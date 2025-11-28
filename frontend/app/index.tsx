@@ -131,7 +131,7 @@ export default function WelcomeScreen() {
         <View style={styles.logoSection}>
           <View style={styles.logoImageContainer}>
             <Image
-              source={require('../assets/rapidreps-logo.jpg')}
+              source={require('../assets/rapidreps-logo.png')}
               style={styles.logo}
               resizeMode="contain"
             />
