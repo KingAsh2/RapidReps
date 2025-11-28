@@ -214,23 +214,17 @@ const styles = StyleSheet.create({
   logoSection: {
     alignItems: 'center',
   },
-  logoContainer: {
+  logoImageContainer: {
     width: width * 0.7,
     height: width * 0.7,
-    borderRadius: 30,
-    backgroundColor: Colors.white,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 15,
     marginBottom: 24,
   },
   logo: {
-    width: '90%',
-    height: '90%',
+    width: '100%',
+    height: '100%',
+    borderRadius: 20,
   },
   taglineContainer: {
     borderRadius: 25,
