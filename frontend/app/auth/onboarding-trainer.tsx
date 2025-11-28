@@ -411,18 +411,17 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingHorizontal: 24,
     paddingBottom: 24,
-    backgroundColor: Colors.secondary,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: Colors.navy,
+    color: Colors.white,
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 14,
-    color: Colors.navy,
-    opacity: 0.7,
+    color: Colors.white,
+    opacity: 0.9,
     marginBottom: 16,
   },
   progressBar: {
