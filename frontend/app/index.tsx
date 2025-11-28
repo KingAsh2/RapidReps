@@ -27,6 +27,12 @@ export default function WelcomeScreen() {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
+    // Mark as ready after a short delay
+    const timer = setTimeout(() => setIsReady(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
     // Pulse animation for logo
     Animated.loop(
       Animated.sequence([
