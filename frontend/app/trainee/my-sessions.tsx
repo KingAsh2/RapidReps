@@ -109,7 +109,7 @@ export default function MySessionsScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
       <LinearGradient
-        colors={Colors.gradientTurquoise}
+        colors={Colors.gradientTealStart}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.header}
