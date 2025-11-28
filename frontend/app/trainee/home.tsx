@@ -8,7 +8,10 @@ import {
   TextInput,
   ActivityIndicator,
   RefreshControl,
+  Alert,
+  Dimensions,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { trainerAPI } from '../../src/services/api';
 import { Colors } from '../../src/utils/colors';
@@ -16,6 +19,10 @@ import { TrainerProfile } from '../../src/types';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import * as Location from 'expo-location';
+
+const { width } = Dimensions.get('window');
 
 export default function TraineeHomeScreen() {
   const { user, logout } = useAuth();
