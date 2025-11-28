@@ -14,6 +14,8 @@ import { Colors } from '../../src/utils/colors';
 import { Session, SessionStatus } from '../../src/types';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 
 export default function TrainerHomeScreen() {
   const { user, logout } = useAuth();
