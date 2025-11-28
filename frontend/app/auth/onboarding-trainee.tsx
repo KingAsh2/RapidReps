@@ -278,7 +278,12 @@ export default function TraineeOnboardingScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <LinearGradient
+        colors={Colors.gradientTealStart}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
         <Text style={styles.title}>Trainee Setup</Text>
         <Text style={styles.subtitle}>
           Step {step} of {totalSteps}
