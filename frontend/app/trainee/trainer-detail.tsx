@@ -311,7 +311,7 @@ export default function TrainerDetailScreen() {
             activeOpacity={0.9}
           >
             <LinearGradient
-              colors={booking ? ['#CCCCCC', '#999999'] : Colors.gradientFire}
+              colors={booking ? ['#CCCCCC', '#999999'] : Colors.gradientMain}
               style={styles.bookButton}
             >
               <Text style={styles.bookButtonText}>
