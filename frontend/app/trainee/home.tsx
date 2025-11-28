@@ -32,8 +32,8 @@ export default function TraineeHomeScreen() {
   const [trainers, setTrainers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showMap, setShowMap] = useState(false);
-  const [location, setLocation] = useState<any>(null);
-  const [locationPermission, setLocationPermission] = useState<string | null>(null);
+  const [location, setLocation] = useState(null);
+  const [locationPermission, setLocationPermission] = useState(null);
 
   useEffect(() => {
     loadTrainers();
