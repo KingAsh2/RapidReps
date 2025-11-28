@@ -299,12 +299,15 @@ const styles = StyleSheet.create({
   },
   featureCard: {
     flex: 1,
+    height: 140,
     borderRadius: 16,
     overflow: 'hidden',
   },
   featureCardGradient: {
+    flex: 1,
     padding: 16,
     alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 2,
     borderColor: 'rgba(255,255,255,0.3)',
     borderRadius: 16,
