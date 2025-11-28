@@ -6,15 +6,40 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
+  Dimensions,
+  Animated,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../src/contexts/AuthContext';
 import { Colors } from '../src/utils/colors';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
+
+const { width, height } = Dimensions.get('window');
 
 export default function WelcomeScreen() {
   const router = useRouter();
   const { user, loading, activeRole } = useAuth();
+  const pulseAnim = React.useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    // Pulse animation for exciting effect
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.05,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, []);
 
   useEffect(() => {
     if (!loading && user && activeRole) {
@@ -36,27 +61,91 @@ export default function WelcomeScreen() {
   }
 
   return (
-    <LinearGradient
-      colors={['#7DD3C0', '#FFFFFF']}
-      style={styles.container}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 0, y: 1 }}
-    >
+    <View style={styles.container}>
+      {/* Animated Gradient Background */}
+      <LinearGradient
+        colors={['#FF6B1A', '#FF8C42', '#FFD700']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradientBackground}
+      >
+        {/* Decorative circles */}
+        <View style={[styles.decorCircle, styles.circle1]} />
+        <View style={[styles.decorCircle, styles.circle2]} />
+        <View style={[styles.decorCircle, styles.circle3]} />
+      </LinearGradient>
+
       <View style={styles.content}>
-        {/* Logo */}
-        <View style={styles.logoContainer}>
-          <Text style={styles.logoText}>RapidReps</Text>
-          <Text style={styles.tagline}>Uber for Personal Training</Text>
+        {/* Logo Section */}
+        <Animated.View style={[styles.logoSection, { transform: [{ scale: pulseAnim }] }]}>
+          <View style={styles.logoContainer}>
+            <Image
+              source={require('../assets/rapidreps-logo.jpg')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+          </View>
+          <View style={styles.taglineContainer}>
+            <LinearGradient
+              colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.85)']}
+              style={styles.taglineGradient}
+            >
+              <Text style={styles.tagline}>🔥 Uber for Personal Training 🔥</Text>
+            </LinearGradient>
+          </View>
+        </Animated.View>
+
+        {/* Features Section */}
+        <View style={styles.featuresSection}>
+          <View style={styles.featureCard}>
+            <LinearGradient
+              colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.1)']}
+              style={styles.featureCardGradient}
+            >
+              <Ionicons name="search" size={32} color={Colors.white} />
+              <Text style={styles.featureTitle}>Find Trainers</Text>
+              <Text style={styles.featureText}>Certified pros near you</Text>
+            </LinearGradient>
+          </View>
+
+          <View style={styles.featureCard}>
+            <LinearGradient
+              colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.1)']}
+              style={styles.featureCardGradient}
+            >
+              <Ionicons name="flash" size={32} color={Colors.white} />
+              <Text style={styles.featureTitle}>Book Instantly</Text>
+              <Text style={styles.featureText}>Quick & easy booking</Text>
+            </LinearGradient>
+          </View>
+
+          <View style={styles.featureCard}>
+            <LinearGradient
+              colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.1)']}
+              style={styles.featureCardGradient}
+            >
+              <Ionicons name="cash" size={32} color={Colors.white} />
+              <Text style={styles.featureTitle}>$1/Minute</Text>
+              <Text style={styles.featureText}>Fair & transparent</Text>
+            </LinearGradient>
+          </View>
         </View>
 
         {/* CTA Buttons */}
         <View style={styles.buttonContainer}>
           <TouchableOpacity
-            style={styles.primaryButton}
+            activeOpacity={0.9}
             onPress={() => router.push('/auth/signup')}
-            activeOpacity={0.8}
           >
-            <Text style={styles.primaryButtonText}>Get Started</Text>
+            <LinearGradient
+              colors={['#FFFFFF', '#F0F0F0']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.primaryButton}
+            >
+              <Text style={styles.primaryButtonText}>Get Started</Text>
+              <Ionicons name="arrow-forward" size={20} color={Colors.primary} />
+            </LinearGradient>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -67,14 +156,8 @@ export default function WelcomeScreen() {
             <Text style={styles.secondaryButtonText}>Log In</Text>
           </TouchableOpacity>
         </View>
-
-        <View style={styles.features}>
-          <Text style={styles.featureText}>✓ Find certified trainers near you</Text>
-          <Text style={styles.featureText}>✓ Book sessions instantly</Text>
-          <Text style={styles.featureText}>✓ $1 per minute pricing</Text>
-        </View>
       </View>
-    </LinearGradient>
+    </View>
   );
 }
 
@@ -88,66 +171,150 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: Colors.background,
   },
+  gradientBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  decorCircle: {
+    position: 'absolute',
+    borderRadius: 1000,
+    opacity: 0.1,
+  },
+  circle1: {
+    width: 300,
+    height: 300,
+    backgroundColor: Colors.white,
+    top: -100,
+    right: -100,
+  },
+  circle2: {
+    width: 200,
+    height: 200,
+    backgroundColor: Colors.white,
+    bottom: 100,
+    left: -50,
+  },
+  circle3: {
+    width: 150,
+    height: 150,
+    backgroundColor: Colors.white,
+    top: height / 2,
+    right: -30,
+  },
   content: {
     flex: 1,
     justifyContent: 'space-between',
     paddingHorizontal: 24,
-    paddingTop: 100,
+    paddingTop: 80,
     paddingBottom: 50,
   },
-  logoContainer: {
+  logoSection: {
     alignItems: 'center',
   },
-  logoText: {
-    fontSize: 56,
-    fontWeight: 'bold',
-    color: Colors.navy,
-    marginBottom: 8,
+  logoContainer: {
+    width: width * 0.7,
+    height: width * 0.7,
+    borderRadius: 30,
+    backgroundColor: Colors.white,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 15,
+    marginBottom: 24,
+  },
+  logo: {
+    width: '90%',
+    height: '90%',
+  },
+  taglineContainer: {
+    borderRadius: 25,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  taglineGradient: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
   },
   tagline: {
     fontSize: 18,
-    color: Colors.navy,
-    opacity: 0.8,
+    fontWeight: 'bold',
+    color: Colors.primary,
+    textAlign: 'center',
+  },
+  featuresSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginVertical: 20,
+  },
+  featureCard: {
+    flex: 1,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  featureCardGradient: {
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.3)',
+    borderRadius: 16,
+  },
+  featureTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: Colors.white,
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  featureText: {
+    fontSize: 11,
+    color: Colors.white,
+    marginTop: 4,
+    textAlign: 'center',
+    opacity: 0.9,
   },
   buttonContainer: {
     gap: 16,
   },
   primaryButton: {
-    backgroundColor: Colors.primary,
+    flexDirection: 'row',
     paddingVertical: 18,
-    borderRadius: 12,
+    borderRadius: 16,
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 10,
   },
   primaryButtonText: {
-    color: Colors.white,
-    fontSize: 18,
+    color: Colors.primary,
+    fontSize: 20,
     fontWeight: 'bold',
   },
   secondaryButton: {
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(255,255,255,0.2)',
     paddingVertical: 18,
-    borderRadius: 12,
+    borderRadius: 16,
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: Colors.navy,
+    borderColor: Colors.white,
   },
   secondaryButtonText: {
-    color: Colors.navy,
+    color: Colors.white,
     fontSize: 18,
-    fontWeight: '600',
-  },
-  features: {
-    gap: 12,
-    marginTop: 32,
-  },
-  featureText: {
-    fontSize: 16,
-    color: Colors.navy,
-    opacity: 0.8,
+    fontWeight: 'bold',
   },
 });
