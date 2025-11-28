@@ -385,7 +385,7 @@ export default function EditTrainerProfileScreen() {
             style={styles.saveButtonContainer}
           >
             <LinearGradient
-              colors={saving ? ['#CCCCCC', '#999999'] : Colors.gradientFire}
+              colors={saving ? ['#CCCCCC', '#999999'] : Colors.gradientMain}
               style={styles.saveButton}
             >
               <Ionicons name="checkmark-circle" size={24} color={Colors.white} />
