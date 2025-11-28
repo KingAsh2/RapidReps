@@ -15,6 +15,7 @@ import { Colors } from '../../src/utils/colors';
 import { TrainerProfile } from '../../src/types';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function TraineeHomeScreen() {
   const { user, logout } = useAuth();
