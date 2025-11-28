@@ -19,6 +19,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeRole, setActiveRoleState] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     loadUser();
@@ -30,20 +31,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const savedRole = await AsyncStorage.getItem('active_role');
       
       if (token) {
-        const userData = await authAPI.getMe();
-        setUser(userData);
-        
-        if (savedRole && userData.roles.includes(savedRole)) {
-          setActiveRoleState(savedRole);
-        } else if (userData.roles.length > 0) {
-          setActiveRoleState(userData.roles[0]);
+        try {
+          const userData = await authAPI.getMe();
+          setUser(userData);
+          
+          if (savedRole && userData.roles.includes(savedRole)) {
+            setActiveRoleState(savedRole);
+          } else if (userData.roles.length > 0) {
+            setActiveRoleState(userData.roles[0]);
+          }
+        } catch (apiError) {
+          console.error('Error fetching user data:', apiError);
+          await AsyncStorage.removeItem('auth_token');
         }
       }
     } catch (error) {
       console.error('Error loading user:', error);
-      await AsyncStorage.removeItem('auth_token');
     } finally {
       setLoading(false);
+      setIsInitialized(true);
     }
   };
 
