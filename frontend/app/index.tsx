@@ -189,14 +189,14 @@ export default function WelcomeScreen() {
         {/* Logo Section */}
         <Animated.View style={[styles.logoSection, { 
           transform: [
-            { scale: logoScaleAnim.current },
+            { scale: logoScaleAnim },
             { 
-              rotate: logoRotateAnim.current.interpolate({
+              rotate: logoRotateAnim.interpolate({
                 inputRange: [-1, 1],
                 outputRange: ['-2deg', '2deg'],
               })
             },
-            { translateY: logoJumpAnim.current }
+            { translateY: logoJumpAnim }
           ] 
         }]}>
           <View style={styles.logoImageContainer}>
