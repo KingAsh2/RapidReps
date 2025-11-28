@@ -115,10 +115,11 @@ export default function WelcomeScreen() {
     <View style={styles.container}>
       {/* Animated Gradient Background */}
       <LinearGradient
-        colors={['#FF6B1A', '#FF8C42', '#FFD700']}
+        colors={['#FF6B1A', '#FF8C42', '#FFB84D', '#FFC870', '#A8E6D7', '#7DD3C0', '#5BC0BE']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradientBackground}
+        locations={[0, 0.15, 0.3, 0.45, 0.65, 0.85, 1]}
       >
         {/* Decorative circles */}
         <View style={[styles.decorCircle, styles.circle1]} />
