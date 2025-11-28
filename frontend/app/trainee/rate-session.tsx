@@ -58,7 +58,7 @@ export default function RateSessionScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <LinearGradient
-        colors={Colors.gradientTurquoise}
+        colors={Colors.gradientTealStart}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.header}
