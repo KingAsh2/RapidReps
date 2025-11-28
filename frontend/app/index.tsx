@@ -339,6 +339,13 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 10,
   },
+  buttonGlowContainer: {
+    borderRadius: 16,
+    shadowColor: '#FFFFFF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 20,
+    elevation: 15,
+  },
   primaryButtonText: {
     color: Colors.primary,
     fontSize: 20,
