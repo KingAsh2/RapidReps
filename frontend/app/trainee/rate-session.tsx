@@ -129,7 +129,7 @@ export default function RateSessionScreen() {
               activeOpacity={0.9}
             >
               <LinearGradient
-                colors={submitting || rating === 0 ? ['#CCCCCC', '#999999'] : Colors.gradientOrange}
+                colors={submitting || rating === 0 ? ['#CCCCCC', '#999999'] : Colors.gradientOrangeStart}
                 style={styles.submitButton}
               >
                 <Ionicons name="checkmark-circle" size={24} color={Colors.white} />
