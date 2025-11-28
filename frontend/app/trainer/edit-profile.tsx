@@ -154,7 +154,7 @@ export default function EditTrainerProfileScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <LinearGradient
-        colors={Colors.gradientOrange}
+        colors={Colors.gradientOrangeStart}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.header}
