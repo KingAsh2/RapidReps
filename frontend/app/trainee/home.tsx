@@ -48,6 +48,10 @@ export default function TraineeHomeScreen() {
   const [locationPermission, setLocationPermission] = useState(null);
 
   const requestLocationPermission = async () => {
+    if (Platform.OS === 'web' || !Location) {
+      return; // Skip location on web
+    }
+    
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       setLocationPermission(status);
@@ -64,7 +68,9 @@ export default function TraineeHomeScreen() {
 
   useEffect(() => {
     loadTrainers();
-    requestLocationPermission();
+    if (Platform.OS !== 'web') {
+      requestLocationPermission();
+    }
   }, []);
 
   const loadTrainers = async () => {
