@@ -293,6 +293,9 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   greeting: {
     fontSize: 26,
