@@ -386,6 +386,55 @@ async def get_trainer_profile(user_id: str):
     
     return TrainerProfileResponse(**serialize_doc(profile))
 
+
+@api_router.post("/trainer-profiles/upload-documents")
+async def upload_verification_documents(
+    documents: List[str],
+    current_user: dict = Depends(get_current_user)
+):
+    """Upload verification documents for trainer profile (base64 encoded)"""
+    profile = await db.trainer_profiles.find_one({'userId': current_user['id']})
+    
+    if not profile:
+        raise HTTPException(status_code=404, detail="Trainer profile not found")
+    
+    # Append new documents to existing ones
+    existing_docs = profile.get('verificationDocs', [])
+    updated_docs = existing_docs + documents
+    
+    result = await db.trainer_profiles.update_one(
+        {'userId': current_user['id']},
+        {
+            '$set': {
+                'verificationDocs': updated_docs,
+                'updatedAt': datetime.utcnow()
+            }
+        }
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=500, detail="Failed to upload documents")
+    
+    return {
+        'success': True,
+        'totalDocuments': len(updated_docs),
+        'message': f'Successfully uploaded {len(documents)} document(s)'
+    }
+
+@api_router.get("/trainer-profiles/my-documents")
+async def get_my_verification_documents(current_user: dict = Depends(get_current_user)):
+    """Get verification documents for current trainer"""
+    profile = await db.trainer_profiles.find_one({'userId': current_user['id']})
+    
+    if not profile:
+        raise HTTPException(status_code=404, detail="Trainer profile not found")
+    
+    return {
+        'documents': profile.get('verificationDocs', []),
+        'isVerified': profile.get('isVerified', False),
+        'totalDocuments': len(profile.get('verificationDocs', []))
+    }
+
 @api_router.get("/trainers/search", response_model=List[TrainerProfileResponse])
 async def search_trainers(
     location: Optional[str] = None,
