@@ -29,7 +29,7 @@ export default function TraineeHomeScreen() {
   const { user, logout } = useAuth();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [trainers, setTrainers] = useState<TrainerProfile[]>([]);
+  const [trainers, setTrainers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showMap, setShowMap] = useState(false);
   const [location, setLocation] = useState<any>(null);
