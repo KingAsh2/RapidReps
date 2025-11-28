@@ -21,9 +21,6 @@ const { width, height } = Dimensions.get('window');
 export default function WelcomeScreen() {
   const router = useRouter();
   const { user, loading, activeRole } = useAuth();
-  const [logoScaleAnim] = useState(new Animated.Value(1));
-  const [logoRotateAnim] = useState(new Animated.Value(0));
-  const [logoJumpAnim] = useState(new Animated.Value(0));
   const [buttonScaleAnim] = useState(new Animated.Value(1));
   const [buttonGlowAnim] = useState(new Animated.Value(0));
   const [buttonShakeAnim] = useState(new Animated.Value(0));
@@ -36,62 +33,6 @@ export default function WelcomeScreen() {
   }, []);
 
   useEffect(() => {
-    // LOGO: Fitness "Pump" Animation - Like a muscle flexing!
-    Animated.loop(
-      Animated.parallel([
-        // Scale pump (muscle flex)
-        Animated.sequence([
-          Animated.timing(logoScaleAnim, {
-            toValue: 1.12,
-            duration: 600,
-            useNativeDriver: true,
-          }),
-          Animated.timing(logoScaleAnim, {
-            toValue: 0.98,
-            duration: 400,
-            useNativeDriver: true,
-          }),
-          Animated.timing(logoScaleAnim, {
-            toValue: 1.08,
-            duration: 500,
-            useNativeDriver: true,
-          }),
-          Animated.timing(logoScaleAnim, {
-            toValue: 1,
-            duration: 500,
-            useNativeDriver: true,
-          }),
-        ]),
-        // Slight rotation for dynamic feel
-        Animated.sequence([
-          Animated.timing(logoRotateAnim, {
-            toValue: 1,
-            duration: 1000,
-            useNativeDriver: true,
-          }),
-          Animated.timing(logoRotateAnim, {
-            toValue: -1,
-            duration: 1000,
-            useNativeDriver: true,
-          }),
-        ]),
-        // Jump effect (like a jump squat!)
-        Animated.sequence([
-          Animated.timing(logoJumpAnim, {
-            toValue: -15,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-          Animated.timing(logoJumpAnim, {
-            toValue: 0,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-          Animated.delay(1400),
-        ]),
-      ])
-    ).start();
-
     // BUTTON: Super Energetic "Call to Action" Animation
     Animated.loop(
       Animated.parallel([
@@ -149,7 +90,7 @@ export default function WelcomeScreen() {
         ]),
       ])
     ).start();
-  }, [logoScaleAnim, logoRotateAnim, logoJumpAnim, buttonScaleAnim, buttonGlowAnim, buttonShakeAnim]);
+  }, [buttonScaleAnim, buttonGlowAnim, buttonShakeAnim]);
 
   useEffect(() => {
     if (!loading && user && activeRole && isReady) {
