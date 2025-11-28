@@ -71,7 +71,7 @@ export default function WelcomeScreen() {
         ]),
       ])
     ).start();
-  }, []);
+  }, [pulseAnim, buttonScaleAnim, buttonGlowAnim]);
 
   useEffect(() => {
     if (!loading && user && activeRole) {
