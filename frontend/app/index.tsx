@@ -165,20 +165,34 @@ export default function WelcomeScreen() {
 
         {/* CTA Buttons */}
         <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            activeOpacity={0.9}
-            onPress={() => router.push('/auth/signup')}
-          >
-            <LinearGradient
-              colors={['#FFFFFF', '#F0F0F0']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.primaryButton}
+          <Animated.View style={{ transform: [{ scale: buttonScaleAnim }] }}>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => router.push('/auth/signup')}
             >
-              <Text style={styles.primaryButtonText}>Get Started</Text>
-              <Ionicons name="arrow-forward" size={20} color={Colors.primary} />
-            </LinearGradient>
-          </TouchableOpacity>
+              <Animated.View
+                style={[
+                  styles.buttonGlowContainer,
+                  {
+                    shadowOpacity: buttonGlowAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.3, 0.6],
+                    }),
+                  },
+                ]}
+              >
+                <LinearGradient
+                  colors={['#FFFFFF', '#F0F0F0']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.primaryButton}
+                >
+                  <Text style={styles.primaryButtonText}>Get Started</Text>
+                  <Ionicons name="arrow-forward" size={20} color={Colors.primary} />
+                </LinearGradient>
+              </Animated.View>
+            </TouchableOpacity>
+          </Animated.View>
 
           <TouchableOpacity
             style={styles.secondaryButton}
