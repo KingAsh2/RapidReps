@@ -164,7 +164,10 @@ export default function TraineeHomeScreen() {
                     </View>
                   )}
                   
-                  <TouchableOpacity style={styles.bookButton}>
+                  <TouchableOpacity 
+                    style={styles.bookButton}
+                    onPress={() => router.push(`/trainee/trainer-detail?trainerId=${trainer.userId}`)}
+                  >
                     <Text style={styles.bookButtonText}>View Profile</Text>
                   </TouchableOpacity>
                 </View>
