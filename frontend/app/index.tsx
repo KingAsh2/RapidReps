@@ -109,7 +109,7 @@ export default function WelcomeScreen() {
 
       <View style={styles.content}>
         {/* Logo Section */}
-        <Animated.View style={[styles.logoSection, { transform: [{ scale: pulseAnim.current }] }]}>
+        <Animated.View style={[styles.logoSection, { transform: [{ scale: pulseAnim }] }]}>
           <View style={styles.logoImageContainer}>
             <Image
               source={require('../assets/rapidreps-logo.jpg')}
