@@ -21,10 +21,13 @@ const { width, height } = Dimensions.get('window');
 export default function WelcomeScreen() {
   const router = useRouter();
   const { user, loading, activeRole } = useAuth();
-  const [pulseAnim] = useState(new Animated.Value(1));
-  const [buttonScaleAnim] = useState(new Animated.Value(1));
-  const [buttonGlowAnim] = useState(new Animated.Value(0));
-  const [isReady, setIsReady] = useState(false);
+  const logoScaleAnim = React.useRef(new Animated.Value(1)).current;
+  const logoRotateAnim = React.useRef(new Animated.Value(0)).current;
+  const logoJumpAnim = React.useRef(new Animated.Value(0)).current;
+  const buttonScaleAnim = React.useRef(new Animated.Value(1)).current;
+  const buttonGlowAnim = React.useRef(new Animated.Value(0)).current;
+  const buttonShakeAnim = React.useRef(new Animated.Value(0)).current;
+  const [isReady, setIsReady] = React.useState(false);
 
   useEffect(() => {
     // Mark as ready after a short delay
@@ -33,52 +36,120 @@ export default function WelcomeScreen() {
   }, []);
 
   useEffect(() => {
-    // Pulse animation for logo
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.05,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-
-    // Energetic button animation
+    // LOGO: Fitness "Pump" Animation - Like a muscle flexing!
     Animated.loop(
       Animated.parallel([
+        // Scale pump (muscle flex)
         Animated.sequence([
-          Animated.timing(buttonScaleAnim, {
-            toValue: 1.03,
-            duration: 800,
+          Animated.timing(logoScaleAnim, {
+            toValue: 1.12,
+            duration: 600,
             useNativeDriver: true,
           }),
-          Animated.timing(buttonScaleAnim, {
+          Animated.timing(logoScaleAnim, {
+            toValue: 0.98,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+          Animated.timing(logoScaleAnim, {
+            toValue: 1.08,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(logoScaleAnim, {
             toValue: 1,
-            duration: 800,
+            duration: 500,
             useNativeDriver: true,
           }),
         ]),
+        // Slight rotation for dynamic feel
+        Animated.sequence([
+          Animated.timing(logoRotateAnim, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(logoRotateAnim, {
+            toValue: -1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+        ]),
+        // Jump effect (like a jump squat!)
+        Animated.sequence([
+          Animated.timing(logoJumpAnim, {
+            toValue: -15,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+          Animated.timing(logoJumpAnim, {
+            toValue: 0,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+          Animated.delay(1400),
+        ]),
+      ])
+    ).start();
+
+    // BUTTON: Super Energetic "Call to Action" Animation
+    Animated.loop(
+      Animated.parallel([
+        // Scale pulse (bigger emphasis)
+        Animated.sequence([
+          Animated.spring(buttonScaleAnim, {
+            toValue: 1.08,
+            friction: 3,
+            tension: 40,
+            useNativeDriver: true,
+          }),
+          Animated.spring(buttonScaleAnim, {
+            toValue: 1,
+            friction: 3,
+            tension: 40,
+            useNativeDriver: true,
+          }),
+        ]),
+        // Intense glow
         Animated.sequence([
           Animated.timing(buttonGlowAnim, {
             toValue: 1,
-            duration: 800,
+            duration: 600,
             useNativeDriver: false,
           }),
           Animated.timing(buttonGlowAnim, {
             toValue: 0,
-            duration: 800,
+            duration: 600,
             useNativeDriver: false,
           }),
         ]),
+        // Shake effect for urgency
+        Animated.sequence([
+          Animated.timing(buttonShakeAnim, {
+            toValue: 3,
+            duration: 50,
+            useNativeDriver: true,
+          }),
+          Animated.timing(buttonShakeAnim, {
+            toValue: -3,
+            duration: 50,
+            useNativeDriver: true,
+          }),
+          Animated.timing(buttonShakeAnim, {
+            toValue: 3,
+            duration: 50,
+            useNativeDriver: true,
+          }),
+          Animated.timing(buttonShakeAnim, {
+            toValue: 0,
+            duration: 50,
+            useNativeDriver: true,
+          }),
+          Animated.delay(1000),
+        ]),
       ])
     ).start();
-  }, [pulseAnim, buttonScaleAnim, buttonGlowAnim]);
+  }, []);
 
   useEffect(() => {
     if (!loading && user && activeRole && isReady) {
