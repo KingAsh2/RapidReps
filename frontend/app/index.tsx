@@ -81,7 +81,7 @@ export default function WelcomeScreen() {
   }, [pulseAnim, buttonScaleAnim, buttonGlowAnim]);
 
   useEffect(() => {
-    if (!loading && user && activeRole) {
+    if (!loading && user && activeRole && isReady) {
       // User is logged in, navigate to appropriate home
       if (activeRole === 'trainer') {
         router.replace('/trainer/home');
@@ -89,7 +89,7 @@ export default function WelcomeScreen() {
         router.replace('/trainee/home');
       }
     }
-  }, [loading, user, activeRole, router]);
+  }, [loading, user, activeRole, isReady, router]);
 
   if (loading) {
     return (
