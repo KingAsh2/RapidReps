@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
 
 # Configuration
-BASE_URL = "https://workout-buddy-662.preview.emergentagent.com/api"
+BASE_URL = "https://rapidreps.preview.emergentagent.com/api"
 HEADERS = {"Content-Type": "application/json"}
 
 class RapidRepsAPITester:
