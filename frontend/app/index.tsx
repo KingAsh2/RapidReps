@@ -29,12 +29,12 @@ export default function WelcomeScreen() {
     // Pulse animation for logo
     Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseAnim, {
+        Animated.timing(pulseAnim.current, {
           toValue: 1.05,
           duration: 1000,
           useNativeDriver: true,
         }),
-        Animated.timing(pulseAnim, {
+        Animated.timing(pulseAnim.current, {
           toValue: 1,
           duration: 1000,
           useNativeDriver: true,
@@ -46,24 +46,24 @@ export default function WelcomeScreen() {
     Animated.loop(
       Animated.parallel([
         Animated.sequence([
-          Animated.timing(buttonScaleAnim, {
+          Animated.timing(buttonScaleAnim.current, {
             toValue: 1.03,
             duration: 800,
             useNativeDriver: true,
           }),
-          Animated.timing(buttonScaleAnim, {
+          Animated.timing(buttonScaleAnim.current, {
             toValue: 1,
             duration: 800,
             useNativeDriver: true,
           }),
         ]),
         Animated.sequence([
-          Animated.timing(buttonGlowAnim, {
+          Animated.timing(buttonGlowAnim.current, {
             toValue: 1,
             duration: 800,
             useNativeDriver: false,
           }),
-          Animated.timing(buttonGlowAnim, {
+          Animated.timing(buttonGlowAnim.current, {
             toValue: 0,
             duration: 800,
             useNativeDriver: false,
