@@ -25,11 +25,15 @@ import * as Location from 'expo-location';
 const { width } = Dimensions.get('window');
 
 export default function TraineeHomeScreen() {
+  const router = useRouter();
   const { user, logout } = useAuth();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [trainers, setTrainers] = useState<TrainerProfile[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showMap, setShowMap] = useState(false);
+  const [location, setLocation] = useState<Location.LocationObject | null>(null);
+  const [locationPermission, setLocationPermission] = useState<Location.PermissionStatus | null>(null);
 
   useEffect(() => {
     loadTrainers();
