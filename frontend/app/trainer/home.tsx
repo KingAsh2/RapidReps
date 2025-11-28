@@ -143,9 +143,12 @@ export default function TrainerHomeScreen() {
             <Ionicons name="person-circle" size={32} color={Colors.primary} />
             <Text style={styles.actionText}>Edit Profile</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionCard}>
-            <Ionicons name="calendar" size={32} color={Colors.secondary} />
-            <Text style={styles.actionText}>Availability</Text>
+          <TouchableOpacity 
+            style={styles.actionCard}
+            onPress={() => router.push('/trainer/verification')}
+          >
+            <Ionicons name="shield-checkmark" size={32} color={Colors.success} />
+            <Text style={styles.actionText}>Verification</Text>
           </TouchableOpacity>
         </View>
 
