@@ -224,7 +224,7 @@ export default function SignUpScreen() {
                   <LinearGradient
                     colors={
                       selectedRoles.includes(UserRole.TRAINEE)
-                        ? Colors.gradientTurquoise
+                        ? Colors.gradientTealStart
                         : ['#FFFFFF', '#FFFFFF']
                     }
                     start={{ x: 0, y: 0 }}
