@@ -83,7 +83,12 @@ export default function TrainerHomeScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <LinearGradient
+        colors={Colors.gradientOrangeStart}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
         <View>
           <Text style={styles.greeting}>Hello, {user?.fullName?.split(' ')[0] || 'Trainer'}!</Text>
           <Text style={styles.subGreeting}>Manage your sessions</Text>
