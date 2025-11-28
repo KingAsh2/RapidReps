@@ -268,7 +268,7 @@ export default function WelcomeScreen() {
                 style={[
                   styles.buttonGlowContainer,
                   {
-                    shadowOpacity: buttonGlowAnim.interpolate({
+                    shadowOpacity: buttonGlowAnim.current.interpolate({
                       inputRange: [0, 1],
                       outputRange: [0.3, 0.6],
                     }),
