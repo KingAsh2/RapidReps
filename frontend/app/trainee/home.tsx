@@ -10,6 +10,7 @@ import {
   RefreshControl,
   Alert,
   Dimensions,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
@@ -19,8 +20,19 @@ import { TrainerProfile } from '../../src/types';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
-import * as Location from 'expo-location';
+
+// Only import maps on native platforms
+let MapView: any = null;
+let Marker: any = null;
+let PROVIDER_GOOGLE: any = null;
+let Location: any = null;
+
+if (Platform.OS !== 'web') {
+  MapView = require('react-native-maps').default;
+  Marker = require('react-native-maps').Marker;
+  PROVIDER_GOOGLE = require('react-native-maps').PROVIDER_GOOGLE;
+  Location = require('expo-location');
+}
 
 const { width } = Dimensions.get('window');
 
