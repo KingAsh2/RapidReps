@@ -21,12 +21,12 @@ const { width, height } = Dimensions.get('window');
 export default function WelcomeScreen() {
   const router = useRouter();
   const { user, loading, activeRole } = useAuth();
-  const logoScaleAnim = React.useRef(new Animated.Value(1)).current;
-  const logoRotateAnim = React.useRef(new Animated.Value(0)).current;
-  const logoJumpAnim = React.useRef(new Animated.Value(0)).current;
-  const buttonScaleAnim = React.useRef(new Animated.Value(1)).current;
-  const buttonGlowAnim = React.useRef(new Animated.Value(0)).current;
-  const buttonShakeAnim = React.useRef(new Animated.Value(0)).current;
+  const logoScaleAnim = React.useRef(new Animated.Value(1));
+  const logoRotateAnim = React.useRef(new Animated.Value(0));
+  const logoJumpAnim = React.useRef(new Animated.Value(0));
+  const buttonScaleAnim = React.useRef(new Animated.Value(1));
+  const buttonGlowAnim = React.useRef(new Animated.Value(0));
+  const buttonShakeAnim = React.useRef(new Animated.Value(0));
   const [isReady, setIsReady] = React.useState(false);
 
   useEffect(() => {
