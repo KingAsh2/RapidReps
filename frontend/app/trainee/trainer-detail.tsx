@@ -110,7 +110,7 @@ export default function TrainerDetailScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
       <LinearGradient
-        colors={Colors.gradientOrange}
+        colors={Colors.gradientOrangeStart}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.header}
