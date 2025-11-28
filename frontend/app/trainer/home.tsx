@@ -94,9 +94,9 @@ export default function TrainerHomeScreen() {
           <Text style={styles.subGreeting}>Manage your sessions</Text>
         </View>
         <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-          <Ionicons name="log-out-outline" size={24} color={Colors.navy} />
+          <Ionicons name="log-out-outline" size={24} color={Colors.white} />
         </TouchableOpacity>
-      </View>
+      </LinearGradient>
 
       <ScrollView
         style={styles.scrollView}
