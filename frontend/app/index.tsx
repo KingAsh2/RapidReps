@@ -78,7 +78,7 @@ export default function WelcomeScreen() {
       <View style={styles.content}>
         {/* Logo Section */}
         <Animated.View style={[styles.logoSection, { transform: [{ scale: pulseAnim }] }]}>
-          <View style={styles.logoContainer}>
+          <View style={styles.logoImageContainer}>
             <Image
               source={require('../assets/rapidreps-logo.jpg')}
               style={styles.logo}
@@ -90,7 +90,7 @@ export default function WelcomeScreen() {
               colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.85)']}
               style={styles.taglineGradient}
             >
-              <Text style={styles.tagline}>🔥 Uber for Personal Training 🔥</Text>
+              <Text style={styles.tagline}>🔥 Your Workout, Delivered 🔥</Text>
             </LinearGradient>
           </View>
         </Animated.View>
