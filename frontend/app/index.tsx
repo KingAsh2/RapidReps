@@ -256,8 +256,8 @@ export default function WelcomeScreen() {
         <View style={styles.buttonContainer}>
           <Animated.View style={{ 
             transform: [
-              { scale: buttonScaleAnim.current },
-              { translateX: buttonShakeAnim.current }
+              { scale: buttonScaleAnim },
+              { translateX: buttonShakeAnim }
             ] 
           }}>
             <TouchableOpacity
