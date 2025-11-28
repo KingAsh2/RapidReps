@@ -144,7 +144,7 @@ export default function WelcomeScreen() {
               <Text style={styles.tagline}>🔥 Your Workout, Delivered 🔥</Text>
             </LinearGradient>
           </View>
-        </Animated.View>
+        </View>
 
         {/* Features Section */}
         <View style={styles.featuresSection}>
