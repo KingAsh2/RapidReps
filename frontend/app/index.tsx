@@ -21,9 +21,9 @@ const { width, height } = Dimensions.get('window');
 export default function WelcomeScreen() {
   const router = useRouter();
   const { user, loading, activeRole } = useAuth();
-  const pulseAnim = React.useRef(new Animated.Value(1)).current;
-  const buttonScaleAnim = React.useRef(new Animated.Value(1)).current;
-  const buttonGlowAnim = React.useRef(new Animated.Value(0)).current;
+  const pulseAnim = React.useRef(new Animated.Value(1));
+  const buttonScaleAnim = React.useRef(new Animated.Value(1));
+  const buttonGlowAnim = React.useRef(new Animated.Value(0));
 
   useEffect(() => {
     // Pulse animation for logo
