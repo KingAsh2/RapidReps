@@ -126,6 +126,21 @@ export default function TrainerHomeScreen() {
           </View>
         )}
 
+        {/* Quick Actions */}
+        <View style={styles.quickActions}>
+          <TouchableOpacity 
+            style={styles.actionCard}
+            onPress={() => router.push('/trainer/edit-profile')}
+          >
+            <Ionicons name="person-circle" size={32} color={Colors.primary} />
+            <Text style={styles.actionText}>Edit Profile</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionCard}>
+            <Ionicons name="calendar" size={32} color={Colors.secondary} />
+            <Text style={styles.actionText}>Availability</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Pending Requests */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Pending Requests ({pendingSessions.length})</Text>
