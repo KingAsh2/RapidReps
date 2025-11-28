@@ -266,7 +266,7 @@ export default function MySessionsScreen() {
                       onPress={() => handleRateSession(session.id, session.trainerId)}
                     >
                       <LinearGradient
-                        colors={Colors.gradientOrange}
+                        colors={Colors.gradientOrangeStart}
                         style={styles.rateButtonGradient}
                       >
                         <Ionicons name="star" size={20} color={Colors.white} />
