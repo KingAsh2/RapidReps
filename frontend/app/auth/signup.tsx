@@ -15,6 +15,7 @@ import { useAuth } from '../../src/contexts/AuthContext';
 import { Colors } from '../../src/utils/colors';
 import { UserRole } from '../../src/types';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function SignUpScreen() {
   const router = useRouter();
@@ -80,153 +81,206 @@ export default function SignUpScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={Colors.navy} />
-          </TouchableOpacity>
-          <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Join RapidReps today</Text>
-        </View>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={Colors.gradientOrange}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.headerGradient}
+      >
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={28} color={Colors.white} />
+        </TouchableOpacity>
+        <Text style={styles.title}>Create Account</Text>
+        <Text style={styles.subtitle}>Join the RapidReps community! 🔥</Text>
+      </LinearGradient>
 
-        {/* Form */}
-        <View style={styles.form}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Full Name</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.fullName}
-              onChangeText={(text) => setFormData({ ...formData, fullName: text })}
-              placeholder="John Doe"
-              placeholderTextColor={Colors.textLight}
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.email}
-              onChangeText={(text) => setFormData({ ...formData, email: text })}
-              placeholder="john@example.com"
-              placeholderTextColor={Colors.textLight}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Phone</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.phone}
-              onChangeText={(text) => setFormData({ ...formData, phone: text })}
-              placeholder="+1 (555) 123-4567"
-              placeholderTextColor={Colors.textLight}
-              keyboardType="phone-pad"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.password}
-              onChangeText={(text) => setFormData({ ...formData, password: text })}
-              placeholder="••••••••"
-              placeholderTextColor={Colors.textLight}
-              secureTextEntry
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Confirm Password</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.confirmPassword}
-              onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })}
-              placeholder="••••••••"
-              placeholderTextColor={Colors.textLight}
-              secureTextEntry
-            />
-          </View>
-
-          {/* Role Selection */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>I want to sign up as:</Text>
-            <View style={styles.roleContainer}>
-              <TouchableOpacity
-                style={[
-                  styles.roleChip,
-                  selectedRoles.includes(UserRole.TRAINER) && styles.roleChipSelected,
-                ]}
-                onPress={() => toggleRole(UserRole.TRAINER)}
-              >
-                <Ionicons
-                  name="barbell"
-                  size={20}
-                  color={selectedRoles.includes(UserRole.TRAINER) ? Colors.white : Colors.navy}
+      <KeyboardAvoidingView
+        style={styles.formContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Form */}
+          <View style={styles.form}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Full Name</Text>
+              <View style={styles.inputWrapper}>
+                <Ionicons name="person" size={20} color={Colors.primary} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  value={formData.fullName}
+                  onChangeText={(text) => setFormData({ ...formData, fullName: text })}
+                  placeholder="John Doe"
+                  placeholderTextColor={Colors.textLight}
                 />
-                <Text
-                  style={[
-                    styles.roleChipText,
-                    selectedRoles.includes(UserRole.TRAINER) && styles.roleChipTextSelected,
-                  ]}
-                >
-                  Trainer
-                </Text>
-              </TouchableOpacity>
+              </View>
+            </View>
 
-              <TouchableOpacity
-                style={[
-                  styles.roleChip,
-                  selectedRoles.includes(UserRole.TRAINEE) && styles.roleChipSelected,
-                ]}
-                onPress={() => toggleRole(UserRole.TRAINEE)}
-              >
-                <Ionicons
-                  name="fitness"
-                  size={20}
-                  color={selectedRoles.includes(UserRole.TRAINEE) ? Colors.white : Colors.navy}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Email</Text>
+              <View style={styles.inputWrapper}>
+                <Ionicons name="mail" size={20} color={Colors.primary} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  value={formData.email}
+                  onChangeText={(text) => setFormData({ ...formData, email: text })}
+                  placeholder="john@example.com"
+                  placeholderTextColor={Colors.textLight}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
                 />
-                <Text
-                  style={[
-                    styles.roleChipText,
-                    selectedRoles.includes(UserRole.TRAINEE) && styles.roleChipTextSelected,
-                  ]}
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Phone</Text>
+              <View style={styles.inputWrapper}>
+                <Ionicons name="call" size={20} color={Colors.primary} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  value={formData.phone}
+                  onChangeText={(text) => setFormData({ ...formData, phone: text })}
+                  placeholder="+1 (555) 123-4567"
+                  placeholderTextColor={Colors.textLight}
+                  keyboardType="phone-pad"
+                />
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Password</Text>
+              <View style={styles.inputWrapper}>
+                <Ionicons name="lock-closed" size={20} color={Colors.primary} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  value={formData.password}
+                  onChangeText={(text) => setFormData({ ...formData, password: text })}
+                  placeholder="••••••••"
+                  placeholderTextColor={Colors.textLight}
+                  secureTextEntry
+                />
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Confirm Password</Text>
+              <View style={styles.inputWrapper}>
+                <Ionicons name="lock-closed" size={20} color={Colors.primary} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  value={formData.confirmPassword}
+                  onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })}
+                  placeholder="••••••••"
+                  placeholderTextColor={Colors.textLight}
+                  secureTextEntry
+                />
+              </View>
+            </View>
+
+            {/* Role Selection */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>🎯 I want to sign up as:</Text>
+              <View style={styles.roleContainer}>
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => toggleRole(UserRole.TRAINER)}
                 >
-                  Trainee
+                  <LinearGradient
+                    colors={
+                      selectedRoles.includes(UserRole.TRAINER)
+                        ? Colors.gradientOrange
+                        : ['#FFFFFF', '#FFFFFF']
+                    }
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={[
+                      styles.roleChip,
+                      selectedRoles.includes(UserRole.TRAINER) && styles.roleChipSelected,
+                    ]}
+                  >
+                    <Ionicons
+                      name="barbell"
+                      size={24}
+                      color={selectedRoles.includes(UserRole.TRAINER) ? Colors.white : Colors.primary}
+                    />
+                    <Text
+                      style={[
+                        styles.roleChipText,
+                        selectedRoles.includes(UserRole.TRAINER) && styles.roleChipTextSelected,
+                      ]}
+                    >
+                      Trainer
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => toggleRole(UserRole.TRAINEE)}
+                >
+                  <LinearGradient
+                    colors={
+                      selectedRoles.includes(UserRole.TRAINEE)
+                        ? Colors.gradientTurquoise
+                        : ['#FFFFFF', '#FFFFFF']
+                    }
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={[
+                      styles.roleChip,
+                      selectedRoles.includes(UserRole.TRAINEE) && styles.roleChipSelected,
+                    ]}
+                  >
+                    <Ionicons
+                      name="fitness"
+                      size={24}
+                      color={selectedRoles.includes(UserRole.TRAINEE) ? Colors.white : Colors.neonBlue}
+                    />
+                    <Text
+                      style={[
+                        styles.roleChipText,
+                        selectedRoles.includes(UserRole.TRAINEE) && styles.roleChipTextSelected,
+                      ]}
+                    >
+                      Trainee
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Sign Up Button */}
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={handleSignUp}
+              disabled={loading}
+            >
+              <LinearGradient
+                colors={loading ? ['#CCCCCC', '#999999'] : Colors.gradientFire}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.signUpButton}
+              >
+                <Text style={styles.signUpButtonText}>
+                  {loading ? 'Creating Account...' : 'Sign Up 🚀'}
                 </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            {/* Login Link */}
+            <View style={styles.loginLink}>
+              <Text style={styles.loginLinkText}>Already have an account? </Text>
+              <TouchableOpacity onPress={() => router.push('/auth/login')}>
+                <Text style={styles.loginLinkButton}>Log In</Text>
               </TouchableOpacity>
             </View>
           </View>
-
-          {/* Sign Up Button */}
-          <TouchableOpacity
-            style={[styles.signUpButton, loading && styles.signUpButtonDisabled]}
-            onPress={handleSignUp}
-            disabled={loading}
-          >
-            <Text style={styles.signUpButtonText}>
-              {loading ? 'Creating Account...' : 'Sign Up'}
-            </Text>
-          </TouchableOpacity>
-
-          {/* Login Link */}
-          <View style={styles.loginLink}>
-            <Text style={styles.loginLinkText}>Already have an account? </Text>
-            <TouchableOpacity onPress={() => router.push('/auth/login')}>
-              <Text style={styles.loginLinkButton}>Log In</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -235,28 +289,36 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.white,
   },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  header: {
+  headerGradient: {
     paddingTop: 60,
     paddingHorizontal: 24,
     paddingBottom: 32,
-    backgroundColor: Colors.secondary,
   },
   backButton: {
     marginBottom: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   title: {
-    fontSize: 32,
+    fontSize: 36,
     fontWeight: 'bold',
-    color: Colors.navy,
+    color: Colors.white,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: Colors.navy,
-    opacity: 0.7,
+    color: Colors.white,
+    opacity: 0.9,
+  },
+  formContainer: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   form: {
     paddingHorizontal: 24,
@@ -268,19 +330,27 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
     color: Colors.navy,
     marginBottom: 8,
   },
-  input: {
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: Colors.background,
-    borderRadius: 12,
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: Colors.border,
     paddingHorizontal: 16,
+  },
+  inputIcon: {
+    marginRight: 12,
+  },
+  input: {
+    flex: 1,
     paddingVertical: 14,
     fontSize: 16,
     color: Colors.navy,
-    borderWidth: 1,
-    borderColor: Colors.border,
   },
   roleContainer: {
     flexDirection: 'row',
@@ -291,40 +361,34 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
+    paddingVertical: 18,
     paddingHorizontal: 16,
-    borderRadius: 12,
+    borderRadius: 16,
     borderWidth: 2,
-    borderColor: Colors.navy,
-    backgroundColor: Colors.white,
+    borderColor: Colors.border,
     gap: 8,
   },
   roleChipSelected: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
+    borderColor: 'transparent',
   },
   roleChipText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     color: Colors.navy,
   },
   roleChipTextSelected: {
     color: Colors.white,
   },
   signUpButton: {
-    backgroundColor: Colors.primary,
     paddingVertical: 18,
-    borderRadius: 12,
+    borderRadius: 14,
     alignItems: 'center',
     marginTop: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  signUpButtonDisabled: {
-    opacity: 0.6,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 8,
   },
   signUpButtonText: {
     color: Colors.white,
@@ -343,6 +407,6 @@ const styles = StyleSheet.create({
   loginLinkButton: {
     fontSize: 14,
     color: Colors.primary,
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });

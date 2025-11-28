@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { Colors } from '../../src/utils/colors';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -40,66 +41,88 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={Colors.navy} />
-          </TouchableOpacity>
-          <Text style={styles.title}>Welcome Back</Text>
-          <Text style={styles.subtitle}>Log in to your account</Text>
-        </View>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={Colors.gradientTurquoise}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.headerGradient}
+      >
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={28} color={Colors.white} />
+        </TouchableOpacity>
+        <Text style={styles.title}>Welcome Back!</Text>
+        <Text style={styles.subtitle}>Ready to crush your goals? 💪</Text>
+      </LinearGradient>
 
-        {/* Form */}
-        <View style={styles.form}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              value={email}
-              onChangeText={setEmail}
-              placeholder="john@example.com"
-              placeholderTextColor={Colors.textLight}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-          </View>
+      <KeyboardAvoidingView
+        style={styles.formContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Form */}
+          <View style={styles.form}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Email</Text>
+              <View style={styles.inputWrapper}>
+                <Ionicons name="mail" size={20} color={Colors.neonBlue} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="john@example.com"
+                  placeholderTextColor={Colors.textLight}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
+            </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
-              value={password}
-              onChangeText={setPassword}
-              placeholder="••••••••"
-              placeholderTextColor={Colors.textLight}
-              secureTextEntry
-            />
-          </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Password</Text>
+              <View style={styles.inputWrapper}>
+                <Ionicons name="lock-closed" size={20} color={Colors.neonBlue} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="••••••••"
+                  placeholderTextColor={Colors.textLight}
+                  secureTextEntry
+                />
+              </View>
+            </View>
 
-          <TouchableOpacity
-            style={[styles.loginButton, loading && styles.loginButtonDisabled]}
-            onPress={handleLogin}
-            disabled={loading}
-          >
-            <Text style={styles.loginButtonText}>
-              {loading ? 'Logging In...' : 'Log In'}
-            </Text>
-          </TouchableOpacity>
-
-          <View style={styles.signupLink}>
-            <Text style={styles.signupLinkText}>Don't have an account? </Text>
-            <TouchableOpacity onPress={() => router.push('/auth/signup')}>
-              <Text style={styles.signupLinkButton}>Sign Up</Text>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={handleLogin}
+              disabled={loading}
+            >
+              <LinearGradient
+                colors={loading ? ['#CCCCCC', '#999999'] : Colors.gradientOcean}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.loginButton}
+              >
+                <Text style={styles.loginButtonText}>
+                  {loading ? 'Logging In...' : 'Log In ⚡'}
+                </Text>
+              </LinearGradient>
             </TouchableOpacity>
+
+            <View style={styles.signupLink}>
+              <Text style={styles.signupLinkText}>Don't have an account? </Text>
+              <TouchableOpacity onPress={() => router.push('/auth/signup')}>
+                <Text style={styles.signupLinkButton}>Sign Up</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -108,28 +131,36 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.white,
   },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  header: {
+  headerGradient: {
     paddingTop: 60,
     paddingHorizontal: 24,
     paddingBottom: 32,
-    backgroundColor: Colors.secondary,
   },
   backButton: {
     marginBottom: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   title: {
-    fontSize: 32,
+    fontSize: 36,
     fontWeight: 'bold',
-    color: Colors.navy,
+    color: Colors.white,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: Colors.navy,
-    opacity: 0.7,
+    color: Colors.white,
+    opacity: 0.9,
+  },
+  formContainer: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   form: {
     paddingHorizontal: 24,
@@ -141,34 +172,38 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
     color: Colors.navy,
     marginBottom: 8,
   },
-  input: {
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: Colors.background,
-    borderRadius: 12,
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: Colors.border,
     paddingHorizontal: 16,
+  },
+  inputIcon: {
+    marginRight: 12,
+  },
+  input: {
+    flex: 1,
     paddingVertical: 14,
     fontSize: 16,
     color: Colors.navy,
-    borderWidth: 1,
-    borderColor: Colors.border,
   },
   loginButton: {
-    backgroundColor: Colors.primary,
     paddingVertical: 18,
-    borderRadius: 12,
+    borderRadius: 14,
     alignItems: 'center',
     marginTop: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  loginButtonDisabled: {
-    opacity: 0.6,
+    shadowColor: Colors.neonBlue,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 8,
   },
   loginButtonText: {
     color: Colors.white,
@@ -186,7 +221,7 @@ const styles = StyleSheet.create({
   },
   signupLinkButton: {
     fontSize: 14,
-    color: Colors.primary,
-    fontWeight: '600',
+    color: Colors.neonBlue,
+    fontWeight: '700',
   },
 });
