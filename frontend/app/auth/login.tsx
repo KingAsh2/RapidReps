@@ -102,7 +102,7 @@ export default function LoginScreen() {
               disabled={loading}
             >
               <LinearGradient
-                colors={loading ? ['#CCCCCC', '#999999'] : Colors.gradientOcean}
+                colors={loading ? ['#CCCCCC', '#999999'] : Colors.gradientTealStart}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.loginButton}
