@@ -97,13 +97,13 @@ export default function WelcomeScreen() {
       Animated.parallel([
         // Scale pulse (bigger emphasis)
         Animated.sequence([
-          Animated.spring(buttonScaleAnim, {
+          Animated.spring(buttonScaleAnim.current, {
             toValue: 1.08,
             friction: 3,
             tension: 40,
             useNativeDriver: true,
           }),
-          Animated.spring(buttonScaleAnim, {
+          Animated.spring(buttonScaleAnim.current, {
             toValue: 1,
             friction: 3,
             tension: 40,
@@ -112,12 +112,12 @@ export default function WelcomeScreen() {
         ]),
         // Intense glow
         Animated.sequence([
-          Animated.timing(buttonGlowAnim, {
+          Animated.timing(buttonGlowAnim.current, {
             toValue: 1,
             duration: 600,
             useNativeDriver: false,
           }),
-          Animated.timing(buttonGlowAnim, {
+          Animated.timing(buttonGlowAnim.current, {
             toValue: 0,
             duration: 600,
             useNativeDriver: false,
@@ -125,22 +125,22 @@ export default function WelcomeScreen() {
         ]),
         // Shake effect for urgency
         Animated.sequence([
-          Animated.timing(buttonShakeAnim, {
+          Animated.timing(buttonShakeAnim.current, {
             toValue: 3,
             duration: 50,
             useNativeDriver: true,
           }),
-          Animated.timing(buttonShakeAnim, {
+          Animated.timing(buttonShakeAnim.current, {
             toValue: -3,
             duration: 50,
             useNativeDriver: true,
           }),
-          Animated.timing(buttonShakeAnim, {
+          Animated.timing(buttonShakeAnim.current, {
             toValue: 3,
             duration: 50,
             useNativeDriver: true,
           }),
-          Animated.timing(buttonShakeAnim, {
+          Animated.timing(buttonShakeAnim.current, {
             toValue: 0,
             duration: 50,
             useNativeDriver: true,
