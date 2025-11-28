@@ -37,7 +37,23 @@ export default function TraineeHomeScreen() {
 
   useEffect(() => {
     loadTrainers();
+    requestLocationPermission();
   }, []);
+
+  const requestLocationPermission = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      setLocationPermission(status);
+      
+      if (status === 'granted') {
+        const currentLocation = await Location.getCurrentPositionAsync({});
+        setLocation(currentLocation);
+      }
+    } catch (error) {
+      console.error('Error requesting location permission:', error);
+      Alert.alert('Location Error', 'Unable to access location services');
+    }
+  };
 
   const loadTrainers = async () => {
     try {
