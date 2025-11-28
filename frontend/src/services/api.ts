@@ -86,6 +86,11 @@ export const trainerAPI = {
     const response = await api.get('/trainer/earnings');
     return response.data;
   },
+
+  getRatings: async (trainerId: string): Promise<any[]> => {
+    const response = await api.get(`/trainers/${trainerId}/ratings`);
+    return response.data;
+  },
 };
 
 // Trainee Profile API
