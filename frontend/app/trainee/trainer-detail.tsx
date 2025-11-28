@@ -257,7 +257,7 @@ export default function TrainerDetailScreen() {
                   <LinearGradient
                     colors={
                       selectedDuration === duration
-                        ? Colors.gradientOrange
+                        ? Colors.gradientOrangeStart
                         : ['#FFFFFF', '#FFFFFF']
                     }
                     style={[
