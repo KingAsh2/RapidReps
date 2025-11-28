@@ -259,7 +259,7 @@ export default function SignUpScreen() {
               disabled={loading}
             >
               <LinearGradient
-                colors={loading ? ['#CCCCCC', '#999999'] : Colors.gradientFire}
+                colors={loading ? ['#CCCCCC', '#999999'] : Colors.gradientMain}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.signUpButton}
