@@ -41,22 +41,22 @@ export default function WelcomeScreen() {
       Animated.parallel([
         // Scale pump (muscle flex)
         Animated.sequence([
-          Animated.timing(logoScaleAnim, {
+          Animated.timing(logoScaleAnim.current, {
             toValue: 1.12,
             duration: 600,
             useNativeDriver: true,
           }),
-          Animated.timing(logoScaleAnim, {
+          Animated.timing(logoScaleAnim.current, {
             toValue: 0.98,
             duration: 400,
             useNativeDriver: true,
           }),
-          Animated.timing(logoScaleAnim, {
+          Animated.timing(logoScaleAnim.current, {
             toValue: 1.08,
             duration: 500,
             useNativeDriver: true,
           }),
-          Animated.timing(logoScaleAnim, {
+          Animated.timing(logoScaleAnim.current, {
             toValue: 1,
             duration: 500,
             useNativeDriver: true,
@@ -64,12 +64,12 @@ export default function WelcomeScreen() {
         ]),
         // Slight rotation for dynamic feel
         Animated.sequence([
-          Animated.timing(logoRotateAnim, {
+          Animated.timing(logoRotateAnim.current, {
             toValue: 1,
             duration: 1000,
             useNativeDriver: true,
           }),
-          Animated.timing(logoRotateAnim, {
+          Animated.timing(logoRotateAnim.current, {
             toValue: -1,
             duration: 1000,
             useNativeDriver: true,
@@ -77,12 +77,12 @@ export default function WelcomeScreen() {
         ]),
         // Jump effect (like a jump squat!)
         Animated.sequence([
-          Animated.timing(logoJumpAnim, {
+          Animated.timing(logoJumpAnim.current, {
             toValue: -15,
             duration: 300,
             useNativeDriver: true,
           }),
-          Animated.timing(logoJumpAnim, {
+          Animated.timing(logoJumpAnim.current, {
             toValue: 0,
             duration: 300,
             useNativeDriver: true,
