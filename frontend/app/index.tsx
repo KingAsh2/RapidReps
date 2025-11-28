@@ -22,9 +22,11 @@ export default function WelcomeScreen() {
   const router = useRouter();
   const { user, loading, activeRole } = useAuth();
   const pulseAnim = React.useRef(new Animated.Value(1)).current;
+  const buttonScaleAnim = React.useRef(new Animated.Value(1)).current;
+  const buttonGlowAnim = React.useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Pulse animation for exciting effect
+    // Pulse animation for logo
     Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
@@ -37,6 +39,36 @@ export default function WelcomeScreen() {
           duration: 1000,
           useNativeDriver: true,
         }),
+      ])
+    ).start();
+
+    // Energetic button animation
+    Animated.loop(
+      Animated.parallel([
+        Animated.sequence([
+          Animated.timing(buttonScaleAnim, {
+            toValue: 1.03,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          Animated.timing(buttonScaleAnim, {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.sequence([
+          Animated.timing(buttonGlowAnim, {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: false,
+          }),
+          Animated.timing(buttonGlowAnim, {
+            toValue: 0,
+            duration: 800,
+            useNativeDriver: false,
+          }),
+        ]),
       ])
     ).start();
   }, []);
