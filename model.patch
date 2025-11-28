@@ -1,485 +1,503 @@
+diff --git a/frontend/app/index.tsx b/frontend/app/index.tsx
+index d8d4ff4..3a456b6 100644
+--- a/frontend/app/index.tsx
++++ b/frontend/app/index.tsx
+@@ -270,7 +270,7 @@ export default function WelcomeScreen() {
+                   {
+                     shadowOpacity: buttonGlowAnim.interpolate({
+                       inputRange: [0, 1],
+-                      outputRange: [0.3, 0.6],
++                      outputRange: [0.3, 0.8],
+                     }),
+                   },
+                 ]}
 diff --git a/model.patch b/model.patch
-index 45222a5..e69de29 100644
+index 37b0884..e69de29 100644
 --- a/model.patch
 +++ b/model.patch
-@@ -1,480 +0,0 @@
--diff --git a/frontend/app/index.tsx b/frontend/app/index.tsx
--index 81b7ca1..d8d4ff4 100644
----- a/frontend/app/index.tsx
--+++ b/frontend/app/index.tsx
--@@ -21,10 +21,13 @@ const { width, height } = Dimensions.get('window');
-- export default function WelcomeScreen() {
--   const router = useRouter();
--   const { user, loading, activeRole } = useAuth();
---  const [pulseAnim] = useState(new Animated.Value(1));
--+  const [logoScaleAnim] = useState(new Animated.Value(1));
--+  const [logoRotateAnim] = useState(new Animated.Value(0));
--+  const [logoJumpAnim] = useState(new Animated.Value(0));
--   const [buttonScaleAnim] = useState(new Animated.Value(1));
--   const [buttonGlowAnim] = useState(new Animated.Value(0));
---  const [isReady, setIsReady] = useState(false);
--+  const [buttonShakeAnim] = useState(new Animated.Value(0));
--+  const [isReady, setIsReady] = React.useState(false);
-- 
--   useEffect(() => {
--     // Mark as ready after a short delay
--@@ -33,52 +36,120 @@ export default function WelcomeScreen() {
--   }, []);
-- 
--   useEffect(() => {
---    // Pulse animation for logo
--+    // LOGO: Fitness "Pump" Animation - Like a muscle flexing!
--     Animated.loop(
---      Animated.sequence([
---        Animated.timing(pulseAnim, {
---          toValue: 1.05,
---          duration: 1000,
---          useNativeDriver: true,
---        }),
---        Animated.timing(pulseAnim, {
---          toValue: 1,
---          duration: 1000,
---          useNativeDriver: true,
---        }),
--+      Animated.parallel([
--+        // Scale pump (muscle flex)
--+        Animated.sequence([
--+          Animated.timing(logoScaleAnim, {
--+            toValue: 1.12,
--+            duration: 600,
--+            useNativeDriver: true,
--+          }),
--+          Animated.timing(logoScaleAnim, {
--+            toValue: 0.98,
--+            duration: 400,
--+            useNativeDriver: true,
--+          }),
--+          Animated.timing(logoScaleAnim, {
--+            toValue: 1.08,
--+            duration: 500,
--+            useNativeDriver: true,
--+          }),
--+          Animated.timing(logoScaleAnim, {
--+            toValue: 1,
--+            duration: 500,
--+            useNativeDriver: true,
--+          }),
--+        ]),
--+        // Slight rotation for dynamic feel
--+        Animated.sequence([
--+          Animated.timing(logoRotateAnim, {
--+            toValue: 1,
--+            duration: 1000,
--+            useNativeDriver: true,
--+          }),
--+          Animated.timing(logoRotateAnim, {
--+            toValue: -1,
--+            duration: 1000,
--+            useNativeDriver: true,
--+          }),
--+        ]),
--+        // Jump effect (like a jump squat!)
--+        Animated.sequence([
--+          Animated.timing(logoJumpAnim, {
--+            toValue: -15,
--+            duration: 300,
--+            useNativeDriver: true,
--+          }),
--+          Animated.timing(logoJumpAnim, {
--+            toValue: 0,
--+            duration: 300,
--+            useNativeDriver: true,
--+          }),
--+          Animated.delay(1400),
--+        ]),
--       ])
--     ).start();
-- 
---    // Energetic button animation
--+    // BUTTON: Super Energetic "Call to Action" Animation
--     Animated.loop(
--       Animated.parallel([
--+        // Scale pulse (bigger emphasis)
--         Animated.sequence([
---          Animated.timing(buttonScaleAnim, {
---            toValue: 1.03,
---            duration: 800,
--+          Animated.spring(buttonScaleAnim, {
--+            toValue: 1.08,
--+            friction: 3,
--+            tension: 40,
--             useNativeDriver: true,
--           }),
---          Animated.timing(buttonScaleAnim, {
--+          Animated.spring(buttonScaleAnim, {
--             toValue: 1,
---            duration: 800,
--+            friction: 3,
--+            tension: 40,
--             useNativeDriver: true,
--           }),
--         ]),
--+        // Intense glow
--         Animated.sequence([
--           Animated.timing(buttonGlowAnim, {
--             toValue: 1,
---            duration: 800,
--+            duration: 600,
--             useNativeDriver: false,
--           }),
--           Animated.timing(buttonGlowAnim, {
--             toValue: 0,
---            duration: 800,
--+            duration: 600,
--             useNativeDriver: false,
--           }),
--         ]),
--+        // Shake effect for urgency
--+        Animated.sequence([
--+          Animated.timing(buttonShakeAnim, {
--+            toValue: 3,
--+            duration: 50,
--+            useNativeDriver: true,
--+          }),
--+          Animated.timing(buttonShakeAnim, {
--+            toValue: -3,
--+            duration: 50,
--+            useNativeDriver: true,
--+          }),
--+          Animated.timing(buttonShakeAnim, {
--+            toValue: 3,
--+            duration: 50,
--+            useNativeDriver: true,
--+          }),
--+          Animated.timing(buttonShakeAnim, {
--+            toValue: 0,
--+            duration: 50,
--+            useNativeDriver: true,
--+          }),
--+          Animated.delay(1000),
--+        ]),
--       ])
--     ).start();
---  }, [pulseAnim, buttonScaleAnim, buttonGlowAnim]);
--+  }, [logoScaleAnim, logoRotateAnim, logoJumpAnim, buttonScaleAnim, buttonGlowAnim, buttonShakeAnim]);
-- 
--   useEffect(() => {
--     if (!loading && user && activeRole && isReady) {
--@@ -116,7 +187,18 @@ export default function WelcomeScreen() {
-- 
--       <View style={styles.content}>
--         {/* Logo Section */}
---        <Animated.View style={[styles.logoSection, { transform: [{ scale: pulseAnim }] }]}>
--+        <Animated.View style={[styles.logoSection, { 
--+          transform: [
--+            { scale: logoScaleAnim },
--+            { 
--+              rotate: logoRotateAnim.interpolate({
--+                inputRange: [-1, 1],
--+                outputRange: ['-2deg', '2deg'],
--+              })
--+            },
--+            { translateY: logoJumpAnim }
--+          ] 
--+        }]}>
--           <View style={styles.logoImageContainer}>
--             <Image
--               source={require('../assets/rapidreps-logo.jpg')}
--@@ -172,7 +254,12 @@ export default function WelcomeScreen() {
-- 
--         {/* CTA Buttons */}
--         <View style={styles.buttonContainer}>
---          <Animated.View style={{ transform: [{ scale: buttonScaleAnim }] }}>
--+          <Animated.View style={{ 
--+            transform: [
--+              { scale: buttonScaleAnim },
--+              { translateX: buttonShakeAnim }
--+            ] 
--+          }}>
--             <TouchableOpacity
--               activeOpacity={0.9}
--               onPress={() => router.push('/auth/signup')}
+@@ -1,485 +0,0 @@
 -diff --git a/model.patch b/model.patch
--index 76b0bf1..d1aa78e 100644
+-index 45222a5..e69de29 100644
 ---- a/model.patch
 -+++ b/model.patch
--@@ -1,279 +0,0 @@
+-@@ -1,480 +0,0 @@
 --diff --git a/frontend/app/index.tsx b/frontend/app/index.tsx
---index 61f049a..81b7ca1 100644
+--index 81b7ca1..d8d4ff4 100644
 ----- a/frontend/app/index.tsx
 --+++ b/frontend/app/index.tsx
---@@ -24,6 +24,13 @@ export default function WelcomeScreen() {
---   const [pulseAnim] = useState(new Animated.Value(1));
+--@@ -21,10 +21,13 @@ const { width, height } = Dimensions.get('window');
+-- export default function WelcomeScreen() {
+--   const router = useRouter();
+--   const { user, loading, activeRole } = useAuth();
+---  const [pulseAnim] = useState(new Animated.Value(1));
+--+  const [logoScaleAnim] = useState(new Animated.Value(1));
+--+  const [logoRotateAnim] = useState(new Animated.Value(0));
+--+  const [logoJumpAnim] = useState(new Animated.Value(0));
 --   const [buttonScaleAnim] = useState(new Animated.Value(1));
 --   const [buttonGlowAnim] = useState(new Animated.Value(0));
---+  const [isReady, setIsReady] = useState(false);
---+
---+  useEffect(() => {
---+    // Mark as ready after a short delay
---+    const timer = setTimeout(() => setIsReady(true), 100);
---+    return () => clearTimeout(timer);
---+  }, []);
+---  const [isReady, setIsReady] = useState(false);
+--+  const [buttonShakeAnim] = useState(new Animated.Value(0));
+--+  const [isReady, setIsReady] = React.useState(false);
 -- 
 --   useEffect(() => {
---     // Pulse animation for logo
---@@ -74,7 +81,7 @@ export default function WelcomeScreen() {
---   }, [pulseAnim, buttonScaleAnim, buttonGlowAnim]);
+--     // Mark as ready after a short delay
+--@@ -33,52 +36,120 @@ export default function WelcomeScreen() {
+--   }, []);
 -- 
 --   useEffect(() => {
----    if (!loading && user && activeRole) {
---+    if (!loading && user && activeRole && isReady) {
---       // User is logged in, navigate to appropriate home
---       if (activeRole === 'trainer') {
---         router.replace('/trainer/home');
---@@ -82,7 +89,7 @@ export default function WelcomeScreen() {
---         router.replace('/trainee/home');
---       }
---     }
----  }, [loading, user, activeRole, router]);
---+  }, [loading, user, activeRole, isReady, router]);
+---    // Pulse animation for logo
+--+    // LOGO: Fitness "Pump" Animation - Like a muscle flexing!
+--     Animated.loop(
+---      Animated.sequence([
+---        Animated.timing(pulseAnim, {
+---          toValue: 1.05,
+---          duration: 1000,
+---          useNativeDriver: true,
+---        }),
+---        Animated.timing(pulseAnim, {
+---          toValue: 1,
+---          duration: 1000,
+---          useNativeDriver: true,
+---        }),
+--+      Animated.parallel([
+--+        // Scale pump (muscle flex)
+--+        Animated.sequence([
+--+          Animated.timing(logoScaleAnim, {
+--+            toValue: 1.12,
+--+            duration: 600,
+--+            useNativeDriver: true,
+--+          }),
+--+          Animated.timing(logoScaleAnim, {
+--+            toValue: 0.98,
+--+            duration: 400,
+--+            useNativeDriver: true,
+--+          }),
+--+          Animated.timing(logoScaleAnim, {
+--+            toValue: 1.08,
+--+            duration: 500,
+--+            useNativeDriver: true,
+--+          }),
+--+          Animated.timing(logoScaleAnim, {
+--+            toValue: 1,
+--+            duration: 500,
+--+            useNativeDriver: true,
+--+          }),
+--+        ]),
+--+        // Slight rotation for dynamic feel
+--+        Animated.sequence([
+--+          Animated.timing(logoRotateAnim, {
+--+            toValue: 1,
+--+            duration: 1000,
+--+            useNativeDriver: true,
+--+          }),
+--+          Animated.timing(logoRotateAnim, {
+--+            toValue: -1,
+--+            duration: 1000,
+--+            useNativeDriver: true,
+--+          }),
+--+        ]),
+--+        // Jump effect (like a jump squat!)
+--+        Animated.sequence([
+--+          Animated.timing(logoJumpAnim, {
+--+            toValue: -15,
+--+            duration: 300,
+--+            useNativeDriver: true,
+--+          }),
+--+          Animated.timing(logoJumpAnim, {
+--+            toValue: 0,
+--+            duration: 300,
+--+            useNativeDriver: true,
+--+          }),
+--+          Animated.delay(1400),
+--+        ]),
+--       ])
+--     ).start();
 -- 
---   if (loading) {
---     return (
+---    // Energetic button animation
+--+    // BUTTON: Super Energetic "Call to Action" Animation
+--     Animated.loop(
+--       Animated.parallel([
+--+        // Scale pulse (bigger emphasis)
+--         Animated.sequence([
+---          Animated.timing(buttonScaleAnim, {
+---            toValue: 1.03,
+---            duration: 800,
+--+          Animated.spring(buttonScaleAnim, {
+--+            toValue: 1.08,
+--+            friction: 3,
+--+            tension: 40,
+--             useNativeDriver: true,
+--           }),
+---          Animated.timing(buttonScaleAnim, {
+--+          Animated.spring(buttonScaleAnim, {
+--             toValue: 1,
+---            duration: 800,
+--+            friction: 3,
+--+            tension: 40,
+--             useNativeDriver: true,
+--           }),
+--         ]),
+--+        // Intense glow
+--         Animated.sequence([
+--           Animated.timing(buttonGlowAnim, {
+--             toValue: 1,
+---            duration: 800,
+--+            duration: 600,
+--             useNativeDriver: false,
+--           }),
+--           Animated.timing(buttonGlowAnim, {
+--             toValue: 0,
+---            duration: 800,
+--+            duration: 600,
+--             useNativeDriver: false,
+--           }),
+--         ]),
+--+        // Shake effect for urgency
+--+        Animated.sequence([
+--+          Animated.timing(buttonShakeAnim, {
+--+            toValue: 3,
+--+            duration: 50,
+--+            useNativeDriver: true,
+--+          }),
+--+          Animated.timing(buttonShakeAnim, {
+--+            toValue: -3,
+--+            duration: 50,
+--+            useNativeDriver: true,
+--+          }),
+--+          Animated.timing(buttonShakeAnim, {
+--+            toValue: 3,
+--+            duration: 50,
+--+            useNativeDriver: true,
+--+          }),
+--+          Animated.timing(buttonShakeAnim, {
+--+            toValue: 0,
+--+            duration: 50,
+--+            useNativeDriver: true,
+--+          }),
+--+          Animated.delay(1000),
+--+        ]),
+--       ])
+--     ).start();
+---  }, [pulseAnim, buttonScaleAnim, buttonGlowAnim]);
+--+  }, [logoScaleAnim, logoRotateAnim, logoJumpAnim, buttonScaleAnim, buttonGlowAnim, buttonShakeAnim]);
+-- 
+--   useEffect(() => {
+--     if (!loading && user && activeRole && isReady) {
+--@@ -116,7 +187,18 @@ export default function WelcomeScreen() {
+-- 
+--       <View style={styles.content}>
+--         {/* Logo Section */}
+---        <Animated.View style={[styles.logoSection, { transform: [{ scale: pulseAnim }] }]}>
+--+        <Animated.View style={[styles.logoSection, { 
+--+          transform: [
+--+            { scale: logoScaleAnim },
+--+            { 
+--+              rotate: logoRotateAnim.interpolate({
+--+                inputRange: [-1, 1],
+--+                outputRange: ['-2deg', '2deg'],
+--+              })
+--+            },
+--+            { translateY: logoJumpAnim }
+--+          ] 
+--+        }]}>
+--           <View style={styles.logoImageContainer}>
+--             <Image
+--               source={require('../assets/rapidreps-logo.jpg')}
+--@@ -172,7 +254,12 @@ export default function WelcomeScreen() {
+-- 
+--         {/* CTA Buttons */}
+--         <View style={styles.buttonContainer}>
+---          <Animated.View style={{ transform: [{ scale: buttonScaleAnim }] }}>
+--+          <Animated.View style={{ 
+--+            transform: [
+--+              { scale: buttonScaleAnim },
+--+              { translateX: buttonShakeAnim }
+--+            ] 
+--+          }}>
+--             <TouchableOpacity
+--               activeOpacity={0.9}
+--               onPress={() => router.push('/auth/signup')}
 --diff --git a/model.patch b/model.patch
---index b07c788..e69de29 100644
+--index 76b0bf1..d1aa78e 100644
 ----- a/model.patch
 --+++ b/model.patch
---@@ -1,238 +0,0 @@
+--@@ -1,279 +0,0 @@
 ---diff --git a/frontend/app/index.tsx b/frontend/app/index.tsx
----index c2426e7..b4ebad3 100644
+---index 61f049a..81b7ca1 100644
 ------ a/frontend/app/index.tsx
 ---+++ b/frontend/app/index.tsx
----@@ -1,4 +1,4 @@
-----import React, { useEffect } from 'react';
----+import React, { useEffect, useState } from 'react';
---- import {
----   View,
----   Text,
----@@ -21,9 +21,9 @@ const { width, height } = Dimensions.get('window');
---- export default function WelcomeScreen() {
----   const router = useRouter();
----   const { user, loading, activeRole } = useAuth();
-----  const pulseAnim = React.useRef(new Animated.Value(1)).current;
-----  const buttonScaleAnim = React.useRef(new Animated.Value(1)).current;
-----  const buttonGlowAnim = React.useRef(new Animated.Value(0)).current;
----+  const [pulseAnim] = useState(new Animated.Value(1));
----+  const [buttonScaleAnim] = useState(new Animated.Value(1));
----+  const [buttonGlowAnim] = useState(new Animated.Value(0));
+---@@ -24,6 +24,13 @@ export default function WelcomeScreen() {
+---   const [pulseAnim] = useState(new Animated.Value(1));
+---   const [buttonScaleAnim] = useState(new Animated.Value(1));
+---   const [buttonGlowAnim] = useState(new Animated.Value(0));
+---+  const [isReady, setIsReady] = useState(false);
+---+
+---+  useEffect(() => {
+---+    // Mark as ready after a short delay
+---+    const timer = setTimeout(() => setIsReady(true), 100);
+---+    return () => clearTimeout(timer);
+---+  }, []);
 --- 
 ---   useEffect(() => {
 ---     // Pulse animation for logo
----@@ -71,7 +71,7 @@ export default function WelcomeScreen() {
----         ]),
----       ])
----     ).start();
-----  }, []);
----+  }, [pulseAnim, buttonScaleAnim, buttonGlowAnim]);
+---@@ -74,7 +81,7 @@ export default function WelcomeScreen() {
+---   }, [pulseAnim, buttonScaleAnim, buttonGlowAnim]);
 --- 
 ---   useEffect(() => {
----     if (!loading && user && activeRole) {
----@@ -82,7 +82,7 @@ export default function WelcomeScreen() {
+----    if (!loading && user && activeRole) {
+---+    if (!loading && user && activeRole && isReady) {
+---       // User is logged in, navigate to appropriate home
+---       if (activeRole === 'trainer') {
+---         router.replace('/trainer/home');
+---@@ -82,7 +89,7 @@ export default function WelcomeScreen() {
 ---         router.replace('/trainee/home');
 ---       }
 ---     }
-----  }, [loading, user, activeRole]);
----+  }, [loading, user, activeRole, router]);
+----  }, [loading, user, activeRole, router]);
+---+  }, [loading, user, activeRole, isReady, router]);
 --- 
 ---   if (loading) {
 ---     return (
----@@ -165,20 +165,34 @@ export default function WelcomeScreen() {
---- 
----         {/* CTA Buttons */}
----         <View style={styles.buttonContainer}>
-----          <TouchableOpacity
-----            activeOpacity={0.9}
-----            onPress={() => router.push('/auth/signup')}
-----          >
-----            <LinearGradient
-----              colors={['#FFFFFF', '#F0F0F0']}
-----              start={{ x: 0, y: 0 }}
-----              end={{ x: 1, y: 1 }}
-----              style={styles.primaryButton}
----+          <Animated.View style={{ transform: [{ scale: buttonScaleAnim }] }}>
----+            <TouchableOpacity
----+              activeOpacity={0.9}
----+              onPress={() => router.push('/auth/signup')}
----             >
-----              <Text style={styles.primaryButtonText}>Get Started</Text>
-----              <Ionicons name="arrow-forward" size={20} color={Colors.primary} />
-----            </LinearGradient>
-----          </TouchableOpacity>
----+              <Animated.View
----+                style={[
----+                  styles.buttonGlowContainer,
----+                  {
----+                    shadowOpacity: buttonGlowAnim.interpolate({
----+                      inputRange: [0, 1],
----+                      outputRange: [0.3, 0.6],
----+                    }),
----+                  },
----+                ]}
----+              >
----+                <LinearGradient
----+                  colors={['#FFFFFF', '#F0F0F0']}
----+                  start={{ x: 0, y: 0 }}
----+                  end={{ x: 1, y: 1 }}
----+                  style={styles.primaryButton}
----+                >
----+                  <Text style={styles.primaryButtonText}>Get Started</Text>
----+                  <Ionicons name="arrow-forward" size={20} color={Colors.primary} />
----+                </LinearGradient>
----+              </Animated.View>
----+            </TouchableOpacity>
----+          </Animated.View>
---- 
----           <TouchableOpacity
----             style={styles.secondaryButton}
----@@ -325,6 +339,13 @@ const styles = StyleSheet.create({
----     shadowRadius: 12,
----     elevation: 10,
----   },
----+  buttonGlowContainer: {
----+    borderRadius: 16,
----+    shadowColor: '#FFFFFF',
----+    shadowOffset: { width: 0, height: 0 },
----+    shadowRadius: 20,
----+    elevation: 15,
----+  },
----   primaryButtonText: {
----     color: Colors.primary,
----     fontSize: 20,
 ---diff --git a/model.patch b/model.patch
----index c70e3f6..e69de29 100644
+---index b07c788..e69de29 100644
 ------ a/model.patch
 ---+++ b/model.patch
----@@ -1,130 +0,0 @@
-----diff --git a/test_result.md b/test_result.md
-----index 187cba4..0ea5421 100644
-------- a/test_result.md
-----+++ b/test_result.md
-----@@ -100,4 +100,122 @@
+---@@ -1,238 +0,0 @@
+----diff --git a/frontend/app/index.tsx b/frontend/app/index.tsx
+----index c2426e7..b4ebad3 100644
+------- a/frontend/app/index.tsx
+----+++ b/frontend/app/index.tsx
+----@@ -1,4 +1,4 @@
+-----import React, { useEffect } from 'react';
+----+import React, { useEffect, useState } from 'react';
+---- import {
+----   View,
+----   Text,
+----@@ -21,9 +21,9 @@ const { width, height } = Dimensions.get('window');
+---- export default function WelcomeScreen() {
+----   const router = useRouter();
+----   const { user, loading, activeRole } = useAuth();
+-----  const pulseAnim = React.useRef(new Animated.Value(1)).current;
+-----  const buttonScaleAnim = React.useRef(new Animated.Value(1)).current;
+-----  const buttonGlowAnim = React.useRef(new Animated.Value(0)).current;
+----+  const [pulseAnim] = useState(new Animated.Value(1));
+----+  const [buttonScaleAnim] = useState(new Animated.Value(1));
+----+  const [buttonGlowAnim] = useState(new Animated.Value(0));
 ---- 
----- #====================================================================================================
----- # Testing Data - Main Agent and testing sub agent both should log testing data below this section
------#====================================================================================================
-----\ No newline at end of file
-----+#====================================================================================================
-----+
-----+user_problem_statement: "Test the RapidReps backend API with comprehensive tests including authentication, profiles, session booking with pricing logic, trainer verification, and rating system"
-----+
-----+backend:
-----+  - task: "Authentication System"
-----+    implemented: true
-----+    working: true
-----+    file: "server.py"
-----+    stuck_count: 0
-----+    priority: "high"
-----+    needs_retesting: false
-----+    status_history:
-----+        - working: true
-----+          agent: "testing"
-----+          comment: "All authentication endpoints working correctly. Signup, login, and JWT verification tested successfully for both trainer and trainee roles."
-----+
-----+  - task: "Trainer Profile Management"
-----+    implemented: true
-----+    working: true
-----+    file: "server.py"
-----+    stuck_count: 0
-----+    priority: "high"
-----+    needs_retesting: false
-----+    status_history:
-----+        - working: true
-----+          agent: "testing"
-----+          comment: "Trainer profile creation and retrieval working correctly. Profile includes all required fields like bio, experience, certifications, training styles, rates, etc."
-----+
-----+  - task: "Trainee Profile Management"
-----+    implemented: true
-----+    working: true
-----+    file: "server.py"
-----+    stuck_count: 0
-----+    priority: "high"
-----+    needs_retesting: false
-----+    status_history:
-----+        - working: true
-----+          agent: "testing"
-----+          comment: "Trainee profile creation and retrieval working correctly. Profile includes fitness goals, level, preferences, budget, etc."
-----+
-----+  - task: "Trainer Search System"
-----+    implemented: true
-----+    working: true
-----+    file: "server.py"
-----+    stuck_count: 0
-----+    priority: "medium"
-----+    needs_retesting: false
-----+    status_history:
-----+        - working: true
-----+          agent: "testing"
-----+          comment: "Trainer search endpoints working correctly. Only verified trainers appear in search results as expected. Search filters (styles, price, location) function properly."
-----+
-----+  - task: "Session Booking & Pricing Logic"
-----+    implemented: true
-----+    working: true
-----+    file: "server.py"
-----+    stuck_count: 0
-----+    priority: "high"
-----+    needs_retesting: false
-----+    status_history:
-----+        - working: true
-----+          agent: "testing"
-----+          comment: "Session booking and pricing logic working perfectly. Base price calculation ($1/min), multi-session discount (5% on 3rd+ session), platform fee (10%), and trainer earnings calculations all correct."
-----+
-----+  - task: "Session Management"
-----+    implemented: true
-----+    working: true
-----+    file: "server.py"
-----+    stuck_count: 0
-----+    priority: "high"
-----+    needs_retesting: false
-----+    status_history:
-----+        - working: true
-----+          agent: "testing"
-----+          comment: "Session management working correctly. Trainers can accept, decline, and complete sessions. Status changes are properly tracked."
-----+
-----+  - task: "Rating System"
-----+    implemented: true
-----+    working: true
-----+    file: "server.py"
-----+    stuck_count: 0
-----+    priority: "medium"
-----+    needs_retesting: false
-----+    status_history:
-----+        - working: true
-----+          agent: "testing"
-----+          comment: "Rating system working correctly. Trainees can rate completed sessions, and trainer average ratings are automatically updated."
-----+
-----+  - task: "Trainer Earnings Calculation"
-----+    implemented: true
-----+    working: true
-----+    file: "server.py"
-----+    stuck_count: 0
-----+    priority: "medium"
-----+    needs_retesting: false
-----+    status_history:
-----+        - working: true
-----+          agent: "testing"
-----+          comment: "Earnings calculation working correctly. Total, monthly, and weekly earnings are calculated accurately based on completed sessions."
-----+
-----+frontend:
-----+  # Frontend testing not performed as per instructions
-----+
-----+metadata:
-----+  created_by: "testing_agent"
-----+  version: "1.0"
-----+  test_sequence: 1
-----+  run_ui: false
-----+
-----+test_plan:
-----+  current_focus: []
-----+  stuck_tasks: []
-----+  test_all: false
-----+  test_priority: "high_first"
-----+
-----+agent_communication:
-----+    - agent: "testing"
-----+      message: "Comprehensive backend testing completed successfully. All 24 test cases passed (100% success rate). RapidReps backend API is fully functional with correct authentication, profile management, session booking with accurate pricing logic including multi-session discounts, session management, rating system, and earnings calculations."
-----\ No newline at end of file
+----   useEffect(() => {
+----     // Pulse animation for logo
+----@@ -71,7 +71,7 @@ export default function WelcomeScreen() {
+----         ]),
+----       ])
+----     ).start();
+-----  }, []);
+----+  }, [pulseAnim, buttonScaleAnim, buttonGlowAnim]);
+---- 
+----   useEffect(() => {
+----     if (!loading && user && activeRole) {
+----@@ -82,7 +82,7 @@ export default function WelcomeScreen() {
+----         router.replace('/trainee/home');
+----       }
+----     }
+-----  }, [loading, user, activeRole]);
+----+  }, [loading, user, activeRole, router]);
+---- 
+----   if (loading) {
+----     return (
+----@@ -165,20 +165,34 @@ export default function WelcomeScreen() {
+---- 
+----         {/* CTA Buttons */}
+----         <View style={styles.buttonContainer}>
+-----          <TouchableOpacity
+-----            activeOpacity={0.9}
+-----            onPress={() => router.push('/auth/signup')}
+-----          >
+-----            <LinearGradient
+-----              colors={['#FFFFFF', '#F0F0F0']}
+-----              start={{ x: 0, y: 0 }}
+-----              end={{ x: 1, y: 1 }}
+-----              style={styles.primaryButton}
+----+          <Animated.View style={{ transform: [{ scale: buttonScaleAnim }] }}>
+----+            <TouchableOpacity
+----+              activeOpacity={0.9}
+----+              onPress={() => router.push('/auth/signup')}
+----             >
+-----              <Text style={styles.primaryButtonText}>Get Started</Text>
+-----              <Ionicons name="arrow-forward" size={20} color={Colors.primary} />
+-----            </LinearGradient>
+-----          </TouchableOpacity>
+----+              <Animated.View
+----+                style={[
+----+                  styles.buttonGlowContainer,
+----+                  {
+----+                    shadowOpacity: buttonGlowAnim.interpolate({
+----+                      inputRange: [0, 1],
+----+                      outputRange: [0.3, 0.6],
+----+                    }),
+----+                  },
+----+                ]}
+----+              >
+----+                <LinearGradient
+----+                  colors={['#FFFFFF', '#F0F0F0']}
+----+                  start={{ x: 0, y: 0 }}
+----+                  end={{ x: 1, y: 1 }}
+----+                  style={styles.primaryButton}
+----+                >
+----+                  <Text style={styles.primaryButtonText}>Get Started</Text>
+----+                  <Ionicons name="arrow-forward" size={20} color={Colors.primary} />
+----+                </LinearGradient>
+----+              </Animated.View>
+----+            </TouchableOpacity>
+----+          </Animated.View>
+---- 
+----           <TouchableOpacity
+----             style={styles.secondaryButton}
+----@@ -325,6 +339,13 @@ const styles = StyleSheet.create({
+----     shadowRadius: 12,
+----     elevation: 10,
+----   },
+----+  buttonGlowContainer: {
+----+    borderRadius: 16,
+----+    shadowColor: '#FFFFFF',
+----+    shadowOffset: { width: 0, height: 0 },
+----+    shadowRadius: 20,
+----+    elevation: 15,
+----+  },
+----   primaryButtonText: {
+----     color: Colors.primary,
+----     fontSize: 20,
+----diff --git a/model.patch b/model.patch
+----index c70e3f6..e69de29 100644
+------- a/model.patch
+----+++ b/model.patch
+----@@ -1,130 +0,0 @@
+-----diff --git a/test_result.md b/test_result.md
+-----index 187cba4..0ea5421 100644
+-------- a/test_result.md
+-----+++ b/test_result.md
+-----@@ -100,4 +100,122 @@
+----- 
+----- #====================================================================================================
+----- # Testing Data - Main Agent and testing sub agent both should log testing data below this section
+------#====================================================================================================
+-----\ No newline at end of file
+-----+#====================================================================================================
+-----+
+-----+user_problem_statement: "Test the RapidReps backend API with comprehensive tests including authentication, profiles, session booking with pricing logic, trainer verification, and rating system"
+-----+
+-----+backend:
+-----+  - task: "Authentication System"
+-----+    implemented: true
+-----+    working: true
+-----+    file: "server.py"
+-----+    stuck_count: 0
+-----+    priority: "high"
+-----+    needs_retesting: false
+-----+    status_history:
+-----+        - working: true
+-----+          agent: "testing"
+-----+          comment: "All authentication endpoints working correctly. Signup, login, and JWT verification tested successfully for both trainer and trainee roles."
+-----+
+-----+  - task: "Trainer Profile Management"
+-----+    implemented: true
+-----+    working: true
+-----+    file: "server.py"
+-----+    stuck_count: 0
+-----+    priority: "high"
+-----+    needs_retesting: false
+-----+    status_history:
+-----+        - working: true
+-----+          agent: "testing"
+-----+          comment: "Trainer profile creation and retrieval working correctly. Profile includes all required fields like bio, experience, certifications, training styles, rates, etc."
+-----+
+-----+  - task: "Trainee Profile Management"
+-----+    implemented: true
+-----+    working: true
+-----+    file: "server.py"
+-----+    stuck_count: 0
+-----+    priority: "high"
+-----+    needs_retesting: false
+-----+    status_history:
+-----+        - working: true
+-----+          agent: "testing"
+-----+          comment: "Trainee profile creation and retrieval working correctly. Profile includes fitness goals, level, preferences, budget, etc."
+-----+
+-----+  - task: "Trainer Search System"
+-----+    implemented: true
+-----+    working: true
+-----+    file: "server.py"
+-----+    stuck_count: 0
+-----+    priority: "medium"
+-----+    needs_retesting: false
+-----+    status_history:
+-----+        - working: true
+-----+          agent: "testing"
+-----+          comment: "Trainer search endpoints working correctly. Only verified trainers appear in search results as expected. Search filters (styles, price, location) function properly."
+-----+
+-----+  - task: "Session Booking & Pricing Logic"
+-----+    implemented: true
+-----+    working: true
+-----+    file: "server.py"
+-----+    stuck_count: 0
+-----+    priority: "high"
+-----+    needs_retesting: false
+-----+    status_history:
+-----+        - working: true
+-----+          agent: "testing"
+-----+          comment: "Session booking and pricing logic working perfectly. Base price calculation ($1/min), multi-session discount (5% on 3rd+ session), platform fee (10%), and trainer earnings calculations all correct."
+-----+
+-----+  - task: "Session Management"
+-----+    implemented: true
+-----+    working: true
+-----+    file: "server.py"
+-----+    stuck_count: 0
+-----+    priority: "high"
+-----+    needs_retesting: false
+-----+    status_history:
+-----+        - working: true
+-----+          agent: "testing"
+-----+          comment: "Session management working correctly. Trainers can accept, decline, and complete sessions. Status changes are properly tracked."
+-----+
+-----+  - task: "Rating System"
+-----+    implemented: true
+-----+    working: true
+-----+    file: "server.py"
+-----+    stuck_count: 0
+-----+    priority: "medium"
+-----+    needs_retesting: false
+-----+    status_history:
+-----+        - working: true
+-----+          agent: "testing"
+-----+          comment: "Rating system working correctly. Trainees can rate completed sessions, and trainer average ratings are automatically updated."
+-----+
+-----+  - task: "Trainer Earnings Calculation"
+-----+    implemented: true
+-----+    working: true
+-----+    file: "server.py"
+-----+    stuck_count: 0
+-----+    priority: "medium"
+-----+    needs_retesting: false
+-----+    status_history:
+-----+        - working: true
+-----+          agent: "testing"
+-----+          comment: "Earnings calculation working correctly. Total, monthly, and weekly earnings are calculated accurately based on completed sessions."
+-----+
+-----+frontend:
+-----+  # Frontend testing not performed as per instructions
+-----+
+-----+metadata:
+-----+  created_by: "testing_agent"
+-----+  version: "1.0"
+-----+  test_sequence: 1
+-----+  run_ui: false
+-----+
+-----+test_plan:
+-----+  current_focus: []
+-----+  stuck_tasks: []
+-----+  test_all: false
+-----+  test_priority: "high_first"
+-----+
+-----+agent_communication:
+-----+    - agent: "testing"
+-----+      message: "Comprehensive backend testing completed successfully. All 24 test cases passed (100% success rate). RapidReps backend API is fully functional with correct authentication, profile management, session booking with accurate pricing logic including multi-session discounts, session management, rating system, and earnings calculations."
+-----\ No newline at end of file
