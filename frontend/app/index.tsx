@@ -254,7 +254,12 @@ export default function WelcomeScreen() {
 
         {/* CTA Buttons */}
         <View style={styles.buttonContainer}>
-          <Animated.View style={{ transform: [{ scale: buttonScaleAnim }] }}>
+          <Animated.View style={{ 
+            transform: [
+              { scale: buttonScaleAnim },
+              { translateX: buttonShakeAnim }
+            ] 
+          }}>
             <TouchableOpacity
               activeOpacity={0.9}
               onPress={() => router.push('/auth/signup')}
