@@ -352,7 +352,12 @@ export default function TrainerOnboardingScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <LinearGradient
+        colors={Colors.gradientOrangeStart}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
         <Text style={styles.title}>Trainer Setup</Text>
         <Text style={styles.subtitle}>
           Step {step} of {totalSteps}
