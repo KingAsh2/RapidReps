@@ -149,7 +149,7 @@ export default function WelcomeScreen() {
         ]),
       ])
     ).start();
-  }, []);
+  }, [logoScaleAnim, logoRotateAnim, logoJumpAnim, buttonScaleAnim, buttonGlowAnim, buttonShakeAnim]);
 
   useEffect(() => {
     if (!loading && user && activeRole && isReady) {
