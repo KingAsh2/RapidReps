@@ -128,93 +128,151 @@ export default function TraineeHomeScreen() {
         </View>
       </View>
 
-      {/* Trainers List */}
-      <ScrollView
-        style={styles.scrollView}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />
-        }
-      >
-        <View style={styles.trainersList}>
-          <Text style={styles.sectionTitle}>Available Trainers</Text>
-          
-          {trainers.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Ionicons name="fitness-outline" size={64} color={Colors.textLight} />
-              <Text style={styles.emptyStateText}>No trainers available yet</Text>
-              <Text style={styles.emptyStateSubtext}>Check back soon!</Text>
-            </View>
+      {/* Main Content - Map or List */}
+      {showMap ? (
+        <View style={styles.mapContainer}>
+          {locationPermission === 'granted' && location ? (
+            <MapView
+              style={styles.map}
+              provider={PROVIDER_GOOGLE}
+              initialRegion={{
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+                latitudeDelta: 0.0922,
+                longitudeDelta: 0.0421,
+              }}
+              showsUserLocation={true}
+              showsMyLocationButton={true}
+            >
+              {trainers.map((trainer, index) => (
+                <Marker
+                  key={trainer.id}
+                  coordinate={{
+                    latitude: location.coords.latitude + (Math.random() - 0.5) * 0.02,
+                    longitude: location.coords.longitude + (Math.random() - 0.5) * 0.02,
+                  }}
+                  title={`Trainer #${trainer.id.slice(0, 6)}`}
+                  description={`${trainer.trainingStyles.slice(0, 2).join(', ')} • $${(trainer.ratePerMinuteCents / 100).toFixed(2)}/min`}
+                  onCalloutPress={() => router.push(`/trainee/trainer-detail?trainerId=${trainer.userId}`)}
+                >
+                  <View style={styles.markerContainer}>
+                    <Ionicons name="fitness" size={20} color={Colors.white} />
+                  </View>
+                </Marker>
+              ))}
+            </MapView>
           ) : (
-            trainers.map((trainer) => (
-              <View key={trainer.id} style={styles.trainerCard}>
-                <View style={styles.trainerAvatar}>
-                  <Ionicons name="person" size={32} color={Colors.primary} />
-                </View>
-                
-                <View style={styles.trainerInfo}>
-                  <View style={styles.trainerHeader}>
-                    <Text style={styles.trainerName}>Trainer #{trainer.id.slice(0, 6)}</Text>
-                    {trainer.isVerified && (
-                      <View style={styles.verifiedBadge}>
-                        <Ionicons name="checkmark-circle" size={16} color={Colors.success} />
-                        <Text style={styles.verifiedText}>Verified</Text>
-                      </View>
-                    )}
-                  </View>
-                  
-                  {trainer.bio && (
-                    <Text style={styles.trainerBio} numberOfLines={2}>
-                      {trainer.bio}
-                    </Text>
-                  )}
-                  
-                  <View style={styles.trainerStats}>
-                    <View style={styles.stat}>
-                      <Ionicons name="star" size={16} color={Colors.warning} />
-                      <Text style={styles.statText}>
-                        {trainer.averageRating.toFixed(1)} ({trainer.totalSessionsCompleted} sessions)
-                      </Text>
-                    </View>
-                    <View style={styles.stat}>
-                      <Ionicons name="cash-outline" size={16} color={Colors.primary} />
-                      <Text style={styles.statText}>
-                        ${(trainer.ratePerMinuteCents / 100).toFixed(2)}/min
-                      </Text>
-                    </View>
-                  </View>
-                  
-                  {trainer.trainingStyles.length > 0 && (
-                    <View style={styles.styleChips}>
-                      {trainer.trainingStyles.slice(0, 3).map((style, index) => (
-                        <View key={index} style={styles.styleChip}>
-                          <Text style={styles.styleChipText}>{style}</Text>
-                        </View>
-                      ))}
-                      {trainer.trainingStyles.length > 3 && (
-                        <Text style={styles.moreStyles}>+{trainer.trainingStyles.length - 3}</Text>
-                      )}
-                    </View>
-                  )}
-                  
-                  {trainer.primaryGym && (
-                    <View style={styles.gymInfo}>
-                      <Ionicons name="location" size={14} color={Colors.textLight} />
-                      <Text style={styles.gymText}>{trainer.primaryGym}</Text>
-                    </View>
-                  )}
-                  
-                  <TouchableOpacity 
-                    style={styles.bookButton}
-                    onPress={() => router.push(`/trainee/trainer-detail?trainerId=${trainer.userId}`)}
-                  >
-                    <Text style={styles.bookButtonText}>View Profile</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ))
+            <View style={styles.locationPermissionContainer}>
+              <Ionicons name="location-outline" size={64} color={Colors.textLight} />
+              <Text style={styles.locationPermissionText}>
+                {locationPermission === 'denied' 
+                  ? 'Location access denied' 
+                  : 'Requesting location access...'}
+              </Text>
+              <Text style={styles.locationPermissionSubtext}>
+                {locationPermission === 'denied'
+                  ? 'Please enable location services to view trainers on the map'
+                  : 'We need your location to show nearby trainers'}
+              </Text>
+              {locationPermission === 'denied' && (
+                <TouchableOpacity 
+                  style={styles.retryButton}
+                  onPress={requestLocationPermission}
+                >
+                  <Text style={styles.retryButtonText}>Retry</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           )}
         </View>
-      </ScrollView>
+      ) : (
+        <ScrollView
+          style={styles.scrollView}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />
+          }
+        >
+          <View style={styles.trainersList}>
+            <Text style={styles.sectionTitle}>Available Trainers</Text>
+            
+            {trainers.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Ionicons name="fitness-outline" size={64} color={Colors.textLight} />
+                <Text style={styles.emptyStateText}>No trainers available yet</Text>
+                <Text style={styles.emptyStateSubtext}>Check back soon!</Text>
+              </View>
+            ) : (
+              trainers.map((trainer) => (
+                <View key={trainer.id} style={styles.trainerCard}>
+                  <View style={styles.trainerAvatar}>
+                    <Ionicons name="person" size={32} color={Colors.primary} />
+                  </View>
+                  
+                  <View style={styles.trainerInfo}>
+                    <View style={styles.trainerHeader}>
+                      <Text style={styles.trainerName}>Trainer #{trainer.id.slice(0, 6)}</Text>
+                      {trainer.isVerified && (
+                        <View style={styles.verifiedBadge}>
+                          <Ionicons name="checkmark-circle" size={16} color={Colors.success} />
+                          <Text style={styles.verifiedText}>Verified</Text>
+                        </View>
+                      )}
+                    </View>
+                    
+                    {trainer.bio && (
+                      <Text style={styles.trainerBio} numberOfLines={2}>
+                        {trainer.bio}
+                      </Text>
+                    )}
+                    
+                    <View style={styles.trainerStats}>
+                      <View style={styles.stat}>
+                        <Ionicons name="star" size={16} color={Colors.warning} />
+                        <Text style={styles.statText}>
+                          {trainer.averageRating.toFixed(1)} ({trainer.totalSessionsCompleted} sessions)
+                        </Text>
+                      </View>
+                      <View style={styles.stat}>
+                        <Ionicons name="cash-outline" size={16} color={Colors.primary} />
+                        <Text style={styles.statText}>
+                          ${(trainer.ratePerMinuteCents / 100).toFixed(2)}/min
+                        </Text>
+                      </View>
+                    </View>
+                    
+                    {trainer.trainingStyles.length > 0 && (
+                      <View style={styles.styleChips}>
+                        {trainer.trainingStyles.slice(0, 3).map((style, index) => (
+                          <View key={index} style={styles.styleChip}>
+                            <Text style={styles.styleChipText}>{style}</Text>
+                          </View>
+                        ))}
+                        {trainer.trainingStyles.length > 3 && (
+                          <Text style={styles.moreStyles}>+{trainer.trainingStyles.length - 3}</Text>
+                        )}
+                      </View>
+                    )}
+                    
+                    {trainer.primaryGym && (
+                      <View style={styles.gymInfo}>
+                        <Ionicons name="location" size={14} color={Colors.textLight} />
+                        <Text style={styles.gymText}>{trainer.primaryGym}</Text>
+                      </View>
+                    )}
+                    
+                    <TouchableOpacity 
+                      style={styles.bookButton}
+                      onPress={() => router.push(`/trainee/trainer-detail?trainerId=${trainer.userId}`)}
+                    >
+                      <Text style={styles.bookButtonText}>View Profile</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))
+            )}
+          </View>
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
