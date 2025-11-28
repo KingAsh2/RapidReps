@@ -270,7 +270,7 @@ export default function WelcomeScreen() {
                   {
                     shadowOpacity: buttonGlowAnim.interpolate({
                       inputRange: [0, 1],
-                      outputRange: [0.3, 0.6],
+                      outputRange: [0.3, 0.8],
                     }),
                   },
                 ]}
