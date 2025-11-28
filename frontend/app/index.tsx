@@ -82,7 +82,7 @@ export default function WelcomeScreen() {
         router.replace('/trainee/home');
       }
     }
-  }, [loading, user, activeRole]);
+  }, [loading, user, activeRole, router]);
 
   if (loading) {
     return (
