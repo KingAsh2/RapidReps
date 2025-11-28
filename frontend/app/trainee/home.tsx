@@ -58,16 +58,21 @@ export default function TraineeHomeScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header */}
-      <View style={styles.header}>
+      {/* Header with Gradient */}
+      <LinearGradient
+        colors={Colors.gradientTurquoise}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
         <View>
-          <Text style={styles.greeting}>Hello, {user?.fullName?.split(' ')[0] || 'there'}!</Text>
+          <Text style={styles.greeting}>Hello, {user?.fullName?.split(' ')[0] || 'there'}! 👋</Text>
           <Text style={styles.subGreeting}>Find your perfect trainer</Text>
         </View>
         <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-          <Ionicons name="log-out-outline" size={24} color={Colors.navy} />
+          <Ionicons name="log-out-outline" size={24} color={Colors.white} />
         </TouchableOpacity>
-      </View>
+      </LinearGradient>
 
       {/* Search Bar */}
       <View style={styles.searchSection}>
