@@ -14,7 +14,14 @@ export const Colors = {
   success: '#10B981',
   warning: '#F59E0B',
   
-  // Vibrant Gradients
+  // Beautiful Gradient Variations - Teal to Orange to Peach
+  gradientMain: ['#5BC0BE', '#7DD3C0', '#A8E6D7', '#B8EBE0', '#FFD4A3', '#FFC870', '#FFB84D', '#FF8C42', '#FF6B1A'],
+  gradientReverse: ['#FF6B1A', '#FF8C42', '#FFB84D', '#FFC870', '#FFD4A3', '#B8EBE0', '#A8E6D7', '#7DD3C0', '#5BC0BE'],
+  gradientTealStart: ['#5BC0BE', '#7DD3C0', '#A8E6D7', '#FFD4A3', '#FFC870', '#FF8C42'],
+  gradientOrangeStart: ['#FF6B1A', '#FF8C42', '#FFB84D', '#FFC870', '#A8E6D7', '#7DD3C0'],
+  gradientPeachMiddle: ['#7DD3C0', '#A8E6D7', '#FFD4A3', '#FFC870', '#FFB84D', '#FF8C42'],
+  
+  // Original gradients (keeping for compatibility)
   gradientOrange: ['#FF8C42', '#FF6B1A', '#FF4500'],
   gradientTurquoise: ['#7DD3C0', '#5BC0BE', '#3A86FF'],
   gradientPurple: ['#A855F7', '#EC4899', '#FF6B1A'],
