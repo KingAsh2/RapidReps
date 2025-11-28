@@ -299,7 +299,7 @@ export default function TraineeOnboardingScreen() {
             />
           ))}
         </View>
-      </View>
+      </LinearGradient>
 
       {/* Form */}
       <ScrollView style={styles.scrollView}>
