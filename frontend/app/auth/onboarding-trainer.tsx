@@ -373,7 +373,7 @@ export default function TrainerOnboardingScreen() {
             />
           ))}
         </View>
-      </View>
+      </LinearGradient>
 
       {/* Form */}
       <ScrollView style={styles.scrollView}>
