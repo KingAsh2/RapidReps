@@ -24,6 +24,7 @@ export default function WelcomeScreen() {
   const [pulseAnim] = useState(new Animated.Value(1));
   const [buttonScaleAnim] = useState(new Animated.Value(1));
   const [buttonGlowAnim] = useState(new Animated.Value(0));
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     // Pulse animation for logo
