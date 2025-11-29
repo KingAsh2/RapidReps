@@ -334,33 +334,54 @@ export default function TraineeHomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.primary,
+  },
+  backgroundGradient: {
+    flex: 1,
+  },
+  safeArea: {
+    flex: 1,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.primary,
   },
   header: {
     paddingHorizontal: 24,
-    paddingVertical: 20,
+    paddingTop: 12,
+    paddingBottom: 24,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
+  },
+  headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 16,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  greetingContainer: {
+    marginTop: 8,
   },
   greeting: {
     fontSize: 26,
     fontWeight: 'bold',
     color: Colors.white,
+    marginBottom: 6,
   },
   subGreeting: {
-    fontSize: 14,
+    fontSize: 16,
     color: Colors.white,
-    marginTop: 4,
-    opacity: 0.9,
+    opacity: 0.95,
   },
   headerButton: {
     width: 36,
