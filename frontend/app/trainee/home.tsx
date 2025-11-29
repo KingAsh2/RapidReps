@@ -30,34 +30,9 @@ export default function TraineeHomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [trainers, setTrainers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [showMap, setShowMap] = useState(false);
-  const [location, setLocation] = useState(null);
-  const [locationPermission, setLocationPermission] = useState(null);
-
-  const requestLocationPermission = async () => {
-    if (Platform.OS === 'web' || !Location) {
-      return; // Skip location on web
-    }
-    
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      setLocationPermission(status);
-      
-      if (status === 'granted') {
-        const currentLocation = await Location.getCurrentPositionAsync({});
-        setLocation(currentLocation);
-      }
-    } catch (error) {
-      console.error('Error requesting location permission:', error);
-      Alert.alert('Location Error', 'Unable to access location services');
-    }
-  };
 
   useEffect(() => {
     loadTrainers();
-    if (Platform.OS !== 'web') {
-      requestLocationPermission();
-    }
   }, []);
 
   const loadTrainers = async () => {
