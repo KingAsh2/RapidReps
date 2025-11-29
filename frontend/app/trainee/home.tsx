@@ -20,8 +20,22 @@ import { TrainerProfile } from '../../src/types';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Location from 'expo-location';
 
 const { width } = Dimensions.get('window');
+
+// Helper function to calculate distance between two points (Haversine formula)
+const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+  const R = 3959; // Earth's radius in miles
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+};
 
 export default function TraineeHomeScreen() {
   const router = useRouter();
@@ -30,10 +44,44 @@ export default function TraineeHomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [trainers, setTrainers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [userLocation, setUserLocation] = useState<{latitude: number, longitude: number} | null>(null);
+  const [locationPermission, setLocationPermission] = useState<string | null>(null);
+  const [locationAddress, setLocationAddress] = useState<string>('');
 
   useEffect(() => {
+    requestLocationPermission();
     loadTrainers();
   }, []);
+
+  const requestLocationPermission = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      setLocationPermission(status);
+      
+      if (status === 'granted') {
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+        setUserLocation({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        });
+
+        // Reverse geocode to get address
+        const addresses = await Location.reverseGeocodeAsync({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        });
+        
+        if (addresses[0]) {
+          const addr = addresses[0];
+          setLocationAddress(`${addr.city || ''}, ${addr.region || ''}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error getting location:', error);
+    }
+  };
 
   const loadTrainers = async () => {
     try {
