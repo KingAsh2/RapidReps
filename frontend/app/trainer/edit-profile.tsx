@@ -792,4 +792,41 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: Colors.white,
   },
+  locationButtonWrapper: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 12,
+  },
+  locationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    paddingVertical: 16,
+  },
+  locationButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.white,
+  },
+  locationDisplay: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 8,
+  },
+  locationDisplayText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.success,
+    flex: 1,
+  },
+  helpText: {
+    fontSize: 12,
+    color: Colors.textLight,
+    fontStyle: 'italic',
+  },
 });
