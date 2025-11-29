@@ -537,18 +537,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  logoCenter: {
+  logoContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   greetingContainer: {
     marginTop: 8,
