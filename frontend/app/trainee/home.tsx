@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.background,
+    backgroundColor: 'rgba(255,255,255,0.95)',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
