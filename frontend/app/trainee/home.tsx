@@ -105,7 +105,18 @@ export default function TraineeHomeScreen() {
 
   const loadTrainers = async () => {
     try {
-      const data = await trainerAPI.searchTrainers({});
+      // Build search params with location and virtual preferences
+      const searchParams: any = {};
+      
+      if (userLocation) {
+        searchParams.latitude = userLocation.latitude;
+        searchParams.longitude = userLocation.longitude;
+      }
+      
+      // Pass wantsVirtual=true to include virtual trainers
+      searchParams.wantsVirtual = true;
+      
+      const data = await trainerAPI.searchTrainers(searchParams);
       
       // Calculate distances and add to trainer objects
       let trainersWithDistance = data.map((trainer: any) => {
@@ -126,18 +137,26 @@ export default function TraineeHomeScreen() {
         };
       });
       
-      // Sort by distance (closest first), trainers without location go to end
+      // Sort by distance (closest first), then virtual trainers
       trainersWithDistance.sort((a: any, b: any) => {
-        if (a.distance === null) return 1;
-        if (b.distance === null) return -1;
-        return a.distance - b.distance;
+        // Prioritize trainers with location (within 20 miles)
+        if (a.distance !== null && b.distance === null) return -1;
+        if (a.distance === null && b.distance !== null) return 1;
+        
+        // Both have distance - sort by distance
+        if (a.distance !== null && b.distance !== null) {
+          return a.distance - b.distance;
+        }
+        
+        // Both are virtual (no location) - sort by rating
+        return (b.averageRating || 0) - (a.averageRating || 0);
       });
       
       setTrainers(trainersWithDistance);
       
       // Check if no trainers available and if there are virtual trainers
-      const hasLocalTrainers = trainersWithDistance.length > 0;
-      const virtualTrainersAvailable = data.filter((t: any) => t.isVirtualTrainingAvailable);
+      const hasLocalTrainers = trainersWithDistance.filter((t: any) => t.distance !== null).length > 0;
+      const virtualTrainersAvailable = trainersWithDistance.filter((t: any) => t.isVirtualTrainingAvailable);
       
       if (!hasLocalTrainers && virtualTrainersAvailable.length > 0) {
         setVirtualTrainers(virtualTrainersAvailable);
