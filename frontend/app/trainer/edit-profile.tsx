@@ -11,7 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, Stack } from 'expo-router';
 import { trainerAPI } from '../../src/services/api';
 import { Colors } from '../../src/utils/colors';
 import { TrainerProfile, TrainingStyles } from '../../src/types';
