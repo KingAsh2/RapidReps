@@ -14,6 +14,7 @@ import { trainerAPI } from '../../src/services/api';
 import { Colors } from '../../src/utils/colors';
 import { TrainingStyles } from '../../src/types';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function TrainerOnboardingScreen() {
   const router = useRouter();
