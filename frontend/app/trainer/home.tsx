@@ -85,8 +85,10 @@ export default function TrainerHomeScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header */}
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <SafeAreaView style={styles.container} edges={['top']}>
+        {/* Header */}
       <LinearGradient
         colors={Colors.gradientOrangeStart}
         start={{ x: 0, y: 0 }}
