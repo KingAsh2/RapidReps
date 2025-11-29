@@ -7,103 +7,36 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Dimensions,
-  Animated,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../src/contexts/AuthContext';
 import { Colors } from '../src/utils/colors';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
+import { AthleticButton } from '../src/components/AthleticButton';
 
 const { width, height } = Dimensions.get('window');
 
 export default function WelcomeScreen() {
   const router = useRouter();
   const { user, loading, activeRole } = useAuth();
-  const [buttonScaleAnim] = useState(new Animated.Value(1));
-  const [buttonGlowAnim] = useState(new Animated.Value(0));
-  const [buttonShakeAnim] = useState(new Animated.Value(0));
   const [isReady, setIsReady] = React.useState(false);
 
   useEffect(() => {
-    // Mark as ready after a short delay
     const timer = setTimeout(() => setIsReady(true), 100);
     return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
-    // BUTTON: Super Energetic "Call to Action" Animation
-    Animated.loop(
-      Animated.parallel([
-        // Scale pulse (bigger emphasis)
-        Animated.sequence([
-          Animated.spring(buttonScaleAnim, {
-            toValue: 1.08,
-            friction: 3,
-            tension: 40,
-            useNativeDriver: true,
-          }),
-          Animated.spring(buttonScaleAnim, {
-            toValue: 1,
-            friction: 3,
-            tension: 40,
-            useNativeDriver: true,
-          }),
-        ]),
-        // Intense glow
-        Animated.sequence([
-          Animated.timing(buttonGlowAnim, {
-            toValue: 1,
-            duration: 600,
-            useNativeDriver: false,
-          }),
-          Animated.timing(buttonGlowAnim, {
-            toValue: 0,
-            duration: 600,
-            useNativeDriver: false,
-          }),
-        ]),
-        // Shake effect for urgency
-        Animated.sequence([
-          Animated.timing(buttonShakeAnim, {
-            toValue: 3,
-            duration: 50,
-            useNativeDriver: true,
-          }),
-          Animated.timing(buttonShakeAnim, {
-            toValue: -3,
-            duration: 50,
-            useNativeDriver: true,
-          }),
-          Animated.timing(buttonShakeAnim, {
-            toValue: 3,
-            duration: 50,
-            useNativeDriver: true,
-          }),
-          Animated.timing(buttonShakeAnim, {
-            toValue: 0,
-            duration: 50,
-            useNativeDriver: true,
-          }),
-          Animated.delay(1000),
-        ]),
-      ])
-    ).start();
-  }, [buttonScaleAnim, buttonGlowAnim, buttonShakeAnim]);
-
-  useEffect(() => {
-    if (!loading && user && activeRole && isReady) {
-      // User is logged in, navigate to appropriate home
+    if (user && activeRole && isReady) {
       if (activeRole === 'trainer') {
         router.replace('/trainer/home');
       } else if (activeRole === 'trainee') {
         router.replace('/trainee/home');
       }
     }
-  }, [loading, user, activeRole, isReady, router]);
+  }, [user, activeRole, isReady, router]);
 
-  if (loading) {
+  if (loading || !isReady) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={Colors.primary} />
@@ -113,128 +46,69 @@ export default function WelcomeScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Animated Gradient Background */}
-      <LinearGradient
-        colors={[
-          '#5BC0BE',  // Deep Teal at top
-          '#7DD3C0',  // Medium Teal
-          '#A8E6D7',  // Light Teal
-          '#B8EBE0',  // Very Light Teal
-          '#FFD4A3',  // Light Peach
-          '#FFC870',  // Peach
-          '#FFB84D',  // Light Orange
-          '#FF8C42',  // Vibrant Orange
-          '#FF6B1A',  // Dark Orange at bottom
-        ]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={styles.gradientBackground}
-        locations={[0, 0.12, 0.25, 0.35, 0.5, 0.62, 0.75, 0.88, 1]}
-      >
-        {/* Decorative circles */}
-        <View style={[styles.decorCircle, styles.circle1]} />
-        <View style={[styles.decorCircle, styles.circle2]} />
-        <View style={[styles.decorCircle, styles.circle3]} />
-      </LinearGradient>
-
+      {/* BACKGROUND - Solid Orange */}
+      <View style={styles.backgroundOrange} />
+      
+      {/* MAIN CONTENT */}
       <View style={styles.content}>
-        {/* Logo Section */}
-        <View style={styles.logoSection}>
-          <View style={styles.logoImageContainer}>
-            <Image
-              source={require('../assets/rapidreps-logo.png')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
+        {/* LOGO SECTION */}
+        <View style={styles.logoContainer}>
+          <Image
+            source={require('../assets/rapidreps-logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
+
+        {/* BRAND TEXT */}
+        <View style={styles.brandSection}>
+          <Text style={styles.brandName}>RAPIDREPS</Text>
+          <Text style={styles.slogan}>YOUR WORKOUT,</Text>
+          <Text style={styles.sloganBold}>DELIVERED 🔥</Text>
+        </View>
+
+        {/* FEATURES */}
+        <View style={styles.featuresContainer}>
+          <View style={styles.featureCard}>
+            <View style={styles.featureIconContainer}>
+              <Ionicons name="search" size={32} color={Colors.navy} />
+            </View>
+            <Text style={styles.featureTitle}>FIND TRAINERS</Text>
+            <Text style={styles.featureText}>Local pros near you</Text>
           </View>
-          <View style={styles.taglineContainer}>
-            <LinearGradient
-              colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.85)']}
-              style={styles.taglineGradient}
-            >
-              <Text style={styles.tagline}>🔥 Your Workout, Delivered 🔥</Text>
-            </LinearGradient>
+
+          <View style={styles.featureCard}>
+            <View style={styles.featureIconContainer}>
+              <Ionicons name="flash" size={32} color={Colors.navy} />
+            </View>
+            <Text style={styles.featureTitle}>BOOK FAST</Text>
+            <Text style={styles.featureText}>Sessions on demand</Text>
+          </View>
+
+          <View style={styles.featureCard}>
+            <View style={styles.featureIconContainer}>
+              <Ionicons name="cash" size={32} color={Colors.navy} />
+            </View>
+            <Text style={styles.featureTitle}>PAY EASY</Text>
+            <Text style={styles.featureText}>Simple pricing</Text>
           </View>
         </View>
 
-        {/* Features Section */}
-        <View style={styles.featuresSection}>
-          <View style={styles.featureCard}>
-            <LinearGradient
-              colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.1)']}
-              style={styles.featureCardGradient}
-            >
-              <Ionicons name="search" size={32} color={Colors.white} />
-              <Text style={styles.featureTitle}>Find Trainers</Text>
-              <Text style={styles.featureText}>Certified pros near you</Text>
-            </LinearGradient>
-          </View>
-
-          <View style={styles.featureCard}>
-            <LinearGradient
-              colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.1)']}
-              style={styles.featureCardGradient}
-            >
-              <Ionicons name="flash" size={32} color={Colors.white} />
-              <Text style={styles.featureTitle}>Book Instantly</Text>
-              <Text style={styles.featureText}>Quick & easy booking</Text>
-            </LinearGradient>
-          </View>
-
-          <View style={styles.featureCard}>
-            <LinearGradient
-              colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.1)']}
-              style={styles.featureCardGradient}
-            >
-              <Ionicons name="cash" size={32} color={Colors.white} />
-              <Text style={styles.featureTitle}>$1/Minute</Text>
-              <Text style={styles.featureText}>Fair & transparent</Text>
-            </LinearGradient>
-          </View>
-        </View>
-
-        {/* CTA Buttons */}
-        <View style={styles.buttonContainer}>
-          <Animated.View style={{ 
-            transform: [
-              { scale: buttonScaleAnim },
-              { translateX: buttonShakeAnim }
-            ] 
-          }}>
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={() => router.push('/auth/signup')}
-            >
-              <Animated.View
-                style={[
-                  styles.buttonGlowContainer,
-                  {
-                    shadowOpacity: buttonGlowAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0.3, 0.8],
-                    }),
-                  },
-                ]}
-              >
-                <LinearGradient
-                  colors={['#FFFFFF', '#F0F0F0']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.primaryButton}
-                >
-                  <Text style={styles.primaryButtonText}>Get Started</Text>
-                  <Ionicons name="arrow-forward" size={20} color={Colors.primary} />
-                </LinearGradient>
-              </Animated.View>
-            </TouchableOpacity>
-          </Animated.View>
+        {/* CTA BUTTONS */}
+        <View style={styles.ctaContainer}>
+          <AthleticButton
+            title="GET STARTED"
+            onPress={() => router.push('/auth/signup')}
+            variant="primary"
+            size="large"
+            icon="fitness"
+          />
 
           <TouchableOpacity
-            style={styles.secondaryButton}
             onPress={() => router.push('/auth/login')}
-            activeOpacity={0.8}
+            style={styles.loginLink}
           >
-            <Text style={styles.secondaryButtonText}>Log In</Text>
+            <Text style={styles.loginLinkText}>ALREADY A MEMBER? LOG IN</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -245,161 +119,128 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Colors.primary,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Colors.background,
-  },
-  gradientBackground: {
+  backgroundOrange: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
+    backgroundColor: Colors.primary,
   },
-  decorCircle: {
-    position: 'absolute',
-    borderRadius: 1000,
-    opacity: 0.1,
-  },
-  circle1: {
-    width: 300,
-    height: 300,
-    backgroundColor: Colors.white,
-    top: -100,
-    right: -100,
-  },
-  circle2: {
-    width: 200,
-    height: 200,
-    backgroundColor: Colors.white,
-    bottom: 100,
-    left: -50,
-  },
-  circle3: {
-    width: 150,
-    height: 150,
-    backgroundColor: Colors.white,
-    top: height / 2,
-    right: -30,
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.primary,
   },
   content: {
     flex: 1,
-    justifyContent: 'space-between',
     paddingHorizontal: 24,
     paddingTop: 80,
-    paddingBottom: 50,
+    paddingBottom: 40,
   },
-  logoSection: {
+  logoContainer: {
     alignItems: 'center',
-  },
-  logoImageContainer: {
-    width: width * 0.7,
-    height: width * 0.7,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
   },
   logo: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 20,
+    width: 140,
+    height: 140,
   },
-  taglineContainer: {
-    borderRadius: 25,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 8,
+  brandSection: {
+    alignItems: 'center',
+    marginBottom: 40,
   },
-  taglineGradient: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
+  brandName: {
+    fontSize: 48,
+    fontWeight: '900',
+    color: Colors.navy,
+    letterSpacing: 2,
+    marginBottom: 16,
+    textShadowColor: 'rgba(0,0,0,0.2)',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 0,
   },
-  tagline: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: Colors.primary,
-    textAlign: 'center',
+  slogan: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: Colors.white,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
   },
-  featuresSection: {
+  sloganBold: {
+    fontSize: 32,
+    fontWeight: '900',
+    fontStyle: 'italic',
+    color: Colors.navy,
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    textShadowColor: 'rgba(255,255,255,0.3)',
+    textShadowOffset: { width: -1, height: -1 },
+    textShadowRadius: 0,
+  },
+  featuresContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginBottom: 50,
     gap: 12,
-    marginVertical: 20,
   },
   featureCard: {
     flex: 1,
-    height: 140,
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  featureCardGradient: {
-    flex: 1,
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    borderWidth: 3,
+    borderColor: Colors.navy,
     padding: 16,
     alignItems: 'center',
+    shadowColor: Colors.navy,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 0,
+  },
+  featureIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.secondary,
+    borderWidth: 3,
+    borderColor: Colors.navy,
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.3)',
-    borderRadius: 16,
+    alignItems: 'center',
+    marginBottom: 12,
   },
   featureTitle: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: Colors.white,
-    marginTop: 8,
+    fontWeight: '900',
+    color: Colors.navy,
     textAlign: 'center',
+    letterSpacing: 0.5,
+    marginBottom: 4,
   },
   featureText: {
     fontSize: 11,
-    color: Colors.white,
-    marginTop: 4,
+    fontWeight: '600',
+    color: Colors.text,
     textAlign: 'center',
-    opacity: 0.9,
   },
-  buttonContainer: {
-    gap: 16,
+  ctaContainer: {
+    marginTop: 'auto',
+    gap: 20,
   },
-  primaryButton: {
-    flexDirection: 'row',
-    paddingVertical: 18,
-    borderRadius: 16,
+  loginLink: {
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 10,
+    paddingVertical: 12,
   },
-  buttonGlowContainer: {
-    borderRadius: 16,
-    shadowColor: '#FFFFFF',
-    shadowOffset: { width: 0, height: 0 },
-    shadowRadius: 20,
-    elevation: 15,
-  },
-  primaryButtonText: {
-    color: Colors.primary,
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  secondaryButton: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingVertical: 18,
-    borderRadius: 16,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: Colors.white,
-  },
-  secondaryButtonText: {
-    color: Colors.white,
-    fontSize: 18,
-    fontWeight: 'bold',
+  loginLinkText: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: Colors.navy,
+    letterSpacing: 1,
+    textDecorationLine: 'underline',
+    textDecorationColor: Colors.navy,
+    textDecorationStyle: 'solid',
   },
 });
