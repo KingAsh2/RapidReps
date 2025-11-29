@@ -93,13 +93,16 @@ export default function TrainerHomeScreen() {
         end={{ x: 1, y: 1 }}
         style={styles.header}
       >
-        <View>
-          <Text style={styles.greeting}>Hello, {user?.fullName?.split(' ')[0] || 'Trainer'}!</Text>
-          <Text style={styles.subGreeting}>Manage your sessions</Text>
+        <View style={styles.headerContent}>
+          <AnimatedLogo size={50} animationType="elastic-scale" />
+          <View style={styles.greetingSection}>
+            <Text style={styles.greeting}>Hello, {user?.fullName?.split(' ')[0] || 'Trainer'}!</Text>
+            <Text style={styles.subGreeting}>Manage your sessions</Text>
+          </View>
+          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+            <Ionicons name="log-out-outline" size={24} color={Colors.white} />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-          <Ionicons name="log-out-outline" size={24} color={Colors.white} />
-        </TouchableOpacity>
       </LinearGradient>
 
       <ScrollView
