@@ -547,12 +547,10 @@ const styles = StyleSheet.create({
   locationBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.background,
+    backgroundColor: 'rgba(255,255,255,0.15)',
     paddingHorizontal: 24,
     paddingVertical: 12,
     gap: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   locationTextContainer: {
     flex: 1,
