@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
   searchSection: {
     paddingHorizontal: 24,
     paddingVertical: 16,
-    backgroundColor: Colors.white,
+    backgroundColor: 'rgba(255,255,255,0.15)',
   },
   searchBar: {
     flexDirection: 'row',
