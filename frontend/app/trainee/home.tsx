@@ -529,14 +529,15 @@ const styles = StyleSheet.create({
   },
   greeting: {
     fontSize: 26,
-    fontWeight: 'bold',
-    color: Colors.white,
+    fontWeight: '900',
+    color: Colors.navy,
     marginBottom: 6,
+    letterSpacing: 0.5,
   },
   subGreeting: {
     fontSize: 16,
-    color: Colors.white,
-    opacity: 0.95,
+    fontWeight: '700',
+    color: Colors.navy,
   },
   headerButton: {
     width: 36,
