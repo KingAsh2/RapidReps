@@ -404,6 +404,82 @@ export default function TraineeHomeScreen() {
         </ScrollView>
         </SafeAreaView>
       </LinearGradient>
+
+      {/* Virtual Training Dialog */}
+      <Modal
+        visible={showVirtualDialog}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowVirtualDialog(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <Animated.View
+            style={[
+              styles.dialogContainer,
+              {
+                transform: [
+                  {
+                    scale: dialogAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.8, 1],
+                    }),
+                  },
+                ],
+                opacity: dialogAnim,
+              },
+            ]}
+          >
+            <LinearGradient
+              colors={Colors.gradientMain}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.dialogGradient}
+            >
+              {/* Animated Icon */}
+              <View style={styles.dialogIconContainer}>
+                <Ionicons name="videocam" size={64} color={Colors.white} />
+              </View>
+
+              {/* Title */}
+              <Text style={styles.dialogTitle}>Don't Sweat Just Yet! 💪</Text>
+
+              {/* Message */}
+              <Text style={styles.dialogMessage}>
+                There are Virtual Trainers available RAPIDLY! 🚀
+              </Text>
+
+              <Text style={styles.dialogSubMessage}>
+                Would you like Virtual Training?
+              </Text>
+
+              {/* Buttons */}
+              <View style={styles.dialogButtons}>
+                <TouchableOpacity
+                  style={[styles.dialogButton, styles.dialogButtonNo]}
+                  onPress={() => setShowVirtualDialog(false)}
+                >
+                  <Text style={styles.dialogButtonTextNo}>Maybe Later</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.dialogButton, styles.dialogButtonYes]}
+                  onPress={handleVirtualTrainingYes}
+                >
+                  <Text style={styles.dialogButtonTextYes}>Yes, Let's Go! 🔥</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Close button */}
+              <TouchableOpacity
+                style={styles.dialogCloseButton}
+                onPress={() => setShowVirtualDialog(false)}
+              >
+                <Ionicons name="close-circle" size={32} color="rgba(255,255,255,0.8)" />
+              </TouchableOpacity>
+            </LinearGradient>
+          </Animated.View>
+        </View>
+      </Modal>
     </View>
   );
 }
