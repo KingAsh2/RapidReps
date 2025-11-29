@@ -317,31 +317,6 @@ export default function TrainerOnboardingScreen() {
               </View>
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Rate Per Minute (cents)</Text>
-              <TextInput
-                style={styles.input}
-                value={formData.ratePerMinuteCents.toString()}
-                onChangeText={(text) => setFormData({ ...formData, ratePerMinuteCents: parseInt(text) || 100 })}
-                placeholder="100"
-                placeholderTextColor={Colors.textLight}
-                keyboardType="numeric"
-              />
-              <Text style={styles.helpText}>
-                Default: $1/min (100 cents). A 60-min session = ${(formData.ratePerMinuteCents * 60) / 100}
-              </Text>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Cancellation Policy</Text>
-              <TextInput
-                style={styles.input}
-                value={formData.cancellationPolicy}
-                onChangeText={(text) => setFormData({ ...formData, cancellationPolicy: text })}
-                placeholder="Free cancellation before 24 hours"
-                placeholderTextColor={Colors.textLight}
-              />
-            </View>
           </View>
         );
 
