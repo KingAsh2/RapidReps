@@ -153,8 +153,15 @@ export default function TraineeHomeScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header with Gradient */}
+    <View style={styles.container}>
+      <LinearGradient
+        colors={Colors.gradientMain}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.backgroundGradient}
+      >
+        <SafeAreaView style={styles.safeArea} edges={['top']}>
+          {/* Header with Gradient */}
       <LinearGradient
         colors={Colors.gradientTealStart}
         start={{ x: 0, y: 0 }}
