@@ -1,1172 +1,1225 @@
 diff --git a/frontend/app/trainee/home.tsx b/frontend/app/trainee/home.tsx
-index 5502d22..0e5937e 100644
+index 0a4998e..18f8dfb 100644
 --- a/frontend/app/trainee/home.tsx
 +++ b/frontend/app/trainee/home.tsx
-@@ -86,7 +86,34 @@ export default function TraineeHomeScreen() {
-   const loadTrainers = async () => {
-     try {
-       const data = await trainerAPI.searchTrainers({});
--      setTrainers(data);
-+      
-+      // Calculate distances and add to trainer objects
-+      let trainersWithDistance = data.map((trainer: any) => {
-+        let distance = null;
-+        
-+        if (userLocation && trainer.latitude && trainer.longitude) {
-+          distance = calculateDistance(
-+            userLocation.latitude,
-+            userLocation.longitude,
-+            trainer.latitude,
-+            trainer.longitude
-+          );
-+        }
-+        
-+        return {
-+          ...trainer,
-+          distance,
-+        };
-+      });
-+      
-+      // Sort by distance (closest first), trainers without location go to end
-+      trainersWithDistance.sort((a: any, b: any) => {
-+        if (a.distance === null) return 1;
-+        if (b.distance === null) return -1;
-+        return a.distance - b.distance;
-+      });
-+      
-+      setTrainers(trainersWithDistance);
-     } catch (error) {
-       console.error('Error loading trainers:', error);
-     } finally {
+@@ -509,6 +509,43 @@ const styles = StyleSheet.create({
+     fontWeight: 'bold',
+     color: Colors.white,
+   },
++  locationBanner: {
++    flexDirection: 'row',
++    alignItems: 'center',
++    backgroundColor: Colors.background,
++    paddingHorizontal: 24,
++    paddingVertical: 12,
++    gap: 12,
++    borderBottomWidth: 1,
++    borderBottomColor: Colors.border,
++  },
++  locationTextContainer: {
++    flex: 1,
++  },
++  locationLabel: {
++    fontSize: 11,
++    fontWeight: '600',
++    color: Colors.textLight,
++    textTransform: 'uppercase',
++    marginBottom: 2,
++  },
++  locationText: {
++    fontSize: 14,
++    color: Colors.navy,
++    fontWeight: '500',
++  },
++  locationWarning: {
++    fontSize: 13,
++    color: Colors.text,
++  },
++  refreshLocationButton: {
++    padding: 8,
++  },
++  distanceText: {
++    fontSize: 13,
++    color: Colors.neonBlue,
++    fontWeight: '700',
++  },
+   // Map styles
+   mapContainer: {
+     flex: 1,
 diff --git a/model.patch b/model.patch
-index 5e70a42..e69de29 100644
+index 9fec778..e69de29 100644
 --- a/model.patch
 +++ b/model.patch
-@@ -1,1127 +0,0 @@
+@@ -1,1172 +0,0 @@
 -diff --git a/frontend/app/trainee/home.tsx b/frontend/app/trainee/home.tsx
--index 8913c9a..eaead28 100644
+-index 5502d22..0e5937e 100644
 ---- a/frontend/app/trainee/home.tsx
 -+++ b/frontend/app/trainee/home.tsx
--@@ -218,22 +218,14 @@ const styles = StyleSheet.create({
--     marginTop: 4,
--     opacity: 0.9,
--   },
---  headerButtons: {
---    flexDirection: 'row',
---    gap: 8,
---  },
--   headerButton: {
---    padding: 8,
---    backgroundColor: 'rgba(255,255,255,0.2)',
---    borderRadius: 20,
--     width: 36,
--     height: 36,
--+    borderRadius: 18,
--+    backgroundColor: 'rgba(255,255,255,0.2)',
--     justifyContent: 'center',
--     alignItems: 'center',
--   },
---  headerButtonActive: {
---    backgroundColor: Colors.white,
---  },
--   searchSection: {
--     paddingHorizontal: 24,
--     paddingVertical: 16,
+-@@ -86,7 +86,34 @@ export default function TraineeHomeScreen() {
+-   const loadTrainers = async () => {
+-     try {
+-       const data = await trainerAPI.searchTrainers({});
+--      setTrainers(data);
+-+      
+-+      // Calculate distances and add to trainer objects
+-+      let trainersWithDistance = data.map((trainer: any) => {
+-+        let distance = null;
+-+        
+-+        if (userLocation && trainer.latitude && trainer.longitude) {
+-+          distance = calculateDistance(
+-+            userLocation.latitude,
+-+            userLocation.longitude,
+-+            trainer.latitude,
+-+            trainer.longitude
+-+          );
+-+        }
+-+        
+-+        return {
+-+          ...trainer,
+-+          distance,
+-+        };
+-+      });
+-+      
+-+      // Sort by distance (closest first), trainers without location go to end
+-+      trainersWithDistance.sort((a: any, b: any) => {
+-+        if (a.distance === null) return 1;
+-+        if (b.distance === null) return -1;
+-+        return a.distance - b.distance;
+-+      });
+-+      
+-+      setTrainers(trainersWithDistance);
+-     } catch (error) {
+-       console.error('Error loading trainers:', error);
+-     } finally {
 -diff --git a/model.patch b/model.patch
--index fbcba9f..e69de29 100644
+-index 5e70a42..e69de29 100644
 ---- a/model.patch
 -+++ b/model.patch
--@@ -1,1093 +0,0 @@
+-@@ -1,1127 +0,0 @@
 --diff --git a/frontend/app/trainee/home.tsx b/frontend/app/trainee/home.tsx
---index db0f3eb..52a5911 100644
+--index 8913c9a..eaead28 100644
 ----- a/frontend/app/trainee/home.tsx
 --+++ b/frontend/app/trainee/home.tsx
---@@ -48,6 +48,10 @@ export default function TraineeHomeScreen() {
---   const [locationPermission, setLocationPermission] = useState(null);
--- 
---   const requestLocationPermission = async () => {
---+    if (Platform.OS === 'web' || !Location) {
---+      return; // Skip location on web
---+    }
---+    
---     try {
---       const { status } = await Location.requestForegroundPermissionsAsync();
---       setLocationPermission(status);
---@@ -64,7 +68,9 @@ export default function TraineeHomeScreen() {
--- 
---   useEffect(() => {
---     loadTrainers();
----    requestLocationPermission();
---+    if (Platform.OS !== 'web') {
---+      requestLocationPermission();
---+    }
---   }, []);
--- 
---   const loadTrainers = async () => {
+--@@ -218,22 +218,14 @@ const styles = StyleSheet.create({
+--     marginTop: 4,
+--     opacity: 0.9,
+--   },
+---  headerButtons: {
+---    flexDirection: 'row',
+---    gap: 8,
+---  },
+--   headerButton: {
+---    padding: 8,
+---    backgroundColor: 'rgba(255,255,255,0.2)',
+---    borderRadius: 20,
+--     width: 36,
+--     height: 36,
+--+    borderRadius: 18,
+--+    backgroundColor: 'rgba(255,255,255,0.2)',
+--     justifyContent: 'center',
+--     alignItems: 'center',
+--   },
+---  headerButtonActive: {
+---    backgroundColor: Colors.white,
+---  },
+--   searchSection: {
+--     paddingHorizontal: 24,
+--     paddingVertical: 16,
 --diff --git a/model.patch b/model.patch
---index cdf45d4..e69de29 100644
+--index fbcba9f..e69de29 100644
 ----- a/model.patch
 --+++ b/model.patch
---@@ -1,1062 +0,0 @@
+--@@ -1,1093 +0,0 @@
 ---diff --git a/frontend/app/trainee/home.tsx b/frontend/app/trainee/home.tsx
----index dd4d0b2..5cf3749 100644
+---index db0f3eb..52a5911 100644
 ------ a/frontend/app/trainee/home.tsx
 ---+++ b/frontend/app/trainee/home.tsx
----@@ -482,14 +482,23 @@ const styles = StyleSheet.create({
----     flex: 1,
----   },
----   map: {
-----    flex: 1,
----+    width: '100%',
----+    height: '100%',
----   },
----   markerContainer: {
----+    width: 36,
----+    height: 36,
----+    borderRadius: 18,
----     backgroundColor: Colors.primary,
-----    borderRadius: 20,
-----    padding: 8,
-----    borderWidth: 2,
----+    justifyContent: 'center',
----+    alignItems: 'center',
----+    borderWidth: 3,
----     borderColor: Colors.white,
----+    shadowColor: '#000',
----+    shadowOffset: { width: 0, height: 2 },
----+    shadowOpacity: 0.3,
----+    shadowRadius: 4,
----+    elevation: 5,
----   },
----   locationPermissionContainer: {
----     flex: 1,
+---@@ -48,6 +48,10 @@ export default function TraineeHomeScreen() {
+---   const [locationPermission, setLocationPermission] = useState(null);
+--- 
+---   const requestLocationPermission = async () => {
+---+    if (Platform.OS === 'web' || !Location) {
+---+      return; // Skip location on web
+---+    }
+---+    
+---     try {
+---       const { status } = await Location.requestForegroundPermissionsAsync();
+---       setLocationPermission(status);
+---@@ -64,7 +68,9 @@ export default function TraineeHomeScreen() {
+--- 
+---   useEffect(() => {
+---     loadTrainers();
+----    requestLocationPermission();
+---+    if (Platform.OS !== 'web') {
+---+      requestLocationPermission();
+---+    }
+---   }, []);
+--- 
+---   const loadTrainers = async () => {
 ---diff --git a/model.patch b/model.patch
----index 0de0996..e69de29 100644
+---index cdf45d4..e69de29 100644
 ------ a/model.patch
 ---+++ b/model.patch
----@@ -1,1025 +0,0 @@
+---@@ -1,1062 +0,0 @@
 ----diff --git a/frontend/app/trainee/home.tsx b/frontend/app/trainee/home.tsx
-----index e7d2c59..dd4d0b2 100644
+----index dd4d0b2..5cf3749 100644
 ------- a/frontend/app/trainee/home.tsx
 ----+++ b/frontend/app/trainee/home.tsx
-----@@ -8,7 +8,10 @@ import {
-----   TextInput,
-----   ActivityIndicator,
-----   RefreshControl,
-----+  Alert,
-----+  Dimensions,
----- } from 'react-native';
-----+import { useRouter } from 'expo-router';
----- import { useAuth } from '../../src/contexts/AuthContext';
----- import { trainerAPI } from '../../src/services/api';
----- import { Colors } from '../../src/utils/colors';
-----@@ -16,16 +19,40 @@ import { TrainerProfile } from '../../src/types';
----- import { Ionicons } from '@expo/vector-icons';
----- import { SafeAreaView } from 'react-native-safe-area-context';
----- import { LinearGradient } from 'expo-linear-gradient';
-----+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
-----+import * as Location from 'expo-location';
-----+
-----+const { width } = Dimensions.get('window');
----- 
----- export default function TraineeHomeScreen() {
-----+  const router = useRouter();
-----   const { user, logout } = useAuth();
-----   const [loading, setLoading] = useState(true);
-----   const [refreshing, setRefreshing] = useState(false);
------  const [trainers, setTrainers] = useState<TrainerProfile[]>([]);
-----+  const [trainers, setTrainers] = useState([]);
-----   const [searchQuery, setSearchQuery] = useState('');
-----+  const [showMap, setShowMap] = useState(false);
-----+  const [location, setLocation] = useState(null);
-----+  const [locationPermission, setLocationPermission] = useState(null);
-----+
-----+  const requestLocationPermission = async () => {
-----+    try {
-----+      const { status } = await Location.requestForegroundPermissionsAsync();
-----+      setLocationPermission(status);
-----+      
-----+      if (status === 'granted') {
-----+        const currentLocation = await Location.getCurrentPositionAsync({});
-----+        setLocation(currentLocation);
-----+      }
-----+    } catch (error) {
-----+      console.error('Error requesting location permission:', error);
-----+      Alert.alert('Location Error', 'Unable to access location services');
-----+    }
-----+  };
----- 
-----   useEffect(() => {
-----     loadTrainers();
-----+    requestLocationPermission();
-----   }, []);
----- 
-----   const loadTrainers = async () => {
-----@@ -70,9 +97,21 @@ export default function TraineeHomeScreen() {
-----           <Text style={styles.greeting}>Hello, {user?.fullName?.split(' ')[0] || 'there'}! 👋</Text>
-----           <Text style={styles.subGreeting}>Find your perfect trainer</Text>
-----         </View>
------        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
------          <Ionicons name="log-out-outline" size={24} color={Colors.white} />
------        </TouchableOpacity>
-----+        <View style={styles.headerButtons}>
-----+          <TouchableOpacity 
-----+            onPress={() => setShowMap(!showMap)} 
-----+            style={[styles.headerButton, showMap && styles.headerButtonActive]}
-----+          >
-----+            <Ionicons 
-----+              name={showMap ? "list" : "map"} 
-----+              size={20} 
-----+              color={showMap ? Colors.primary : Colors.white} 
-----+            />
-----+          </TouchableOpacity>
-----+          <TouchableOpacity onPress={handleLogout} style={styles.headerButton}>
-----+            <Ionicons name="log-out-outline" size={20} color={Colors.white} />
-----+          </TouchableOpacity>
-----+        </View>
-----       </LinearGradient>
----- 
-----       {/* Search Bar */}
-----@@ -89,93 +128,151 @@ export default function TraineeHomeScreen() {
-----         </View>
-----       </View>
----- 
------      {/* Trainers List */}
------      <ScrollView
------        style={styles.scrollView}
------        refreshControl={
------          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />
------        }
------      >
------        <View style={styles.trainersList}>
------          <Text style={styles.sectionTitle}>Available Trainers</Text>
------          
------          {trainers.length === 0 ? (
------            <View style={styles.emptyState}>
------              <Ionicons name="fitness-outline" size={64} color={Colors.textLight} />
------              <Text style={styles.emptyStateText}>No trainers available yet</Text>
------              <Text style={styles.emptyStateSubtext}>Check back soon!</Text>
------            </View>
------          ) : (
------            trainers.map((trainer) => (
------              <View key={trainer.id} style={styles.trainerCard}>
------                <View style={styles.trainerAvatar}>
------                  <Ionicons name="person" size={32} color={Colors.primary} />
------                </View>
------                
------                <View style={styles.trainerInfo}>
------                  <View style={styles.trainerHeader}>
------                    <Text style={styles.trainerName}>Trainer #{trainer.id.slice(0, 6)}</Text>
------                    {trainer.isVerified && (
------                      <View style={styles.verifiedBadge}>
------                        <Ionicons name="checkmark-circle" size={16} color={Colors.success} />
------                        <Text style={styles.verifiedText}>Verified</Text>
------                      </View>
------                    )}
-----+      {/* Main Content - Map or List */}
-----+      {showMap ? (
-----+        <View style={styles.mapContainer}>
-----+          {locationPermission === 'granted' && location ? (
-----+            <MapView
-----+              style={styles.map}
-----+              provider={PROVIDER_GOOGLE}
-----+              initialRegion={{
-----+                latitude: location.coords.latitude,
-----+                longitude: location.coords.longitude,
-----+                latitudeDelta: 0.0922,
-----+                longitudeDelta: 0.0421,
-----+              }}
-----+              showsUserLocation={true}
-----+              showsMyLocationButton={true}
-----+            >
-----+              {trainers.map((trainer, index) => (
-----+                <Marker
-----+                  key={trainer.id}
-----+                  coordinate={{
-----+                    latitude: location.coords.latitude + (Math.random() - 0.5) * 0.02,
-----+                    longitude: location.coords.longitude + (Math.random() - 0.5) * 0.02,
-----+                  }}
-----+                  title={`Trainer #${trainer.id.slice(0, 6)}`}
-----+                  description={`${trainer.trainingStyles.slice(0, 2).join(', ')} • $${(trainer.ratePerMinuteCents / 100).toFixed(2)}/min`}
-----+                  onCalloutPress={() => router.push(`/trainee/trainer-detail?trainerId=${trainer.userId}`)}
-----+                >
-----+                  <View style={styles.markerContainer}>
-----+                    <Ionicons name="fitness" size={20} color={Colors.white} />
-----                   </View>
------                  
------                  {trainer.bio && (
------                    <Text style={styles.trainerBio} numberOfLines={2}>
------                      {trainer.bio}
------                    </Text>
------                  )}
------                  
------                  <View style={styles.trainerStats}>
------                    <View style={styles.stat}>
------                      <Ionicons name="star" size={16} color={Colors.warning} />
------                      <Text style={styles.statText}>
------                        {trainer.averageRating.toFixed(1)} ({trainer.totalSessionsCompleted} sessions)
------                      </Text>
------                    </View>
------                    <View style={styles.stat}>
------                      <Ionicons name="cash-outline" size={16} color={Colors.primary} />
------                      <Text style={styles.statText}>
------                        ${(trainer.ratePerMinuteCents / 100).toFixed(2)}/min
------                      </Text>
------                    </View>
-----+                </Marker>
-----+              ))}
-----+            </MapView>
-----+          ) : (
-----+            <View style={styles.locationPermissionContainer}>
-----+              <Ionicons name="location-outline" size={64} color={Colors.textLight} />
-----+              <Text style={styles.locationPermissionText}>
-----+                {locationPermission === 'denied' 
-----+                  ? 'Location access denied' 
-----+                  : 'Requesting location access...'}
-----+              </Text>
-----+              <Text style={styles.locationPermissionSubtext}>
-----+                {locationPermission === 'denied'
-----+                  ? 'Please enable location services to view trainers on the map'
-----+                  : 'We need your location to show nearby trainers'}
-----+              </Text>
-----+              {locationPermission === 'denied' && (
-----+                <TouchableOpacity 
-----+                  style={styles.retryButton}
-----+                  onPress={requestLocationPermission}
-----+                >
-----+                  <Text style={styles.retryButtonText}>Retry</Text>
-----+                </TouchableOpacity>
-----+              )}
-----+            </View>
-----+          )}
-----+        </View>
-----+      ) : (
-----+        <ScrollView
-----+          style={styles.scrollView}
-----+          refreshControl={
-----+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />
-----+          }
-----+        >
-----+          <View style={styles.trainersList}>
-----+            <Text style={styles.sectionTitle}>Available Trainers</Text>
-----+            
-----+            {trainers.length === 0 ? (
-----+              <View style={styles.emptyState}>
-----+                <Ionicons name="fitness-outline" size={64} color={Colors.textLight} />
-----+                <Text style={styles.emptyStateText}>No trainers available yet</Text>
-----+                <Text style={styles.emptyStateSubtext}>Check back soon!</Text>
-----+              </View>
-----+            ) : (
-----+              trainers.map((trainer) => (
-----+                <View key={trainer.id} style={styles.trainerCard}>
-----+                  <View style={styles.trainerAvatar}>
-----+                    <Ionicons name="person" size={32} color={Colors.primary} />
-----                   </View>
-----                   
------                  {trainer.trainingStyles.length > 0 && (
------                    <View style={styles.styleChips}>
------                      {trainer.trainingStyles.slice(0, 3).map((style, index) => (
------                        <View key={index} style={styles.styleChip}>
------                          <Text style={styles.styleChipText}>{style}</Text>
-----+                  <View style={styles.trainerInfo}>
-----+                    <View style={styles.trainerHeader}>
-----+                      <Text style={styles.trainerName}>Trainer #{trainer.id.slice(0, 6)}</Text>
-----+                      {trainer.isVerified && (
-----+                        <View style={styles.verifiedBadge}>
-----+                          <Ionicons name="checkmark-circle" size={16} color={Colors.success} />
-----+                          <Text style={styles.verifiedText}>Verified</Text>
-----                         </View>
------                      ))}
------                      {trainer.trainingStyles.length > 3 && (
------                        <Text style={styles.moreStyles}>+{trainer.trainingStyles.length - 3}</Text>
-----                       )}
-----                     </View>
------                  )}
------                  
------                  {trainer.primaryGym && (
------                    <View style={styles.gymInfo}>
------                      <Ionicons name="location" size={14} color={Colors.textLight} />
------                      <Text style={styles.gymText}>{trainer.primaryGym}</Text>
-----+                    
-----+                    {trainer.bio && (
-----+                      <Text style={styles.trainerBio} numberOfLines={2}>
-----+                        {trainer.bio}
-----+                      </Text>
-----+                    )}
-----+                    
-----+                    <View style={styles.trainerStats}>
-----+                      <View style={styles.stat}>
-----+                        <Ionicons name="star" size={16} color={Colors.warning} />
-----+                        <Text style={styles.statText}>
-----+                          {trainer.averageRating.toFixed(1)} ({trainer.totalSessionsCompleted} sessions)
-----+                        </Text>
-----+                      </View>
-----+                      <View style={styles.stat}>
-----+                        <Ionicons name="cash-outline" size={16} color={Colors.primary} />
-----+                        <Text style={styles.statText}>
-----+                          ${(trainer.ratePerMinuteCents / 100).toFixed(2)}/min
-----+                        </Text>
-----+                      </View>
-----                     </View>
------                  )}
------                  
------                  <TouchableOpacity 
------                    style={styles.bookButton}
------                    onPress={() => router.push(`/trainee/trainer-detail?trainerId=${trainer.userId}`)}
------                  >
------                    <Text style={styles.bookButtonText}>View Profile</Text>
------                  </TouchableOpacity>
-----+                    
-----+                    {trainer.trainingStyles.length > 0 && (
-----+                      <View style={styles.styleChips}>
-----+                        {trainer.trainingStyles.slice(0, 3).map((style, index) => (
-----+                          <View key={index} style={styles.styleChip}>
-----+                            <Text style={styles.styleChipText}>{style}</Text>
-----+                          </View>
-----+                        ))}
-----+                        {trainer.trainingStyles.length > 3 && (
-----+                          <Text style={styles.moreStyles}>+{trainer.trainingStyles.length - 3}</Text>
-----+                        )}
-----+                      </View>
-----+                    )}
-----+                    
-----+                    {trainer.primaryGym && (
-----+                      <View style={styles.gymInfo}>
-----+                        <Ionicons name="location" size={14} color={Colors.textLight} />
-----+                        <Text style={styles.gymText}>{trainer.primaryGym}</Text>
-----+                      </View>
-----+                    )}
-----+                    
-----+                    <TouchableOpacity 
-----+                      style={styles.bookButton}
-----+                      onPress={() => router.push(`/trainee/trainer-detail?trainerId=${trainer.userId}`)}
-----+                    >
-----+                      <Text style={styles.bookButtonText}>View Profile</Text>
-----+                    </TouchableOpacity>
-----+                  </View>
-----                 </View>
------              </View>
------            ))
------          )}
------        </View>
------      </ScrollView>
-----+              ))
-----+            )}
-----+          </View>
-----+        </ScrollView>
-----+      )}
-----     </SafeAreaView>
-----   );
----- }
-----@@ -196,6 +293,9 @@ const styles = StyleSheet.create({
-----     paddingVertical: 20,
-----     borderBottomLeftRadius: 24,
-----     borderBottomRightRadius: 24,
-----+    flexDirection: 'row',
-----+    justifyContent: 'space-between',
-----+    alignItems: 'center',
+----@@ -482,14 +482,23 @@ const styles = StyleSheet.create({
+----     flex: 1,
 ----   },
-----   greeting: {
-----     fontSize: 26,
-----@@ -208,10 +308,21 @@ const styles = StyleSheet.create({
-----     marginTop: 4,
-----     opacity: 0.9,
+----   map: {
+-----    flex: 1,
+----+    width: '100%',
+----+    height: '100%',
 ----   },
------  logoutButton: {
-----+  headerButtons: {
-----+    flexDirection: 'row',
-----+    gap: 8,
-----+  },
-----+  headerButton: {
-----     padding: 8,
-----     backgroundColor: 'rgba(255,255,255,0.2)',
-----     borderRadius: 20,
+----   markerContainer: {
 ----+    width: 36,
 ----+    height: 36,
+----+    borderRadius: 18,
+----     backgroundColor: Colors.primary,
+-----    borderRadius: 20,
+-----    padding: 8,
+-----    borderWidth: 2,
 ----+    justifyContent: 'center',
 ----+    alignItems: 'center',
-----+  },
-----+  headerButtonActive: {
-----+    backgroundColor: Colors.white,
+----+    borderWidth: 3,
+----     borderColor: Colors.white,
+----+    shadowColor: '#000',
+----+    shadowOffset: { width: 0, height: 2 },
+----+    shadowOpacity: 0.3,
+----+    shadowRadius: 4,
+----+    elevation: 5,
 ----   },
-----   searchSection: {
-----     paddingHorizontal: 24,
-----@@ -366,4 +477,50 @@ const styles = StyleSheet.create({
-----     fontWeight: 'bold',
-----     color: Colors.white,
-----   },
-----+  // Map styles
-----+  mapContainer: {
-----+    flex: 1,
-----+  },
-----+  map: {
-----+    flex: 1,
-----+  },
-----+  markerContainer: {
-----+    backgroundColor: Colors.primary,
-----+    borderRadius: 20,
-----+    padding: 8,
-----+    borderWidth: 2,
-----+    borderColor: Colors.white,
-----+  },
-----+  locationPermissionContainer: {
-----+    flex: 1,
-----+    justifyContent: 'center',
-----+    alignItems: 'center',
-----+    paddingHorizontal: 40,
-----+  },
-----+  locationPermissionText: {
-----+    fontSize: 18,
-----+    fontWeight: '600',
-----+    color: Colors.navy,
-----+    textAlign: 'center',
-----+    marginTop: 16,
-----+  },
-----+  locationPermissionSubtext: {
-----+    fontSize: 14,
-----+    color: Colors.textLight,
-----+    textAlign: 'center',
-----+    marginTop: 8,
-----+    lineHeight: 20,
-----+  },
-----+  retryButton: {
-----+    backgroundColor: Colors.primary,
-----+    paddingHorizontal: 24,
-----+    paddingVertical: 12,
-----+    borderRadius: 8,
-----+    marginTop: 20,
-----+  },
-----+  retryButtonText: {
-----+    fontSize: 16,
-----+    fontWeight: 'bold',
-----+    color: Colors.white,
-----+  },
----- });
+----   locationPermissionContainer: {
+----     flex: 1,
 ----diff --git a/model.patch b/model.patch
-----index b554bba..2ef53d2 100644
+----index 0de0996..e69de29 100644
 ------- a/model.patch
 ----+++ b/model.patch
-----@@ -1,623 +0,0 @@
------diff --git a/frontend/app/index.tsx b/frontend/app/index.tsx
------index 3a456b6..855e29c 100644
--------- a/frontend/app/index.tsx
------+++ b/frontend/app/index.tsx
------@@ -21,9 +21,6 @@ const { width, height } = Dimensions.get('window');
------ export default function WelcomeScreen() {
------   const router = useRouter();
------   const { user, loading, activeRole } = useAuth();
-------  const [logoScaleAnim] = useState(new Animated.Value(1));
-------  const [logoRotateAnim] = useState(new Animated.Value(0));
-------  const [logoJumpAnim] = useState(new Animated.Value(0));
------   const [buttonScaleAnim] = useState(new Animated.Value(1));
------   const [buttonGlowAnim] = useState(new Animated.Value(0));
------   const [buttonShakeAnim] = useState(new Animated.Value(0));
------@@ -36,62 +33,6 @@ export default function WelcomeScreen() {
+----@@ -1,1025 +0,0 @@
+-----diff --git a/frontend/app/trainee/home.tsx b/frontend/app/trainee/home.tsx
+-----index e7d2c59..dd4d0b2 100644
+-------- a/frontend/app/trainee/home.tsx
+-----+++ b/frontend/app/trainee/home.tsx
+-----@@ -8,7 +8,10 @@ import {
+-----   TextInput,
+-----   ActivityIndicator,
+-----   RefreshControl,
+-----+  Alert,
+-----+  Dimensions,
+----- } from 'react-native';
+-----+import { useRouter } from 'expo-router';
+----- import { useAuth } from '../../src/contexts/AuthContext';
+----- import { trainerAPI } from '../../src/services/api';
+----- import { Colors } from '../../src/utils/colors';
+-----@@ -16,16 +19,40 @@ import { TrainerProfile } from '../../src/types';
+----- import { Ionicons } from '@expo/vector-icons';
+----- import { SafeAreaView } from 'react-native-safe-area-context';
+----- import { LinearGradient } from 'expo-linear-gradient';
+-----+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+-----+import * as Location from 'expo-location';
+-----+
+-----+const { width } = Dimensions.get('window');
+----- 
+----- export default function TraineeHomeScreen() {
+-----+  const router = useRouter();
+-----   const { user, logout } = useAuth();
+-----   const [loading, setLoading] = useState(true);
+-----   const [refreshing, setRefreshing] = useState(false);
+------  const [trainers, setTrainers] = useState<TrainerProfile[]>([]);
+-----+  const [trainers, setTrainers] = useState([]);
+-----   const [searchQuery, setSearchQuery] = useState('');
+-----+  const [showMap, setShowMap] = useState(false);
+-----+  const [location, setLocation] = useState(null);
+-----+  const [locationPermission, setLocationPermission] = useState(null);
+-----+
+-----+  const requestLocationPermission = async () => {
+-----+    try {
+-----+      const { status } = await Location.requestForegroundPermissionsAsync();
+-----+      setLocationPermission(status);
+-----+      
+-----+      if (status === 'granted') {
+-----+        const currentLocation = await Location.getCurrentPositionAsync({});
+-----+        setLocation(currentLocation);
+-----+      }
+-----+    } catch (error) {
+-----+      console.error('Error requesting location permission:', error);
+-----+      Alert.alert('Location Error', 'Unable to access location services');
+-----+    }
+-----+  };
+----- 
+-----   useEffect(() => {
+-----     loadTrainers();
+-----+    requestLocationPermission();
 -----   }, []);
 ----- 
------   useEffect(() => {
-------    // LOGO: Fitness "Pump" Animation - Like a muscle flexing!
-------    Animated.loop(
-------      Animated.parallel([
-------        // Scale pump (muscle flex)
-------        Animated.sequence([
-------          Animated.timing(logoScaleAnim, {
-------            toValue: 1.12,
-------            duration: 600,
-------            useNativeDriver: true,
-------          }),
-------          Animated.timing(logoScaleAnim, {
-------            toValue: 0.98,
-------            duration: 400,
-------            useNativeDriver: true,
-------          }),
-------          Animated.timing(logoScaleAnim, {
-------            toValue: 1.08,
-------            duration: 500,
-------            useNativeDriver: true,
-------          }),
-------          Animated.timing(logoScaleAnim, {
-------            toValue: 1,
-------            duration: 500,
-------            useNativeDriver: true,
-------          }),
-------        ]),
-------        // Slight rotation for dynamic feel
-------        Animated.sequence([
-------          Animated.timing(logoRotateAnim, {
-------            toValue: 1,
-------            duration: 1000,
-------            useNativeDriver: true,
-------          }),
-------          Animated.timing(logoRotateAnim, {
-------            toValue: -1,
-------            duration: 1000,
-------            useNativeDriver: true,
-------          }),
-------        ]),
-------        // Jump effect (like a jump squat!)
-------        Animated.sequence([
-------          Animated.timing(logoJumpAnim, {
-------            toValue: -15,
-------            duration: 300,
-------            useNativeDriver: true,
-------          }),
-------          Animated.timing(logoJumpAnim, {
-------            toValue: 0,
-------            duration: 300,
-------            useNativeDriver: true,
-------          }),
-------          Animated.delay(1400),
-------        ]),
-------      ])
-------    ).start();
-------
------     // BUTTON: Super Energetic "Call to Action" Animation
------     Animated.loop(
------       Animated.parallel([
------@@ -149,7 +90,7 @@ export default function WelcomeScreen() {
------         ]),
------       ])
------     ).start();
-------  }, [logoScaleAnim, logoRotateAnim, logoJumpAnim, buttonScaleAnim, buttonGlowAnim, buttonShakeAnim]);
------+  }, [buttonScaleAnim, buttonGlowAnim, buttonShakeAnim]);
------ 
------   useEffect(() => {
------     if (!loading && user && activeRole && isReady) {
------@@ -187,18 +128,7 @@ export default function WelcomeScreen() {
------ 
------       <View style={styles.content}>
------         {/* Logo Section */}
-------        <Animated.View style={[styles.logoSection, { 
-------          transform: [
-------            { scale: logoScaleAnim },
-------            { 
-------              rotate: logoRotateAnim.interpolate({
-------                inputRange: [-1, 1],
-------                outputRange: ['-2deg', '2deg'],
-------              })
-------            },
-------            { translateY: logoJumpAnim }
-------          ] 
-------        }]}>
------+        <View style={styles.logoSection}>
------           <View style={styles.logoImageContainer}>
------             <Image
------               source={require('../assets/rapidreps-logo.jpg')}
------@@ -214,7 +144,7 @@ export default function WelcomeScreen() {
------               <Text style={styles.tagline}>🔥 Your Workout, Delivered 🔥</Text>
------             </LinearGradient>
------           </View>
-------        </Animated.View>
+-----   const loadTrainers = async () => {
+-----@@ -70,9 +97,21 @@ export default function TraineeHomeScreen() {
+-----           <Text style={styles.greeting}>Hello, {user?.fullName?.split(' ')[0] || 'there'}! 👋</Text>
+-----           <Text style={styles.subGreeting}>Find your perfect trainer</Text>
+-----         </View>
+------        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+------          <Ionicons name="log-out-outline" size={24} color={Colors.white} />
+------        </TouchableOpacity>
+-----+        <View style={styles.headerButtons}>
+-----+          <TouchableOpacity 
+-----+            onPress={() => setShowMap(!showMap)} 
+-----+            style={[styles.headerButton, showMap && styles.headerButtonActive]}
+-----+          >
+-----+            <Ionicons 
+-----+              name={showMap ? "list" : "map"} 
+-----+              size={20} 
+-----+              color={showMap ? Colors.primary : Colors.white} 
+-----+            />
+-----+          </TouchableOpacity>
+-----+          <TouchableOpacity onPress={handleLogout} style={styles.headerButton}>
+-----+            <Ionicons name="log-out-outline" size={20} color={Colors.white} />
+-----+          </TouchableOpacity>
 -----+        </View>
+-----       </LinearGradient>
 ----- 
------         {/* Features Section */}
------         <View style={styles.featuresSection}>
+-----       {/* Search Bar */}
+-----@@ -89,93 +128,151 @@ export default function TraineeHomeScreen() {
+-----         </View>
+-----       </View>
+----- 
+------      {/* Trainers List */}
+------      <ScrollView
+------        style={styles.scrollView}
+------        refreshControl={
+------          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />
+------        }
+------      >
+------        <View style={styles.trainersList}>
+------          <Text style={styles.sectionTitle}>Available Trainers</Text>
+------          
+------          {trainers.length === 0 ? (
+------            <View style={styles.emptyState}>
+------              <Ionicons name="fitness-outline" size={64} color={Colors.textLight} />
+------              <Text style={styles.emptyStateText}>No trainers available yet</Text>
+------              <Text style={styles.emptyStateSubtext}>Check back soon!</Text>
+------            </View>
+------          ) : (
+------            trainers.map((trainer) => (
+------              <View key={trainer.id} style={styles.trainerCard}>
+------                <View style={styles.trainerAvatar}>
+------                  <Ionicons name="person" size={32} color={Colors.primary} />
+------                </View>
+------                
+------                <View style={styles.trainerInfo}>
+------                  <View style={styles.trainerHeader}>
+------                    <Text style={styles.trainerName}>Trainer #{trainer.id.slice(0, 6)}</Text>
+------                    {trainer.isVerified && (
+------                      <View style={styles.verifiedBadge}>
+------                        <Ionicons name="checkmark-circle" size={16} color={Colors.success} />
+------                        <Text style={styles.verifiedText}>Verified</Text>
+------                      </View>
+------                    )}
+-----+      {/* Main Content - Map or List */}
+-----+      {showMap ? (
+-----+        <View style={styles.mapContainer}>
+-----+          {locationPermission === 'granted' && location ? (
+-----+            <MapView
+-----+              style={styles.map}
+-----+              provider={PROVIDER_GOOGLE}
+-----+              initialRegion={{
+-----+                latitude: location.coords.latitude,
+-----+                longitude: location.coords.longitude,
+-----+                latitudeDelta: 0.0922,
+-----+                longitudeDelta: 0.0421,
+-----+              }}
+-----+              showsUserLocation={true}
+-----+              showsMyLocationButton={true}
+-----+            >
+-----+              {trainers.map((trainer, index) => (
+-----+                <Marker
+-----+                  key={trainer.id}
+-----+                  coordinate={{
+-----+                    latitude: location.coords.latitude + (Math.random() - 0.5) * 0.02,
+-----+                    longitude: location.coords.longitude + (Math.random() - 0.5) * 0.02,
+-----+                  }}
+-----+                  title={`Trainer #${trainer.id.slice(0, 6)}`}
+-----+                  description={`${trainer.trainingStyles.slice(0, 2).join(', ')} • $${(trainer.ratePerMinuteCents / 100).toFixed(2)}/min`}
+-----+                  onCalloutPress={() => router.push(`/trainee/trainer-detail?trainerId=${trainer.userId}`)}
+-----+                >
+-----+                  <View style={styles.markerContainer}>
+-----+                    <Ionicons name="fitness" size={20} color={Colors.white} />
+-----                   </View>
+------                  
+------                  {trainer.bio && (
+------                    <Text style={styles.trainerBio} numberOfLines={2}>
+------                      {trainer.bio}
+------                    </Text>
+------                  )}
+------                  
+------                  <View style={styles.trainerStats}>
+------                    <View style={styles.stat}>
+------                      <Ionicons name="star" size={16} color={Colors.warning} />
+------                      <Text style={styles.statText}>
+------                        {trainer.averageRating.toFixed(1)} ({trainer.totalSessionsCompleted} sessions)
+------                      </Text>
+------                    </View>
+------                    <View style={styles.stat}>
+------                      <Ionicons name="cash-outline" size={16} color={Colors.primary} />
+------                      <Text style={styles.statText}>
+------                        ${(trainer.ratePerMinuteCents / 100).toFixed(2)}/min
+------                      </Text>
+------                    </View>
+-----+                </Marker>
+-----+              ))}
+-----+            </MapView>
+-----+          ) : (
+-----+            <View style={styles.locationPermissionContainer}>
+-----+              <Ionicons name="location-outline" size={64} color={Colors.textLight} />
+-----+              <Text style={styles.locationPermissionText}>
+-----+                {locationPermission === 'denied' 
+-----+                  ? 'Location access denied' 
+-----+                  : 'Requesting location access...'}
+-----+              </Text>
+-----+              <Text style={styles.locationPermissionSubtext}>
+-----+                {locationPermission === 'denied'
+-----+                  ? 'Please enable location services to view trainers on the map'
+-----+                  : 'We need your location to show nearby trainers'}
+-----+              </Text>
+-----+              {locationPermission === 'denied' && (
+-----+                <TouchableOpacity 
+-----+                  style={styles.retryButton}
+-----+                  onPress={requestLocationPermission}
+-----+                >
+-----+                  <Text style={styles.retryButtonText}>Retry</Text>
+-----+                </TouchableOpacity>
+-----+              )}
+-----+            </View>
+-----+          )}
+-----+        </View>
+-----+      ) : (
+-----+        <ScrollView
+-----+          style={styles.scrollView}
+-----+          refreshControl={
+-----+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />
+-----+          }
+-----+        >
+-----+          <View style={styles.trainersList}>
+-----+            <Text style={styles.sectionTitle}>Available Trainers</Text>
+-----+            
+-----+            {trainers.length === 0 ? (
+-----+              <View style={styles.emptyState}>
+-----+                <Ionicons name="fitness-outline" size={64} color={Colors.textLight} />
+-----+                <Text style={styles.emptyStateText}>No trainers available yet</Text>
+-----+                <Text style={styles.emptyStateSubtext}>Check back soon!</Text>
+-----+              </View>
+-----+            ) : (
+-----+              trainers.map((trainer) => (
+-----+                <View key={trainer.id} style={styles.trainerCard}>
+-----+                  <View style={styles.trainerAvatar}>
+-----+                    <Ionicons name="person" size={32} color={Colors.primary} />
+-----                   </View>
+-----                   
+------                  {trainer.trainingStyles.length > 0 && (
+------                    <View style={styles.styleChips}>
+------                      {trainer.trainingStyles.slice(0, 3).map((style, index) => (
+------                        <View key={index} style={styles.styleChip}>
+------                          <Text style={styles.styleChipText}>{style}</Text>
+-----+                  <View style={styles.trainerInfo}>
+-----+                    <View style={styles.trainerHeader}>
+-----+                      <Text style={styles.trainerName}>Trainer #{trainer.id.slice(0, 6)}</Text>
+-----+                      {trainer.isVerified && (
+-----+                        <View style={styles.verifiedBadge}>
+-----+                          <Ionicons name="checkmark-circle" size={16} color={Colors.success} />
+-----+                          <Text style={styles.verifiedText}>Verified</Text>
+-----                         </View>
+------                      ))}
+------                      {trainer.trainingStyles.length > 3 && (
+------                        <Text style={styles.moreStyles}>+{trainer.trainingStyles.length - 3}</Text>
+-----                       )}
+-----                     </View>
+------                  )}
+------                  
+------                  {trainer.primaryGym && (
+------                    <View style={styles.gymInfo}>
+------                      <Ionicons name="location" size={14} color={Colors.textLight} />
+------                      <Text style={styles.gymText}>{trainer.primaryGym}</Text>
+-----+                    
+-----+                    {trainer.bio && (
+-----+                      <Text style={styles.trainerBio} numberOfLines={2}>
+-----+                        {trainer.bio}
+-----+                      </Text>
+-----+                    )}
+-----+                    
+-----+                    <View style={styles.trainerStats}>
+-----+                      <View style={styles.stat}>
+-----+                        <Ionicons name="star" size={16} color={Colors.warning} />
+-----+                        <Text style={styles.statText}>
+-----+                          {trainer.averageRating.toFixed(1)} ({trainer.totalSessionsCompleted} sessions)
+-----+                        </Text>
+-----+                      </View>
+-----+                      <View style={styles.stat}>
+-----+                        <Ionicons name="cash-outline" size={16} color={Colors.primary} />
+-----+                        <Text style={styles.statText}>
+-----+                          ${(trainer.ratePerMinuteCents / 100).toFixed(2)}/min
+-----+                        </Text>
+-----+                      </View>
+-----                     </View>
+------                  )}
+------                  
+------                  <TouchableOpacity 
+------                    style={styles.bookButton}
+------                    onPress={() => router.push(`/trainee/trainer-detail?trainerId=${trainer.userId}`)}
+------                  >
+------                    <Text style={styles.bookButtonText}>View Profile</Text>
+------                  </TouchableOpacity>
+-----+                    
+-----+                    {trainer.trainingStyles.length > 0 && (
+-----+                      <View style={styles.styleChips}>
+-----+                        {trainer.trainingStyles.slice(0, 3).map((style, index) => (
+-----+                          <View key={index} style={styles.styleChip}>
+-----+                            <Text style={styles.styleChipText}>{style}</Text>
+-----+                          </View>
+-----+                        ))}
+-----+                        {trainer.trainingStyles.length > 3 && (
+-----+                          <Text style={styles.moreStyles}>+{trainer.trainingStyles.length - 3}</Text>
+-----+                        )}
+-----+                      </View>
+-----+                    )}
+-----+                    
+-----+                    {trainer.primaryGym && (
+-----+                      <View style={styles.gymInfo}>
+-----+                        <Ionicons name="location" size={14} color={Colors.textLight} />
+-----+                        <Text style={styles.gymText}>{trainer.primaryGym}</Text>
+-----+                      </View>
+-----+                    )}
+-----+                    
+-----+                    <TouchableOpacity 
+-----+                      style={styles.bookButton}
+-----+                      onPress={() => router.push(`/trainee/trainer-detail?trainerId=${trainer.userId}`)}
+-----+                    >
+-----+                      <Text style={styles.bookButtonText}>View Profile</Text>
+-----+                    </TouchableOpacity>
+-----+                  </View>
+-----                 </View>
+------              </View>
+------            ))
+------          )}
+------        </View>
+------      </ScrollView>
+-----+              ))
+-----+            )}
+-----+          </View>
+-----+        </ScrollView>
+-----+      )}
+-----     </SafeAreaView>
+-----   );
+----- }
+-----@@ -196,6 +293,9 @@ const styles = StyleSheet.create({
+-----     paddingVertical: 20,
+-----     borderBottomLeftRadius: 24,
+-----     borderBottomRightRadius: 24,
+-----+    flexDirection: 'row',
+-----+    justifyContent: 'space-between',
+-----+    alignItems: 'center',
+-----   },
+-----   greeting: {
+-----     fontSize: 26,
+-----@@ -208,10 +308,21 @@ const styles = StyleSheet.create({
+-----     marginTop: 4,
+-----     opacity: 0.9,
+-----   },
+------  logoutButton: {
+-----+  headerButtons: {
+-----+    flexDirection: 'row',
+-----+    gap: 8,
+-----+  },
+-----+  headerButton: {
+-----     padding: 8,
+-----     backgroundColor: 'rgba(255,255,255,0.2)',
+-----     borderRadius: 20,
+-----+    width: 36,
+-----+    height: 36,
+-----+    justifyContent: 'center',
+-----+    alignItems: 'center',
+-----+  },
+-----+  headerButtonActive: {
+-----+    backgroundColor: Colors.white,
+-----   },
+-----   searchSection: {
+-----     paddingHorizontal: 24,
+-----@@ -366,4 +477,50 @@ const styles = StyleSheet.create({
+-----     fontWeight: 'bold',
+-----     color: Colors.white,
+-----   },
+-----+  // Map styles
+-----+  mapContainer: {
+-----+    flex: 1,
+-----+  },
+-----+  map: {
+-----+    flex: 1,
+-----+  },
+-----+  markerContainer: {
+-----+    backgroundColor: Colors.primary,
+-----+    borderRadius: 20,
+-----+    padding: 8,
+-----+    borderWidth: 2,
+-----+    borderColor: Colors.white,
+-----+  },
+-----+  locationPermissionContainer: {
+-----+    flex: 1,
+-----+    justifyContent: 'center',
+-----+    alignItems: 'center',
+-----+    paddingHorizontal: 40,
+-----+  },
+-----+  locationPermissionText: {
+-----+    fontSize: 18,
+-----+    fontWeight: '600',
+-----+    color: Colors.navy,
+-----+    textAlign: 'center',
+-----+    marginTop: 16,
+-----+  },
+-----+  locationPermissionSubtext: {
+-----+    fontSize: 14,
+-----+    color: Colors.textLight,
+-----+    textAlign: 'center',
+-----+    marginTop: 8,
+-----+    lineHeight: 20,
+-----+  },
+-----+  retryButton: {
+-----+    backgroundColor: Colors.primary,
+-----+    paddingHorizontal: 24,
+-----+    paddingVertical: 12,
+-----+    borderRadius: 8,
+-----+    marginTop: 20,
+-----+  },
+-----+  retryButtonText: {
+-----+    fontSize: 16,
+-----+    fontWeight: 'bold',
+-----+    color: Colors.white,
+-----+  },
+----- });
 -----diff --git a/model.patch b/model.patch
------index 7092afd..e69de29 100644
+-----index b554bba..2ef53d2 100644
 -------- a/model.patch
 -----+++ b/model.patch
------@@ -1,503 +0,0 @@
+-----@@ -1,623 +0,0 @@
 ------diff --git a/frontend/app/index.tsx b/frontend/app/index.tsx
-------index d8d4ff4..3a456b6 100644
+------index 3a456b6..855e29c 100644
 --------- a/frontend/app/index.tsx
 ------+++ b/frontend/app/index.tsx
-------@@ -270,7 +270,7 @@ export default function WelcomeScreen() {
-------                   {
-------                     shadowOpacity: buttonGlowAnim.interpolate({
-------                       inputRange: [0, 1],
--------                      outputRange: [0.3, 0.6],
-------+                      outputRange: [0.3, 0.8],
-------                     }),
-------                   },
-------                 ]}
+------@@ -21,9 +21,6 @@ const { width, height } = Dimensions.get('window');
+------ export default function WelcomeScreen() {
+------   const router = useRouter();
+------   const { user, loading, activeRole } = useAuth();
+-------  const [logoScaleAnim] = useState(new Animated.Value(1));
+-------  const [logoRotateAnim] = useState(new Animated.Value(0));
+-------  const [logoJumpAnim] = useState(new Animated.Value(0));
+------   const [buttonScaleAnim] = useState(new Animated.Value(1));
+------   const [buttonGlowAnim] = useState(new Animated.Value(0));
+------   const [buttonShakeAnim] = useState(new Animated.Value(0));
+------@@ -36,62 +33,6 @@ export default function WelcomeScreen() {
+------   }, []);
+------ 
+------   useEffect(() => {
+-------    // LOGO: Fitness "Pump" Animation - Like a muscle flexing!
+-------    Animated.loop(
+-------      Animated.parallel([
+-------        // Scale pump (muscle flex)
+-------        Animated.sequence([
+-------          Animated.timing(logoScaleAnim, {
+-------            toValue: 1.12,
+-------            duration: 600,
+-------            useNativeDriver: true,
+-------          }),
+-------          Animated.timing(logoScaleAnim, {
+-------            toValue: 0.98,
+-------            duration: 400,
+-------            useNativeDriver: true,
+-------          }),
+-------          Animated.timing(logoScaleAnim, {
+-------            toValue: 1.08,
+-------            duration: 500,
+-------            useNativeDriver: true,
+-------          }),
+-------          Animated.timing(logoScaleAnim, {
+-------            toValue: 1,
+-------            duration: 500,
+-------            useNativeDriver: true,
+-------          }),
+-------        ]),
+-------        // Slight rotation for dynamic feel
+-------        Animated.sequence([
+-------          Animated.timing(logoRotateAnim, {
+-------            toValue: 1,
+-------            duration: 1000,
+-------            useNativeDriver: true,
+-------          }),
+-------          Animated.timing(logoRotateAnim, {
+-------            toValue: -1,
+-------            duration: 1000,
+-------            useNativeDriver: true,
+-------          }),
+-------        ]),
+-------        // Jump effect (like a jump squat!)
+-------        Animated.sequence([
+-------          Animated.timing(logoJumpAnim, {
+-------            toValue: -15,
+-------            duration: 300,
+-------            useNativeDriver: true,
+-------          }),
+-------          Animated.timing(logoJumpAnim, {
+-------            toValue: 0,
+-------            duration: 300,
+-------            useNativeDriver: true,
+-------          }),
+-------          Animated.delay(1400),
+-------        ]),
+-------      ])
+-------    ).start();
+-------
+------     // BUTTON: Super Energetic "Call to Action" Animation
+------     Animated.loop(
+------       Animated.parallel([
+------@@ -149,7 +90,7 @@ export default function WelcomeScreen() {
+------         ]),
+------       ])
+------     ).start();
+-------  }, [logoScaleAnim, logoRotateAnim, logoJumpAnim, buttonScaleAnim, buttonGlowAnim, buttonShakeAnim]);
+------+  }, [buttonScaleAnim, buttonGlowAnim, buttonShakeAnim]);
+------ 
+------   useEffect(() => {
+------     if (!loading && user && activeRole && isReady) {
+------@@ -187,18 +128,7 @@ export default function WelcomeScreen() {
+------ 
+------       <View style={styles.content}>
+------         {/* Logo Section */}
+-------        <Animated.View style={[styles.logoSection, { 
+-------          transform: [
+-------            { scale: logoScaleAnim },
+-------            { 
+-------              rotate: logoRotateAnim.interpolate({
+-------                inputRange: [-1, 1],
+-------                outputRange: ['-2deg', '2deg'],
+-------              })
+-------            },
+-------            { translateY: logoJumpAnim }
+-------          ] 
+-------        }]}>
+------+        <View style={styles.logoSection}>
+------           <View style={styles.logoImageContainer}>
+------             <Image
+------               source={require('../assets/rapidreps-logo.jpg')}
+------@@ -214,7 +144,7 @@ export default function WelcomeScreen() {
+------               <Text style={styles.tagline}>🔥 Your Workout, Delivered 🔥</Text>
+------             </LinearGradient>
+------           </View>
+-------        </Animated.View>
+------+        </View>
+------ 
+------         {/* Features Section */}
+------         <View style={styles.featuresSection}>
 ------diff --git a/model.patch b/model.patch
-------index 37b0884..e69de29 100644
+------index 7092afd..e69de29 100644
 --------- a/model.patch
 ------+++ b/model.patch
-------@@ -1,485 +0,0 @@
+------@@ -1,503 +0,0 @@
+-------diff --git a/frontend/app/index.tsx b/frontend/app/index.tsx
+-------index d8d4ff4..3a456b6 100644
+---------- a/frontend/app/index.tsx
+-------+++ b/frontend/app/index.tsx
+-------@@ -270,7 +270,7 @@ export default function WelcomeScreen() {
+-------                   {
+-------                     shadowOpacity: buttonGlowAnim.interpolate({
+-------                       inputRange: [0, 1],
+--------                      outputRange: [0.3, 0.6],
+-------+                      outputRange: [0.3, 0.8],
+-------                     }),
+-------                   },
+-------                 ]}
 -------diff --git a/model.patch b/model.patch
--------index 45222a5..e69de29 100644
+-------index 37b0884..e69de29 100644
 ---------- a/model.patch
 -------+++ b/model.patch
--------@@ -1,480 +0,0 @@
---------diff --git a/frontend/app/index.tsx b/frontend/app/index.tsx
---------index 81b7ca1..d8d4ff4 100644
------------ a/frontend/app/index.tsx
---------+++ b/frontend/app/index.tsx
---------@@ -21,10 +21,13 @@ const { width, height } = Dimensions.get('window');
--------- export default function WelcomeScreen() {
---------   const router = useRouter();
---------   const { user, loading, activeRole } = useAuth();
----------  const [pulseAnim] = useState(new Animated.Value(1));
---------+  const [logoScaleAnim] = useState(new Animated.Value(1));
---------+  const [logoRotateAnim] = useState(new Animated.Value(0));
---------+  const [logoJumpAnim] = useState(new Animated.Value(0));
---------   const [buttonScaleAnim] = useState(new Animated.Value(1));
---------   const [buttonGlowAnim] = useState(new Animated.Value(0));
----------  const [isReady, setIsReady] = useState(false);
---------+  const [buttonShakeAnim] = useState(new Animated.Value(0));
---------+  const [isReady, setIsReady] = React.useState(false);
--------- 
---------   useEffect(() => {
---------     // Mark as ready after a short delay
---------@@ -33,52 +36,120 @@ export default function WelcomeScreen() {
---------   }, []);
--------- 
---------   useEffect(() => {
----------    // Pulse animation for logo
---------+    // LOGO: Fitness "Pump" Animation - Like a muscle flexing!
---------     Animated.loop(
----------      Animated.sequence([
----------        Animated.timing(pulseAnim, {
----------          toValue: 1.05,
----------          duration: 1000,
----------          useNativeDriver: true,
----------        }),
----------        Animated.timing(pulseAnim, {
----------          toValue: 1,
----------          duration: 1000,
----------          useNativeDriver: true,
----------        }),
---------+      Animated.parallel([
---------+        // Scale pump (muscle flex)
---------+        Animated.sequence([
---------+          Animated.timing(logoScaleAnim, {
---------+            toValue: 1.12,
---------+            duration: 600,
---------+            useNativeDriver: true,
---------+          }),
---------+          Animated.timing(logoScaleAnim, {
---------+            toValue: 0.98,
---------+            duration: 400,
---------+            useNativeDriver: true,
---------+          }),
---------+          Animated.timing(logoScaleAnim, {
---------+            toValue: 1.08,
---------+            duration: 500,
---------+            useNativeDriver: true,
---------+          }),
---------+          Animated.timing(logoScaleAnim, {
---------+            toValue: 1,
---------+            duration: 500,
---------+            useNativeDriver: true,
---------+          }),
---------+        ]),
---------+        // Slight rotation for dynamic feel
---------+        Animated.sequence([
---------+          Animated.timing(logoRotateAnim, {
---------+            toValue: 1,
---------+            duration: 1000,
---------+            useNativeDriver: true,
---------+          }),
---------+          Animated.timing(logoRotateAnim, {
---------+            toValue: -1,
---------+            duration: 1000,
---------+            useNativeDriver: true,
---------+          }),
---------+        ]),
---------+        // Jump effect (like a jump squat!)
---------+        Animated.sequence([
---------+          Animated.timing(logoJumpAnim, {
---------+            toValue: -15,
---------+            duration: 300,
---------+            useNativeDriver: true,
---------+          }),
---------+          Animated.timing(logoJumpAnim, {
---------+            toValue: 0,
---------+            duration: 300,
---------+            useNativeDriver: true,
---------+          }),
---------+          Animated.delay(1400),
---------+        ]),
---------       ])
---------     ).start();
--------- 
----------    // Energetic button animation
---------+    // BUTTON: Super Energetic "Call to Action" Animation
---------     Animated.loop(
---------       Animated.parallel([
---------+        // Scale pulse (bigger emphasis)
---------         Animated.sequence([
----------          Animated.timing(buttonScaleAnim, {
----------            toValue: 1.03,
----------            duration: 800,
---------+          Animated.spring(buttonScaleAnim, {
---------+            toValue: 1.08,
---------+            friction: 3,
---------+            tension: 40,
---------             useNativeDriver: true,
---------           }),
----------          Animated.timing(buttonScaleAnim, {
---------+          Animated.spring(buttonScaleAnim, {
---------             toValue: 1,
----------            duration: 800,
---------+            friction: 3,
---------+            tension: 40,
---------             useNativeDriver: true,
---------           }),
---------         ]),
---------+        // Intense glow
---------         Animated.sequence([
---------           Animated.timing(buttonGlowAnim, {
---------             toValue: 1,
----------            duration: 800,
---------+            duration: 600,
---------             useNativeDriver: false,
---------           }),
---------           Animated.timing(buttonGlowAnim, {
---------             toValue: 0,
----------            duration: 800,
---------+            duration: 600,
---------             useNativeDriver: false,
---------           }),
---------         ]),
---------+        // Shake effect for urgency
---------+        Animated.sequence([
---------+          Animated.timing(buttonShakeAnim, {
---------+            toValue: 3,
---------+            duration: 50,
---------+            useNativeDriver: true,
---------+          }),
---------+          Animated.timing(buttonShakeAnim, {
---------+            toValue: -3,
---------+            duration: 50,
---------+            useNativeDriver: true,
---------+          }),
---------+          Animated.timing(buttonShakeAnim, {
---------+            toValue: 3,
---------+            duration: 50,
---------+            useNativeDriver: true,
---------+          }),
---------+          Animated.timing(buttonShakeAnim, {
---------+            toValue: 0,
---------+            duration: 50,
---------+            useNativeDriver: true,
---------+          }),
---------+          Animated.delay(1000),
---------+        ]),
---------       ])
---------     ).start();
----------  }, [pulseAnim, buttonScaleAnim, buttonGlowAnim]);
---------+  }, [logoScaleAnim, logoRotateAnim, logoJumpAnim, buttonScaleAnim, buttonGlowAnim, buttonShakeAnim]);
--------- 
---------   useEffect(() => {
---------     if (!loading && user && activeRole && isReady) {
---------@@ -116,7 +187,18 @@ export default function WelcomeScreen() {
--------- 
---------       <View style={styles.content}>
---------         {/* Logo Section */}
----------        <Animated.View style={[styles.logoSection, { transform: [{ scale: pulseAnim }] }]}>
---------+        <Animated.View style={[styles.logoSection, { 
---------+          transform: [
---------+            { scale: logoScaleAnim },
---------+            { 
---------+              rotate: logoRotateAnim.interpolate({
---------+                inputRange: [-1, 1],
---------+                outputRange: ['-2deg', '2deg'],
---------+              })
---------+            },
---------+            { translateY: logoJumpAnim }
---------+          ] 
---------+        }]}>
---------           <View style={styles.logoImageContainer}>
---------             <Image
---------               source={require('../assets/rapidreps-logo.jpg')}
---------@@ -172,7 +254,12 @@ export default function WelcomeScreen() {
--------- 
---------         {/* CTA Buttons */}
---------         <View style={styles.buttonContainer}>
----------          <Animated.View style={{ transform: [{ scale: buttonScaleAnim }] }}>
---------+          <Animated.View style={{ 
---------+            transform: [
---------+              { scale: buttonScaleAnim },
---------+              { translateX: buttonShakeAnim }
---------+            ] 
---------+          }}>
---------             <TouchableOpacity
---------               activeOpacity={0.9}
---------               onPress={() => router.push('/auth/signup')}
+-------@@ -1,485 +0,0 @@
 --------diff --git a/model.patch b/model.patch
---------index 76b0bf1..d1aa78e 100644
+--------index 45222a5..e69de29 100644
 ----------- a/model.patch
 --------+++ b/model.patch
---------@@ -1,279 +0,0 @@
+--------@@ -1,480 +0,0 @@
 ---------diff --git a/frontend/app/index.tsx b/frontend/app/index.tsx
----------index 61f049a..81b7ca1 100644
+---------index 81b7ca1..d8d4ff4 100644
 ------------ a/frontend/app/index.tsx
 ---------+++ b/frontend/app/index.tsx
----------@@ -24,6 +24,13 @@ export default function WelcomeScreen() {
----------   const [pulseAnim] = useState(new Animated.Value(1));
+---------@@ -21,10 +21,13 @@ const { width, height } = Dimensions.get('window');
+--------- export default function WelcomeScreen() {
+---------   const router = useRouter();
+---------   const { user, loading, activeRole } = useAuth();
+----------  const [pulseAnim] = useState(new Animated.Value(1));
+---------+  const [logoScaleAnim] = useState(new Animated.Value(1));
+---------+  const [logoRotateAnim] = useState(new Animated.Value(0));
+---------+  const [logoJumpAnim] = useState(new Animated.Value(0));
 ---------   const [buttonScaleAnim] = useState(new Animated.Value(1));
 ---------   const [buttonGlowAnim] = useState(new Animated.Value(0));
----------+  const [isReady, setIsReady] = useState(false);
----------+
----------+  useEffect(() => {
----------+    // Mark as ready after a short delay
----------+    const timer = setTimeout(() => setIsReady(true), 100);
----------+    return () => clearTimeout(timer);
----------+  }, []);
+----------  const [isReady, setIsReady] = useState(false);
+---------+  const [buttonShakeAnim] = useState(new Animated.Value(0));
+---------+  const [isReady, setIsReady] = React.useState(false);
 --------- 
 ---------   useEffect(() => {
----------     // Pulse animation for logo
----------@@ -74,7 +81,7 @@ export default function WelcomeScreen() {
----------   }, [pulseAnim, buttonScaleAnim, buttonGlowAnim]);
+---------     // Mark as ready after a short delay
+---------@@ -33,52 +36,120 @@ export default function WelcomeScreen() {
+---------   }, []);
 --------- 
 ---------   useEffect(() => {
-----------    if (!loading && user && activeRole) {
----------+    if (!loading && user && activeRole && isReady) {
----------       // User is logged in, navigate to appropriate home
----------       if (activeRole === 'trainer') {
----------         router.replace('/trainer/home');
----------@@ -82,7 +89,7 @@ export default function WelcomeScreen() {
----------         router.replace('/trainee/home');
----------       }
----------     }
-----------  }, [loading, user, activeRole, router]);
----------+  }, [loading, user, activeRole, isReady, router]);
+----------    // Pulse animation for logo
+---------+    // LOGO: Fitness "Pump" Animation - Like a muscle flexing!
+---------     Animated.loop(
+----------      Animated.sequence([
+----------        Animated.timing(pulseAnim, {
+----------          toValue: 1.05,
+----------          duration: 1000,
+----------          useNativeDriver: true,
+----------        }),
+----------        Animated.timing(pulseAnim, {
+----------          toValue: 1,
+----------          duration: 1000,
+----------          useNativeDriver: true,
+----------        }),
+---------+      Animated.parallel([
+---------+        // Scale pump (muscle flex)
+---------+        Animated.sequence([
+---------+          Animated.timing(logoScaleAnim, {
+---------+            toValue: 1.12,
+---------+            duration: 600,
+---------+            useNativeDriver: true,
+---------+          }),
+---------+          Animated.timing(logoScaleAnim, {
+---------+            toValue: 0.98,
+---------+            duration: 400,
+---------+            useNativeDriver: true,
+---------+          }),
+---------+          Animated.timing(logoScaleAnim, {
+---------+            toValue: 1.08,
+---------+            duration: 500,
+---------+            useNativeDriver: true,
+---------+          }),
+---------+          Animated.timing(logoScaleAnim, {
+---------+            toValue: 1,
+---------+            duration: 500,
+---------+            useNativeDriver: true,
+---------+          }),
+---------+        ]),
+---------+        // Slight rotation for dynamic feel
+---------+        Animated.sequence([
+---------+          Animated.timing(logoRotateAnim, {
+---------+            toValue: 1,
+---------+            duration: 1000,
+---------+            useNativeDriver: true,
+---------+          }),
+---------+          Animated.timing(logoRotateAnim, {
+---------+            toValue: -1,
+---------+            duration: 1000,
+---------+            useNativeDriver: true,
+---------+          }),
+---------+        ]),
+---------+        // Jump effect (like a jump squat!)
+---------+        Animated.sequence([
+---------+          Animated.timing(logoJumpAnim, {
+---------+            toValue: -15,
+---------+            duration: 300,
+---------+            useNativeDriver: true,
+---------+          }),
+---------+          Animated.timing(logoJumpAnim, {
+---------+            toValue: 0,
+---------+            duration: 300,
+---------+            useNativeDriver: true,
+---------+          }),
+---------+          Animated.delay(1400),
+---------+        ]),
+---------       ])
+---------     ).start();
 --------- 
----------   if (loading) {
----------     return (
+----------    // Energetic button animation
+---------+    // BUTTON: Super Energetic "Call to Action" Animation
+---------     Animated.loop(
+---------       Animated.parallel([
+---------+        // Scale pulse (bigger emphasis)
+---------         Animated.sequence([
+----------          Animated.timing(buttonScaleAnim, {
+----------            toValue: 1.03,
+----------            duration: 800,
+---------+          Animated.spring(buttonScaleAnim, {
+---------+            toValue: 1.08,
+---------+            friction: 3,
+---------+            tension: 40,
+---------             useNativeDriver: true,
+---------           }),
+----------          Animated.timing(buttonScaleAnim, {
+---------+          Animated.spring(buttonScaleAnim, {
+---------             toValue: 1,
+----------            duration: 800,
+---------+            friction: 3,
+---------+            tension: 40,
+---------             useNativeDriver: true,
+---------           }),
+---------         ]),
+---------+        // Intense glow
+---------         Animated.sequence([
+---------           Animated.timing(buttonGlowAnim, {
+---------             toValue: 1,
+----------            duration: 800,
+---------+            duration: 600,
+---------             useNativeDriver: false,
+---------           }),
+---------           Animated.timing(buttonGlowAnim, {
+---------             toValue: 0,
+----------            duration: 800,
+---------+            duration: 600,
+---------             useNativeDriver: false,
+---------           }),
+---------         ]),
+---------+        // Shake effect for urgency
+---------+        Animated.sequence([
+---------+          Animated.timing(buttonShakeAnim, {
+---------+            toValue: 3,
+---------+            duration: 50,
+---------+            useNativeDriver: true,
+---------+          }),
+---------+          Animated.timing(buttonShakeAnim, {
+---------+            toValue: -3,
+---------+            duration: 50,
+---------+            useNativeDriver: true,
+---------+          }),
+---------+          Animated.timing(buttonShakeAnim, {
+---------+            toValue: 3,
+---------+            duration: 50,
+---------+            useNativeDriver: true,
+---------+          }),
+---------+          Animated.timing(buttonShakeAnim, {
+---------+            toValue: 0,
+---------+            duration: 50,
+---------+            useNativeDriver: true,
+---------+          }),
+---------+          Animated.delay(1000),
+---------+        ]),
+---------       ])
+---------     ).start();
+----------  }, [pulseAnim, buttonScaleAnim, buttonGlowAnim]);
+---------+  }, [logoScaleAnim, logoRotateAnim, logoJumpAnim, buttonScaleAnim, buttonGlowAnim, buttonShakeAnim]);
+--------- 
+---------   useEffect(() => {
+---------     if (!loading && user && activeRole && isReady) {
+---------@@ -116,7 +187,18 @@ export default function WelcomeScreen() {
+--------- 
+---------       <View style={styles.content}>
+---------         {/* Logo Section */}
+----------        <Animated.View style={[styles.logoSection, { transform: [{ scale: pulseAnim }] }]}>
+---------+        <Animated.View style={[styles.logoSection, { 
+---------+          transform: [
+---------+            { scale: logoScaleAnim },
+---------+            { 
+---------+              rotate: logoRotateAnim.interpolate({
+---------+                inputRange: [-1, 1],
+---------+                outputRange: ['-2deg', '2deg'],
+---------+              })
+---------+            },
+---------+            { translateY: logoJumpAnim }
+---------+          ] 
+---------+        }]}>
+---------           <View style={styles.logoImageContainer}>
+---------             <Image
+---------               source={require('../assets/rapidreps-logo.jpg')}
+---------@@ -172,7 +254,12 @@ export default function WelcomeScreen() {
+--------- 
+---------         {/* CTA Buttons */}
+---------         <View style={styles.buttonContainer}>
+----------          <Animated.View style={{ transform: [{ scale: buttonScaleAnim }] }}>
+---------+          <Animated.View style={{ 
+---------+            transform: [
+---------+              { scale: buttonScaleAnim },
+---------+              { translateX: buttonShakeAnim }
+---------+            ] 
+---------+          }}>
+---------             <TouchableOpacity
+---------               activeOpacity={0.9}
+---------               onPress={() => router.push('/auth/signup')}
 ---------diff --git a/model.patch b/model.patch
----------index b07c788..e69de29 100644
+---------index 76b0bf1..d1aa78e 100644
 ------------ a/model.patch
 ---------+++ b/model.patch
----------@@ -1,238 +0,0 @@
+---------@@ -1,279 +0,0 @@
 ----------diff --git a/frontend/app/index.tsx b/frontend/app/index.tsx
-----------index c2426e7..b4ebad3 100644
+----------index 61f049a..81b7ca1 100644
 ------------- a/frontend/app/index.tsx
 ----------+++ b/frontend/app/index.tsx
-----------@@ -1,4 +1,4 @@
------------import React, { useEffect } from 'react';
-----------+import React, { useEffect, useState } from 'react';
----------- import {
-----------   View,
-----------   Text,
-----------@@ -21,9 +21,9 @@ const { width, height } = Dimensions.get('window');
----------- export default function WelcomeScreen() {
-----------   const router = useRouter();
-----------   const { user, loading, activeRole } = useAuth();
------------  const pulseAnim = React.useRef(new Animated.Value(1)).current;
------------  const buttonScaleAnim = React.useRef(new Animated.Value(1)).current;
------------  const buttonGlowAnim = React.useRef(new Animated.Value(0)).current;
-----------+  const [pulseAnim] = useState(new Animated.Value(1));
-----------+  const [buttonScaleAnim] = useState(new Animated.Value(1));
-----------+  const [buttonGlowAnim] = useState(new Animated.Value(0));
+----------@@ -24,6 +24,13 @@ export default function WelcomeScreen() {
+----------   const [pulseAnim] = useState(new Animated.Value(1));
+----------   const [buttonScaleAnim] = useState(new Animated.Value(1));
+----------   const [buttonGlowAnim] = useState(new Animated.Value(0));
+----------+  const [isReady, setIsReady] = useState(false);
+----------+
+----------+  useEffect(() => {
+----------+    // Mark as ready after a short delay
+----------+    const timer = setTimeout(() => setIsReady(true), 100);
+----------+    return () => clearTimeout(timer);
+----------+  }, []);
 ---------- 
 ----------   useEffect(() => {
 ----------     // Pulse animation for logo
-----------@@ -71,7 +71,7 @@ export default function WelcomeScreen() {
-----------         ]),
-----------       ])
-----------     ).start();
------------  }, []);
-----------+  }, [pulseAnim, buttonScaleAnim, buttonGlowAnim]);
+----------@@ -74,7 +81,7 @@ export default function WelcomeScreen() {
+----------   }, [pulseAnim, buttonScaleAnim, buttonGlowAnim]);
 ---------- 
 ----------   useEffect(() => {
-----------     if (!loading && user && activeRole) {
-----------@@ -82,7 +82,7 @@ export default function WelcomeScreen() {
+-----------    if (!loading && user && activeRole) {
+----------+    if (!loading && user && activeRole && isReady) {
+----------       // User is logged in, navigate to appropriate home
+----------       if (activeRole === 'trainer') {
+----------         router.replace('/trainer/home');
+----------@@ -82,7 +89,7 @@ export default function WelcomeScreen() {
 ----------         router.replace('/trainee/home');
 ----------       }
 ----------     }
------------  }, [loading, user, activeRole]);
-----------+  }, [loading, user, activeRole, router]);
+-----------  }, [loading, user, activeRole, router]);
+----------+  }, [loading, user, activeRole, isReady, router]);
 ---------- 
 ----------   if (loading) {
 ----------     return (
-----------@@ -165,20 +165,34 @@ export default function WelcomeScreen() {
----------- 
-----------         {/* CTA Buttons */}
-----------         <View style={styles.buttonContainer}>
------------          <TouchableOpacity
------------            activeOpacity={0.9}
------------            onPress={() => router.push('/auth/signup')}
------------          >
------------            <LinearGradient
------------              colors={['#FFFFFF', '#F0F0F0']}
------------              start={{ x: 0, y: 0 }}
------------              end={{ x: 1, y: 1 }}
------------              style={styles.primaryButton}
-----------+          <Animated.View style={{ transform: [{ scale: buttonScaleAnim }] }}>
-----------+            <TouchableOpacity
-----------+              activeOpacity={0.9}
-----------+              onPress={() => router.push('/auth/signup')}
-----------             >
------------              <Text style={styles.primaryButtonText}>Get Started</Text>
------------              <Ionicons name="arrow-forward" size={20} color={Colors.primary} />
------------            </LinearGradient>
------------          </TouchableOpacity>
-----------+              <Animated.View
-----------+                style={[
-----------+                  styles.buttonGlowContainer,
-----------+                  {
-----------+                    shadowOpacity: buttonGlowAnim.interpolate({
-----------+                      inputRange: [0, 1],
-----------+                      outputRange: [0.3, 0.6],
-----------+                    }),
-----------+                  },
-----------+                ]}
-----------+              >
-----------+                <LinearGradient
-----------+                  colors={['#FFFFFF', '#F0F0F0']}
-----------+                  start={{ x: 0, y: 0 }}
-----------+                  end={{ x: 1, y: 1 }}
-----------+                  style={styles.primaryButton}
-----------+                >
-----------+                  <Text style={styles.primaryButtonText}>Get Started</Text>
-----------+                  <Ionicons name="arrow-forward" size={20} color={Colors.primary} />
-----------+                </LinearGradient>
-----------+              </Animated.View>
-----------+            </TouchableOpacity>
-----------+          </Animated.View>
----------- 
-----------           <TouchableOpacity
-----------             style={styles.secondaryButton}
-----------@@ -325,6 +339,13 @@ const styles = StyleSheet.create({
-----------     shadowRadius: 12,
-----------     elevation: 10,
-----------   },
-----------+  buttonGlowContainer: {
-----------+    borderRadius: 16,
-----------+    shadowColor: '#FFFFFF',
-----------+    shadowOffset: { width: 0, height: 0 },
-----------+    shadowRadius: 20,
-----------+    elevation: 15,
-----------+  },
-----------   primaryButtonText: {
-----------     color: Colors.primary,
-----------     fontSize: 20,
 ----------diff --git a/model.patch b/model.patch
-----------index c70e3f6..e69de29 100644
+----------index b07c788..e69de29 100644
 ------------- a/model.patch
 ----------+++ b/model.patch
-----------@@ -1,130 +0,0 @@
------------diff --git a/test_result.md b/test_result.md
------------index 187cba4..0ea5421 100644
--------------- a/test_result.md
------------+++ b/test_result.md
------------@@ -100,4 +100,122 @@
+----------@@ -1,238 +0,0 @@
+-----------diff --git a/frontend/app/index.tsx b/frontend/app/index.tsx
+-----------index c2426e7..b4ebad3 100644
+-------------- a/frontend/app/index.tsx
+-----------+++ b/frontend/app/index.tsx
+-----------@@ -1,4 +1,4 @@
+------------import React, { useEffect } from 'react';
+-----------+import React, { useEffect, useState } from 'react';
+----------- import {
+-----------   View,
+-----------   Text,
+-----------@@ -21,9 +21,9 @@ const { width, height } = Dimensions.get('window');
+----------- export default function WelcomeScreen() {
+-----------   const router = useRouter();
+-----------   const { user, loading, activeRole } = useAuth();
+------------  const pulseAnim = React.useRef(new Animated.Value(1)).current;
+------------  const buttonScaleAnim = React.useRef(new Animated.Value(1)).current;
+------------  const buttonGlowAnim = React.useRef(new Animated.Value(0)).current;
+-----------+  const [pulseAnim] = useState(new Animated.Value(1));
+-----------+  const [buttonScaleAnim] = useState(new Animated.Value(1));
+-----------+  const [buttonGlowAnim] = useState(new Animated.Value(0));
 ----------- 
------------ #====================================================================================================
------------ # Testing Data - Main Agent and testing sub agent both should log testing data below this section
-------------#====================================================================================================
------------\ No newline at end of file
------------+#====================================================================================================
------------+
------------+user_problem_statement: "Test the RapidReps backend API with comprehensive tests including authentication, profiles, session booking with pricing logic, trainer verification, and rating system"
------------+
------------+backend:
------------+  - task: "Authentication System"
------------+    implemented: true
------------+    working: true
------------+    file: "server.py"
------------+    stuck_count: 0
------------+    priority: "high"
------------+    needs_retesting: false
------------+    status_history:
------------+        - working: true
------------+          agent: "testing"
------------+          comment: "All authentication endpoints working correctly. Signup, login, and JWT verification tested successfully for both trainer and trainee roles."
------------+
------------+  - task: "Trainer Profile Management"
------------+    implemented: true
------------+    working: true
------------+    file: "server.py"
------------+    stuck_count: 0
------------+    priority: "high"
------------+    needs_retesting: false
------------+    status_history:
------------+        - working: true
------------+          agent: "testing"
------------+          comment: "Trainer profile creation and retrieval working correctly. Profile includes all required fields like bio, experience, certifications, training styles, rates, etc."
------------+
------------+  - task: "Trainee Profile Management"
------------+    implemented: true
------------+    working: true
------------+    file: "server.py"
------------+    stuck_count: 0
------------+    priority: "high"
------------+    needs_retesting: false
------------+    status_history:
------------+        - working: true
------------+          agent: "testing"
------------+          comment: "Trainee profile creation and retrieval working correctly. Profile includes fitness goals, level, preferences, budget, etc."
------------+
------------+  - task: "Trainer Search System"
------------+    implemented: true
------------+    working: true
------------+    file: "server.py"
------------+    stuck_count: 0
------------+    priority: "medium"
------------+    needs_retesting: false
------------+    status_history:
------------+        - working: true
------------+          agent: "testing"
------------+          comment: "Trainer search endpoints working correctly. Only verified trainers appear in search results as expected. Search filters (styles, price, location) function properly."
------------+
------------+  - task: "Session Booking & Pricing Logic"
------------+    implemented: true
------------+    working: true
------------+    file: "server.py"
------------+    stuck_count: 0
------------+    priority: "high"
------------+    needs_retesting: false
------------+    status_history:
------------+        - working: true
------------+          agent: "testing"
------------+          comment: "Session booking and pricing logic working perfectly. Base price calculation ($1/min), multi-session discount (5% on 3rd+ session), platform fee (10%), and trainer earnings calculations all correct."
------------+
------------+  - task: "Session Management"
------------+    implemented: true
------------+    working: true
------------+    file: "server.py"
------------+    stuck_count: 0
------------+    priority: "high"
------------+    needs_retesting: false
------------+    status_history:
------------+        - working: true
------------+          agent: "testing"
------------+          comment: "Session management working correctly. Trainers can accept, decline, and complete sessions. Status changes are properly tracked."
------------+
------------+  - task: "Rating System"
------------+    implemented: true
------------+    working: true
------------+    file: "server.py"
------------+    stuck_count: 0
------------+    priority: "medium"
------------+    needs_retesting: false
------------+    status_history:
------------+        - working: true
------------+          agent: "testing"
------------+          comment: "Rating system working correctly. Trainees can rate completed sessions, and trainer average ratings are automatically updated."
------------+
------------+  - task: "Trainer Earnings Calculation"
------------+    implemented: true
------------+    working: true
------------+    file: "server.py"
------------+    stuck_count: 0
------------+    priority: "medium"
------------+    needs_retesting: false
------------+    status_history:
------------+        - working: true
------------+          agent: "testing"
------------+          comment: "Earnings calculation working correctly. Total, monthly, and weekly earnings are calculated accurately based on completed sessions."
------------+
------------+frontend:
------------+  # Frontend testing not performed as per instructions
------------+
------------+metadata:
------------+  created_by: "testing_agent"
------------+  version: "1.0"
------------+  test_sequence: 1
------------+  run_ui: false
------------+
------------+test_plan:
------------+  current_focus: []
------------+  stuck_tasks: []
------------+  test_all: false
------------+  test_priority: "high_first"
------------+
------------+agent_communication:
------------+    - agent: "testing"
------------+      message: "Comprehensive backend testing completed successfully. All 24 test cases passed (100% success rate). RapidReps backend API is fully functional with correct authentication, profile management, session booking with accurate pricing logic including multi-session discounts, session management, rating system, and earnings calculations."
------------\ No newline at end of file
+-----------   useEffect(() => {
+-----------     // Pulse animation for logo
+-----------@@ -71,7 +71,7 @@ export default function WelcomeScreen() {
+-----------         ]),
+-----------       ])
+-----------     ).start();
+------------  }, []);
+-----------+  }, [pulseAnim, buttonScaleAnim, buttonGlowAnim]);
+----------- 
+-----------   useEffect(() => {
+-----------     if (!loading && user && activeRole) {
+-----------@@ -82,7 +82,7 @@ export default function WelcomeScreen() {
+-----------         router.replace('/trainee/home');
+-----------       }
+-----------     }
+------------  }, [loading, user, activeRole]);
+-----------+  }, [loading, user, activeRole, router]);
+----------- 
+-----------   if (loading) {
+-----------     return (
+-----------@@ -165,20 +165,34 @@ export default function WelcomeScreen() {
+----------- 
+-----------         {/* CTA Buttons */}
+-----------         <View style={styles.buttonContainer}>
+------------          <TouchableOpacity
+------------            activeOpacity={0.9}
+------------            onPress={() => router.push('/auth/signup')}
+------------          >
+------------            <LinearGradient
+------------              colors={['#FFFFFF', '#F0F0F0']}
+------------              start={{ x: 0, y: 0 }}
+------------              end={{ x: 1, y: 1 }}
+------------              style={styles.primaryButton}
+-----------+          <Animated.View style={{ transform: [{ scale: buttonScaleAnim }] }}>
+-----------+            <TouchableOpacity
+-----------+              activeOpacity={0.9}
+-----------+              onPress={() => router.push('/auth/signup')}
+-----------             >
+------------              <Text style={styles.primaryButtonText}>Get Started</Text>
+------------              <Ionicons name="arrow-forward" size={20} color={Colors.primary} />
+------------            </LinearGradient>
+------------          </TouchableOpacity>
+-----------+              <Animated.View
+-----------+                style={[
+-----------+                  styles.buttonGlowContainer,
+-----------+                  {
+-----------+                    shadowOpacity: buttonGlowAnim.interpolate({
+-----------+                      inputRange: [0, 1],
+-----------+                      outputRange: [0.3, 0.6],
+-----------+                    }),
+-----------+                  },
+-----------+                ]}
+-----------+              >
+-----------+                <LinearGradient
+-----------+                  colors={['#FFFFFF', '#F0F0F0']}
+-----------+                  start={{ x: 0, y: 0 }}
+-----------+                  end={{ x: 1, y: 1 }}
+-----------+                  style={styles.primaryButton}
+-----------+                >
+-----------+                  <Text style={styles.primaryButtonText}>Get Started</Text>
+-----------+                  <Ionicons name="arrow-forward" size={20} color={Colors.primary} />
+-----------+                </LinearGradient>
+-----------+              </Animated.View>
+-----------+            </TouchableOpacity>
+-----------+          </Animated.View>
+----------- 
+-----------           <TouchableOpacity
+-----------             style={styles.secondaryButton}
+-----------@@ -325,6 +339,13 @@ const styles = StyleSheet.create({
+-----------     shadowRadius: 12,
+-----------     elevation: 10,
+-----------   },
+-----------+  buttonGlowContainer: {
+-----------+    borderRadius: 16,
+-----------+    shadowColor: '#FFFFFF',
+-----------+    shadowOffset: { width: 0, height: 0 },
+-----------+    shadowRadius: 20,
+-----------+    elevation: 15,
+-----------+  },
+-----------   primaryButtonText: {
+-----------     color: Colors.primary,
+-----------     fontSize: 20,
+-----------diff --git a/model.patch b/model.patch
+-----------index c70e3f6..e69de29 100644
+-------------- a/model.patch
+-----------+++ b/model.patch
+-----------@@ -1,130 +0,0 @@
+------------diff --git a/test_result.md b/test_result.md
+------------index 187cba4..0ea5421 100644
+--------------- a/test_result.md
+------------+++ b/test_result.md
+------------@@ -100,4 +100,122 @@
+------------ 
+------------ #====================================================================================================
+------------ # Testing Data - Main Agent and testing sub agent both should log testing data below this section
+-------------#====================================================================================================
+------------\ No newline at end of file
+------------+#====================================================================================================
+------------+
+------------+user_problem_statement: "Test the RapidReps backend API with comprehensive tests including authentication, profiles, session booking with pricing logic, trainer verification, and rating system"
+------------+
+------------+backend:
+------------+  - task: "Authentication System"
+------------+    implemented: true
+------------+    working: true
+------------+    file: "server.py"
+------------+    stuck_count: 0
+------------+    priority: "high"
+------------+    needs_retesting: false
+------------+    status_history:
+------------+        - working: true
+------------+          agent: "testing"
+------------+          comment: "All authentication endpoints working correctly. Signup, login, and JWT verification tested successfully for both trainer and trainee roles."
+------------+
+------------+  - task: "Trainer Profile Management"
+------------+    implemented: true
+------------+    working: true
+------------+    file: "server.py"
+------------+    stuck_count: 0
+------------+    priority: "high"
+------------+    needs_retesting: false
+------------+    status_history:
+------------+        - working: true
+------------+          agent: "testing"
+------------+          comment: "Trainer profile creation and retrieval working correctly. Profile includes all required fields like bio, experience, certifications, training styles, rates, etc."
+------------+
+------------+  - task: "Trainee Profile Management"
+------------+    implemented: true
+------------+    working: true
+------------+    file: "server.py"
+------------+    stuck_count: 0
+------------+    priority: "high"
+------------+    needs_retesting: false
+------------+    status_history:
+------------+        - working: true
+------------+          agent: "testing"
+------------+          comment: "Trainee profile creation and retrieval working correctly. Profile includes fitness goals, level, preferences, budget, etc."
+------------+
+------------+  - task: "Trainer Search System"
+------------+    implemented: true
+------------+    working: true
+------------+    file: "server.py"
+------------+    stuck_count: 0
+------------+    priority: "medium"
+------------+    needs_retesting: false
+------------+    status_history:
+------------+        - working: true
+------------+          agent: "testing"
+------------+          comment: "Trainer search endpoints working correctly. Only verified trainers appear in search results as expected. Search filters (styles, price, location) function properly."
+------------+
+------------+  - task: "Session Booking & Pricing Logic"
+------------+    implemented: true
+------------+    working: true
+------------+    file: "server.py"
+------------+    stuck_count: 0
+------------+    priority: "high"
+------------+    needs_retesting: false
+------------+    status_history:
+------------+        - working: true
+------------+          agent: "testing"
+------------+          comment: "Session booking and pricing logic working perfectly. Base price calculation ($1/min), multi-session discount (5% on 3rd+ session), platform fee (10%), and trainer earnings calculations all correct."
+------------+
+------------+  - task: "Session Management"
+------------+    implemented: true
+------------+    working: true
+------------+    file: "server.py"
+------------+    stuck_count: 0
+------------+    priority: "high"
+------------+    needs_retesting: false
+------------+    status_history:
+------------+        - working: true
+------------+          agent: "testing"
+------------+          comment: "Session management working correctly. Trainers can accept, decline, and complete sessions. Status changes are properly tracked."
+------------+
+------------+  - task: "Rating System"
+------------+    implemented: true
+------------+    working: true
+------------+    file: "server.py"
+------------+    stuck_count: 0
+------------+    priority: "medium"
+------------+    needs_retesting: false
+------------+    status_history:
+------------+        - working: true
+------------+          agent: "testing"
+------------+          comment: "Rating system working correctly. Trainees can rate completed sessions, and trainer average ratings are automatically updated."
+------------+
+------------+  - task: "Trainer Earnings Calculation"
+------------+    implemented: true
+------------+    working: true
+------------+    file: "server.py"
+------------+    stuck_count: 0
+------------+    priority: "medium"
+------------+    needs_retesting: false
+------------+    status_history:
+------------+        - working: true
+------------+          agent: "testing"
+------------+          comment: "Earnings calculation working correctly. Total, monthly, and weekly earnings are calculated accurately based on completed sessions."
+------------+
+------------+frontend:
+------------+  # Frontend testing not performed as per instructions
+------------+
+------------+metadata:
+------------+  created_by: "testing_agent"
+------------+  version: "1.0"
+------------+  test_sequence: 1
+------------+  run_ui: false
+------------+
+------------+test_plan:
+------------+  current_focus: []
+------------+  stuck_tasks: []
+------------+  test_all: false
+------------+  test_priority: "high_first"
+------------+
+------------+agent_communication:
+------------+    - agent: "testing"
+------------+      message: "Comprehensive backend testing completed successfully. All 24 test cases passed (100% success rate). RapidReps backend API is fully functional with correct authentication, profile management, session booking with accurate pricing logic including multi-session discounts, session management, rating system, and earnings calculations."
+------------\ No newline at end of file
