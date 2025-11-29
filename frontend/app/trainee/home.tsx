@@ -165,6 +165,60 @@ export default function TraineeHomeScreen() {
 
   const handleLogout = async () => {
     await logout();
+    router.replace('/');
+  };
+
+  const initiateVideoCall = async (trainer: any) => {
+    // Get trainer's contact info (phone/email)
+    const trainerPhone = trainer.userId; // In real app, would have phone number
+    
+    if (Platform.OS === 'ios') {
+      // Try FaceTime first on iOS
+      const facetimeUrl = `facetime://${trainerPhone}`;
+      const canOpen = await Linking.canOpenURL(facetimeUrl);
+      
+      if (canOpen) {
+        await Linking.openURL(facetimeUrl);
+      } else {
+        // Fallback to regular phone call
+        Alert.alert('FaceTime Not Available', 'Would you like to call the trainer instead?', [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Call', onPress: () => Linking.openURL(`tel:${trainerPhone}`) },
+        ]);
+      }
+    } else if (Platform.OS === 'android') {
+      // On Android, use Google Meet or Duo
+      Alert.alert(
+        'Start Video Call',
+        'How would you like to connect with your trainer?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Google Meet', onPress: () => Linking.openURL('https://meet.google.com/new') },
+          { text: 'Phone Call', onPress: () => Linking.openURL(`tel:${trainerPhone}`) },
+        ]
+      );
+    }
+  };
+
+  const handleVirtualTrainingYes = () => {
+    setShowVirtualDialog(false);
+    // Show virtual trainers
+    if (virtualTrainers.length > 0) {
+      Alert.alert(
+        `${virtualTrainers.length} Virtual Trainer${virtualTrainers.length > 1 ? 's' : ''} Available! 🎉`,
+        'Connecting you now...',
+        [
+          {
+            text: 'Start Video Call',
+            onPress: () => initiateVideoCall(virtualTrainers[0]),
+          },
+          {
+            text: 'View All',
+            onPress: () => setTrainers(virtualTrainers),
+          },
+        ]
+      );
+    }
   };
 
   if (loading) {
