@@ -506,6 +506,7 @@ export default function TraineeHomeScreen() {
         </View>
       </Modal>
     </View>
+    </>
   );
 }
 
