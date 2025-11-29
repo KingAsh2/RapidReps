@@ -516,6 +516,38 @@ export default function EditTrainerProfileScreen() {
                       />
                     </LinearGradient>
                   </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Current Location (for matching)</Text>
+                    <TouchableOpacity
+                      onPress={getCurrentLocation}
+                      disabled={gettingLocation}
+                      style={styles.locationButtonWrapper}
+                    >
+                      <LinearGradient
+                        colors={gettingLocation ? ['#CCCCCC', '#999999'] : Colors.gradientTealStart}
+                        style={styles.locationButton}
+                      >
+                        <Ionicons 
+                          name={gettingLocation ? "hourglass" : "location"} 
+                          size={24} 
+                          color={Colors.white} 
+                        />
+                        <Text style={styles.locationButtonText}>
+                          {gettingLocation ? 'Getting Location...' : 'Set Current Location 📍'}
+                        </Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                    {formData.locationAddress && (
+                      <View style={styles.locationDisplay}>
+                        <Ionicons name="checkmark-circle" size={20} color={Colors.success} />
+                        <Text style={styles.locationDisplayText}>{formData.locationAddress}</Text>
+                      </View>
+                    )}
+                    <Text style={styles.helpText}>
+                      Setting your location helps trainees find you nearby
+                    </Text>
+                  </View>
                 </LinearGradient>
               </View>
 
