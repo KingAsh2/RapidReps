@@ -70,6 +70,9 @@ export default function EditTrainerProfileScreen() {
           sessionDurations: data.sessionDurationsOffered || [30, 45, 60],
           travelRadiusMiles: data.travelRadiusMiles?.toString() || '10',
           cancellationPolicy: data.cancellationPolicy || 'Free cancellation before 24 hours',
+          latitude: data.latitude || null,
+          longitude: data.longitude || null,
+          locationAddress: data.locationAddress || '',
         });
       }
     } catch (error) {
