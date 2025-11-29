@@ -732,6 +732,87 @@ const styles = StyleSheet.create({
     color: Colors.neonBlue,
     fontWeight: '700',
   },
+  // Virtual Training Dialog Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  dialogContainer: {
+    width: '100%',
+    maxWidth: 400,
+    borderRadius: 24,
+    overflow: 'hidden',
+  },
+  dialogGradient: {
+    padding: 32,
+    alignItems: 'center',
+  },
+  dialogIconContainer: {
+    marginBottom: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dialogTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: Colors.white,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  dialogMessage: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: Colors.white,
+    textAlign: 'center',
+    marginBottom: 12,
+    lineHeight: 28,
+  },
+  dialogSubMessage: {
+    fontSize: 18,
+    color: Colors.white,
+    textAlign: 'center',
+    marginBottom: 32,
+    opacity: 0.95,
+  },
+  dialogButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
+  },
+  dialogButton: {
+    flex: 1,
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  dialogButtonNo: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  dialogButtonYes: {
+    backgroundColor: Colors.white,
+  },
+  dialogButtonTextNo: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.white,
+  },
+  dialogButtonTextYes: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.primary,
+  },
+  dialogCloseButton: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+  },
   // Map styles
   mapContainer: {
     flex: 1,
