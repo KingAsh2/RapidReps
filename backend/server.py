@@ -126,6 +126,9 @@ class TrainerProfileResponse(BaseModel):
     totalSessionsCompleted: int = 0
     isVerified: bool = False
     availability: Optional[dict] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    locationAddress: Optional[str] = None
     createdAt: datetime
 
 # Trainee Profile Models
