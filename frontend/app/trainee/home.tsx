@@ -505,8 +505,6 @@ export default function TraineeHomeScreen() {
           </Animated.View>
         </View>
       </Modal>
-        </SafeAreaView>
-      </LinearGradient>
     </View>
     </>
   );
