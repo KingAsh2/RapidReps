@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { AnimatedLogo } from '../../src/components/AnimatedLogo';
 
 export default function TrainerHomeScreen() {
   const router = useRouter();
