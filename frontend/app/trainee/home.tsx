@@ -96,65 +96,8 @@ export default function TraineeHomeScreen() {
         </View>
       </View>
 
-      {/* Main Content - Map or List */}
-      {showMap ? (
-        <View style={styles.mapContainer}>
-          {locationPermission === 'granted' && location ? (
-            <MapView
-              style={styles.map}
-              provider={PROVIDER_GOOGLE}
-              initialRegion={{
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
-                latitudeDelta: 0.0922,
-                longitudeDelta: 0.0421,
-              }}
-              showsUserLocation={true}
-              showsMyLocationButton={true}
-            >
-              {trainers.map((trainer, index) => (
-                <Marker
-                  key={trainer.id}
-                  coordinate={{
-                    latitude: location.coords.latitude + (Math.random() - 0.5) * 0.02,
-                    longitude: location.coords.longitude + (Math.random() - 0.5) * 0.02,
-                  }}
-                  title={`Trainer #${trainer.id.slice(0, 6)}`}
-                  description={`${trainer.trainingStyles.slice(0, 2).join(', ')} • $${(trainer.ratePerMinuteCents / 100).toFixed(2)}/min`}
-                  onCalloutPress={() => router.push(`/trainee/trainer-detail?trainerId=${trainer.userId}`)}
-                >
-                  <View style={styles.markerContainer}>
-                    <Ionicons name="fitness" size={20} color={Colors.white} />
-                  </View>
-                </Marker>
-              ))}
-            </MapView>
-          ) : (
-            <View style={styles.locationPermissionContainer}>
-              <Ionicons name="location-outline" size={64} color={Colors.textLight} />
-              <Text style={styles.locationPermissionText}>
-                {locationPermission === 'denied' 
-                  ? 'Location access denied' 
-                  : 'Requesting location access...'}
-              </Text>
-              <Text style={styles.locationPermissionSubtext}>
-                {locationPermission === 'denied'
-                  ? 'Please enable location services to view trainers on the map'
-                  : 'We need your location to show nearby trainers'}
-              </Text>
-              {locationPermission === 'denied' && (
-                <TouchableOpacity 
-                  style={styles.retryButton}
-                  onPress={requestLocationPermission}
-                >
-                  <Text style={styles.retryButtonText}>Retry</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          )}
-        </View>
-      ) : (
-        <ScrollView
+      {/* Main Content - Trainer List */}
+      <ScrollView
           style={styles.scrollView}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />
