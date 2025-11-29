@@ -102,6 +102,9 @@ class TrainerProfileCreate(BaseModel):
     cancellationPolicy: Optional[str] = "Free cancellation before 24 hours"
     availability: Optional[dict] = None
     verificationDocs: List[str] = []
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    locationAddress: Optional[str] = None
 
 class TrainerProfileResponse(BaseModel):
     id: str
