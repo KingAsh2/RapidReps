@@ -492,6 +492,7 @@ export default function EditTrainerProfileScreen() {
         </SafeAreaView>
       </LinearGradient>
     </View>
+    </>
   );
 }
 
