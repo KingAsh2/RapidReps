@@ -177,6 +177,10 @@ export default function EditTrainerProfileScreen() {
         sessionDurationsOffered: formData.sessionDurations,
         travelRadiusMiles: parseInt(formData.travelRadiusMiles) || 10,
         cancellationPolicy: formData.cancellationPolicy,
+        latitude: formData.latitude,
+        longitude: formData.longitude,
+        locationAddress: formData.locationAddress,
+        isVirtualTrainingAvailable: formData.offersVirtual,
       });
 
       Alert.alert('Success! 🎉', 'Your profile has been updated');
