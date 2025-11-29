@@ -11,6 +11,9 @@ import {
   Alert,
   Dimensions,
   Platform,
+  Modal,
+  Linking,
+  Animated,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
