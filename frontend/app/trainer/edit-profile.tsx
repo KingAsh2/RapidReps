@@ -153,14 +153,16 @@ export default function EditTrainerProfileScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <LinearGradient
-        colors={Colors.gradientMain}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={styles.backgroundGradient}
-      >
-        <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <View style={styles.container}>
+        <LinearGradient
+          colors={Colors.gradientMain}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={styles.backgroundGradient}
+        >
+          <SafeAreaView style={styles.safeArea} edges={['top']}>
           {/* Header */}
           <LinearGradient
             colors={Colors.gradientOrangeStart}
