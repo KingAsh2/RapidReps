@@ -17,6 +17,7 @@ import { useAuth } from '../../src/contexts/AuthContext';
 import { Colors } from '../../src/utils/colors';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { AnimatedLogo } from '../../src/components/AnimatedLogo';
 
 export default function LoginScreen() {
   const router = useRouter();
