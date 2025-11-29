@@ -250,6 +250,7 @@ export default function TraineeHomeScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color={Colors.white} />
           </TouchableOpacity>
+          <AnimatedLogo size={45} animationType="spin-bounce" />
           <TouchableOpacity onPress={handleLogout} style={styles.headerButton}>
             <Ionicons name="log-out-outline" size={20} color={Colors.white} />
           </TouchableOpacity>
