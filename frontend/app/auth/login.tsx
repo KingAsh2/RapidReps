@@ -142,17 +142,24 @@ export default function LoginScreen() {
             <TouchableOpacity
               activeOpacity={0.9}
               onPress={handleLogin}
-              disabled={loading}
+              disabled={loading || loginSuccess}
             >
               <LinearGradient
-                colors={loading ? ['#CCCCCC', '#999999'] : Colors.gradientTealStart}
+                colors={loading || loginSuccess ? ['#CCCCCC', '#999999'] : Colors.gradientTealStart}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.loginButton}
               >
-                <Text style={styles.loginButtonText}>
-                  {loading ? 'Logging In...' : 'Log In ⚡'}
-                </Text>
+                {loading && !loginSuccess ? (
+                  <View style={styles.loadingRow}>
+                    <ActivityIndicator size="small" color={Colors.white} />
+                    <Text style={styles.loginButtonText}>Logging In...</Text>
+                  </View>
+                ) : (
+                  <Text style={styles.loginButtonText}>
+                    {loginSuccess ? 'Success! 🎉' : 'Log In ⚡'}
+                  </Text>
+                )}
               </LinearGradient>
             </TouchableOpacity>
 
