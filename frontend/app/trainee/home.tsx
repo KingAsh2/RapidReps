@@ -250,35 +250,39 @@ export default function TraineeHomeScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <LinearGradient
-        colors={Colors.gradientMain}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={styles.backgroundGradient}
-      >
-        <SafeAreaView style={styles.safeArea} edges={['top']}>
-          {/* Header with Gradient */}
-      <LinearGradient
-        colors={Colors.gradientTealStart}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.header}
-      >
-        <View style={styles.headerTop}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={Colors.white} />
-          </TouchableOpacity>
-          <AnimatedLogo size={45} animationType="spin-bounce" />
-          <TouchableOpacity onPress={handleLogout} style={styles.headerButton}>
-            <Ionicons name="log-out-outline" size={20} color={Colors.white} />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.greetingContainer}>
-          <Text style={styles.greeting}>Hey there, {user?.fullName?.split(' ')[0] || 'there'}! 💪</Text>
-          <Text style={styles.subGreeting}>Let&apos;s get to work and find you a trainer</Text>
-        </View>
-      </LinearGradient>
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <View style={styles.container}>
+        <LinearGradient
+          colors={Colors.gradientMain}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={styles.backgroundGradient}
+        >
+          <SafeAreaView style={styles.safeArea} edges={['top']}>
+            {/* Header with Gradient */}
+        <LinearGradient
+          colors={Colors.gradientTealStart}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.header}
+        >
+          <View style={styles.headerTop}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+              <Ionicons name="arrow-back" size={24} color={Colors.white} />
+            </TouchableOpacity>
+            <View style={styles.logoCenter}>
+              <AnimatedLogo size={50} animationType="spin-bounce" />
+            </View>
+            <TouchableOpacity onPress={handleLogout} style={styles.headerButton}>
+              <Ionicons name="log-out-outline" size={20} color={Colors.white} />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.greetingContainer}>
+            <Text style={styles.greeting}>Hey there, {user?.fullName?.split(' ')[0] || 'there'}! 💪</Text>
+            <Text style={styles.subGreeting}>Let&apos;s get to work and find you a trainer</Text>
+          </View>
+        </LinearGradient>
 
       {/* Search Bar */}
       <View style={styles.searchSection}>
