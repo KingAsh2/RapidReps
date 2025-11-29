@@ -184,6 +184,40 @@ export default function TraineeHomeScreen() {
         </View>
       </View>
 
+      {/* Location Info Banner */}
+      {userLocation && (
+        <View style={styles.locationBanner}>
+          <Ionicons name="location" size={20} color={Colors.primary} />
+          <View style={styles.locationTextContainer}>
+            <Text style={styles.locationLabel}>Your Location</Text>
+            <Text style={styles.locationText}>
+              {locationAddress || `${userLocation.latitude.toFixed(4)}, ${userLocation.longitude.toFixed(4)}`}
+            </Text>
+          </View>
+          <TouchableOpacity onPress={requestLocationPermission} style={styles.refreshLocationButton}>
+            <Ionicons name="refresh" size={18} color={Colors.primary} />
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {!userLocation && locationPermission !== 'granted' && (
+        <View style={styles.locationBanner}>
+          <Ionicons name="location-outline" size={20} color={Colors.warning} />
+          <View style={styles.locationTextContainer}>
+            <Text style={styles.locationWarning}>
+              {locationPermission === 'denied' 
+                ? 'Location access denied. Enable in settings to see distances.' 
+                : 'Getting your location...'}
+            </Text>
+          </View>
+          {locationPermission === 'denied' && (
+            <TouchableOpacity onPress={requestLocationPermission} style={styles.refreshLocationButton}>
+              <Ionicons name="settings-outline" size={18} color={Colors.warning} />
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
+
       {/* Main Content - Trainer List */}
       <ScrollView
           style={styles.scrollView}
