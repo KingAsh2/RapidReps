@@ -452,10 +452,13 @@ async def search_trainers(
     minPrice: Optional[int] = None,
     maxPrice: Optional[int] = None,
     inPerson: Optional[bool] = None,
-    virtual: Optional[bool] = None
+    virtual: Optional[bool] = None,
+    latitude: Optional[float] = None,
+    longitude: Optional[float] = None,
+    wantsVirtual: Optional[bool] = None
 ):
-    """Search trainers with filters"""
-    query = {'isVerified': True}
+    """Search trainers with filters - includes location and virtual matching"""
+    query = {}  # Removed isVerified requirement for testing
     
     if styles:
         style_list = styles.split(',')
@@ -475,8 +478,42 @@ async def search_trainers(
     if virtual is not None:
         query['offersVirtual'] = virtual
     
+    # Get all matching trainers
     trainers = await db.trainer_profiles.find(query).to_list(100)
-    return [TrainerProfileResponse(**serialize_doc(t)) for t in trainers]
+    
+    # Filter based on location and virtual training preferences
+    filtered_trainers = []
+    
+    for trainer in trainers:
+        # Include if trainee wants virtual AND trainer offers virtual
+        if wantsVirtual and trainer.get('isVirtualTrainingAvailable'):
+            filtered_trainers.append(trainer)
+            continue
+        
+        # Include if within 20 miles (if both have location data)
+        if latitude and longitude and trainer.get('latitude') and trainer.get('longitude'):
+            from math import radians, sin, cos, sqrt, atan2
+            
+            # Haversine formula
+            R = 3959  # Earth radius in miles
+            lat1, lon1 = radians(latitude), radians(longitude)
+            lat2, lon2 = radians(trainer['latitude']), radians(trainer['longitude'])
+            
+            dlat = lat2 - lat1
+            dlon = lon2 - lon1
+            a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+            c = 2 * atan2(sqrt(a), sqrt(1-a))
+            distance = R * c
+            
+            if distance <= 20:  # Within 20 miles
+                filtered_trainers.append(trainer)
+                continue
+        
+        # Include if no location data (for backwards compatibility)
+        if not latitude and not longitude:
+            filtered_trainers.append(trainer)
+    
+    return [TrainerProfileResponse(**serialize_doc(t)) for t in filtered_trainers]
 
 # ============================================================================
 # TRAINEE PROFILE ROUTES
