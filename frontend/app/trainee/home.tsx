@@ -509,6 +509,43 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: Colors.white,
   },
+  locationBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.background,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    gap: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  locationTextContainer: {
+    flex: 1,
+  },
+  locationLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: Colors.textLight,
+    textTransform: 'uppercase',
+    marginBottom: 2,
+  },
+  locationText: {
+    fontSize: 14,
+    color: Colors.navy,
+    fontWeight: '500',
+  },
+  locationWarning: {
+    fontSize: 13,
+    color: Colors.text,
+  },
+  refreshLocationButton: {
+    padding: 8,
+  },
+  distanceText: {
+    fontSize: 13,
+    color: Colors.neonBlue,
+    fontWeight: '700',
+  },
   // Map styles
   mapContainer: {
     flex: 1,
