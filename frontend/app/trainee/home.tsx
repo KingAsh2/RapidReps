@@ -86,7 +86,34 @@ export default function TraineeHomeScreen() {
   const loadTrainers = async () => {
     try {
       const data = await trainerAPI.searchTrainers({});
-      setTrainers(data);
+      
+      // Calculate distances and add to trainer objects
+      let trainersWithDistance = data.map((trainer: any) => {
+        let distance = null;
+        
+        if (userLocation && trainer.latitude && trainer.longitude) {
+          distance = calculateDistance(
+            userLocation.latitude,
+            userLocation.longitude,
+            trainer.latitude,
+            trainer.longitude
+          );
+        }
+        
+        return {
+          ...trainer,
+          distance,
+        };
+      });
+      
+      // Sort by distance (closest first), trainers without location go to end
+      trainersWithDistance.sort((a: any, b: any) => {
+        if (a.distance === null) return 1;
+        if (b.distance === null) return -1;
+        return a.distance - b.distance;
+      });
+      
+      setTrainers(trainersWithDistance);
     } catch (error) {
       console.error('Error loading trainers:', error);
     } finally {
