@@ -218,21 +218,13 @@ const styles = StyleSheet.create({
     marginTop: 4,
     opacity: 0.9,
   },
-  headerButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
   headerButton: {
-    padding: 8,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: 20,
     width: 36,
     height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  headerButtonActive: {
-    backgroundColor: Colors.white,
   },
   searchSection: {
     paddingHorizontal: 24,
