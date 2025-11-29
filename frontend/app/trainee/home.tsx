@@ -271,6 +271,14 @@ export default function TraineeHomeScreen() {
                           ${(trainer.ratePerMinuteCents / 100).toFixed(2)}/min
                         </Text>
                       </View>
+                      {trainer.distance !== null && (
+                        <View style={styles.stat}>
+                          <Ionicons name="navigate" size={16} color={Colors.neonBlue} />
+                          <Text style={styles.distanceText}>
+                            {trainer.distance.toFixed(1)} mi
+                          </Text>
+                        </View>
+                      )}
                     </View>
                     
                     {trainer.trainingStyles.length > 0 && (
