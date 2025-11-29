@@ -299,6 +299,15 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
   },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: 16,
+  },
+  greetingSection: {
+    flex: 1,
+  },
   greeting: {
     fontSize: 24,
     fontWeight: 'bold',
