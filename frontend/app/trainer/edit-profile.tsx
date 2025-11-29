@@ -110,6 +110,47 @@ export default function EditTrainerProfileScreen() {
     }
   };
 
+  const getCurrentLocation = async () => {
+    setGettingLocation(true);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Please enable location permissions to set your location');
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+
+      // Reverse geocode to get address
+      const addresses = await Location.reverseGeocodeAsync({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+
+      let address = '';
+      if (addresses[0]) {
+        const addr = addresses[0];
+        address = `${addr.city || ''}, ${addr.region || ''}`.trim().replace(/^,\s*/, '');
+      }
+
+      setFormData({
+        ...formData,
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        locationAddress: address || 'Location set',
+      });
+
+      Alert.alert('Success!', 'Location updated successfully');
+    } catch (error) {
+      console.error('Error getting location:', error);
+      Alert.alert('Error', 'Failed to get your location. Please try again.');
+    } finally {
+      setGettingLocation(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!user || !profile) return;
 
