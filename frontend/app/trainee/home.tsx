@@ -133,6 +133,23 @@ export default function TraineeHomeScreen() {
       });
       
       setTrainers(trainersWithDistance);
+      
+      // Check if no trainers available and if there are virtual trainers
+      const hasLocalTrainers = trainersWithDistance.length > 0;
+      const virtualTrainersAvailable = data.filter((t: any) => t.isVirtualTrainingAvailable);
+      
+      if (!hasLocalTrainers && virtualTrainersAvailable.length > 0) {
+        setVirtualTrainers(virtualTrainersAvailable);
+        // Show virtual training dialog after a short delay
+        setTimeout(() => {
+          setShowVirtualDialog(true);
+          Animated.spring(dialogAnim, {
+            toValue: 1,
+            useNativeDriver: true,
+            friction: 6,
+          }).start();
+        }, 800);
+      }
     } catch (error) {
       console.error('Error loading trainers:', error);
     } finally {
