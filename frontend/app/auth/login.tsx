@@ -172,6 +172,58 @@ export default function LoginScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Success Overlay */}
+      {loginSuccess && (
+        <Animated.View
+          style={[
+            styles.successOverlay,
+            {
+              opacity: successAnim,
+              transform: [
+                {
+                  scale: successAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.3, 1],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          <LinearGradient
+            colors={Colors.gradientMain}
+            style={styles.successGradient}
+          >
+            <Animated.View
+              style={[
+                styles.checkmarkContainer,
+                {
+                  transform: [
+                    {
+                      scale: checkmarkAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0, 1],
+                      }),
+                    },
+                    {
+                      rotate: checkmarkAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ['0deg', '360deg'],
+                      }),
+                    },
+                  ],
+                },
+              ]}
+            >
+              <Ionicons name="checkmark-circle" size={80} color={Colors.white} />
+            </Animated.View>
+            <Text style={styles.successText}>Login Successful! 🎉</Text>
+            <Text style={styles.successSubtext}>Redirecting you now...</Text>
+            <ActivityIndicator size="small" color={Colors.white} style={{ marginTop: 20 }} />
+          </LinearGradient>
+        </Animated.View>
+      )}
     </View>
   );
 }
