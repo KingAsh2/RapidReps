@@ -255,7 +255,7 @@ export default function TraineeHomeScreen() {
         </View>
         <View style={styles.greetingContainer}>
           <Text style={styles.greeting}>Hey there, {user?.fullName?.split(' ')[0] || 'there'}! 💪</Text>
-          <Text style={styles.subGreeting}>Let's get to work and find you a trainer</Text>
+          <Text style={styles.subGreeting}>Let&apos;s get to work and find you a trainer</Text>
         </View>
       </LinearGradient>
 
