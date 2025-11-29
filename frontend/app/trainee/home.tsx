@@ -161,13 +161,18 @@ export default function TraineeHomeScreen() {
         end={{ x: 1, y: 1 }}
         style={styles.header}
       >
-        <View>
-          <Text style={styles.greeting}>Hello, {user?.fullName?.split(' ')[0] || 'there'}! 👋</Text>
-          <Text style={styles.subGreeting}>Find your perfect trainer</Text>
+        <View style={styles.headerTop}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color={Colors.white} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleLogout} style={styles.headerButton}>
+            <Ionicons name="log-out-outline" size={20} color={Colors.white} />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity onPress={handleLogout} style={styles.headerButton}>
-          <Ionicons name="log-out-outline" size={20} color={Colors.white} />
-        </TouchableOpacity>
+        <View style={styles.greetingContainer}>
+          <Text style={styles.greeting}>Hey there, {user?.fullName?.split(' ')[0] || 'there'}! 💪</Text>
+          <Text style={styles.subGreeting}>Let's get to work and find you a trainer</Text>
+        </View>
       </LinearGradient>
 
       {/* Search Bar */}
