@@ -277,7 +277,8 @@ export default function TrainerHomeScreen() {
           )}
         </View>
       </ScrollView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </>
   );
 }
 
