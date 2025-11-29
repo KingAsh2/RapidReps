@@ -40,7 +40,12 @@ export default function EditTrainerProfileScreen() {
     sessionDurations: [30, 45, 60],
     travelRadiusMiles: '10',
     cancellationPolicy: 'Free cancellation before 24 hours',
+    latitude: null as number | null,
+    longitude: null as number | null,
+    locationAddress: '',
   });
+  
+  const [gettingLocation, setGettingLocation] = useState(false);
 
   useEffect(() => {
     loadProfile();
