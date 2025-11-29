@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,8 @@ import {
   Platform,
   Alert,
   ScrollView,
+  Animated,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
@@ -18,10 +20,28 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, user, activeRole } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [loginSuccess, setLoginSuccess] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [successAnim] = useState(new Animated.Value(0));
+  const [checkmarkAnim] = useState(new Animated.Value(0));
+
+  // Navigate when user is logged in and has an active role
+  useEffect(() => {
+    if (user && activeRole && loginSuccess) {
+      // Small delay for success animation
+      const timer = setTimeout(() => {
+        if (activeRole === 'trainer') {
+          router.replace('/trainer/home');
+        } else if (activeRole === 'trainee') {
+          router.replace('/trainee/home');
+        }
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [user, activeRole, loginSuccess, router]);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -31,12 +51,35 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      await login(email, password);
-      // Navigation is handled automatically by the auth context
+      await login(email.trim(), password);
+      
+      // Show success animation
+      setLoginSuccess(true);
+      
+      // Animate success overlay
+      Animated.parallel([
+        Animated.spring(successAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+          friction: 5,
+        }),
+        Animated.sequence([
+          Animated.delay(200),
+          Animated.spring(checkmarkAnim, {
+            toValue: 1,
+            useNativeDriver: true,
+            friction: 5,
+          }),
+        ]),
+      ]).start();
+      
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Invalid email or password');
-    } finally {
       setLoading(false);
+      console.error('Login error:', error);
+      Alert.alert(
+        'Login Failed',
+        error.response?.data?.detail || 'Invalid email or password. Please try again.'
+      );
     }
   };
 
