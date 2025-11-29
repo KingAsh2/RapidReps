@@ -13,6 +13,8 @@ import { useAuth } from '../../src/contexts/AuthContext';
 import { traineeAPI } from '../../src/services/api';
 import { Colors } from '../../src/utils/colors';
 import { TrainingStyles, FitnessLevel } from '../../src/types';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function TraineeOnboardingScreen() {
   const router = useRouter();
