@@ -24,6 +24,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
+import { AnimatedLogo } from '../../src/components/AnimatedLogo';
 
 const { width } = Dimensions.get('window');
 
