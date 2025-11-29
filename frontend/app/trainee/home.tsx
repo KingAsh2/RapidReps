@@ -21,25 +21,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 
-// Dynamically load maps only on native platforms
-let MapView: any = null;
-let Marker: any = null;
-let PROVIDER_GOOGLE: any = null;
-let Location: any = null;
-
-// Use dynamic import to prevent web bundler issues
-if (Platform.OS !== 'web') {
-  try {
-    const Maps = require('react-native-maps');
-    MapView = Maps.default;
-    Marker = Maps.Marker;
-    PROVIDER_GOOGLE = Maps.PROVIDER_GOOGLE;
-    Location = require('expo-location');
-  } catch (error) {
-    console.log('Maps not available on this platform');
-  }
-}
-
 const { width } = Dimensions.get('window');
 
 export default function TraineeHomeScreen() {
