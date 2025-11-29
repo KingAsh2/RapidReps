@@ -92,6 +92,7 @@ export default function LoginScreen() {
         end={{ x: 1, y: 1 }}
         style={styles.headerGradient}
       >
+        <AnimatedLogo size={70} animationType="power-slam" />
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={28} color={Colors.white} />
         </TouchableOpacity>
