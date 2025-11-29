@@ -81,7 +81,10 @@ export default function TrainerOnboardingScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!user) return;
+    if (!user) {
+      Alert.alert('Error', 'User not found. Please log in again.');
+      return;
+    }
 
     setLoading(true);
     try {
@@ -94,6 +97,8 @@ export default function TrainerOnboardingScreen() {
         .map(g => g.trim())
         .filter(g => g);
 
+      console.log('Creating trainer profile...');
+      
       await trainerAPI.createProfile({
         userId: user.id,
         bio: formData.bio,
@@ -105,18 +110,32 @@ export default function TrainerOnboardingScreen() {
         offersInPerson: formData.offersInPerson,
         offersVirtual: formData.offersVirtual,
         sessionDurationsOffered: formData.sessionDurations,
-        ratePerMinuteCents: formData.ratePerMinuteCents,
+        ratePerMinuteCents: 100, // Default $1/min
         travelRadiusMiles: formData.travelRadiusMiles,
-        cancellationPolicy: formData.cancellationPolicy,
+        cancellationPolicy: 'Free cancellation before 24 hours', // Default policy
       });
 
-      Alert.alert('Success', 'Your trainer profile has been created!', [
-        { text: 'OK', onPress: () => router.replace('/trainer/home') },
-      ]);
-    } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Failed to create profile');
-    } finally {
+      console.log('Profile created successfully!');
+      
       setLoading(false);
+      
+      Alert.alert(
+        'Success! 🎉',
+        'Your trainer profile has been created! Ready to connect with trainees.',
+        [
+          { 
+            text: 'Get Started', 
+            onPress: () => {
+              console.log('Navigating to trainer home...');
+              router.replace('/trainer/home');
+            }
+          },
+        ]
+      );
+    } catch (error: any) {
+      console.error('Profile creation error:', error);
+      setLoading(false);
+      Alert.alert('Error', error.response?.data?.detail || 'Failed to create profile. Please try again.');
     }
   };
 
