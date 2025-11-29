@@ -325,7 +325,9 @@ export default function TraineeHomeScreen() {
             )}
           </View>
         </ScrollView>
-    </SafeAreaView>
+        </SafeAreaView>
+      </LinearGradient>
+    </View>
   );
 }
 
