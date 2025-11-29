@@ -268,14 +268,11 @@ export default function TraineeHomeScreen() {
           style={styles.header}
         >
           <View style={styles.headerTop}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-              <Ionicons name="arrow-back" size={24} color={Colors.white} />
-            </TouchableOpacity>
-            <View style={styles.logoCenter}>
-              <AnimatedLogo size={50} animationType="spin-bounce" />
+            <View style={styles.logoContainer}>
+              <AnimatedLogo size={60} animationType="spin-bounce" />
             </View>
             <TouchableOpacity onPress={handleLogout} style={styles.headerButton}>
-              <Ionicons name="log-out-outline" size={20} color={Colors.white} />
+              <Ionicons name="log-out-outline" size={24} color={Colors.white} />
             </TouchableOpacity>
           </View>
           <View style={styles.greetingContainer}>
