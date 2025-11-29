@@ -20,6 +20,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { AnimatedLogo } from '../../src/components/AnimatedLogo';
+import * as Location from 'expo-location';
 
 export default function EditTrainerProfileScreen() {
   const router = useRouter();
