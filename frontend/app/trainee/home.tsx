@@ -77,21 +77,9 @@ export default function TraineeHomeScreen() {
           <Text style={styles.greeting}>Hello, {user?.fullName?.split(' ')[0] || 'there'}! 👋</Text>
           <Text style={styles.subGreeting}>Find your perfect trainer</Text>
         </View>
-        <View style={styles.headerButtons}>
-          <TouchableOpacity 
-            onPress={() => setShowMap(!showMap)} 
-            style={[styles.headerButton, showMap && styles.headerButtonActive]}
-          >
-            <Ionicons 
-              name={showMap ? "list" : "map"} 
-              size={20} 
-              color={showMap ? Colors.primary : Colors.white} 
-            />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleLogout} style={styles.headerButton}>
-            <Ionicons name="log-out-outline" size={20} color={Colors.white} />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity onPress={handleLogout} style={styles.headerButton}>
+          <Ionicons name="log-out-outline" size={20} color={Colors.white} />
+        </TouchableOpacity>
       </LinearGradient>
 
       {/* Search Bar */}
