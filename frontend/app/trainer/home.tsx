@@ -310,14 +310,15 @@ const styles = StyleSheet.create({
   },
   greeting: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: Colors.white,
+    fontWeight: '900',
+    color: Colors.navy,
+    letterSpacing: 0.5,
   },
   subGreeting: {
     fontSize: 14,
-    color: Colors.white,
+    fontWeight: '700',
+    color: Colors.navy,
     marginTop: 2,
-    opacity: 0.9,
   },
   logoutButton: {
     padding: 8,
