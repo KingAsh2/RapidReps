@@ -609,6 +609,304 @@ class RapidRepsProximityTester:
             
         self.log_result("Scenario 4 - Nearby Trainees (15-mile radius)", success, message, details)
 
+    def test_virtual_session_setup(self):
+        """Setup virtual trainer for virtual session testing"""
+        print("\n🔧 Setting up virtual trainer for virtual session testing...")
+        
+        # Create a dedicated virtual trainer
+        virtual_trainer_data = {
+            "fullName": "Virtual Trainer Pro",
+            "email": f"virtual.trainer.{datetime.now().timestamp()}@test.com",
+            "phone": "+1234567899",
+            "password": "testpass123",
+            "roles": ["trainer"]
+        }
+        
+        response = self.make_request('POST', '/auth/signup', virtual_trainer_data)
+        if not response or response.status_code != 200:
+            self.log_result("Virtual Session Setup - Trainer Signup", False, 
+                           f"Failed to create virtual trainer. Status: {response.status_code if response else 'No response'}")
+            return None, None
+            
+        user_info = response.json()
+        virtual_trainer_id = user_info['user']['id']
+        virtual_trainer_token = user_info['access_token']
+        
+        # Create virtual trainer profile with all required flags
+        virtual_profile = {
+            "userId": virtual_trainer_id,
+            "bio": "Expert virtual fitness trainer",
+            "experienceYears": 8,
+            "certifications": ["NASM-CPT", "Virtual Training Specialist"],
+            "trainingStyles": ["HIIT", "Strength Training", "Yoga"],
+            "offersInPerson": True,
+            "offersVirtual": True,  # KEY: Must offer virtual
+            "isAvailable": True,    # KEY: Must be available
+            "isVirtualTrainingAvailable": True,  # KEY: Virtual training available
+            "ratePerMinuteCents": 175,
+            "latitude": 40.7128,
+            "longitude": -74.0060,
+            "locationAddress": "New York, NY",
+            "videoCallPreference": "zoom",
+            "zoomMeetingLink": "https://zoom.us/j/123456789"
+        }
+        
+        profile_response = self.make_request('POST', '/trainer-profiles', virtual_profile, token=virtual_trainer_token)
+        if not profile_response or profile_response.status_code != 200:
+            self.log_result("Virtual Session Setup - Trainer Profile", False, 
+                           f"Failed to create virtual trainer profile. Status: {profile_response.status_code if profile_response else 'No response'}")
+            return None, None
+            
+        self.log_result("Virtual Session Setup", True, "Virtual trainer created successfully")
+        return virtual_trainer_id, virtual_trainer_token
+
+    def test_virtual_session_successful_request(self):
+        """Test successful virtual session request with available trainer"""
+        print("\n🧪 Testing Virtual Session - Successful Request")
+        
+        # Setup virtual trainer
+        virtual_trainer_id, virtual_trainer_token = self.test_virtual_session_setup()
+        if not virtual_trainer_id:
+            return
+            
+        # Create a trainee for virtual session
+        trainee_data = {
+            "fullName": "Virtual Session Trainee",
+            "email": f"virtual.trainee.{datetime.now().timestamp()}@test.com",
+            "phone": "+1234567898",
+            "password": "testpass123",
+            "roles": ["trainee"]
+        }
+        
+        response = self.make_request('POST', '/auth/signup', trainee_data)
+        if not response or response.status_code != 200:
+            self.log_result("Virtual Session - Trainee Setup", False, "Failed to create trainee")
+            return
+            
+        trainee_info = response.json()
+        trainee_id = trainee_info['user']['id']
+        trainee_token = trainee_info['access_token']
+        
+        # Create trainee profile
+        trainee_profile = {
+            "userId": trainee_id,
+            "fitnessGoals": "Virtual training experience",
+            "currentFitnessLevel": "intermediate",
+            "experienceLevel": "Some experience",
+            "isVirtualEnabled": True,
+            "budgetMinPerMinuteCents": 100,
+            "budgetMaxPerMinuteCents": 300
+        }
+        
+        profile_response = self.make_request('POST', '/trainee-profiles', trainee_profile, token=trainee_token)
+        if not profile_response or profile_response.status_code != 200:
+            self.log_result("Virtual Session - Trainee Profile Setup", False, "Failed to create trainee profile")
+            return
+            
+        # Request virtual session
+        virtual_session_request = {
+            "traineeId": trainee_id,
+            "durationMinutes": 30,
+            "paymentMethod": "mock",
+            "notes": "Testing virtual session request"
+        }
+        
+        response = self.make_request('POST', '/virtual-sessions/request', virtual_session_request, token=trainee_token)
+        
+        if not response or response.status_code != 200:
+            self.log_result("Virtual Session Request", False, 
+                           f"Failed to request virtual session. Status: {response.status_code if response else 'No response'}",
+                           response.text if response else None)
+            return
+            
+        result = response.json()
+        
+        # Verify response structure
+        required_fields = ['sessionId', 'trainerId', 'trainerName', 'trainerRating', 
+                          'sessionDateTimeStart', 'sessionDateTimeEnd', 'durationMinutes', 
+                          'finalSessionPriceCents', 'status']
+        
+        missing_fields = [field for field in required_fields if field not in result]
+        
+        if missing_fields:
+            self.log_result("Virtual Session - Response Structure", False, 
+                           f"Missing required fields: {missing_fields}")
+            return
+            
+        # Verify pricing ($18 for 30 minutes = 1800 cents)
+        expected_price = 1800
+        actual_price = result['finalSessionPriceCents']
+        price_correct = actual_price == expected_price
+        
+        # Verify duration
+        duration_correct = result['durationMinutes'] == 30
+        
+        # Verify status is confirmed (auto-confirmed for virtual)
+        status_correct = result['status'] == 'confirmed'
+        
+        # Verify trainer matching
+        trainer_matched = result['trainerId'] == virtual_trainer_id
+        
+        success = (len(missing_fields) == 0 and price_correct and 
+                  duration_correct and status_correct and trainer_matched)
+        
+        details = {
+            'session_id': result.get('sessionId'),
+            'trainer_id': result.get('trainerId'),
+            'trainer_name': result.get('trainerName'),
+            'price_cents': actual_price,
+            'expected_price_cents': expected_price,
+            'duration_minutes': result.get('durationMinutes'),
+            'status': result.get('status'),
+            'zoom_link': result.get('zoomMeetingLink')
+        }
+        
+        message = f"Virtual session created successfully. Price: ${actual_price/100:.2f}, Duration: {result.get('durationMinutes')}min, Status: {result.get('status')}"
+        
+        self.log_result("Virtual Session - Successful Request", success, message, details)
+        
+        return result
+
+    def test_virtual_session_no_available_trainers(self):
+        """Test error case when no virtual trainers are available"""
+        print("\n🧪 Testing Virtual Session - No Available Trainers")
+        
+        # Create a trainee
+        trainee_data = {
+            "fullName": "No Trainer Trainee",
+            "email": f"no.trainer.trainee.{datetime.now().timestamp()}@test.com",
+            "phone": "+1234567897",
+            "password": "testpass123",
+            "roles": ["trainee"]
+        }
+        
+        response = self.make_request('POST', '/auth/signup', trainee_data)
+        if not response or response.status_code != 200:
+            self.log_result("Virtual Session No Trainers - Setup", False, "Failed to create trainee")
+            return
+            
+        trainee_info = response.json()
+        trainee_id = trainee_info['user']['id']
+        trainee_token = trainee_info['access_token']
+        
+        # Make all existing virtual trainers unavailable by searching and toggling
+        # First, let's make sure we have no available virtual trainers
+        # We'll create a trainer and then make them unavailable
+        
+        temp_trainer_data = {
+            "fullName": "Temp Virtual Trainer",
+            "email": f"temp.virtual.{datetime.now().timestamp()}@test.com",
+            "phone": "+1234567896",
+            "password": "testpass123",
+            "roles": ["trainer"]
+        }
+        
+        trainer_response = self.make_request('POST', '/auth/signup', temp_trainer_data)
+        if trainer_response and trainer_response.status_code == 200:
+            trainer_info = trainer_response.json()
+            temp_trainer_token = trainer_info['access_token']
+            
+            # Create profile and immediately make unavailable
+            temp_profile = {
+                "userId": trainer_info['user']['id'],
+                "offersVirtual": True,
+                "isVirtualTrainingAvailable": True,
+                "isAvailable": False  # Make unavailable
+            }
+            
+            self.make_request('POST', '/trainer-profiles', temp_profile, token=temp_trainer_token)
+        
+        # Now try to request virtual session (should fail)
+        virtual_session_request = {
+            "traineeId": trainee_id,
+            "durationMinutes": 30,
+            "paymentMethod": "mock",
+            "notes": "This should fail - no trainers available"
+        }
+        
+        response = self.make_request('POST', '/virtual-sessions/request', virtual_session_request, token=trainee_token)
+        
+        # Should return 404 with appropriate error message
+        if response and response.status_code == 404:
+            error_data = response.json()
+            expected_message = "No virtual trainers available at the moment"
+            
+            if expected_message in error_data.get('detail', ''):
+                success = True
+                message = f"Correct error handling: {error_data['detail']}"
+            else:
+                success = False
+                message = f"Unexpected error message: {error_data.get('detail')}"
+        else:
+            success = False
+            message = f"Expected 404 error, got {response.status_code if response else 'No response'}: {response.text if response else 'No response'}"
+        
+        self.log_result("Virtual Session - No Available Trainers", success, message)
+
+    def test_virtual_session_pricing_verification(self):
+        """Test virtual session pricing breakdown verification"""
+        print("\n🧪 Testing Virtual Session - Pricing Verification")
+        
+        # Setup and create a virtual session
+        session_data = self.test_virtual_session_successful_request()
+        if not session_data:
+            return
+            
+        session_id = session_data['sessionId']
+        
+        # Get session details from database
+        response = self.make_request('GET', f'/sessions/{session_id}')
+        
+        if not response or response.status_code != 200:
+            self.log_result("Virtual Session Pricing - Session Retrieval", False, 
+                           f"Failed to retrieve session details. Status: {response.status_code if response else 'No response'}")
+            return
+            
+        session = response.json()
+        
+        # Verify pricing breakdown
+        base_price = session.get('baseSessionPriceCents', 0)
+        platform_fee = session.get('platformFeeCents', 0)
+        trainer_earnings = session.get('trainerEarningsCents', 0)
+        final_price = session.get('finalSessionPriceCents', 0)
+        
+        # Expected: $18 base, $1.80 platform fee (10%), $16.20 trainer earnings
+        expected_base = 1800
+        expected_platform_fee = 180
+        expected_trainer_earnings = 1620
+        expected_final = 1800
+        
+        pricing_correct = (base_price == expected_base and 
+                          platform_fee == expected_platform_fee and 
+                          trainer_earnings == expected_trainer_earnings and
+                          final_price == expected_final)
+        
+        # Verify session type is virtual
+        is_virtual = session.get('locationType') == 'virtual'
+        
+        # Verify payment processing
+        payment_status = session.get('paymentStatus')
+        payment_id = session.get('paymentIntentId')
+        payment_processed = payment_status == 'completed' and payment_id and payment_id.startswith('mock_payment_')
+        
+        success = pricing_correct and is_virtual and payment_processed
+        
+        details = {
+            'base_price_cents': base_price,
+            'platform_fee_cents': platform_fee,
+            'trainer_earnings_cents': trainer_earnings,
+            'final_price_cents': final_price,
+            'location_type': session.get('locationType'),
+            'payment_status': payment_status,
+            'payment_id': payment_id
+        }
+        
+        message = f"Pricing verification. Base: ${base_price/100:.2f}, Fee: ${platform_fee/100:.2f}, Earnings: ${trainer_earnings/100:.2f}"
+        if not pricing_correct:
+            message += f" (Expected: ${expected_base/100:.2f}, ${expected_platform_fee/100:.2f}, ${expected_trainer_earnings/100:.2f})"
+        
+        self.log_result("Virtual Session - Pricing Verification", success, message, details)
+
     def run_all_tests(self):
         """Run all proximity matching tests"""
         print("🚀 Starting RapidReps Proximity Matching Tests")
