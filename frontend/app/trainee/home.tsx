@@ -416,7 +416,7 @@ export default function TraineeHomeScreen() {
                     {trainer.locationAddress && (
                       <View style={styles.locationRow}>
                         <Ionicons name="location" size={16} color={Colors.secondary} />
-                        <Text style={styles.locationText}>
+                        <Text style={styles.locationRowText}>
                           {trainer.locationAddress}
                           {trainer.distance !== null && ` • ${trainer.distance.toFixed(1)} mi away`}
                         </Text>
