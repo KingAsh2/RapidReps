@@ -29,6 +29,11 @@ export default function TrainerDetailScreen() {
   const [selectedDuration, setSelectedDuration] = useState<number>(60);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [booking, setBooking] = useState(false);
+  
+  // Long press animation states
+  const pressProgress = useRef(new Animated.Value(0)).current;
+  const pressTimer = useRef<NodeJS.Timeout | null>(null);
+  const [isHolding, setIsHolding] = useState(false);
 
   useEffect(() => {
     loadTrainerDetails();
