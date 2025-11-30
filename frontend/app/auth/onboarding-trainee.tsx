@@ -411,47 +411,6 @@ export default function TraineeOnboardingScreen() {
           </View>
         );
 
-      case 4:
-        return (
-          <View style={styles.stepContent}>
-            <Text style={styles.stepTitle}>Budget 💰</Text>
-            
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Budget Per Minute (cents)</Text>
-              <View style={styles.budgetRow}>
-                <View style={styles.budgetInput}>
-                  <Text style={styles.budgetLabel}>Min</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={formData.budgetMinPerMinuteCents.toString()}
-                    onChangeText={(text) => setFormData({ ...formData, budgetMinPerMinuteCents: parseInt(text) || 50 })}
-                    placeholder="50"
-                    placeholderTextColor={Colors.textLight}
-                    keyboardType="numeric"
-                  />
-                </View>
-                <View style={styles.budgetInput}>
-                  <Text style={styles.budgetLabel}>Max</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={formData.budgetMaxPerMinuteCents.toString()}
-                    onChangeText={(text) => setFormData({ ...formData, budgetMaxPerMinuteCents: parseInt(text) || 200 })}
-                    placeholder="200"
-                    placeholderTextColor={Colors.textLight}
-                    keyboardType="numeric"
-                  />
-                </View>
-              </View>
-              <Text style={styles.helpText}>
-                Budget range: ${formData.budgetMinPerMinuteCents / 100} - ${formData.budgetMaxPerMinuteCents / 100} per minute
-              </Text>
-              <Text style={styles.helpText}>
-                Example: For a 60-min session at $1/min = $60
-              </Text>
-            </View>
-          </View>
-        );
-
       default:
         return null;
     }
