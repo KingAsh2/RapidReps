@@ -51,7 +51,7 @@ export default function SignupScreen() {
 
     setLoading(true);
     try {
-      await authAPI.signup({
+      await signup({
         fullName: formData.fullName,
         email: formData.email,
         phone: formData.phone,
