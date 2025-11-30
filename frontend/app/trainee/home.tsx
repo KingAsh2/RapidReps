@@ -139,7 +139,7 @@ export default function TraineeHomeScreen() {
       
       // Sort by distance (closest first), then virtual trainers
       trainersWithDistance.sort((a: any, b: any) => {
-        // Prioritize trainers with location (within 20 miles)
+        // Prioritize trainers with location (within 10 miles)
         if (a.distance !== null && b.distance === null) return -1;
         if (a.distance === null && b.distance !== null) return 1;
         
