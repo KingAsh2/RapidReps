@@ -510,25 +510,39 @@ async def search_trainers(
     trainers = await db.trainer_profiles.find(query).to_list(100)
     
     # Filter based on location and virtual training preferences
-    filtered_trainers = []
+    # Priority: In-person trainers within 15 miles, then virtual trainers within 20 miles
+    in_person_trainers = []
+    virtual_trainers = []
     
     for trainer in trainers:
-        # Include if trainee wants virtual AND trainer offers virtual
-        if wantsVirtual and trainer.get('isVirtualTrainingAvailable'):
-            filtered_trainers.append(trainer)
-            continue
-        
-        # Include if within 10 miles (if both have location data)
         if latitude and longitude and trainer.get('latitude') and trainer.get('longitude'):
             distance = calculate_distance(latitude, longitude, trainer['latitude'], trainer['longitude'])
             
-            if distance <= 10:  # Within 10 miles
-                filtered_trainers.append(trainer)
-                continue
-        
-        # Include if no location data (for backwards compatibility)
-        if not latitude and not longitude:
-            filtered_trainers.append(trainer)
+            # In-person trainers within 15 miles (PRIORITY)
+            if trainer.get('offersInPerson') and distance <= 15:
+                trainer['distance'] = distance
+                trainer['matchType'] = 'in-person'
+                in_person_trainers.append(trainer)
+            # Virtual trainers within 20 miles (if trainee wants virtual)
+            elif wantsVirtual and trainer.get('isVirtualTrainingAvailable') and distance <= 20:
+                trainer['distance'] = distance
+                trainer['matchType'] = 'virtual'
+                virtual_trainers.append(trainer)
+        else:
+            # Trainers without location - only include if they offer virtual and trainee wants it
+            if wantsVirtual and trainer.get('isVirtualTrainingAvailable'):
+                trainer['distance'] = None
+                trainer['matchType'] = 'virtual'
+                virtual_trainers.append(trainer)
+    
+    # Sort in-person trainers by distance (closest first)
+    in_person_trainers.sort(key=lambda t: t.get('distance', 999))
+    
+    # Sort virtual trainers by distance (closest first)
+    virtual_trainers.sort(key=lambda t: t.get('distance', 999))
+    
+    # Combine: In-person first (priority), then virtual
+    filtered_trainers = in_person_trainers + virtual_trainers
     
     return [TrainerProfileResponse(**serialize_doc(t)) for t in filtered_trainers]
 
