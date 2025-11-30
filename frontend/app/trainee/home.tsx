@@ -369,6 +369,25 @@ export default function TraineeHomeScreen() {
                       </Text>
                     )}
                     
+                    {/* Location Display */}
+                    {trainer.locationAddress && (
+                      <View style={styles.locationRow}>
+                        <Ionicons name="location" size={16} color={Colors.secondary} />
+                        <Text style={styles.locationText}>
+                          {trainer.locationAddress}
+                          {trainer.distance !== null && ` • ${trainer.distance.toFixed(1)} mi away`}
+                        </Text>
+                      </View>
+                    )}
+                    
+                    {/* Virtual Badge */}
+                    {trainer.isVirtualTrainingAvailable && (
+                      <View style={styles.virtualBadge}>
+                        <Ionicons name="videocam" size={14} color={Colors.white} />
+                        <Text style={styles.virtualBadgeText}>Virtual Available</Text>
+                      </View>
+                    )}
+
                     <View style={styles.trainerStats}>
                       <View style={styles.stat}>
                         <Ionicons name="star" size={16} color={Colors.warning} />
@@ -382,14 +401,6 @@ export default function TraineeHomeScreen() {
                           ${(trainer.ratePerMinuteCents / 100).toFixed(2)}/min
                         </Text>
                       </View>
-                      {trainer.distance !== null && (
-                        <View style={styles.stat}>
-                          <Ionicons name="navigate" size={16} color={Colors.neonBlue} />
-                          <Text style={styles.distanceText}>
-                            {trainer.distance.toFixed(1)} mi
-                          </Text>
-                        </View>
-                      )}
                     </View>
                     
                     {trainer.trainingStyles.length > 0 && (
