@@ -169,6 +169,19 @@ export default function TraineeHomeScreen() {
     }
   };
 
+  const loadSessions = async () => {
+    try {
+      const data = await traineeAPI.getSessions();
+      setSessions(data);
+    } catch (error) {
+      console.error('Error loading sessions:', error);
+    }
+  };
+
+  useEffect(() => {
+    loadSessions();
+  }, []);
+
   const onRefresh = () => {
     setRefreshing(true);
     loadTrainers();
