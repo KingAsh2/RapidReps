@@ -22,6 +22,7 @@ export const Colors = {
   // STATUS COLORS
   success: '#30C7C9',  // Teal
   error: '#FF4444',
+  danger: '#FF4444',  // Alias for error
   warning: '#FFA526',  // Light Orange
   
   // TEXT
