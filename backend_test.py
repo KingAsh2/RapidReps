@@ -964,13 +964,275 @@ class RapidRepsProximityTester:
         
         print("\n" + "="*80)
 
-if __name__ == "__main__":
+def test_virtual_training_flow_end_to_end():
+    """
+    TEST RUN #1 of 3 - Virtual Training Flow End-to-End Test
+    
+    Test Sequence:
+    1. Create a new test trainee user
+    2. Create trainee profile with virtual enabled
+    3. Create a test virtual trainer with required flags
+    4. Request virtual session via `/api/virtual-sessions/request`
+    5. Verify session creation with correct details (price $18, duration 30min, status confirmed, type virtual, mock payment ID)
+    6. Verify session can be retrieved
+    7. Complete the session via `/api/sessions/{sessionId}/complete`
+    8. Create rating for the completed session
+    9. Verify trainer rating updated
+    """
+    print("🚀 Starting TEST #1: Virtual Training Flow End-to-End Test")
+    print("=" * 60)
+    
     tester = RapidRepsProximityTester()
-    success = tester.run_all_tests()
+    results = []
+    
+    # Generate unique identifiers for this test run
+    test_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+    trainee_email = f"test_trainee_{test_id}@example.com"
+    trainer_email = f"test_trainer_{test_id}@example.com"
+    
+    trainee_token = None
+    trainer_token = None
+    trainee_id = None
+    trainer_id = None
+    session_id = None
+    
+    try:
+        # Step 1: Create a new test trainee user
+        print("\n📝 Step 1: Creating test trainee user...")
+        trainee_data = {
+            "fullName": "Test Trainee User",
+            "email": trainee_email,
+            "phone": "+1234567890",
+            "password": "testpass123",
+            "roles": ["trainee"]
+        }
+        
+        response = tester.make_request('POST', '/auth/signup', trainee_data)
+        if response and response.status_code == 200:
+            trainee_result = response.json()
+            trainee_token = trainee_result['access_token']
+            trainee_id = trainee_result['user']['id']
+            tester.log_result("Step 1 - Create Trainee User", True, f"Created trainee: {trainee_email}")
+        else:
+            tester.log_result("Step 1 - Create Trainee User", False, f"Status: {response.status_code if response else 'No response'}")
+            return False
+        
+        # Step 2: Create trainee profile with virtual enabled
+        print("\n📝 Step 2: Creating trainee profile with virtual enabled...")
+        trainee_profile_data = {
+            "userId": trainee_id,
+            "fitnessGoals": "Get fit and healthy through virtual training",
+            "currentFitnessLevel": "beginner",
+            "experienceLevel": "Never trained",
+            "preferredTrainingStyles": ["strength", "cardio"],
+            "prefersVirtual": True,
+            "isVirtualEnabled": True,
+            "budgetMinPerMinuteCents": 50,
+            "budgetMaxPerMinuteCents": 200,
+            "latitude": 40.7128,
+            "longitude": -74.0060,
+            "locationAddress": "New York, NY"
+        }
+        
+        response = tester.make_request('POST', '/trainee-profiles', trainee_profile_data, token=trainee_token)
+        if response and response.status_code == 200:
+            tester.log_result("Step 2 - Create Trainee Profile with Virtual Enabled", True, "Trainee profile created with virtual enabled")
+        else:
+            tester.log_result("Step 2 - Create Trainee Profile with Virtual Enabled", False, f"Status: {response.status_code if response else 'No response'}")
+            return False
+        
+        # Step 3: Create a test virtual trainer with required flags
+        print("\n📝 Step 3: Creating test virtual trainer...")
+        trainer_data = {
+            "fullName": "Test Virtual Trainer Pro",
+            "email": trainer_email,
+            "phone": "+1987654321",
+            "password": "trainerpass123",
+            "roles": ["trainer"]
+        }
+        
+        response = tester.make_request('POST', '/auth/signup', trainer_data)
+        if response and response.status_code == 200:
+            trainer_result = response.json()
+            trainer_token = trainer_result['access_token']
+            trainer_id = trainer_result['user']['id']
+            tester.log_result("Step 3a - Create Virtual Trainer User", True, f"Created trainer: {trainer_email}")
+        else:
+            tester.log_result("Step 3a - Create Virtual Trainer User", False, f"Status: {response.status_code if response else 'No response'}")
+            return False
+        
+        # Create trainer profile with ALL required virtual training flags
+        trainer_profile_data = {
+            "userId": trainer_id,
+            "bio": "Expert virtual trainer specializing in home workouts and form correction",
+            "experienceYears": 5,
+            "certifications": ["NASM-CPT", "Virtual Training Specialist"],
+            "trainingStyles": ["strength", "cardio", "functional"],
+            "offersInPerson": True,
+            "offersVirtual": True,  # KEY: Must offer virtual
+            "isAvailable": True,    # KEY: Must be available
+            "isVirtualTrainingAvailable": True,  # KEY: Virtual training available
+            "ratePerMinuteCents": 60,  # $0.60/min for $18/30min
+            "latitude": 40.7589,
+            "longitude": -73.9851,
+            "locationAddress": "Manhattan, NY",
+            "videoCallPreference": "zoom"
+        }
+        
+        response = tester.make_request('POST', '/trainer-profiles', trainer_profile_data, token=trainer_token)
+        if response and response.status_code == 200:
+            tester.log_result("Step 3b - Create Virtual Trainer Profile", True, "Virtual trainer profile created with all required flags")
+        else:
+            tester.log_result("Step 3b - Create Virtual Trainer Profile", False, f"Status: {response.status_code if response else 'No response'}")
+            return False
+        
+        # Step 4: Request virtual session via `/api/virtual-sessions/request`
+        print("\n📝 Step 4: Requesting virtual training session...")
+        virtual_session_request = {
+            "traineeId": trainee_id,
+            "durationMinutes": 30,
+            "paymentMethod": "mock",
+            "notes": "TEST #1 - Virtual training session end-to-end test"
+        }
+        
+        response = tester.make_request('POST', '/virtual-sessions/request', virtual_session_request, token=trainee_token)
+        if response and response.status_code == 200:
+            session_match = response.json()
+            session_id = session_match['sessionId']
+            tester.log_result("Step 4 - Request Virtual Session", True, f"Virtual session created: {session_id}")
+            
+            # Step 5: Verify session creation with correct details
+            print("\n📝 Step 5: Verifying session details...")
+            
+            # Check price: $18 (1800 cents)
+            if session_match['finalSessionPriceCents'] == 1800:
+                tester.log_result("Step 5a - Verify Session Price ($18)", True, f"Correct price: ${session_match['finalSessionPriceCents']/100:.2f}")
+            else:
+                tester.log_result("Step 5a - Verify Session Price ($18)", False, f"Expected $18.00 (1800 cents), got ${session_match['finalSessionPriceCents']/100:.2f}")
+            
+            # Check duration: 30 minutes
+            if session_match['durationMinutes'] == 30:
+                tester.log_result("Step 5b - Verify Session Duration (30 min)", True, f"Correct duration: {session_match['durationMinutes']} minutes")
+            else:
+                tester.log_result("Step 5b - Verify Session Duration (30 min)", False, f"Expected 30 minutes, got {session_match['durationMinutes']}")
+            
+            # Check status: confirmed
+            if session_match['status'] == 'confirmed':
+                tester.log_result("Step 5c - Verify Session Status (confirmed)", True, f"Correct status: {session_match['status']}")
+            else:
+                tester.log_result("Step 5c - Verify Session Status (confirmed)", False, f"Expected 'confirmed', got {session_match['status']}")
+            
+            # Check trainer assignment
+            if session_match.get('trainerId') and session_match.get('trainerName'):
+                tester.log_result("Step 5d - Verify Trainer Assignment", True, f"Trainer assigned: {session_match['trainerName']} (ID: {session_match['trainerId']})")
+            else:
+                tester.log_result("Step 5d - Verify Trainer Assignment", False, "Missing trainer details in response")
+            
+        else:
+            tester.log_result("Step 4 - Request Virtual Session", False, f"Status: {response.status_code if response else 'No response'}")
+            return False
+        
+        # Step 6: Verify session can be retrieved
+        print("\n📝 Step 6: Retrieving session details...")
+        response = tester.make_request('GET', f'/sessions/{session_id}', token=trainee_token)
+        if response and response.status_code == 200:
+            session_details = response.json()
+            tester.log_result("Step 6a - Retrieve Session Details", True, f"Session retrieved successfully")
+            
+            # Verify it's a virtual session
+            if session_details.get('locationType') == 'virtual':
+                tester.log_result("Step 6b - Verify Session Type (virtual)", True, f"Correct type: {session_details['locationType']}")
+            else:
+                tester.log_result("Step 6b - Verify Session Type (virtual)", False, f"Expected 'virtual', got {session_details.get('locationType')}")
+            
+            # Check for mock payment ID
+            payment_id = session_details.get('paymentIntentId', '')
+            if payment_id and 'mock_payment' in payment_id:
+                tester.log_result("Step 6c - Verify Mock Payment ID", True, f"Mock payment ID exists: {payment_id}")
+            else:
+                tester.log_result("Step 6c - Verify Mock Payment ID", False, f"Payment ID: {payment_id}")
+        else:
+            tester.log_result("Step 6a - Retrieve Session Details", False, f"Status: {response.status_code if response else 'No response'}")
+            return False
+        
+        # Step 7: Complete the session via `/api/sessions/{sessionId}/complete`
+        print("\n📝 Step 7: Completing the session...")
+        response = tester.make_request('PATCH', f'/sessions/{session_id}/complete', token=trainer_token)
+        if response and response.status_code == 200:
+            completed_session = response.json()
+            tester.log_result("Step 7a - Complete Session", True, f"Session completed successfully")
+            
+            # Verify status changed to completed
+            if completed_session['status'] == 'completed':
+                tester.log_result("Step 7b - Verify Session Completion Status", True, f"Status updated to: {completed_session['status']}")
+            else:
+                tester.log_result("Step 7b - Verify Session Completion Status", False, f"Expected 'completed', got {completed_session['status']}")
+        else:
+            tester.log_result("Step 7a - Complete Session", False, f"Status: {response.status_code if response else 'No response'}")
+            return False
+        
+        # Step 8: Create rating for the completed session
+        print("\n📝 Step 8: Creating rating for completed session...")
+        rating_data = {
+            "sessionId": session_id,
+            "traineeId": trainee_id,
+            "trainerId": trainer_id,
+            "rating": 5,
+            "reviewText": "Excellent virtual training session! Great form corrections via video and very motivating."
+        }
+        
+        response = tester.make_request('POST', '/ratings', rating_data, token=trainee_token)
+        if response and response.status_code == 200:
+            rating_result = response.json()
+            tester.log_result("Step 8 - Create Session Rating", True, f"5-star rating created successfully")
+        else:
+            tester.log_result("Step 8 - Create Session Rating", False, f"Status: {response.status_code if response else 'No response'}")
+            return False
+        
+        # Step 9: Verify trainer rating updated
+        print("\n📝 Step 9: Verifying trainer rating update...")
+        response = tester.make_request('GET', f'/trainer-profiles/{trainer_id}')
+        if response and response.status_code == 200:
+            trainer_profile = response.json()
+            avg_rating = trainer_profile.get('averageRating', 0)
+            if avg_rating > 0:
+                tester.log_result("Step 9 - Verify Trainer Rating Updated", True, f"Trainer average rating updated to: {avg_rating}")
+            else:
+                tester.log_result("Step 9 - Verify Trainer Rating Updated", False, f"Average rating not updated: {avg_rating}")
+        else:
+            tester.log_result("Step 9 - Verify Trainer Rating Updated", False, f"Status: {response.status_code if response else 'No response'}")
+            return False
+        
+        print("\n🎉 TEST #1 - Virtual Training Flow End-to-End Test COMPLETED!")
+        
+        # Print summary for this specific test
+        passed_tests = sum(1 for r in tester.test_results if r['success'])
+        total_tests = len(tester.test_results)
+        
+        print(f"\n📊 TEST #1 SUMMARY: {passed_tests}/{total_tests} steps passed ({(passed_tests/total_tests*100):.1f}%)")
+        
+        if passed_tests == total_tests:
+            print("✅ ALL STEPS PASSED - Virtual training flow is working correctly!")
+            return True
+        else:
+            print("❌ SOME STEPS FAILED - See details above")
+            failed_tests = [r for r in tester.test_results if not r['success']]
+            for failed in failed_tests:
+                print(f"   ❌ {failed['test']}: {failed['message']}")
+            return False
+        
+    except Exception as e:
+        tester.log_result("Virtual Training Flow Test", False, f"Exception: {str(e)}")
+        print(f"❌ TEST #1 FAILED with exception: {str(e)}")
+        return False
+
+if __name__ == "__main__":
+    # Run the specific virtual training flow test as requested
+    success = test_virtual_training_flow_end_to_end()
     
     if success:
-        print("🎉 All proximity matching tests passed!")
+        print("\n🎉 TEST #1 PASSED - Virtual Training Flow End-to-End Test successful!")
         sys.exit(0)
     else:
-        print("💥 Some tests failed!")
+        print("\n💥 TEST #1 FAILED - Virtual Training Flow End-to-End Test failed!")
         sys.exit(1)
