@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """
-RapidReps Backend API Testing - UPDATED Proximity Matching Rules
-Testing the UPDATED proximity matching rules:
-1. In-Person Training: 15 miles radius (changed from 10 miles)
-2. Virtual Training: 20 miles radius (changed from unlimited)
-3. Display Order: In-person trainers first, then virtual trainers
-4. Nearby Trainees: 15 miles radius (changed from 10 miles)
+RapidReps Backend API Comprehensive Testing Suite
+Testing all backend functionality including:
+1. Authentication endpoints (signup, login, JWT verification)
+2. Trainer profile management (create, read, update, toggle availability)
+3. Trainee profile management (create, read, update with location data)
+4. Trainer search with proximity matching (15mi in-person, 20mi virtual)
+5. Session booking and management
+6. Rating system
+7. Nearby trainees endpoint
 """
 
 import requests
