@@ -77,10 +77,12 @@ def test_health_check():
 
 def create_test_user(role="trainee", suffix=""):
     """Create a test user and return auth token"""
+    import random
+    unique_id = random.randint(10000, 99999)
     user_data = {
         "fullName": f"Test {role.title()} {suffix}",
-        "email": f"test{role}{suffix}@example.com",
-        "phone": f"555-000-{1000 + len(suffix)}",
+        "email": f"test{role}{suffix}{unique_id}@example.com",
+        "phone": f"555-{unique_id}",
         "password": "testpass123",
         "roles": [role]
     }
