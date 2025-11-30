@@ -137,20 +137,10 @@ export default function TraineeHomeScreen() {
         };
       });
       
-      // Sort by distance (closest first), then virtual trainers
-      trainersWithDistance.sort((a: any, b: any) => {
-        // Prioritize trainers with location (within 10 miles)
-        if (a.distance !== null && b.distance === null) return -1;
-        if (a.distance === null && b.distance !== null) return 1;
-        
-        // Both have distance - sort by distance
-        if (a.distance !== null && b.distance !== null) {
-          return a.distance - b.distance;
-        }
-        
-        // Both are virtual (no location) - sort by rating
-        return (b.averageRating || 0) - (a.averageRating || 0);
-      });
+      // Backend now returns trainers in priority order:
+      // 1. In-person trainers within 15 miles (sorted by distance)
+      // 2. Virtual trainers within 20 miles (sorted by distance)
+      // No additional sorting needed here
       
       setTrainers(trainersWithDistance);
       
