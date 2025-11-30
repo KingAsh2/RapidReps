@@ -69,12 +69,32 @@ class RapidRepsProximityTester:
             return response
         except requests.exceptions.RequestException as e:
             return None
-    
     def test_health_check(self):
-        """Test API health endpoint"""
-        success, data, status = self.make_request("GET", "/health")
-        self.log_test("Health Check", success, f"Status: {status}, Response: {data}")
-        return success
+        """Test API health check"""
+        response = self.make_request("GET", "/health")
+        if response and response.status_code == 200:
+            results.add_pass("API Health Check")
+            return True
+        else:
+            results.add_fail("API Health Check", f"Status: {response.status_code if response else 'No response'}")
+            return False
+
+    def create_test_user(self, role="trainee", suffix=""):
+        """Create a test user and return auth token"""
+        user_data = {
+            "fullName": f"Test {role.title()} {suffix}",
+            "email": f"test{role}{suffix}@example.com",
+            "phone": f"555-000-{1000 + len(suffix)}",
+            "password": "testpass123",
+            "roles": [role]
+        }
+        
+        response = self.make_request("POST", "/auth/signup", user_data)
+        if response and response.status_code == 200:
+            data = response.json()
+            self.test_users.append(data["user"]["id"])
+            return data["access_token"], data["user"]["id"]
+        return None, None
     
     def test_signup_trainer(self):
         """Test trainer signup"""
