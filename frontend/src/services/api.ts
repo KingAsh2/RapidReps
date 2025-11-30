@@ -105,6 +105,18 @@ export const trainerAPI = {
     const response = await api.get(`/trainers/${trainerId}/ratings`);
     return response.data;
   },
+
+  getNearbyTrainees: async (): Promise<any> => {
+    const response = await api.get('/trainers/nearby-trainees');
+    return response.data;
+  },
+
+  toggleAvailability: async (isAvailable: boolean): Promise<any> => {
+    const response = await api.patch('/trainer-profiles/toggle-availability', null, {
+      params: { isAvailable },
+    });
+    return response.data;
+  },
 };
 
 // Trainee Profile API
