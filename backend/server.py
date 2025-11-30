@@ -140,32 +140,42 @@ class TrainerProfileResponse(BaseModel):
 # Trainee Profile Models
 class TraineeProfileCreate(BaseModel):
     userId: str
-    avatarUrl: Optional[str] = None
+    profilePhoto: Optional[str] = None  # base64 encoded
     fitnessGoals: Optional[str] = None
     currentFitnessLevel: str = FitnessLevel.BEGINNER
+    experienceLevel: Optional[str] = None  # "Never trained", "Some experience", "Regular exerciser"
     preferredTrainingStyles: List[str] = []
     injuriesOrLimitations: Optional[str] = None
     homeGymOrZipCode: Optional[str] = None
     prefersInPerson: bool = True
     prefersVirtual: bool = False
+    isVirtualEnabled: bool = False
     typicalAvailability: Optional[dict] = None
     budgetMinPerMinuteCents: Optional[int] = 50
     budgetMaxPerMinuteCents: Optional[int] = 200
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    locationAddress: Optional[str] = None  # "City, State"
 
 class TraineeProfileResponse(BaseModel):
     id: str
     userId: str
-    avatarUrl: Optional[str] = None
+    profilePhoto: Optional[str] = None
     fitnessGoals: Optional[str] = None
     currentFitnessLevel: str = FitnessLevel.BEGINNER
+    experienceLevel: Optional[str] = None
     preferredTrainingStyles: List[str] = []
     injuriesOrLimitations: Optional[str] = None
     homeGymOrZipCode: Optional[str] = None
     prefersInPerson: bool = True
     prefersVirtual: bool = False
+    isVirtualEnabled: bool = False
     typicalAvailability: Optional[dict] = None
     budgetMinPerMinuteCents: int = 50
     budgetMaxPerMinuteCents: int = 200
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    locationAddress: Optional[str] = None
     createdAt: datetime
 
 # Session Models
