@@ -1,18 +1,22 @@
 #!/usr/bin/env python3
 """
-RapidReps Backend API Test Suite - Proximity Matching & Trainer Availability Features
-Tests the newly implemented features for proximity matching and trainer availability.
+RapidReps Backend API Testing - UPDATED Proximity Matching Rules
+Testing the UPDATED proximity matching rules:
+1. In-Person Training: 15 miles radius (changed from 10 miles)
+2. Virtual Training: 20 miles radius (changed from unlimited)
+3. Display Order: In-person trainers first, then virtual trainers
+4. Nearby Trainees: 15 miles radius (changed from 10 miles)
 """
 
 import requests
 import json
-import base64
+import sys
 from datetime import datetime, timedelta
-import time
+import os
 
-# Configuration
-BASE_URL = "https://workout-match-4.preview.emergentagent.com/api"
-HEADERS = {"Content-Type": "application/json"}
+# Get backend URL from environment
+BACKEND_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://workout-match-4.preview.emergentagent.com')
+API_BASE = f"{BACKEND_URL}/api"
 
 class TestResults:
     def __init__(self):
