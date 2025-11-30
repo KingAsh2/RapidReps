@@ -43,14 +43,20 @@ export default function SignupScreen() {
       return;
     }
 
+    if (!formData.phone) {
+      Alert.alert('Error', 'Please enter your phone number');
+      return;
+    }
+
     setLoading(true);
     try {
-      await authAPI.signup(
-        formData.email,
-        formData.password,
-        formData.fullName,
-        formData.roles
-      );
+      await authAPI.signup({
+        fullName: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password,
+        roles: formData.roles,
+      });
 
       Alert.alert('Success', 'Account created successfully!', [
         { 
