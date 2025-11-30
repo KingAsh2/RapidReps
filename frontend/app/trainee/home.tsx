@@ -25,6 +25,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import { AnimatedLogo } from '../../src/components/AnimatedLogo';
+import TrainingModeDialog from '../../src/components/TrainingModeDialog';
 
 const { width } = Dimensions.get('window');
 
