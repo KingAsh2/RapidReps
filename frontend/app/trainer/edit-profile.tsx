@@ -152,8 +152,13 @@ export default function EditTrainerProfileScreen() {
   };
 
   const handleSave = async () => {
-    if (!user || !profile) return;
+    if (!user || !profile) {
+      console.log('Save failed: user or profile missing', { user, profile });
+      Alert.alert('Error', 'User not found. Please log in again.');
+      return;
+    }
 
+    console.log('Starting save...', { userId: user.id, formData });
     setSaving(true);
     try {
       const certList = formData.certifications
@@ -164,6 +169,13 @@ export default function EditTrainerProfileScreen() {
         .split(',')
         .map((g) => g.trim())
         .filter((g) => g);
+
+      console.log('Calling API with data:', {
+        userId: user.id,
+        locationAddress: formData.locationAddress,
+        latitude: formData.latitude,
+        longitude: formData.longitude,
+      });
 
       await trainerAPI.updateProfile({
         userId: user.id,
