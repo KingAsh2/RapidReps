@@ -296,13 +296,13 @@ export default function TraineeHomeScreen() {
       </View>
 
       {/* Location Info Banner */}
-      {userLocation && (
+      {userLocation && locationAddress && (
         <View style={styles.locationBanner}>
           <Ionicons name="location" size={20} color={Colors.primary} />
           <View style={styles.locationTextContainer}>
             <Text style={styles.locationLabel}>Your Location</Text>
             <Text style={styles.locationText}>
-              {locationAddress || `${userLocation.latitude.toFixed(4)}, ${userLocation.longitude.toFixed(4)}`}
+              {locationAddress}
             </Text>
           </View>
           <TouchableOpacity onPress={requestLocationPermission} style={styles.refreshLocationButton}>
