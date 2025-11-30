@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,19 +7,24 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Dimensions,
+  Pressable,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../src/contexts/AuthContext';
 import { Colors } from '../src/utils/colors';
 import { Ionicons } from '@expo/vector-icons';
 import { AthleticButton } from '../src/components/AthleticButton';
+import { Video, ResizeMode } from 'expo-av';
 
 const { width, height } = Dimensions.get('window');
 
 export default function WelcomeScreen() {
   const router = useRouter();
   const { user, loading, activeRole } = useAuth();
-  const [isReady, setIsReady] = React.useState(false);
+  const [isReady, setIsReady] = useState(false);
+  const [showVideo, setShowVideo] = useState(true);
+  const [videoEnded, setVideoEnded] = useState(false);
+  const videoRef = useRef<Video>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsReady(true), 100);
@@ -36,10 +41,51 @@ export default function WelcomeScreen() {
     }
   }, [user, activeRole, isReady, router]);
 
+  const handleVideoEnd = () => {
+    setVideoEnded(true);
+    setTimeout(() => {
+      setShowVideo(false);
+    }, 300);
+  };
+
+  const handleSkipVideo = () => {
+    setShowVideo(false);
+  };
+
   if (loading || !isReady) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
+
+  // Show intro video first
+  if (showVideo) {
+    return (
+      <View style={styles.videoContainer}>
+        <Video
+          ref={videoRef}
+          source={require('../assets/videos/intro.mp4')}
+          style={styles.video}
+          resizeMode={ResizeMode.COVER}
+          shouldPlay
+          isLooping={false}
+          onPlaybackStatusUpdate={(status) => {
+            if (status.isLoaded && status.didJustFinish) {
+              handleVideoEnd();
+            }
+          }}
+        />
+        
+        {/* Skip Button */}
+        <Pressable 
+          onPress={handleSkipVideo}
+          style={styles.skipButton}
+        >
+          <Text style={styles.skipText}>SKIP</Text>
+          <Ionicons name="arrow-forward" size={20} color={Colors.white} />
+        </Pressable>
       </View>
     );
   }
@@ -117,6 +163,32 @@ export default function WelcomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  videoContainer: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  video: {
+    width: width,
+    height: height,
+  },
+  skipButton: {
+    position: 'absolute',
+    top: 60,
+    right: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    gap: 6,
+  },
+  skipText: {
+    color: Colors.white,
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 1,
+  },
   container: {
     flex: 1,
     backgroundColor: Colors.primary,
