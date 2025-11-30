@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  Image,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
@@ -15,25 +17,110 @@ import { Colors } from '../../src/utils/colors';
 import { TrainingStyles, FitnessLevel } from '../../src/types';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import * as Location from 'expo-location';
 
 export default function TraineeOnboardingScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
-  const totalSteps = 3;
+  const totalSteps = 4;
 
   const [formData, setFormData] = useState({
+    profilePhoto: '',
     fitnessGoals: '',
+    experienceLevel: 'Never trained',
     currentFitnessLevel: FitnessLevel.BEGINNER,
     preferredTrainingStyles: [] as string[],
     injuriesOrLimitations: '',
     homeGymOrZipCode: '',
     prefersInPerson: true,
     prefersVirtual: false,
+    isVirtualEnabled: false,
     budgetMinPerMinuteCents: 50,
     budgetMaxPerMinuteCents: 200,
+    latitude: null as number | null,
+    longitude: null as number | null,
+    locationAddress: '',
   });
+
+  const [locationLoading, setLocationLoading] = useState(false);
+
+  const experienceLevels = ['Never trained', 'Some experience', 'Regular exerciser'];
+
+  useEffect(() => {
+    // Request location permission on mount
+    requestLocationPermission();
+  }, []);
+
+  const requestLocationPermission = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status === 'granted') {
+        await getCurrentLocation();
+      }
+    } catch (error) {
+      console.error('Error requesting location permission:', error);
+    }
+  };
+
+  const getCurrentLocation = async () => {
+    setLocationLoading(true);
+    try {
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+      
+      const { latitude, longitude } = location.coords;
+      
+      // Reverse geocode to get address
+      const addresses = await Location.reverseGeocodeAsync({ latitude, longitude });
+      
+      if (addresses[0]) {
+        const addr = addresses[0];
+        const locationAddress = `${addr.city || ''}, ${addr.region || ''}`;
+        setFormData(prev => ({
+          ...prev,
+          latitude,
+          longitude,
+          locationAddress,
+        }));
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          latitude,
+          longitude,
+        }));
+      }
+    } catch (error) {
+      console.error('Error getting location:', error);
+      Alert.alert('Location Error', 'Could not get your location. You can enter it manually.');
+    } finally {
+      setLocationLoading(false);
+    }
+  };
+
+  const pickImage = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (permissionResult.granted === false) {
+      Alert.alert('Permission Required', 'Camera roll permission is required!');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+      base64: true,
+    });
+
+    if (!result.canceled && result.assets[0].base64) {
+      setFormData({ ...formData, profilePhoto: `data:image/jpeg;base64,${result.assets[0].base64}` });
+    }
+  };
 
   const toggleStyle = (style: string) => {
     if (formData.preferredTrainingStyles.includes(style)) {
@@ -70,18 +157,24 @@ export default function TraineeOnboardingScreen() {
     try {
       await traineeAPI.createProfile({
         userId: user.id,
+        profilePhoto: formData.profilePhoto,
         fitnessGoals: formData.fitnessGoals,
+        experienceLevel: formData.experienceLevel,
         currentFitnessLevel: formData.currentFitnessLevel,
         preferredTrainingStyles: formData.preferredTrainingStyles,
         injuriesOrLimitations: formData.injuriesOrLimitations,
         homeGymOrZipCode: formData.homeGymOrZipCode,
         prefersInPerson: formData.prefersInPerson,
         prefersVirtual: formData.prefersVirtual,
+        isVirtualEnabled: formData.isVirtualEnabled,
         budgetMinPerMinuteCents: formData.budgetMinPerMinuteCents,
         budgetMaxPerMinuteCents: formData.budgetMaxPerMinuteCents,
+        latitude: formData.latitude,
+        longitude: formData.longitude,
+        locationAddress: formData.locationAddress,
       });
 
-      Alert.alert('Success', 'Your trainee profile has been created!', [
+      Alert.alert('Success! 🎉', 'Your trainee profile has been created!', [
         { text: 'OK', onPress: () => router.replace('/trainee/home') },
       ]);
     } catch (error: any) {
@@ -96,7 +189,59 @@ export default function TraineeOnboardingScreen() {
       case 1:
         return (
           <View style={styles.stepContent}>
-            <Text style={styles.stepTitle}>Tell us about yourself</Text>
+            <Text style={styles.stepTitle}>Profile Photo & Location 📍</Text>
+            
+            {/* Profile Photo */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Profile Photo</Text>
+              <TouchableOpacity style={styles.photoContainer} onPress={pickImage}>
+                {formData.profilePhoto ? (
+                  <Image source={{ uri: formData.profilePhoto }} style={styles.photo} />
+                ) : (
+                  <View style={styles.photoPlaceholder}>
+                    <Ionicons name="camera" size={40} color={Colors.textLight} />
+                    <Text style={styles.photoPlaceholderText}>Tap to add photo</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            {/* Location */}
+            <View style={styles.inputGroup}>
+              <View style={styles.labelRow}>
+                <Text style={styles.label}>Your Location</Text>
+                {locationLoading && <ActivityIndicator size="small" color={Colors.primary} />}
+              </View>
+              <TextInput
+                style={styles.input}
+                value={formData.locationAddress}
+                onChangeText={(text) => setFormData({ ...formData, locationAddress: text })}
+                placeholder="City, State"
+                placeholderTextColor={Colors.textLight}
+              />
+              <TouchableOpacity 
+                style={styles.locationButton} 
+                onPress={getCurrentLocation}
+                disabled={locationLoading}
+              >
+                <Ionicons name="locate" size={20} color={Colors.white} />
+                <Text style={styles.locationButtonText}>
+                  {locationLoading ? 'Getting location...' : 'Use GPS Location'}
+                </Text>
+              </TouchableOpacity>
+              {formData.latitude && formData.longitude && (
+                <Text style={styles.helpText}>
+                  ✓ Location captured: {formData.latitude.toFixed(4)}, {formData.longitude.toFixed(4)}
+                </Text>
+              )}
+            </View>
+          </View>
+        );
+
+      case 2:
+        return (
+          <View style={styles.stepContent}>
+            <Text style={styles.stepTitle}>Tell us about yourself 💪</Text>
             
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Fitness Goals</Text>
@@ -109,6 +254,31 @@ export default function TraineeOnboardingScreen() {
                 multiline
                 numberOfLines={4}
               />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Experience Level</Text>
+              <View style={styles.levelContainer}>
+                {experienceLevels.map((level) => (
+                  <TouchableOpacity
+                    key={level}
+                    style={[
+                      styles.levelChip,
+                      formData.experienceLevel === level && styles.levelChipSelected,
+                    ]}
+                    onPress={() => setFormData({ ...formData, experienceLevel: level })}
+                  >
+                    <Text
+                      style={[
+                        styles.levelChipText,
+                        formData.experienceLevel === level && styles.levelChipTextSelected,
+                      ]}
+                    >
+                      {level}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
 
             <View style={styles.inputGroup}>
@@ -149,10 +319,10 @@ export default function TraineeOnboardingScreen() {
           </View>
         );
 
-      case 2:
+      case 3:
         return (
           <View style={styles.stepContent}>
-            <Text style={styles.stepTitle}>Training Preferences</Text>
+            <Text style={styles.stepTitle}>Training Preferences 🏋️</Text>
             
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Preferred Training Styles</Text>
@@ -189,6 +359,11 @@ export default function TraineeOnboardingScreen() {
                   ]}
                   onPress={() => setFormData({ ...formData, prefersInPerson: !formData.prefersInPerson })}
                 >
+                  <Ionicons 
+                    name="fitness" 
+                    size={20} 
+                    color={formData.prefersInPerson ? Colors.white : Colors.navy} 
+                  />
                   <Text
                     style={[
                       styles.toggleButtonText,
@@ -202,14 +377,19 @@ export default function TraineeOnboardingScreen() {
                 <TouchableOpacity
                   style={[
                     styles.toggleButton,
-                    formData.prefersVirtual && styles.toggleButtonActive,
+                    formData.isVirtualEnabled && styles.toggleButtonActive,
                   ]}
-                  onPress={() => setFormData({ ...formData, prefersVirtual: !formData.prefersVirtual })}
+                  onPress={() => setFormData({ ...formData, isVirtualEnabled: !formData.isVirtualEnabled })}
                 >
+                  <Ionicons 
+                    name="videocam" 
+                    size={20} 
+                    color={formData.isVirtualEnabled ? Colors.white : Colors.navy} 
+                  />
                   <Text
                     style={[
                       styles.toggleButtonText,
-                      formData.prefersVirtual && styles.toggleButtonTextActive,
+                      formData.isVirtualEnabled && styles.toggleButtonTextActive,
                     ]}
                   >
                     Virtual
@@ -231,10 +411,10 @@ export default function TraineeOnboardingScreen() {
           </View>
         );
 
-      case 3:
+      case 4:
         return (
           <View style={styles.stepContent}>
-            <Text style={styles.stepTitle}>Budget</Text>
+            <Text style={styles.stepTitle}>Budget 💰</Text>
             
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Budget Per Minute (cents)</Text>
@@ -342,14 +522,15 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: Colors.white,
+    fontWeight: '900',
+    color: Colors.navy,
     marginBottom: 4,
+    letterSpacing: 0.5,
   },
   subtitle: {
     fontSize: 14,
-    color: Colors.white,
-    opacity: 0.9,
+    color: Colors.navy,
+    fontWeight: '700',
     marginBottom: 16,
   },
   progressBar: {
@@ -359,11 +540,11 @@ const styles = StyleSheet.create({
   progressDot: {
     flex: 1,
     height: 4,
-    backgroundColor: Colors.white,
+    backgroundColor: 'rgba(0,0,0,0.2)',
     borderRadius: 2,
   },
   progressDotActive: {
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.navy,
   },
   scrollView: {
     flex: 1,
@@ -386,6 +567,12 @@ const styles = StyleSheet.create({
     color: Colors.navy,
     marginBottom: 8,
   },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
   input: {
     backgroundColor: Colors.background,
     borderRadius: 12,
@@ -393,8 +580,8 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     fontSize: 16,
     color: Colors.navy,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    borderWidth: 2,
+    borderColor: Colors.navy,
   },
   textArea: {
     height: 100,
@@ -405,16 +592,59 @@ const styles = StyleSheet.create({
     color: Colors.textLight,
     marginTop: 4,
   },
+  photoContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  photo: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 3,
+    borderColor: Colors.navy,
+  },
+  photoPlaceholder: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: Colors.background,
+    borderWidth: 3,
+    borderColor: Colors.navy,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  photoPlaceholderText: {
+    fontSize: 12,
+    color: Colors.textLight,
+    marginTop: 8,
+  },
+  locationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.primary,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginTop: 8,
+    gap: 8,
+  },
+  locationButtonText: {
+    color: Colors.white,
+    fontSize: 14,
+    fontWeight: '600',
+  },
   levelContainer: {
     flexDirection: 'row',
-    gap: 12,
+    flexWrap: 'wrap',
+    gap: 8,
   },
   levelChip: {
     flex: 1,
+    minWidth: '30%',
     paddingVertical: 14,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: Colors.border,
+    borderColor: Colors.navy,
     backgroundColor: Colors.white,
     alignItems: 'center',
   },
@@ -423,7 +653,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.primary,
   },
   levelChipText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     color: Colors.navy,
   },
@@ -440,7 +670,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: Colors.border,
+    borderColor: Colors.navy,
     backgroundColor: Colors.white,
   },
   chipSelected: {
@@ -461,12 +691,15 @@ const styles = StyleSheet.create({
   },
   toggleButton: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
     paddingVertical: 14,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: Colors.border,
+    borderColor: Colors.navy,
     backgroundColor: Colors.white,
-    alignItems: 'center',
   },
   toggleButtonActive: {
     backgroundColor: Colors.primary,
@@ -516,6 +749,8 @@ const styles = StyleSheet.create({
   nextButton: {
     flex: 2,
     backgroundColor: Colors.primary,
+    borderWidth: 3,
+    borderColor: Colors.navy,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
