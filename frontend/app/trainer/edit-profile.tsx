@@ -606,7 +606,7 @@ export default function EditTrainerProfileScreen() {
                       />
                     </LinearGradient>
                     <Text style={styles.helpText}>
-                      Enter your city and state (e.g., "Elkridge, MD")
+                      Enter your city and state (e.g., &quot;Elkridge, MD&quot;)
                     </Text>
                   </View>
 
