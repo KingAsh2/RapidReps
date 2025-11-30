@@ -125,8 +125,9 @@ export default function WelcomeScreen() {
               resizeMode={ResizeMode.CONTAIN}
               shouldPlay={true}
               isLooping={false}
-              isMuted={true}
+              isMuted={false}
               useNativeControls={false}
+              volume={1.0}
               onPlaybackStatusUpdate={(status) => {
                 if (status.isLoaded && status.didJustFinish) {
                   handleVideoEnd();
