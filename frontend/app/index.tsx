@@ -69,8 +69,10 @@ export default function WelcomeScreen() {
           source={require('../assets/videos/intro.mp4')}
           style={styles.video}
           resizeMode={ResizeMode.COVER}
-          shouldPlay
+          shouldPlay={true}
           isLooping={false}
+          isMuted={true}
+          useNativeControls={false}
           onPlaybackStatusUpdate={(status) => {
             if (status.isLoaded && status.didJustFinish) {
               handleVideoEnd();
