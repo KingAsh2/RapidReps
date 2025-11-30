@@ -1008,4 +1008,30 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  // Floating Action Button styles
+  fab: {
+    position: 'absolute',
+    bottom: 30,
+    right: 24,
+    borderRadius: 28,
+    elevation: 8,
+    shadowColor: Colors.navy,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  fabGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderRadius: 28,
+    gap: 8,
+  },
+  fabText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: Colors.white,
+    letterSpacing: 0.5,
+  },
 });
