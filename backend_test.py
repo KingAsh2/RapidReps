@@ -47,47 +47,28 @@ class RapidRepsProximityTester:
         self.base_url = BASE_URL
         self.headers = HEADERS.copy()
         self.test_users = []  # Store created users for cleanup
-        
-    def log_test(self, test_name: str, success: bool, details: str = ""):
-        """Log test result"""
-        status = "✅ PASS" if success else "❌ FAIL"
-        self.test_results.append({
-            "test": test_name,
-            "status": status,
-            "success": success,
-            "details": details
-        })
-        print(f"{status}: {test_name}")
-        if details:
-            print(f"   Details: {details}")
-    
-    def make_request(self, method: str, endpoint: str, data: Dict = None, token: str = None) -> tuple:
-        """Make HTTP request and return (success, response_data, status_code)"""
+    def make_request(self, method, endpoint, data=None, headers=None, params=None):
+        """Make HTTP request with error handling"""
         url = f"{self.base_url}{endpoint}"
-        headers = self.headers.copy()
-        
-        if token:
-            headers["Authorization"] = f"Bearer {token}"
+        request_headers = self.headers.copy()
+        if headers:
+            request_headers.update(headers)
         
         try:
-            if method.upper() == "GET":
-                response = requests.get(url, headers=headers, timeout=30)
-            elif method.upper() == "POST":
-                response = requests.post(url, headers=headers, json=data, timeout=30)
-            elif method.upper() == "PATCH":
-                response = requests.patch(url, headers=headers, json=data, timeout=30)
+            if method == "GET":
+                response = requests.get(url, headers=request_headers, params=params)
+            elif method == "POST":
+                response = requests.post(url, headers=request_headers, json=data)
+            elif method == "PATCH":
+                response = requests.patch(url, headers=request_headers, json=data, params=params)
+            elif method == "PUT":
+                response = requests.put(url, headers=request_headers, json=data)
             else:
-                return False, {"error": f"Unsupported method: {method}"}, 0
+                raise ValueError(f"Unsupported method: {method}")
             
-            try:
-                response_data = response.json()
-            except:
-                response_data = {"raw_response": response.text}
-            
-            return response.status_code < 400, response_data, response.status_code
-            
+            return response
         except requests.exceptions.RequestException as e:
-            return False, {"error": str(e)}, 0
+            return None
     
     def test_health_check(self):
         """Test API health endpoint"""
