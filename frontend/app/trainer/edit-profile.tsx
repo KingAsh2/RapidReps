@@ -573,25 +573,25 @@ export default function EditTrainerProfileScreen() {
                       GPS helps calculate exact distances to trainees
                     </Text>
                   </View>
+
+                  {/* Save Button - Moved here for better UX */}
+                  <TouchableOpacity
+                    onPress={handleSave}
+                    disabled={saving}
+                    style={styles.saveButtonWrapper}
+                  >
+                    <LinearGradient
+                      colors={saving ? ['#CCCCCC', '#999999'] : Colors.gradientMain}
+                      style={styles.saveButton}
+                    >
+                      <Ionicons name="save" size={24} color={Colors.white} />
+                      <Text style={styles.saveButtonText}>
+                        {saving ? 'Saving...' : 'Save Changes 🔥'}
+                      </Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
                 </LinearGradient>
               </View>
-
-              {/* Save Button */}
-              <TouchableOpacity
-                onPress={handleSave}
-                disabled={saving}
-                style={styles.saveButtonWrapper}
-              >
-                <LinearGradient
-                  colors={saving ? ['#CCCCCC', '#999999'] : Colors.gradientMain}
-                  style={styles.saveButton}
-                >
-                  <Ionicons name="save" size={24} color={Colors.white} />
-                  <Text style={styles.saveButtonText}>
-                    {saving ? 'Saving...' : 'Save Changes 🔥'}
-                  </Text>
-                </LinearGradient>
-              </TouchableOpacity>
 
               <View style={{ height: 40 }} />
             </ScrollView>
