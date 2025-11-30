@@ -184,6 +184,7 @@ export default function TrainerOnboardingScreen() {
       
       await trainerAPI.createProfile({
         userId: user.id,
+        profilePhoto: formData.profilePhoto,
         bio: formData.bio,
         experienceYears: parseInt(formData.experienceYears) || 0,
         certifications: certList,
