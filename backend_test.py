@@ -143,9 +143,10 @@ def test_trainee_profile_with_new_fields():
 
 def test_trainee_profile_update():
     """Test updating trainee profile with new fields"""
-    profile_id, token, user_id = test_trainee_profile_with_new_fields()
-    if not profile_id:
+    result = test_trainee_profile_with_new_fields()
+    if not result or result[0] is None:
         return
+    profile_id, token, user_id = result
     
     auth_headers = {"Authorization": f"Bearer {token}"}
     
