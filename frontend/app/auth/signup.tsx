@@ -23,6 +23,7 @@ export default function SignupScreen() {
     password: '',
     confirmPassword: '',
     fullName: '',
+    phone: '',
     roles: [] as UserRole[],
   });
 
