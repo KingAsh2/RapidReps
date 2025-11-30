@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """
-RapidReps Backend API Test Suite
-Tests all core functionality including authentication, profiles, sessions, and pricing logic.
+RapidReps Backend API Test Suite - Proximity Matching & Trainer Availability Features
+Tests the newly implemented features for proximity matching and trainer availability.
 """
 
 import requests
 import json
+import base64
 from datetime import datetime, timedelta
-from typing import Dict, Any, Optional
+import time
 
 # Configuration
 BASE_URL = "https://workout-match-4.preview.emergentagent.com/api"
