@@ -33,7 +33,7 @@ export default function EditTrainerProfileScreen() {
     bio: '',
     experienceYears: '0',
     certifications: '',
-    trainingStyles: [] as string[],
+    trainingStyles: [],
     gymsWorkedAt: '',
     primaryGym: '',
     offersInPerson: true,
