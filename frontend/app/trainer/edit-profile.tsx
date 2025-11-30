@@ -918,4 +918,36 @@ const styles = StyleSheet.create({
     color: Colors.textLight,
     fontStyle: 'italic',
   },
+  availabilityCard: {
+    marginBottom: 8,
+  },
+  availabilityToggle: {
+    padding: 0,
+  },
+  availabilityContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 20,
+  },
+  availabilityLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  availabilityText: {
+    marginLeft: 16,
+    flex: 1,
+  },
+  availabilityTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.white,
+    marginBottom: 4,
+  },
+  availabilitySubtitle: {
+    fontSize: 14,
+    color: Colors.white,
+    opacity: 0.9,
+  },
 });
