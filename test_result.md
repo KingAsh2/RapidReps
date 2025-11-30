@@ -201,6 +201,54 @@ backend:
           agent: "testing"
           comment: "Earnings calculation working correctly. Total, monthly, and weekly earnings are calculated accurately based on completed sessions."
 
+  - task: "Enhanced Trainee Profile with Proximity Fields"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "Enhanced trainee profile creation and update working correctly. All new fields (profilePhoto, latitude, longitude, locationAddress, experienceLevel, isVirtualEnabled) are properly stored and retrieved. Profile photos are base64 encoded and location data supports GPS coordinates."
+
+  - task: "Trainer Availability Toggle"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "Trainer availability toggle endpoint working perfectly. PATCH /api/trainer-profiles/toggle-availability correctly updates isAvailable field and returns proper success response. Tested both setting to available (true) and unavailable (false)."
+
+  - task: "Nearby Trainees Endpoint"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "Nearby trainees endpoint working correctly. GET /api/trainers/nearby-trainees returns trainees within 10 miles of authenticated trainer with accurate distance calculations using Haversine formula. Properly handles cases where trainer has no location set."
+
+  - task: "10-Mile Proximity Search for Trainers"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "Updated trainer search logic working correctly. /api/trainers/search now uses 10-mile radius (changed from 20 miles) and only shows trainers with isAvailable=true. Location-based filtering works properly with GPS coordinates. Virtual trainer visibility works correctly when wantsVirtual=true."
+
 frontend:
   # Frontend testing not performed as per instructions
 
