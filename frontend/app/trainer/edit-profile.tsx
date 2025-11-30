@@ -154,8 +154,8 @@ export default function EditTrainerProfileScreen() {
   };
 
   const handleSave = async () => {
-    if (!user || !profile) {
-      console.log('Save failed: user or profile missing', { user, profile });
+    if (!user) {
+      console.log('Save failed: user missing', { user });
       Alert.alert('Error', 'User not found. Please log in again.');
       return;
     }
