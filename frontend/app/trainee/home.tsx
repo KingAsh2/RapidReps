@@ -764,6 +764,34 @@ const styles = StyleSheet.create({
     color: Colors.neonBlue,
     fontWeight: '700',
   },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 8,
+  },
+  locationText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.secondary,
+  },
+  virtualBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: Colors.secondary,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    marginBottom: 8,
+  },
+  virtualBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.white,
+    textTransform: 'uppercase',
+  },
   // Virtual Training Dialog Styles
   modalOverlay: {
     flex: 1,
