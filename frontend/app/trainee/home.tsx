@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
-import { trainerAPI } from '../../src/services/api';
+import { trainerAPI, traineeAPI } from '../../src/services/api';
 import { Colors } from '../../src/utils/colors';
 import { TrainerProfile } from '../../src/types';
 import { Ionicons } from '@expo/vector-icons';
