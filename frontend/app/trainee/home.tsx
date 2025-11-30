@@ -53,7 +53,6 @@ export default function TraineeHomeScreen() {
   const [locationPermission, setLocationPermission] = useState<string | null>(null);
   const [locationAddress, setLocationAddress] = useState<string>('');
   const [showTrainingModeDialog, setShowTrainingModeDialog] = useState(false);
-  const [dialogAnim] = useState(new Animated.Value(0));
 
   useEffect(() => {
     requestLocationPermission();
