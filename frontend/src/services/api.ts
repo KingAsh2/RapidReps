@@ -57,6 +57,20 @@ export const trainerAPI = {
     return response.data;
   },
 
+  updateProfile: async (profile: any): Promise<TrainerProfile> => {
+    const response = await api.post('/trainer-profiles', profile);
+    return response.data;
+  },
+
+  getMyProfile: async (): Promise<TrainerProfile> => {
+    const token = await AsyncStorage.getItem('token');
+    const userStr = await AsyncStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : null;
+    if (!user) throw new Error('User not found');
+    const response = await api.get(`/trainer-profiles/${user.id}`);
+    return response.data;
+  },
+
   searchTrainers: async (filters: any): Promise<TrainerProfile[]> => {
     const response = await api.get('/trainers/search', { params: filters });
     return response.data;
