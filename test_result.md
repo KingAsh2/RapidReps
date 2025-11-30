@@ -249,6 +249,18 @@ backend:
           agent: "testing"
           comment: "Updated trainer search logic working correctly. /api/trainers/search now uses 10-mile radius (changed from 20 miles) and only shows trainers with isAvailable=true. Location-based filtering works properly with GPS coordinates. Virtual trainer visibility works correctly when wantsVirtual=true."
 
+  - task: "UPDATED Proximity Matching Rules (15mi In-Person, 20mi Virtual)"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "UPDATED proximity matching rules successfully implemented and tested. ✅ In-Person Training: 15 miles radius (changed from 10 miles) - tested with 14 trainers, all within 15 miles. ✅ Virtual Training: 20 miles radius (changed from unlimited) - tested with 2 virtual trainers within 20 miles. ✅ Display Order: In-person trainers appear before virtual trainers in search results. ✅ Nearby Trainees: 15 miles radius (changed from 10 miles) - tested with 2 trainees within 15 miles. ✅ Trainer Availability Toggle: Successfully tested hiding/showing trainers based on availability status. Fixed distance calculation bug in TrainerProfileResponse model by adding distance and matchType fields. All proximity matching scenarios working correctly."
+
 frontend:
   # Frontend testing not performed as per instructions
 
