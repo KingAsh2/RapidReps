@@ -928,6 +928,13 @@ class RapidRepsProximityTester:
         self.test_scenario_3_trainer_availability_toggle()
         self.test_scenario_4_nearby_trainees()
         
+        # Run NEW virtual session tests
+        print("\n🚀 Testing NEW Virtual Training Session Flow")
+        print("-" * 50)
+        self.test_virtual_session_successful_request()
+        self.test_virtual_session_no_available_trainers()
+        self.test_virtual_session_pricing_verification()
+        
         # Print summary
         self.print_summary()
         
