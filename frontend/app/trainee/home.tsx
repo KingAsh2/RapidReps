@@ -175,7 +175,7 @@ export default function TraineeHomeScreen() {
 
   const handleLogout = async () => {
     await logout();
-    router.replace('/');
+    router.replace('/auth/login');
   };
 
   const initiateVideoCall = async (trainer: any) => {
