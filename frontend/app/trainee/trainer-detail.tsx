@@ -68,10 +68,48 @@ export default function TrainerDetailScreen() {
     return { base: basePrice, discount, final: finalPrice, platformFee, trainerEarns };
   };
 
+  const handlePressIn = () => {
+    if (booking) return;
+    
+    setIsHolding(true);
+    
+    // Animate the progress bar
+    Animated.timing(pressProgress, {
+      toValue: 1,
+      duration: 1500, // 1.5 seconds to complete
+      useNativeDriver: false,
+    }).start();
+    
+    // Set timer to complete the action
+    pressTimer.current = setTimeout(() => {
+      handleBookSession();
+    }, 1500);
+  };
+
+  const handlePressOut = () => {
+    setIsHolding(false);
+    
+    // Cancel the timer
+    if (pressTimer.current) {
+      clearTimeout(pressTimer.current);
+      pressTimer.current = null;
+    }
+    
+    // Reset the animation
+    Animated.timing(pressProgress, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+  };
+
   const handleBookSession = async () => {
     if (!trainer || !user) return;
 
     setBooking(true);
+    setIsHolding(false);
+    pressProgress.setValue(0);
+    
     try {
       const sessionStart = new Date(selectedDate);
       sessionStart.setHours(10, 0, 0, 0); // Default to 10 AM for now
