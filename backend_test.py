@@ -1,26 +1,20 @@
 #!/usr/bin/env python3
 """
-RapidReps Backend API Comprehensive Testing Suite
-Testing all backend functionality including:
-1. Authentication endpoints (signup, login, JWT verification)
-2. Trainer profile management (create, read, update, toggle availability)
-3. Trainee profile management (create, read, update with location data)
-4. Trainer search with proximity matching (15mi in-person, 20mi virtual)
-5. Session booking and management
-6. Rating system
-7. Nearby trainees endpoint
-8. NEW: Virtual training session request endpoint
+RapidReps Backend API Testing - TEST RUN #2 of 3
+Virtual Training Flow Stress Test
+
+This test focuses on multiple concurrent virtual session requests and edge cases.
 """
 
-import requests
+import asyncio
+import aiohttp
 import json
-import sys
+import time
 from datetime import datetime, timedelta
-import os
+from typing import Dict, List, Optional
 
-# Get backend URL from environment
-BACKEND_URL = 'https://trainer-connect-24.preview.emergentagent.com'
-API_BASE = f"{BACKEND_URL}/api"
+# Configuration
+BASE_URL = "https://trainer-connect-24.preview.emergentagent.com/api"
 
 class RapidRepsProximityTester:
     def __init__(self):
