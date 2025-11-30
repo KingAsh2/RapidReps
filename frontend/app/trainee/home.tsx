@@ -47,6 +47,7 @@ export default function TraineeHomeScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [trainers, setTrainers] = useState([]);
+  const [sessions, setSessions] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [userLocation, setUserLocation] = useState<{latitude: number, longitude: number} | null>(null);
   const [locationPermission, setLocationPermission] = useState<string | null>(null);
