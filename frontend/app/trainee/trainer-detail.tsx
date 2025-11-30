@@ -349,21 +349,43 @@ export default function TrainerDetailScreen() {
             </Text>
           </View>
 
-          {/* Book Button */}
-          <TouchableOpacity
-            onPress={handleBookSession}
+          {/* Lock In Button with Long Press */}
+          <Pressable
+            onPressIn={handlePressIn}
+            onPressOut={handlePressOut}
             disabled={booking}
-            activeOpacity={0.9}
+            style={styles.lockInContainer}
           >
             <LinearGradient
-              colors={booking ? ['#CCCCCC', '#999999'] : Colors.gradientMain}
+              colors={booking ? ['#CCCCCC', '#999999'] : Colors.gradientOrangeStart}
               style={styles.bookButton}
             >
-              <Text style={styles.bookButtonText}>
-                {booking ? 'Booking...' : 'Request Booking'}
-              </Text>
+              {/* Animated Progress Fill */}
+              <Animated.View
+                style={[
+                  styles.progressFill,
+                  {
+                    width: pressProgress.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['0%', '100%'],
+                    }),
+                  },
+                ]}
+              />
+              
+              {/* Button Content */}
+              <View style={styles.buttonContent}>
+                <Text style={styles.bookButtonText}>
+                  {booking ? 'Booking...' : isHolding ? 'Hold to Lock In 💪🏾' : 'Lock In 💪🏾'}
+                </Text>
+                {!booking && !isHolding && (
+                  <Text style={styles.holdHintText}>
+                    Press & hold
+                  </Text>
+                )}
+              </View>
             </LinearGradient>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </ScrollView>
     </SafeAreaView>
