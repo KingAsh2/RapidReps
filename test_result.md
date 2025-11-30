@@ -326,3 +326,25 @@ agent_communication:
       - Virtual training override logic working as expected
       
       All proximity matching and trainer availability features are fully functional."
+    - agent: "testing"
+      message: "UPDATED Proximity Matching Rules Testing Completed Successfully! 
+      
+      **Tested the NEW proximity matching rules:**
+      ✅ In-Person Training: 15 miles radius (changed from 10 miles) - Verified 14 trainers within 15 miles
+      ✅ Virtual Training: 20 miles radius (changed from unlimited) - Verified 2 virtual trainers within 20 miles  
+      ✅ Display Order: In-person trainers first, then virtual trainers - Confirmed correct ordering
+      ✅ Nearby Trainees: 15 miles radius (changed from 10 miles) - Verified 2 trainees within 15 miles
+      ✅ Trainer Availability Toggle: Successfully tested hiding/showing trainers
+      
+      **Key Fixes Made:**
+      - Fixed distance calculation bug by adding 'distance' and 'matchType' fields to TrainerProfileResponse model
+      - Fixed sorting logic to handle None distance values properly
+      - Corrected test coordinates for James Wilson to be within 20-mile virtual limit
+      
+      **Test Results:**
+      - Scenario 1 (In-Person Only): ✅ PASS - Only in-person trainers within 15 miles returned
+      - Scenario 2 (In-Person + Virtual): ✅ PASS - Correct ordering and distance limits enforced
+      - Scenario 3 (Availability Toggle): ✅ PASS - Trainers properly hidden/shown based on availability
+      - Scenario 4 (Nearby Trainees): ✅ PASS - Only trainees within 15 miles returned
+      
+      All UPDATED proximity matching rules are working correctly as specified!"
