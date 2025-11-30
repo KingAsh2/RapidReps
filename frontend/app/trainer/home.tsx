@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  Switch,
+  Image,
 } from 'react-native';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { trainerAPI } from '../../src/services/api';
@@ -25,6 +27,9 @@ export default function TrainerHomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [earnings, setEarnings] = useState<any>(null);
+  const [isAvailable, setIsAvailable] = useState(true);
+  const [nearbyTrainees, setNearbyTrainees] = useState<any[]>([]);
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -32,12 +37,18 @@ export default function TrainerHomeScreen() {
 
   const loadData = async () => {
     try {
-      const [sessionsData, earningsData] = await Promise.all([
+      const [sessionsData, earningsData, traineesData, profileData] = await Promise.all([
         trainerAPI.getSessions(),
         trainerAPI.getEarnings(),
+        trainerAPI.getNearbyTrainees(),
+        trainerAPI.getMyProfile().catch(() => null),
       ]);
       setSessions(sessionsData);
       setEarnings(earningsData);
+      setNearbyTrainees(traineesData.trainees || []);
+      if (profileData) {
+        setIsAvailable(profileData.isAvailable ?? true);
+      }
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -49,6 +60,18 @@ export default function TrainerHomeScreen() {
   const onRefresh = () => {
     setRefreshing(true);
     loadData();
+  };
+
+  const handleToggleAvailability = async (value: boolean) => {
+    setAvailabilityLoading(true);
+    try {
+      await trainerAPI.toggleAvailability(value);
+      setIsAvailable(value);
+    } catch (error) {
+      console.error('Error toggling availability:', error);
+    } finally {
+      setAvailabilityLoading(false);
+    }
   };
 
   const handleAccept = async (sessionId: string) => {
@@ -113,6 +136,93 @@ export default function TrainerHomeScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />
         }
       >
+        {/* Availability Toggle Card */}
+        <View style={styles.availabilityCard}>
+          <View style={styles.availabilityHeader}>
+            <View style={styles.availabilityIconContainer}>
+              <Ionicons 
+                name={isAvailable ? "radio-button-on" : "radio-button-off"} 
+                size={28} 
+                color={isAvailable ? Colors.success : Colors.textLight} 
+              />
+            </View>
+            <View style={styles.availabilityInfo}>
+              <Text style={styles.availabilityTitle}>Trainer Status</Text>
+              <Text style={[styles.availabilityStatus, isAvailable && styles.availabilityStatusOnline]}>
+                {isAvailable ? '🟢 Available to Trainees' : '🔴 Unavailable'}
+              </Text>
+            </View>
+            {availabilityLoading ? (
+              <ActivityIndicator size="small" color={Colors.primary} />
+            ) : (
+              <Switch
+                value={isAvailable}
+                onValueChange={handleToggleAvailability}
+                trackColor={{ false: Colors.textLight, true: Colors.primary }}
+                thumbColor={Colors.white}
+                ios_backgroundColor={Colors.textLight}
+              />
+            )}
+          </View>
+          <Text style={styles.availabilityDescription}>
+            {isAvailable 
+              ? 'You are visible to trainees in your area' 
+              : 'Toggle on to accept new clients'}
+          </Text>
+        </View>
+
+        {/* Nearby Trainees Section */}
+        {nearbyTrainees.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Nearby Trainees ({nearbyTrainees.length}) 📍</Text>
+            {nearbyTrainees.map((trainee, index) => (
+              <View key={index} style={styles.traineeCard}>
+                <View style={styles.traineeAvatarContainer}>
+                  {trainee.profilePhoto ? (
+                    <Image source={{ uri: trainee.profilePhoto }} style={styles.traineeAvatar} />
+                  ) : (
+                    <View style={styles.traineeAvatarPlaceholder}>
+                      <Ionicons name="person" size={28} color={Colors.primary} />
+                    </View>
+                  )}
+                </View>
+                <View style={styles.traineeInfo}>
+                  <View style={styles.traineeHeader}>
+                    <Text style={styles.traineeName}>{trainee.fullName}</Text>
+                    <View style={styles.distanceBadge}>
+                      <Ionicons name="location" size={14} color={Colors.white} />
+                      <Text style={styles.distanceText}>{trainee.distance} mi</Text>
+                    </View>
+                  </View>
+                  {trainee.fitnessGoals && (
+                    <View style={styles.goalRow}>
+                      <Ionicons name="trophy" size={14} color={Colors.secondary} />
+                      <Text style={styles.goalText} numberOfLines={2}>{trainee.fitnessGoals}</Text>
+                    </View>
+                  )}
+                  {trainee.experienceLevel && (
+                    <View style={styles.expRow}>
+                      <Ionicons name="barbell" size={14} color={Colors.textLight} />
+                      <Text style={styles.expText}>{trainee.experienceLevel}</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {nearbyTrainees.length === 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Nearby Trainees 📍</Text>
+            <View style={styles.emptySection}>
+              <Ionicons name="people-outline" size={48} color={Colors.textLight} />
+              <Text style={styles.emptyText}>No trainees in your area yet</Text>
+              <Text style={styles.emptySubtext}>Make sure your location is set in your profile</Text>
+            </View>
+          </View>
+        )}
+
         {/* Earnings Card */}
         {earnings && (
           <View style={styles.earningsCard}>
@@ -329,6 +439,56 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  availabilityCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    borderWidth: 3,
+    borderColor: Colors.navy,
+    marginHorizontal: 24,
+    marginTop: 24,
+    padding: 20,
+    shadowColor: Colors.navy,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 0,
+  },
+  availabilityHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 12,
+  },
+  availabilityIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  availabilityInfo: {
+    flex: 1,
+  },
+  availabilityTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.textLight,
+    marginBottom: 4,
+  },
+  availabilityStatus: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: Colors.textLight,
+  },
+  availabilityStatusOnline: {
+    color: Colors.success,
+  },
+  availabilityDescription: {
+    fontSize: 13,
+    color: Colors.textLight,
+    marginTop: 8,
+  },
   earningsCard: {
     backgroundColor: Colors.white,
     borderRadius: 12,
@@ -395,6 +555,95 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 14,
+    color: Colors.textLight,
+    marginTop: 12,
+  },
+  emptySubtext: {
+    fontSize: 12,
+    color: Colors.textLight,
+    marginTop: 4,
+  },
+  traineeCard: {
+    flexDirection: 'row',
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    borderWidth: 3,
+    borderColor: Colors.navy,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: Colors.navy,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 0,
+  },
+  traineeAvatarContainer: {
+    marginRight: 16,
+  },
+  traineeAvatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 2,
+    borderColor: Colors.navy,
+  },
+  traineeAvatarPlaceholder: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: Colors.background,
+    borderWidth: 2,
+    borderColor: Colors.navy,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  traineeInfo: {
+    flex: 1,
+  },
+  traineeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  traineeName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: Colors.navy,
+  },
+  distanceBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: Colors.secondary,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  distanceText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.white,
+  },
+  goalRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 6,
+    marginBottom: 6,
+  },
+  goalText: {
+    flex: 1,
+    fontSize: 13,
+    color: Colors.navy,
+    lineHeight: 18,
+  },
+  expRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  expText: {
+    fontSize: 12,
     color: Colors.textLight,
   },
   sessionCard: {
