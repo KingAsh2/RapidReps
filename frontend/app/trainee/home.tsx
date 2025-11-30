@@ -333,6 +333,45 @@ export default function TraineeHomeScreen() {
         </View>
       )}
 
+      {/* Pending Session Requests */}
+      {sessions.filter((s: any) => s.status === 'requested').length > 0 && (
+        <View style={styles.pendingSection}>
+          <Text style={styles.sectionTitle}>
+            Pending Requests ({sessions.filter((s: any) => s.status === 'requested').length})
+          </Text>
+          {sessions.filter((s: any) => s.status === 'requested').map((session: any) => (
+            <View key={session.id} style={styles.pendingCard}>
+              <View style={styles.pendingHeader}>
+                <Ionicons name="time-outline" size={24} color={Colors.warning} />
+                <Text style={styles.pendingTitle}>Session Request Sent</Text>
+              </View>
+              <View style={styles.pendingDetails}>
+                <View style={styles.pendingDetail}>
+                  <Ionicons name="calendar-outline" size={16} color={Colors.textLight} />
+                  <Text style={styles.pendingDetailText}>
+                    {new Date(session.sessionDateTimeStart).toLocaleDateString()}
+                  </Text>
+                </View>
+                <View style={styles.pendingDetail}>
+                  <Ionicons name="time-outline" size={16} color={Colors.textLight} />
+                  <Text style={styles.pendingDetailText}>
+                    {session.durationMinutes} minutes
+                  </Text>
+                </View>
+                <View style={styles.pendingDetail}>
+                  <Ionicons name="location-outline" size={16} color={Colors.textLight} />
+                  <Text style={styles.pendingDetailText}>
+                    {session.locationType}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.pendingStatusContainer}>
+                <Text style={styles.pendingStatus}>⏳ Waiting for trainer response...</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
       {/* Main Content - Trainer List */}
       <ScrollView
           style={styles.scrollView}
