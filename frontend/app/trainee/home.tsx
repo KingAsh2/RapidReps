@@ -804,7 +804,7 @@ const styles = StyleSheet.create({
   },
   distanceText: {
     fontSize: 13,
-    color: Colors.neonBlue,
+    color: Colors.secondary,
     fontWeight: '700',
   },
   locationRow: {
@@ -813,7 +813,7 @@ const styles = StyleSheet.create({
     gap: 6,
     marginBottom: 8,
   },
-  locationText: {
+  locationRowText: {
     fontSize: 14,
     fontWeight: '600',
     color: Colors.secondary,
