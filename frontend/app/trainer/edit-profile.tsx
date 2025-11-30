@@ -41,8 +41,8 @@ export default function EditTrainerProfileScreen() {
     sessionDurations: [30, 45, 60],
     travelRadiusMiles: '10',
     cancellationPolicy: 'Free cancellation before 24 hours',
-    latitude: null as number | null,
-    longitude: null as number | null,
+    latitude: null,
+    longitude: null,
     locationAddress: '',
     isAvailable: true,
   });
