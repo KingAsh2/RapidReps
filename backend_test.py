@@ -374,7 +374,7 @@ class RapidRepsProximityTester:
             "Mike Johnson", "Marcus Thompson", "Amanda Foster",
             "Robert Williams", "Sarah Williams", "David Chen", "Emma Davis"
         ]
-        expected_virtual = ["James Wilson"]  # 18.3 miles - within 20 mile limit
+        expected_virtual = ["James Wilson"]  # 17.6 miles - within 20 mile limit
         excluded_trainers = ["Sophia Anderson", "Liam Martinez"]  # >20 miles
         
         found_names = [t.get('bio', '').replace('Experienced trainer - ', '') for t in trainers]
