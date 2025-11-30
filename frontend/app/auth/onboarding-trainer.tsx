@@ -367,6 +367,38 @@ export default function TrainerOnboardingScreen() {
                 keyboardType="numeric"
               />
             </View>
+
+            <View style={styles.inputGroup}>
+              <View style={styles.labelRow}>
+                <Text style={styles.label}>Your Location 📍</Text>
+                {locationLoading && <ActivityIndicator size="small" color={Colors.primary} />}
+              </View>
+              <TextInput
+                style={styles.input}
+                value={formData.locationAddress}
+                onChangeText={(text) => setFormData({ ...formData, locationAddress: text })}
+                placeholder="City, State"
+                placeholderTextColor={Colors.textLight}
+              />
+              <TouchableOpacity 
+                style={styles.locationButton} 
+                onPress={getCurrentLocation}
+                disabled={locationLoading}
+              >
+                <Ionicons name="locate" size={20} color={Colors.white} />
+                <Text style={styles.locationButtonText}>
+                  {locationLoading ? 'Getting location...' : 'Use GPS Location'}
+                </Text>
+              </TouchableOpacity>
+              {formData.latitude && formData.longitude && (
+                <Text style={styles.helpText}>
+                  ✓ Location captured: {formData.latitude.toFixed(4)}, {formData.longitude.toFixed(4)}
+                </Text>
+              )}
+              <Text style={styles.helpText}>
+                Important: Setting your location makes you visible to nearby trainees!
+              </Text>
+            </View>
           </View>
         );
 
