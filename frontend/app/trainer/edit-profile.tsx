@@ -74,6 +74,7 @@ export default function EditTrainerProfileScreen() {
           latitude: data.latitude || null,
           longitude: data.longitude || null,
           locationAddress: data.locationAddress || '',
+          isAvailable: data.isAvailable ?? true,
         });
       }
     } catch (error) {
