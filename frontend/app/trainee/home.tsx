@@ -344,7 +344,7 @@ export default function TraineeHomeScreen() {
                   
                   <View style={styles.trainerInfo}>
                     <View style={styles.trainerHeader}>
-                      <Text style={styles.trainerName}>Trainer #{trainer.id.slice(0, 6)}</Text>
+                      <Text style={styles.trainerName}>{trainer.fullName || 'Trainer'}</Text>
                       {trainer.isVerified && (
                         <View style={styles.verifiedBadge}>
                           <Ionicons name="checkmark-circle" size={16} color={Colors.success} />
