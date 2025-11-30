@@ -287,8 +287,8 @@ class VirtualSessionTester:
         print("\n🧪 Testing no available virtual trainers scenario...")
         
         # First, make our trainer unavailable
-        response = self.make_request('PATCH', '/trainer-profiles/toggle-availability', 
-                                   {"isAvailable": False}, self.trainer_token)
+        response = self.make_request('PATCH', '/trainer-profiles/toggle-availability?isAvailable=false', 
+                                   None, self.trainer_token)
         
         if not response or response.status_code != 200:
             self.log_test("Setup - Make Trainer Unavailable", False, 
