@@ -137,6 +137,7 @@ class TrainerProfileResponse(BaseModel):
     videoCallPreference: Optional[str] = None
     distance: Optional[float] = None  # Distance from search location in miles
     matchType: Optional[str] = None  # 'in-person' or 'virtual'
+    fullName: Optional[str] = None  # Trainer's full name from users collection
     createdAt: datetime
 
 # Trainee Profile Models
