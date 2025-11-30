@@ -229,6 +229,26 @@ class RatingResponse(BaseModel):
     reviewText: Optional[str] = None
     createdAt: datetime
 
+# Virtual Session Models
+class VirtualSessionRequest(BaseModel):
+    traineeId: str
+    durationMinutes: int = 30
+    paymentMethod: str = "mock"  # For MVP: mock payment
+    notes: Optional[str] = None
+
+class VirtualSessionMatchResponse(BaseModel):
+    sessionId: str
+    trainerId: str
+    trainerName: str
+    trainerBio: Optional[str] = None
+    trainerRating: float
+    sessionDateTimeStart: datetime
+    sessionDateTimeEnd: datetime
+    durationMinutes: int
+    finalSessionPriceCents: int
+    zoomMeetingLink: Optional[str] = None
+    status: str
+
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
