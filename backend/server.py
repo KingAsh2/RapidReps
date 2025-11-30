@@ -549,6 +549,12 @@ async def search_trainers(
     # Combine: In-person first (priority), then virtual
     filtered_trainers = in_person_trainers + virtual_trainers
     
+    # Add fullName from users collection
+    for trainer in filtered_trainers:
+        user = await db.users.find_one({'_id': ObjectId(trainer['userId'])})
+        if user:
+            trainer['fullName'] = user.get('fullName', 'Unknown Trainer')
+    
     return [TrainerProfileResponse(**serialize_doc(t)) for t in filtered_trainers]
 
 # ============================================================================
