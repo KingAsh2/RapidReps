@@ -113,6 +113,11 @@ export default function TrainerOnboardingScreen() {
         ratePerMinuteCents: 100, // Default $1/min
         travelRadiusMiles: formData.travelRadiusMiles,
         cancellationPolicy: 'Free cancellation before 24 hours', // Default policy
+        latitude: null,
+        longitude: null,
+        locationAddress: '',
+        isAvailable: true,
+        isVirtualTrainingAvailable: formData.offersVirtual,
       });
 
       console.log('Profile created successfully!');
