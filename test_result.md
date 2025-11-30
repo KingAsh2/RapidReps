@@ -261,6 +261,18 @@ backend:
           agent: "testing"
           comment: "UPDATED proximity matching rules successfully implemented and tested. ✅ In-Person Training: 15 miles radius (changed from 10 miles) - tested with 14 trainers, all within 15 miles. ✅ Virtual Training: 20 miles radius (changed from unlimited) - tested with 2 virtual trainers within 20 miles. ✅ Display Order: In-person trainers appear before virtual trainers in search results. ✅ Nearby Trainees: 15 miles radius (changed from 10 miles) - tested with 2 trainees within 15 miles. ✅ Trainer Availability Toggle: Successfully tested hiding/showing trainers based on availability status. Fixed distance calculation bug in TrainerProfileResponse model by adding distance and matchType fields. All proximity matching scenarios working correctly."
 
+  - task: "Virtual Training Session Request Endpoint"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "NEW virtual training session endpoint (/api/virtual-sessions/request) successfully tested and working correctly. ✅ Session Creation: Auto-creates confirmed sessions with $18/30min pricing (1800 cents). ✅ Trainer Matching: Correctly prioritizes trainers by rating and experience - matched with existing high-rated trainer 'Alex Rodriguez' (5.0 rating). ✅ Pricing Logic: Accurate pricing breakdown - $18 base, $1.80 platform fee (10%), $16.20 trainer earnings. ✅ Mock Payment: Payment processing working with mock payment IDs generated. ✅ Session Details: Correct session type (virtual), duration (30 min), status (confirmed), and Zoom links. ✅ Response Structure: All required fields present in VirtualSessionMatchResponse. Minor: Trainer matching works as designed by selecting best available trainer rather than test trainer. Core functionality fully operational."
+
 frontend:
   # Frontend testing not performed as per instructions
 
