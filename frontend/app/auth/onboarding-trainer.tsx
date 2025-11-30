@@ -574,6 +574,21 @@ const styles = StyleSheet.create({
     color: Colors.textLight,
     marginTop: 4,
   },
+  locationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.primary,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginTop: 8,
+    gap: 8,
+  },
+  locationButtonText: {
+    color: Colors.white,
+    fontSize: 14,
+    fontWeight: '600',
+  },
   chipContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
