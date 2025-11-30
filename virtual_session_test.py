@@ -322,8 +322,8 @@ class VirtualSessionTester:
                          f"Expected 404, got {response.status_code if response else 'None'}: {error_msg}")
         
         # Restore trainer availability for other tests
-        self.make_request('PATCH', '/trainer-profiles/toggle-availability', 
-                         {"isAvailable": True}, self.trainer_token)
+        self.make_request('PATCH', '/trainer-profiles/toggle-availability?isAvailable=true', 
+                         None, self.trainer_token)
         
     def run_all_tests(self):
         """Run all virtual session tests"""
