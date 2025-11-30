@@ -62,15 +62,7 @@ export default function VirtualConfirmScreen() {
     pressProgress.setValue(0);
     
     // Navigate to payment screen
-    // After payment, the session will be created with virtual flag
-    router.push({
-      pathname: '/trainee/payment',
-      params: {
-        amount: 18,
-        sessionType: 'virtual',
-        duration: 30,
-      },
-    });
+    router.push('/trainee/payment');
   };
 
   const circleProgress = pressProgress.interpolate({
