@@ -36,6 +36,12 @@ export interface TrainerProfile {
   totalSessionsCompleted: number;
   isVerified: boolean;
   availability?: any;
+  latitude?: number;
+  longitude?: number;
+  locationAddress?: string;
+  isAvailable: boolean;
+  isVirtualTrainingAvailable?: boolean;
+  videoCallPreference?: string;
   createdAt: string;
 }
 
