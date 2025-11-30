@@ -28,6 +28,7 @@ export default function TrainerOnboardingScreen() {
   const totalSteps = 4;
 
   const [formData, setFormData] = useState({
+    profilePhoto: '',
     bio: '',
     experienceYears: '',
     certifications: '',
@@ -46,6 +47,27 @@ export default function TrainerOnboardingScreen() {
   });
 
   const [locationLoading, setLocationLoading] = useState(false);
+
+  const pickImage = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (permissionResult.granted === false) {
+      Alert.alert('Permission Required', 'Camera roll permission is required!');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+      base64: true,
+    });
+
+    if (!result.canceled && result.assets[0].base64) {
+      setFormData({ ...formData, profilePhoto: `data:image/jpeg;base64,${result.assets[0].base64}` });
+    }
+  };
 
   useEffect(() => {
     // Auto-request location on mount
