@@ -150,6 +150,16 @@ export const traineeAPI = {
     const response = await api.post('/ratings', rating);
     return response.data;
   },
+
+  requestVirtualSession: async (traineeId: string, durationMinutes: number = 30, notes?: string): Promise<any> => {
+    const response = await api.post('/virtual-sessions/request', {
+      traineeId,
+      durationMinutes,
+      paymentMethod: 'mock',
+      notes,
+    });
+    return response.data;
+  },
 };
 
 export default api;
