@@ -549,6 +549,12 @@ const styles = StyleSheet.create({
     color: Colors.navy,
     marginBottom: 8,
   },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
   input: {
     backgroundColor: Colors.background,
     borderRadius: 12,
