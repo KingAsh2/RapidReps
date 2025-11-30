@@ -166,6 +166,7 @@ export default function EditTrainerProfileScreen() {
         .filter((g) => g);
 
       await trainerAPI.updateProfile({
+        userId: user.id,
         bio: formData.bio,
         experienceYears: parseInt(formData.experienceYears) || 0,
         certifications: certList,
@@ -175,6 +176,7 @@ export default function EditTrainerProfileScreen() {
         offersInPerson: formData.offersInPerson,
         offersVirtual: formData.offersVirtual,
         sessionDurationsOffered: formData.sessionDurations,
+        ratePerMinuteCents: 100,
         travelRadiusMiles: parseInt(formData.travelRadiusMiles) || 10,
         cancellationPolicy: formData.cancellationPolicy,
         latitude: formData.latitude,
