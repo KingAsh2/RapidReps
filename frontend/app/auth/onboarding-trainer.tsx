@@ -235,6 +235,21 @@ export default function TrainerOnboardingScreen() {
           <View style={styles.stepContent}>
             <Text style={styles.stepTitle}>Tell us about yourself</Text>
             
+            {/* Profile Photo */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Profile Photo</Text>
+              <TouchableOpacity style={styles.photoContainer} onPress={pickImage}>
+                {formData.profilePhoto ? (
+                  <Image source={{ uri: formData.profilePhoto }} style={styles.photo} />
+                ) : (
+                  <View style={styles.photoPlaceholder}>
+                    <Ionicons name="camera" size={40} color={Colors.textLight} />
+                    <Text style={styles.photoPlaceholderText}>Tap to add photo</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            </View>
+
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Bio</Text>
               <TextInput
