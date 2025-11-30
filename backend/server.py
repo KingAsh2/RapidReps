@@ -105,6 +105,7 @@ class TrainerProfileCreate(BaseModel):
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     locationAddress: Optional[str] = None
+    isAvailable: bool = True  # Toggle for visibility to trainees
     isVirtualTrainingAvailable: bool = False
     videoCallPreference: Optional[str] = "native"  # native, zoom, etc.
 
