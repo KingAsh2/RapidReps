@@ -98,7 +98,7 @@ export default function EditTrainerProfileScreen() {
     }
   };
 
-  const toggleDuration = (duration: number) => {
+  const toggleDuration = (duration) => {
     if (formData.sessionDurations.includes(duration)) {
       setFormData({
         ...formData,
