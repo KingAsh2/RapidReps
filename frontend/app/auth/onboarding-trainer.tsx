@@ -38,7 +38,64 @@ export default function TrainerOnboardingScreen() {
     ratePerMinuteCents: 100,
     travelRadiusMiles: 10,
     cancellationPolicy: 'Free cancellation before 24 hours',
+    latitude: null as number | null,
+    longitude: null as number | null,
+    locationAddress: '',
   });
+
+  const [locationLoading, setLocationLoading] = useState(false);
+
+  useEffect(() => {
+    // Auto-request location on mount
+    requestLocationPermission();
+  }, []);
+
+  const requestLocationPermission = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status === 'granted') {
+        await getCurrentLocation();
+      }
+    } catch (error) {
+      console.error('Error requesting location permission:', error);
+    }
+  };
+
+  const getCurrentLocation = async () => {
+    setLocationLoading(true);
+    try {
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+      
+      const { latitude, longitude } = location.coords;
+      
+      // Reverse geocode to get address
+      const addresses = await Location.reverseGeocodeAsync({ latitude, longitude });
+      
+      if (addresses[0]) {
+        const addr = addresses[0];
+        const locationAddress = `${addr.city || ''}, ${addr.region || ''}`;
+        setFormData(prev => ({
+          ...prev,
+          latitude,
+          longitude,
+          locationAddress,
+        }));
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          latitude,
+          longitude,
+        }));
+      }
+    } catch (error) {
+      console.error('Error getting location:', error);
+      Alert.alert('Location Error', 'Could not get your location. You can enter it manually in Step 4.');
+    } finally {
+      setLocationLoading(false);
+    }
+  };
 
   const toggleStyle = (style: string) => {
     if (formData.trainingStyles.includes(style)) {
