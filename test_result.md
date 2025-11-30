@@ -280,6 +280,15 @@ agent_communication:
     - agent: "testing"
       message: "Comprehensive backend testing completed successfully. All 24 test cases passed (100% success rate). RapidReps backend API is fully functional with correct authentication, profile management, session booking with accurate pricing logic including multi-session discounts, session management, rating system, and earnings calculations."
     - agent: "main"
+      message: "FIXED Crystal's profile save issue and verified visibility. The problem was the edit-profile screen was blocking saves when no profile existed. Removed the profile existence check to allow profile creation. Also fixed password verification bug for bytes/string handling.
+      
+      **Fix Summary:**
+      - Removed `!profile` check in handleSave function that was preventing new profile creation
+      - Fixed `verify_password` to handle both bytes and string password hashes
+      - Created Crystal's trainer profile (fedsense@gmail.com / superman)
+      - Crystal is now visible to Ashton (1.7 miles away)
+      - All test accounts can now login and save profiles successfully"
+    - agent: "main"
       message: "Implemented complete proximity matching system with the following changes:
       
       **Backend:**
