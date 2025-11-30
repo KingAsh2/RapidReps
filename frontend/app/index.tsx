@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Dimensions,
   Pressable,
+  Animated,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../src/contexts/AuthContext';
@@ -15,6 +16,7 @@ import { Colors } from '../src/utils/colors';
 import { Ionicons } from '@expo/vector-icons';
 import { AthleticButton } from '../src/components/AthleticButton';
 import { Video, ResizeMode } from 'expo-av';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const { width, height } = Dimensions.get('window');
 
@@ -23,8 +25,15 @@ export default function WelcomeScreen() {
   const { user, loading, activeRole } = useAuth();
   const [isReady, setIsReady] = useState(false);
   const [showVideo, setShowVideo] = useState(true);
+  const [showTransition, setShowTransition] = useState(false);
   const [videoEnded, setVideoEnded] = useState(false);
   const videoRef = useRef<Video>(null);
+  
+  // Transition animation values
+  const logoScale = useRef(new Animated.Value(0.8)).current;
+  const logoOpacity = useRef(new Animated.Value(0)).current;
+  const backgroundOpacity = useRef(new Animated.Value(0)).current;
+  const contentOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const timer = setTimeout(() => setIsReady(true), 100);
@@ -43,9 +52,52 @@ export default function WelcomeScreen() {
 
   const handleVideoEnd = () => {
     setVideoEnded(true);
-    setTimeout(() => {
-      setShowVideo(false);
-    }, 300);
+    setShowTransition(true);
+    
+    // Sequence of animations for smooth transition
+    Animated.sequence([
+      // 1. Fade in logo and background
+      Animated.parallel([
+        Animated.spring(logoScale, {
+          toValue: 1.2,
+          useNativeDriver: true,
+          friction: 8,
+          tension: 40,
+        }),
+        Animated.timing(logoOpacity, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.timing(backgroundOpacity, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+      ]),
+      // 2. Brief pause
+      Animated.delay(200),
+      // 3. Scale down logo and fade in content
+      Animated.parallel([
+        Animated.spring(logoScale, {
+          toValue: 1,
+          useNativeDriver: true,
+          friction: 7,
+          tension: 40,
+        }),
+        Animated.timing(contentOpacity, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start(() => {
+      // Hide video after transition complete
+      setTimeout(() => {
+        setShowVideo(false);
+        setShowTransition(false);
+      }, 100);
+    });
   };
 
   const handleSkipVideo = () => {
@@ -60,113 +112,174 @@ export default function WelcomeScreen() {
     );
   }
 
-  // Show intro video first
-  if (showVideo) {
-    return (
-      <View style={styles.videoContainer}>
-        <Video
-          ref={videoRef}
-          source={require('../assets/videos/intro.mp4')}
-          style={styles.video}
-          resizeMode={ResizeMode.COVER}
-          shouldPlay={true}
-          isLooping={false}
-          isMuted={true}
-          useNativeControls={false}
-          onPlaybackStatusUpdate={(status) => {
-            if (status.isLoaded && status.didJustFinish) {
-              handleVideoEnd();
-            }
-          }}
-        />
-        
-        {/* Skip Button */}
-        <Pressable 
-          onPress={handleSkipVideo}
-          style={styles.skipButton}
-        >
-          <Text style={styles.skipText}>SKIP</Text>
-          <Ionicons name="arrow-forward" size={20} color={Colors.white} />
-        </Pressable>
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
-      {/* BACKGROUND - Solid Orange */}
-      <View style={styles.backgroundOrange} />
-      
-      {/* MAIN CONTENT */}
-      <View style={styles.content}>
-        {/* LOGO SECTION */}
-        <View style={styles.logoContainer}>
-          <Image
-            source={require('../assets/rapidreps-logo.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-        </View>
-
-        {/* BRAND TEXT */}
-        <View style={styles.brandSection}>
-          <Text style={styles.brandName}>RAPIDREPS</Text>
-          <Text style={styles.slogan}>YOUR WORKOUT,</Text>
-          <Text style={styles.sloganBold}>DELIVERED 🔥</Text>
-        </View>
-
-        {/* FEATURES */}
-        <View style={styles.featuresContainer}>
-          <View style={styles.featureCard}>
-            <View style={styles.featureIconContainer}>
-              <Ionicons name="search" size={32} color={Colors.navy} />
-            </View>
-            <Text style={styles.featureTitle}>FIND TRAINERS</Text>
-            <Text style={styles.featureText}>Local pros near you</Text>
+      {/* Intro Video */}
+      {showVideo && (
+        <View style={styles.videoContainer}>
+          <View style={styles.videoWrapper}>
+            <Video
+              ref={videoRef}
+              source={require('../assets/videos/intro.mp4')}
+              style={styles.video}
+              resizeMode={ResizeMode.CONTAIN}
+              shouldPlay={true}
+              isLooping={false}
+              isMuted={true}
+              useNativeControls={false}
+              onPlaybackStatusUpdate={(status) => {
+                if (status.isLoaded && status.didJustFinish) {
+                  handleVideoEnd();
+                }
+              }}
+            />
           </View>
-
-          <View style={styles.featureCard}>
-            <View style={styles.featureIconContainer}>
-              <Ionicons name="flash" size={32} color={Colors.navy} />
-            </View>
-            <Text style={styles.featureTitle}>BOOK FAST</Text>
-            <Text style={styles.featureText}>Sessions on demand</Text>
-          </View>
-
-          <View style={styles.featureCard}>
-            <View style={styles.featureIconContainer}>
-              <Ionicons name="cash" size={32} color={Colors.navy} />
-            </View>
-            <Text style={styles.featureTitle}>PAY EASY</Text>
-            <Text style={styles.featureText}>Simple pricing</Text>
-          </View>
-        </View>
-
-        {/* CTA BUTTONS */}
-        <View style={styles.ctaContainer}>
-          <AthleticButton
-            title="GET STARTED"
-            onPress={() => router.push('/auth/signup')}
-            variant="primary"
-            size="large"
-            icon="fitness"
-          />
-
-          <TouchableOpacity
-            onPress={() => router.push('/auth/login')}
-            style={styles.loginLink}
+          
+          {/* Skip Button */}
+          <Pressable 
+            onPress={handleSkipVideo}
+            style={styles.skipButton}
           >
-            <Text style={styles.loginLinkText}>ALREADY A MEMBER? LOG IN</Text>
-          </TouchableOpacity>
+            <Text style={styles.skipText}>SKIP</Text>
+            <Ionicons name="arrow-forward" size={20} color={Colors.white} />
+          </Pressable>
         </View>
-      </View>
+      )}
+
+      {/* Transition Layer */}
+      {showTransition && (
+        <Animated.View 
+          style={[
+            styles.transitionContainer,
+            { opacity: backgroundOpacity }
+          ]}
+        >
+          <LinearGradient
+            colors={Colors.gradientOrangeStart}
+            style={StyleSheet.absoluteFillObject}
+          />
+          
+          {/* Animated Logo */}
+          <Animated.View
+            style={[
+              styles.transitionLogoContainer,
+              {
+                opacity: logoOpacity,
+                transform: [{ scale: logoScale }],
+              },
+            ]}
+          >
+            <Image
+              source={require('../assets/rapidreps-logo.png')}
+              style={styles.transitionLogo}
+              resizeMode="contain"
+            />
+          </Animated.View>
+
+          {/* Welcome Content (fades in) */}
+          <Animated.View 
+            style={[
+              styles.transitionContent,
+              { opacity: contentOpacity }
+            ]}
+          >
+            <Text style={styles.welcomeText}>RAPIDREPS</Text>
+            <Text style={styles.welcomeSubtext}>YOUR WORKOUT, DELIVERED 🔥</Text>
+          </Animated.View>
+        </Animated.View>
+      )}
+
+      {/* Welcome Screen (shows after transition) */}
+      {!showVideo && !showTransition && (
+        <>
+          {/* BACKGROUND - Solid Orange */}
+          <View style={styles.backgroundOrange} />
+          
+          {/* MAIN CONTENT */}
+          <View style={styles.content}>
+            {/* LOGO SECTION */}
+            <View style={styles.logoContainer}>
+              <Image
+                source={require('../assets/rapidreps-logo.png')}
+                style={styles.logo}
+                resizeMode="contain"
+              />
+            </View>
+
+            {/* BRAND TEXT */}
+            <View style={styles.brandSection}>
+              <Text style={styles.brandName}>RAPIDREPS</Text>
+              <Text style={styles.slogan}>YOUR WORKOUT,</Text>
+              <Text style={styles.sloganBold}>DELIVERED 🔥</Text>
+            </View>
+
+            {/* FEATURES */}
+            <View style={styles.featuresContainer}>
+              <View style={styles.featureCard}>
+                <View style={styles.featureIconContainer}>
+                  <Ionicons name="search" size={32} color={Colors.navy} />
+                </View>
+                <Text style={styles.featureTitle}>FIND TRAINERS</Text>
+                <Text style={styles.featureText}>Local pros near you</Text>
+              </View>
+
+              <View style={styles.featureCard}>
+                <View style={styles.featureIconContainer}>
+                  <Ionicons name="flash" size={32} color={Colors.navy} />
+                </View>
+                <Text style={styles.featureTitle}>BOOK FAST</Text>
+                <Text style={styles.featureText}>Sessions on demand</Text>
+              </View>
+
+              <View style={styles.featureCard}>
+                <View style={styles.featureIconContainer}>
+                  <Ionicons name="cash" size={32} color={Colors.navy} />
+                </View>
+                <Text style={styles.featureTitle}>PAY EASY</Text>
+                <Text style={styles.featureText}>Simple pricing</Text>
+              </View>
+            </View>
+
+            {/* CTA BUTTONS */}
+            <View style={styles.ctaContainer}>
+              <AthleticButton
+                title="GET STARTED"
+                onPress={() => router.push('/auth/signup')}
+                variant="primary"
+                size="large"
+                icon="fitness"
+              />
+
+              <TouchableOpacity
+                onPress={() => router.push('/auth/login')}
+                style={styles.loginLink}
+              >
+                <Text style={styles.loginLinkText}>ALREADY A MEMBER? LOG IN</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.primary,
+  },
   videoContainer: {
     flex: 1,
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  videoWrapper: {
+    width: width,
+    height: height,
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: '#000',
   },
   video: {
@@ -184,6 +297,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 20,
     gap: 6,
+    zIndex: 10,
   },
   skipText: {
     color: Colors.white,
@@ -191,9 +305,43 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 1,
   },
-  container: {
-    flex: 1,
-    backgroundColor: Colors.primary,
+  transitionContainer: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 5,
+  },
+  transitionLogoContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  transitionLogo: {
+    width: 200,
+    height: 200,
+  },
+  transitionContent: {
+    position: 'absolute',
+    bottom: height * 0.3,
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  welcomeText: {
+    fontSize: 48,
+    fontWeight: '900',
+    color: Colors.navy,
+    letterSpacing: 2,
+    textAlign: 'center',
+    textShadowColor: 'rgba(0,0,0,0.2)',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 0,
+  },
+  welcomeSubtext: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: Colors.white,
+    letterSpacing: 1,
+    textAlign: 'center',
+    marginTop: 12,
   },
   backgroundOrange: {
     position: 'absolute',
