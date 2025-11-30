@@ -477,6 +477,35 @@ export default function TraineeHomeScreen() {
             )}
           </View>
         </ScrollView>
+
+        {/* Floating Action Button - Start Training */}
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => setShowTrainingModeDialog(true)}
+          activeOpacity={0.9}
+        >
+          <LinearGradient
+            colors={Colors.gradientOrangeStart}
+            style={styles.fabGradient}
+          >
+            <Ionicons name="fitness" size={28} color={Colors.white} />
+            <Text style={styles.fabText}>START TRAINING</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+
+        {/* Training Mode Dialog */}
+        <TrainingModeDialog
+          visible={showTrainingModeDialog}
+          onClose={() => setShowTrainingModeDialog(false)}
+          onSelectInPerson={() => {
+            setShowTrainingModeDialog(false);
+            // Show in-person trainers (already shown by default)
+          }}
+          onSelectVirtual={() => {
+            setShowTrainingModeDialog(false);
+            router.push('/trainee/virtual-confirm');
+          }}
+        />
         </SafeAreaView>
       </LinearGradient>
 
