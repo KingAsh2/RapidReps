@@ -502,7 +502,7 @@ async def search_trainers(
             filtered_trainers.append(trainer)
             continue
         
-        # Include if within 20 miles (if both have location data)
+        # Include if within 10 miles (if both have location data)
         if latitude and longitude and trainer.get('latitude') and trainer.get('longitude'):
             from math import radians, sin, cos, sqrt, atan2
             
@@ -517,7 +517,7 @@ async def search_trainers(
             c = 2 * atan2(sqrt(a), sqrt(1-a))
             distance = R * c
             
-            if distance <= 20:  # Within 20 miles
+            if distance <= 10:  # Within 10 miles
                 filtered_trainers.append(trainer)
                 continue
         
