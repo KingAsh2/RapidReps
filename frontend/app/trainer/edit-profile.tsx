@@ -216,7 +216,7 @@ export default function EditTrainerProfileScreen() {
           }
         ]
       );
-    } catch (error: any) {
+    } catch (error) {
       console.error('Save error:', error);
       setSaving(false);
       Alert.alert('Error', error.response?.data?.detail || error.message || 'Failed to update profile');
