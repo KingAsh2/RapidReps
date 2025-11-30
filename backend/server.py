@@ -536,10 +536,10 @@ async def search_trainers(
                 virtual_trainers.append(trainer)
     
     # Sort in-person trainers by distance (closest first)
-    in_person_trainers.sort(key=lambda t: t.get('distance') if t.get('distance') is not None else 999)
+    in_person_trainers.sort(key=lambda t: t.get('distance', 999) if t.get('distance') is not None else 999)
     
     # Sort virtual trainers by distance (closest first), None goes to end
-    virtual_trainers.sort(key=lambda t: t.get('distance') if t.get('distance') is not None else 999)
+    virtual_trainers.sort(key=lambda t: t.get('distance', 999) if t.get('distance') is not None else 999)
     
     # Combine: In-person first (priority), then virtual
     filtered_trainers = in_person_trainers + virtual_trainers
