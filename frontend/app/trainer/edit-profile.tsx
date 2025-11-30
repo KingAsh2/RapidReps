@@ -197,12 +197,26 @@ export default function EditTrainerProfileScreen() {
         isVirtualTrainingAvailable: formData.offersVirtual,
       });
 
-      Alert.alert('Success! 🎉', 'Your profile has been updated');
-      router.back();
-    } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Failed to update profile');
-    } finally {
+      console.log('Profile updated successfully!');
       setSaving(false);
+      Alert.alert(
+        'Success! 🎉', 
+        'Your profile has been updated successfully!',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              console.log('Navigating back...');
+              loadProfile(); // Reload to confirm save
+              router.back();
+            }
+          }
+        ]
+      );
+    } catch (error: any) {
+      console.error('Save error:', error);
+      setSaving(false);
+      Alert.alert('Error', error.response?.data?.detail || error.message || 'Failed to update profile');
     }
   };
 
