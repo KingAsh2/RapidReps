@@ -131,6 +131,11 @@ export const traineeAPI = {
     return response.data;
   },
 
+  updateProfile: async (profile: any): Promise<TraineeProfile> => {
+    const response = await api.post('/trainee-profiles', profile);
+    return response.data;
+  },
+
   getSessions: async (status?: string): Promise<Session[]> => {
     const response = await api.get('/trainee/sessions', { params: { status } });
     return response.data;
