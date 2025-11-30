@@ -275,6 +275,45 @@ export default function EditTrainerProfileScreen() {
               contentContainerStyle={styles.scrollContent}
               showsVerticalScrollIndicator={false}
             >
+              {/* Availability Toggle Section */}
+              <View style={styles.section}>
+                <LinearGradient
+                  colors={formData.isAvailable ? Colors.gradientTealStart : ['rgba(200,200,200,0.95)', 'rgba(150,150,150,0.85)']}
+                  style={[styles.sectionCard, styles.availabilityCard]}
+                >
+                  <TouchableOpacity
+                    onPress={() => setFormData({ ...formData, isAvailable: !formData.isAvailable })}
+                    style={styles.availabilityToggle}
+                  >
+                    <View style={styles.availabilityContent}>
+                      <View style={styles.availabilityLeft}>
+                        <Ionicons 
+                          name={formData.isAvailable ? "radio-button-on" : "radio-button-off"} 
+                          size={32} 
+                          color={Colors.white} 
+                        />
+                        <View style={styles.availabilityText}>
+                          <Text style={styles.availabilityTitle}>
+                            {formData.isAvailable ? "🟢 Available for Training" : "🔴 Currently Unavailable"}
+                          </Text>
+                          <Text style={styles.availabilitySubtitle}>
+                            {formData.isAvailable 
+                              ? "Trainees can find and book you" 
+                              : "Hidden from trainee searches"
+                            }
+                          </Text>
+                        </View>
+                      </View>
+                      <Ionicons 
+                        name={formData.isAvailable ? "toggle" : "toggle-outline"} 
+                        size={40} 
+                        color={Colors.white} 
+                      />
+                    </View>
+                  </TouchableOpacity>
+                </LinearGradient>
+              </View>
+
               {/* About You Section */}
               <View style={styles.section}>
                 <LinearGradient
