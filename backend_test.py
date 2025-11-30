@@ -9,6 +9,7 @@ Testing all backend functionality including:
 5. Session booking and management
 6. Rating system
 7. Nearby trainees endpoint
+8. NEW: Virtual training session request endpoint
 """
 
 import requests
