@@ -520,18 +520,7 @@ async def search_trainers(
         
         # Include if within 10 miles (if both have location data)
         if latitude and longitude and trainer.get('latitude') and trainer.get('longitude'):
-            from math import radians, sin, cos, sqrt, atan2
-            
-            # Haversine formula
-            R = 3959  # Earth radius in miles
-            lat1, lon1 = radians(latitude), radians(longitude)
-            lat2, lon2 = radians(trainer['latitude']), radians(trainer['longitude'])
-            
-            dlat = lat2 - lat1
-            dlon = lon2 - lon1
-            a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
-            c = 2 * atan2(sqrt(a), sqrt(1-a))
-            distance = R * c
+            distance = calculate_distance(latitude, longitude, trainer['latitude'], trainer['longitude'])
             
             if distance <= 10:  # Within 10 miles
                 filtered_trainers.append(trainer)
