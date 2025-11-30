@@ -14,18 +14,39 @@ import time
 BASE_URL = "https://workout-match-4.preview.emergentagent.com/api"
 HEADERS = {"Content-Type": "application/json"}
 
-class RapidRepsAPITester:
+class TestResults:
+    def __init__(self):
+        self.passed = 0
+        self.failed = 0
+        self.errors = []
+    
+    def add_pass(self, test_name):
+        self.passed += 1
+        print(f"✅ {test_name}")
+    
+    def add_fail(self, test_name, error):
+        self.failed += 1
+        self.errors.append(f"{test_name}: {error}")
+        print(f"❌ {test_name}: {error}")
+    
+    def summary(self):
+        total = self.passed + self.failed
+        print(f"\n{'='*60}")
+        print(f"TEST SUMMARY: {self.passed}/{total} tests passed")
+        if self.errors:
+            print(f"\nFAILED TESTS:")
+            for error in self.errors:
+                print(f"  - {error}")
+        print(f"{'='*60}")
+
+# Global test results
+results = TestResults()
+
+class RapidRepsProximityTester:
     def __init__(self):
         self.base_url = BASE_URL
         self.headers = HEADERS.copy()
-        self.trainer_token = None
-        self.trainee_token = None
-        self.trainer_user_id = None
-        self.trainee_user_id = None
-        self.trainer_profile_id = None
-        self.trainee_profile_id = None
-        self.session_ids = []
-        self.test_results = []
+        self.test_users = []  # Store created users for cleanup
         
     def log_test(self, test_name: str, success: bool, details: str = ""):
         """Log test result"""
