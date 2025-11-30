@@ -843,6 +843,101 @@ async def complete_session(session_id: str, current_user: dict = Depends(get_cur
     return SessionResponse(**serialize_doc(updated_session))
 
 # ============================================================================
+# VIRTUAL SESSION ROUTES
+# ============================================================================
+
+@api_router.post("/virtual-sessions/request", response_model=VirtualSessionMatchResponse)
+async def request_virtual_session(
+    request: VirtualSessionRequest, 
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Request a virtual training session - finds and matches with an available trainer
+    For MVP: Uses mock payment and simple matching logic
+    """
+    # Find available virtual trainers
+    available_trainers = await db.trainer_profiles.find({
+        'isAvailable': True,
+        'isVirtualTrainingAvailable': True,
+        'offersVirtual': True
+    }).to_list(100)
+    
+    if not available_trainers:
+        raise HTTPException(
+            status_code=404, 
+            detail="No virtual trainers available at the moment. Please try again later."
+        )
+    
+    # Sort by rating and total sessions (prioritize experienced, highly-rated trainers)
+    available_trainers.sort(
+        key=lambda t: (t.get('averageRating', 0), t.get('totalSessionsCompleted', 0)), 
+        reverse=True
+    )
+    
+    # Select the best available trainer
+    selected_trainer = available_trainers[0]
+    trainer_user = await db.users.find_one({'_id': ObjectId(selected_trainer['userId'])})
+    
+    if not trainer_user:
+        raise HTTPException(status_code=404, detail="Trainer user not found")
+    
+    # Calculate pricing (fixed $18 for 30 min virtual session for MVP)
+    base_price = 1800  # $18.00 in cents
+    platform_fee = int(base_price * 0.10)  # 10% platform fee
+    trainer_earnings = base_price - platform_fee
+    
+    # Create session starting immediately
+    session_start = datetime.utcnow()
+    session_end = session_start + timedelta(minutes=request.durationMinutes)
+    
+    # Mock payment processing (for MVP)
+    payment_status = "completed"  # Mock successful payment
+    
+    session_doc = {
+        'traineeId': request.traineeId,
+        'trainerId': selected_trainer['userId'],
+        'status': SessionStatus.CONFIRMED,  # Auto-confirm for virtual sessions
+        'sessionDateTimeStart': session_start,
+        'sessionDateTimeEnd': session_end,
+        'durationMinutes': request.durationMinutes,
+        'basePricePerMinuteCents': 60,  # $0.60/min for $18/30min
+        'baseSessionPriceCents': base_price,
+        'discountType': None,
+        'discountAmountCents': 0,
+        'finalSessionPriceCents': base_price,
+        'platformFeePercent': 10,
+        'platformFeeCents': platform_fee,
+        'trainerEarningsCents': trainer_earnings,
+        'locationType': 'virtual',
+        'locationNameOrAddress': 'Zoom Video Call',
+        'notes': request.notes,
+        'paymentIntentId': f'mock_payment_{uuid.uuid4().hex[:16]}',
+        'paymentStatus': payment_status,
+        'isVirtualSession': True,
+        'zoomMeetingLink': selected_trainer.get('zoomMeetingLink', 'https://zoom.us/j/placeholder'),
+        'createdAt': datetime.utcnow(),
+        'updatedAt': datetime.utcnow()
+    }
+    
+    result = await db.sessions.insert_one(session_doc)
+    session_id = str(result.inserted_id)
+    
+    # Return match response
+    return VirtualSessionMatchResponse(
+        sessionId=session_id,
+        trainerId=selected_trainer['userId'],
+        trainerName=trainer_user.get('fullName', 'Trainer'),
+        trainerBio=selected_trainer.get('bio'),
+        trainerRating=selected_trainer.get('averageRating', 0.0),
+        sessionDateTimeStart=session_start,
+        sessionDateTimeEnd=session_end,
+        durationMinutes=request.durationMinutes,
+        finalSessionPriceCents=base_price,
+        zoomMeetingLink=selected_trainer.get('zoomMeetingLink', 'https://zoom.us/j/placeholder'),
+        status=SessionStatus.CONFIRMED
+    )
+
+# ============================================================================
 # RATING ROUTES
 # ============================================================================
 
