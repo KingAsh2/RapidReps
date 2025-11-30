@@ -586,7 +586,7 @@ async def get_trainee_profile(user_id: str):
 
 @api_router.get("/trainers/nearby-trainees")
 async def get_nearby_trainees(current_user: dict = Depends(get_current_user)):
-    """Get trainees within 10 miles of the trainer"""
+    """Get trainees within 15 miles of the trainer"""
     # Get trainer's profile to get their location
     trainer_profile = await db.trainer_profiles.find_one({'userId': str(current_user['_id'])})
     
@@ -605,7 +605,7 @@ async def get_nearby_trainees(current_user: dict = Depends(get_current_user)):
     # Get all trainee profiles
     all_trainees = await db.trainee_profiles.find({}).to_list(1000)
     
-    # Filter trainees within 10 miles
+    # Filter trainees within 15 miles
     nearby_trainees = []
     for trainee in all_trainees:
         trainee_lat = trainee.get('latitude')
@@ -614,7 +614,7 @@ async def get_nearby_trainees(current_user: dict = Depends(get_current_user)):
         if trainee_lat and trainee_lon:
             distance = calculate_distance(trainer_lat, trainer_lon, trainee_lat, trainee_lon)
             
-            if distance <= 10:
+            if distance <= 15:
                 # Get user info for trainee
                 user = await db.users.find_one({'_id': ObjectId(trainee['userId'])})
                 trainee_data = serialize_doc(trainee)
