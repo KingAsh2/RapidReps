@@ -83,9 +83,9 @@ class RapidRepsProximityTester:
             {
                 "name": "James Wilson",
                 "email": "james.wilson@test.com",
-                "lat": 39.3500, "lon": -77.1500,  # ~18.3 miles
+                "lat": 39.2800, "lon": -77.0800,  # ~17.6 miles
                 "offers_in_person": False, "offers_virtual": True,
-                "expected_distance": 18.3
+                "expected_distance": 17.6
             },
             {
                 "name": "Sophia Anderson",
