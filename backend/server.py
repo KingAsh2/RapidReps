@@ -460,7 +460,7 @@ async def search_trainers(
     wantsVirtual: Optional[bool] = None
 ):
     """Search trainers with filters - includes location and virtual matching"""
-    query = {}  # Removed isVerified requirement for testing
+    query = {'isAvailable': True}  # Only show available trainers
     
     if styles:
         style_list = styles.split(',')
