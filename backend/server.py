@@ -135,6 +135,8 @@ class TrainerProfileResponse(BaseModel):
     isAvailable: bool = True  # Toggle for visibility to trainees
     isVirtualTrainingAvailable: bool = False
     videoCallPreference: Optional[str] = None
+    distance: Optional[float] = None  # Distance from search location in miles
+    matchType: Optional[str] = None  # 'in-person' or 'virtual'
     createdAt: datetime
 
 # Trainee Profile Models
