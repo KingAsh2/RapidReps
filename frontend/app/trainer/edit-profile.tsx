@@ -197,6 +197,7 @@ export default function EditTrainerProfileScreen() {
         longitude: formData.longitude,
         locationAddress: formData.locationAddress,
         isVirtualTrainingAvailable: formData.offersVirtual,
+        isAvailable: formData.isAvailable,
       });
 
       console.log('Profile updated successfully!');
