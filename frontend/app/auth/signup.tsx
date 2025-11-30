@@ -133,6 +133,18 @@ export default function SignupScreen() {
           </View>
 
           <View style={styles.inputGroup}>
+            <Text style={styles.label}>Phone</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.phone}
+              onChangeText={(text) => setFormData({ ...formData, phone: text })}
+              placeholder="555-1234"
+              placeholderTextColor={Colors.textLight}
+              keyboardType="phone-pad"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
             <Text style={styles.label}>Password</Text>
             <TextInput
               style={styles.input}
