@@ -44,6 +44,7 @@ export default function EditTrainerProfileScreen() {
     latitude: null as number | null,
     longitude: null as number | null,
     locationAddress: '',
+    isAvailable: true,
   });
   
   const [gettingLocation, setGettingLocation] = useState(false);
