@@ -916,6 +916,62 @@ const styles = StyleSheet.create({
     top: 16,
     right: 16,
   },
+  // Pending Session Styles
+  pendingSection: {
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  pendingCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: Colors.warning,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: Colors.warning,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  pendingHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 8,
+  },
+  pendingTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: Colors.warning,
+  },
+  pendingDetails: {
+    marginBottom: 12,
+    gap: 8,
+  },
+  pendingDetail: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  pendingDetailText: {
+    fontSize: 14,
+    color: Colors.textLight,
+    fontWeight: '500',
+  },
+  pendingStatusContainer: {
+    backgroundColor: 'rgba(255, 193, 7, 0.1)',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+  },
+  pendingStatus: {
+    fontSize: 14,
+    color: Colors.warning,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
   // Map styles
   mapContainer: {
     flex: 1,
