@@ -219,3 +219,29 @@ test_plan:
 agent_communication:
     - agent: "testing"
       message: "Comprehensive backend testing completed successfully. All 24 test cases passed (100% success rate). RapidReps backend API is fully functional with correct authentication, profile management, session booking with accurate pricing logic including multi-session discounts, session management, rating system, and earnings calculations."
+    - agent: "main"
+      message: "Implemented complete proximity matching system with the following changes:
+      
+      **Backend:**
+      - Enhanced TraineeProfile models with profilePhoto, latitude, longitude, locationAddress, experienceLevel, and isVirtualEnabled fields
+      - Changed trainer-trainee matching radius from 20 miles to 10 miles as per user requirement
+      - Added calculate_distance() helper function using Haversine formula
+      - Added /trainers/nearby-trainees endpoint to fetch trainees within 10 miles of trainer
+      - Added /trainer-profiles/toggle-availability endpoint for online/offline status
+      - Updated trainee profile API to support location and photos
+      
+      **Frontend:**
+      - Completely rewrote trainee onboarding with 4 steps including profile photo upload, GPS location capture with manual override, experience level selection, and virtual training toggle
+      - Updated trainer home screen with prominent availability toggle (like Uber), showing online/offline status
+      - Added 'Nearby Trainees' section on trainer home displaying trainees within 10 miles with their photos, distance, goals, and experience
+      - Updated API service with new endpoints: getNearbyTrainees(), toggleAvailability(), and updateProfile() for trainees
+      
+      **Key Features:**
+      - Profile photos for both trainers and trainees (base64 encoded)
+      - GPS-based location with manual text entry fallback
+      - 10-mile proximity matching using coordinates (not text-based city matching)
+      - Trainer availability toggle prominently displayed on home screen
+      - Distance display in miles (e.g., '3 miles away')
+      - Virtual training override (virtual trainers visible to all trainees with virtual enabled)
+      
+      Ready for backend testing."
