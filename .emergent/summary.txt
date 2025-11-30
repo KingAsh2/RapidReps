@@ -1,78 +1,86 @@
 <analysis>
-The trajectory outlines an iterative and highly user-driven development process for a full-stack mobile application, RapidReps. The initial phase involved establishing the core backend with FastAPI/MongoDB and building out fundamental frontend features like authentication and role-based onboarding using React Native and Expo.
+The trajectory details the iterative development of the RapidReps mobile app, a marketplace for personal trainers. The process was heavily user-driven, starting with foundational backend (FastAPI/MongoDB) and frontend (React Native/Expo) features like authentication and role-based onboarding. Development cycles involved significant UI/UX enhancements, including a complete athletic re-branding with custom fonts and a new color palette.
 
-A significant portion of the work involved responding to explicit user feedback, leading to numerous UI/UX revisions. Key cycles included: implementing a consistent gradient theme, troubleshooting and ultimately removing  due to Expo Go compatibility issues, adding detailed login feedback animations, and undertaking a massive UI overhaul to an athletic brand style with custom fonts and a new color palette.
+Key functional developments included implementing and refining a location-based trainer search. This evolved from simple matching to a sophisticated system with distinct radii for in-person (15 miles) and virtual (20 miles) training. The engineer addressed numerous critical bugs, including profiles not saving, broken signup/login flows due to incorrect API calls and context management, and a persistent  in password verification. A recurring infrastructure challenge was a CORS/domain mismatch in the forked environment, which blocked all button functionality and was resolved by directing the user to test via the Expo Go app.
 
-The engineer also addressed functional requests, such as implementing location-based search (first with device location, then with manual entry), adding logic for virtual training, and fixing critical bugs related to data persistence (trainer profiles not saving) and navigation (duplicate back buttons). The final request involved adding an availability toggle for trainers, which the engineer began implementing on the backend. The development pattern is characterized by rapid implementation, user testing, and subsequent refinement.
-
-The user's primary language is English. All future responses should be in English.
+The most recent and substantial task is the implementation of a full-fledged virtual training flow using Zoom. This began with creating new UI components for training mode selection and a long-press confirmation screen. The work was paused mid-integration of these new components into the trainee's home screen. The user's primary language is English. The next agent should respond in English.
 </analysis>
+
 <product_requirements>
-RapidReps is a mobile marketplace application, conceptualized as Uber for personal training, connecting trainees with trainers.
+RapidReps is a mobile application connecting trainees with personal trainers, akin to Uber for fitness.
 
-**Core User-Facing Features:**
-- **Dual Roles:** Users sign up as Trainee or Trainer.
-- **Search & Matching:** Trainees find trainers based on location and virtual availability. The logic matches users within a 20-mile radius or if both have enabled virtual training.
-- **Location Display:** Locations are displayed as City, State, not coordinates.
-- **Virtual Training:** If no local trainers are found, the app prompts the user to search for virtual trainers. A video call can be initiated via native device linking ( or ).
-- **Trainer Availability:** Trainers can toggle their visibility (go online/offline) to trainees.
-- **Branding:** The app features a high-energy, athletic design.
-  - **Fonts:** Bold, athletic, display-style fonts are used for titles and key text.
-  - **Colors:** A specific palette of orange gradient, teal accent, and deep navy for text and outlines.
-  - **UI:** The welcome screen has a distinct design, while internal screens use a consistent theme with semi-transparent cards over a gradient background. Buttons are solid orange with navy borders. The logo is used with energetic animations on key screens.
+**Core Features:**
+*   **Dual Roles:** Users can be a Trainee or Trainer.
+*   **Location-Based Matching:** The app facilitates bidirectional discovery.
+    *   Trainees see in-person trainers within a 15-mile radius and virtual trainers within a 20-mile radius. In-person results are prioritized.
+    *   Trainers see nearby trainees within a 15-mile radius on their dashboard.
+*   **Virtual Training Flow:** A new, comprehensive system for on-demand virtual sessions.
+    *   A dialog asks the user to choose In-Person or Virtual training.
+    *   Selecting Virtual leads to a confirmation screen for a 8/30-minute session, initiated with a long-press gesture.
+    *   Upon confirmation and payment, the system matches the trainee with an available virtual trainer based on status, activity, and ratings.
+    *   Video calls are launched via Zoom integration.
+*   **Session Booking:** The Lock In 💪🏾 button on a trainer's detail page uses a long-press and hold gesture with a fill animation to prevent accidental bookings.
+*   **Onboarding & Profiles:** Both roles have multi-step onboarding flows to collect necessary details, including profile photos and GPS location to enable matching.
+*   **Branding:** The app features an energetic, athletic aesthetic with an animated intro video, a distinct orange/navy color scheme, and bold typography.
 </product_requirements>
+
 <key_technical_concepts>
-- **Backend:** FastAPI (Python) with Pydantic models.
-- **Database:** MongoDB.
-- **Frontend:** React Native with Expo.
-- **Routing:** File-based routing with .
-- **Authentication:** JWT-based, managed via  and .
-- **UI:**  for backgrounds,  for animations, and platform-conditional rendering.
-- **Location:**  for fetching user coordinates and performing reverse geocoding.
-- **API Service:** Centralized API calls using  in .
+- **Backend:** FastAPI, Pydantic, MongoDB
+- **Frontend:** React Native, Expo
+- **Routing:** File-based with 
+- **State Management:**  ()
+- **API Communication:** 
+- **Authentication:** JWT stored in 
+- **UI/Animation:** , , 
+- **Device Features:**  for geolocation,  for photos,  for video playback.
 </key_technical_concepts>
+
 <code_architecture>
-The application uses a monorepo structure with distinct  and  directories.
+The application follows a monorepo structure with separate  and  directories.
 
 
-- ****
-  - **Importance:** The entire FastAPI application logic. Defines all data models, API endpoints, and business logic for search, profiles, and authentication.
-  - **Summary of Changes:** Heavily modified to support evolving features. Key changes include adding , , , , and  fields to the  models. The  endpoint was significantly updated to perform geospatial queries (finding trainers within a 20-mile radius) and filter by virtual availability.
+- ****: The core FastAPI application. It was heavily modified to add location coordinates, , , and  to data models. The  endpoint was updated to use geospatial queries and implement the 15-mile (in-person) and 20-mile (virtual) filtering logic, including joining user data to return . A  (sorting  distance) and an  (re-encoding password hash) were fixed.
 
-- ****
-  - **Importance:** The main dashboard for trainees, and the most frequently modified file. It handles trainer searching, location services, and displaying results.
-  - **Summary of Changes:** Underwent a major refactor to remove  and replace it with a location-based list. The  function was updated to pass the user's location and virtual preference to the backend. The UI was completely overhauled to match the athletic brand style, including removing a duplicate back button, centering the logo, and displaying trainer location as City, State. An energetic modal for virtual training was also added.
+- ****: The initial account creation screen. It was fixed to pass a  number and send data as a single object to the API. Crucially, it was updated to use  instead of a direct API call, which resolved a User not found error during the subsequent onboarding step by correctly persisting the auth state.
 
-- ****
-  - **Importance:** Allows trainers to create and update their profiles. This screen was the source of a critical not saving bug.
-  - **Summary of Changes:** The save functionality was fixed by ensuring the  was passed and that the correct  API method was called. UI was significantly improved by adding a manual text input for , a button to fetch GPS coordinates, moving the save button to a more prominent position, and applying the new athletic branding.
+- ****: The setup wizard for new trainers. This file was significantly refactored to add profile photo and location capture (, ), which were critical missing features preventing new trainers from being visible in search results.
 
-- ****
-  - **Importance:** Centralizes all frontend-to-backend communication.
-  - **Summary of Changes:** A critical  function was added to the  object. This was the key fix for the trainer settings not saving bug, as the original file only had a  method.
+- ****: The trainee's main dashboard. This screen was updated to remove an old virtual training dialog, add a Pending Requests section for sent sessions, and display the trainer's . The current work involves adding a new component () to initiate the virtual/in-person training flow.
 
-- ****
-  - **Importance:** The multi-step wizard for new trainer signups.
-  - **Summary of Changes:** A  import was added to fix a crash. The Rate per minute and Cancellation Policy fields were removed from the form. The  function was fixed to ensure navigation to the trainer home screen upon completion.
+- ****: Displays a single trainer's profile. The Book Session  was replaced with a  component implementing a Lock In 💪🏾 long-press gesture with a fill animation using  to prevent accidental bookings.
 
-- ****
-  - **Importance:** A reusable component created to provide energetic, brand-consistent animations.
-  - **Summary of Changes:** Created from scratch to support various animation styles (, , ) and added to multiple screens like , , and the home screens for branding purposes.
+- ****: Manages user authentication state. The  function was fixed to explicitly navigate the user back to the login screen. It was central to fixing the onboarding flow by providing a  method that properly stores the user token and data.
+
+- ****: The application's entry point/splash screen. It was modified to use  to play a background video () on launch. Logic was added for a smooth, animated transition from the video to the main welcome content.
+
+- ** & **: These are new files created to begin the implementation of the comprehensive virtual training flow.  presents the In-Person vs. Virtual choice, and  is the subsequent screen for confirming a virtual session with a long-press button.
 </code_architecture>
+
 <pending_tasks>
-- Fully implement the Admin Dashboard.
+- Complete the full virtual training flow, including backend matching logic, Zoom integration, payment screen, and post-session summary.
+- Implement the Admin Dashboard.
 - Integrate a real Stripe payment system.
-- Build out the trainer's earnings dashboard and full session management screens.
+- Build out the trainer's earnings dashboard.
 - Implement the trainer document upload flow for verification.
-- Complete the athletic branding UI transformation across all remaining secondary screens (e.g., , , ).
+- Apply the athletic branding UI transformation to remaining secondary screens.
 </pending_tasks>
+
 <current_work>
-The most recent task was to implement a feature allowing trainers to toggle their availability, similar to an online/offline status on Uber. This request came directly from the user.
+The most recent and significant task is the implementation of a comprehensive new virtual training flow, a major feature requested by the user. The previous engineer chose to build this system systematically (user's Option A).
 
-Work on this feature has already begun. The previous AI engineer identified that this would require a backend change first. The last action taken was editing the  file to add a new boolean field, , to the trainer profile Pydantic models (, , and ).
+The work is in **Phase 1: Building the Frontend UI/UX Flow**.
 
-The field was added with a default value of . The immediate next step was to also add this field to the  model to ensure the availability status is sent to the frontend. The work was paused immediately after modifying the first set of models and before updating the response model and the associated API endpoints.
+1.  **New Components Created:**
+    *   : A modal component that asks the user to select between In-Person Training and Virtual Live Video Training.
+    *   : A new screen for the virtual flow, featuring the 8 for 30 minutes confirmation message and a long-press button to lock in the session.
+
+2.  **Integration into Trainee Home:**
+    *   The  component has been imported into .
+    *   The old logic for showing a simple virtual training dialog () has been removed from  to make way for the new flow.
+
+The work was paused immediately before the final step of this phase: adding a Floating Action Button (FAB) or similar trigger to the  UI, which would open the newly created . The backend logic for matching, notifications, and Zoom integration has not been started yet.
 </current_work>
+
 <optional_next_step>
-Continue implementing the trainer availability toggle by adding the  field to the  model in .
+Add a floating action button (FAB) to  to trigger the  and wire up the  and  handlers to navigate to the appropriate screen (either  or the existing in-person list).
 </optional_next_step>
