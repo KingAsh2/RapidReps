@@ -524,7 +524,26 @@ export default function EditTrainerProfileScreen() {
                   </View>
 
                   <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Current Location (for matching)</Text>
+                    <Text style={styles.label}>Location (City, State)</Text>
+                    <LinearGradient
+                      colors={['rgba(91,192,190,0.1)', 'rgba(255,139,66,0.05)']}
+                      style={styles.inputGradient}
+                    >
+                      <TextInput
+                        style={styles.input}
+                        value={formData.locationAddress}
+                        onChangeText={(text) => setFormData({ ...formData, locationAddress: text })}
+                        placeholder="Elkridge, MD"
+                        placeholderTextColor={Colors.textLight}
+                      />
+                    </LinearGradient>
+                    <Text style={styles.helpText}>
+                      Enter your city and state (e.g., "Elkridge, MD")
+                    </Text>
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>GPS Location (for precise matching)</Text>
                     <TouchableOpacity
                       onPress={getCurrentLocation}
                       disabled={gettingLocation}
@@ -540,18 +559,18 @@ export default function EditTrainerProfileScreen() {
                           color={Colors.white} 
                         />
                         <Text style={styles.locationButtonText}>
-                          {gettingLocation ? 'Getting Location...' : 'Set Current Location 📍'}
+                          {gettingLocation ? 'Getting GPS...' : 'Set GPS Location 📍'}
                         </Text>
                       </LinearGradient>
                     </TouchableOpacity>
-                    {formData.locationAddress && (
+                    {formData.latitude && formData.longitude && (
                       <View style={styles.locationDisplay}>
                         <Ionicons name="checkmark-circle" size={20} color={Colors.success} />
-                        <Text style={styles.locationDisplayText}>{formData.locationAddress}</Text>
+                        <Text style={styles.locationDisplayText}>GPS Coordinates Set</Text>
                       </View>
                     )}
                     <Text style={styles.helpText}>
-                      Setting your location helps trainees find you nearby
+                      GPS helps calculate exact distances to trainees
                     </Text>
                   </View>
                 </LinearGradient>
