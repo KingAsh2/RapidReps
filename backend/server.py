@@ -570,6 +570,74 @@ async def get_trainee_profile(user_id: str):
     
     return TraineeProfileResponse(**serialize_doc(profile))
 
+@api_router.get("/trainers/nearby-trainees")
+async def get_nearby_trainees(current_user: dict = Depends(get_current_user)):
+    """Get trainees within 10 miles of the trainer"""
+    # Get trainer's profile to get their location
+    trainer_profile = await db.trainer_profiles.find_one({'userId': str(current_user['_id'])})
+    
+    if not trainer_profile:
+        raise HTTPException(status_code=404, detail="Trainer profile not found")
+    
+    trainer_lat = trainer_profile.get('latitude')
+    trainer_lon = trainer_profile.get('longitude')
+    
+    if not trainer_lat or not trainer_lon:
+        return {
+            'trainees': [],
+            'message': 'Trainer location not set. Please update your profile with location.'
+        }
+    
+    # Get all trainee profiles
+    all_trainees = await db.trainee_profiles.find({}).to_list(1000)
+    
+    # Filter trainees within 10 miles
+    nearby_trainees = []
+    for trainee in all_trainees:
+        trainee_lat = trainee.get('latitude')
+        trainee_lon = trainee.get('longitude')
+        
+        if trainee_lat and trainee_lon:
+            distance = calculate_distance(trainer_lat, trainer_lon, trainee_lat, trainee_lon)
+            
+            if distance <= 10:
+                # Get user info for trainee
+                user = await db.users.find_one({'_id': ObjectId(trainee['userId'])})
+                trainee_data = serialize_doc(trainee)
+                trainee_data['distance'] = round(distance, 1)
+                trainee_data['fullName'] = user.get('fullName', 'Unknown') if user else 'Unknown'
+                nearby_trainees.append(trainee_data)
+    
+    # Sort by distance
+    nearby_trainees.sort(key=lambda x: x['distance'])
+    
+    return {
+        'trainees': nearby_trainees,
+        'count': len(nearby_trainees)
+    }
+
+@api_router.patch("/trainer-profiles/toggle-availability")
+async def toggle_trainer_availability(isAvailable: bool, current_user: dict = Depends(get_current_user)):
+    """Toggle trainer availability (online/offline)"""
+    result = await db.trainer_profiles.update_one(
+        {'userId': str(current_user['_id'])},
+        {
+            '$set': {
+                'isAvailable': isAvailable,
+                'updatedAt': datetime.utcnow()
+            }
+        }
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Trainer profile not found")
+    
+    return {
+        'success': True,
+        'isAvailable': isAvailable,
+        'message': f"You are now {'available' if isAvailable else 'unavailable'} to trainees"
+    }
+
 # ============================================================================
 # SESSION ROUTES
 # ============================================================================
