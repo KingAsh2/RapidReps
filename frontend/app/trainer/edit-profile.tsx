@@ -84,7 +84,7 @@ export default function EditTrainerProfileScreen() {
     }
   };
 
-  const toggleStyle = (style: string) => {
+  const toggleStyle = (style) => {
     if (formData.trainingStyles.includes(style)) {
       setFormData({
         ...formData,
