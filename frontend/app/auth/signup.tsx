@@ -9,7 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { authAPI } from '../../src/services/api';
+import { useAuth } from '../../src/contexts/AuthContext';
 import { Colors } from '../../src/utils/colors';
 import { UserRole } from '../../src/types';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -17,6 +17,7 @@ import { AnimatedLogo } from '../../src/components/AnimatedLogo';
 
 export default function SignupScreen() {
   const router = useRouter();
+  const { signup } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
