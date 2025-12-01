@@ -366,7 +366,12 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Virtual Training Session Request Endpoint"
+    - "Virtual Training Flow - FAB Button & Training Mode Dialog"
+    - "Virtual Training Flow - Confirmation Screen"
+    - "Virtual Training Flow - Payment Screen"
+    - "Virtual Training Flow - Session Active Screen"
+    - "Virtual Training Flow - Session Complete Screen"
+    - "Trainee Authentication & Home Screen"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
