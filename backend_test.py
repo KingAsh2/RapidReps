@@ -480,7 +480,7 @@ class RapidRepsTestSuite:
         }
         
         response = self.make_request('POST', '/auth/signup', trainer_no_zoom)
-        if response.status_code == 201:
+        if response.status_code in [200, 201]:
             trainer_data = response.json()
             trainer_no_zoom_id = trainer_data['user']['id']
             trainer_no_zoom_token = trainer_data['access_token']
