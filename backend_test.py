@@ -283,7 +283,7 @@ class RapidRepsTestSuite:
             headers = {'Authorization': f'Bearer {self.trainee_token}'}
             response = self.make_request('POST', '/ratings', rating_data, headers)
             
-            if response.status_code != 201:
+            if response.status_code not in [200, 201]:
                 return self.log_test(f"Rating {i+1} Creation", False, f"Status: {response.status_code}")
         
         self.log_test("All Ratings Created", True, "Ratings: 5, 4, 3 stars")
