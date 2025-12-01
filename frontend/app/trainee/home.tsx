@@ -58,9 +58,19 @@ export default function TraineeHomeScreen() {
   const [virtualTrainers, setVirtualTrainers] = useState([]);
   const dialogAnim = new Animated.Value(0);
 
+  // Redirect to login if not authenticated
   useEffect(() => {
-    requestLocationPermission();
-  }, []);
+    if (!user) {
+      console.log('User not authenticated, redirecting to login');
+      router.replace('/auth/login');
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      requestLocationPermission();
+    }
+  }, [user]);
 
   useEffect(() => {
     // Reload trainers when location is available to calculate distances
