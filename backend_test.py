@@ -1,7 +1,19 @@
 #!/usr/bin/env python3
 """
-TEST RUN #3 of 3 - Virtual Training Flow Data Integrity & Edge Cases
-Comprehensive backend testing for RapidReps virtual training system
+FINAL VERIFICATION TEST - Complete Virtual Training Flow
+RapidReps Backend API End-to-End Testing
+
+Test Sequence:
+1. Create new test trainee
+2. Request virtual session (with trainers available) → Should succeed
+3. Verify session created with correct pricing ($18/30min)
+4. Complete the session
+5. Create rating (5 stars)
+6. Verify rating updated trainer average
+7. ERROR CASE: Disable all trainers
+8. Request virtual session (no trainers available) → Should return 404 error
+9. Verify error response has correct structure: {"detail": "error message"}
+10. Re-enable all trainers
 """
 
 import requests
@@ -13,7 +25,7 @@ import uuid
 
 # Configuration
 BACKEND_URL = "https://trainer-connect-24.preview.emergentagent.com/api"
-TEST_PREFIX = f"test3_{int(time.time())}_"
+TEST_PREFIX = f"final_verification_{int(time.time())}_"
 
 class RapidRepsTestSuite:
     def __init__(self):
