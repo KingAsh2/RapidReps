@@ -13,7 +13,7 @@ import uuid
 
 # Configuration
 BACKEND_URL = "https://trainer-connect-24.preview.emergentagent.com/api"
-TEST_PREFIX = "test3_"
+TEST_PREFIX = f"test3_{int(time.time())}_"
 
 class RapidRepsTestSuite:
     def __init__(self):
