@@ -419,10 +419,13 @@ class RapidRepsTestSuite:
         
         full_session = response.json()
         
+        # Debug: Print session fields to see what's available
+        print(f"Session fields: {list(full_session.keys())}")
+        
         # Verify paymentIntentId exists and follows pattern 'mock_payment_*'
         payment_id = full_session.get('paymentIntentId')
         if not payment_id:
-            return self.log_test("Payment ID Exists", False, "No paymentIntentId found in session document")
+            return self.log_test("Payment ID Exists", False, f"No paymentIntentId found in session document. Available fields: {list(full_session.keys())}")
         
         if not payment_id.startswith('mock_payment_'):
             return self.log_test("Payment ID Pattern", False, f"Expected 'mock_payment_*', got '{payment_id}'")
