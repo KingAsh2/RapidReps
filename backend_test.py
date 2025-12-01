@@ -60,13 +60,23 @@ class RapidRepsAPITester:
                 headers=default_headers,
                 params=params
             ) as response:
-                response_data = await response.json()
+                response_text = await response.text()
+                print(f"  🔍 {method} {endpoint} -> Status: {response.status}")
+                print(f"  📤 Request data: {data}")
+                print(f"  📥 Response: {response_text[:200]}...")
+                
+                try:
+                    response_data = json.loads(response_text)
+                except:
+                    response_data = {'raw_response': response_text}
+                    
                 return {
                     'status_code': response.status,
                     'data': response_data,
                     'success': 200 <= response.status < 300
                 }
         except Exception as e:
+            print(f"  ❌ Request exception: {str(e)}")
             return {
                 'status_code': 0,
                 'data': {'error': str(e)},
