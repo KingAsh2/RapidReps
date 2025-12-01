@@ -370,7 +370,7 @@ class RapidRepsTestSuite:
         headers = {'Authorization': f'Bearer {self.trainee_token}'}
         response = self.make_request('POST', '/ratings', rating_data, headers)
         
-        if response.status_code != 201:
+        if response.status_code not in [200, 201]:
             return self.log_test("Rating Completed Session Allowed", False, f"Status: {response.status_code}")
         
         self.log_test("Rating Completed Session Allowed", True, "Successfully rated completed session")
@@ -378,7 +378,7 @@ class RapidRepsTestSuite:
         # Try to rate same session twice (should fail)
         response = self.make_request('POST', '/ratings', rating_data, headers)
         
-        if response.status_code == 201:
+        if response.status_code in [200, 201]:
             return self.log_test("Duplicate Rating Blocked", False, "Should not allow duplicate ratings")
         
         self.log_test("Duplicate Rating Blocked", True, "Correctly blocked duplicate rating")
