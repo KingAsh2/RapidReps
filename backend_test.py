@@ -24,6 +24,9 @@ class RapidRepsAPITester:
         self.test_trainees = {}
         self.test_sessions = []
         self.results = []
+        # Use timestamp to ensure unique emails for each test run
+        import time
+        self.timestamp = str(int(time.time()))
         
     async def setup_session(self):
         """Setup HTTP session"""
