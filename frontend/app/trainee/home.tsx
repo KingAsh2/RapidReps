@@ -173,16 +173,26 @@ export default function TraineeHomeScreen() {
 
   const loadSessions = async () => {
     try {
+      // Only load sessions if user is authenticated
+      if (!user) {
+        console.log('User not authenticated, skipping session load');
+        return;
+      }
       const data = await traineeAPI.getSessions();
-      setSessions(data);
+      setSessions(data || []);
     } catch (error) {
       console.error('Error loading sessions:', error);
+      // Set empty array on error to prevent undefined issues
+      setSessions([]);
     }
   };
 
   useEffect(() => {
-    loadSessions();
-  }, []);
+    // Only load sessions if user is authenticated
+    if (user) {
+      loadSessions();
+    }
+  }, [user]);
 
   const onRefresh = () => {
     setRefreshing(true);
