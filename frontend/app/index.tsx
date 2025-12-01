@@ -283,27 +283,43 @@ export default function WelcomeScreen() {
           >
             <Text style={styles.welcomeText}>RAPIDREPS</Text>
             <View style={styles.sloganContainer}>
-              <Text style={styles.welcomeSubtext}>YOUR WORKOUT, DELIVERED</Text>
-              <Animated.Text 
+              <Text style={styles.welcomeSubtext}>YOUR WORKOUT,</Text>
+              <Animated.View 
                 style={[
-                  styles.rapidlyText,
+                  styles.animatedPhraseContainer,
                   {
-                    opacity: rapidOpacity,
                     transform: [
-                      { scale: rapidScale },
+                      { scale: phraseScale },
                       { 
-                        rotateY: rapidRotate.interpolate({
+                        rotate: phraseRotate.interpolate({
                           inputRange: [0, 1],
-                          outputRange: ['0deg', '360deg']
+                          outputRange: ['0deg', '2deg']
                         })
                       }
                     ]
                   }
                 ]}
               >
-                RAPIDLY
-              </Animated.Text>
-              <Text style={styles.welcomeSubtext}> 🔥</Text>
+                <Text style={styles.animatedPhrase}>DELIVERED RAPIDLY</Text>
+                <Animated.Text 
+                  style={[
+                    styles.flameEmoji,
+                    {
+                      transform: [
+                        { scale: flameScale },
+                        { 
+                          rotate: flameRotate.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: ['0deg', '-15deg']
+                          })
+                        }
+                      ]
+                    }
+                  ]}
+                >
+                  🔥
+                </Animated.Text>
+              </Animated.View>
             </View>
           </Animated.View>
         </Animated.View>
