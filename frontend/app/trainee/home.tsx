@@ -737,6 +737,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
+    overflow: 'hidden',
+  },
+  trainerAvatarImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
   },
   trainerInfo: {
     flex: 1,
