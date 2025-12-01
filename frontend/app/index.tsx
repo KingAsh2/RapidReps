@@ -35,10 +35,11 @@ export default function WelcomeScreen() {
   const backgroundOpacity = useRef(new Animated.Value(0)).current;
   const contentOpacity = useRef(new Animated.Value(0)).current;
   
-  // RAPIDLY animation values - rapid flip/pulse effect
-  const rapidScale = useRef(new Animated.Value(0)).current;
-  const rapidRotate = useRef(new Animated.Value(0)).current;
-  const rapidOpacity = useRef(new Animated.Value(0)).current;
+  // DELIVERED RAPIDLY animation values - smooth energetic effect
+  const phraseScale = useRef(new Animated.Value(1)).current;
+  const phraseRotate = useRef(new Animated.Value(0)).current;
+  const flameScale = useRef(new Animated.Value(1)).current;
+  const flameRotate = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const timer = setTimeout(() => setIsReady(true), 100);
