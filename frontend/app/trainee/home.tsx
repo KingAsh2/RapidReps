@@ -45,7 +45,6 @@ const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: numbe
 export default function TraineeHomeScreen() {
   const router = useRouter();
   const { user, logout } = useAuth();
-  const rootNavigationState = useRootNavigationState();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [trainers, setTrainers] = useState([]);
@@ -58,14 +57,6 @@ export default function TraineeHomeScreen() {
   const [showVirtualDialog, setShowVirtualDialog] = useState(false);
   const [virtualTrainers, setVirtualTrainers] = useState([]);
   const dialogAnim = new Animated.Value(0);
-
-  // Redirect to login if not authenticated (only when navigation is ready)
-  useEffect(() => {
-    if (!user && rootNavigationState?.key) {
-      console.log('User not authenticated, redirecting to login');
-      router.replace('/auth/login');
-    }
-  }, [user, rootNavigationState]);
 
   useEffect(() => {
     if (user) {
