@@ -32,14 +32,14 @@ export default function LoginScreen() {
   // Navigate when user is logged in and has an active role
   useEffect(() => {
     if (user && activeRole && loginSuccess) {
-      // Small delay for success animation
+      // Increased delay to ensure Root Layout is fully mounted
       const timer = setTimeout(() => {
         if (activeRole === 'trainer') {
           router.replace('/trainer/home');
         } else if (activeRole === 'trainee') {
           router.replace('/trainee/home');
         }
-      }, 1500);
+      }, 2500); // Increased from 1500ms to 2500ms
       return () => clearTimeout(timer);
     }
   }, [user, activeRole, loginSuccess, router]);
