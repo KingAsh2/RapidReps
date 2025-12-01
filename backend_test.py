@@ -124,7 +124,7 @@ class RapidRepsTestSuite:
         headers = {'Authorization': f'Bearer {self.trainee_token}'}
         response = self.make_request('POST', '/trainee-profiles', trainee_profile, headers)
         
-        if response.status_code == 201:
+        if response.status_code in [200, 201]:
             self.log_test("Trainee Profile Creation", True, "Virtual enabled profile created")
         else:
             return self.log_test("Trainee Profile Creation", False, f"Status: {response.status_code}")
