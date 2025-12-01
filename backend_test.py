@@ -376,7 +376,7 @@ class RapidRepsAPITester:
         """Step 4: Rapid Sequential Requests"""
         print("\n🔄 Step 4: Testing rapid sequential session requests...")
         
-        trainee_a_email = "alex.trainee.a@rapidreps.test"
+        trainee_a_email = "alex.trainee.a@example.com"
         
         # Request 3 virtual sessions in quick succession
         sessions = []
@@ -420,8 +420,8 @@ class RapidRepsAPITester:
         """Step 5: Session Lifecycle Test"""
         print("\n🔄 Step 5: Testing session lifecycle...")
         
-        trainee_a_email = "alex.trainee.a@rapidreps.test"
-        trainer_1_email = "sarah.trainer.1@rapidreps.test"
+        trainee_a_email = "alex.trainee.a@example.com"
+        trainer_1_email = "sarah.trainer.1@example.com"
         
         # Request a session
         session_1 = await self.request_virtual_session(
@@ -461,9 +461,9 @@ class RapidRepsAPITester:
         """Step 6: Trainer Availability Test"""
         print("\n🔄 Step 6: Testing trainer availability edge cases...")
         
-        trainee_a_email = "alex.trainee.a@rapidreps.test"
-        trainer_1_email = "sarah.trainer.1@rapidreps.test"
-        trainer_2_email = "mike.trainer.2@rapidreps.test"
+        trainee_a_email = "alex.trainee.a@example.com"
+        trainer_1_email = "sarah.trainer.1@example.com"
+        trainer_2_email = "mike.trainer.2@example.com"
         
         # Toggle all trainers to unavailable
         unavailable_1 = await self.toggle_trainer_availability(trainer_1_email, False)
