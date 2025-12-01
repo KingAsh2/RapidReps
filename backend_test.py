@@ -422,7 +422,7 @@ class RapidRepsTestSuite:
         # Verify paymentIntentId exists and follows pattern 'mock_payment_*'
         payment_id = full_session.get('paymentIntentId')
         if not payment_id:
-            return self.log_test("Payment ID Exists", False, "No paymentIntentId found")
+            return self.log_test("Payment ID Exists", False, "No paymentIntentId found in session document")
         
         if not payment_id.startswith('mock_payment_'):
             return self.log_test("Payment ID Pattern", False, f"Expected 'mock_payment_*', got '{payment_id}'")
