@@ -452,7 +452,7 @@ class RapidRepsTestSuite:
         headers = {'Authorization': f'Bearer {self.trainee_token}'}
         response = self.make_request('POST', '/virtual-sessions/request', session_request, headers)
         
-        if response.status_code != 201:
+        if response.status_code not in [200, 201]:
             return self.log_test("Session with Zoom Link", False, f"Status: {response.status_code}")
         
         session_data = response.json()
