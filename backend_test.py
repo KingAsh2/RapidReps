@@ -380,7 +380,7 @@ class RapidRepsAPITester:
         """Step 4: Rapid Sequential Requests"""
         print("\n🔄 Step 4: Testing rapid sequential session requests...")
         
-        trainee_a_email = "f"alex.trainee.a.{self.timestamp}@example.com""
+        trainee_a_email = f"alex.trainee.a.{self.timestamp}@example.com"
         
         # Request 3 virtual sessions in quick succession
         sessions = []
@@ -424,7 +424,7 @@ class RapidRepsAPITester:
         """Step 5: Session Lifecycle Test"""
         print("\n🔄 Step 5: Testing session lifecycle...")
         
-        trainee_a_email = "f"alex.trainee.a.{self.timestamp}@example.com""
+        trainee_a_email = f"alex.trainee.a.{self.timestamp}@example.com"
         trainer_1_email = "f"sarah.trainer.1.{self.timestamp}@example.com""
         
         # Request a session
@@ -465,7 +465,7 @@ class RapidRepsAPITester:
         """Step 6: Trainer Availability Test"""
         print("\n🔄 Step 6: Testing trainer availability edge cases...")
         
-        trainee_a_email = "f"alex.trainee.a.{self.timestamp}@example.com""
+        trainee_a_email = f"alex.trainee.a.{self.timestamp}@example.com"
         trainer_1_email = "f"sarah.trainer.1.{self.timestamp}@example.com""
         trainer_2_email = "f"mike.trainer.2.{self.timestamp}@example.com""
         
