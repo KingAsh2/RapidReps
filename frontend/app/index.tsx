@@ -46,67 +46,102 @@ export default function WelcomeScreen() {
     return () => clearTimeout(timer);
   }, []);
 
-  // RAPIDLY animation - continuous rapid flip/pop effect
+  // Smooth energetic animation for "DELIVERED RAPIDLY" phrase
   useEffect(() => {
-    const createRapidAnimation = () => {
+    const createPhraseAnimation = () => {
       return Animated.loop(
         Animated.sequence([
-          // Quick pop in with rotation
+          // Smooth pulse in with slight rotation
           Animated.parallel([
-            Animated.timing(rapidScale, {
-              toValue: 1.3,
-              duration: 150,
+            Animated.timing(phraseScale, {
+              toValue: 1.15,
+              duration: 600,
               useNativeDriver: true,
             }),
-            Animated.timing(rapidRotate, {
-              toValue: 1,
-              duration: 150,
-              useNativeDriver: true,
-            }),
-            Animated.timing(rapidOpacity, {
-              toValue: 1,
-              duration: 100,
+            Animated.timing(phraseRotate, {
+              toValue: 2,
+              duration: 600,
               useNativeDriver: true,
             }),
           ]),
-          // Bounce back
+          // Smooth pulse back
           Animated.parallel([
-            Animated.spring(rapidScale, {
+            Animated.timing(phraseScale, {
               toValue: 1,
-              friction: 5,
-              tension: 100,
+              duration: 600,
               useNativeDriver: true,
             }),
-            Animated.timing(rapidRotate, {
+            Animated.timing(phraseRotate, {
               toValue: 0,
-              duration: 100,
+              duration: 600,
               useNativeDriver: true,
             }),
           ]),
           // Brief pause
-          Animated.delay(800),
-          // Flash out
-          Animated.timing(rapidOpacity, {
-            toValue: 0.6,
-            duration: 100,
-            useNativeDriver: true,
-          }),
-          // Flash back in
-          Animated.timing(rapidOpacity, {
-            toValue: 1,
-            duration: 100,
-            useNativeDriver: true,
-          }),
-          // Longer pause before repeating
-          Animated.delay(1200),
+          Animated.delay(400),
         ])
       );
     };
 
-    const animation = createRapidAnimation();
-    animation.start();
+    const createFlameAnimation = () => {
+      return Animated.loop(
+        Animated.sequence([
+          // Flame blow effect - quick scale and rotate
+          Animated.parallel([
+            Animated.timing(flameScale, {
+              toValue: 1.4,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(flameRotate, {
+              toValue: 1,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+          ]),
+          // Blow back
+          Animated.parallel([
+            Animated.spring(flameScale, {
+              toValue: 1,
+              friction: 4,
+              tension: 80,
+              useNativeDriver: true,
+            }),
+            Animated.timing(flameRotate, {
+              toValue: 0,
+              duration: 200,
+              useNativeDriver: true,
+            }),
+          ]),
+          // Quick second blow
+          Animated.parallel([
+            Animated.timing(flameScale, {
+              toValue: 1.2,
+              duration: 200,
+              useNativeDriver: true,
+            }),
+          ]),
+          Animated.timing(flameScale, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+          // Pause before repeating
+          Animated.delay(600),
+        ])
+      );
+    };
 
-    return () => animation.stop();
+    const phraseAnim = createPhraseAnimation();
+    const flameAnim = createFlameAnimation();
+    
+    phraseAnim.start();
+    flameAnim.start();
+
+    return () => {
+      phraseAnim.stop();
+      flameAnim.stop();
+    };
   }, []);
 
   // Remove automatic navigation from index - let login screen handle it
