@@ -346,30 +346,42 @@ export default function WelcomeScreen() {
             <View style={styles.brandSection}>
               <Text style={styles.brandName}>RAPIDREPS</Text>
               <Text style={styles.slogan}>YOUR WORKOUT,</Text>
-              <View style={styles.sloganRow}>
-                <Text style={styles.sloganBold}>DELIVERED </Text>
+              <Animated.View 
+                style={[
+                  styles.animatedPhraseContainer,
+                  {
+                    transform: [
+                      { scale: phraseScale },
+                      { 
+                        rotate: phraseRotate.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['0deg', '2deg']
+                        })
+                      }
+                    ]
+                  }
+                ]}
+              >
+                <Text style={styles.sloganBold}>DELIVERED RAPIDLY</Text>
                 <Animated.Text 
                   style={[
-                    styles.sloganBold,
-                    styles.rapidlyBold,
+                    styles.flameEmoji,
                     {
-                      opacity: rapidOpacity,
                       transform: [
-                        { scale: rapidScale },
+                        { scale: flameScale },
                         { 
-                          rotateY: rapidRotate.interpolate({
+                          rotate: flameRotate.interpolate({
                             inputRange: [0, 1],
-                            outputRange: ['0deg', '360deg']
+                            outputRange: ['0deg', '-15deg']
                           })
                         }
                       ]
                     }
                   ]}
                 >
-                  RAPIDLY
+                  🔥
                 </Animated.Text>
-                <Text style={styles.sloganBold}> 🔥</Text>
-              </View>
+              </Animated.View>
             </View>
 
             {/* FEATURES */}
