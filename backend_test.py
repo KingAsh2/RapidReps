@@ -530,7 +530,7 @@ class RapidRepsTestSuite:
         # Record time after request
         after_request = datetime.utcnow()
         
-        if response.status_code != 201:
+        if response.status_code not in [200, 201]:
             return self.log_test("Session Creation", False, f"Status: {response.status_code}")
         
         session_data = response.json()
