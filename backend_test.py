@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
 """
-RapidReps Backend API Testing - TEST RUN #2 of 3
-Virtual Training Flow Stress Test
-
-This test focuses on multiple concurrent virtual session requests and edge cases.
+TEST RUN #3 of 3 - Virtual Training Flow Data Integrity & Edge Cases
+Comprehensive backend testing for RapidReps virtual training system
 """
 
-import asyncio
-import aiohttp
+import requests
 import json
 import time
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+from typing import Dict, Any, List
+import uuid
 
 # Configuration
-BASE_URL = "https://trainer-connect-24.preview.emergentagent.com/api"
+BACKEND_URL = "https://trainer-connect-24.preview.emergentagent.com/api"
+TEST_PREFIX = "test3_"
 
 class RapidRepsAPITester:
     def __init__(self):
