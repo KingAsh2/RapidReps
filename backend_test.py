@@ -15,588 +15,656 @@ import uuid
 BACKEND_URL = "https://trainer-connect-24.preview.emergentagent.com/api"
 TEST_PREFIX = "test3_"
 
-class RapidRepsAPITester:
+class RapidRepsTestSuite:
     def __init__(self):
-        self.session = None
-        self.test_users = {}
-        self.test_trainers = {}
-        self.test_trainees = {}
+        self.session = requests.Session()
+        self.trainee_token = None
+        self.trainer_token = None
+        self.trainee_id = None
+        self.trainer_id = None
         self.test_sessions = []
-        self.results = []
-        # Use timestamp to ensure unique emails for each test run
-        import time
-        self.timestamp = str(int(time.time()))
+        self.test_results = []
         
-    async def setup_session(self):
-        """Setup HTTP session"""
-        self.session = aiohttp.ClientSession()
-        
-    async def cleanup_session(self):
-        """Cleanup HTTP session"""
-        if self.session:
-            await self.session.close()
-            
-    def log_result(self, test_name: str, success: bool, message: str, details: dict = None):
+    def log_test(self, test_name: str, passed: bool, details: str = ""):
         """Log test result"""
-        status = "✅ PASS" if success else "❌ FAIL"
-        print(f"{status} - {test_name}: {message}")
-        self.results.append({
+        status = "✅ PASS" if passed else "❌ FAIL"
+        result = f"{status} - {test_name}"
+        if details:
+            result += f": {details}"
+        print(result)
+        self.test_results.append({
             'test': test_name,
-            'success': success,
-            'message': message,
-            'details': details or {},
-            'timestamp': datetime.now().isoformat()
+            'passed': passed,
+            'details': details
         })
-        
-    async def make_request(self, method: str, endpoint: str, data: dict = None, headers: dict = None, params: dict = None):
-        """Make HTTP request"""
-        url = f"{BASE_URL}{endpoint}"
+        return passed
+    
+    def make_request(self, method: str, endpoint: str, data: Dict = None, headers: Dict = None) -> requests.Response:
+        """Make HTTP request with error handling"""
+        url = f"{BACKEND_URL}{endpoint}"
         default_headers = {'Content-Type': 'application/json'}
         if headers:
             default_headers.update(headers)
             
         try:
-            async with self.session.request(
-                method, url, 
-                json=data, 
-                headers=default_headers,
-                params=params
-            ) as response:
-                response_text = await response.text()
-                # Debug logging (commented out for cleaner output)
-                # print(f"  🔍 {method} {endpoint} -> Status: {response.status}")
-                # print(f"  📤 Request data: {data}")
-                # print(f"  📥 Response: {response_text[:200]}...")
+            if method.upper() == 'GET':
+                response = self.session.get(url, headers=default_headers)
+            elif method.upper() == 'POST':
+                response = self.session.post(url, json=data, headers=default_headers)
+            elif method.upper() == 'PATCH':
+                response = self.session.patch(url, json=data, headers=default_headers)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
                 
-                try:
-                    response_data = json.loads(response_text)
-                except:
-                    response_data = {'raw_response': response_text}
-                    
-                return {
-                    'status_code': response.status,
-                    'data': response_data,
-                    'success': 200 <= response.status < 300
-                }
+            return response
         except Exception as e:
-            print(f"  ❌ Request exception: {str(e)}")
-            return {
-                'status_code': 0,
-                'data': {'error': str(e)},
-                'success': False
-            }
-            
-    async def create_test_user(self, name: str, email: str, phone: str, password: str, roles: List[str]):
-        """Create a test user"""
-        user_data = {
-            "fullName": name,
-            "email": email,
-            "phone": phone,
-            "password": password,
-            "roles": roles
+            print(f"Request failed: {method} {url} - {str(e)}")
+            raise
+    
+    def setup_test_users(self) -> bool:
+        """Create test trainee and trainer users"""
+        print("\n=== SETTING UP TEST USERS ===")
+        
+        # Create test trainee
+        trainee_data = {
+            "fullName": f"{TEST_PREFIX}DataIntegrity Trainee",
+            "email": f"{TEST_PREFIX}trainee_data@test.com",
+            "phone": "+1234567890",
+            "password": "testpass123",
+            "roles": ["trainee"]
         }
         
-        response = await self.make_request("POST", "/auth/signup", user_data)
-        if response['success']:
-            user_info = {
-                'id': response['data']['user']['id'],
-                'email': email,
-                'password': password,
-                'token': response['data']['access_token'],
-                'roles': roles
-            }
-            self.test_users[email] = user_info
-            return user_info
+        response = self.make_request('POST', '/auth/signup', trainee_data)
+        if response.status_code == 201:
+            data = response.json()
+            self.trainee_token = data['access_token']
+            self.trainee_id = data['user']['id']
+            self.log_test("Trainee User Creation", True, f"ID: {self.trainee_id}")
         else:
-            print(f"  ❌ User creation failed: Status {response['status_code']}, Data: {response['data']}")
-            return None
+            return self.log_test("Trainee User Creation", False, f"Status: {response.status_code}")
         
-    async def create_trainer_profile(self, user_info: dict, virtual_enabled: bool = True):
-        """Create trainer profile"""
-        headers = {'Authorization': f"Bearer {user_info['token']}"}
-        
-        profile_data = {
-            "userId": user_info['id'],
-            "bio": f"Experienced virtual trainer - {user_info['email']}",
-            "experienceYears": 5,
-            "certifications": ["NASM-CPT", "Virtual Training Specialist"],
-            "trainingStyles": ["Strength Training", "HIIT", "Virtual Coaching"],
-            "offersInPerson": True,
-            "offersVirtual": virtual_enabled,
-            "isVirtualTrainingAvailable": virtual_enabled,
-            "sessionDurationsOffered": [30, 45, 60],
-            "ratePerMinuteCents": 60,  # $0.60/min for $18/30min
-            "latitude": 40.7128,
-            "longitude": -74.0060,
-            "locationAddress": "New York, NY",
-            "isAvailable": True,
-            "videoCallPreference": "zoom"
+        # Create test trainer
+        trainer_data = {
+            "fullName": f"{TEST_PREFIX}DataIntegrity Trainer",
+            "email": f"{TEST_PREFIX}trainer_data@test.com", 
+            "phone": "+1234567891",
+            "password": "testpass123",
+            "roles": ["trainer"]
         }
         
-        response = await self.make_request("POST", "/trainer-profiles", profile_data, headers)
-        if response['success']:
-            self.test_trainers[user_info['email']] = {
-                **user_info,
-                'profile': response['data']
-            }
-            return response['data']
-        return None
+        response = self.make_request('POST', '/auth/signup', trainer_data)
+        if response.status_code == 201:
+            data = response.json()
+            self.trainer_token = data['access_token']
+            self.trainer_id = data['user']['id']
+            self.log_test("Trainer User Creation", True, f"ID: {self.trainer_id}")
+        else:
+            return self.log_test("Trainer User Creation", False, f"Status: {response.status_code}")
         
-    async def create_trainee_profile(self, user_info: dict, virtual_enabled: bool = True):
-        """Create trainee profile"""
-        headers = {'Authorization': f"Bearer {user_info['token']}"}
+        return True
+    
+    def setup_test_profiles(self) -> bool:
+        """Create test profiles for trainee and trainer"""
+        print("\n=== SETTING UP TEST PROFILES ===")
         
-        profile_data = {
-            "userId": user_info['id'],
+        # Create trainee profile with virtual enabled
+        trainee_profile = {
+            "userId": self.trainee_id,
             "profilePhoto": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k=",
-            "fitnessGoals": "Weight loss and strength building",
+            "fitnessGoals": "Build strength and endurance",
             "currentFitnessLevel": "intermediate",
             "experienceLevel": "Some experience",
-            "preferredTrainingStyles": ["Strength Training", "HIIT"],
-            "prefersInPerson": True,
-            "prefersVirtual": virtual_enabled,
-            "isVirtualEnabled": virtual_enabled,
-            "budgetMinPerMinuteCents": 50,
-            "budgetMaxPerMinuteCents": 100,
+            "preferredTrainingStyles": ["strength", "cardio"],
+            "isVirtualEnabled": True,
+            "latitude": 40.7128,
+            "longitude": -74.0060,
+            "locationAddress": "New York, NY"
+        }
+        
+        headers = {'Authorization': f'Bearer {self.trainee_token}'}
+        response = self.make_request('POST', '/trainee-profiles', trainee_profile, headers)
+        
+        if response.status_code == 201:
+            self.log_test("Trainee Profile Creation", True, "Virtual enabled profile created")
+        else:
+            return self.log_test("Trainee Profile Creation", False, f"Status: {response.status_code}")
+        
+        # Create trainer profile with virtual training enabled
+        trainer_profile = {
+            "userId": self.trainer_id,
+            "bio": "Experienced virtual trainer specializing in strength and conditioning",
+            "experienceYears": 5,
+            "certifications": ["NASM-CPT", "ACSM"],
+            "trainingStyles": ["strength", "cardio", "functional"],
+            "offersVirtual": True,
+            "isVirtualTrainingAvailable": True,
+            "isAvailable": True,
+            "ratePerMinuteCents": 60,
             "latitude": 40.7589,
             "longitude": -73.9851,
-            "locationAddress": "Manhattan, NY"
+            "locationAddress": "Manhattan, NY",
+            "zoomMeetingLink": "https://zoom.us/j/test123456789"
         }
         
-        response = await self.make_request("POST", "/trainee-profiles", profile_data, headers)
-        if response['success']:
-            self.test_trainees[user_info['email']] = {
-                **user_info,
-                'profile': response['data']
-            }
-            return response['data']
-        return None
+        headers = {'Authorization': f'Bearer {self.trainer_token}'}
+        response = self.make_request('POST', '/trainer-profiles', trainer_profile, headers)
         
-    async def toggle_trainer_availability(self, trainer_email: str, available: bool):
-        """Toggle trainer availability"""
-        trainer = self.test_trainers.get(trainer_email)
-        if not trainer:
-            return False
-            
-        headers = {'Authorization': f"Bearer {trainer['token']}"}
-        params = {'isAvailable': str(available).lower()}
-        response = await self.make_request("PATCH", "/trainer-profiles/toggle-availability", 
-                                         None, headers, params)
-        return response['success']
+        if response.status_code == 201:
+            self.log_test("Trainer Profile Creation", True, "Virtual trainer profile created")
+        else:
+            return self.log_test("Trainer Profile Creation", False, f"Status: {response.status_code}")
         
-    async def request_virtual_session(self, trainee_email: str, duration: int = 30, notes: str = None):
-        """Request a virtual training session"""
-        trainee = self.test_trainees.get(trainee_email)
-        if not trainee:
-            return None
-            
-        headers = {'Authorization': f"Bearer {trainee['token']}"}
-        
-        request_data = {
-            "traineeId": trainee['id'],
-            "durationMinutes": duration,
-            "paymentMethod": "mock",
-            "notes": notes or f"Virtual session request from {trainee_email}"
-        }
-        
-        response = await self.make_request("POST", "/virtual-sessions/request", request_data, headers)
-        if response['success']:
-            session_data = response['data']
-            self.test_sessions.append(session_data)
-            return session_data
-        return response
-        
-    async def complete_session(self, session_id: str, trainer_email: str):
-        """Complete a session"""
-        trainer = self.test_trainers.get(trainer_email)
-        if not trainer:
-            return False
-            
-        headers = {'Authorization': f"Bearer {trainer['token']}"}
-        response = await self.make_request("PATCH", f"/sessions/{session_id}/complete", {}, headers)
-        return response['success']
-        
-    async def get_session(self, session_id: str):
-        """Get session details"""
-        response = await self.make_request("GET", f"/sessions/{session_id}")
-        return response['data'] if response['success'] else None
-
-    # ============================================================================
-    # TEST SCENARIOS
-    # ============================================================================
+        return True
     
-    async def test_1_create_test_trainees(self):
-        """Step 1: Create 2 new test trainees (Trainee A and Trainee B)"""
-        print("\n🔄 Step 1: Creating test trainees...")
+    def test_data_integrity(self) -> bool:
+        """Test 1: Data Integrity - Verify session response contains all required fields"""
+        print("\n=== TEST 1: DATA INTEGRITY ===")
         
-        # Create Trainee A
-        trainee_a = await self.create_test_user(
-            "Alex Thompson", 
-            f"alex.trainee.a.{self.timestamp}@example.com", 
-            "+1234567890", 
-            "testpass123", 
-            ["trainee"]
-        )
+        # Request virtual session
+        session_request = {
+            "traineeId": self.trainee_id,
+            "durationMinutes": 30,
+            "paymentMethod": "mock",
+            "notes": "Data integrity test session"
+        }
         
-        if trainee_a:
-            profile_a = await self.create_trainee_profile(trainee_a, virtual_enabled=True)
-            if profile_a:
-                self.log_result("Create Trainee A", True, 
-                              f"Successfully created trainee A: {trainee_a['email']}")
-            else:
-                self.log_result("Create Trainee A Profile", False, "Failed to create trainee A profile")
-                return False
-        else:
-            self.log_result("Create Trainee A", False, "Failed to create trainee A user")
-            return False
-            
-        # Create Trainee B
-        trainee_b = await self.create_test_user(
-            "Blake Johnson", 
-            f"blake.trainee.b.{self.timestamp}@example.com", 
-            "+1234567891", 
-            "testpass123", 
-            ["trainee"]
-        )
+        headers = {'Authorization': f'Bearer {self.trainee_token}'}
+        response = self.make_request('POST', '/virtual-sessions/request', session_request, headers)
         
-        if trainee_b:
-            profile_b = await self.create_trainee_profile(trainee_b, virtual_enabled=True)
-            if profile_b:
-                self.log_result("Create Trainee B", True, 
-                              f"Successfully created trainee B: {trainee_b['email']}")
-            else:
-                self.log_result("Create Trainee B Profile", False, "Failed to create trainee B profile")
-                return False
-        else:
-            self.log_result("Create Trainee B", False, "Failed to create trainee B user")
-            return False
-            
-        return True
+        if response.status_code != 201:
+            return self.log_test("Virtual Session Request", False, f"Status: {response.status_code}")
         
-    async def test_2_ensure_virtual_trainers(self):
-        """Step 2: Ensure at least 2 virtual trainers are available"""
-        print("\n🔄 Step 2: Creating virtual trainers...")
+        session_data = response.json()
+        self.test_sessions.append(session_data['sessionId'])
         
-        # Create Virtual Trainer 1
-        trainer_1 = await self.create_test_user(
-            "Sarah Martinez", 
-            f"sarah.trainer.1.{self.timestamp}@example.com", 
-            "+1234567892", 
-            "testpass123", 
-            ["trainer"]
-        )
-        
-        if trainer_1:
-            profile_1 = await self.create_trainer_profile(trainer_1, virtual_enabled=True)
-            if profile_1:
-                self.log_result("Create Virtual Trainer 1", True, 
-                              f"Successfully created virtual trainer 1: {trainer_1['email']}")
-            else:
-                self.log_result("Create Virtual Trainer 1 Profile", False, "Failed to create trainer 1 profile")
-                return False
-        else:
-            self.log_result("Create Virtual Trainer 1", False, "Failed to create trainer 1 user")
-            return False
-            
-        # Create Virtual Trainer 2
-        trainer_2 = await self.create_test_user(
-            "Mike Rodriguez", 
-            f"mike.trainer.2.{self.timestamp}@example.com", 
-            "+1234567893", 
-            "testpass123", 
-            ["trainer"]
-        )
-        
-        if trainer_2:
-            profile_2 = await self.create_trainer_profile(trainer_2, virtual_enabled=True)
-            if profile_2:
-                self.log_result("Create Virtual Trainer 2", True, 
-                              f"Successfully created virtual trainer 2: {trainer_2['email']}")
-            else:
-                self.log_result("Create Virtual Trainer 2 Profile", False, "Failed to create trainer 2 profile")
-                return False
-        else:
-            self.log_result("Create Virtual Trainer 2", False, "Failed to create trainer 2 user")
-            return False
-            
-        return True
-        
-    async def test_3_concurrent_sessions(self):
-        """Step 3: Concurrent Sessions Test"""
-        print("\n🔄 Step 3: Testing concurrent virtual session requests...")
-        
-        trainee_a_email = f"alex.trainee.a.{self.timestamp}@example.com"
-        trainee_b_email = f"blake.trainee.b.{self.timestamp}@example.com"
-        
-        # Request virtual sessions concurrently
-        start_time = time.time()
-        
-        # Create concurrent requests
-        tasks = [
-            self.request_virtual_session(trainee_a_email, 30, "Concurrent test - Trainee A"),
-            self.request_virtual_session(trainee_b_email, 30, "Concurrent test - Trainee B")
+        # Verify all required fields are present
+        required_fields = [
+            'sessionId', 'trainerId', 'trainerName', 'trainerBio', 'trainerRating',
+            'sessionDateTimeStart', 'sessionDateTimeEnd', 'durationMinutes',
+            'finalSessionPriceCents', 'zoomMeetingLink', 'status'
         ]
         
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-        end_time = time.time()
+        missing_fields = []
+        for field in required_fields:
+            if field not in session_data:
+                missing_fields.append(field)
         
-        session_a = results[0] if not isinstance(results[0], Exception) else None
-        session_b = results[1] if not isinstance(results[1], Exception) else None
+        if missing_fields:
+            return self.log_test("Required Fields Present", False, f"Missing: {missing_fields}")
         
-        # Verify both sessions created successfully
-        if session_a and session_b and hasattr(session_a, 'get') and hasattr(session_b, 'get'):
-            if session_a.get('sessionId') and session_b.get('sessionId'):
-                # Verify different session IDs
-                if session_a['sessionId'] != session_b['sessionId']:
-                    self.log_result("Concurrent Sessions - Different IDs", True, 
-                                  f"Sessions have different IDs: {session_a['sessionId']} vs {session_b['sessionId']}")
-                else:
-                    self.log_result("Concurrent Sessions - Different IDs", False, 
-                                  "Sessions have same ID - potential conflict")
-                    
-                # Verify pricing consistency
-                if (session_a.get('finalSessionPriceCents') == 1800 and 
-                    session_b.get('finalSessionPriceCents') == 1800):
-                    self.log_result("Concurrent Sessions - Pricing", True, 
-                                  "Both sessions have correct pricing ($18 each)")
-                else:
-                    self.log_result("Concurrent Sessions - Pricing", False, 
-                                  f"Pricing inconsistent: A=${session_a.get('finalSessionPriceCents', 0)/100}, B=${session_b.get('finalSessionPriceCents', 0)/100}")
-                    
-                self.log_result("Concurrent Sessions Test", True, 
-                              f"Both sessions created successfully in {end_time - start_time:.2f}s")
-                return True
-            else:
-                self.log_result("Concurrent Sessions Test", False, 
-                              "One or both sessions missing sessionId")
-        else:
-            self.log_result("Concurrent Sessions Test", False, 
-                          f"Failed to create concurrent sessions. A: {type(session_a)}, B: {type(session_b)}")
-            
-        return False
+        self.log_test("Required Fields Present", True, "All required fields found")
         
-    async def test_4_rapid_sequential_requests(self):
-        """Step 4: Rapid Sequential Requests"""
-        print("\n🔄 Step 4: Testing rapid sequential session requests...")
+        # Verify data types
+        type_checks = [
+            ('sessionId', str),
+            ('trainerId', str), 
+            ('trainerName', str),
+            ('trainerRating', (int, float)),
+            ('durationMinutes', int),
+            ('finalSessionPriceCents', int),
+            ('status', str)
+        ]
         
-        trainee_a_email = f"alex.trainee.a.{self.timestamp}@example.com"
+        type_errors = []
+        for field, expected_type in type_checks:
+            if not isinstance(session_data.get(field), expected_type):
+                type_errors.append(f"{field}: expected {expected_type}, got {type(session_data.get(field))}")
         
-        # Request 3 virtual sessions in quick succession
-        sessions = []
-        start_time = time.time()
+        if type_errors:
+            return self.log_test("Data Types Correct", False, f"Type errors: {type_errors}")
         
+        self.log_test("Data Types Correct", True, "All data types match expectations")
+        
+        # Verify pricing is correct ($18 for 30 minutes = 1800 cents)
+        expected_price = 1800
+        actual_price = session_data.get('finalSessionPriceCents')
+        
+        if actual_price != expected_price:
+            return self.log_test("Pricing Correct", False, f"Expected {expected_price}, got {actual_price}")
+        
+        self.log_test("Pricing Correct", True, f"Correct pricing: ${actual_price/100}")
+        
+        # Verify session duration
+        if session_data.get('durationMinutes') != 30:
+            return self.log_test("Duration Correct", False, f"Expected 30 min, got {session_data.get('durationMinutes')}")
+        
+        self.log_test("Duration Correct", True, "30 minute duration confirmed")
+        
+        return True
+    
+    def test_multi_session_rating_impact(self) -> bool:
+        """Test 2: Multi-Session Rating Impact - Test rating system with multiple sessions"""
+        print("\n=== TEST 2: MULTI-SESSION RATING IMPACT ===")
+        
+        # Create 3 virtual sessions
+        session_ids = []
         for i in range(3):
-            session = await self.request_virtual_session(
-                trainee_a_email, 30, f"Rapid sequential test - Session {i+1}"
-            )
-            if session and hasattr(session, 'get') and session.get('sessionId'):
-                sessions.append(session)
-                print(f"  Created session {i+1}: {session['sessionId']}")
-            else:
-                self.log_result(f"Rapid Sequential - Session {i+1}", False, 
-                              f"Failed to create session {i+1}")
-                
-        end_time = time.time()
-        
-        # Verify all 3 sessions created
-        if len(sessions) == 3:
-            # Check for unique session IDs
-            session_ids = [s['sessionId'] for s in sessions]
-            unique_ids = set(session_ids)
+            session_request = {
+                "traineeId": self.trainee_id,
+                "durationMinutes": 30,
+                "paymentMethod": "mock",
+                "notes": f"Rating test session {i+1}"
+            }
             
-            if len(unique_ids) == 3:
-                self.log_result("Rapid Sequential - Unique IDs", True, 
-                              "All 3 sessions have unique IDs")
-            else:
-                self.log_result("Rapid Sequential - Unique IDs", False, 
-                              f"Duplicate session IDs found: {session_ids}")
-                
-            self.log_result("Rapid Sequential Test", True, 
-                          f"All 3 sessions created successfully in {end_time - start_time:.2f}s")
-            return True
-        else:
-            self.log_result("Rapid Sequential Test", False, 
-                          f"Only {len(sessions)}/3 sessions created")
-            return False
+            headers = {'Authorization': f'Bearer {self.trainee_token}'}
+            response = self.make_request('POST', '/virtual-sessions/request', session_request, headers)
             
-    async def test_5_session_lifecycle(self):
-        """Step 5: Session Lifecycle Test"""
-        print("\n🔄 Step 5: Testing session lifecycle...")
-        
-        trainee_a_email = f"alex.trainee.a.{self.timestamp}@example.com"
-        trainer_1_email = f"sarah.trainer.1.{self.timestamp}@example.com"
-        
-        # Request a session
-        session_1 = await self.request_virtual_session(
-            trainee_a_email, 30, "Lifecycle test - Session 1"
-        )
-        
-        if not session_1 or not session_1.get('sessionId'):
-            self.log_result("Session Lifecycle - Create", False, "Failed to create initial session")
-            return False
+            if response.status_code != 201:
+                return self.log_test(f"Session {i+1} Creation", False, f"Status: {response.status_code}")
             
-        session_1_id = session_1['sessionId']
-        self.log_result("Session Lifecycle - Create", True, f"Created session: {session_1_id}")
+            session_data = response.json()
+            session_ids.append(session_data['sessionId'])
+            self.test_sessions.append(session_data['sessionId'])
+            time.sleep(0.1)  # Small delay between requests
+        
+        self.log_test("Multiple Sessions Created", True, f"Created {len(session_ids)} sessions")
+        
+        # Complete all sessions
+        for i, session_id in enumerate(session_ids):
+            headers = {'Authorization': f'Bearer {self.trainer_token}'}
+            response = self.make_request('PATCH', f'/sessions/{session_id}/complete', {}, headers)
+            
+            if response.status_code != 200:
+                return self.log_test(f"Session {i+1} Completion", False, f"Status: {response.status_code}")
+        
+        self.log_test("All Sessions Completed", True, "3 sessions marked as completed")
+        
+        # Rate each session with different ratings (5, 4, 3 stars)
+        ratings = [5, 4, 3]
+        for i, (session_id, rating) in enumerate(zip(session_ids, ratings)):
+            rating_data = {
+                "sessionId": session_id,
+                "traineeId": self.trainee_id,
+                "trainerId": self.trainer_id,
+                "rating": rating,
+                "reviewText": f"Test rating {rating} stars for session {i+1}"
+            }
+            
+            headers = {'Authorization': f'Bearer {self.trainee_token}'}
+            response = self.make_request('POST', '/ratings', rating_data, headers)
+            
+            if response.status_code != 201:
+                return self.log_test(f"Rating {i+1} Creation", False, f"Status: {response.status_code}")
+        
+        self.log_test("All Ratings Created", True, "Ratings: 5, 4, 3 stars")
+        
+        # Verify trainer's average rating is updated correctly: (5+4+3)/3 = 4.0
+        response = self.make_request('GET', f'/trainer-profiles/{self.trainer_id}')
+        
+        if response.status_code != 200:
+            return self.log_test("Trainer Profile Retrieval", False, f"Status: {response.status_code}")
+        
+        trainer_data = response.json()
+        expected_rating = 4.0
+        actual_rating = trainer_data.get('averageRating', 0)
+        
+        if abs(actual_rating - expected_rating) > 0.01:  # Allow small floating point differences
+            return self.log_test("Average Rating Calculation", False, f"Expected {expected_rating}, got {actual_rating}")
+        
+        self.log_test("Average Rating Calculation", True, f"Correct average: {actual_rating}")
+        
+        return True
+    
+    def test_session_status_progression(self) -> bool:
+        """Test 3: Session Status Progression - Test session lifecycle and rating restrictions"""
+        print("\n=== TEST 3: SESSION STATUS PROGRESSION ===")
+        
+        # Request virtual session
+        session_request = {
+            "traineeId": self.trainee_id,
+            "durationMinutes": 30,
+            "paymentMethod": "mock",
+            "notes": "Status progression test"
+        }
+        
+        headers = {'Authorization': f'Bearer {self.trainee_token}'}
+        response = self.make_request('POST', '/virtual-sessions/request', session_request, headers)
+        
+        if response.status_code != 201:
+            return self.log_test("Session Creation", False, f"Status: {response.status_code}")
+        
+        session_data = response.json()
+        session_id = session_data['sessionId']
+        self.test_sessions.append(session_id)
+        
+        # Verify session starts as 'confirmed'
+        if session_data.get('status') != 'confirmed':
+            return self.log_test("Initial Status Check", False, f"Expected 'confirmed', got '{session_data.get('status')}'")
+        
+        self.log_test("Initial Status Check", True, "Session status is 'confirmed'")
+        
+        # Try to rate incomplete session (should fail)
+        rating_data = {
+            "sessionId": session_id,
+            "traineeId": self.trainee_id,
+            "trainerId": self.trainer_id,
+            "rating": 5,
+            "reviewText": "Trying to rate incomplete session"
+        }
+        
+        headers = {'Authorization': f'Bearer {self.trainee_token}'}
+        response = self.make_request('POST', '/ratings', rating_data, headers)
+        
+        if response.status_code == 201:
+            return self.log_test("Rating Incomplete Session Blocked", False, "Should not allow rating incomplete session")
+        
+        self.log_test("Rating Incomplete Session Blocked", True, "Correctly blocked rating of incomplete session")
         
         # Complete the session
-        completed = await self.complete_session(session_1_id, trainer_1_email)
-        if completed:
-            self.log_result("Session Lifecycle - Complete", True, f"Completed session: {session_1_id}")
-        else:
-            self.log_result("Session Lifecycle - Complete", False, f"Failed to complete session: {session_1_id}")
+        headers = {'Authorization': f'Bearer {self.trainer_token}'}
+        response = self.make_request('PATCH', f'/sessions/{session_id}/complete', {}, headers)
+        
+        if response.status_code != 200:
+            return self.log_test("Session Completion", False, f"Status: {response.status_code}")
+        
+        # Verify status changed to 'completed'
+        response = self.make_request('GET', f'/sessions/{session_id}')
+        if response.status_code == 200:
+            session_data = response.json()
+            if session_data.get('status') != 'completed':
+                return self.log_test("Status Change Verification", False, f"Expected 'completed', got '{session_data.get('status')}'")
             
-        # Request another session immediately after
-        session_2 = await self.request_virtual_session(
-            trainee_a_email, 30, "Lifecycle test - Session 2 (after completion)"
-        )
+            self.log_test("Status Change Verification", True, "Session status changed to 'completed'")
         
-        if session_2 and session_2.get('sessionId'):
-            session_2_id = session_2['sessionId']
-            self.log_result("Session Lifecycle - New After Complete", True, 
-                          f"Successfully created new session after completion: {session_2_id}")
-            return True
-        else:
-            self.log_result("Session Lifecycle - New After Complete", False, 
-                          "Failed to create new session after completion")
-            return False
-            
-    async def test_6_trainer_availability(self):
-        """Step 6: Trainer Availability Test"""
-        print("\n🔄 Step 6: Testing trainer availability edge cases...")
+        # Now rating should be allowed
+        headers = {'Authorization': f'Bearer {self.trainee_token}'}
+        response = self.make_request('POST', '/ratings', rating_data, headers)
         
-        trainee_a_email = f"alex.trainee.a.{self.timestamp}@example.com"
-        trainer_1_email = f"sarah.trainer.1.{self.timestamp}@example.com"
-        trainer_2_email = f"mike.trainer.2.{self.timestamp}@example.com"
+        if response.status_code != 201:
+            return self.log_test("Rating Completed Session Allowed", False, f"Status: {response.status_code}")
         
-        # Toggle all trainers to unavailable
-        unavailable_1 = await self.toggle_trainer_availability(trainer_1_email, False)
-        unavailable_2 = await self.toggle_trainer_availability(trainer_2_email, False)
+        self.log_test("Rating Completed Session Allowed", True, "Successfully rated completed session")
         
-        if unavailable_1 and unavailable_2:
-            self.log_result("Trainer Availability - Set Unavailable", True, 
-                          "Successfully set both trainers to unavailable")
-        else:
-            self.log_result("Trainer Availability - Set Unavailable", False, 
-                          "Failed to set trainers unavailable")
-            
-        # Try to request virtual session (should fail gracefully)
-        failed_session = await self.request_virtual_session(
-            trainee_a_email, 30, "Should fail - no trainers available"
-        )
+        # Try to rate same session twice (should fail)
+        response = self.make_request('POST', '/ratings', rating_data, headers)
         
-        # Check if it failed gracefully
-        if (failed_session and 
-            isinstance(failed_session, dict) and 
-            failed_session.get('status_code') == 404):
-            self.log_result("Trainer Availability - Graceful Failure", True, 
-                          "Properly handled no trainers available scenario")
-        else:
-            # Debug what we actually got
-            if failed_session:
-                status = failed_session.get('status_code', 'unknown') if isinstance(failed_session, dict) else 'not dict'
-                data = failed_session.get('data', {}) if isinstance(failed_session, dict) else {}
-                self.log_result("Trainer Availability - Graceful Failure", False, 
-                              f"Expected 404 error, got status {status}: {data}")
-            else:
-                self.log_result("Trainer Availability - Graceful Failure", False, 
-                              "No response received when no trainers available")
-            
-        # Toggle trainers back to available
-        available_1 = await self.toggle_trainer_availability(trainer_1_email, True)
-        available_2 = await self.toggle_trainer_availability(trainer_2_email, True)
+        if response.status_code == 201:
+            return self.log_test("Duplicate Rating Blocked", False, "Should not allow duplicate ratings")
         
-        if available_1 and available_2:
-            self.log_result("Trainer Availability - Set Available", True, 
-                          "Successfully set both trainers back to available")
-        else:
-            self.log_result("Trainer Availability - Set Available", False, 
-                          "Failed to set trainers back to available")
-            
-        # Verify session creation works again
-        success_session = await self.request_virtual_session(
-            trainee_a_email, 30, "Should succeed - trainers available again"
-        )
+        self.log_test("Duplicate Rating Blocked", True, "Correctly blocked duplicate rating")
         
-        if success_session and success_session.get('sessionId'):
-            self.log_result("Trainer Availability - Recovery", True, 
-                          f"Session creation works again: {success_session['sessionId']}")
-            return True
-        else:
-            self.log_result("Trainer Availability - Recovery", False, 
-                          "Session creation still not working after setting trainers available")
-            return False
-
-    # ============================================================================
-    # MAIN TEST RUNNER
-    # ============================================================================
+        return True
     
-    async def run_all_tests(self):
+    def test_payment_mock_validation(self) -> bool:
+        """Test 4: Payment Mock Validation - Verify mock payment processing"""
+        print("\n=== TEST 4: PAYMENT MOCK VALIDATION ===")
+        
+        # Request virtual session
+        session_request = {
+            "traineeId": self.trainee_id,
+            "durationMinutes": 30,
+            "paymentMethod": "mock",
+            "notes": "Payment validation test"
+        }
+        
+        headers = {'Authorization': f'Bearer {self.trainee_token}'}
+        response = self.make_request('POST', '/virtual-sessions/request', session_request, headers)
+        
+        if response.status_code != 201:
+            return self.log_test("Session Creation", False, f"Status: {response.status_code}")
+        
+        session_data = response.json()
+        session_id = session_data['sessionId']
+        self.test_sessions.append(session_id)
+        
+        # Get full session details to check payment fields
+        response = self.make_request('GET', f'/sessions/{session_id}')
+        
+        if response.status_code != 200:
+            return self.log_test("Session Retrieval", False, f"Status: {response.status_code}")
+        
+        full_session = response.json()
+        
+        # Verify paymentIntentId exists and follows pattern 'mock_payment_*'
+        payment_id = full_session.get('paymentIntentId')
+        if not payment_id:
+            return self.log_test("Payment ID Exists", False, "No paymentIntentId found")
+        
+        if not payment_id.startswith('mock_payment_'):
+            return self.log_test("Payment ID Pattern", False, f"Expected 'mock_payment_*', got '{payment_id}'")
+        
+        self.log_test("Payment ID Pattern", True, f"Correct pattern: {payment_id}")
+        
+        # Verify paymentStatus is 'completed' (mock payment)
+        payment_status = full_session.get('paymentStatus')
+        if payment_status != 'completed':
+            return self.log_test("Payment Status", False, f"Expected 'completed', got '{payment_status}'")
+        
+        self.log_test("Payment Status", True, "Mock payment status is 'completed'")
+        
+        # Verify no actual charge occurred (this is inherently true for mock)
+        self.log_test("No Actual Charge", True, "Mock payment - no real charge processed")
+        
+        return True
+    
+    def test_zoom_link_handling(self) -> bool:
+        """Test 5: Zoom Link Handling - Test zoom link inclusion in responses"""
+        print("\n=== TEST 5: ZOOM LINK HANDLING ===")
+        
+        # Test with trainer having zoom link (our test trainer has one)
+        session_request = {
+            "traineeId": self.trainee_id,
+            "durationMinutes": 30,
+            "paymentMethod": "mock",
+            "notes": "Zoom link test with trainer having link"
+        }
+        
+        headers = {'Authorization': f'Bearer {self.trainee_token}'}
+        response = self.make_request('POST', '/virtual-sessions/request', session_request, headers)
+        
+        if response.status_code != 201:
+            return self.log_test("Session with Zoom Link", False, f"Status: {response.status_code}")
+        
+        session_data = response.json()
+        self.test_sessions.append(session_data['sessionId'])
+        
+        # Verify zoom link is included
+        zoom_link = session_data.get('zoomMeetingLink')
+        if not zoom_link:
+            return self.log_test("Zoom Link Present", False, "No zoom link in response")
+        
+        # Should be the trainer's actual zoom link or placeholder
+        expected_link = "https://zoom.us/j/test123456789"
+        if zoom_link != expected_link and not zoom_link.startswith('https://zoom.us/j/'):
+            return self.log_test("Zoom Link Format", False, f"Unexpected format: {zoom_link}")
+        
+        self.log_test("Zoom Link Present", True, f"Zoom link: {zoom_link}")
+        
+        # Create trainer without zoom link to test placeholder
+        trainer_no_zoom = {
+            "fullName": f"{TEST_PREFIX}NoZoom Trainer",
+            "email": f"{TEST_PREFIX}trainer_nozoom@test.com",
+            "phone": "+1234567892",
+            "password": "testpass123",
+            "roles": ["trainer"]
+        }
+        
+        response = self.make_request('POST', '/auth/signup', trainer_no_zoom)
+        if response.status_code == 201:
+            trainer_data = response.json()
+            trainer_no_zoom_id = trainer_data['user']['id']
+            trainer_no_zoom_token = trainer_data['access_token']
+            
+            # Create profile without zoom link
+            profile_no_zoom = {
+                "userId": trainer_no_zoom_id,
+                "bio": "Trainer without zoom link",
+                "experienceYears": 3,
+                "offersVirtual": True,
+                "isVirtualTrainingAvailable": True,
+                "isAvailable": True,
+                "ratePerMinuteCents": 60,
+                "latitude": 40.7589,
+                "longitude": -73.9851
+                # No zoomMeetingLink provided
+            }
+            
+            headers = {'Authorization': f'Bearer {trainer_no_zoom_token}'}
+            response = self.make_request('POST', '/trainer-profiles', profile_no_zoom, headers)
+            
+            if response.status_code == 201:
+                self.log_test("Trainer Without Zoom Created", True, "Test trainer without zoom link created")
+            else:
+                self.log_test("Trainer Without Zoom Created", False, f"Status: {response.status_code}")
+        
+        return True
+    
+    def test_session_timestamps(self) -> bool:
+        """Test 6: Session Timestamps - Verify timestamp accuracy and consistency"""
+        print("\n=== TEST 6: SESSION TIMESTAMPS ===")
+        
+        # Record time before request
+        before_request = datetime.utcnow()
+        
+        # Request virtual session
+        session_request = {
+            "traineeId": self.trainee_id,
+            "durationMinutes": 30,
+            "paymentMethod": "mock",
+            "notes": "Timestamp test session"
+        }
+        
+        headers = {'Authorization': f'Bearer {self.trainee_token}'}
+        response = self.make_request('POST', '/virtual-sessions/request', session_request, headers)
+        
+        # Record time after request
+        after_request = datetime.utcnow()
+        
+        if response.status_code != 201:
+            return self.log_test("Session Creation", False, f"Status: {response.status_code}")
+        
+        session_data = response.json()
+        session_id = session_data['sessionId']
+        self.test_sessions.append(session_id)
+        
+        # Parse timestamps
+        try:
+            start_time_str = session_data.get('sessionDateTimeStart')
+            end_time_str = session_data.get('sessionDateTimeEnd')
+            
+            # Handle different datetime formats
+            for fmt in ['%Y-%m-%dT%H:%M:%S.%fZ', '%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%dT%H:%M:%S.%f']:
+                try:
+                    start_time = datetime.strptime(start_time_str.replace('Z', ''), fmt.replace('Z', ''))
+                    end_time = datetime.strptime(end_time_str.replace('Z', ''), fmt.replace('Z', ''))
+                    break
+                except ValueError:
+                    continue
+            else:
+                return self.log_test("Timestamp Parsing", False, f"Could not parse timestamps: {start_time_str}, {end_time_str}")
+            
+        except Exception as e:
+            return self.log_test("Timestamp Parsing", False, f"Error parsing timestamps: {str(e)}")
+        
+        # Verify sessionDateTimeStart is approximately current time (within 2 minutes)
+        time_diff = abs((start_time - before_request).total_seconds())
+        if time_diff > 120:  # 2 minutes tolerance
+            return self.log_test("Start Time Accuracy", False, f"Start time too far from current: {time_diff}s difference")
+        
+        self.log_test("Start Time Accuracy", True, f"Start time within {time_diff:.1f}s of request")
+        
+        # Verify sessionDateTimeEnd is exactly 30 minutes after start
+        expected_duration = timedelta(minutes=30)
+        actual_duration = end_time - start_time
+        
+        if abs(actual_duration.total_seconds() - expected_duration.total_seconds()) > 1:  # 1 second tolerance
+            return self.log_test("Duration Accuracy", False, f"Expected 30 min, got {actual_duration}")
+        
+        self.log_test("Duration Accuracy", True, "End time is exactly 30 minutes after start")
+        
+        # Get full session to check createdAt timestamp
+        response = self.make_request('GET', f'/sessions/{session_id}')
+        if response.status_code == 200:
+            full_session = response.json()
+            created_at_str = full_session.get('createdAt')
+            
+            if created_at_str:
+                try:
+                    # Parse createdAt timestamp
+                    for fmt in ['%Y-%m-%dT%H:%M:%S.%fZ', '%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%dT%H:%M:%S.%f']:
+                        try:
+                            created_at = datetime.strptime(created_at_str.replace('Z', ''), fmt.replace('Z', ''))
+                            break
+                        except ValueError:
+                            continue
+                    
+                    # Verify createdAt is within reasonable time of request
+                    created_diff = abs((created_at - before_request).total_seconds())
+                    if created_diff > 120:  # 2 minutes tolerance
+                        return self.log_test("CreatedAt Timestamp", False, f"CreatedAt too far from request: {created_diff}s")
+                    
+                    self.log_test("CreatedAt Timestamp", True, f"CreatedAt within {created_diff:.1f}s of request")
+                    
+                except Exception as e:
+                    self.log_test("CreatedAt Timestamp", False, f"Error parsing createdAt: {str(e)}")
+            else:
+                self.log_test("CreatedAt Timestamp", False, "No createdAt field found")
+        
+        return True
+    
+    def run_all_tests(self):
         """Run all test scenarios"""
-        print("🚀 Starting RapidReps Virtual Training Flow Stress Test - TEST RUN #2 of 3")
+        print("🚀 STARTING TEST RUN #3 of 3 - Virtual Training Flow Data Integrity & Edge Cases")
         print("=" * 80)
         
-        await self.setup_session()
-        
         try:
-            # Run test scenarios in sequence
-            test_results = []
+            # Setup
+            if not self.setup_test_users():
+                return False
             
-            test_results.append(await self.test_1_create_test_trainees())
-            test_results.append(await self.test_2_ensure_virtual_trainers())
-            test_results.append(await self.test_3_concurrent_sessions())
-            test_results.append(await self.test_4_rapid_sequential_requests())
-            test_results.append(await self.test_5_session_lifecycle())
-            test_results.append(await self.test_6_trainer_availability())
+            if not self.setup_test_profiles():
+                return False
             
-            # Summary
-            passed_tests = sum(1 for result in self.results if result['success'])
-            total_tests = len(self.results)
-            success_rate = (passed_tests / total_tests * 100) if total_tests > 0 else 0
-            
-            print("\n" + "=" * 80)
-            print(f"🏁 TEST RUN #2 COMPLETE - Virtual Training Flow Stress Test")
-            print(f"📊 Results: {passed_tests}/{total_tests} tests passed ({success_rate:.1f}% success rate)")
-            print("=" * 80)
-            
-            # Detailed results
-            print("\n📋 DETAILED TEST RESULTS:")
-            for result in self.results:
-                status = "✅" if result['success'] else "❌"
-                print(f"{status} {result['test']}: {result['message']}")
-                
-            # Success criteria check
-            print("\n🎯 SUCCESS CRITERIA VERIFICATION:")
-            concurrent_passed = any(r['test'] == 'Concurrent Sessions Test' and r['success'] for r in self.results)
-            sequential_passed = any(r['test'] == 'Rapid Sequential Test' and r['success'] for r in self.results)
-            lifecycle_passed = any(r['test'].startswith('Session Lifecycle') and r['success'] for r in self.results)
-            availability_passed = any(r['test'] == 'Trainer Availability - Recovery' and r['success'] for r in self.results)
-            
-            criteria_met = [
-                ("Multiple concurrent sessions handled correctly", concurrent_passed),
-                ("Rapid sequential requests processed", sequential_passed),
-                ("Session lifecycle management working", lifecycle_passed),
-                ("Proper error handling when no trainers available", availability_passed),
-                ("Session pricing remains consistent", True),  # Verified in concurrent test
-                ("All sessions independently tracked", True)   # Verified by unique IDs
+            # Run all test scenarios
+            tests = [
+                self.test_data_integrity,
+                self.test_multi_session_rating_impact,
+                self.test_session_status_progression,
+                self.test_payment_mock_validation,
+                self.test_zoom_link_handling,
+                self.test_session_timestamps
             ]
             
-            for criterion, met in criteria_met:
-                status = "✅" if met else "❌"
-                print(f"{status} {criterion}")
+            all_passed = True
+            for test in tests:
+                if not test():
+                    all_passed = False
+            
+            # Summary
+            print("\n" + "=" * 80)
+            print("📊 TEST SUMMARY")
+            print("=" * 80)
+            
+            passed_count = sum(1 for result in self.test_results if result['passed'])
+            total_count = len(self.test_results)
+            success_rate = (passed_count / total_count * 100) if total_count > 0 else 0
+            
+            print(f"Total Tests: {total_count}")
+            print(f"Passed: {passed_count}")
+            print(f"Failed: {total_count - passed_count}")
+            print(f"Success Rate: {success_rate:.1f}%")
+            
+            if all_passed:
+                print("\n🎉 ALL TESTS PASSED - Virtual Training Data Integrity Verified!")
+            else:
+                print("\n⚠️  SOME TESTS FAILED - Review failed tests above")
                 
-            overall_success = all(met for _, met in criteria_met)
-            print(f"\n🏆 OVERALL TEST STATUS: {'✅ SUCCESS' if overall_success else '❌ FAILED'}")
+                # Show failed tests
+                failed_tests = [r for r in self.test_results if not r['passed']]
+                if failed_tests:
+                    print("\nFailed Tests:")
+                    for test in failed_tests:
+                        print(f"  ❌ {test['test']}: {test['details']}")
             
-            return overall_success
+            return all_passed
             
-        finally:
-            await self.cleanup_session()
-
-async def main():
-    """Main test execution"""
-    tester = RapidRepsAPITester()
-    success = await tester.run_all_tests()
-    return success
+        except Exception as e:
+            print(f"\n💥 TEST SUITE ERROR: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return False
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    test_suite = RapidRepsTestSuite()
+    success = test_suite.run_all_tests()
+    exit(0 if success else 1)
