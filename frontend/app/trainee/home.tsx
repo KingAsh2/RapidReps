@@ -268,6 +268,11 @@ export default function TraineeHomeScreen() {
     }
   };
 
+  // Wait for navigation to be ready
+  if (!rootNavigationState?.key) {
+    return null;
+  }
+
   // Return null if no user (will redirect in useEffect)
   if (!user) {
     return null;
