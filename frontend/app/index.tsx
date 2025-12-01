@@ -246,7 +246,29 @@ export default function WelcomeScreen() {
             ]}
           >
             <Text style={styles.welcomeText}>RAPIDREPS</Text>
-            <Text style={styles.welcomeSubtext}>YOUR WORKOUT, DELIVERED 🔥</Text>
+            <View style={styles.sloganContainer}>
+              <Text style={styles.welcomeSubtext}>YOUR WORKOUT, DELIVERED</Text>
+              <Animated.Text 
+                style={[
+                  styles.rapidlyText,
+                  {
+                    opacity: rapidOpacity,
+                    transform: [
+                      { scale: rapidScale },
+                      { 
+                        rotateY: rapidRotate.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['0deg', '360deg']
+                        })
+                      }
+                    ]
+                  }
+                ]}
+              >
+                RAPIDLY
+              </Animated.Text>
+              <Text style={styles.welcomeSubtext}> 🔥</Text>
+            </View>
           </Animated.View>
         </Animated.View>
       )}
