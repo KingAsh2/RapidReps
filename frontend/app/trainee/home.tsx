@@ -15,7 +15,7 @@ import {
   Linking,
   Animated,
 } from 'react-native';
-import { useRouter, Stack } from 'expo-router';
+import { useRouter, Stack, useRootNavigationState } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { trainerAPI, traineeAPI } from '../../src/services/api';
 import { Colors } from '../../src/utils/colors';
