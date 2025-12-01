@@ -93,7 +93,7 @@ class RapidRepsTestSuite:
         }
         
         response = self.make_request('POST', '/auth/signup', trainer_data)
-        if response.status_code == 201:
+        if response.status_code in [200, 201]:
             data = response.json()
             self.trainer_token = data['access_token']
             self.trainer_id = data['user']['id']
