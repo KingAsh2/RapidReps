@@ -45,6 +45,69 @@ export default function WelcomeScreen() {
     return () => clearTimeout(timer);
   }, []);
 
+  // RAPIDLY animation - continuous rapid flip/pop effect
+  useEffect(() => {
+    const createRapidAnimation = () => {
+      return Animated.loop(
+        Animated.sequence([
+          // Quick pop in with rotation
+          Animated.parallel([
+            Animated.timing(rapidScale, {
+              toValue: 1.3,
+              duration: 150,
+              useNativeDriver: true,
+            }),
+            Animated.timing(rapidRotate, {
+              toValue: 1,
+              duration: 150,
+              useNativeDriver: true,
+            }),
+            Animated.timing(rapidOpacity, {
+              toValue: 1,
+              duration: 100,
+              useNativeDriver: true,
+            }),
+          ]),
+          // Bounce back
+          Animated.parallel([
+            Animated.spring(rapidScale, {
+              toValue: 1,
+              friction: 5,
+              tension: 100,
+              useNativeDriver: true,
+            }),
+            Animated.timing(rapidRotate, {
+              toValue: 0,
+              duration: 100,
+              useNativeDriver: true,
+            }),
+          ]),
+          // Brief pause
+          Animated.delay(800),
+          // Flash out
+          Animated.timing(rapidOpacity, {
+            toValue: 0.6,
+            duration: 100,
+            useNativeDriver: true,
+          }),
+          // Flash back in
+          Animated.timing(rapidOpacity, {
+            toValue: 1,
+            duration: 100,
+            useNativeDriver: true,
+          }),
+          // Longer pause before repeating
+          Animated.delay(1200),
+        ])
+      );
+    };
+
+    const animation = createRapidAnimation();
+    animation.start();
+
+    return () => animation.stop();
+  }, []);
+
   // Remove automatic navigation from index - let login screen handle it
   // This prevents race conditions with multiple navigation attempts
 
