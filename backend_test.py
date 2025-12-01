@@ -94,7 +94,9 @@ class RapidRepsAPITester:
             }
             self.test_users[email] = user_info
             return user_info
-        return None
+        else:
+            print(f"  ❌ User creation failed: Status {response['status_code']}, Data: {response['data']}")
+            return None
         
     async def create_trainer_profile(self, user_info: dict, virtual_enabled: bool = True):
         """Create trainer profile"""
