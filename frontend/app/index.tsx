@@ -40,20 +40,8 @@ export default function WelcomeScreen() {
     return () => clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
-    // Add a small delay to ensure Root Layout is fully mounted
-    if (user && activeRole && isReady) {
-      const navigationTimer = setTimeout(() => {
-        if (activeRole === 'trainer') {
-          router.replace('/trainer/home');
-        } else if (activeRole === 'trainee') {
-          router.replace('/trainee/home');
-        }
-      }, 100); // Small delay to ensure proper mounting
-      
-      return () => clearTimeout(navigationTimer);
-    }
-  }, [user, activeRole, isReady, router]);
+  // Remove automatic navigation from index - let login screen handle it
+  // This prevents race conditions with multiple navigation attempts
 
   const handleVideoEnd = () => {
     setVideoEnded(true);
