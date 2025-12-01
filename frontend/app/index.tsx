@@ -41,12 +41,17 @@ export default function WelcomeScreen() {
   }, []);
 
   useEffect(() => {
+    // Add a small delay to ensure Root Layout is fully mounted
     if (user && activeRole && isReady) {
-      if (activeRole === 'trainer') {
-        router.replace('/trainer/home');
-      } else if (activeRole === 'trainee') {
-        router.replace('/trainee/home');
-      }
+      const navigationTimer = setTimeout(() => {
+        if (activeRole === 'trainer') {
+          router.replace('/trainer/home');
+        } else if (activeRole === 'trainee') {
+          router.replace('/trainee/home');
+        }
+      }, 100); // Small delay to ensure proper mounting
+      
+      return () => clearTimeout(navigationTimer);
     }
   }, [user, activeRole, isReady, router]);
 
