@@ -290,7 +290,7 @@ frontend:
     implemented: true
     working: false
     file: "app/trainee/home.tsx, src/components/TrainingModeDialog.tsx"
-    stuck_count: 1
+    stuck_count: 2
     priority: "high"
     needs_retesting: false
     status_history:
@@ -300,6 +300,9 @@ frontend:
         - working: false
           agent: "testing"
           comment: "CRITICAL ISSUE: Authentication works (login successful, URL changes to /trainee/home), but home screen shows orange background with no content (0 text length, 0 buttons). React components not rendering properly on home screen. FAB button and other UI elements not visible. Console shows app is running but components fail to render."
+        - working: false
+          agent: "testing"
+          comment: "QUICK VERIFICATION TEST #2 COMPLETED - ISSUE IDENTIFIED AND PARTIALLY FIXED. ✅ ROOT CAUSE FOUND: React Router error 'Attempted to navigate before mounting the Root Layout component'. This prevents all React components from rendering on /trainee/home. ✅ PARTIAL FIX APPLIED: Removed duplicate navigation logic from index.tsx and increased login navigation delay to 2500ms. However, the React navigation error persists, indicating a deeper issue with Expo Router setup or AuthContext timing. ❌ HOME SCREEN STILL BROKEN: Orange background with no content, 0 buttons, 0 text. Authentication works (API calls successful), but React components fail to render due to navigation timing issue. RECOMMENDATION: Use websearch tool to find Expo Router navigation timing solutions."
 
   - task: "Virtual Training Flow - Confirmation Screen"
     implemented: true
@@ -365,7 +368,7 @@ frontend:
     implemented: true
     working: false
     file: "app/auth/login.tsx, app/trainee/home.tsx"
-    stuck_count: 1
+    stuck_count: 2
     priority: "high"
     needs_retesting: false
     status_history:
@@ -375,6 +378,9 @@ frontend:
         - working: false
           agent: "testing"
           comment: "PARTIAL SUCCESS: ✅ Login screen works perfectly - form renders correctly, authentication successful, URL navigation works. ❌ Home screen critical issue - after successful login and navigation to /trainee/home, screen shows only orange background with no content (0 text, 0 buttons). React components not rendering on home screen despite successful authentication."
+        - working: false
+          agent: "testing"
+          comment: "ISSUE ANALYSIS COMPLETE - Navigation Timing Problem Identified. ✅ LOGIN WORKS: Authentication successful, API calls work, tokens stored correctly. ✅ NAVIGATION WORKS: URL changes to /trainee/home successfully. ❌ REACT ROUTER ERROR: 'Attempted to navigate before mounting the Root Layout component' prevents React components from rendering. ❌ HOME SCREEN BROKEN: Shows only orange background, 0 text content, 0 buttons, 144 React elements present but not visible. ATTEMPTED FIXES: Removed duplicate navigation from index.tsx, increased login delay to 2500ms, but error persists. This suggests deeper Expo Router or AuthContext mounting issue."
 
 metadata:
   created_by: "testing_agent"
@@ -635,3 +641,5 @@ agent_communication:
       message: "🚨 CRITICAL FRONTEND ISSUE DISCOVERED - Virtual Training Flow Blocked. ✅ AUTHENTICATION WORKS: Login screen renders perfectly, credentials accepted, URL navigation successful (/auth/login → /trainee/home). ❌ HOME SCREEN CRITICAL ISSUE: After successful login, trainee home screen shows only orange background with no content (0 text length, 0 buttons). React components not rendering despite successful authentication. This blocks entire virtual training flow testing as FAB button and all UI elements are not visible. Console shows app running but components fail to render. IMPACT: Cannot test any virtual training flow features (FAB → Dialog → Confirmation → Payment → Session → Rating) due to home screen rendering failure. RECOMMENDATION: Investigate React component rendering issue on /trainee/home route."
     - agent: "testing"
       message: "🔍 QUICK VERIFICATION TEST COMPLETED - Issue Confirmed After Frontend Restart. AUTHENTICATION DIAGNOSIS: ✅ Backend API healthy and working (created new test user successfully), ✅ Login authentication successful (testuser@example.com works), ✅ URL navigation to /trainee/home successful, ✅ No 401/403 errors in console logs. HOME SCREEN RENDERING ISSUE: ❌ Still shows only orange background after restart, ❌ 0 text content rendered, ❌ 0 buttons visible, ❌ FAB button completely missing, ❌ All React components fail to render. CONSOLE ANALYSIS: No authentication errors, some React Native web warnings (useNativeDriver, deprecated props) but no critical JavaScript errors. ROOT CAUSE CONFIRMED: This is a React component rendering issue specifically on the /trainee/home route, not an authentication or backend problem. The frontend restart did not resolve the component rendering failure. IMPACT: Virtual training flow remains completely inaccessible - FAB button and TrainingModeDialog cannot be tested until home screen components render properly."
+    - agent: "testing"
+      message: "🎯 QUICK VERIFICATION TEST #2 COMPLETED - ROOT CAUSE IDENTIFIED: React Router Navigation Timing Issue. DETAILED ANALYSIS: ✅ Found exact error: 'Attempted to navigate before mounting the Root Layout component. Ensure the Root Layout component is rendering a Slot, or other navigator on the first render.' ✅ Authentication working perfectly: API calls successful, user data retrieved, tokens stored. ✅ Navigation working: URL changes to /trainee/home correctly. ❌ React components not rendering due to navigation timing race condition. ATTEMPTED FIXES: 1) Removed duplicate navigation logic from index.tsx (was competing with login.tsx navigation), 2) Increased login navigation delay from 1500ms to 2500ms, 3) Added proper cleanup timers. CURRENT STATUS: React navigation error persists despite fixes, indicating deeper Expo Router or AuthContext mounting issue. Home screen still shows orange background with 0 content. RECOMMENDATION: This is a complex Expo Router timing issue that requires websearch for advanced solutions."
