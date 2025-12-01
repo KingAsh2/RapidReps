@@ -294,7 +294,30 @@ export default function WelcomeScreen() {
             <View style={styles.brandSection}>
               <Text style={styles.brandName}>RAPIDREPS</Text>
               <Text style={styles.slogan}>YOUR WORKOUT,</Text>
-              <Text style={styles.sloganBold}>DELIVERED 🔥</Text>
+              <View style={styles.sloganRow}>
+                <Text style={styles.sloganBold}>DELIVERED </Text>
+                <Animated.Text 
+                  style={[
+                    styles.sloganBold,
+                    styles.rapidlyBold,
+                    {
+                      opacity: rapidOpacity,
+                      transform: [
+                        { scale: rapidScale },
+                        { 
+                          rotateY: rapidRotate.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: ['0deg', '360deg']
+                          })
+                        }
+                      ]
+                    }
+                  ]}
+                >
+                  RAPIDLY
+                </Animated.Text>
+                <Text style={styles.sloganBold}> 🔥</Text>
+              </View>
             </View>
 
             {/* FEATURES */}
