@@ -229,7 +229,7 @@ class RapidRepsAPITester:
         # Create Trainee A
         trainee_a = await self.create_test_user(
             "Alex Thompson", 
-            "alex.trainee.a@rapidreps.test", 
+            "alex.trainee.a@example.com", 
             "+1234567890", 
             "testpass123", 
             ["trainee"]
