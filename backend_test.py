@@ -302,7 +302,7 @@ class RapidRepsAPITester:
         # Create Virtual Trainer 2
         trainer_2 = await self.create_test_user(
             "Mike Rodriguez", 
-            "mike.trainer.2@example.com", 
+            f"mike.trainer.2.{self.timestamp}@example.com", 
             "+1234567893", 
             "testpass123", 
             ["trainer"]
