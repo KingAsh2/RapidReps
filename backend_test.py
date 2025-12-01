@@ -425,7 +425,7 @@ class RapidRepsAPITester:
         print("\n🔄 Step 5: Testing session lifecycle...")
         
         trainee_a_email = f"alex.trainee.a.{self.timestamp}@example.com"
-        trainer_1_email = "f"sarah.trainer.1.{self.timestamp}@example.com""
+        trainer_1_email = f"sarah.trainer.1.{self.timestamp}@example.com"
         
         # Request a session
         session_1 = await self.request_virtual_session(
@@ -466,7 +466,7 @@ class RapidRepsAPITester:
         print("\n🔄 Step 6: Testing trainer availability edge cases...")
         
         trainee_a_email = f"alex.trainee.a.{self.timestamp}@example.com"
-        trainer_1_email = "f"sarah.trainer.1.{self.timestamp}@example.com""
+        trainer_1_email = f"sarah.trainer.1.{self.timestamp}@example.com"
         trainer_2_email = "f"mike.trainer.2.{self.timestamp}@example.com""
         
         # Toggle all trainers to unavailable
