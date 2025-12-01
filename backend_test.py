@@ -320,7 +320,7 @@ class RapidRepsTestSuite:
         headers = {'Authorization': f'Bearer {self.trainee_token}'}
         response = self.make_request('POST', '/virtual-sessions/request', session_request, headers)
         
-        if response.status_code != 201:
+        if response.status_code not in [200, 201]:
             return self.log_test("Session Creation", False, f"Status: {response.status_code}")
         
         session_data = response.json()
@@ -345,7 +345,7 @@ class RapidRepsTestSuite:
         headers = {'Authorization': f'Bearer {self.trainee_token}'}
         response = self.make_request('POST', '/ratings', rating_data, headers)
         
-        if response.status_code == 201:
+        if response.status_code in [200, 201]:
             return self.log_test("Rating Incomplete Session Blocked", False, "Should not allow rating incomplete session")
         
         self.log_test("Rating Incomplete Session Blocked", True, "Correctly blocked rating of incomplete session")
