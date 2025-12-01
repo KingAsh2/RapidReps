@@ -227,10 +227,14 @@ class RapidRepsAPITester:
         """Step 1: Create 2 new test trainees (Trainee A and Trainee B)"""
         print("\n🔄 Step 1: Creating test trainees...")
         
+        # Use timestamp to ensure unique emails
+        import time
+        timestamp = str(int(time.time()))
+        
         # Create Trainee A
         trainee_a = await self.create_test_user(
             "Alex Thompson", 
-            "alex.trainee.a@example.com", 
+            f"alex.trainee.a.{timestamp}@example.com", 
             "+1234567890", 
             "testpass123", 
             ["trainee"]
