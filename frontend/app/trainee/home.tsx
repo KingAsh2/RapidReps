@@ -406,7 +406,15 @@ export default function TraineeHomeScreen() {
               trainers.map((trainer) => (
                 <View key={trainer.id} style={styles.trainerCard}>
                   <View style={styles.trainerAvatar}>
-                    <Ionicons name="person" size={32} color={Colors.primary} />
+                    {trainer.avatarUrl ? (
+                      <Image
+                        source={{ uri: trainer.avatarUrl }}
+                        style={styles.trainerAvatarImage}
+                        defaultSource={require('../../assets/rapidreps-logo.png')}
+                      />
+                    ) : (
+                      <Ionicons name="person" size={32} color={Colors.primary} />
+                    )}
                   </View>
                   
                   <View style={styles.trainerInfo}>
