@@ -81,7 +81,11 @@ class RapidRepsTestSuite:
             self.trainee_id = data['user']['id']
             self.log_test("Trainee User Creation", True, f"ID: {self.trainee_id}")
         else:
-            return self.log_test("Trainee User Creation", False, f"Status: {response.status_code}")
+            try:
+                error_data = response.json()
+                return self.log_test("Trainee User Creation", False, f"Status: {response.status_code}, Error: {error_data}")
+            except:
+                return self.log_test("Trainee User Creation", False, f"Status: {response.status_code}, Response: {response.text}")
         
         # Create test trainer
         trainer_data = {
