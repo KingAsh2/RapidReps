@@ -484,13 +484,20 @@ class RapidRepsAPITester:
         
         # Check if it failed gracefully
         if (failed_session and 
-            hasattr(failed_session, 'get') and 
+            isinstance(failed_session, dict) and 
             failed_session.get('status_code') == 404):
             self.log_result("Trainer Availability - Graceful Failure", True, 
                           "Properly handled no trainers available scenario")
         else:
-            self.log_result("Trainer Availability - Graceful Failure", False, 
-                          f"Did not handle no trainers scenario properly: {type(failed_session)}")
+            # Debug what we actually got
+            if failed_session:
+                status = failed_session.get('status_code', 'unknown') if isinstance(failed_session, dict) else 'not dict'
+                data = failed_session.get('data', {}) if isinstance(failed_session, dict) else {}
+                self.log_result("Trainer Availability - Graceful Failure", False, 
+                              f"Expected 404 error, got status {status}: {data}")
+            else:
+                self.log_result("Trainer Availability - Graceful Failure", False, 
+                              "No response received when no trainers available")
             
         # Toggle trainers back to available
         available_1 = await self.toggle_trainer_availability(trainer_1_email, True)
