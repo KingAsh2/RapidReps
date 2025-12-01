@@ -326,8 +326,8 @@ class RapidRepsAPITester:
         """Step 3: Concurrent Sessions Test"""
         print("\n🔄 Step 3: Testing concurrent virtual session requests...")
         
-        trainee_a_email = "alex.trainee.a@example.com"
-        trainee_b_email = "blake.trainee.b@example.com"
+        trainee_a_email = f"alex.trainee.a.{self.timestamp}@example.com"
+        trainee_b_email = f"blake.trainee.b.{self.timestamp}@example.com"
         
         # Request virtual sessions concurrently
         start_time = time.time()
