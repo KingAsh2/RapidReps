@@ -467,7 +467,7 @@ class RapidRepsAPITester:
         
         trainee_a_email = f"alex.trainee.a.{self.timestamp}@example.com"
         trainer_1_email = f"sarah.trainer.1.{self.timestamp}@example.com"
-        trainer_2_email = "f"mike.trainer.2.{self.timestamp}@example.com""
+        trainer_2_email = f"mike.trainer.2.{self.timestamp}@example.com"
         
         # Toggle all trainers to unavailable
         unavailable_1 = await self.toggle_trainer_availability(trainer_1_email, False)
