@@ -61,9 +61,10 @@ class RapidRepsAPITester:
                 params=params
             ) as response:
                 response_text = await response.text()
-                print(f"  🔍 {method} {endpoint} -> Status: {response.status}")
-                print(f"  📤 Request data: {data}")
-                print(f"  📥 Response: {response_text[:200]}...")
+                # Debug logging (commented out for cleaner output)
+                # print(f"  🔍 {method} {endpoint} -> Status: {response.status}")
+                # print(f"  📤 Request data: {data}")
+                # print(f"  📥 Response: {response_text[:200]}...")
                 
                 try:
                     response_data = json.loads(response_text)
