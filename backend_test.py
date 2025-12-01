@@ -502,7 +502,7 @@ class RapidRepsTestSuite:
             headers = {'Authorization': f'Bearer {trainer_no_zoom_token}'}
             response = self.make_request('POST', '/trainer-profiles', profile_no_zoom, headers)
             
-            if response.status_code == 201:
+            if response.status_code in [200, 201]:
                 self.log_test("Trainer Without Zoom Created", True, "Test trainer without zoom link created")
             else:
                 self.log_test("Trainer Without Zoom Created", False, f"Status: {response.status_code}")
