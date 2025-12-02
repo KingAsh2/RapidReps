@@ -151,6 +151,34 @@ export default function WelcomeScreen() {
   // Remove automatic navigation from index - let login screen handle it
   // This prevents race conditions with multiple navigation attempts
 
+  const handleLockInPressIn = () => {
+    setIsHoldingLockIn(true);
+    Animated.timing(lockInProgress, {
+      toValue: 1,
+      duration: 1500, // 1.5 seconds hold
+      useNativeDriver: false,
+    }).start(({ finished }) => {
+      if (finished) {
+        handleLockInComplete();
+      }
+    });
+  };
+
+  const handleLockInPressOut = () => {
+    setIsHoldingLockIn(false);
+    Animated.timing(lockInProgress, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+  };
+
+  const handleLockInComplete = () => {
+    setIsHoldingLockIn(false);
+    lockInProgress.setValue(0);
+    router.push('/auth/signup');
+  };
+
   const handleVideoEnd = () => {
     setVideoEnded(true);
     setShowTransition(true);
