@@ -41,6 +41,10 @@ export default function WelcomeScreen() {
   const flameScale = useRef(new Animated.Value(1)).current;
   const flameRotate = useRef(new Animated.Value(0)).current;
 
+  // Lock-In button long-press animation
+  const [isHoldingLockIn, setIsHoldingLockIn] = useState(false);
+  const lockInProgress = useRef(new Animated.Value(0)).current;
+
   useEffect(() => {
     const timer = setTimeout(() => setIsReady(true), 100);
     return () => clearTimeout(timer);
