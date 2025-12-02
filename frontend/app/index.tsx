@@ -333,18 +333,17 @@ export default function WelcomeScreen() {
           
           {/* MAIN CONTENT */}
           <View style={styles.content}>
-            {/* LOGO SECTION */}
+            {/* LOGO SECTION - LARGER */}
             <View style={styles.logoContainer}>
               <Image
                 source={require('../assets/rapidreps-logo.png')}
-                style={styles.logo}
+                style={styles.logoLarge}
                 resizeMode="contain"
               />
             </View>
 
             {/* BRAND TEXT */}
             <View style={styles.brandSection}>
-              <Text style={styles.brandName}>RAPIDREPS</Text>
               <Text style={styles.slogan}>YOUR WORKOUT,</Text>
               <Animated.View 
                 style={[
