@@ -395,13 +395,36 @@ export default function WelcomeScreen() {
 
             {/* CTA BUTTONS */}
             <View style={styles.ctaContainer}>
-              <AthleticButton
-                title="GET STARTED"
-                onPress={() => router.push('/auth/signup')}
-                variant="primary"
-                size="large"
-                icon="fitness"
-              />
+              {/* Lock-In Button with Long Press */}
+              <Pressable
+                onPressIn={handleLockInPressIn}
+                onPressOut={handleLockInPressOut}
+                style={styles.lockInButton}
+              >
+                <LinearGradient
+                  colors={[_srcUtilsColors.Colors.secondary, _srcUtilsColors.Colors.primary]}
+                  style={styles.lockInGradient}
+                >
+                  {/* Progress Bar Background */}
+                  <Animated.View
+                    style={[
+                      styles.lockInProgressBar,
+                      {
+                        width: lockInProgress.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['0%', '100%'],
+                        }),
+                      },
+                    ]}
+                  />
+                  
+                  {/* Button Content */}
+                  <View style={styles.lockInContent}>
+                    <Ionicons name="barbell" size={28} color={_srcUtilsColors.Colors.white} />
+                    <Text style={styles.lockInText}>LOCK-IN 💪</Text>
+                  </View>
+                </LinearGradient>
+              </Pressable>
 
               <TouchableOpacity
                 onPress={() => router.push('/auth/login')}
