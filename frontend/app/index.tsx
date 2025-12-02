@@ -568,8 +568,8 @@ const styles = StyleSheet.create({
     height: 140,
   },
   logoLarge: {
-    width: 240,
-    height: 240,
+    width: 312,
+    height: 312,
   },
   brandSection: {
     alignItems: 'center',
