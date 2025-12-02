@@ -1,53 +1,155 @@
 #!/usr/bin/env python3
 """
-FINAL VERIFICATION TEST - Complete Virtual Training Flow
-RapidReps Backend API End-to-End Testing
-
-Test Sequence:
-1. Create new test trainee
-2. Request virtual session (with trainers available) → Should succeed
-3. Verify session created with correct pricing ($18/30min)
-4. Complete the session
-5. Create rating (5 stars)
-6. Verify rating updated trainer average
-7. ERROR CASE: Disable all trainers
-8. Request virtual session (no trainers available) → Should return 404 error
-9. Verify error response has correct structure: {"detail": "error message"}
-10. Re-enable all trainers
+Comprehensive Backend Testing for RapidReps App
+Tests all backend functionality end-to-end with real data flow.
 """
 
 import requests
 import json
 import time
 from datetime import datetime, timedelta
-from typing import Dict, Any, List
+from typing import Dict, List, Optional
 import uuid
 
 # Configuration
-BACKEND_URL = "https://trainer-connect-24.preview.emergentagent.com/api"
-TEST_PREFIX = f"final_verification_{int(time.time())}_"
+BASE_URL = "https://trainer-connect-24.preview.emergentagent.com/api"
+HEADERS = {"Content-Type": "application/json"}
 
-class RapidRepsTestSuite:
+class RapidRepsBackendTester:
     def __init__(self):
-        self.session = requests.Session()
-        self.trainee_token = None
-        self.trainer_token = None
-        self.trainee_id = None
-        self.trainer_id = None
-        self.test_sessions = []
-        self.test_results = []
+        self.base_url = BASE_URL
+        self.headers = HEADERS.copy()
+        self.test_data = {}
+        self.tokens = {}
+        self.results = []
         
-    def log_test(self, test_name: str, passed: bool, details: str = ""):
+    def log_result(self, phase: str, test_name: str, success: bool, details: str = ""):
         """Log test result"""
-        status = "✅ PASS" if passed else "❌ FAIL"
-        result = f"{status} - {test_name}"
-        if details:
-            result += f": {details}"
-        print(result)
-        self.test_results.append({
-            'test': test_name,
-            'passed': passed,
-            'details': details
+        result = {
+            "phase": phase,
+            "test": test_name,
+            "success": success,
+            "details": details,
+            "timestamp": datetime.now().isoformat()
+        }
+        self.results.append(result)
+        status = "✅ PASS" if success else "❌ FAIL"
+        print(f"{status} | {phase} | {test_name}")
+        if details and not success:
+            print(f"    Details: {details}")
+    
+    def make_request(self, method: str, endpoint: str, data: dict = None, auth_token: str = None) -> tuple:
+        """Make HTTP request and return (success, response_data, status_code)"""
+        url = f"{self.base_url}{endpoint}"
+        headers = self.headers.copy()
+        
+        if auth_token:
+            headers["Authorization"] = f"Bearer {auth_token}"
+        
+        try:
+            if method.upper() == "GET":
+                response = requests.get(url, headers=headers, params=data)
+            elif method.upper() == "POST":
+                response = requests.post(url, headers=headers, json=data)
+            elif method.upper() == "PATCH":
+                response = requests.patch(url, headers=headers, json=data)
+            elif method.upper() == "PUT":
+                response = requests.put(url, headers=headers, json=data)
+            else:
+                return False, {"error": f"Unsupported method: {method}"}, 400
+            
+            try:
+                response_data = response.json()
+            except:
+                response_data = {"raw_response": response.text}
+            
+            return response.status_code < 400, response_data, response.status_code
+        except Exception as e:
+            return False, {"error": str(e)}, 0
+
+    # ============================================================================
+    # PHASE 1: Authentication & User Management
+    # ============================================================================
+    
+    def test_phase_1_authentication(self):
+        """Test authentication and user management"""
+        print("\n🔐 PHASE 1: Authentication & User Management")
+        
+        # Generate unique test data
+        timestamp = int(time.time())
+        trainee_email = f"trainee_{timestamp}@rapidreps.test"
+        trainer_email = f"trainer_{timestamp}@rapidreps.test"
+        
+        # Test 1: Create trainee account
+        trainee_data = {
+            "fullName": "Alex Johnson",
+            "email": trainee_email,
+            "phone": "+1-555-0101",
+            "password": "SecurePass123!",
+            "roles": ["trainee"]
+        }
+        
+        success, response, status = self.make_request("POST", "/auth/signup", trainee_data)
+        if success and "access_token" in response:
+            self.tokens["trainee"] = response["access_token"]
+            self.test_data["trainee_id"] = response["user"]["id"]
+            self.test_data["trainee_email"] = trainee_email
+            self.log_result("Phase 1", "Create Trainee Account", True, f"User ID: {response['user']['id']}")
+        else:
+            self.log_result("Phase 1", "Create Trainee Account", False, f"Status: {status}, Response: {response}")
+            return False
+        
+        # Test 2: Create trainer account
+        trainer_data = {
+            "fullName": "Sarah Martinez",
+            "email": trainer_email,
+            "phone": "+1-555-0102",
+            "password": "TrainerPass456!",
+            "roles": ["trainer"]
+        }
+        
+        success, response, status = self.make_request("POST", "/auth/signup", trainer_data)
+        if success and "access_token" in response:
+            self.tokens["trainer"] = response["access_token"]
+            self.test_data["trainer_id"] = response["user"]["id"]
+            self.test_data["trainer_email"] = trainer_email
+            self.log_result("Phase 1", "Create Trainer Account", True, f"User ID: {response['user']['id']}")
+        else:
+            self.log_result("Phase 1", "Create Trainer Account", False, f"Status: {status}, Response: {response}")
+            return False
+        
+        # Test 3: Login with trainee account
+        login_data = {"email": trainee_email, "password": "SecurePass123!"}
+        success, response, status = self.make_request("POST", "/auth/login", login_data)
+        if success and "access_token" in response:
+            self.log_result("Phase 1", "Trainee Login", True, "Login successful")
+        else:
+            self.log_result("Phase 1", "Trainee Login", False, f"Status: {status}, Response: {response}")
+        
+        # Test 4: Login with trainer account
+        login_data = {"email": trainer_email, "password": "TrainerPass456!"}
+        success, response, status = self.make_request("POST", "/auth/login", login_data)
+        if success and "access_token" in response:
+            self.log_result("Phase 1", "Trainer Login", True, "Login successful")
+        else:
+            self.log_result("Phase 1", "Trainer Login", False, f"Status: {status}, Response: {response}")
+        
+        # Test 5: JWT token validation
+        success, response, status = self.make_request("GET", "/auth/me", auth_token=self.tokens["trainee"])
+        if success and "id" in response:
+            self.log_result("Phase 1", "JWT Token Validation", True, f"User: {response['fullName']}")
+        else:
+            self.log_result("Phase 1", "JWT Token Validation", False, f"Status: {status}, Response: {response}")
+        
+        # Test 6: Invalid credentials (should fail)
+        invalid_login = {"email": trainee_email, "password": "WrongPassword"}
+        success, response, status = self.make_request("POST", "/auth/login", invalid_login)
+        if not success and status == 401:
+            self.log_result("Phase 1", "Invalid Credentials Test", True, "Correctly rejected invalid credentials")
+        else:
+            self.log_result("Phase 1", "Invalid Credentials Test", False, f"Should have failed but got: {status}")
+        
+        return True
         })
         return passed
     
