@@ -244,7 +244,7 @@ export default function WelcomeScreen() {
         </View>
       )}
 
-      {/* Transition Layer */}
+      {/* Transition Layer - Full Screen Logo Only */}
       {showTransition && (
         <Animated.View 
           style={[
@@ -257,10 +257,10 @@ export default function WelcomeScreen() {
             style={StyleSheet.absoluteFillObject}
           />
           
-          {/* Animated Logo */}
+          {/* Full Screen Animated Logo */}
           <Animated.View
             style={[
-              styles.transitionLogoContainer,
+              styles.transitionFullScreenLogo,
               {
                 opacity: logoOpacity,
                 transform: [{ scale: logoScale }],
@@ -269,58 +269,9 @@ export default function WelcomeScreen() {
           >
             <Image
               source={require('../assets/rapidreps-logo.png')}
-              style={styles.transitionLogo}
+              style={styles.transitionLogoFull}
               resizeMode="contain"
             />
-          </Animated.View>
-
-          {/* Welcome Content (fades in) */}
-          <Animated.View 
-            style={[
-              styles.transitionContent,
-              { opacity: contentOpacity }
-            ]}
-          >
-            <Text style={styles.welcomeText}>RAPIDREPS</Text>
-            <View style={styles.sloganContainer}>
-              <Text style={styles.welcomeSubtext}>YOUR WORKOUT,</Text>
-              <Animated.View 
-                style={[
-                  styles.animatedPhraseContainer,
-                  {
-                    transform: [
-                      { scale: phraseScale },
-                      { 
-                        rotate: phraseRotate.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: ['0deg', '2deg']
-                        })
-                      }
-                    ]
-                  }
-                ]}
-              >
-                <Text style={styles.animatedPhrase}>DELIVERED RAPIDLY</Text>
-                <Animated.Text 
-                  style={[
-                    styles.flameEmoji,
-                    {
-                      transform: [
-                        { scale: flameScale },
-                        { 
-                          rotate: flameRotate.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: ['0deg', '-15deg']
-                          })
-                        }
-                      ]
-                    }
-                  ]}
-                >
-                  🔥
-                </Animated.Text>
-              </Animated.View>
-            </View>
           </Animated.View>
         </Animated.View>
       )}
