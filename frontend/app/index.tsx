@@ -440,6 +440,18 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
   },
+  transitionFullScreenLogo: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+  },
+  transitionLogoFull: {
+    width: width * 0.8,
+    height: height * 0.5,
+    maxWidth: 500,
+    maxHeight: 500,
+  },
   transitionContent: {
     position: 'absolute',
     bottom: height * 0.3,
