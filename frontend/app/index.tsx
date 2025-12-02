@@ -561,11 +561,15 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 32,
   },
   logo: {
     width: 140,
     height: 140,
+  },
+  logoLarge: {
+    width: 240,
+    height: 240,
   },
   brandSection: {
     alignItems: 'center',
