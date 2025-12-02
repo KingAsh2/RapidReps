@@ -402,7 +402,7 @@ export default function WelcomeScreen() {
                 style={styles.lockInButton}
               >
                 <LinearGradient
-                  colors={[_srcUtilsColors.Colors.secondary, _srcUtilsColors.Colors.primary]}
+                  colors={[Colors.secondary, Colors.primary]}
                   style={styles.lockInGradient}
                 >
                   {/* Progress Bar Background */}
@@ -420,7 +420,7 @@ export default function WelcomeScreen() {
                   
                   {/* Button Content */}
                   <View style={styles.lockInContent}>
-                    <Ionicons name="barbell" size={28} color={_srcUtilsColors.Colors.white} />
+                    <Ionicons name="barbell" size={28} color={Colors.white} />
                     <Text style={styles.lockInText}>LOCK-IN 💪</Text>
                   </View>
                 </LinearGradient>
