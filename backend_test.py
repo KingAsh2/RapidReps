@@ -350,14 +350,6 @@ if __name__ == "__main__":
     else:
         print("\n⚠️  TESTING COMPLETED WITH ISSUES")
         print("Some tests failed - review the results above for details.")
-            except:
-                return self.log_test("Trainee User Creation", False, f"Status: {response.status_code}, Response: {response.text}")
-        
-        # Create test trainer
-        trainer_data = {
-            "fullName": f"{TEST_PREFIX}DataIntegrity Trainer",
-            "email": f"{TEST_PREFIX}trainer_data@test.com", 
-            "phone": "+1234567891",
             "password": "testpass123",
             "roles": ["trainer"]
         }
