@@ -738,12 +738,18 @@ export default function TraineeHomeScreen() {
       </Modal>
 
       {/* Trainer Filters Modal */}
-      <TrainerFilters
+      <Modal
         visible={showFilters}
-        onClose={() => setShowFilters(false)}
-        filters={filters}
-        onFiltersChange={setFilters}
-      />
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowFilters(false)}
+      >
+        <TrainerFilters
+          filters={filters}
+          onFiltersChange={setFilters}
+          onClose={() => setShowFilters(false)}
+        />
+      </Modal>
     </View>
     </>
   );
