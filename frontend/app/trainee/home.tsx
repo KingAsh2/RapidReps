@@ -450,6 +450,7 @@ export default function TraineeHomeScreen() {
           ))}
         </View>
       )}
+      
       {/* Main Content - Trainer List */}
       <ScrollView
           style={styles.scrollView}
@@ -457,6 +458,31 @@ export default function TraineeHomeScreen() {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />
           }
         >
+          {/* Virtual Upsell Banner */}
+          <TouchableOpacity 
+            onPress={() => setShowTrainingModeDialog(true)}
+            style={styles.virtualBanner}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={[Colors.secondary, Colors.primary]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.virtualBannerGradient}
+            >
+              <View style={styles.virtualBannerIcon}>
+                <Ionicons name="videocam" size={32} color={Colors.white} />
+              </View>
+              <View style={styles.virtualBannerContent}>
+                <Text style={styles.virtualBannerTitle}>Need a trainer NOW?</Text>
+                <Text style={styles.virtualBannerSubtitle}>Start a 30-minute virtual session for $18.</Text>
+              </View>
+              <View style={styles.virtualBannerArrow}>
+                <Ionicons name="arrow-forward-circle" size={40} color={Colors.white} />
+              </View>
+            </LinearGradient>
+          </TouchableOpacity>
+
           <View style={styles.trainersList}>
             <Text style={styles.sectionTitle}>Available Trainers</Text>
             
