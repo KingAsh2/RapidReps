@@ -367,12 +367,27 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
+  termsSection: {
+    marginTop: 16,
+    paddingHorizontal: 8,
+  },
+  termsText: {
+    fontSize: 12,
+    color: Colors.text,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  termsLink: {
+    color: Colors.neonBlue,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
+  },
   loginSection: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
-    marginTop: 8,
+    marginTop: 16,
   },
   loginText: {
     fontSize: 14,
