@@ -58,6 +58,16 @@ export default function TraineeHomeScreen() {
   const [showVirtualDialog, setShowVirtualDialog] = useState(false);
   const [virtualTrainers, setVirtualTrainers] = useState([]);
   const dialogAnim = new Animated.Value(0);
+  
+  // Filter & Sort States
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    minRating: 0, // 0 = no filter, 3, 4, 5 = minimum rating
+    gender: 'any', // 'any', 'male', 'female'
+    specialties: [] as string[], // Array of selected specialties
+  });
+  const [sortBy, setSortBy] = useState('distance'); // 'distance', 'rating', 'price'
+  const [showSortMenu, setShowSortMenu] = useState(false);
 
   useEffect(() => {
     if (user) {
