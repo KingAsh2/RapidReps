@@ -218,6 +218,44 @@ export default function TraineeHomeScreen() {
     router.replace('/auth/login');
   };
 
+  // Filter and Sort Logic
+  const getFilteredAndSortedTrainers = () => {
+    let filtered = [...trainers];
+
+    // Apply filters
+    if (filters.minRating > 0) {
+      filtered = filtered.filter((t) => (t.averageRating || 0) >= filters.minRating);
+    }
+
+    if (filters.gender !== 'any' && filters.gender) {
+      // Assuming trainer object has a 'gender' field
+      filtered = filtered.filter((t) => t.gender?.toLowerCase() === filters.gender);
+    }
+
+    if (filters.specialties.length > 0) {
+      filtered = filtered.filter((t) => {
+        // Assuming trainer has specializations array
+        const trainerSpecialties = t.specializations || [];
+        return filters.specialties.some((specialty) =>
+          trainerSpecialties.includes(specialty)
+        );
+      });
+    }
+
+    // Apply sorting
+    if (sortBy === 'distance') {
+      filtered.sort((a, b) => (a.distance || 999) - (b.distance || 999));
+    } else if (sortBy === 'rating') {
+      filtered.sort((a, b) => (b.averageRating || 0) - (a.averageRating || 0));
+    } else if (sortBy === 'price') {
+      filtered.sort((a, b) => (a.ratePerSession || 999) - (b.ratePerSession || 999));
+    }
+
+    return filtered;
+  };
+
+  const displayedTrainers = getFilteredAndSortedTrainers();
+
   const initiateVideoCall = async (trainer: any) => {
     // Get trainer's contact info (phone/email)
     const trainerPhone = trainer.userId; // In real app, would have phone number
