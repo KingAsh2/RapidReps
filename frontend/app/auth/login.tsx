@@ -286,6 +286,16 @@ const styles = StyleSheet.create({
     color: Colors.navy,
     marginBottom: 8,
   },
+  forgotPasswordLink: {
+    alignSelf: 'flex-end',
+    marginTop: 8,
+  },
+  forgotPasswordText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: Colors.neonBlue,
+    textDecorationLine: 'underline',
+  },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
