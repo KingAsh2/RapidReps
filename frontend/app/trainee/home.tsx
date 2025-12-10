@@ -525,14 +525,14 @@ export default function TraineeHomeScreen() {
           <View style={styles.trainersList}>
             <Text style={styles.sectionTitle}>Available Trainers</Text>
             
-            {trainers.length === 0 ? (
+            {displayedTrainers.length === 0 ? (
               <View style={styles.emptyState}>
                 <Ionicons name="fitness-outline" size={64} color={Colors.textLight} />
                 <Text style={styles.emptyStateText}>No trainers available yet</Text>
                 <Text style={styles.emptyStateSubtext}>Check back soon!</Text>
               </View>
             ) : (
-              trainers.map((trainer) => (
+              displayedTrainers.map((trainer) => (
                 <View key={trainer.id} style={styles.trainerCard}>
                   <View style={styles.trainerAvatar}>
                     {trainer.avatarUrl ? (
