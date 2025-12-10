@@ -736,6 +736,14 @@ export default function TraineeHomeScreen() {
           </Animated.View>
         </View>
       </Modal>
+
+      {/* Trainer Filters Modal */}
+      <TrainerFilters
+        visible={showFilters}
+        onClose={() => setShowFilters(false)}
+        filters={filters}
+        onFiltersChange={setFilters}
+      />
     </View>
     </>
   );
