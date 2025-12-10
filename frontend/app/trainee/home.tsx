@@ -248,7 +248,7 @@ export default function TraineeHomeScreen() {
     } else if (sortBy === 'rating') {
       filtered.sort((a, b) => (b.averageRating || 0) - (a.averageRating || 0));
     } else if (sortBy === 'price') {
-      filtered.sort((a, b) => (a.ratePerSession || 999) - (b.ratePerSession || 999));
+      filtered.sort((a, b) => (a.ratePerMinuteCents || 99999) - (b.ratePerMinuteCents || 99999));
     }
 
     return filtered;
