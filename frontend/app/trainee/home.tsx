@@ -234,10 +234,10 @@ export default function TraineeHomeScreen() {
 
     if (filters.specialties.length > 0) {
       filtered = filtered.filter((t) => {
-        // Assuming trainer has specializations array
-        const trainerSpecialties = t.specializations || [];
+        // Check if trainer has any of the selected specialties in their training styles
+        const trainerStyles = t.trainingStyles || [];
         return filters.specialties.some((specialty) =>
-          trainerSpecialties.includes(specialty)
+          trainerStyles.includes(specialty)
         );
       });
     }
