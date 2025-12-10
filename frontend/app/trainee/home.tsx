@@ -310,7 +310,7 @@ export default function TraineeHomeScreen() {
           </View>
         </LinearGradient>
 
-      {/* Search Bar */}
+      {/* Search Bar with Filter & Sort */}
       <View style={styles.searchSection}>
         <View style={styles.searchBar}>
           <Ionicons name="search" size={20} color={Colors.textLight} />
@@ -322,6 +322,59 @@ export default function TraineeHomeScreen() {
             onChangeText={setSearchQuery}
           />
         </View>
+        <View style={styles.filterSortRow}>
+          <TouchableOpacity 
+            onPress={() => setShowFilters(true)}
+            style={styles.filterButton}
+          >
+            <Ionicons name="options-outline" size={20} color={Colors.navy} />
+            <Text style={styles.filterButtonText}>Filters</Text>
+            {(filters.minRating > 0 || filters.gender !== 'any' || filters.specialties.length > 0) && (
+              <View style={styles.filterBadge}>
+                <Text style={styles.filterBadgeText}>•</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            onPress={() => setShowSortMenu(!showSortMenu)}
+            style={styles.sortButton}
+          >
+            <Ionicons name="swap-vertical" size={20} color={Colors.navy} />
+            <Text style={styles.sortButtonText}>
+              {sortBy === 'distance' ? 'Distance' : sortBy === 'rating' ? 'Rating' : 'Price'}
+            </Text>
+            <Ionicons name="chevron-down" size={16} color={Colors.navy} />
+          </TouchableOpacity>
+        </View>
+        
+        {/* Sort Menu Dropdown */}
+        {showSortMenu && (
+          <View style={styles.sortMenu}>
+            {[
+              { value: 'distance', label: 'Distance', icon: 'location' },
+              { value: 'rating', label: 'Rating', icon: 'star' },
+              { value: 'price', label: 'Price (Low to High)', icon: 'cash' },
+            ].map((option) => (
+              <TouchableOpacity
+                key={option.value}
+                onPress={() => {
+                  setSortBy(option.value);
+                  setShowSortMenu(false);
+                }}
+                style={styles.sortMenuItem}
+              >
+                <Ionicons name={option.icon as any} size={18} color={sortBy === option.value ? Colors.secondary : Colors.text} />
+                <Text style={[styles.sortMenuText, sortBy === option.value && styles.sortMenuTextActive]}>
+                  {option.label}
+                </Text>
+                {sortBy === option.value && (
+                  <Ionicons name="checkmark" size={20} color={Colors.secondary} />
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </View>
 
       {/* Location Info Banner */}
