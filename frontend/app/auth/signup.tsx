@@ -247,6 +247,20 @@ export default function SignupScreen() {
             </LinearGradient>
           </TouchableOpacity>
 
+          <View style={styles.termsSection}>
+            <Text style={styles.termsText}>
+              By continuing, you agree to the{' '}
+              <Text style={styles.termsLink} onPress={() => Alert.alert('Terms of Service', 'Terms of Service will be available soon.')}>
+                Terms of Service
+              </Text>
+              {' '}and{' '}
+              <Text style={styles.termsLink} onPress={() => Alert.alert('Privacy Policy', 'Privacy Policy will be available soon.')}>
+                Privacy Policy
+              </Text>
+              .
+            </Text>
+          </View>
+
           <View style={styles.loginSection}>
             <Text style={styles.loginText}>Already have an account?</Text>
             <TouchableOpacity onPress={() => router.push('/auth/login')}>
