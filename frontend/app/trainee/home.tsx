@@ -1288,4 +1288,48 @@ const styles = StyleSheet.create({
     color: Colors.secondary,
     fontWeight: '700',
   },
+  // Virtual Banner Styles
+  virtualBanner: {
+    marginHorizontal: 24,
+    marginBottom: 16,
+    borderRadius: 16,
+    overflow: 'hidden',
+    elevation: 8,
+    shadowColor: Colors.navy,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  virtualBannerGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 20,
+    gap: 16,
+  },
+  virtualBannerIcon: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  virtualBannerContent: {
+    flex: 1,
+  },
+  virtualBannerTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: Colors.white,
+    marginBottom: 4,
+  },
+  virtualBannerSubtitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.white,
+    opacity: 0.9,
+  },
+  virtualBannerArrow: {
+    opacity: 0.8,
+  },
 });
