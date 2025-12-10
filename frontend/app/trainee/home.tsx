@@ -27,6 +27,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import { AnimatedLogo } from '../../src/components/AnimatedLogo';
 import TrainingModeDialog from '../../src/components/TrainingModeDialog';
+import TrainerFilters from '../../src/components/TrainerFilters';
 
 const { width } = Dimensions.get('window');
 
