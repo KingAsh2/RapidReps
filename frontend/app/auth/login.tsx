@@ -22,6 +22,7 @@ import { AnimatedLogo } from '../../src/components/AnimatedLogo';
 export default function LoginScreen() {
   const router = useRouter();
   const { login, user, activeRole } = useAuth();
+  const { showAlert } = useAlert();
   const [loading, setLoading] = useState(false);
   const [loginSuccess, setLoginSuccess] = useState(false);
   const [email, setEmail] = useState('');
