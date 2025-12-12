@@ -270,6 +270,23 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.navy,
   },
+  sessionTypeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.secondary,
+    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginTop: 16,
+    gap: 8,
+  },
+  sessionTypeBadgeText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: Colors.white,
+    letterSpacing: 0.5,
+  },
   ratingCard: {
     backgroundColor: Colors.white,
     borderRadius: 20,
