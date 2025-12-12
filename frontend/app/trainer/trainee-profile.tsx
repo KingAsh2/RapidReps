@@ -143,7 +143,11 @@ export default function TraineeProfileScreen() {
     if (session?.traineePhone) {
       Linking.openURL(`tel:${session.traineePhone}`);
     } else {
-      Alert.alert('Contact Unavailable', 'Contact information will be shared after session is confirmed.');
+      showAlert({
+        title: 'Contact Unavailable',
+        message: 'Contact information will be shared after session is confirmed.',
+        type: 'info',
+      });
     }
   };
 
