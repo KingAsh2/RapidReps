@@ -276,11 +276,11 @@ export default function SignupScreen() {
           <View style={styles.termsSection}>
             <Text style={styles.termsText}>
               By continuing, you agree to the{' '}
-              <Text style={styles.termsLink} onPress={() => Alert.alert('Terms of Service', 'Terms of Service will be available soon.')}>
+              <Text style={styles.termsLink} onPress={() => showAlert({ title: 'Terms of Service', message: 'Terms of Service will be available soon.', type: 'info' })}>
                 Terms of Service
               </Text>
               {' '}and{' '}
-              <Text style={styles.termsLink} onPress={() => Alert.alert('Privacy Policy', 'Privacy Policy will be available soon.')}>
+              <Text style={styles.termsLink} onPress={() => showAlert({ title: 'Privacy Policy', message: 'Privacy Policy will be available soon.', type: 'info' })}>
                 Privacy Policy
               </Text>
               .
