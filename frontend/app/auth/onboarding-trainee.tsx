@@ -183,11 +183,20 @@ export default function TraineeOnboardingScreen() {
         locationAddress: formData.locationAddress,
       });
 
-      Alert.alert('Success! 🎉', 'Your trainee profile has been created!', [
-        { text: 'OK', onPress: () => router.replace('/trainee/home') },
-      ]);
+      showAlert({
+        title: 'Success! 🎉',
+        message: 'Your trainee profile has been created!',
+        type: 'success',
+        buttons: [
+          { text: 'OK', onPress: () => router.replace('/trainee/home') },
+        ],
+      });
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Failed to create profile');
+      showAlert({
+        title: 'Profile Creation Failed',
+        message: error.response?.data?.detail || 'Failed to create profile',
+        type: 'error',
+      });
     } finally {
       setLoading(false);
     }
