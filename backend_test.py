@@ -602,18 +602,19 @@ class RapidRepsAPITester:
         
         print("\n=== PHASE 1: Account Creation (20 accounts) ===")
         
-        # Create 10 trainer accounts
+        # Create 10 trainer accounts with unique timestamps
+        timestamp = int(time.time())
         trainer_data = [
-            ("Alex Trainer", "alex.trainer1@test.com", "trainer123", "Personal Training"),
-            ("Maria Fitness", "maria.trainer2@test.com", "trainer123", "Yoga"),
-            ("John Strength", "john.trainer3@test.com", "trainer123", "Strength Training"),
-            ("Sarah Yoga", "sarah.trainer4@test.com", "trainer123", "Yoga"),
-            ("Mike Boxing", "mike.trainer5@test.com", "trainer123", "Boxing"),
-            ("Lisa Pilates", "lisa.trainer6@test.com", "trainer123", "Pilates"),
-            ("Tom HIIT", "tom.trainer7@test.com", "trainer123", "HIIT"),
-            ("Emma Crossfit", "emma.trainer8@test.com", "trainer123", "CrossFit"),
-            ("David Sports", "david.trainer9@test.com", "trainer123", "Sports Training"),
-            ("Nicole Wellness", "nicole.trainer10@test.com", "trainer123", "Wellness")
+            ("Alex Trainer", f"alex.trainer1_{timestamp}@test.com", "trainer123", "Personal Training"),
+            ("Maria Fitness", f"maria.trainer2_{timestamp}@test.com", "trainer123", "Yoga"),
+            ("John Strength", f"john.trainer3_{timestamp}@test.com", "trainer123", "Strength Training"),
+            ("Sarah Yoga", f"sarah.trainer4_{timestamp}@test.com", "trainer123", "Yoga"),
+            ("Mike Boxing", f"mike.trainer5_{timestamp}@test.com", "trainer123", "Boxing"),
+            ("Lisa Pilates", f"lisa.trainer6_{timestamp}@test.com", "trainer123", "Pilates"),
+            ("Tom HIIT", f"tom.trainer7_{timestamp}@test.com", "trainer123", "HIIT"),
+            ("Emma Crossfit", f"emma.trainer8_{timestamp}@test.com", "trainer123", "CrossFit"),
+            ("David Sports", f"david.trainer9_{timestamp}@test.com", "trainer123", "Sports Training"),
+            ("Nicole Wellness", f"nicole.trainer10_{timestamp}@test.com", "trainer123", "Wellness")
         ]
         
         for name, email, password, specialization in trainer_data:
