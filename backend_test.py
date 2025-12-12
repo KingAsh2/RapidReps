@@ -258,8 +258,8 @@ class RapidRepsAPITester:
             
             # Test availability toggle
             toggle_success, toggle_data, toggle_status = self.make_request(
-                "PATCH", "/trainer-profiles/toggle-availability", 
-                {"isAvailable": False}, trainer["token"]
+                "PATCH", "/trainer-profiles/toggle-availability?isAvailable=false", 
+                {}, trainer["token"]
             )
             self.log_test("Trainer Availability Toggle (Offline)", 
                          toggle_success and toggle_status == 200, 
@@ -267,8 +267,8 @@ class RapidRepsAPITester:
             
             # Toggle back online
             toggle_success, toggle_data, toggle_status = self.make_request(
-                "PATCH", "/trainer-profiles/toggle-availability", 
-                {"isAvailable": True}, trainer["token"]
+                "PATCH", "/trainer-profiles/toggle-availability?isAvailable=true", 
+                {}, trainer["token"]
             )
             self.log_test("Trainer Availability Toggle (Online)", 
                          toggle_success and toggle_status == 200, 
