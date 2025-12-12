@@ -294,6 +294,32 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  demoNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 193, 7, 0.2)',
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: Colors.warning,
+    padding: 16,
+    marginBottom: 20,
+    gap: 12,
+  },
+  demoNoticeText: {
+    flex: 1,
+  },
+  demoNoticeTitle: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: Colors.white,
+    marginBottom: 4,
+  },
+  demoNoticeSubtitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.white,
+    lineHeight: 18,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
