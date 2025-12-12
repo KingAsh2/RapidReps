@@ -5,7 +5,6 @@ import {
   TextInput,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
@@ -14,9 +13,11 @@ import { Colors } from '../../src/utils/colors';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAlert } from '../../src/contexts/AlertContext';
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
+  const { showAlert } = useAlert();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
@@ -28,12 +29,20 @@ export default function ForgotPasswordScreen() {
 
   const handleResetPassword = async () => {
     if (!email) {
-      Alert.alert('Error', 'Please enter your email address');
+      showAlert({
+        title: 'Email Required',
+        message: 'Please enter your email address',
+        type: 'error',
+      });
       return;
     }
 
     if (!validateEmail(email)) {
-      Alert.alert('Error', 'Please enter a valid email address');
+      showAlert({
+        title: 'Invalid Email',
+        message: 'Please enter a valid email address',
+        type: 'error',
+      });
       return;
     }
 
