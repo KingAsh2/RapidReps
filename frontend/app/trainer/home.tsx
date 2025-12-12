@@ -637,6 +637,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   traineeInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
     flex: 1,
   },
   traineeHeader: {
