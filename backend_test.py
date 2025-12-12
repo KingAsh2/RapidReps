@@ -603,7 +603,8 @@ class RapidRepsAPITester:
         print("\n=== PHASE 1: Account Creation (20 accounts) ===")
         
         # Create 10 trainer accounts with unique timestamps
-        timestamp = int(time.time())
+        import time as time_module
+        timestamp = int(time_module.time())
         trainer_data = [
             ("Alex Trainer", f"alex.trainer1_{timestamp}@test.com", "trainer123", "Personal Training"),
             ("Maria Fitness", f"maria.trainer2_{timestamp}@test.com", "trainer123", "Yoga"),
