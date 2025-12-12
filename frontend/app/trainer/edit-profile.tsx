@@ -118,7 +118,11 @@ export default function EditTrainerProfileScreen() {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Please enable location permissions to set your location');
+        showAlert({
+          title: 'Permission Denied',
+          message: 'Please enable location permissions to set your location',
+          type: 'warning',
+        });
         return;
       }
 
@@ -145,10 +149,18 @@ export default function EditTrainerProfileScreen() {
         locationAddress: address || 'Location set',
       });
 
-      Alert.alert('Success!', 'Location updated successfully');
+      showAlert({
+        title: 'Success! 📍',
+        message: 'Location updated successfully',
+        type: 'success',
+      });
     } catch (error) {
       console.error('Error getting location:', error);
-      Alert.alert('Error', 'Failed to get your location. Please try again.');
+      showAlert({
+        title: 'Location Error',
+        message: 'Failed to get your location. Please try again.',
+        type: 'error',
+      });
     } finally {
       setGettingLocation(false);
     }
@@ -157,7 +169,11 @@ export default function EditTrainerProfileScreen() {
   const handleSave = async () => {
     if (!user) {
       console.log('Save failed: user missing', { user });
-      Alert.alert('Error', 'User not found. Please log in again.');
+      showAlert({
+        title: 'Authentication Error',
+        message: 'User not found. Please log in again.',
+        type: 'error',
+      });
       return;
     }
 
