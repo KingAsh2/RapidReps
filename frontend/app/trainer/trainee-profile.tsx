@@ -121,8 +121,8 @@ export default function TraineeProfileScreen() {
             }
           },
         },
-      ]
-    );
+      ],
+    });
   };
 
   const handleNavigate = () => {
@@ -131,7 +131,11 @@ export default function TraineeProfileScreen() {
       const url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
       Linking.openURL(url);
     } else {
-      Alert.alert('Location Not Available', 'Trainee location will be shared after payment confirmation.');
+      showAlert({
+        title: 'Location Not Available',
+        message: 'Trainee location will be shared after payment confirmation.',
+        type: 'info',
+      });
     }
   };
 
