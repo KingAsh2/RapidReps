@@ -431,4 +431,78 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: Colors.danger,
   },
+  helpLink: {
+    alignItems: 'center',
+    paddingVertical: 12,
+    marginTop: 8,
+  },
+  helpLinkText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: Colors.white,
+    textDecorationLine: 'underline',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalContent: {
+    backgroundColor: Colors.white,
+    borderRadius: 20,
+    borderWidth: 4,
+    borderColor: Colors.navy,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: Colors.navy,
+    flex: 1,
+    marginLeft: 12,
+  },
+  helpTips: {
+    gap: 20,
+    marginBottom: 24,
+  },
+  helpTip: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  helpTipContent: {
+    flex: 1,
+  },
+  helpTipTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: Colors.navy,
+    marginBottom: 4,
+  },
+  helpTipText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.text,
+    lineHeight: 20,
+  },
+  modalCloseButton: {
+    backgroundColor: Colors.secondary,
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+  },
+  modalCloseButtonText: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: Colors.white,
+  },
 });
