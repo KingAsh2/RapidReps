@@ -8,7 +8,6 @@ import {
   TextInput,
   ActivityIndicator,
   RefreshControl,
-  Alert,
   Dimensions,
   Platform,
   Modal,
@@ -18,6 +17,7 @@ import {
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
+import { useAlert } from '../../src/contexts/AlertContext';
 import { trainerAPI, traineeAPI } from '../../src/services/api';
 import { Colors } from '../../src/utils/colors';
 import { TrainerProfile } from '../../src/types';
@@ -47,6 +47,7 @@ const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: numbe
 export default function TraineeHomeScreen() {
   const router = useRouter();
   const { user, logout } = useAuth();
+  const { showAlert } = useAlert();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [trainers, setTrainers] = useState([]);
