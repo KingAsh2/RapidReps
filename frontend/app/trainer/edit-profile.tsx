@@ -219,10 +219,11 @@ export default function EditTrainerProfileScreen() {
 
       console.log('Profile updated successfully!');
       setSaving(false);
-      Alert.alert(
-        'Success! 🎉', 
-        'Your profile has been updated successfully!',
-        [
+      showAlert({
+        title: 'Success! 🎉',
+        message: 'Your profile has been updated successfully!',
+        type: 'success',
+        buttons: [
           {
             text: 'OK',
             onPress: () => {
