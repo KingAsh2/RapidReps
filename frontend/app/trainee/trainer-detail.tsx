@@ -128,11 +128,20 @@ export default function TrainerDetailScreen() {
         locationNameOrAddress: trainer.primaryGym || 'Virtual',
       });
 
-      Alert.alert('Success!', 'Session booking requested! The trainer will review your request.', [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
+      showAlert({
+        title: 'Success! 🎉',
+        message: 'Session booking requested! The trainer will review your request.',
+        type: 'success',
+        buttons: [
+          { text: 'OK', onPress: () => router.back() },
+        ],
+      });
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Failed to book session');
+      showAlert({
+        title: 'Booking Failed',
+        message: error.response?.data?.detail || 'Failed to book session',
+        type: 'error',
+      });
     } finally {
       setBooking(false);
     }
