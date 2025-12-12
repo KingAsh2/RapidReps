@@ -61,19 +61,28 @@ export default function SessionActiveScreen() {
       if (canOpen) {
         await Linking.openURL(zoomLink);
       } else {
-        Alert.alert('Invalid Link', 'Unable to open Zoom link. Please contact support.');
+        showAlert({
+          title: 'Invalid Link',
+          message: 'Unable to open Zoom link. Please contact support.',
+          type: 'error',
+        });
       }
     } catch (error) {
       console.error('Error opening Zoom link:', error);
-      Alert.alert('Error', 'Unable to join Zoom meeting. Please try again.');
+      showAlert({
+        title: 'Connection Error',
+        message: 'Unable to join Zoom meeting. Please try again.',
+        type: 'error',
+      });
     }
   };
 
   const handleEndSession = () => {
-    Alert.alert(
-      'End Session?',
-      'Are you sure you want to end this session early?',
-      [
+    showAlert({
+      title: 'End Session?',
+      message: 'Are you sure you want to end this session early?',
+      type: 'warning',
+      buttons: [
         {
           text: 'Cancel',
           style: 'cancel',
@@ -83,8 +92,8 @@ export default function SessionActiveScreen() {
           style: 'destructive',
           onPress: handleSessionEnd,
         },
-      ]
-    );
+      ],
+    });
   };
 
   const handleSessionEnd = async () => {
