@@ -117,10 +117,12 @@ export default function SessionCompleteScreen() {
               <Ionicons name="time-outline" size={20} color={Colors.navy} />
               <Text style={styles.summaryText}>Duration: {durationMinutes} minutes</Text>
             </View>
-            <View style={styles.summaryRow}>
-              <Ionicons name="videocam-outline" size={20} color={Colors.navy} />
-              <Text style={styles.summaryText}>Type: Virtual Training</Text>
-            </View>
+          </View>
+
+          {/* Session Type Badge */}
+          <View style={styles.sessionTypeBadge}>
+            <Ionicons name="videocam" size={18} color={Colors.white} />
+            <Text style={styles.sessionTypeBadgeText}>Virtual Training</Text>
           </View>
         </View>
 
