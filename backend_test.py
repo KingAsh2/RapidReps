@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
 # Configuration
-BASE_URL = "https://trainer-connect-24.preview.emergentagent.com/api"
+BASE_URL = "https://workout-match-5.preview.emergentagent.com/api"
 HEADERS = {"Content-Type": "application/json"}
 
 class RapidRepsAPITester:

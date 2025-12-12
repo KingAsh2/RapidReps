@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 import uuid
 
 # Configuration
-BACKEND_URL = "https://trainer-connect-24.preview.emergentagent.com/api"
+BACKEND_URL = "https://workout-match-5.preview.emergentagent.com/api"
 TEST_PREFIX = f"error_test_{int(time.time())}_"
 
 def make_request(method, endpoint, data=None, headers=None, expect_error=False):
