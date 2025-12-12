@@ -620,18 +620,20 @@ class RapidRepsAPITester:
             self.create_trainer_account(name, email, password, specialization)
             time.sleep(0.1)  # Small delay to avoid rate limiting
         
-        # Create 10 trainee accounts
+        # Create 10 trainee accounts with unique timestamps
+        import time
+        timestamp = int(time.time())
         trainee_data = [
-            ("Test User 1", "trainee1@test.com", "trainee123"),
-            ("Test User 2", "trainee2@test.com", "trainee123"),
-            ("Test User 3", "trainee3@test.com", "trainee123"),
-            ("Test User 4", "trainee4@test.com", "trainee123"),
-            ("Test User 5", "trainee5@test.com", "trainee123"),
-            ("Test User 6", "trainee6@test.com", "trainee123"),
-            ("Test User 7", "trainee7@test.com", "trainee123"),
-            ("Test User 8", "trainee8@test.com", "trainee123"),
-            ("Test User 9", "trainee9@test.com", "trainee123"),
-            ("Test User 10", "trainee10@test.com", "trainee123")
+            ("Test User 1", f"trainee1_{timestamp}@test.com", "trainee123"),
+            ("Test User 2", f"trainee2_{timestamp}@test.com", "trainee123"),
+            ("Test User 3", f"trainee3_{timestamp}@test.com", "trainee123"),
+            ("Test User 4", f"trainee4_{timestamp}@test.com", "trainee123"),
+            ("Test User 5", f"trainee5_{timestamp}@test.com", "trainee123"),
+            ("Test User 6", f"trainee6_{timestamp}@test.com", "trainee123"),
+            ("Test User 7", f"trainee7_{timestamp}@test.com", "trainee123"),
+            ("Test User 8", f"trainee8_{timestamp}@test.com", "trainee123"),
+            ("Test User 9", f"trainee9_{timestamp}@test.com", "trainee123"),
+            ("Test User 10", f"trainee10_{timestamp}@test.com", "trainee123")
         ]
         
         for name, email, password in trainee_data:
