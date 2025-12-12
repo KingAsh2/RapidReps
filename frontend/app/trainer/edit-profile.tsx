@@ -232,12 +232,16 @@ export default function EditTrainerProfileScreen() {
               router.back();
             }
           }
-        ]
-      );
+        ],
+      });
     } catch (error) {
       console.error('Save error:', error);
       setSaving(false);
-      Alert.alert('Error', error.response?.data?.detail || error.message || 'Failed to update profile');
+      showAlert({
+        title: 'Update Failed',
+        message: error.response?.data?.detail || error.message || 'Failed to update profile',
+        type: 'error',
+      });
     }
   };
 
