@@ -205,6 +205,70 @@ export default function SessionActiveScreen() {
           </View>
         </Pressable>
       </View>
+
+      {/* Help Modal */}
+      <Modal
+        visible={showHelpModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowHelpModal(false)}
+      >
+        <Pressable 
+          style={styles.modalOverlay}
+          onPress={() => setShowHelpModal(false)}
+        >
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Ionicons name="help-circle" size={32} color={Colors.secondary} />
+              <Text style={styles.modalTitle}>Having Trouble?</Text>
+              <TouchableOpacity onPress={() => setShowHelpModal(false)}>
+                <Ionicons name="close-circle" size={32} color={Colors.navy} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.helpTips}>
+              <View style={styles.helpTip}>
+                <Ionicons name="wifi" size={24} color={Colors.primary} />
+                <View style={styles.helpTipContent}>
+                  <Text style={styles.helpTipTitle}>Check your internet connection</Text>
+                  <Text style={styles.helpTipText}>Make sure you have a stable WiFi or cellular connection</Text>
+                </View>
+              </View>
+
+              <View style={styles.helpTip}>
+                <Ionicons name="logo-zoom" size={24} color={Colors.primary} />
+                <View style={styles.helpTipContent}>
+                  <Text style={styles.helpTipTitle}>Make sure Zoom is installed</Text>
+                  <Text style={styles.helpTipText}>Download Zoom from the App Store or Google Play</Text>
+                </View>
+              </View>
+
+              <View style={styles.helpTip}>
+                <Ionicons name="refresh" size={24} color={Colors.primary} />
+                <View style={styles.helpTipContent}>
+                  <Text style={styles.helpTipTitle}>Try refreshing</Text>
+                  <Text style={styles.helpTipText}>Close and reopen the app, then try joining again</Text>
+                </View>
+              </View>
+
+              <View style={styles.helpTip}>
+                <Ionicons name="call" size={24} color={Colors.primary} />
+                <View style={styles.helpTipContent}>
+                  <Text style={styles.helpTipTitle}>Contact support</Text>
+                  <Text style={styles.helpTipText}>If problems persist, reach out to our support team</Text>
+                </View>
+              </View>
+            </View>
+
+            <TouchableOpacity 
+              onPress={() => setShowHelpModal(false)}
+              style={styles.modalCloseButton}
+            >
+              <Text style={styles.modalCloseButtonText}>Got It</Text>
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
