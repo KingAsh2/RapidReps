@@ -41,10 +41,11 @@ export default function TraineeProfileScreen() {
   }, [sessionDetails]);
 
   const handleAccept = async () => {
-    Alert.alert(
-      'Accept Session Request',
-      'Are you sure you want to accept this session?',
-      [
+    showAlert({
+      title: 'Accept Session Request',
+      message: 'Are you sure you want to accept this session?',
+      type: 'info',
+      buttons: [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Accept',
@@ -54,33 +55,39 @@ export default function TraineeProfileScreen() {
               await trainerAPI.acceptSession(sessionId);
               
               // Show success with payment notification
-              Alert.alert(
-                'Session Accepted! 🎉',
-                'The trainee has been notified and will process payment. You\'ll receive location details once confirmed.',
-                [
+              showAlert({
+                title: 'Session Accepted! 🎉',
+                message: 'The trainee has been notified and will process payment. You\'ll receive location details once confirmed.',
+                type: 'success',
+                buttons: [
                   {
                     text: 'OK',
                     onPress: () => router.back(),
                   },
-                ]
-              );
+                ],
+              });
             } catch (error: any) {
               console.error('Error accepting session:', error);
-              Alert.alert('Error', 'Failed to accept session. Please try again.');
+              showAlert({
+                title: 'Accept Failed',
+                message: 'Failed to accept session. Please try again.',
+                type: 'error',
+              });
             } finally {
               setLoading(false);
             }
           },
         },
-      ]
-    );
+      ],
+    });
   };
 
   const handleDeny = async () => {
-    Alert.alert(
-      'Decline Session Request',
-      'Are you sure you want to decline this session? The trainee will be notified.',
-      [
+    showAlert({
+      title: 'Decline Session Request',
+      message: 'Are you sure you want to decline this session? The trainee will be notified.',
+      type: 'warning',
+      buttons: [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Decline',
@@ -91,19 +98,24 @@ export default function TraineeProfileScreen() {
               // Mock API call - in real app would update session status
               await new Promise(resolve => setTimeout(resolve, 1000));
               
-              Alert.alert(
-                'Session Declined',
-                'The trainee has been notified that you are unavailable.',
-                [
+              showAlert({
+                title: 'Session Declined',
+                message: 'The trainee has been notified that you are unavailable.',
+                type: 'info',
+                buttons: [
                   {
                     text: 'OK',
                     onPress: () => router.back(),
                   },
-                ]
-              );
+                ],
+              });
             } catch (error) {
               console.error('Error declining session:', error);
-              Alert.alert('Error', 'Failed to decline session. Please try again.');
+              showAlert({
+                title: 'Decline Failed',
+                message: 'Failed to decline session. Please try again.',
+                type: 'error',
+              });
             } finally {
               setLoading(false);
             }
