@@ -172,6 +172,17 @@ export default function PaymentScreen() {
 
       {/* Content */}
       <View style={styles.content}>
+        {/* Demo Mode Notice */}
+        <View style={styles.demoNotice}>
+          <Ionicons name="information-circle" size={24} color={Colors.warning} />
+          <View style={styles.demoNoticeText}>
+            <Text style={styles.demoNoticeTitle}>Demo Mode</Text>
+            <Text style={styles.demoNoticeSubtitle}>
+              This is a test payment screen. No real charges will be made.
+            </Text>
+          </View>
+        </View>
+
         {/* Amount Card */}
         <View style={styles.amountCard}>
           <Text style={styles.amountLabel}>Total Amount</Text>
