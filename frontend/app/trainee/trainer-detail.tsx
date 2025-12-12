@@ -50,7 +50,11 @@ export default function TrainerDetailScreen() {
       setRatings(ratingsData);
     } catch (error) {
       console.error('Error loading trainer:', error);
-      Alert.alert('Error', 'Failed to load trainer details');
+      showAlert({
+        title: 'Loading Failed',
+        message: 'Failed to load trainer details',
+        type: 'error',
+      });
     } finally {
       setLoading(false);
     }
