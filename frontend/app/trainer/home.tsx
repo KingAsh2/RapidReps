@@ -278,18 +278,45 @@ export default function TrainerHomeScreen() {
             </View>
           ) : (
             pendingSessions.map((session) => (
-              <View key={session.id} style={styles.sessionCard}>
+              <TouchableOpacity 
+                key={session.id} 
+                style={styles.sessionCard}
+                onPress={() => router.push({
+                  pathname: '/trainer/trainee-profile',
+                  params: {
+                    sessionId: session.id,
+                    traineeId: session.traineeId,
+                    traineeName: session.traineeName || 'Trainee',
+                    traineePhoto: session.traineePhoto || '',
+                    sessionDetails: JSON.stringify(session),
+                  }
+                })}
+                activeOpacity={0.7}
+              >
                 <View style={styles.sessionHeader}>
-                  <View>
-                    <Text style={styles.sessionDate}>
-                      {new Date(session.sessionDateTimeStart).toLocaleDateString()}
-                    </Text>
-                    <Text style={styles.sessionTime}>
-                      {new Date(session.sessionDateTimeStart).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </Text>
+                  <View style={styles.traineeInfo}>
+                    {session.traineePhoto ? (
+                      <Image 
+                        source={{ uri: session.traineePhoto }} 
+                        style={styles.traineeAvatar}
+                      />
+                    ) : (
+                      <View style={styles.traineeAvatarPlaceholder}>
+                        <Ionicons name="person" size={20} color={Colors.textLight} />
+                      </View>
+                    )}
+                    <View>
+                      <Text style={styles.traineeName}>
+                        {session.traineeName || 'Trainee'}
+                      </Text>
+                      <Text style={styles.sessionDate}>
+                        {new Date(session.sessionDateTimeStart).toLocaleDateString()} at{' '}
+                        {new Date(session.sessionDateTimeStart).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </Text>
+                    </View>
                   </View>
                   <View style={styles.statusBadge}>
                     <Text style={styles.statusText}>Pending</Text>
@@ -317,21 +344,32 @@ export default function TrainerHomeScreen() {
                   </View>
                 </View>
 
+                <View style={styles.tapHint}>
+                  <Ionicons name="eye-outline" size={16} color={Colors.secondary} />
+                  <Text style={styles.tapHintText}>Tap to view trainee profile</Text>
+                </View>
+
                 <View style={styles.actionButtons}>
                   <TouchableOpacity
                     style={styles.acceptButton}
-                    onPress={() => handleAccept(session.id)}
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      handleAccept(session.id);
+                    }}
                   >
                     <Text style={styles.acceptButtonText}>Accept</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.declineButton}
-                    onPress={() => handleDecline(session.id)}
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      handleDecline(session.id);
+                    }}
                   >
                     <Text style={styles.declineButtonText}>Decline</Text>
                   </TouchableOpacity>
                 </View>
-              </View>
+              </TouchableOpacity>
             ))
           )}
         </View>
