@@ -270,22 +270,28 @@ export default function TraineeHomeScreen() {
         await Linking.openURL(facetimeUrl);
       } else {
         // Fallback to regular phone call
-        Alert.alert('FaceTime Not Available', 'Would you like to call the trainer instead?', [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Call', onPress: () => Linking.openURL(`tel:${trainerPhone}`) },
-        ]);
+        showAlert({
+          title: 'FaceTime Not Available',
+          message: 'Would you like to call the trainer instead?',
+          type: 'info',
+          buttons: [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Call', onPress: () => Linking.openURL(`tel:${trainerPhone}`) },
+          ],
+        });
       }
     } else if (Platform.OS === 'android') {
       // On Android, use Google Meet or Duo
-      Alert.alert(
-        'Start Video Call',
-        'How would you like to connect with your trainer?',
-        [
+      showAlert({
+        title: 'Start Video Call',
+        message: 'How would you like to connect with your trainer?',
+        type: 'info',
+        buttons: [
           { text: 'Cancel', style: 'cancel' },
           { text: 'Google Meet', onPress: () => Linking.openURL('https://meet.google.com/new') },
           { text: 'Phone Call', onPress: () => Linking.openURL(`tel:${trainerPhone}`) },
-        ]
-      );
+        ],
+      });
     }
   };
 
@@ -293,10 +299,11 @@ export default function TraineeHomeScreen() {
     setShowVirtualDialog(false);
     // Show virtual trainers
     if (virtualTrainers.length > 0) {
-      Alert.alert(
-        `${virtualTrainers.length} Virtual Trainer${virtualTrainers.length > 1 ? 's' : ''} Available! 🎉`,
-        'Connecting you now...',
-        [
+      showAlert({
+        title: `${virtualTrainers.length} Virtual Trainer${virtualTrainers.length > 1 ? 's' : ''} Available! 🎉`,
+        message: 'Connecting you now...',
+        type: 'success',
+        buttons: [
           {
             text: 'Start Video Call',
             onPress: () => initiateVideoCall(virtualTrainers[0]),
@@ -305,8 +312,8 @@ export default function TraineeHomeScreen() {
             text: 'View All',
             onPress: () => setTrainers(virtualTrainers),
           },
-        ]
-      );
+        ],
+      });
     }
   };
 
