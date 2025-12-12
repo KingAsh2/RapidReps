@@ -45,17 +45,29 @@ export default function PaymentScreen() {
   const handlePayment = async () => {
     // Validate inputs
     if (!cardNumber || cardNumber.replace(/\s/g, '').length !== 16) {
-      Alert.alert('Invalid Card', 'Please enter a valid 16-digit card number');
+      showAlert({
+        title: 'Invalid Card',
+        message: 'Please enter a valid 16-digit card number',
+        type: 'error',
+      });
       return;
     }
 
     if (!expiryDate || expiryDate.length !== 5) {
-      Alert.alert('Invalid Expiry', 'Please enter expiry date in MM/YY format');
+      showAlert({
+        title: 'Invalid Expiry',
+        message: 'Please enter expiry date in MM/YY format',
+        type: 'error',
+      });
       return;
     }
 
     if (!cvv || cvv.length !== 3) {
-      Alert.alert('Invalid CVV', 'Please enter a valid 3-digit CVV');
+      showAlert({
+        title: 'Invalid CVV',
+        message: 'Please enter a valid 3-digit CVV',
+        type: 'error',
+      });
       return;
     }
 
@@ -100,10 +112,11 @@ export default function PaymentScreen() {
       
       // Handle payment failure
       if (error.message === 'Payment processing failed') {
-        Alert.alert(
-          'Payment Failed',
-          'Payment could not be processed. Please check your card details and try again.',
-          [
+        showAlert({
+          title: 'Payment Failed',
+          message: 'Payment could not be processed. Please check your card details and try again.',
+          type: 'error',
+          buttons: [
             {
               text: 'Retry',
               onPress: () => {
@@ -118,20 +131,21 @@ export default function PaymentScreen() {
               style: 'cancel',
               onPress: () => router.back(),
             },
-          ]
-        );
+          ],
+        });
       } else {
         // Handle no trainers available
-        Alert.alert(
-          'Session Unavailable',
-          error.response?.data?.detail || 'No virtual trainers available at the moment. Please try again later.',
-          [
+        showAlert({
+          title: 'Session Unavailable',
+          message: error.response?.data?.detail || 'No virtual trainers available at the moment. Please try again later.',
+          type: 'error',
+          buttons: [
             {
               text: 'OK',
               onPress: () => router.back(),
             },
-          ]
-        );
+          ],
+        });
       }
     }
   };
