@@ -438,10 +438,14 @@ class RapidRepsAPITester:
         for i, session_info in enumerate(self.sessions[:2]):
             if session_info["type"] == "virtual":
                 session_id = session_info["session"]["sessionId"]
+                # For virtual sessions, we need to use any authenticated user token
+                auth_token = session_info["trainee"]["token"]
             else:
                 session_id = session_info["session"]["id"]
+                # For regular sessions, use trainer token if available
+                auth_token = session_info["trainer"]["token"] if session_info["trainer"] else session_info["trainee"]["token"]
             
-            success, data, status = self.make_request("PATCH", f"/sessions/{session_id}/complete", {})
+            success, data, status = self.make_request("PATCH", f"/sessions/{session_id}/complete", {}, auth_token)
             self.log_test(f"Session Complete #{i+1}", success and status == 200, 
                          f"Status: {data.get('status') if success else 'Failed'}")
 
