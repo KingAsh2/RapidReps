@@ -47,7 +47,11 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+      showAlert({
+        title: 'Missing Fields',
+        message: 'Please fill in all fields',
+        type: 'error',
+      });
       return;
     }
 
@@ -78,10 +82,11 @@ export default function LoginScreen() {
     } catch (error: any) {
       setLoading(false);
       console.error('Login error:', error);
-      Alert.alert(
-        'Login Failed',
-        error.response?.data?.detail || 'Invalid email or password. Please try again.'
-      );
+      showAlert({
+        title: 'Login Failed',
+        message: error.response?.data?.detail || 'Invalid email or password. Please try again.',
+        type: 'error',
+      });
     }
   };
 
