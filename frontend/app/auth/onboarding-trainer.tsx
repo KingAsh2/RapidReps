@@ -6,12 +6,12 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Alert,
   ActivityIndicator,
   Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
+import { useAlert } from '../../src/contexts/AlertContext';
 import { trainerAPI } from '../../src/services/api';
 import { Colors } from '../../src/utils/colors';
 import { TrainingStyles } from '../../src/types';
@@ -23,6 +23,7 @@ import * as ImagePicker from 'expo-image-picker';
 export default function TrainerOnboardingScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const { showAlert } = useAlert();
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
   const totalSteps = 4;
