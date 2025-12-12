@@ -172,6 +172,11 @@ export default function SessionActiveScreen() {
           </LinearGradient>
         </Pressable>
 
+        {/* Having Trouble Link */}
+        <TouchableOpacity onPress={() => setShowHelpModal(true)} style={styles.helpLink}>
+          <Text style={styles.helpLinkText}>Having trouble?</Text>
+        </TouchableOpacity>
+
         {/* Session Tips */}
         <View style={styles.tipsContainer}>
           <View style={styles.tip}>
