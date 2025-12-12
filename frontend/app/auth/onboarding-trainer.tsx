@@ -120,7 +120,11 @@ export default function TrainerOnboardingScreen() {
       }
     } catch (error) {
       console.error('Error getting location:', error);
-      Alert.alert('Location Error', 'Could not get your location. You can enter it manually in Step 4.');
+      showAlert({
+        title: 'Location Error',
+        message: 'Could not get your location. You can enter it manually in Step 4.',
+        type: 'warning',
+      });
     } finally {
       setLocationLoading(false);
     }
