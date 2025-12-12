@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Test the RapidReps backend API with comprehensive tests including authentication, profiles, session booking with pricing logic, trainer verification, and rating system"
+user_problem_statement: "Comprehensive full-stack test of RapidReps app after implementing Athletic Design System for all modal dialogs. Testing backend stability and frontend alert implementations across 12 converted screens including authentication, onboarding, payment, and session flows."
 
 backend:
   - task: "Authentication System"
