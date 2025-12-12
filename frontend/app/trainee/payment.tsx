@@ -64,6 +64,13 @@ export default function PaymentScreen() {
       // Mock payment processing delay
       await new Promise(resolve => setTimeout(resolve, 2000));
 
+      // Simulate random payment failure (20% chance for demo purposes)
+      const shouldFail = Math.random() < 0.2;
+      
+      if (shouldFail) {
+        throw new Error('Payment processing failed');
+      }
+
       // Request virtual session (includes mock payment)
       const sessionResponse = await traineeAPI.requestVirtualSession(
         user?.id || '',
@@ -88,17 +95,43 @@ export default function PaymentScreen() {
       }, 1500);
     } catch (error: any) {
       console.error('Payment error:', error);
-      Alert.alert(
-        'Session Unavailable',
-        error.response?.data?.detail || 'No virtual trainers available at the moment. Please try again later.',
-        [
-          {
-            text: 'OK',
-            onPress: () => router.back(),
-          },
-        ]
-      );
       setProcessing(false);
+      
+      // Handle payment failure
+      if (error.message === 'Payment processing failed') {
+        Alert.alert(
+          'Payment Failed',
+          'Payment could not be processed. Please check your card details and try again.',
+          [
+            {
+              text: 'Retry',
+              onPress: () => {
+                // Reset states for retry
+                setCardNumber('');
+                setExpiryDate('');
+                setCvv('');
+              },
+            },
+            {
+              text: 'Cancel',
+              style: 'cancel',
+              onPress: () => router.back(),
+            },
+          ]
+        );
+      } else {
+        // Handle no trainers available
+        Alert.alert(
+          'Session Unavailable',
+          error.response?.data?.detail || 'No virtual trainers available at the moment. Please try again later.',
+          [
+            {
+              text: 'OK',
+              onPress: () => router.back(),
+            },
+          ]
+        );
+      }
     }
   };
 
