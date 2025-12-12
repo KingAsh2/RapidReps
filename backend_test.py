@@ -623,8 +623,7 @@ class RapidRepsAPITester:
             time.sleep(0.1)  # Small delay to avoid rate limiting
         
         # Create 10 trainee accounts with unique timestamps
-        import time
-        timestamp = int(time.time())
+        timestamp = int(time_module.time())
         trainee_data = [
             ("Test User 1", f"trainee1_{timestamp}@test.com", "trainee123"),
             ("Test User 2", f"trainee2_{timestamp}@test.com", "trainee123"),
