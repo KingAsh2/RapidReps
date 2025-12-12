@@ -102,6 +102,21 @@ export default function VirtualConfirmScreen() {
           <Text style={styles.priceDuration}>for 30 minutes</Text>
         </View>
 
+        {/* Time Estimate & Reassurance */}
+        <View style={styles.infoCard}>
+          <Ionicons name="time-outline" size={20} color={Colors.secondary} />
+          <Text style={styles.infoText}>
+            You'll be connected with a trainer in about <Text style={styles.infoTextBold}>2-3 minutes</Text>
+          </Text>
+        </View>
+
+        <View style={styles.reassuranceCard}>
+          <Ionicons name="shield-checkmark" size={20} color={Colors.success} />
+          <Text style={styles.reassuranceText}>
+            If no trainer is available, you won't be charged
+          </Text>
+        </View>
+
         {/* Features */}
         <View style={styles.featuresContainer}>
           <View style={styles.feature}>
