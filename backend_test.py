@@ -41,7 +41,7 @@ class RapidRepsAPITester:
             self.test_results['errors'].append(f"{test_name}: {message}")
             print(f"❌ {test_name}: FAIL {message}")
     
-    def make_request(self, method: str, endpoint: str, data: dict = None, auth_token: str = None) -> tuple:
+    def make_request(self, method: str, endpoint: str, data: dict = None, auth_token: str = None, params: dict = None) -> tuple:
         """Make HTTP request and return (success, response_data, status_code)"""
         url = f"{self.base_url}{endpoint}"
         headers = self.headers.copy()
@@ -51,13 +51,13 @@ class RapidRepsAPITester:
         
         try:
             if method.upper() == "GET":
-                response = requests.get(url, headers=headers, params=data)
+                response = requests.get(url, headers=headers, params=data or params)
             elif method.upper() == "POST":
-                response = requests.post(url, headers=headers, json=data)
+                response = requests.post(url, headers=headers, json=data, params=params)
             elif method.upper() == "PATCH":
-                response = requests.patch(url, headers=headers, json=data)
+                response = requests.patch(url, headers=headers, json=data, params=params)
             elif method.upper() == "PUT":
-                response = requests.put(url, headers=headers, json=data)
+                response = requests.put(url, headers=headers, json=data, params=params)
             else:
                 return False, {"error": f"Unsupported method: {method}"}, 400
             
