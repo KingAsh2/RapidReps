@@ -6,7 +6,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
@@ -19,12 +18,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/contexts/AuthContext';
+import { useAlert } from '../../src/contexts/AlertContext';
 import { AnimatedLogo } from '../../src/components/AnimatedLogo';
 import * as Location from 'expo-location';
 
 export default function EditTrainerProfileScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const { showAlert } = useAlert();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<TrainerProfile | null>(null);
