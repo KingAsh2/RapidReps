@@ -26,6 +26,7 @@ export default function SessionActiveScreen() {
 
   const [timeRemaining, setTimeRemaining] = useState(durationMinutes * 60); // seconds
   const [isEnding, setIsEnding] = useState(false);
+  const [showHelpModal, setShowHelpModal] = useState(false);
 
   useEffect(() => {
     // Start countdown timer
