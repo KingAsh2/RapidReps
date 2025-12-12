@@ -37,7 +37,11 @@ export default function SessionCompleteScreen() {
 
   const handleSubmitRating = async () => {
     if (rating === 0) {
-      Alert.alert('Rating Required', 'Please select a star rating before submitting.');
+      showAlert({
+        title: 'Rating Required',
+        message: 'Please select a star rating before submitting.',
+        type: 'warning',
+      });
       return;
     }
 
@@ -52,28 +56,30 @@ export default function SessionCompleteScreen() {
         reviewText: review || undefined,
       });
 
-      Alert.alert(
-        'Thank You! 🎉',
-        'Your feedback helps trainers improve their service.',
-        [
+      showAlert({
+        title: 'Thank You! 🎉',
+        message: 'Your feedback helps trainers improve their service.',
+        type: 'success',
+        buttons: [
           {
             text: 'Done',
             onPress: () => router.replace('/trainee/home'),
           },
-        ]
-      );
+        ],
+      });
     } catch (error: any) {
       console.error('Error submitting rating:', error);
-      Alert.alert(
-        'Error',
-        'Failed to submit rating. Please try again.',
-        [
+      showAlert({
+        title: 'Submission Failed',
+        message: 'Failed to submit rating. Please try again.',
+        type: 'error',
+        buttons: [
           {
             text: 'OK',
             onPress: () => setSubmitting(false),
           },
-        ]
-      );
+        ],
+      });
     }
   };
 
