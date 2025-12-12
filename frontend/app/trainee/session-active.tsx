@@ -6,6 +6,8 @@ import {
   Pressable,
   Alert,
   Linking,
+  Modal,
+  TouchableOpacity,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Colors } from '../../src/utils/colors';
