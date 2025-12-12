@@ -53,7 +53,11 @@ export default function TrainerOnboardingScreen() {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     
     if (permissionResult.granted === false) {
-      Alert.alert('Permission Required', 'Camera roll permission is required!');
+      showAlert({
+        title: 'Permission Required',
+        message: 'Camera roll permission is required!',
+        type: 'warning',
+      });
       return;
     }
 
