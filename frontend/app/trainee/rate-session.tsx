@@ -5,7 +5,6 @@ import {
   TextInput,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
@@ -17,18 +16,24 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/contexts/AuthContext';
+import { useAlert } from '../../src/contexts/AlertContext';
 
 export default function RateSessionScreen() {
   const router = useRouter();
   const { sessionId, trainerId } = useLocalSearchParams();
   const { user } = useAuth();
+  const { showAlert } = useAlert();
   const [rating, setRating] = useState(0);
   const [reviewText, setReviewText] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
     if (rating === 0) {
-      Alert.alert('Rating Required', 'Please select a star rating');
+      showAlert({
+        title: 'Rating Required',
+        message: 'Please select a star rating',
+        type: 'warning',
+      });
       return;
     }
 
@@ -42,14 +47,23 @@ export default function RateSessionScreen() {
         reviewText: reviewText.trim() || undefined,
       });
 
-      Alert.alert('Success!', 'Thank you for your feedback!', [
-        {
-          text: 'OK',
-          onPress: () => router.back(),
-        },
-      ]);
+      showAlert({
+        title: 'Success! 🎉',
+        message: 'Thank you for your feedback!',
+        type: 'success',
+        buttons: [
+          {
+            text: 'OK',
+            onPress: () => router.back(),
+          },
+        ],
+      });
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Failed to submit rating');
+      showAlert({
+        title: 'Submission Failed',
+        message: error.response?.data?.detail || 'Failed to submit rating',
+        type: 'error',
+      });
     } finally {
       setSubmitting(false);
     }
