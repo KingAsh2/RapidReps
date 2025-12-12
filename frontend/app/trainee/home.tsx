@@ -347,9 +347,17 @@ export default function TraineeHomeScreen() {
             <View style={styles.logoContainer}>
               <AnimatedLogo size={60} animationType="spin-bounce" />
             </View>
-            <TouchableOpacity onPress={handleLogout} style={styles.headerButton}>
-              <Ionicons name="log-out-outline" size={24} color={Colors.white} />
-            </TouchableOpacity>
+            <View style={styles.headerActions}>
+              <TouchableOpacity 
+                onPress={() => router.push('/trainee/profile')} 
+                style={styles.headerButton}
+              >
+                <Ionicons name="person-circle-outline" size={28} color={Colors.white} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleLogout} style={styles.headerButton}>
+                <Ionicons name="log-out-outline" size={24} color={Colors.white} />
+              </TouchableOpacity>
+            </View>
           </View>
           <View style={styles.greetingContainer}>
             <Text style={styles.greeting}>Hey there, {user?.fullName?.split(' ')[0] || 'there'}! 💪</Text>
