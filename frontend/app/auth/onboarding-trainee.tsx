@@ -96,7 +96,11 @@ export default function TraineeOnboardingScreen() {
       }
     } catch (error) {
       console.error('Error getting location:', error);
-      Alert.alert('Location Error', 'Could not get your location. You can enter it manually.');
+      showAlert({
+        title: 'Location Error',
+        message: 'Could not get your location. You can enter it manually.',
+        type: 'warning',
+      });
     } finally {
       setLocationLoading(false);
     }
@@ -106,7 +110,11 @@ export default function TraineeOnboardingScreen() {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     
     if (permissionResult.granted === false) {
-      Alert.alert('Permission Required', 'Camera roll permission is required!');
+      showAlert({
+        title: 'Permission Required',
+        message: 'Camera roll permission is required!',
+        type: 'warning',
+      });
       return;
     }
 
