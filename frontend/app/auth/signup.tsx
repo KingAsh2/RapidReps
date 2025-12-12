@@ -31,22 +31,38 @@ export default function SignupScreen() {
 
   const handleSignup = async () => {
     if (!formData.email || !formData.password || !formData.fullName) {
-      Alert.alert('Error', 'Please fill in all fields');
+      showAlert({
+        title: 'Missing Information',
+        message: 'Please fill in all fields',
+        type: 'error',
+      });
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+      showAlert({
+        title: 'Password Mismatch',
+        message: 'Passwords do not match',
+        type: 'error',
+      });
       return;
     }
 
     if (formData.roles.length === 0) {
-      Alert.alert('Error', 'Please select at least one role');
+      showAlert({
+        title: 'Select Role',
+        message: 'Please select at least one role',
+        type: 'error',
+      });
       return;
     }
 
     if (!formData.phone) {
-      Alert.alert('Error', 'Please enter your phone number');
+      showAlert({
+        title: 'Phone Required',
+        message: 'Please enter your phone number',
+        type: 'error',
+      });
       return;
     }
 
@@ -60,21 +76,30 @@ export default function SignupScreen() {
         roles: formData.roles,
       });
 
-      Alert.alert('Success', 'Account created successfully!', [
-        { 
-          text: 'OK', 
-          onPress: () => {
-            // If user selected trainer, go to trainer onboarding
-            if (formData.roles.includes(UserRole.TRAINER)) {
-              router.replace('/auth/onboarding-trainer');
-            } else {
-              router.replace('/auth/onboarding-trainee');
+      showAlert({
+        title: 'Success! 🎉',
+        message: 'Account created successfully!',
+        type: 'success',
+        buttons: [
+          { 
+            text: 'Continue', 
+            onPress: () => {
+              // If user selected trainer, go to trainer onboarding
+              if (formData.roles.includes(UserRole.TRAINER)) {
+                router.replace('/auth/onboarding-trainer');
+              } else {
+                router.replace('/auth/onboarding-trainee');
+              }
             }
-          }
-        },
-      ]);
+          },
+        ],
+      });
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Signup failed');
+      showAlert({
+        title: 'Signup Failed',
+        message: error.response?.data?.detail || 'Signup failed',
+        type: 'error',
+      });
     } finally {
       setLoading(false);
     }
