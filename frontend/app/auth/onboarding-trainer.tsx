@@ -233,12 +233,16 @@ export default function TrainerOnboardingScreen() {
               router.replace('/trainer/home');
             }
           },
-        ]
-      );
+        ],
+      });
     } catch (error: any) {
       console.error('Profile creation error:', error);
       setLoading(false);
-      Alert.alert('Error', error.response?.data?.detail || 'Failed to create profile. Please try again.');
+      showAlert({
+        title: 'Profile Creation Failed',
+        message: error.response?.data?.detail || 'Failed to create profile. Please try again.',
+        type: 'error',
+      });
     }
   };
 
