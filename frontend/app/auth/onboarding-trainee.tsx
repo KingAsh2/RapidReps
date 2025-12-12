@@ -6,12 +6,12 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Alert,
   Image,
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
+import { useAlert } from '../../src/contexts/AlertContext';
 import { traineeAPI } from '../../src/services/api';
 import { Colors } from '../../src/utils/colors';
 import { TrainingStyles, FitnessLevel } from '../../src/types';
@@ -23,6 +23,7 @@ import * as Location from 'expo-location';
 export default function TraineeOnboardingScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const { showAlert } = useAlert();
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
   const totalSteps = 3;
