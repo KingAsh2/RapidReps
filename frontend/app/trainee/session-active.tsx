@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   Pressable,
-  Alert,
   Linking,
   Modal,
   TouchableOpacity,
@@ -15,10 +14,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { trainerAPI } from '../../src/services/api';
+import { useAlert } from '../../src/contexts/AlertContext';
 
 export default function SessionActiveScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const { showAlert } = useAlert();
   
   const sessionId = params.sessionId as string;
   const trainerId = params.trainerId as string;
