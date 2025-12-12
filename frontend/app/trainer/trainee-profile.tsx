@@ -7,7 +7,6 @@ import {
   Image,
   TouchableOpacity,
   Linking,
-  Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Colors } from '../../src/utils/colors';
@@ -15,10 +14,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { trainerAPI } from '../../src/services/api';
+import { useAlert } from '../../src/contexts/AlertContext';
 
 export default function TraineeProfileScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const { showAlert } = useAlert();
   
   const sessionId = params.sessionId as string;
   const traineeId = params.traineeId as string;
