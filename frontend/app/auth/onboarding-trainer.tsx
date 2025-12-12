@@ -174,7 +174,11 @@ export default function TrainerOnboardingScreen() {
 
   const handleSubmit = async () => {
     if (!user) {
-      Alert.alert('Error', 'User not found. Please log in again.');
+      showAlert({
+        title: 'Authentication Error',
+        message: 'User not found. Please log in again.',
+        type: 'error',
+      });
       return;
     }
 
@@ -217,10 +221,11 @@ export default function TrainerOnboardingScreen() {
       
       setLoading(false);
       
-      Alert.alert(
-        'Success! 🎉',
-        'Your trainer profile has been created! Ready to connect with trainees.',
-        [
+      showAlert({
+        title: 'Success! 🎉',
+        message: 'Your trainer profile has been created! Ready to connect with trainees.',
+        type: 'success',
+        buttons: [
           { 
             text: 'Get Started', 
             onPress: () => {
