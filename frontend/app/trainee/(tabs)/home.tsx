@@ -555,7 +555,7 @@ export default function TraineeHomeScreen() {
                       <Image
                         source={{ uri: trainer.avatarUrl }}
                         style={styles.trainerAvatarImage}
-                        defaultSource={require('../../assets/rapidreps-logo.png')}
+                        defaultSource={require('../../../assets/rapidreps-logo.png')}
                       />
                     ) : (
                       <Ionicons name="person" size={32} color={Colors.primary} />
