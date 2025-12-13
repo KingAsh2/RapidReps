@@ -1416,6 +1416,262 @@ async def check_badges(current_user: dict = Depends(get_current_user)):
     }
 
 
+
+# ============================================================================
+# TRAINEE ACHIEVEMENTS & BADGES SYSTEM
+# ============================================================================
+
+async def calculate_trainee_badge_progress(trainee_id: str) -> TraineeAchievements:
+    """Calculate all badge progress for a trainee"""
+    
+    # Get all completed sessions for this trainee
+    completed_sessions = await db.sessions.find({
+        'traineeId': trainee_id,
+        'status': SessionStatus.COMPLETED
+    }).to_list(1000)
+    
+    # Get trainee achievement doc
+    achievement_doc = await db.trainee_achievements.find_one({'traineeId': trainee_id})
+    if not achievement_doc:
+        achievement_doc = {
+            'traineeId': trainee_id,
+            'discountSessionsRemaining': 0,
+            'currentStreak': 0,
+            'streekWeeks': 0,
+            'lastStreakReset': None,
+            'unlockedBadges': [],
+            'trainAgainCount': 0
+        }
+    
+    # Get all ratings by this trainee
+    ratings = await db.ratings.find({'traineeId': trainee_id}).to_list(1000)
+    
+    total_completed = len(completed_sessions)
+    badges = []
+    
+    # 1. Commitment Badge - 10 completed sessions
+    commitment_progress = min(total_completed, 10)
+    badges.append(BadgeProgress(
+        badgeType=TraineeBadgeType.COMMITMENT,
+        badgeName="Commitment Badge",
+        description="Complete 10 training sessions",
+        isUnlocked=total_completed >= 10,
+        progress=commitment_progress,
+        target=10,
+        unlockedAt=achievement_doc.get('commitment_unlocked_at')
+    ))
+    
+    # 2. Consistency Champ - 2+ sessions/week for 3 consecutive weeks
+    streak_progress = achievement_doc.get('streakWeeks', 0)
+    badges.append(BadgeProgress(
+        badgeType=TraineeBadgeType.CONSISTENCY_CHAMP,
+        badgeName="Consistency Champ",
+        description="Complete 2+ sessions per week for 3 consecutive weeks",
+        isUnlocked=streak_progress >= 3,
+        progress=min(streak_progress, 3),
+        target=3,
+        unlockedAt=achievement_doc.get('consistency_champ_unlocked_at')
+    ))
+    
+    # 3. Weekend Grinder - 5 weekend sessions
+    weekend_sessions = [s for s in completed_sessions 
+                       if datetime.fromisoformat(str(s['sessionDateTimeStart'])).weekday() >= 5]
+    weekend_progress = min(len(weekend_sessions), 5)
+    badges.append(BadgeProgress(
+        badgeType=TraineeBadgeType.WEEKEND_GRINDER,
+        badgeName="Weekend Grinder",
+        description="Complete 5 sessions on Saturday or Sunday",
+        isUnlocked=len(weekend_sessions) >= 5,
+        progress=weekend_progress,
+        target=5,
+        unlockedAt=achievement_doc.get('weekend_grinder_unlocked_at')
+    ))
+    
+    # 4. Early Riser - 5 sessions before noon
+    early_sessions = [s for s in completed_sessions 
+                     if datetime.fromisoformat(str(s['sessionDateTimeStart'])).hour < 12]
+    early_progress = min(len(early_sessions), 5)
+    badges.append(BadgeProgress(
+        badgeType=TraineeBadgeType.EARLY_RISER,
+        badgeName="Early Riser",
+        description="Complete 5 sessions before 11:59 AM",
+        isUnlocked=len(early_sessions) >= 5,
+        progress=early_progress,
+        target=5,
+        unlockedAt=achievement_doc.get('early_riser_unlocked_at')
+    ))
+    
+    # 5. Night Hustler - 5 sessions after 6 PM
+    night_sessions = [s for s in completed_sessions 
+                     if datetime.fromisoformat(str(s['sessionDateTimeStart'])).hour >= 18]
+    night_progress = min(len(night_sessions), 5)
+    badges.append(BadgeProgress(
+        badgeType=TraineeBadgeType.NIGHT_HUSTLER,
+        badgeName="Night Hustler",
+        description="Complete 5 sessions at or after 6:00 PM",
+        isUnlocked=len(night_sessions) >= 5,
+        progress=night_progress,
+        target=5,
+        unlockedAt=achievement_doc.get('night_hustler_unlocked_at')
+    ))
+    
+    # 6. Loyalty Lock - 20 lifetime sessions (1 reduced service fee)
+    loyalty_progress = min(total_completed, 20)
+    badges.append(BadgeProgress(
+        badgeType=TraineeBadgeType.LOYALTY_LOCK,
+        badgeName="Loyalty Lock",
+        description="Complete 20 lifetime sessions",
+        isUnlocked=total_completed >= 20,
+        progress=loyalty_progress,
+        target=20,
+        reward="1 reduced service fee session",
+        unlockedAt=achievement_doc.get('loyalty_lock_unlocked_at')
+    ))
+    
+    # 7. Trainer Favorite - 5 "Would Train Again" confirmations
+    train_again_count = achievement_doc.get('trainAgainCount', 0)
+    trainer_fav_progress = min(train_again_count, 5)
+    badges.append(BadgeProgress(
+        badgeType=TraineeBadgeType.TRAINER_FAVORITE,
+        badgeName="Trainer Favorite",
+        description="Get 5 'Would Train Again' confirmations from trainers",
+        isUnlocked=train_again_count >= 5,
+        progress=trainer_fav_progress,
+        target=5,
+        unlockedAt=achievement_doc.get('trainer_favorite_unlocked_at')
+    ))
+    
+    # 8. Explorer - Sessions with 5 unique trainers
+    unique_trainers = set(s['trainerId'] for s in completed_sessions)
+    explorer_progress = min(len(unique_trainers), 5)
+    badges.append(BadgeProgress(
+        badgeType=TraineeBadgeType.EXPLORER,
+        badgeName="Explorer",
+        description="Train with 5 different trainers",
+        isUnlocked=len(unique_trainers) >= 5,
+        progress=explorer_progress,
+        target=5,
+        unlockedAt=achievement_doc.get('explorer_unlocked_at')
+    ))
+    
+    # 9. Feedback Hero - 10 completed session reviews
+    feedback_count = len(ratings)
+    feedback_progress = min(feedback_count, 10)
+    badges.append(BadgeProgress(
+        badgeType=TraineeBadgeType.FEEDBACK_HERO,
+        badgeName="Feedback Hero",
+        description="Write 10 session reviews",
+        isUnlocked=feedback_count >= 10,
+        progress=feedback_progress,
+        target=10,
+        unlockedAt=achievement_doc.get('feedback_hero_unlocked_at')
+    ))
+    
+    # 10. All-In - 3 sessions in a single calendar week
+    all_in_found = False
+    # Group sessions by week
+    from collections import defaultdict
+    weeks = defaultdict(int)
+    for session in completed_sessions:
+        start_date = datetime.fromisoformat(str(session['sessionDateTimeStart']))
+        week_key = f"{start_date.year}-W{start_date.isocalendar()[1]}"
+        weeks[week_key] += 1
+        if weeks[week_key] >= 3:
+            all_in_found = True
+            break
+    
+    badges.append(BadgeProgress(
+        badgeType=TraineeBadgeType.ALL_IN,
+        badgeName="All-In",
+        description="Complete 3 sessions in a single calendar week",
+        isUnlocked=all_in_found,
+        progress=1 if all_in_found else 0,
+        target=1,
+        unlockedAt=achievement_doc.get('all_in_unlocked_at')
+    ))
+    
+    return TraineeAchievements(
+        traineeId=trainee_id,
+        badges=badges,
+        totalCompletedSessions=total_completed,
+        discountSessionsRemaining=achievement_doc.get('discountSessionsRemaining', 0),
+        currentStreak=achievement_doc.get('currentStreak', 0),
+        streakWeeks=achievement_doc.get('streakWeeks', 0),
+        lastStreakReset=achievement_doc.get('lastStreakReset')
+    )
+
+async def check_and_unlock_trainee_badges(trainee_id: str):
+    """Check if any new trainee badges should be unlocked and update DB"""
+    achievements = await calculate_trainee_badge_progress(trainee_id)
+    achievement_doc = await db.trainee_achievements.find_one({'traineeId': trainee_id})
+    
+    if not achievement_doc:
+        achievement_doc = {
+            'traineeId': trainee_id,
+            'discountSessionsRemaining': 0,
+            'unlockedBadges': [],
+            'trainAgainCount': 0
+        }
+        await db.trainee_achievements.insert_one(achievement_doc)
+    
+    newly_unlocked = []
+    
+    for badge in achievements.badges:
+        badge_key = f"{badge.badgeType}_unlocked_at"
+        
+        # Check if badge is unlocked but not yet recorded
+        if badge.isUnlocked and badge_key not in achievement_doc:
+            # Record unlock
+            await db.trainee_achievements.update_one(
+                {'traineeId': trainee_id},
+                {'$set': {badge_key: datetime.utcnow()}}
+            )
+            newly_unlocked.append(badge.badgeType)
+            
+            # Special handling for Loyalty Lock badge
+            if badge.badgeType == TraineeBadgeType.LOYALTY_LOCK:
+                await db.trainee_achievements.update_one(
+                    {'traineeId': trainee_id},
+                    {'$set': {'discountSessionsRemaining': 1}}
+                )
+    
+    return newly_unlocked
+
+@api_router.get("/trainee/achievements")
+async def get_trainee_achievements(current_user: dict = Depends(get_current_user)):
+    """Get achievements and badge progress for current trainee"""
+    if UserRole.TRAINEE not in current_user.get('roles', []):
+        raise HTTPException(status_code=403, detail="Trainee access required")
+    
+    # Use user ID as trainee ID for now (they can have profiles in both collections)
+    trainee_id = current_user['id']
+    
+    achievements = await calculate_trainee_badge_progress(trainee_id)
+    
+    return {
+        'traineeId': trainee_id,
+        'badges': [badge.dict() for badge in achievements.badges],
+        'totalCompletedSessions': achievements.totalCompletedSessions,
+        'discountSessionsRemaining': achievements.discountSessionsRemaining,
+        'currentStreak': achievements.currentStreak,
+        'streakWeeks': achievements.streakWeeks
+    }
+
+@api_router.post("/trainee/check-badges")
+async def check_trainee_badges(current_user: dict = Depends(get_current_user)):
+    """Manually trigger trainee badge check (for testing)"""
+    if UserRole.TRAINEE not in current_user.get('roles', []):
+        raise HTTPException(status_code=403, detail="Trainee access required")
+    
+    trainee_id = current_user['id']
+    newly_unlocked = await check_and_unlock_trainee_badges(trainee_id)
+    
+    return {
+        'newlyUnlocked': newly_unlocked,
+        'message': f"Unlocked {len(newly_unlocked)} new badge(s)" if newly_unlocked else "No new badges"
+    }
+
+
 # ============================================================================
 # ROOT ROUTES
 # ============================================================================
