@@ -11,13 +11,13 @@ import {
   Switch,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Colors } from '../../src/utils/colors';
+import { Colors } from '../../../src/utils/colors';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '../../src/contexts/AuthContext';
-import { useAlert } from '../../src/contexts/AlertContext';
-import { traineeAPI } from '../../src/services/api';
+import { useAuth } from '../../../src/contexts/AuthContext';
+import { useAlert } from '../../../src/contexts/AlertContext';
+import { traineeAPI } from '../../../src/services/api';
 import * as ImagePicker from 'expo-image-picker';
 
 export default function TraineeProfileScreen() {
