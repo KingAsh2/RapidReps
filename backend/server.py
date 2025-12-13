@@ -283,6 +283,30 @@ class TrainerAchievements(BaseModel):
     lastStreakReset: Optional[datetime] = None
 
 
+
+# Trainee Badge Types
+class TraineeBadgeType:
+    COMMITMENT = "commitment"
+    CONSISTENCY_CHAMP = "consistency_champ"
+    WEEKEND_GRINDER = "weekend_grinder"
+    EARLY_RISER = "early_riser"
+    NIGHT_HUSTLER = "night_hustler"
+    LOYALTY_LOCK = "loyalty_lock"
+    TRAINER_FAVORITE = "trainer_favorite"
+    EXPLORER = "explorer"
+    FEEDBACK_HERO = "feedback_hero"
+    ALL_IN = "all_in"
+
+class TraineeAchievements(BaseModel):
+    traineeId: str
+    badges: List[BadgeProgress]
+    totalCompletedSessions: int
+    discountSessionsRemaining: int = 0
+    currentStreak: int = 0
+    streakWeeks: int = 0
+    lastStreakReset: Optional[datetime] = None
+
+
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
