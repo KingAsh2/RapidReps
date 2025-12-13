@@ -24,6 +24,7 @@ const BACKEND_URL = Constants.expoConfig?.extra?.backendUrl || process.env.EXPO_
 
 export default function VerificationScreen() {
   const router = useRouter();
+  const { showAlert } = useAlert();
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [documents, setDocuments] = useState<string[]>([]);
