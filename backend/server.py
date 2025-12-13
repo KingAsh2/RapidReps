@@ -1387,7 +1387,7 @@ async def get_trainer_achievements(current_user: dict = Depends(get_current_user
     if not trainer_profile:
         raise HTTPException(status_code=404, detail="Trainer profile not found")
     
-    achievements = await calculate_badge_progress(str(trainer_profile['_id']))
+    achievements = await calculate_badge_progress(str(current_user['_id']))
     
     return {
         'trainerId': str(trainer_profile['_id']),
