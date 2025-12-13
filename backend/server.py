@@ -1110,6 +1110,288 @@ async def get_platform_revenue(current_user: dict = Depends(get_current_user)):
         'averageSessionValueCents': total_session_value // len(completed_sessions) if completed_sessions else 0
     }
 
+
+# ============================================================================
+# TRAINER ACHIEVEMENTS & BADGES SYSTEM
+# ============================================================================
+
+async def calculate_badge_progress(trainer_id: str) -> TrainerAchievements:
+    """Calculate all badge progress for a trainer"""
+    
+    # Get all completed sessions for this trainer
+    completed_sessions = await db.sessions.find({
+        'trainerId': trainer_id,
+        'status': SessionStatus.COMPLETED
+    }).to_list(1000)
+    
+    # Get trainer achievement doc
+    achievement_doc = await db.trainer_achievements.find_one({'trainerId': trainer_id})
+    if not achievement_doc:
+        achievement_doc = {
+            'trainerId': trainer_id,
+            'discountSessionsRemaining': 0,
+            'currentStreak': 0,
+            'streakWeeks': 0,
+            'lastStreakReset': None,
+            'unlockedBadges': []
+        }
+    
+    # Get all ratings for this trainer
+    ratings = await db.ratings.find({'trainerId': trainer_id}).to_list(1000)
+    five_star_count = len([r for r in ratings if r['rating'] == 5])
+    
+    total_completed = len(completed_sessions)
+    badges = []
+    
+    # 1. Milestone Master Badge - 25 total sessions
+    milestone_progress = min(total_completed, 25)
+    badges.append(BadgeProgress(
+        badgeType=BadgeType.MILESTONE_MASTER,
+        badgeName="Milestone Master",
+        description="Complete 25 total sessions",
+        isUnlocked=total_completed >= 25,
+        progress=milestone_progress,
+        target=25,
+        reward="5% service fee on next 5 sessions",
+        unlockedAt=achievement_doc.get('milestone_master_unlocked_at')
+    ))
+    
+    # 2. Weekend Warrior Badge - 10 weekend sessions
+    weekend_sessions = [s for s in completed_sessions 
+                       if datetime.fromisoformat(str(s['sessionDateTimeStart'])).weekday() >= 5]
+    weekend_progress = min(len(weekend_sessions), 10)
+    badges.append(BadgeProgress(
+        badgeType=BadgeType.WEEKEND_WARRIOR,
+        badgeName="Weekend Warrior",
+        description="Complete 10 sessions on Saturday or Sunday",
+        isUnlocked=len(weekend_sessions) >= 10,
+        progress=weekend_progress,
+        target=10,
+        unlockedAt=achievement_doc.get('weekend_warrior_unlocked_at')
+    ))
+    
+    # 3. Streak Star Badge - 10 sessions/week for 3 consecutive weeks
+    streak_progress = achievement_doc.get('streakWeeks', 0)
+    badges.append(BadgeProgress(
+        badgeType=BadgeType.STREAK_STAR,
+        badgeName="Streak Star",
+        description="Complete 10 sessions per week for 3 consecutive weeks",
+        isUnlocked=streak_progress >= 3,
+        progress=min(streak_progress, 3),
+        target=3,
+        unlockedAt=achievement_doc.get('streak_star_unlocked_at')
+    ))
+    
+    # 4. Early Bird Badge - 10 sessions before noon
+    early_sessions = [s for s in completed_sessions 
+                     if datetime.fromisoformat(str(s['sessionDateTimeStart'])).hour < 12]
+    early_progress = min(len(early_sessions), 10)
+    badges.append(BadgeProgress(
+        badgeType=BadgeType.EARLY_BIRD,
+        badgeName="Early Bird",
+        description="Complete 10 sessions before 11:59 AM",
+        isUnlocked=len(early_sessions) >= 10,
+        progress=early_progress,
+        target=10,
+        unlockedAt=achievement_doc.get('early_bird_unlocked_at')
+    ))
+    
+    # 5. Night Owl Badge - 10 sessions after 6 PM
+    night_sessions = [s for s in completed_sessions 
+                     if datetime.fromisoformat(str(s['sessionDateTimeStart'])).hour >= 18]
+    night_progress = min(len(night_sessions), 10)
+    badges.append(BadgeProgress(
+        badgeType=BadgeType.NIGHT_OWL,
+        badgeName="Night Owl",
+        description="Complete 10 sessions at or after 6:00 PM",
+        isUnlocked=len(night_sessions) >= 10,
+        progress=night_progress,
+        target=10,
+        unlockedAt=achievement_doc.get('night_owl_unlocked_at')
+    ))
+    
+    # 6. Top Trainer of the Month Badge
+    top_trainer_unlocked = achievement_doc.get('top_trainer_unlocked_at') is not None
+    badges.append(BadgeProgress(
+        badgeType=BadgeType.TOP_TRAINER,
+        badgeName="Top Trainer of the Month",
+        description="Rank #1 in total completed sessions for the month",
+        isUnlocked=top_trainer_unlocked,
+        progress=1 if top_trainer_unlocked else 0,
+        target=1,
+        reward="Monthly recognition",
+        unlockedAt=achievement_doc.get('top_trainer_unlocked_at')
+    ))
+    
+    # 7. New Client Champ Badge - 10 unique first-time clients
+    unique_clients = set()
+    for session in completed_sessions:
+        trainee_id = session['traineeId']
+        # Count only if this is the first completed session with this client
+        client_sessions = [s for s in completed_sessions if s['traineeId'] == trainee_id]
+        if len(client_sessions) > 0 and client_sessions[0]['_id'] == session['_id']:
+            unique_clients.add(trainee_id)
+    
+    new_client_progress = min(len(unique_clients), 10)
+    badges.append(BadgeProgress(
+        badgeType=BadgeType.NEW_CLIENT_CHAMP,
+        badgeName="New Client Champ",
+        description="Complete sessions with 10 unique first-time clients",
+        isUnlocked=len(unique_clients) >= 10,
+        progress=new_client_progress,
+        target=10,
+        unlockedAt=achievement_doc.get('new_client_champ_unlocked_at')
+    ))
+    
+    # 8. Flexibility Guru Badge - 10 sessions across 3 time blocks
+    time_blocks = set()
+    for session in completed_sessions:
+        hour = datetime.fromisoformat(str(session['sessionDateTimeStart'])).hour
+        if hour < 12:
+            time_blocks.add('morning')
+        elif hour < 18:
+            time_blocks.add('afternoon')
+        else:
+            time_blocks.add('evening')
+    
+    flexibility_sessions = len(completed_sessions) if len(time_blocks) >= 3 else 0
+    flexibility_progress = min(flexibility_sessions, 10)
+    badges.append(BadgeProgress(
+        badgeType=BadgeType.FLEXIBILITY_GURU,
+        badgeName="Flexibility Guru",
+        description="Complete 10 sessions across morning, afternoon, and evening",
+        isUnlocked=flexibility_sessions >= 10,
+        progress=flexibility_progress,
+        target=10,
+        unlockedAt=achievement_doc.get('flexibility_guru_unlocked_at')
+    ))
+    
+    # 9. Feedback Favorite Badge - 10 five-star ratings
+    feedback_progress = min(five_star_count, 10)
+    badges.append(BadgeProgress(
+        badgeType=BadgeType.FEEDBACK_FAVORITE,
+        badgeName="Feedback Favorite",
+        description="Receive 10 client ratings of 5 stars",
+        isUnlocked=five_star_count >= 10,
+        progress=feedback_progress,
+        target=10,
+        unlockedAt=achievement_doc.get('feedback_favorite_unlocked_at')
+    ))
+    
+    # 10. Double Duty Badge - 2 back-to-back sessions (within 15 min)
+    double_duty_found = False
+    sorted_sessions = sorted(completed_sessions, key=lambda s: s['sessionDateTimeStart'])
+    for i in range(len(sorted_sessions) - 1):
+        end_time = sorted_sessions[i]['sessionDateTimeEnd']
+        next_start = sorted_sessions[i + 1]['sessionDateTimeStart']
+        
+        # Convert to datetime if string
+        if isinstance(end_time, str):
+            end_time = datetime.fromisoformat(end_time)
+        if isinstance(next_start, str):
+            next_start = datetime.fromisoformat(next_start)
+            
+        time_diff = (next_start - end_time).total_seconds() / 60
+        if time_diff <= 15:
+            double_duty_found = True
+            break
+    
+    badges.append(BadgeProgress(
+        badgeType=BadgeType.DOUBLE_DUTY,
+        badgeName="Double Duty",
+        description="Complete 2 back-to-back sessions within 15 minutes",
+        isUnlocked=double_duty_found,
+        progress=1 if double_duty_found else 0,
+        target=1,
+        unlockedAt=achievement_doc.get('double_duty_unlocked_at')
+    ))
+    
+    return TrainerAchievements(
+        trainerId=trainer_id,
+        badges=badges,
+        totalCompletedSessions=total_completed,
+        discountSessionsRemaining=achievement_doc.get('discountSessionsRemaining', 0),
+        currentStreak=achievement_doc.get('currentStreak', 0),
+        streakWeeks=achievement_doc.get('streakWeeks', 0),
+        lastStreakReset=achievement_doc.get('lastStreakReset')
+    )
+
+async def check_and_unlock_badges(trainer_id: str):
+    """Check if any new badges should be unlocked and update DB"""
+    achievements = await calculate_badge_progress(trainer_id)
+    achievement_doc = await db.trainer_achievements.find_one({'trainerId': trainer_id})
+    
+    if not achievement_doc:
+        achievement_doc = {
+            'trainerId': trainer_id,
+            'discountSessionsRemaining': 0,
+            'unlockedBadges': []
+        }
+        await db.trainer_achievements.insert_one(achievement_doc)
+    
+    newly_unlocked = []
+    
+    for badge in achievements.badges:
+        badge_key = f"{badge.badgeType}_unlocked_at"
+        
+        # Check if badge is unlocked but not yet recorded
+        if badge.isUnlocked and badge_key not in achievement_doc:
+            # Record unlock
+            await db.trainer_achievements.update_one(
+                {'trainerId': trainer_id},
+                {'$set': {badge_key: datetime.utcnow()}}
+            )
+            newly_unlocked.append(badge.badgeType)
+            
+            # Special handling for Milestone Master badge
+            if badge.badgeType == BadgeType.MILESTONE_MASTER:
+                await db.trainer_achievements.update_one(
+                    {'trainerId': trainer_id},
+                    {'$set': {'discountSessionsRemaining': 5}}
+                )
+    
+    return newly_unlocked
+
+@api_router.get("/trainer/achievements")
+async def get_trainer_achievements(current_user: dict = Depends(get_current_user)):
+    """Get achievements and badge progress for current trainer"""
+    if UserRole.TRAINER not in current_user.get('roles', []):
+        raise HTTPException(status_code=403, detail="Trainer access required")
+    
+    # Find trainer profile
+    trainer_profile = await db.trainer_profiles.find_one({'userId': current_user['id']})
+    if not trainer_profile:
+        raise HTTPException(status_code=404, detail="Trainer profile not found")
+    
+    achievements = await calculate_badge_progress(str(trainer_profile['_id']))
+    
+    return {
+        'trainerId': str(trainer_profile['_id']),
+        'badges': [badge.dict() for badge in achievements.badges],
+        'totalCompletedSessions': achievements.totalCompletedSessions,
+        'discountSessionsRemaining': achievements.discountSessionsRemaining,
+        'currentStreak': achievements.currentStreak,
+        'streakWeeks': achievements.streakWeeks
+    }
+
+@api_router.post("/trainer/check-badges")
+async def check_badges(current_user: dict = Depends(get_current_user)):
+    """Manually trigger badge check (for testing)"""
+    if UserRole.TRAINER not in current_user.get('roles', []):
+        raise HTTPException(status_code=403, detail="Trainer access required")
+    
+    trainer_profile = await db.trainer_profiles.find_one({'userId': current_user['id']})
+    if not trainer_profile:
+        raise HTTPException(status_code=404, detail="Trainer profile not found")
+    
+    newly_unlocked = await check_and_unlock_badges(str(trainer_profile['_id']))
+    
+    return {
+        'newlyUnlocked': newly_unlocked,
+        'message': f"Unlocked {len(newly_unlocked)} new badge(s)" if newly_unlocked else "No new badges"
+    }
+
+
 # ============================================================================
 # ROOT ROUTES
 # ============================================================================
