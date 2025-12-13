@@ -16,18 +16,18 @@ import {
   Image,
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
-import { useAuth } from '../../src/contexts/AuthContext';
-import { useAlert } from '../../src/contexts/AlertContext';
-import { trainerAPI, traineeAPI } from '../../src/services/api';
-import { Colors } from '../../src/utils/colors';
-import { TrainerProfile } from '../../src/types';
+import { useAuth } from '../../../src/contexts/AuthContext';
+import { useAlert } from '../../../src/contexts/AlertContext';
+import { trainerAPI, traineeAPI } from '../../../src/services/api';
+import { Colors } from '../../../src/utils/colors';
+import { TrainerProfile } from '../../../src/types';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
-import { AnimatedLogo } from '../../src/components/AnimatedLogo';
-import TrainingModeDialog from '../../src/components/TrainingModeDialog';
-import TrainerFilters from '../../src/components/TrainerFilters';
+import { AnimatedLogo } from '../../../src/components/AnimatedLogo';
+import TrainingModeDialog from '../../../src/components/TrainingModeDialog';
+import TrainerFilters from '../../../src/components/TrainerFilters';
 
 const { width } = Dimensions.get('window');
 
