@@ -339,7 +339,7 @@ export default function TrainerAchievementsScreen() {
       setLoading(true);
       const token = await AsyncStorage.getItem('token');
       const response = await axios.get(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/trainer/achievements`,
+        `${process.env.EXPO_PUBLIC_BACKEND_URL}/trainee/achievements`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
