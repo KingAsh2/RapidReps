@@ -96,7 +96,11 @@ export default function VerificationScreen() {
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission Required', 'Camera permission is required to take photos.');
+        showAlert({
+          title: 'Permission Required',
+          message: 'Camera permission is required to take photos.',
+          type: 'warning',
+        });
         return;
       }
 
@@ -111,7 +115,11 @@ export default function VerificationScreen() {
       }
     } catch (error) {
       console.error('Error taking photo:', error);
-      Alert.alert('Error', 'Failed to take photo');
+      showAlert({
+        title: 'Error',
+        message: 'Failed to take photo',
+        type: 'error',
+      });
     }
   };
 
