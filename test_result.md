@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Comprehensive full-stack test of RapidReps app after implementing Athletic Design System for all modal dialogs. Testing backend stability and frontend alert implementations across 12 converted screens including authentication, onboarding, payment, and session flows."
+user_problem_statement: "COMPREHENSIVE BADGE & REWARDS SYSTEM TEST - Validate all trainer and trainee badge triggers, calculations, and reward systems are working correctly. Test all 20 badges (10 trainer + 10 trainee) with realistic session data scenarios."
 
 backend:
   - task: "Authentication System"
