@@ -249,6 +249,40 @@ class VirtualSessionMatchResponse(BaseModel):
     zoomMeetingLink: Optional[str] = None
     status: str
 
+
+# Badge/Achievement Models
+class BadgeType:
+    MILESTONE_MASTER = "milestone_master"
+    WEEKEND_WARRIOR = "weekend_warrior"
+    STREAK_STAR = "streak_star"
+    EARLY_BIRD = "early_bird"
+    NIGHT_OWL = "night_owl"
+    TOP_TRAINER = "top_trainer"
+    NEW_CLIENT_CHAMP = "new_client_champ"
+    FLEXIBILITY_GURU = "flexibility_guru"
+    FEEDBACK_FAVORITE = "feedback_favorite"
+    DOUBLE_DUTY = "double_duty"
+
+class BadgeProgress(BaseModel):
+    badgeType: str
+    badgeName: str
+    description: str
+    isUnlocked: bool
+    progress: int
+    target: int
+    reward: Optional[str] = None
+    unlockedAt: Optional[datetime] = None
+
+class TrainerAchievements(BaseModel):
+    trainerId: str
+    badges: List[BadgeProgress]
+    totalCompletedSessions: int
+    discountSessionsRemaining: int = 0
+    currentStreak: int = 0
+    streakWeeks: int = 0
+    lastStreakReset: Optional[datetime] = None
+
+
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
