@@ -125,9 +125,17 @@ export default function TrainerHomeScreen() {
             <Text style={styles.greeting}>Hello, {user?.fullName?.split(' ')[0] || 'Trainer'}!</Text>
             <Text style={styles.subGreeting}>Manage your sessions</Text>
           </View>
-          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-            <Ionicons name="log-out-outline" size={24} color={Colors.white} />
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <TouchableOpacity 
+              onPress={() => router.push('/trainer/achievements')} 
+              style={styles.achievementsButton}
+            >
+              <Ionicons name="trophy" size={24} color={Colors.warning} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+              <Ionicons name="log-out-outline" size={24} color={Colors.white} />
+            </TouchableOpacity>
+          </View>
         </View>
       </LinearGradient>
 
