@@ -84,7 +84,11 @@ export default function VerificationScreen() {
       }
     } catch (error) {
       console.error('Error picking image:', error);
-      Alert.alert('Error', 'Failed to pick image');
+      showAlert({
+        title: 'Error',
+        message: 'Failed to pick image',
+        type: 'error',
+      });
     }
   };
 
