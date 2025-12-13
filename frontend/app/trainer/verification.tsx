@@ -130,7 +130,11 @@ export default function VerificationScreen() {
 
   const uploadDocuments = async () => {
     if (selectedImages.length === 0) {
-      Alert.alert('No Documents', 'Please select at least one document to upload');
+      showAlert({
+        title: 'No Documents',
+        message: 'Please select at least one document to upload',
+        type: 'warning',
+      });
       return;
     }
 
@@ -143,18 +147,28 @@ export default function VerificationScreen() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      Alert.alert('Success!', response.data.message, [
-        {
-          text: 'OK',
-          onPress: () => {
-            setSelectedImages([]);
-            loadDocuments();
+      showAlert({
+        title: 'Success!',
+        message: response.data.message,
+        type: 'success',
+        buttons: [
+          {
+            text: 'OK',
+            style: 'default',
+            onPress: () => {
+              setSelectedImages([]);
+              loadDocuments();
+            },
           },
-        },
-      ]);
+        ],
+      });
     } catch (error: any) {
       console.error('Error uploading documents:', error);
-      Alert.alert('Error', error.response?.data?.detail || 'Failed to upload documents');
+      showAlert({
+        title: 'Error',
+        message: error.response?.data?.detail || 'Failed to upload documents',
+        type: 'error',
+      });
     } finally {
       setUploading(false);
     }
