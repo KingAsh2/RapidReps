@@ -1663,7 +1663,7 @@ async def check_trainee_badges(current_user: dict = Depends(get_current_user)):
     if UserRole.TRAINEE not in current_user.get('roles', []):
         raise HTTPException(status_code=403, detail="Trainee access required")
     
-    trainee_id = current_user['id']
+    trainee_id = str(current_user['_id'])
     newly_unlocked = await check_and_unlock_trainee_badges(trainee_id)
     
     return {
