@@ -24,16 +24,16 @@ const { width } = Dimensions.get('window');
 
 // Badge icons mapping
 const BADGE_ICONS: { [key: string]: any } = {
-  milestone_master: '🎯',
-  weekend_warrior: '🏋️',
-  streak_star: '🔥',
-  early_bird: '🌅',
-  night_owl: '🦉',
-  top_trainer: '👑',
-  new_client_champ: '🤝',
-  flexibility_guru: '🧘',
-  feedback_favorite: '⭐',
-  double_duty: '⚡',
+  commitment: '💪',
+  consistency_champ: '🔥',
+  weekend_grinder: '🏋️',
+  early_riser: '🌅',
+  night_hustler: '🌙',
+  loyalty_lock: '🏆',
+  trainer_favorite: '⭐',
+  explorer: '🗺️',
+  feedback_hero: '📝',
+  all_in: '⚡',
 };
 
 interface Badge {
