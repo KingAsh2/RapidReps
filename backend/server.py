@@ -1383,7 +1383,7 @@ async def get_trainer_achievements(current_user: dict = Depends(get_current_user
         raise HTTPException(status_code=403, detail="Trainer access required")
     
     # Find trainer profile
-    trainer_profile = await db.trainer_profiles.find_one({'userId': current_user['id']})
+    trainer_profile = await db.trainer_profiles.find_one({'userId': str(current_user['_id'])})
     if not trainer_profile:
         raise HTTPException(status_code=404, detail="Trainer profile not found")
     
