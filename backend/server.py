@@ -1408,7 +1408,7 @@ async def check_badges(current_user: dict = Depends(get_current_user)):
     if not trainer_profile:
         raise HTTPException(status_code=404, detail="Trainer profile not found")
     
-    newly_unlocked = await check_and_unlock_badges(str(trainer_profile['_id']))
+    newly_unlocked = await check_and_unlock_badges(str(current_user['_id']))
     
     return {
         'newlyUnlocked': newly_unlocked,
