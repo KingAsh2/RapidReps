@@ -1644,7 +1644,7 @@ async def get_trainee_achievements(current_user: dict = Depends(get_current_user
         raise HTTPException(status_code=403, detail="Trainee access required")
     
     # Use user ID as trainee ID for now (they can have profiles in both collections)
-    trainee_id = current_user['id']
+    trainee_id = str(current_user['_id'])
     
     achievements = await calculate_trainee_badge_progress(trainee_id)
     
