@@ -39,10 +39,11 @@ export default function VerificationScreen() {
   const requestPermissions = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert(
-        'Permission Required',
-        'Please grant camera roll permissions to upload documents.'
-      );
+      showAlert({
+        title: 'Permission Required',
+        message: 'Please grant camera roll permissions to upload documents.',
+        type: 'warning',
+      });
     }
   };
 
