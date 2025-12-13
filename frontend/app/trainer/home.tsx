@@ -480,8 +480,26 @@ const styles = StyleSheet.create({
     color: Colors.navy,
     marginTop: 2,
   },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  achievementsButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   logoutButton: {
-    padding: 8,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   scrollView: {
     flex: 1,
