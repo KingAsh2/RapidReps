@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Alert,
   ActivityIndicator,
   Image,
   Dimensions,
@@ -16,6 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Colors } from '../../src/utils/colors';
+import { useAlert } from '../../src/contexts/AlertContext';
 import axios from 'axios';
 import Constants from 'expo-constants';
 
