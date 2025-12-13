@@ -16,6 +16,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { useAlert } from '../../../src/contexts/AlertContext';
+import { traineeAPI } from '../../../src/services/api';
 
 export default function SavedTrainersScreen() {
   const router = useRouter();
