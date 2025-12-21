@@ -114,6 +114,7 @@ export const TrainingStyles = [
   'HIIT',
   'Boxing',
   'Functional Training',
+  'Functional Fitness (55+)',
   'Mobility',
   'Sports Training',
   'Cardio',
