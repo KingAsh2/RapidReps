@@ -162,28 +162,11 @@ export default function TraineeHomeScreen() {
     startAnimations();
   }, []);
 
-  // Force exit loading state after timeout
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (loading) {
-        console.log('[TraineeHome] Force exiting loading state after timeout');
-        setLoading(false);
-      }
-    }, 3000);
-    return () => clearTimeout(timeout);
-  }, []);
-  
   useEffect(() => {
     if (user) {
       requestLocationPermission();
       // Start loading trainers immediately, don't wait for location
       loadTrainers();
-    } else {
-      // If no user, still stop loading after a brief delay
-      const timeout = setTimeout(() => {
-        setLoading(false);
-      }, 1000);
-      return () => clearTimeout(timeout);
     }
   }, [user]);
 
