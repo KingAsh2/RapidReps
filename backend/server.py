@@ -377,6 +377,17 @@ def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
     
     return distance
 
+
+class ReportCreate(BaseModel):
+    reportedUserId: str
+    reason: str
+    context: Optional[str] = None
+    contentType: Optional[str] = None  # e.g., "profile", "message", "media", "session"
+    contentId: Optional[str] = None
+
+class BlockResponse(BaseModel):
+    blockedUserIds: List[str]
+
 # ============================================================================
 # AUTH ROUTES
 # ============================================================================
@@ -465,6 +476,70 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         isAdmin=current_user.get('isAdmin', False),
         createdAt=current_user['createdAt']
     )
+
+
+
+@api_router.delete("/auth/me")
+async def delete_me(current_user: dict = Depends(get_current_user)):
+    """Delete the current user's account (Google Play requirement)."""
+    user_id = str(current_user['_id'])
+
+    # Delete related docs (best-effort)
+    await db.trainer_profiles.delete_many({'userId': user_id})
+    await db.trainee_profiles.delete_many({'userId': user_id})
+    await db.sessions.delete_many({'$or': [{'traineeId': user_id}, {'trainerId': user_id}]})
+    await db.ratings.delete_many({'$or': [{'traineeId': user_id}, {'trainerId': user_id}]})
+    await db.trainer_achievements.delete_many({'trainerId': user_id})
+    await db.trainee_achievements.delete_many({'traineeId': user_id})
+    await db.blocks.delete_many({'$or': [{'blockerUserId': user_id}, {'blockedUserId': user_id}]})
+    await db.reports.delete_many({'$or': [{'reporterUserId': user_id}, {'reportedUserId': user_id}]})
+
+    # Finally delete user
+    await db.users.delete_one({'_id': current_user['_id']})
+
+    return {'success': True}
+
+
+# ============================================================================
+# SAFETY / MODERATION ROUTES
+# ============================================================================
+
+@api_router.post("/safety/report")
+async def report_user(report: ReportCreate, current_user: dict = Depends(get_current_user)):
+    """Create a safety report about a user/content."""
+    report_doc = report.dict()
+    report_doc['reporterUserId'] = str(current_user['_id'])
+    report_doc['createdAt'] = datetime.utcnow()
+    await db.reports.insert_one(report_doc)
+    return {'success': True}
+
+@api_router.post("/safety/block/{blocked_user_id}")
+async def block_user(blocked_user_id: str, current_user: dict = Depends(get_current_user)):
+    """Block a user (prevents future interactions)."""
+    blocker_id = str(current_user['_id'])
+    existing = await db.blocks.find_one({'blockerUserId': blocker_id, 'blockedUserId': blocked_user_id})
+    if not existing:
+        await db.blocks.insert_one({
+            'blockerUserId': blocker_id,
+            'blockedUserId': blocked_user_id,
+            'createdAt': datetime.utcnow(),
+        })
+    return {'success': True}
+
+@api_router.delete("/safety/block/{blocked_user_id}")
+async def unblock_user(blocked_user_id: str, current_user: dict = Depends(get_current_user)):
+    blocker_id = str(current_user['_id'])
+    await db.blocks.delete_one({'blockerUserId': blocker_id, 'blockedUserId': blocked_user_id})
+    return {'success': True}
+
+@api_router.get("/safety/blocks", response_model=BlockResponse)
+async def get_blocks(current_user: dict = Depends(get_current_user)):
+    blocker_id = str(current_user['_id'])
+    cursor = db.blocks.find({'blockerUserId': blocker_id})
+    blocked = []
+    async for doc in cursor:
+        blocked.append(doc['blockedUserId'])
+    return BlockResponse(blockedUserIds=blocked)
 
 # ============================================================================
 # TRAINER PROFILE ROUTES
