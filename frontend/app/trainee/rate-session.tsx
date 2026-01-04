@@ -47,17 +47,8 @@ export default function RateSessionScreen() {
         reviewText: reviewText.trim() || undefined,
       });
 
-      showAlert({
-        title: 'Success! 🎉',
-        message: 'Thank you for your feedback!',
-        type: 'success',
-        buttons: [
-          {
-            text: 'OK',
-            onPress: () => router.back(),
-          },
-        ],
-      });
+      // Navigate back directly
+      router.back();
     } catch (error: any) {
       showAlert({
         title: 'Submission Failed',
