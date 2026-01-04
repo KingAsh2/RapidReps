@@ -1,243 +1,389 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
-  TextInput,
   StyleSheet,
+  TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
-  Animated,
   ActivityIndicator,
+  Animated,
+  Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import { Colors } from '../../src/utils/colors';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useAlert } from '../../src/contexts/AlertContext';
-import { Colors } from '../../src/utils/colors';
-import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { AnimatedLogo } from '../../src/components/AnimatedLogo';
+
+const { width } = Dimensions.get('window');
 
 export default function LoginScreen() {
   const router = useRouter();
   const { login, user, activeRole } = useAuth();
   const { showAlert } = useAlert();
-  const [loading, setLoading] = useState(false);
-  const [loginSuccess, setLoginSuccess] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [successAnim] = useState(new Animated.Value(0));
-  const [checkmarkAnim] = useState(new Animated.Value(0));
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginSuccess, setLoginSuccess] = useState(false);
 
-  // Navigate when user is logged in and has an active role
+  // Animation values
+  const gradientAnim = useRef(new Animated.Value(0)).current;
+  const cardAnim = useRef(new Animated.Value(0)).current;
+  const emailFocusAnim = useRef(new Animated.Value(0)).current;
+  const passwordFocusAnim = useRef(new Animated.Value(0)).current;
+  const buttonPressAnim = useRef(new Animated.Value(1)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const lockShakeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // Animated gradient background
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(gradientAnim, {
+          toValue: 1,
+          duration: 3000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(gradientAnim, {
+          toValue: 0,
+          duration: 3000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    // Card entrance animation
+    Animated.spring(cardAnim, {
+      toValue: 1,
+      tension: 50,
+      friction: 7,
+      useNativeDriver: true,
+    }).start();
+
+    // Pulse animation for button
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.05,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, []);
+
   useEffect(() => {
     if (user && activeRole && loginSuccess) {
-      // Increased delay to ensure Root Layout is fully mounted
       const timer = setTimeout(() => {
         if (activeRole === 'trainer') {
           router.replace('/trainer/home');
         } else if (activeRole === 'trainee') {
           router.replace('/trainee/(tabs)/home');
         }
-      }, 2500); // Increased from 1500ms to 2500ms
+      }, 2500);
       return () => clearTimeout(timer);
     }
-  }, [user, activeRole, loginSuccess, router]);
+  }, [user, activeRole, loginSuccess]);
+
+  const handleEmailFocus = () => {
+    Animated.spring(emailFocusAnim, {
+      toValue: 1,
+      tension: 50,
+      friction: 3,
+      useNativeDriver: false,
+    }).start();
+  };
+
+  const handleEmailBlur = () => {
+    Animated.spring(emailFocusAnim, {
+      toValue: 0,
+      tension: 50,
+      friction: 3,
+      useNativeDriver: false,
+    }).start();
+  };
+
+  const handlePasswordFocus = () => {
+    Animated.spring(passwordFocusAnim, {
+      toValue: 1,
+      tension: 50,
+      friction: 3,
+      useNativeDriver: false,
+    }).start();
+    // Lock shake animation
+    Animated.sequence([
+      Animated.timing(lockShakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
+      Animated.timing(lockShakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
+      Animated.timing(lockShakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
+      Animated.timing(lockShakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
+    ]).start();
+  };
+
+  const handlePasswordBlur = () => {
+    Animated.spring(passwordFocusAnim, {
+      toValue: 0,
+      tension: 50,
+      friction: 3,
+      useNativeDriver: false,
+    }).start();
+  };
 
   const handleLogin = async () => {
     if (!email || !password) {
       showAlert({
-        title: 'Missing Fields',
-        message: 'Please fill in all fields',
-        type: 'error',
+        title: 'Missing Info',
+        message: 'Please enter both email and password',
+        type: 'warning',
       });
       return;
     }
 
+    // Button press animation
+    Animated.sequence([
+      Animated.timing(buttonPressAnim, {
+        toValue: 0.95,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(buttonPressAnim, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
     setLoading(true);
     try {
-      await login(email.trim(), password);
-      
-      // Show success animation
+      await login(email.trim().toLowerCase(), password);
       setLoginSuccess(true);
-      
-      // Animate success overlay
-      Animated.parallel([
-        Animated.spring(successAnim, {
-          toValue: 1,
-          useNativeDriver: true,
-          friction: 5,
-        }),
-        Animated.sequence([
-          Animated.delay(200),
-          Animated.spring(checkmarkAnim, {
-            toValue: 1,
-            useNativeDriver: true,
-            friction: 5,
-          }),
-        ]),
-      ]).start();
-      
+      showAlert({
+        title: 'Welcome Back! 💪',
+        message: "Let's crush those goals!",
+        type: 'success',
+      });
     } catch (error: any) {
-      setLoading(false);
-      console.error('Login error:', error);
       showAlert({
         title: 'Login Failed',
-        message: error.response?.data?.detail || 'Invalid email or password. Please try again.',
+        message: error.response?.data?.detail || 'Invalid email or password',
         type: 'error',
       });
+    } finally {
+      setLoading(false);
     }
   };
 
+  const emailBorderColor = emailFocusAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['rgba(255, 255, 255, 0.3)', Colors.warning],
+  });
+
+  const passwordBorderColor = passwordFocusAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['rgba(255, 255, 255, 0.3)', Colors.warning],
+  });
+
+  const cardTranslateY = cardAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [50, 0],
+  });
+
+  const gradientTranslateX = gradientAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 100],
+  });
+
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={Colors.gradientTealStart}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.headerGradient}
+      {/* Animated Gradient Background */}
+      <Animated.View
+        style={[
+          styles.gradientBackground,
+          {
+            transform: [
+              { translateX: gradientTranslateX },
+              { scale: 1.2 },
+            ],
+          },
+        ]}
       >
-        <AnimatedLogo size={70} animationType="power-slam" />
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={28} color={Colors.white} />
-        </TouchableOpacity>
-        <Text style={styles.title}>Welcome Back!</Text>
-        <Text style={styles.subtitle}>Ready to crush your goals? 💪</Text>
-      </LinearGradient>
+        <LinearGradient
+          colors={['#FF6B35', '#F7931E', '#00CFC1', '#1a2a5e']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFillObject}
+        />
+      </Animated.View>
 
-      <KeyboardAvoidingView
-        style={styles.formContainer}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <ScrollView 
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
+      <SafeAreaView style={styles.safeArea}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardView}
         >
-          {/* Form */}
-          <View style={styles.form}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email</Text>
-              <View style={styles.inputWrapper}>
-                <Ionicons name="mail" size={20} color={Colors.neonBlue} style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  value={email}
-                  onChangeText={setEmail}
-                  placeholder="john@example.com"
-                  placeholderTextColor={Colors.textLight}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
-              </View>
-            </View>
+          {/* Back Button */}
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={28} color={Colors.white} />
+          </TouchableOpacity>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Password</Text>
-              <View style={styles.inputWrapper}>
-                <Ionicons name="lock-closed" size={20} color={Colors.neonBlue} style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder="••••••••"
-                  placeholderTextColor={Colors.textLight}
-                  secureTextEntry
-                />
-              </View>
-              <TouchableOpacity 
-                onPress={() => router.push('/auth/forgot-password')}
-                style={styles.forgotPasswordLink}
-              >
-                <Text style={styles.forgotPasswordText}>Forgot password?</Text>
-              </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={handleLogin}
-              disabled={loading || loginSuccess}
-            >
-              <LinearGradient
-                colors={loading || loginSuccess ? ['#CCCCCC', '#999999'] : Colors.gradientTealStart}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.loginButton}
-              >
-                {loading && !loginSuccess ? (
-                  <View style={styles.loadingRow}>
-                    <ActivityIndicator size="small" color={Colors.white} />
-                    <Text style={styles.loginButtonText}>Logging In...</Text>
-                  </View>
-                ) : (
-                  <Text style={styles.loginButtonText}>
-                    {loginSuccess ? 'Success! 🎉' : 'Log In ⚡'}
-                  </Text>
-                )}
-              </LinearGradient>
-            </TouchableOpacity>
-
-            <View style={styles.signupLink}>
-              <Text style={styles.signupLinkText}>Don't have an account? </Text>
-              <TouchableOpacity onPress={() => router.push('/auth/signup')}>
-                <Text style={styles.signupLinkButton}>Sign Up</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-
-      {/* Success Overlay */}
-      {loginSuccess && (
-        <Animated.View
-          style={[
-            styles.successOverlay,
-            {
-              opacity: successAnim,
-              transform: [
-                {
-                  scale: successAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.3, 1],
-                  }),
-                },
-              ],
-            },
-          ]}
-        >
-          <LinearGradient
-            colors={Colors.gradientMain}
-            style={styles.successGradient}
+          {/* Login Card */}
+          <Animated.View
+            style={[
+              styles.cardContainer,
+              {
+                opacity: cardAnim,
+                transform: [{ translateY: cardTranslateY }],
+              },
+            ]}
           >
-            <Animated.View
-              style={[
-                styles.checkmarkContainer,
-                {
-                  transform: [
+            {/* Glassmorphism Card */}
+            <View style={styles.glassCard}>
+              {/* Header */}
+              <View style={styles.header}>
+                <Text style={styles.title}>Let's Finish What{"\n"}You Started</Text>
+                <Text style={styles.subtitle}>Time to lock in 💪⚡</Text>
+              </View>
+
+              {/* Email Input */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Email</Text>
+                <Animated.View
+                  style={[
+                    styles.inputContainer,
                     {
-                      scale: checkmarkAnim.interpolate({
+                      borderColor: emailBorderColor,
+                      borderWidth: emailFocusAnim.interpolate({
                         inputRange: [0, 1],
-                        outputRange: [0, 1],
+                        outputRange: [2, 3],
                       }),
                     },
+                  ]}
+                >
+                  <Ionicons name="mail" size={20} color={Colors.white} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="john@example.com"
+                    placeholderTextColor="rgba(255, 255, 255, 0.5)"
+                    value={email}
+                    onChangeText={setEmail}
+                    onFocus={handleEmailFocus}
+                    onBlur={handleEmailBlur}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                </Animated.View>
+              </View>
+
+              {/* Password Input */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Password</Text>
+                <Animated.View
+                  style={[
+                    styles.inputContainer,
                     {
-                      rotate: checkmarkAnim.interpolate({
+                      borderColor: passwordBorderColor,
+                      borderWidth: passwordFocusAnim.interpolate({
                         inputRange: [0, 1],
-                        outputRange: ['0deg', '360deg'],
+                        outputRange: [2, 3],
                       }),
+                      transform: [{ translateX: lockShakeAnim }],
                     },
-                  ],
-                },
-              ]}
-            >
-              <Ionicons name="checkmark-circle" size={80} color={Colors.white} />
-            </Animated.View>
-            <Text style={styles.successText}>Login Successful! 🎉</Text>
-            <Text style={styles.successSubtext}>Redirecting you now...</Text>
-            <ActivityIndicator size="small" color={Colors.white} style={{ marginTop: 20 }} />
-          </LinearGradient>
-        </Animated.View>
-      )}
+                  ]}
+                >
+                  <Ionicons
+                    name={showPassword ? 'lock-open' : 'lock-closed'}
+                    size={20}
+                    color={Colors.white}
+                    style={styles.inputIcon}
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="••••••••"
+                    placeholderTextColor="rgba(255, 255, 255, 0.5)"
+                    value={password}
+                    onChangeText={setPassword}
+                    onFocus={handlePasswordFocus}
+                    onBlur={handlePasswordBlur}
+                    secureTextEntry={!showPassword}
+                    autoCapitalize="none"
+                  />
+                  <TouchableOpacity
+                    onPress={() => setShowPassword(!showPassword)}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <Ionicons
+                      name={showPassword ? 'eye-off' : 'eye'}
+                      size={20}
+                      color="rgba(255, 255, 255, 0.7)"
+                    />
+                  </TouchableOpacity>
+                </Animated.View>
+              </View>
+
+              {/* Forgot Password */}
+              <TouchableOpacity
+                onPress={() => router.push('/auth/forgot-password')}
+                style={styles.forgotButton}
+              >
+                <Text style={styles.forgotText}>Forgot password?</Text>
+              </TouchableOpacity>
+
+              {/* Login Button */}
+              <Animated.View
+                style={[
+                  styles.loginButtonContainer,
+                  {
+                    transform: [
+                      { scale: loading ? 1 : buttonPressAnim },
+                      { scale: loading ? 1 : pulseAnim },
+                    ],
+                  },
+                ]}
+              >
+                <TouchableOpacity
+                  onPress={handleLogin}
+                  disabled={loading}
+                  style={styles.loginButton}
+                  activeOpacity={0.8}
+                >
+                  <LinearGradient
+                    colors={['#00CFC1', '#FF6B35']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.loginButtonGradient}
+                  >
+                    {loading ? (
+                      <ActivityIndicator size="small" color={Colors.white} />
+                    ) : (
+                      <View style={styles.loginButtonContent}>
+                        <Text style={styles.loginButtonText}>Log In</Text>
+                        <Ionicons name="flash" size={20} color={Colors.white} />
+                      </View>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+              </Animated.View>
+
+              {/* Sign Up Link */}
+              <View style={styles.signupContainer}>
+                <Text style={styles.signupText}>Don't have an account? </Text>
+                <TouchableOpacity onPress={() => router.push('/auth/signup')}>
+                  <Text style={styles.signupLink}>Sign Up</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Animated.View>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
     </View>
   );
 }
@@ -245,43 +391,69 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.navy,
   },
-  headerGradient: {
-    paddingTop: 60,
-    paddingHorizontal: 24,
-    paddingBottom: 32,
+  gradientBackground: {
+    ...StyleSheet.absoluteFillObject,
+    width: width * 2,
+  },
+  safeArea: {
+    flex: 1,
+  },
+  keyboardView: {
+    flex: 1,
+    padding: 20,
+    justifyContent: 'center',
   },
   backButton: {
-    marginBottom: 16,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    position: 'absolute',
+    top: 60,
+    left: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  cardContainer: {
+    width: '100%',
+    maxWidth: 400,
+    alignSelf: 'center',
+  },
+  glassCard: {
+    backgroundColor: 'rgba(26, 42, 94, 0.85)',
+    borderRadius: 24,
+    padding: 32,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.3,
+    shadowRadius: 30,
+    elevation: 10,
+  },
+  header: {
+    marginBottom: 32,
     alignItems: 'center',
   },
   title: {
-    fontSize: 36,
-    fontWeight: 'bold',
+    fontSize: 32,
+    fontWeight: '900',
     color: Colors.white,
+    textAlign: 'center',
+    lineHeight: 38,
     marginBottom: 8,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   subtitle: {
     fontSize: 16,
-    color: Colors.white,
-    opacity: 0.9,
-  },
-  formContainer: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  form: {
-    paddingHorizontal: 24,
-    paddingTop: 32,
-    paddingBottom: 40,
+    fontWeight: '600',
+    color: Colors.warning,
+    textAlign: 'center',
   },
   inputGroup: {
     marginBottom: 20,
@@ -289,108 +461,79 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '700',
-    color: Colors.navy,
+    color: Colors.white,
     marginBottom: 8,
+    letterSpacing: 0.5,
   },
-  forgotPasswordLink: {
-    alignSelf: 'flex-end',
-    marginTop: 8,
-  },
-  forgotPasswordText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: Colors.neonBlue,
-    textDecorationLine: 'underline',
-  },
-  inputWrapper: {
+  inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.background,
-    borderRadius: 14,
-    borderWidth: 2,
-    borderColor: Colors.border,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 16,
     paddingHorizontal: 16,
+    height: 56,
   },
   inputIcon: {
     marginRight: 12,
   },
   input: {
     flex: 1,
-    paddingVertical: 14,
     fontSize: 16,
-    color: Colors.navy,
+    fontWeight: '600',
+    color: Colors.white,
+  },
+  forgotButton: {
+    alignSelf: 'flex-end',
+    marginBottom: 24,
+  },
+  forgotText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.warning,
+    textDecorationLine: 'underline',
+  },
+  loginButtonContainer: {
+    marginBottom: 24,
   },
   loginButton: {
-    paddingVertical: 18,
-    borderRadius: 14,
-    alignItems: 'center',
-    marginTop: 8,
-    shadowColor: Colors.neonBlue,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: Colors.secondary,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
     elevation: 8,
   },
+  loginButtonGradient: {
+    paddingVertical: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loginButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   loginButtonText: {
-    color: Colors.white,
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '900',
+    color: Colors.white,
+    letterSpacing: 1,
+  },
+  signupContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  signupText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.7)',
   },
   signupLink: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 24,
-  },
-  signupLinkText: {
     fontSize: 14,
-    color: Colors.textLight,
-  },
-  signupLinkButton: {
-    fontSize: 14,
-    color: Colors.neonBlue,
-    fontWeight: '700',
-  },
-  loadingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  successOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
-  },
-  successGradient: {
-    width: '80%',
-    padding: 40,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 10,
-  },
-  checkmarkContainer: {
-    marginBottom: 20,
-  },
-  successText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: Colors.white,
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  successSubtext: {
-    fontSize: 16,
-    color: Colors.white,
-    opacity: 0.9,
-    textAlign: 'center',
+    fontWeight: '900',
+    color: Colors.warning,
+    textDecorationLine: 'underline',
   },
 });
