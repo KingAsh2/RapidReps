@@ -167,6 +167,12 @@ export default function TraineeHomeScreen() {
       requestLocationPermission();
       // Start loading trainers immediately, don't wait for location
       loadTrainers();
+    } else {
+      // If no user, still stop loading after a brief delay
+      const timeout = setTimeout(() => {
+        setLoading(false);
+      }, 1000);
+      return () => clearTimeout(timeout);
     }
   }, [user]);
 
