@@ -502,6 +502,38 @@ export default function TraineeOnboardingScreen() {
           </Text>
         </TouchableOpacity>
       </View>
+
+      {/* Training Style Info Modal */}
+      <Modal
+        visible={showStyleInfo !== null}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowStyleInfo(null)}
+      >
+        <TouchableOpacity 
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowStyleInfo(null)}
+        >
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{showStyleInfo}</Text>
+              <TouchableOpacity onPress={() => setShowStyleInfo(null)}>
+                <Ionicons name="close-circle" size={28} color={Colors.navy} />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.modalDescription}>
+              {showStyleInfo && TrainingStyleDescriptions[showStyleInfo]}
+            </Text>
+            <TouchableOpacity 
+              style={styles.modalButton}
+              onPress={() => setShowStyleInfo(null)}
+            >
+              <Text style={styles.modalButtonText}>Got it!</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
