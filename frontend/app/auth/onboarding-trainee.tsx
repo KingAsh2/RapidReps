@@ -61,50 +61,81 @@ export default function TraineeOnboardingScreen() {
 
   const requestLocationPermission = async () => {
     try {
+      console.log('[Onboarding] Requesting location permission...');
       const { status } = await Location.requestForegroundPermissionsAsync();
+      console.log('[Onboarding] Location permission status:', status);
+      
       if (status === 'granted') {
         await getCurrentLocation();
+      } else {
+        console.log('[Onboarding] Location permission not granted');
+        // Don't show error - location is optional
       }
     } catch (error) {
-      console.error('Error requesting location permission:', error);
+      console.error('[Onboarding] Error requesting location permission:', error);
+      // Silent fail - location is optional
     }
   };
 
   const getCurrentLocation = async () => {
     setLocationLoading(true);
     try {
-      const location = await Location.getCurrentPositionAsync({
+      console.log('[Onboarding] Getting current location...');
+      
+      // Add timeout to prevent hanging
+      const locationPromise = Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
+        timeout: 10000, // 10 second timeout
       });
+      
+      const location = await Promise.race([
+        locationPromise,
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Location timeout')), 10000)
+        )
+      ]) as any;
+      
+      console.log('[Onboarding] Got location:', location);
       
       const { latitude, longitude } = location.coords;
       
       // Reverse geocode to get address
-      const addresses = await Location.reverseGeocodeAsync({ latitude, longitude });
-      
-      if (addresses[0]) {
-        const addr = addresses[0];
-        const locationAddress = `${addr.city || ''}, ${addr.region || ''}`;
-        setFormData(prev => ({
-          ...prev,
-          latitude,
-          longitude,
-          locationAddress,
-        }));
-      } else {
+      try {
+        const addresses = await Location.reverseGeocodeAsync({ latitude, longitude });
+        
+        if (addresses[0]) {
+          const addr = addresses[0];
+          const locationAddress = `${addr.city || ''}, ${addr.region || ''}`;
+          setFormData(prev => ({
+            ...prev,
+            latitude,
+            longitude,
+            locationAddress,
+          }));
+          console.log('[Onboarding] Location set:', locationAddress);
+        } else {
+          setFormData(prev => ({
+            ...prev,
+            latitude,
+            longitude,
+          }));
+        }
+      } catch (geocodeError) {
+        console.error('[Onboarding] Geocoding failed, using coords only:', geocodeError);
+        // Still save coordinates even if geocoding fails
         setFormData(prev => ({
           ...prev,
           latitude,
           longitude,
         }));
       }
-    } catch (error) {
-      console.error('Error getting location:', error);
-      showAlert({
-        title: 'Location Error',
-        message: 'Could not get your location. You can enter it manually.',
-        type: 'warning',
-      });
+    } catch (error: any) {
+      console.error('[Onboarding] Error getting location:', error);
+      // Only show alert if it's not a permission issue or timeout
+      if (error?.message !== 'Location timeout') {
+        // Make this less alarming - location is optional
+        console.log('[Onboarding] Location not available, continuing without it');
+      }
     } finally {
       setLocationLoading(false);
     }
