@@ -384,6 +384,18 @@ export default function TraineeProfileScreen() {
           </View>
         )}
 
+        {/* Delete Account Section */}
+        <View style={styles.dangerZone}>
+          <Text style={styles.dangerZoneTitle}>Danger Zone</Text>
+          <TouchableOpacity onPress={handleDeleteAccount} style={styles.deleteAccountButton}>
+            <Ionicons name="trash-outline" size={20} color={Colors.error} />
+            <Text style={styles.deleteAccountText}>Delete Account</Text>
+          </TouchableOpacity>
+          <Text style={styles.deleteAccountWarning}>
+            This will permanently delete your account and all data. This cannot be undone.
+          </Text>
+        </View>
+
         <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
