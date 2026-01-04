@@ -155,7 +155,7 @@ export default function MySessionsScreen() {
                 <Text style={styles.emptyText}>No upcoming sessions</Text>
                 <TouchableOpacity
                   style={styles.browseButton}
-                  onPress={() => router.push('/trainee/home')}
+                  onPress={() => router.push('/trainee/(tabs)/home')}
                 >
                   <Text style={styles.browseButtonText}>Find Trainers</Text>
                 </TouchableOpacity>
