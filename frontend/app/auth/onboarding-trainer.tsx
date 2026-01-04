@@ -221,20 +221,8 @@ export default function TrainerOnboardingScreen() {
       
       setLoading(false);
       
-      showAlert({
-        title: 'Success! 🎉',
-        message: 'Your trainer profile has been created! Ready to connect with trainees.',
-        type: 'success',
-        buttons: [
-          { 
-            text: 'Get Started', 
-            onPress: () => {
-              console.log('Navigating to trainer home...');
-              router.replace('/trainer/home');
-            }
-          },
-        ],
-      });
+      // Navigate directly without success popup
+      router.replace('/trainer/home');
     } catch (error: any) {
       console.error('Profile creation error:', error);
       setLoading(false);
