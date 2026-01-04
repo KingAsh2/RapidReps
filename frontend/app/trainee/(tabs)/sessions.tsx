@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,15 +8,37 @@ import {
   RefreshControl,
   ActivityIndicator,
   Image,
+  Animated,
+  Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Colors } from '../../../src/utils/colors';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { useAlert } from '../../../src/contexts/AlertContext';
 import { traineeAPI } from '../../../src/services/api';
+
+const { width } = Dimensions.get('window');
+
+// Brand colors
+const COLORS = {
+  teal: '#1FB8B4',
+  tealLight: '#22C1C3',
+  orange: '#F7931E',
+  orangeHot: '#FF6A00',
+  orangeLight: '#FF9F1C',
+  orangeGlow: '#FFB347',
+  yellow: '#FDBB2D',
+  navy: '#1a2a5e',
+  white: '#FFFFFF',
+  offWhite: '#FAFBFC',
+  gray: '#8892b0',
+  grayLight: '#E8ECF0',
+  success: '#00C853',
+  error: '#FF4757',
+  warning: '#FFA502',
+};
 
 export default function SessionsScreen() {
   const router = useRouter();
@@ -27,9 +49,47 @@ export default function SessionsScreen() {
   const [sessions, setSessions] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'upcoming' | 'pending' | 'past'>('upcoming');
 
+  // Animations
+  const headerAnim = useRef(new Animated.Value(0)).current;
+  const tabsAnim = useRef(new Animated.Value(0)).current;
+  const cardAnims = useRef([...Array(20)].map(() => new Animated.Value(0))).current;
+
   useEffect(() => {
     loadSessions();
   }, []);
+
+  useEffect(() => {
+    if (!loading) {
+      // Header animation
+      Animated.timing(headerAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }).start();
+
+      // Tabs animation
+      setTimeout(() => {
+        Animated.spring(tabsAnim, {
+          toValue: 1,
+          friction: 8,
+          tension: 40,
+          useNativeDriver: true,
+        }).start();
+      }, 150);
+
+      // Staggered cards
+      cardAnims.forEach((anim, index) => {
+        setTimeout(() => {
+          Animated.spring(anim, {
+            toValue: 1,
+            friction: 8,
+            tension: 40,
+            useNativeDriver: true,
+          }).start();
+        }, 250 + (index * 80));
+      });
+    }
+  }, [loading, activeTab]);
 
   const loadSessions = async () => {
     try {
@@ -38,11 +98,6 @@ export default function SessionsScreen() {
       setSessions(data);
     } catch (error) {
       console.error('Error loading sessions:', error);
-      showAlert({
-        title: 'Loading Failed',
-        message: 'Could not load your sessions. Please try again.',
-        type: 'error',
-      });
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -56,8 +111,7 @@ export default function SessionsScreen() {
 
   const upcomingSessions = sessions.filter(s => s.status === 'confirmed' && new Date(s.sessionDateTimeStart) > new Date());
   const pendingSessions = sessions.filter(s => s.status === 'requested');
-  const pastSessions = sessions.filter(s => s.status === 'completed' || (s.status === 'confirmed' && new Date(s.sessionDateTimeStart) <= new Date()));
-  const cancelledSessions = sessions.filter(s => s.status === 'cancelled');
+  const pastSessions = sessions.filter(s => s.status === 'completed' || s.status === 'cancelled' || (s.status === 'confirmed' && new Date(s.sessionDateTimeStart) <= new Date()));
 
   const handleCancelSession = async (session: any) => {
     const isAccepted = session.status === 'confirmed';
@@ -68,13 +122,11 @@ export default function SessionsScreen() {
     let message = `Session Price: $${sessionPrice.toFixed(2)}\n\n`;
     
     if (isAccepted) {
-      message += `⚠️ This session was already accepted by the trainer.\n\n`;
+      message += `⚠️ This session was already accepted.\n\n`;
       message += `Cancellation Fee (20%): $${cancellationFee.toFixed(2)}\n`;
-      message += `Refund Amount (80%): $${refundAmount.toFixed(2)}\n\n`;
-      message += `Do you want to proceed?`;
+      message += `Refund Amount: $${refundAmount.toFixed(2)}`;
     } else {
-      message += `✓ No cancellation fee (session not yet accepted)\n`;
-      message += `Full Refund: $${refundAmount.toFixed(2)}`;
+      message += `✓ No cancellation fee\nFull Refund: $${refundAmount.toFixed(2)}`;
     }
 
     showAlert({
@@ -89,12 +141,11 @@ export default function SessionsScreen() {
           onPress: async () => {
             try {
               await traineeAPI.cancelSession(session._id);
-              // Refresh the list silently - UI will update
               loadSessions();
             } catch (error: any) {
               showAlert({
                 title: 'Cancellation Failed',
-                message: error.response?.data?.detail || 'Could not cancel session. Please try again or contact support.',
+                message: error.response?.data?.detail || 'Could not cancel session.',
                 type: 'error',
               });
             }
@@ -104,528 +155,581 @@ export default function SessionsScreen() {
     });
   };
 
-  const renderSession = (session: any) => {
-    const isUpcoming = session.status === 'confirmed';
-    const isPending = session.status === 'requested';
-    const isPast = session.status === 'completed';
-    const isCancelled = session.status === 'cancelled';
-
-    return (
-      <View key={session.id} style={styles.sessionCard}>
-        {/* Status Badge */}
-        <View style={[
-          styles.statusBadge,
-          isPending && styles.statusPending,
-          isUpcoming && styles.statusUpcoming,
-          isPast && styles.statusPast,
-          isCancelled && styles.statusCancelled,
-        ]}>
-          <Ionicons 
-            name={
-              isPending ? 'time-outline' : 
-              isUpcoming ? 'checkmark-circle' :
-              isPast ? 'checkmark-done' : 
-              'close-circle'
-            } 
-            size={16} 
-            color={Colors.white} 
-          />
-          <Text style={styles.statusText}>
-            {isPending ? 'Pending' : isUpcoming ? 'Confirmed' : isPast ? 'Completed' : 'Cancelled'}
-          </Text>
-        </View>
-
-        {/* Session Info */}
-        <View style={styles.sessionHeader}>
-          {session.trainerPhoto ? (
-            <Image source={{ uri: session.trainerPhoto }} style={styles.trainerAvatar} />
-          ) : (
-            <View style={styles.trainerAvatarPlaceholder}>
-              <Ionicons name="person" size={24} color={Colors.textLight} />
-            </View>
-          )}
-          <View style={styles.sessionInfo}>
-            <Text style={styles.trainerName}>{session.trainerName || 'Trainer'}</Text>
-            <View style={styles.sessionDetail}>
-              <Ionicons name="calendar-outline" size={14} color={Colors.textLight} />
-              <Text style={styles.sessionDetailText}>
-                {new Date(session.sessionDateTimeStart).toLocaleDateString('en-US', {
-                  weekday: 'short',
-                  month: 'short',
-                  day: 'numeric',
-                })}
-              </Text>
-            </View>
-            <View style={styles.sessionDetail}>
-              <Ionicons name="time-outline" size={14} color={Colors.textLight} />
-              <Text style={styles.sessionDetailText}>
-                {new Date(session.sessionDateTimeStart).toLocaleTimeString('en-US', {
-                  hour: 'numeric',
-                  minute: '2-digit',
-                })} • {session.durationMinutes} min
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Location & Price */}
-        <View style={styles.sessionMeta}>
-          <View style={styles.metaItem}>
-            <Ionicons name="location-outline" size={16} color={Colors.secondary} />
-            <Text style={styles.metaText}>{session.locationType || 'In-Person'}</Text>
-          </View>
-          <View style={styles.metaItem}>
-            <Ionicons name="cash-outline" size={16} color={Colors.secondary} />
-            <Text style={styles.metaText}>
-              ${((session.finalSessionPriceCents || 0) / 100).toFixed(2)}
-            </Text>
-          </View>
-        </View>
-
-        {/* Actions */}
-        <View style={styles.actionButtons}>
-          {isUpcoming && (
-            <>
-              <TouchableOpacity
-                style={styles.actionButtonSecondary}
-                onPress={() => handleCancelSession(session)}
-              >
-                <Text style={styles.actionButtonSecondaryText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.actionButtonPrimary}
-                onPress={() => router.push(`/trainee/trainer-detail?trainerId=${session.trainerId}`)}
-              >
-                <LinearGradient
-                  colors={[Colors.secondary, Colors.primary]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.actionButtonGradient}
-                >
-                  <Text style={styles.actionButtonPrimaryText}>View Details</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            </>
-          )}
-          {isPending && (
-            <>
-              <View style={styles.pendingInfo}>
-                <Ionicons name="hourglass-outline" size={16} color={Colors.warning} />
-                <Text style={styles.pendingText}>Waiting for trainer to accept...</Text>
-              </View>
-              <TouchableOpacity
-                style={styles.actionButtonSecondary}
-                onPress={() => handleCancelSession(session)}
-              >
-                <Text style={styles.actionButtonSecondaryText}>Withdraw Request</Text>
-              </TouchableOpacity>
-            </>
-          )}
-          {isPast && !session.hasRated && (
-            <TouchableOpacity
-              style={styles.actionButtonPrimary}
-              onPress={() => router.push({
-                pathname: '/trainee/rate-session',
-                params: {
-                  sessionId: session.id,
-                  trainerId: session.trainerId,
-                },
-              })}
-            >
-              <LinearGradient
-                colors={[Colors.secondary, Colors.primary]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.actionButtonGradient}
-              >
-                <Ionicons name="star-outline" size={16} color={Colors.white} />
-                <Text style={styles.actionButtonPrimaryText}>Rate Session</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          )}
-          {isPast && session.hasRated && (
-            <View style={styles.ratedBadge}>
-              <Ionicons name="checkmark-circle" size={16} color={Colors.success} />
-              <Text style={styles.ratedText}>Rated</Text>
-            </View>
-          )}
-        </View>
-      </View>
-    );
-  };
-
-  const renderTabContent = () => {
-    const sessionsToShow = activeTab === 'upcoming' ? upcomingSessions : 
-                          activeTab === 'pending' ? pendingSessions : 
-                          [...pastSessions, ...cancelledSessions];
-
-    if (sessionsToShow.length === 0) {
-      return (
-        <View style={styles.emptyState}>
-          <Ionicons 
-            name={
-              activeTab === 'upcoming' ? 'calendar-outline' : 
-              activeTab === 'pending' ? 'time-outline' : 
-              'checkmark-done-outline'
-            } 
-            size={80} 
-            color={Colors.textLight} 
-          />
-          <Text style={styles.emptyTitle}>
-            {activeTab === 'upcoming' ? 'No Upcoming Sessions' :
-             activeTab === 'pending' ? 'No Pending Requests' :
-             'No Past Sessions'}
-          </Text>
-          <Text style={styles.emptyText}>
-            {activeTab === 'upcoming' ? 'Book a session to see it here!' :
-             activeTab === 'pending' ? 'Your session requests will appear here' :
-             'Completed sessions will appear here'}
-          </Text>
-        </View>
-      );
+  const getActiveData = () => {
+    switch (activeTab) {
+      case 'upcoming': return upcomingSessions;
+      case 'pending': return pendingSessions;
+      case 'past': return pastSessions;
+      default: return [];
     }
-
-    return sessionsToShow.map(renderSession);
   };
+
+  const headerTranslateY = headerAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-30, 0],
+  });
+
+  const tabsTranslateY = tabsAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [20, 0],
+  });
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-        <Text style={styles.loadingText}>Loading sessions...</Text>
-      </View>
+      <LinearGradient
+        colors={[COLORS.teal, COLORS.tealLight, COLORS.orange]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.loadingContainer}
+      >
+        <ActivityIndicator size="large" color={COLORS.white} />
+        <Text style={styles.loadingText}>Loading your sessions...</Text>
+      </LinearGradient>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header */}
+    <View style={styles.container}>
+      {/* Full gradient background */}
       <LinearGradient
-        colors={Colors.gradientTealStart}
+        colors={[COLORS.teal, COLORS.tealLight, COLORS.orange]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={styles.header}
-      >
-        <Text style={styles.headerTitle}>My Sessions</Text>
-        <Text style={styles.headerSubtitle}>
-          {upcomingSessions.length} upcoming • {pendingSessions.length} pending
-        </Text>
-      </LinearGradient>
+        style={StyleSheet.absoluteFill}
+      />
 
-      {/* Tab Bar */}
-      <View style={styles.tabBar}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'upcoming' && styles.tabActive]}
-          onPress={() => setActiveTab('upcoming')}
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        {/* Header */}
+        <Animated.View
+          style={[
+            styles.header,
+            {
+              opacity: headerAnim,
+              transform: [{ translateY: headerTranslateY }],
+            },
+          ]}
         >
-          <Text style={[styles.tabText, activeTab === 'upcoming' && styles.tabTextActive]}>
-            Upcoming
+          <Text style={styles.headerTitle}>MY SESSIONS 📅</Text>
+          <Text style={styles.headerSubtitle}>
+            {upcomingSessions.length} upcoming • {pendingSessions.length} pending
           </Text>
-          {upcomingSessions.length > 0 && (
-            <View style={styles.tabBadge}>
-              <Text style={styles.tabBadgeText}>{upcomingSessions.length}</Text>
+        </Animated.View>
+
+        {/* Tab Bar */}
+        <Animated.View
+          style={[
+            styles.tabBar,
+            {
+              opacity: tabsAnim,
+              transform: [{ translateY: tabsTranslateY }],
+            },
+          ]}
+        >
+          <TouchableOpacity
+            onPress={() => setActiveTab('upcoming')}
+            style={[styles.tab, activeTab === 'upcoming' && styles.tabActive]}
+          >
+            <LinearGradient
+              colors={activeTab === 'upcoming' ? [COLORS.white, COLORS.offWhite] : ['transparent', 'transparent']}
+              style={styles.tabGradient}
+            >
+              <Ionicons 
+                name="calendar" 
+                size={18} 
+                color={activeTab === 'upcoming' ? COLORS.teal : 'rgba(255,255,255,0.7)'} 
+              />
+              <Text style={[styles.tabText, activeTab === 'upcoming' && styles.tabTextActive]}>
+                Upcoming
+              </Text>
+              {upcomingSessions.length > 0 && (
+                <View style={[styles.tabBadge, activeTab === 'upcoming' && styles.tabBadgeActive]}>
+                  <Text style={[styles.tabBadgeText, activeTab === 'upcoming' && styles.tabBadgeTextActive]}>
+                    {upcomingSessions.length}
+                  </Text>
+                </View>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => setActiveTab('pending')}
+            style={[styles.tab, activeTab === 'pending' && styles.tabActive]}
+          >
+            <LinearGradient
+              colors={activeTab === 'pending' ? [COLORS.white, COLORS.offWhite] : ['transparent', 'transparent']}
+              style={styles.tabGradient}
+            >
+              <Ionicons 
+                name="time" 
+                size={18} 
+                color={activeTab === 'pending' ? COLORS.orange : 'rgba(255,255,255,0.7)'} 
+              />
+              <Text style={[styles.tabText, activeTab === 'pending' && styles.tabTextActive]}>
+                Pending
+              </Text>
+              {pendingSessions.length > 0 && (
+                <View style={[styles.tabBadge, styles.tabBadgePending, activeTab === 'pending' && styles.tabBadgeActive]}>
+                  <Text style={[styles.tabBadgeText, activeTab === 'pending' && styles.tabBadgeTextActive]}>
+                    {pendingSessions.length}
+                  </Text>
+                </View>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => setActiveTab('past')}
+            style={[styles.tab, activeTab === 'past' && styles.tabActive]}
+          >
+            <LinearGradient
+              colors={activeTab === 'past' ? [COLORS.white, COLORS.offWhite] : ['transparent', 'transparent']}
+              style={styles.tabGradient}
+            >
+              <Ionicons 
+                name="checkmark-done" 
+                size={18} 
+                color={activeTab === 'past' ? COLORS.gray : 'rgba(255,255,255,0.7)'} 
+              />
+              <Text style={[styles.tabText, activeTab === 'past' && styles.tabTextActive]}>
+                History
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </Animated.View>
+
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.white} />
+          }
+        >
+          {getActiveData().length === 0 ? (
+            <View style={styles.emptyCard}>
+              <LinearGradient
+                colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.9)']}
+                style={styles.emptyGradient}
+              >
+                <Ionicons 
+                  name={activeTab === 'upcoming' ? 'calendar-outline' : activeTab === 'pending' ? 'time-outline' : 'archive-outline'} 
+                  size={56} 
+                  color={COLORS.teal} 
+                />
+                <Text style={styles.emptyTitle}>
+                  {activeTab === 'upcoming' ? 'No upcoming sessions' : 
+                   activeTab === 'pending' ? 'No pending requests' : 
+                   'No session history'}
+                </Text>
+                <Text style={styles.emptySubtitle}>
+                  {activeTab === 'upcoming' ? 'Book a trainer to get started!' : 
+                   activeTab === 'pending' ? 'Your requests will appear here' : 
+                   'Completed sessions show up here'}
+                </Text>
+                {activeTab !== 'past' && (
+                  <TouchableOpacity 
+                    style={styles.emptyButton}
+                    onPress={() => router.push('/trainee/(tabs)/home')}
+                  >
+                    <LinearGradient
+                      colors={[COLORS.orange, COLORS.orangeLight]}
+                      style={styles.emptyButtonGradient}
+                    >
+                      <Text style={styles.emptyButtonText}>Find Trainers</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                )}
+              </LinearGradient>
             </View>
+          ) : (
+            getActiveData().map((session, index) => {
+              const isUpcoming = session.status === 'confirmed' && new Date(session.sessionDateTimeStart) > new Date();
+              const isPending = session.status === 'requested';
+              const isCancelled = session.status === 'cancelled';
+              const isCompleted = session.status === 'completed';
+
+              return (
+                <Animated.View
+                  key={session.id || index}
+                  style={[
+                    styles.sessionCard,
+                    {
+                      opacity: cardAnims[index] || 1,
+                      transform: [{
+                        translateY: (cardAnims[index] || new Animated.Value(1)).interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [30, 0],
+                        }),
+                      }],
+                    },
+                  ]}
+                >
+                  <LinearGradient
+                    colors={[COLORS.white, COLORS.offWhite]}
+                    style={styles.sessionGradient}
+                  >
+                    {/* Status Badge */}
+                    <View style={[
+                      styles.statusBadge,
+                      isPending && styles.statusPending,
+                      isUpcoming && styles.statusUpcoming,
+                      isCompleted && styles.statusCompleted,
+                      isCancelled && styles.statusCancelled,
+                    ]}>
+                      <Ionicons 
+                        name={
+                          isPending ? 'time' : 
+                          isUpcoming ? 'checkmark-circle' :
+                          isCompleted ? 'checkmark-done' : 
+                          'close-circle'
+                        } 
+                        size={14} 
+                        color={COLORS.white} 
+                      />
+                      <Text style={styles.statusText}>
+                        {isPending ? 'PENDING' : isUpcoming ? 'CONFIRMED' : isCompleted ? 'COMPLETED' : 'CANCELLED'}
+                      </Text>
+                    </View>
+
+                    {/* Trainer Info */}
+                    <View style={styles.trainerRow}>
+                      {session.trainerPhoto ? (
+                        <Image source={{ uri: session.trainerPhoto }} style={styles.trainerAvatar} />
+                      ) : (
+                        <LinearGradient
+                          colors={[COLORS.teal, COLORS.tealLight]}
+                          style={styles.trainerAvatarPlaceholder}
+                        >
+                          <Ionicons name="person" size={22} color={COLORS.white} />
+                        </LinearGradient>
+                      )}
+                      <View style={styles.trainerInfo}>
+                        <Text style={styles.trainerName}>{session.trainerName || 'Trainer'}</Text>
+                        <Text style={styles.sessionDate}>
+                          {new Date(session.sessionDateTimeStart).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                          {' • '}
+                          {new Date(session.sessionDateTimeStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </Text>
+                      </View>
+                    </View>
+
+                    {/* Session Stats */}
+                    <View style={styles.sessionStats}>
+                      <View style={styles.sessionStat}>
+                        <Ionicons name="time-outline" size={16} color={COLORS.gray} />
+                        <Text style={styles.sessionStatText}>{session.durationMinutes} min</Text>
+                      </View>
+                      <View style={styles.sessionStat}>
+                        <Ionicons name="location-outline" size={16} color={COLORS.gray} />
+                        <Text style={styles.sessionStatText}>{session.locationType}</Text>
+                      </View>
+                      <View style={styles.sessionStat}>
+                        <Ionicons name="cash-outline" size={16} color={COLORS.teal} />
+                        <Text style={[styles.sessionStatText, { color: COLORS.teal, fontWeight: '700' }]}>
+                          ${(session.finalSessionPriceCents / 100).toFixed(2)}
+                        </Text>
+                      </View>
+                    </View>
+
+                    {/* Action Buttons */}
+                    {(isPending || isUpcoming) && (
+                      <TouchableOpacity
+                        style={styles.cancelButton}
+                        onPress={() => handleCancelSession(session)}
+                      >
+                        <Ionicons name="close-outline" size={18} color={COLORS.error} />
+                        <Text style={styles.cancelButtonText}>Cancel Session</Text>
+                      </TouchableOpacity>
+                    )}
+
+                    {isCompleted && !session.hasRated && (
+                      <TouchableOpacity
+                        style={styles.rateButton}
+                        onPress={() => router.push(`/trainee/rate-session?sessionId=${session.id}&trainerId=${session.trainerId}`)}
+                      >
+                        <LinearGradient
+                          colors={[COLORS.orange, COLORS.orangeLight]}
+                          style={styles.rateButtonGradient}
+                        >
+                          <Ionicons name="star" size={18} color={COLORS.white} />
+                          <Text style={styles.rateButtonText}>Rate Session</Text>
+                        </LinearGradient>
+                      </TouchableOpacity>
+                    )}
+                  </LinearGradient>
+                </Animated.View>
+              );
+            })
           )}
-        </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'pending' && styles.tabActive]}
-          onPress={() => setActiveTab('pending')}
-        >
-          <Text style={[styles.tabText, activeTab === 'pending' && styles.tabTextActive]}>
-            Pending
-          </Text>
-          {pendingSessions.length > 0 && (
-            <View style={styles.tabBadge}>
-              <Text style={styles.tabBadgeText}>{pendingSessions.length}</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'past' && styles.tabActive]}
-          onPress={() => setActiveTab('past')}
-        >
-          <Text style={[styles.tabText, activeTab === 'past' && styles.tabTextActive]}>
-            Past
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Sessions List */}
-      <ScrollView
-        style={styles.content}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />
-        }
-      >
-        {renderTabContent()}
-        <View style={{ height: 20 }} />
-      </ScrollView>
-    </SafeAreaView>
+          <View style={{ height: 100 }} />
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+  },
+  safeArea: {
+    flex: 1,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.background,
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: Colors.textLight,
+    fontWeight: '600',
+    color: COLORS.white,
   },
+  // Header
   header: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     paddingTop: 12,
-    paddingBottom: 24,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+    paddingBottom: 16,
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: '900',
-    color: Colors.white,
-    marginBottom: 4,
+    color: COLORS.white,
+    letterSpacing: 0.5,
   },
   headerSubtitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: 'rgba(255,255,255,0.8)',
+    color: 'rgba(255,255,255,0.9)',
+    marginTop: 4,
   },
+  // Tab Bar
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: Colors.white,
-    borderBottomWidth: 2,
-    borderBottomColor: Colors.background,
+    marginHorizontal: 20,
+    marginBottom: 16,
+    gap: 8,
   },
   tab: {
     flex: 1,
-    paddingVertical: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderBottomWidth: 3,
-    borderBottomColor: 'transparent',
-    flexDirection: 'row',
-    gap: 8,
+    borderRadius: 14,
+    overflow: 'hidden',
   },
   tabActive: {
-    borderBottomColor: Colors.secondary,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  tabGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    gap: 6,
   },
   tabText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
-    color: Colors.textLight,
+    color: 'rgba(255,255,255,0.8)',
   },
   tabTextActive: {
-    color: Colors.secondary,
+    color: COLORS.navy,
   },
   tabBadge: {
-    backgroundColor: Colors.secondary,
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.3)',
     paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    minWidth: 20,
+    alignItems: 'center',
+  },
+  tabBadgePending: {
+    backgroundColor: COLORS.orange,
+  },
+  tabBadgeActive: {
+    backgroundColor: COLORS.teal,
   },
   tabBadgeText: {
-    fontSize: 12,
-    fontWeight: '900',
-    color: Colors.white,
+    fontSize: 11,
+    fontWeight: '800',
+    color: COLORS.white,
   },
-  content: {
+  tabBadgeTextActive: {
+    color: COLORS.white,
+  },
+  // Scroll
+  scrollView: {
     flex: 1,
-    padding: 16,
   },
+  scrollContent: {
+    paddingHorizontal: 20,
+  },
+  // Empty State
+  emptyCard: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  emptyGradient: {
+    padding: 40,
+    alignItems: 'center',
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: COLORS.navy,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.gray,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  emptyButton: {
+    borderRadius: 14,
+    overflow: 'hidden',
+  },
+  emptyButtonGradient: {
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+  },
+  emptyButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: COLORS.white,
+  },
+  // Session Card
   sessionCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 16,
-    borderWidth: 3,
-    borderColor: Colors.navy,
-    padding: 16,
-    marginBottom: 16,
+    marginBottom: 14,
+    borderRadius: 18,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  sessionGradient: {
+    padding: 18,
   },
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    marginBottom: 12,
-    gap: 6,
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
+    marginBottom: 14,
+    backgroundColor: COLORS.gray,
   },
   statusPending: {
-    backgroundColor: Colors.warning,
+    backgroundColor: COLORS.orange,
   },
   statusUpcoming: {
-    backgroundColor: Colors.success,
+    backgroundColor: COLORS.teal,
   },
-  statusPast: {
-    backgroundColor: Colors.textLight,
+  statusCompleted: {
+    backgroundColor: COLORS.success,
   },
   statusCancelled: {
-    backgroundColor: Colors.error,
+    backgroundColor: COLORS.error,
   },
   statusText: {
-    fontSize: 12,
-    fontWeight: '900',
-    color: Colors.white,
+    fontSize: 11,
+    fontWeight: '800',
+    color: COLORS.white,
+    letterSpacing: 0.5,
   },
-  sessionHeader: {
+  trainerRow: {
     flexDirection: 'row',
-    marginBottom: 12,
+    alignItems: 'center',
+    marginBottom: 14,
   },
   trainerAvatar: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    borderWidth: 2,
-    borderColor: Colors.navy,
-    marginRight: 12,
+    marginRight: 14,
   },
   trainerAvatarPlaceholder: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: Colors.background,
-    borderWidth: 2,
-    borderColor: Colors.navy,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 14,
   },
-  sessionInfo: {
+  trainerInfo: {
     flex: 1,
   },
   trainerName: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: Colors.navy,
+    fontSize: 17,
+    fontWeight: '800',
+    color: COLORS.navy,
     marginBottom: 4,
   },
-  sessionDetail: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 2,
-  },
-  sessionDetailText: {
-    fontSize: 13,
-    color: Colors.textLight,
+  sessionDate: {
+    fontSize: 14,
     fontWeight: '600',
+    color: COLORS.gray,
   },
-  sessionMeta: {
+  sessionStats: {
     flexDirection: 'row',
     gap: 16,
-    marginBottom: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: Colors.background,
+    marginBottom: 14,
   },
-  metaItem: {
+  sessionStat: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
-  metaText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.text,
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  actionButtonSecondary: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 12,
-    backgroundColor: Colors.background,
-    borderWidth: 2,
-    borderColor: Colors.navy,
-    alignItems: 'center',
-  },
-  actionButtonSecondaryText: {
-    fontSize: 14,
-    fontWeight: '900',
-    color: Colors.navy,
-  },
-  actionButtonPrimary: {
-    flex: 2,
-    borderRadius: 12,
-    overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: Colors.navy,
-  },
-  actionButtonGradient: {
-    flexDirection: 'row',
-    paddingVertical: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-  },
-  actionButtonPrimaryText: {
-    fontSize: 14,
-    fontWeight: '900',
-    color: Colors.white,
-  },
-  pendingInfo: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 12,
-    backgroundColor: Colors.background,
-    borderRadius: 12,
-  },
-  pendingText: {
+  sessionStatText: {
     fontSize: 13,
     fontWeight: '600',
-    color: Colors.warning,
+    color: COLORS.gray,
   },
-  ratedBadge: {
-    flex: 1,
+  cancelButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
     paddingVertical: 12,
-    backgroundColor: Colors.background,
     borderRadius: 12,
+    borderWidth: 2,
+    borderColor: COLORS.error,
   },
-  ratedText: {
+  cancelButtonText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: Colors.success,
+    fontWeight: '700',
+    color: COLORS.error,
   },
-  emptyState: {
-    flex: 1,
+  rateButton: {
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  rateButtonGradient: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 80,
+    gap: 8,
+    paddingVertical: 14,
   },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: Colors.navy,
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyText: {
-    fontSize: 14,
-    color: Colors.textLight,
-    textAlign: 'center',
-    maxWidth: 250,
+  rateButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: COLORS.white,
   },
 });
