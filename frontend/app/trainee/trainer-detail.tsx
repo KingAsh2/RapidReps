@@ -806,6 +806,24 @@ const styles = StyleSheet.create({
     opacity: 0.9,
     fontWeight: '600',
   },
+  messageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: Colors.secondary,
+    marginBottom: 12,
+  },
+  messageButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.secondary,
+  },
 
   section: {
     marginTop: 20,
