@@ -123,18 +123,24 @@ export default function TraineeHomeScreen() {
 
   const loadTrainers = async () => {
     try {
+      console.log('[TraineeHome] Starting loadTrainers...');
       // Build search params with location and virtual preferences
       const searchParams: any = {};
       
       if (userLocation) {
         searchParams.latitude = userLocation.latitude;
         searchParams.longitude = userLocation.longitude;
+        console.log('[TraineeHome] Using location:', userLocation);
+      } else {
+        console.log('[TraineeHome] No location available');
       }
       
       // Pass wantsVirtual=true to include virtual trainers
       searchParams.wantsVirtual = true;
       
+      console.log('[TraineeHome] Calling trainerAPI.searchTrainers...');
       const data = await trainerAPI.searchTrainers(searchParams);
+      console.log('[TraineeHome] Received trainers:', data?.length || 0);
       
       // Calculate distances and add to trainer objects
       let trainersWithDistance = data.map((trainer: any) => {
@@ -161,6 +167,7 @@ export default function TraineeHomeScreen() {
       // No additional sorting needed here
       
       setTrainers(trainersWithDistance);
+      console.log('[TraineeHome] Set trainers state with', trainersWithDistance.length, 'trainers');
       
       // Check if no trainers available and if there are virtual trainers
       const hasLocalTrainers = trainersWithDistance.filter((t: any) => t.distance !== null).length > 0;
@@ -179,8 +186,11 @@ export default function TraineeHomeScreen() {
         }, 800);
       }
     } catch (error) {
-      console.error('Error loading trainers:', error);
+      console.error('[TraineeHome] Error loading trainers:', error);
+      // Set empty array on error so UI still renders
+      setTrainers([]);
     } finally {
+      console.log('[TraineeHome] Setting loading to false');
       setLoading(false);
       setRefreshing(false);
     }
