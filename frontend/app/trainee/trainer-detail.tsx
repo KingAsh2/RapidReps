@@ -180,14 +180,8 @@ export default function TrainerDetailScreen() {
         locationNameOrAddress: trainer.primaryGym || 'Virtual',
       });
 
-      showAlert({
-        title: 'Success! 🎉',
-        message: 'Session booking requested! The trainer will review your request.',
-        type: 'success',
-        buttons: [
-          { text: 'OK', onPress: () => router.back() },
-        ],
-      });
+      // Navigate back directly - sessions page will show the new booking
+      router.back();
     } catch (error: any) {
       showAlert({
         title: 'Booking Failed',
