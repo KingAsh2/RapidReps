@@ -544,6 +544,7 @@ export default function TraineeOnboardingScreen() {
         </TouchableOpacity>
       </Modal>
     </View>
+    </KeyboardAvoidingView>
   );
 }
 
