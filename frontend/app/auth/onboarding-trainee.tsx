@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,17 +11,36 @@ import {
   Modal,
   KeyboardAvoidingView,
   Platform,
+  Animated,
+  Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useAlert } from '../../src/contexts/AlertContext';
 import { traineeAPI } from '../../src/services/api';
-import { Colors } from '../../src/utils/colors';
 import { TrainingStyles, FitnessLevel, TrainingStyleDescriptions } from '../../src/types';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
+
+const { width } = Dimensions.get('window');
+
+// Brand colors
+const COLORS = {
+  teal: '#1FB8B4',
+  tealLight: '#22C1C3',
+  orange: '#F7931E',
+  orangeHot: '#FF6A00',
+  orangeLight: '#FF9F1C',
+  navy: '#1a2a5e',
+  white: '#FFFFFF',
+  offWhite: '#FAFBFC',
+  gray: '#8892b0',
+  grayLight: '#E8ECF0',
+  success: '#00C853',
+};
 
 export default function TraineeOnboardingScreen() {
   const router = useRouter();
@@ -31,6 +50,11 @@ export default function TraineeOnboardingScreen() {
   const [step, setStep] = useState(1);
   const totalSteps = 3;
   const [showStyleInfo, setShowStyleInfo] = useState<string | null>(null);
+  const [locationLoading, setLocationLoading] = useState(false);
+
+  // Animations
+  const progressAnim = useRef(new Animated.Value(1)).current;
+  const contentAnim = useRef(new Animated.Value(1)).current;
 
   const [formData, setFormData] = useState({
     profilePhoto: '',
@@ -50,120 +74,62 @@ export default function TraineeOnboardingScreen() {
     locationAddress: '',
   });
 
-  const [locationLoading, setLocationLoading] = useState(false);
-
   const experienceLevels = ['Never trained', 'Some experience', 'Regular exerciser'];
 
   useEffect(() => {
-    // Request location permission on mount
     requestLocationPermission();
   }, []);
 
+  useEffect(() => {
+    // Animate progress bar
+    Animated.timing(progressAnim, {
+      toValue: step / totalSteps,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+
+    // Animate content
+    Animated.sequence([
+      Animated.timing(contentAnim, { toValue: 0, duration: 150, useNativeDriver: true }),
+      Animated.timing(contentAnim, { toValue: 1, duration: 300, useNativeDriver: true }),
+    ]).start();
+  }, [step]);
+
   const requestLocationPermission = async () => {
     try {
-      console.log('[Onboarding] Requesting location permission...');
       const { status } = await Location.requestForegroundPermissionsAsync();
-      console.log('[Onboarding] Location permission status:', status);
-      
       if (status === 'granted') {
         await getCurrentLocation();
-      } else if (status === 'denied') {
-        showAlert({
-          title: 'Location Access Needed',
-          message: 'To find nearby trainers, please enable location access in your device settings.',
-          type: 'warning',
-        });
       }
     } catch (error) {
-      console.error('[Onboarding] Error requesting location permission:', error);
-      showAlert({
-        title: 'Location Error',
-        message: 'Unable to request location permission. You can continue and set location later.',
-        type: 'warning',
-      });
+      console.error('[Onboarding] Error requesting location:', error);
     }
   };
 
   const getCurrentLocation = async () => {
     setLocationLoading(true);
     try {
-      console.log('[Onboarding] Getting current location...');
-      
-      // Request location with better settings
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
-        maximumAge: 10000, // Accept cached location up to 10 seconds old
-        timeout: 15000, // 15 second timeout
       });
-      
-      console.log('[Onboarding] Got location:', location.coords);
-      
+
       const { latitude, longitude } = location.coords;
-      
-      // Reverse geocode to get address
-      try {
-        console.log('[Onboarding] Reverse geocoding...');
-        const addresses = await Location.reverseGeocodeAsync({ 
-          latitude, 
-          longitude 
-        });
-        
-        if (addresses && addresses[0]) {
-          const addr = addresses[0];
-          const locationAddress = `${addr.city || ''}, ${addr.region || ''}`.trim();
-          
-          setFormData(prev => ({
-            ...prev,
-            latitude,
-            longitude,
-            locationAddress: locationAddress || 'Location Set',
-          }));
-          
-          console.log('[Onboarding] Location successfully set:', locationAddress);
-          // Location set silently - no popup needed
-        } else {
-          // No address but we have coordinates
-          setFormData(prev => ({
-            ...prev,
-            latitude,
-            longitude,
-            locationAddress: `${latitude.toFixed(2)}, ${longitude.toFixed(2)}`,
-          }));
-          
-          console.log('[Onboarding] Coordinates saved (no address)');
-          // Location set silently - no popup needed
-        }
-      } catch (geocodeError) {
-        console.error('[Onboarding] Geocoding failed:', geocodeError);
-        // Still save coordinates even if geocoding fails
-        setFormData(prev => ({
-          ...prev,
-          latitude,
-          longitude,
-          locationAddress: `${latitude.toFixed(2)}, ${longitude.toFixed(2)}`,
-        }));
-        // Location set silently - no popup needed
+
+      const addresses = await Location.reverseGeocodeAsync({ latitude, longitude });
+      let locationAddress = '';
+      if (addresses[0]) {
+        const addr = addresses[0];
+        locationAddress = `${addr.city || ''}, ${addr.region || ''}`.trim().replace(/^,\s*/, '');
       }
-    } catch (error: any) {
+
+      setFormData(prev => ({
+        ...prev,
+        latitude,
+        longitude,
+        locationAddress: locationAddress || `${latitude.toFixed(2)}, ${longitude.toFixed(2)}`,
+      }));
+    } catch (error) {
       console.error('[Onboarding] Error getting location:', error);
-      
-      let errorMessage = 'Unable to get your location. ';
-      
-      if (error.code === 'E_LOCATION_TIMEOUT') {
-        errorMessage += 'Location request timed out. Please ensure GPS is enabled and try again.';
-      } else if (error.code === 'E_LOCATION_UNAVAILABLE') {
-        errorMessage += 'Location services unavailable. Please check your device settings.';
-      } else if (error.code === 'E_LOCATION_SERVICES_DISABLED') {
-        errorMessage += 'Location services are disabled. Please enable them in settings.';
-      } else {
-        errorMessage += 'You can continue and set location later in your profile.';
-      }
-      
-      showAlert({
-        title: 'Location Error',
-        message: errorMessage,
-        type: 'error',
-      });
     } finally {
       setLocationLoading(false);
     }
@@ -171,11 +137,10 @@ export default function TraineeOnboardingScreen() {
 
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
-    if (permissionResult.granted === false) {
+    if (!permissionResult.granted) {
       showAlert({
         title: 'Permission Required',
-        message: 'Camera roll permission is required!',
+        message: 'Camera roll permission is required',
         type: 'warning',
       });
       return;
@@ -246,14 +211,7 @@ export default function TraineeOnboardingScreen() {
         locationAddress: formData.locationAddress,
       });
 
-      showAlert({
-        title: 'Success! 🎉',
-        message: 'Your trainee profile has been created!',
-        type: 'success',
-        buttons: [
-          { text: 'OK', onPress: () => router.replace('/trainee/(tabs)/home') },
-        ],
-      });
+      router.replace('/trainee/(tabs)/home');
     } catch (error: any) {
       showAlert({
         title: 'Profile Creation Failed',
@@ -265,56 +223,71 @@ export default function TraineeOnboardingScreen() {
     }
   };
 
+  const progressWidth = progressAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0%', '100%'],
+  });
+
   const renderStep = () => {
     switch (step) {
       case 1:
         return (
           <View style={styles.stepContent}>
-            <Text style={styles.stepTitle}>Profile Photo & Location 📍</Text>
-            
-            {/* Profile Photo */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Profile Photo</Text>
-              <TouchableOpacity style={styles.photoContainer} onPress={pickImage}>
-                {formData.profilePhoto ? (
-                  <Image source={{ uri: formData.profilePhoto }} style={styles.photo} />
-                ) : (
-                  <View style={styles.photoPlaceholder}>
-                    <Ionicons name="camera" size={40} color={Colors.textLight} />
-                    <Text style={styles.photoPlaceholderText}>Tap to add photo</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            </View>
+            <Text style={styles.stepTitle}>Let's set you up! 📍</Text>
+            <Text style={styles.stepSubtitle}>Add your photo and location</Text>
+
+            {/* Photo */}
+            <TouchableOpacity style={styles.photoContainer} onPress={pickImage}>
+              {formData.profilePhoto ? (
+                <Image source={{ uri: formData.profilePhoto }} style={styles.photo} />
+              ) : (
+                <LinearGradient
+                  colors={[COLORS.teal, COLORS.tealLight]}
+                  style={styles.photoPlaceholder}
+                >
+                  <Ionicons name="camera" size={40} color={COLORS.white} />
+                  <Text style={styles.photoText}>Add Photo</Text>
+                </LinearGradient>
+              )}
+              <View style={styles.editBadge}>
+                <Ionicons name="pencil" size={16} color={COLORS.white} />
+              </View>
+            </TouchableOpacity>
 
             {/* Location */}
-            <View style={styles.inputGroup}>
-              <View style={styles.labelRow}>
-                <Text style={styles.label}>Your Location</Text>
-                {locationLoading && <ActivityIndicator size="small" color={Colors.primary} />}
-              </View>
-              <TextInput
-                style={styles.input}
-                value={formData.locationAddress}
-                onChangeText={(text) => setFormData({ ...formData, locationAddress: text })}
-                placeholder="City, State"
-                placeholderTextColor={Colors.textLight}
-              />
-              <TouchableOpacity 
-                style={styles.locationButton} 
-                onPress={getCurrentLocation}
-                disabled={locationLoading}
-              >
-                <Ionicons name="locate" size={20} color={Colors.white} />
-                <Text style={styles.locationButtonText}>
-                  {locationLoading ? 'Getting location...' : 'Use GPS Location'}
-                </Text>
-              </TouchableOpacity>
-              {formData.latitude && formData.longitude && (
-                <Text style={styles.helpText}>
-                  ✓ Location captured: {formData.latitude.toFixed(4)}, {formData.longitude.toFixed(4)}
-                </Text>
-              )}
+            <View style={styles.locationCard}>
+              <LinearGradient colors={[COLORS.white, COLORS.offWhite]} style={styles.locationGradient}>
+                <View style={styles.locationHeader}>
+                  <Ionicons name="location" size={24} color={COLORS.orange} />
+                  <Text style={styles.locationTitle}>Your Location</Text>
+                </View>
+                {formData.locationAddress ? (
+                  <Text style={styles.locationText}>📍 {formData.locationAddress}</Text>
+                ) : (
+                  <Text style={styles.locationPlaceholder}>Location helps find nearby trainers</Text>
+                )}
+                <TouchableOpacity
+                  style={styles.locationButton}
+                  onPress={getCurrentLocation}
+                  disabled={locationLoading}
+                >
+                  <LinearGradient
+                    colors={[COLORS.teal, COLORS.tealLight]}
+                    style={styles.locationButtonGradient}
+                  >
+                    {locationLoading ? (
+                      <ActivityIndicator size="small" color={COLORS.white} />
+                    ) : (
+                      <>
+                        <Ionicons name="navigate" size={18} color={COLORS.white} />
+                        <Text style={styles.locationButtonText}>
+                          {formData.locationAddress ? 'Update' : 'Get Location'}
+                        </Text>
+                      </>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+              </LinearGradient>
             </View>
           </View>
         );
@@ -322,80 +295,65 @@ export default function TraineeOnboardingScreen() {
       case 2:
         return (
           <View style={styles.stepContent}>
-            <Text style={styles.stepTitle}>Tell us about yourself 💪</Text>
-            
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Fitness Goals</Text>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                value={formData.fitnessGoals}
-                onChangeText={(text) => setFormData({ ...formData, fitnessGoals: text })}
-                placeholder="e.g., Lose 20 lbs, build muscle, improve endurance..."
-                placeholderTextColor={Colors.textLight}
-                multiline
-                numberOfLines={4}
-              />
+            <Text style={styles.stepTitle}>Your fitness journey 💪</Text>
+            <Text style={styles.stepSubtitle}>Tell us about your goals</Text>
+
+            {/* Goals */}
+            <View style={styles.inputCard}>
+              <LinearGradient colors={[COLORS.white, COLORS.offWhite]} style={styles.inputCardGradient}>
+                <Text style={styles.inputLabel}>What are your fitness goals?</Text>
+                <TextInput
+                  style={styles.textArea}
+                  value={formData.fitnessGoals}
+                  onChangeText={(text) => setFormData({ ...formData, fitnessGoals: text })}
+                  placeholder="e.g. Lose weight, build muscle, improve endurance..."
+                  placeholderTextColor={COLORS.gray}
+                  multiline
+                  numberOfLines={3}
+                />
+              </LinearGradient>
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Experience Level</Text>
-              <View style={styles.levelContainer}>
-                {experienceLevels.map((level) => (
-                  <TouchableOpacity
-                    key={level}
-                    style={[
-                      styles.levelChip,
-                      formData.experienceLevel === level && styles.levelChipSelected,
-                    ]}
-                    onPress={() => setFormData({ ...formData, experienceLevel: level })}
-                  >
-                    <Text
+            {/* Experience Level */}
+            <View style={styles.inputCard}>
+              <LinearGradient colors={[COLORS.white, COLORS.offWhite]} style={styles.inputCardGradient}>
+                <Text style={styles.inputLabel}>Experience Level</Text>
+                <View style={styles.experienceRow}>
+                  {experienceLevels.map((level) => (
+                    <TouchableOpacity
+                      key={level}
+                      onPress={() => setFormData({ ...formData, experienceLevel: level })}
                       style={[
-                        styles.levelChipText,
-                        formData.experienceLevel === level && styles.levelChipTextSelected,
+                        styles.experienceChip,
+                        formData.experienceLevel === level && styles.experienceChipSelected,
                       ]}
                     >
-                      {level}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+                      <Text
+                        style={[
+                          styles.experienceText,
+                          formData.experienceLevel === level && styles.experienceTextSelected,
+                        ]}
+                      >
+                        {level}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </LinearGradient>
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Current Fitness Level</Text>
-              <View style={styles.levelContainer}>
-                {Object.values(FitnessLevel).map((level) => (
-                  <TouchableOpacity
-                    key={level}
-                    style={[
-                      styles.levelChip,
-                      formData.currentFitnessLevel === level && styles.levelChipSelected,
-                    ]}
-                    onPress={() => setFormData({ ...formData, currentFitnessLevel: level })}
-                  >
-                    <Text
-                      style={[
-                        styles.levelChipText,
-                        formData.currentFitnessLevel === level && styles.levelChipTextSelected,
-                      ]}
-                    >
-                      {level.charAt(0).toUpperCase() + level.slice(1)}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Injuries or Limitations (Optional)</Text>
-              <TextInput
-                style={styles.input}
-                value={formData.injuriesOrLimitations}
-                onChangeText={(text) => setFormData({ ...formData, injuriesOrLimitations: text })}
-                placeholder="e.g., Bad knee, lower back pain..."
-                placeholderTextColor={Colors.textLight}
-              />
+            {/* Injuries */}
+            <View style={styles.inputCard}>
+              <LinearGradient colors={[COLORS.white, COLORS.offWhite]} style={styles.inputCardGradient}>
+                <Text style={styles.inputLabel}>Any injuries or limitations?</Text>
+                <TextInput
+                  style={styles.input}
+                  value={formData.injuriesOrLimitations}
+                  onChangeText={(text) => setFormData({ ...formData, injuriesOrLimitations: text })}
+                  placeholder="Optional - let trainers know"
+                  placeholderTextColor={COLORS.gray}
+                />
+              </LinearGradient>
             </View>
           </View>
         );
@@ -403,523 +361,550 @@ export default function TraineeOnboardingScreen() {
       case 3:
         return (
           <View style={styles.stepContent}>
-            <Text style={styles.stepTitle}>Training Preferences 🏋️</Text>
-            
-            <View style={styles.inputGroup}>
-              <View style={styles.labelRow}>
-                <Text style={styles.label}>Preferred Training Styles</Text>
-                <Text style={styles.labelHint}>(Tap ⓘ to learn more)</Text>
-              </View>
-              <View style={styles.chipContainer}>
-                {TrainingStyles.map((style) => (
-                  <View key={style} style={styles.chipWrapper}>
+            <Text style={styles.stepTitle}>Training preferences 🏋️</Text>
+            <Text style={styles.stepSubtitle}>What types of training interest you?</Text>
+
+            <View style={styles.stylesCard}>
+              <LinearGradient colors={[COLORS.white, COLORS.offWhite]} style={styles.stylesGradient}>
+                <View style={styles.stylesGrid}>
+                  {TrainingStyles.map((style) => (
                     <TouchableOpacity
-                      style={[
-                        styles.chip,
-                        formData.preferredTrainingStyles.includes(style) && styles.chipSelected,
-                      ]}
+                      key={style}
                       onPress={() => toggleStyle(style)}
+                      onLongPress={() => setShowStyleInfo(style)}
+                      style={[
+                        styles.styleChip,
+                        formData.preferredTrainingStyles.includes(style) && styles.styleChipSelected,
+                      ]}
                     >
                       <Text
                         style={[
-                          styles.chipText,
-                          formData.preferredTrainingStyles.includes(style) && styles.chipTextSelected,
+                          styles.styleText,
+                          formData.preferredTrainingStyles.includes(style) && styles.styleTextSelected,
                         ]}
                       >
                         {style}
                       </Text>
                       <TouchableOpacity
                         onPress={() => setShowStyleInfo(style)}
-                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                        style={styles.infoIcon}
+                        style={styles.infoButton}
                       >
-                        <Ionicons 
-                          name="information-circle-outline" 
-                          size={18} 
-                          color={formData.preferredTrainingStyles.includes(style) ? Colors.white : Colors.navy} 
+                        <Ionicons
+                          name="information-circle"
+                          size={16}
+                          color={formData.preferredTrainingStyles.includes(style) ? COLORS.white : COLORS.gray}
                         />
                       </TouchableOpacity>
                     </TouchableOpacity>
-                  </View>
-                ))}
-              </View>
+                  ))}
+                </View>
+                <Text style={styles.helperText}>Tap to select • Hold for info</Text>
+              </LinearGradient>
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Session Format</Text>
-              <View style={styles.toggleRow}>
-                <TouchableOpacity
-                  style={[
-                    styles.toggleButton,
-                    formData.prefersInPerson && styles.toggleButtonActive,
-                  ]}
-                  onPress={() => setFormData({ ...formData, prefersInPerson: !formData.prefersInPerson })}
-                >
-                  <Ionicons 
-                    name="fitness" 
-                    size={20} 
-                    color={formData.prefersInPerson ? Colors.white : Colors.navy} 
-                  />
-                  <Text
-                    style={[
-                      styles.toggleButtonText,
-                      formData.prefersInPerson && styles.toggleButtonTextActive,
-                    ]}
+            {/* Training Mode */}
+            <View style={styles.inputCard}>
+              <LinearGradient colors={[COLORS.white, COLORS.offWhite]} style={styles.inputCardGradient}>
+                <Text style={styles.inputLabel}>Training Mode</Text>
+                <View style={styles.modeRow}>
+                  <TouchableOpacity
+                    onPress={() => setFormData({ ...formData, prefersInPerson: !formData.prefersInPerson })}
+                    style={[styles.modeChip, formData.prefersInPerson && styles.modeChipSelected]}
                   >
-                    In-Person
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    styles.toggleButton,
-                    formData.isVirtualEnabled && styles.toggleButtonActive,
-                  ]}
-                  onPress={() => setFormData({ ...formData, isVirtualEnabled: !formData.isVirtualEnabled })}
-                >
-                  <Ionicons 
-                    name="videocam" 
-                    size={20} 
-                    color={formData.isVirtualEnabled ? Colors.white : Colors.navy} 
-                  />
-                  <Text
-                    style={[
-                      styles.toggleButtonText,
-                      formData.isVirtualEnabled && styles.toggleButtonTextActive,
-                    ]}
+                    <Ionicons
+                      name="person"
+                      size={20}
+                      color={formData.prefersInPerson ? COLORS.white : COLORS.navy}
+                    />
+                    <Text style={[styles.modeText, formData.prefersInPerson && styles.modeTextSelected]}>
+                      In-Person
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => setFormData({ ...formData, prefersVirtual: !formData.prefersVirtual })}
+                    style={[styles.modeChip, formData.prefersVirtual && styles.modeChipSelected]}
                   >
-                    Virtual
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Home Gym or Zip Code</Text>
-              <TextInput
-                style={styles.input}
-                value={formData.homeGymOrZipCode}
-                onChangeText={(text) => setFormData({ ...formData, homeGymOrZipCode: text })}
-                placeholder="90210 or Gold's Gym Downtown"
-                placeholderTextColor={Colors.textLight}
-              />
+                    <Ionicons
+                      name="videocam"
+                      size={20}
+                      color={formData.prefersVirtual ? COLORS.white : COLORS.navy}
+                    />
+                    <Text style={[styles.modeText, formData.prefersVirtual && styles.modeTextSelected]}>
+                      Virtual
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </LinearGradient>
             </View>
           </View>
         );
-
-      default:
-        return null;
     }
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={{ flex: 1 }} 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-    >
-      <View style={styles.container}>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={[COLORS.teal, COLORS.tealLight, COLORS.orange]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
         {/* Header */}
-        <LinearGradient
-          colors={Colors.gradientTealStart}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.header}
-        >
-          <Text style={styles.title}>Trainee Setup</Text>
-          <Text style={styles.subtitle}>
-            Step {step} of {totalSteps}
-          </Text>
-          <View style={styles.progressBar}>
-            {[...Array(totalSteps)].map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.progressDot,
-                  index < step && styles.progressDotActive,
-                ]}
-              />
-            ))}
+        <View style={styles.header}>
+          {step > 1 ? (
+            <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+              <Ionicons name="arrow-back" size={24} color={COLORS.white} />
+            </TouchableOpacity>
+          ) : (
+            <View style={{ width: 44 }} />
+          )}
+          <Text style={styles.headerTitle}>Step {step} of {totalSteps}</Text>
+          <View style={{ width: 44 }} />
+        </View>
+
+        {/* Progress Bar */}
+        <View style={styles.progressContainer}>
+          <View style={styles.progressBg}>
+            <Animated.View style={[styles.progressFill, { width: progressWidth }]} />
           </View>
-        </LinearGradient>
+        </View>
 
-        {/* Form */}
-        <ScrollView 
-          style={styles.scrollView}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardView}
         >
-          {renderStep()}
-        </ScrollView>
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <Animated.View style={{ opacity: contentAnim }}>
+              {renderStep()}
+            </Animated.View>
+          </ScrollView>
 
-        {/* Navigation Buttons */}
-        <View style={styles.footer}>
-        {step > 1 && (
-          <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-            <Text style={styles.backButtonText}>Back</Text>
-          </TouchableOpacity>
-        )}
-        
-        <TouchableOpacity
-          style={[styles.nextButton, loading && styles.nextButtonDisabled]}
-          onPress={handleNext}
-          disabled={loading}
-        >
-          <Text style={styles.nextButtonText}>
-            {loading ? 'Saving...' : step === totalSteps ? 'Finish' : 'Next'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+          {/* Bottom CTA */}
+          <View style={styles.bottomContainer}>
+            <TouchableOpacity
+              style={styles.nextButton}
+              onPress={handleNext}
+              disabled={loading}
+            >
+              <LinearGradient
+                colors={loading ? [COLORS.gray, COLORS.grayLight] : [COLORS.orangeHot, COLORS.orange]}
+                style={styles.nextButtonGradient}
+              >
+                {loading ? (
+                  <ActivityIndicator size="small" color={COLORS.white} />
+                ) : (
+                  <>
+                    <Text style={styles.nextButtonText}>
+                      {step === totalSteps ? 'Complete Setup' : 'Continue'}
+                    </Text>
+                    <Ionicons name="arrow-forward" size={20} color={COLORS.white} />
+                  </>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
 
-      {/* Training Style Info Modal */}
+      {/* Style Info Modal */}
       <Modal
-        visible={showStyleInfo !== null}
-        transparent={true}
+        visible={!!showStyleInfo}
+        transparent
         animationType="fade"
         onRequestClose={() => setShowStyleInfo(null)}
       >
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.modalOverlay}
           activeOpacity={1}
           onPress={() => setShowStyleInfo(null)}
         >
           <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
+            <LinearGradient colors={[COLORS.white, COLORS.offWhite]} style={styles.modalGradient}>
               <Text style={styles.modalTitle}>{showStyleInfo}</Text>
-              <TouchableOpacity onPress={() => setShowStyleInfo(null)}>
-                <Ionicons name="close-circle" size={28} color={Colors.navy} />
+              <Text style={styles.modalDescription}>
+                {showStyleInfo ? TrainingStyleDescriptions[showStyleInfo] || 'No description available.' : ''}
+              </Text>
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={() => setShowStyleInfo(null)}
+              >
+                <Text style={styles.modalButtonText}>Got it!</Text>
               </TouchableOpacity>
-            </View>
-            <Text style={styles.modalDescription}>
-              {showStyleInfo && TrainingStyleDescriptions[showStyleInfo]}
-            </Text>
-            <TouchableOpacity 
-              style={styles.modalButton}
-              onPress={() => setShowStyleInfo(null)}
-            >
-              <Text style={styles.modalButtonText}>Got it!</Text>
-            </TouchableOpacity>
+            </LinearGradient>
           </View>
         </TouchableOpacity>
       </Modal>
     </View>
-    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
+  },
+  safeArea: {
+    flex: 1,
   },
   header: {
-    paddingTop: 60,
-    paddingHorizontal: 24,
-    paddingBottom: 24,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '900',
-    color: Colors.navy,
-    marginBottom: 4,
-    letterSpacing: 0.5,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: Colors.navy,
-    fontWeight: '700',
-    marginBottom: 16,
-  },
-  progressBar: {
     flexDirection: 'row',
-    gap: 8,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
   },
-  progressDot: {
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.white,
+  },
+  progressContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  progressBg: {
+    height: 6,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: COLORS.white,
+    borderRadius: 3,
+  },
+  keyboardView: {
     flex: 1,
-    height: 4,
-    backgroundColor: 'rgba(0,0,0,0.2)',
-    borderRadius: 2,
-  },
-  progressDotActive: {
-    backgroundColor: Colors.navy,
   },
   scrollView: {
     flex: 1,
   },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
   stepContent: {
-    padding: 24,
+    flex: 1,
   },
   stepTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: Colors.navy,
-    marginBottom: 24,
-  },
-  inputGroup: {
-    marginBottom: 24,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.navy,
+    fontSize: 28,
+    fontWeight: '900',
+    color: COLORS.white,
     marginBottom: 8,
   },
-  labelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  input: {
-    backgroundColor: Colors.background,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+  stepSubtitle: {
     fontSize: 16,
-    color: Colors.navy,
-    borderWidth: 2,
-    borderColor: Colors.navy,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.9)',
+    marginBottom: 24,
   },
-  textArea: {
-    height: 100,
-    textAlignVertical: 'top',
-  },
-  helpText: {
-    fontSize: 12,
-    color: Colors.textLight,
-    marginTop: 4,
-  },
+  // Photo
   photoContainer: {
-    alignItems: 'center',
-    marginBottom: 16,
+    alignSelf: 'center',
+    marginBottom: 24,
+    position: 'relative',
   },
   photo: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 3,
-    borderColor: Colors.navy,
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+    borderWidth: 4,
+    borderColor: COLORS.white,
   },
   photoPlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: Colors.background,
-    borderWidth: 3,
-    borderColor: Colors.navy,
+    width: 130,
+    height: 130,
+    borderRadius: 65,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 4,
+    borderColor: COLORS.white,
   },
-  photoPlaceholderText: {
-    fontSize: 12,
-    color: Colors.textLight,
-    marginTop: 8,
+  photoText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.white,
+    marginTop: 4,
+  },
+  editBadge: {
+    position: 'absolute',
+    bottom: 4,
+    right: 4,
+    backgroundColor: COLORS.orange,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: COLORS.white,
+  },
+  // Location
+  locationCard: {
+    borderRadius: 18,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  locationGradient: {
+    padding: 20,
+  },
+  locationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 12,
+  },
+  locationTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: COLORS.navy,
+  },
+  locationText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.teal,
+    marginBottom: 14,
+  },
+  locationPlaceholder: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: COLORS.gray,
+    marginBottom: 14,
   },
   locationButton: {
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  locationButtonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.primary,
-    paddingVertical: 12,
-    borderRadius: 12,
-    marginTop: 8,
+    paddingVertical: 14,
     gap: 8,
   },
   locationButtonText: {
-    color: Colors.white,
+    fontSize: 15,
+    fontWeight: '700',
+    color: COLORS.white,
+  },
+  // Input Cards
+  inputCard: {
+    borderRadius: 18,
+    overflow: 'hidden',
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  inputCardGradient: {
+    padding: 18,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.navy,
+    marginBottom: 10,
+  },
+  input: {
+    backgroundColor: COLORS.grayLight,
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 15,
+    fontWeight: '500',
+    color: COLORS.navy,
+  },
+  textArea: {
+    backgroundColor: COLORS.grayLight,
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 15,
+    fontWeight: '500',
+    color: COLORS.navy,
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  experienceRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  experienceChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: COLORS.grayLight,
+  },
+  experienceChipSelected: {
+    backgroundColor: COLORS.teal,
+  },
+  experienceText: {
     fontSize: 14,
     fontWeight: '600',
+    color: COLORS.navy,
   },
-  levelContainer: {
+  experienceTextSelected: {
+    color: COLORS.white,
+  },
+  // Styles
+  stylesCard: {
+    borderRadius: 18,
+    overflow: 'hidden',
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  stylesGradient: {
+    padding: 18,
+  },
+  stylesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 10,
   },
-  levelChip: {
-    flex: 1,
-    minWidth: '30%',
-    paddingVertical: 14,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: Colors.navy,
-    backgroundColor: Colors.white,
-    alignItems: 'center',
-  },
-  levelChipSelected: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  levelChipText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: Colors.navy,
-  },
-  levelChipTextSelected: {
-    color: Colors.white,
-  },
-  chipContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  chip: {
+  styleChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 20,
-    borderWidth: 2,
-    borderColor: Colors.navy,
-    backgroundColor: Colors.white,
+    backgroundColor: COLORS.grayLight,
+    gap: 6,
   },
-  chipSelected: {
-    backgroundColor: Colors.secondary,
-    borderColor: Colors.secondary,
+  styleChipSelected: {
+    backgroundColor: COLORS.teal,
   },
-  chipText: {
-    fontSize: 14,
+  styleText: {
+    fontSize: 13,
     fontWeight: '600',
-    color: Colors.navy,
+    color: COLORS.navy,
   },
-  chipTextSelected: {
-    color: Colors.white,
-    fontWeight: '700',
+  styleTextSelected: {
+    color: COLORS.white,
   },
-  toggleRow: {
+  infoButton: {
+    padding: 2,
+  },
+  helperText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: COLORS.gray,
+    textAlign: 'center',
+    marginTop: 14,
+  },
+  // Mode
+  modeRow: {
     flexDirection: 'row',
     gap: 12,
   },
-  toggleButton: {
+  modeChip: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 14,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: Colors.navy,
-    backgroundColor: Colors.white,
-  },
-  toggleButtonActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  toggleButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.navy,
-  },
-  toggleButtonTextActive: {
-    color: Colors.white,
-  },
-  budgetRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  budgetInput: {
-    flex: 1,
-  },
-  budgetLabel: {
-    fontSize: 12,
-    color: Colors.textLight,
-    marginBottom: 4,
-  },
-  footer: {
-    flexDirection: 'row',
-    paddingHorizontal: 24,
-    paddingVertical: 20,
-    gap: 12,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-  },
-  backButton: {
-    flex: 1,
     paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: Colors.navy,
+    borderRadius: 14,
+    backgroundColor: COLORS.grayLight,
+    gap: 8,
   },
-  backButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.navy,
+  modeChipSelected: {
+    backgroundColor: COLORS.teal,
+  },
+  modeText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: COLORS.navy,
+  },
+  modeTextSelected: {
+    color: COLORS.white,
+  },
+  // Bottom
+  bottomContainer: {
+    padding: 20,
+    paddingBottom: Platform.OS === 'ios' ? 30 : 20,
   },
   nextButton: {
-    flex: 2,
-    backgroundColor: Colors.primary,
-    borderWidth: 3,
-    borderColor: Colors.navy,
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: COLORS.orange,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
-  nextButtonDisabled: {
-    opacity: 0.6,
+  nextButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 18,
+    gap: 10,
   },
   nextButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: Colors.white,
+    fontSize: 17,
+    fontWeight: '800',
+    color: COLORS.white,
   },
-  labelHint: {
-    fontSize: 12,
-    color: Colors.textLight,
-    fontStyle: 'italic',
-  },
-  chipWrapper: {
-    marginBottom: 8,
-  },
-  infoIcon: {
-    marginLeft: 6,
-  },
+  // Modal
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 30,
   },
   modalContent: {
-    backgroundColor: Colors.white,
-    borderRadius: 20,
-    padding: 24,
     width: '100%',
-    maxWidth: 400,
-    borderWidth: 3,
-    borderColor: Colors.navy,
+    borderRadius: 20,
+    overflow: 'hidden',
   },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  modalGradient: {
+    padding: 24,
     alignItems: 'center',
-    marginBottom: 16,
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: '900',
-    color: Colors.navy,
-    flex: 1,
+    fontWeight: '800',
+    color: COLORS.navy,
+    marginBottom: 12,
   },
   modalDescription: {
-    fontSize: 16,
-    color: Colors.text,
-    lineHeight: 24,
+    fontSize: 15,
+    fontWeight: '500',
+    color: COLORS.gray,
+    textAlign: 'center',
+    lineHeight: 22,
     marginBottom: 20,
   },
   modalButton: {
-    backgroundColor: Colors.secondary,
-    paddingVertical: 14,
+    backgroundColor: COLORS.teal,
+    paddingHorizontal: 32,
+    paddingVertical: 12,
     borderRadius: 12,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: Colors.navy,
   },
   modalButtonText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
-    color: Colors.white,
+    color: COLORS.white,
   },
 });
