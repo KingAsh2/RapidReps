@@ -347,26 +347,41 @@ export default function TraineeOnboardingScreen() {
             <Text style={styles.stepTitle}>Training Preferences 🏋️</Text>
             
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Preferred Training Styles</Text>
+              <View style={styles.labelRow}>
+                <Text style={styles.label}>Preferred Training Styles</Text>
+                <Text style={styles.labelHint}>(Tap ⓘ to learn more)</Text>
+              </View>
               <View style={styles.chipContainer}>
                 {TrainingStyles.map((style) => (
-                  <TouchableOpacity
-                    key={style}
-                    style={[
-                      styles.chip,
-                      formData.preferredTrainingStyles.includes(style) && styles.chipSelected,
-                    ]}
-                    onPress={() => toggleStyle(style)}
-                  >
-                    <Text
+                  <View key={style} style={styles.chipWrapper}>
+                    <TouchableOpacity
                       style={[
-                        styles.chipText,
-                        formData.preferredTrainingStyles.includes(style) && styles.chipTextSelected,
+                        styles.chip,
+                        formData.preferredTrainingStyles.includes(style) && styles.chipSelected,
                       ]}
+                      onPress={() => toggleStyle(style)}
                     >
-                      {style}
-                    </Text>
-                  </TouchableOpacity>
+                      <Text
+                        style={[
+                          styles.chipText,
+                          formData.preferredTrainingStyles.includes(style) && styles.chipTextSelected,
+                        ]}
+                      >
+                        {style}
+                      </Text>
+                      <TouchableOpacity
+                        onPress={() => setShowStyleInfo(style)}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                        style={styles.infoIcon}
+                      >
+                        <Ionicons 
+                          name="information-circle-outline" 
+                          size={18} 
+                          color={formData.preferredTrainingStyles.includes(style) ? Colors.white : Colors.navy} 
+                        />
+                      </TouchableOpacity>
+                    </TouchableOpacity>
+                  </View>
                 ))}
               </View>
             </View>
