@@ -30,6 +30,7 @@ export default function TraineeOnboardingScreen() {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
   const totalSteps = 3;
+  const [showStyleInfo, setShowStyleInfo] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     profilePhoto: '',
