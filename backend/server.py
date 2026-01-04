@@ -1078,7 +1078,12 @@ async def create_session(session: SessionCreate, current_user: dict = Depends(ge
 @api_router.get("/sessions/{session_id}", response_model=SessionResponse)
 async def get_session(session_id: str):
     """Get session by ID"""
-    session = await db.sessions.find_one({'_id': ObjectId(session_id)})
+    try:
+        oid = ObjectId(session_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid session ID format")
+    
+    session = await db.sessions.find_one({'_id': oid})
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     
