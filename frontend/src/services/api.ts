@@ -43,7 +43,13 @@ export const authAPI = {
     const response = await api.get('/auth/me');
     return response.data;
   },
+
+  deleteMe: async (): Promise<{ success: boolean }> => {
+    const response = await api.delete('/auth/me');
+    return response.data;
+  },
 };
+
 
 // Trainer Profile API
 export const trainerAPI = {
@@ -163,3 +169,27 @@ export const traineeAPI = {
 };
 
 export default api;
+
+
+// Safety / Moderation API
+export const safetyAPI = {
+  reportUser: async (data: { reportedUserId: string; reason: string; context?: string; contentType?: string; contentId?: string; }): Promise<{ success: boolean }> => {
+    const response = await api.post('/safety/report', data);
+    return response.data;
+  },
+
+  blockUser: async (blockedUserId: string): Promise<{ success: boolean }> => {
+    const response = await api.post(`/safety/block/${blockedUserId}`);
+    return response.data;
+  },
+
+  unblockUser: async (blockedUserId: string): Promise<{ success: boolean }> => {
+    const response = await api.delete(`/safety/block/${blockedUserId}`);
+    return response.data;
+  },
+
+  getMyBlocks: async (): Promise<{ blockedUserIds: string[] }> => {
+    const response = await api.get('/safety/blocks');
+    return response.data;
+  },
+};
