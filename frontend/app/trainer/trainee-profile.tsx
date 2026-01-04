@@ -39,7 +39,7 @@ export default function TraineeProfileScreen() {
                 reason: 'Reported from trainee profile',
                 contentType: 'profile',
               });
-              showAlert({ title: 'Submitted', message: 'Thanks — we received your report.', type: 'success' });
+              // Silent success - no popup
             } catch (e: any) {
               showAlert({ title: 'Error', message: e?.message || 'Unable to submit report.', type: 'error' });
             }
@@ -62,7 +62,7 @@ export default function TraineeProfileScreen() {
           onPress: async () => {
             try {
               await safetyAPI.blockUser(traineeId as string);
-              showAlert({ title: 'Blocked', message: 'Trainee blocked.', type: 'success' });
+              // Navigate back silently
               router.back();
             } catch (e: any) {
               showAlert({ title: 'Error', message: e?.message || 'Unable to block user.', type: 'error' });
