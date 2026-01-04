@@ -355,15 +355,8 @@ export default function TraineeHomeScreen() {
   const handleVirtualTrainingYes = () => {
     setShowVirtualDialog(false);
     if (virtualTrainers.length > 0) {
-      showAlert({
-        title: `${virtualTrainers.length} Virtual Trainer${virtualTrainers.length > 1 ? 's' : ''} Available! 🎉`,
-        message: 'Connecting you now...',
-        type: 'success',
-        buttons: [
-          { text: 'Start Video Call', onPress: () => initiateVideoCall(virtualTrainers[0]) },
-          { text: 'View All', onPress: () => setTrainers(virtualTrainers) },
-        ],
-      });
+      // Show virtual trainers directly in the list
+      setTrainers(virtualTrainers);
     }
   };
 
