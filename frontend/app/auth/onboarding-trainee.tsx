@@ -67,13 +67,20 @@ export default function TraineeOnboardingScreen() {
       
       if (status === 'granted') {
         await getCurrentLocation();
-      } else {
-        console.log('[Onboarding] Location permission not granted');
-        // Don't show error - location is optional
+      } else if (status === 'denied') {
+        showAlert({
+          title: 'Location Access Needed',
+          message: 'To find nearby trainers, please enable location access in your device settings.',
+          type: 'warning',
+        });
       }
     } catch (error) {
       console.error('[Onboarding] Error requesting location permission:', error);
-      // Silent fail - location is optional
+      showAlert({
+        title: 'Location Error',
+        message: 'Unable to request location permission. You can continue and set location later.',
+        type: 'warning',
+      });
     }
   };
 
@@ -82,60 +89,96 @@ export default function TraineeOnboardingScreen() {
     try {
       console.log('[Onboarding] Getting current location...');
       
-      // Add timeout to prevent hanging
-      const locationPromise = Location.getCurrentPositionAsync({
+      // Request location with better settings
+      const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
-        timeout: 10000, // 10 second timeout
+        maximumAge: 10000, // Accept cached location up to 10 seconds old
+        timeout: 15000, // 15 second timeout
       });
       
-      const location = await Promise.race([
-        locationPromise,
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Location timeout')), 10000)
-        )
-      ]) as any;
-      
-      console.log('[Onboarding] Got location:', location);
+      console.log('[Onboarding] Got location:', location.coords);
       
       const { latitude, longitude } = location.coords;
       
       // Reverse geocode to get address
       try {
-        const addresses = await Location.reverseGeocodeAsync({ latitude, longitude });
+        console.log('[Onboarding] Reverse geocoding...');
+        const addresses = await Location.reverseGeocodeAsync({ 
+          latitude, 
+          longitude 
+        });
         
-        if (addresses[0]) {
+        if (addresses && addresses[0]) {
           const addr = addresses[0];
-          const locationAddress = `${addr.city || ''}, ${addr.region || ''}`;
+          const locationAddress = `${addr.city || ''}, ${addr.region || ''}`.trim();
+          
           setFormData(prev => ({
             ...prev,
             latitude,
             longitude,
-            locationAddress,
+            locationAddress: locationAddress || 'Location Set',
           }));
-          console.log('[Onboarding] Location set:', locationAddress);
+          
+          console.log('[Onboarding] Location successfully set:', locationAddress);
+          
+          showAlert({
+            title: 'Location Set! 📍',
+            message: `Your location: ${locationAddress}`,
+            type: 'success',
+          });
         } else {
+          // No address but we have coordinates
           setFormData(prev => ({
             ...prev,
             latitude,
             longitude,
+            locationAddress: `${latitude.toFixed(2)}, ${longitude.toFixed(2)}`,
           }));
+          
+          console.log('[Onboarding] Coordinates saved (no address)');
+          
+          showAlert({
+            title: 'Location Set! 📍',
+            message: 'Your coordinates have been saved.',
+            type: 'success',
+          });
         }
       } catch (geocodeError) {
-        console.error('[Onboarding] Geocoding failed, using coords only:', geocodeError);
+        console.error('[Onboarding] Geocoding failed:', geocodeError);
         // Still save coordinates even if geocoding fails
         setFormData(prev => ({
           ...prev,
           latitude,
           longitude,
+          locationAddress: `${latitude.toFixed(2)}, ${longitude.toFixed(2)}`,
         }));
+        
+        showAlert({
+          title: 'Location Set! 📍',
+          message: 'Your coordinates have been saved.',
+          type: 'success',
+        });
       }
     } catch (error: any) {
       console.error('[Onboarding] Error getting location:', error);
-      // Only show alert if it's not a permission issue or timeout
-      if (error?.message !== 'Location timeout') {
-        // Make this less alarming - location is optional
-        console.log('[Onboarding] Location not available, continuing without it');
+      
+      let errorMessage = 'Unable to get your location. ';
+      
+      if (error.code === 'E_LOCATION_TIMEOUT') {
+        errorMessage += 'Location request timed out. Please ensure GPS is enabled and try again.';
+      } else if (error.code === 'E_LOCATION_UNAVAILABLE') {
+        errorMessage += 'Location services unavailable. Please check your device settings.';
+      } else if (error.code === 'E_LOCATION_SERVICES_DISABLED') {
+        errorMessage += 'Location services are disabled. Please enable them in settings.';
+      } else {
+        errorMessage += 'You can continue and set location later in your profile.';
       }
+      
+      showAlert({
+        title: 'Location Error',
+        message: errorMessage,
+        type: 'error',
+      });
     } finally {
       setLocationLoading(false);
     }
