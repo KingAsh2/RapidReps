@@ -165,20 +165,17 @@ export default function TraineeHomeScreen() {
   useEffect(() => {
     if (user) {
       requestLocationPermission();
+      // Start loading trainers immediately, don't wait for location
+      loadTrainers();
     }
   }, [user]);
 
   useEffect(() => {
-    if (userLocation) {
+    // Reload trainers when location becomes available to update distances
+    if (userLocation && !loading) {
       loadTrainers();
     }
   }, [userLocation]);
-
-  useEffect(() => {
-    if (!loading && trainers.length === 0) {
-      loadTrainers();
-    }
-  }, []);
 
   const requestLocationPermission = async () => {
     try {
