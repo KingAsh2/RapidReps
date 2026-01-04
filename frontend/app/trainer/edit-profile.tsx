@@ -245,6 +245,48 @@ export default function EditTrainerProfileScreen() {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    showAlert({
+      title: 'Delete Account',
+      message: 'This will permanently delete your account and all data. This action cannot be undone.',
+      type: 'warning',
+      buttons: [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete Forever',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const { authAPI } = await import('../../src/services/api');
+              const { logout } = await import('../../src/contexts/AuthContext');
+              await authAPI.deleteMe();
+              showAlert({
+                title: 'Account Deleted',
+                message: 'Your account has been permanently deleted.',
+                type: 'success',
+                buttons: [
+                  {
+                    text: 'OK',
+                    onPress: () => {
+                      // Logout is handled by the auth context
+                      router.replace('/');
+                    },
+                  },
+                ],
+              });
+            } catch (error: any) {
+              showAlert({
+                title: 'Error',
+                message: error?.response?.data?.detail || 'Unable to delete account. Please try again.',
+                type: 'error',
+              });
+            }
+          },
+        },
+      ],
+    });
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
