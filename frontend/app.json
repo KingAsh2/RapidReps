@@ -1,22 +1,36 @@
 {
   "expo": {
-    "name": "frontend",
-    "slug": "frontend",
+    "name": "RapidReps",
+    "slug": "rapidreps",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "frontend",
+    "scheme": "rapidreps",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.kingash.rapidreps",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "RapidReps uses your location to show nearby trainers/trainees and match sessions.",
+        "NSCameraUsageDescription": "RapidReps uses the camera for profile photos, verification, and uploading session media.",
+        "NSPhotoLibraryUsageDescription": "RapidReps lets you upload photos and videos for profiles and session content."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#000"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.kingash.rapidreps",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "CAMERA",
+        "READ_MEDIA_IMAGES",
+        "READ_MEDIA_VIDEO"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -35,7 +49,20 @@
         }
       ],
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow RapidReps to access your photos/videos so you can upload profile and session content.",
+          "cameraPermission": "Allow RapidReps to use your camera for profile photos and session media."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow RapidReps to use your location to show nearby trainers and trainees."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
