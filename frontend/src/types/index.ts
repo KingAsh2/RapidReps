@@ -123,3 +123,19 @@ export const TrainingStyles = [
   'CrossFit',
   'Bodybuilding',
 ];
+
+export const TrainingStyleDescriptions: { [key: string]: string } = {
+  'Strength Training': 'Build muscle and increase power through resistance exercises',
+  'Weight Loss': 'Burn calories and shed fat with targeted workouts',
+  'HIIT': 'High-Intensity Interval Training for maximum calorie burn in minimal time',
+  'Boxing': 'Combat sport training for fitness, agility, and self-defense',
+  'Functional Training': 'Movement-based exercises that improve daily activities',
+  'Functional Fitness (55+)': 'Age-appropriate exercises focusing on balance, mobility, and strength for active aging',
+  'Mobility': 'Improve flexibility, joint health, and range of motion',
+  'Sports Training': 'Sport-specific conditioning and performance enhancement',
+  'Cardio': 'Improve heart health and endurance through aerobic exercise',
+  'Yoga': 'Mind-body practice combining poses, breathing, and meditation',
+  'Pilates': 'Core-focused exercises for strength, flexibility, and posture',
+  'CrossFit': 'Varied high-intensity workouts combining multiple fitness disciplines',
+  'Bodybuilding': 'Muscle hypertrophy and aesthetic physique development',
+};
