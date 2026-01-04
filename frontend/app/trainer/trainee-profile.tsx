@@ -302,6 +302,23 @@ export default function TraineeProfileScreen() {
         <View style={styles.actionsCard}>
           <Text style={styles.cardTitle}>Quick Actions</Text>
           
+          <TouchableOpacity 
+            onPress={async () => {
+              try {
+                const { chatAPI } = await import('../../src/services/api');
+                const result = await chatAPI.getOrCreateConversation(session?.traineeId || '');
+                router.push(`/messages/chat?conversationId=${result.conversationId}&userId=${session?.traineeId}&userName=${traineeName}`);
+              } catch (error) {
+                console.error('Error creating conversation:', error);
+              }
+            }}
+            style={styles.actionButton}
+          >
+            <Ionicons name="chatbubble" size={24} color={Colors.secondary} />
+            <Text style={styles.actionButtonText}>Message Trainee</Text>
+            <Ionicons name="chevron-forward" size={20} color={Colors.textLight} />
+          </TouchableOpacity>
+
           <TouchableOpacity onPress={handleNavigate} style={styles.actionButton}>
             <Ionicons name="navigate" size={24} color={Colors.primary} />
             <Text style={styles.actionButtonText}>Navigate to Trainee</Text>
