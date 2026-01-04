@@ -24,6 +24,58 @@ export default function TrainerDetailScreen() {
   const { trainerId } = useLocalSearchParams();
   const { user } = useAuth();
   const { showAlert } = useAlert();
+
+
+  const handleReportTrainer = () => {
+    showAlert({
+      title: 'Report',
+      message: 'Report this trainer for spam, harassment, or inappropriate content?',
+      type: 'warning',
+      buttons: [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Report',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await safetyAPI.reportUser({
+                reportedUserId: trainerId as string,
+                reason: 'Reported from trainer profile',
+                contentType: 'profile',
+              });
+              showAlert({ title: 'Submitted', message: 'Thanks — we received your report.', type: 'success' });
+            } catch (e: any) {
+              showAlert({ title: 'Error', message: e?.message || 'Unable to submit report.', type: 'error' });
+            }
+          },
+        },
+      ],
+    });
+  };
+
+  const handleBlockTrainer = () => {
+    showAlert({
+      title: 'Block Trainer',
+      message: 'Blocking hides this trainer from your results and prevents future interactions.',
+      type: 'warning',
+      buttons: [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Block',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await safetyAPI.blockUser(trainerId as string);
+              showAlert({ title: 'Blocked', message: 'Trainer blocked.', type: 'success' });
+              router.back();
+            } catch (e: any) {
+              showAlert({ title: 'Error', message: e?.message || 'Unable to block user.', type: 'error' });
+            }
+          },
+        },
+      ],
+    });
+  };
   const [loading, setLoading] = useState(true);
   const [trainer, setTrainer] = useState<TrainerProfile | null>(null);
   const [ratings, setRatings] = useState<any[]>([]);
@@ -737,5 +789,40 @@ const styles = StyleSheet.create({
     marginTop: 4,
     opacity: 0.9,
     fontWeight: '600',
+  },
+
+  section: {
+    marginTop: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+    marginBottom: 8,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    backgroundColor: Colors.surface,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  actionText: {
+    color: Colors.textPrimary,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  dangerRow: {
+    borderColor: Colors.error,
+  },
+  dangerText: {
+    color: Colors.error,
   },
 });
