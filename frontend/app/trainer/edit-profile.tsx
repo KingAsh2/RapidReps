@@ -274,7 +274,7 @@ export default function EditTrainerProfileScreen() {
                   },
                 ],
               });
-            } catch (error: any) {
+            } catch (error) {
               showAlert({
                 title: 'Error',
                 message: error?.response?.data?.detail || 'Unable to delete account. Please try again.',
