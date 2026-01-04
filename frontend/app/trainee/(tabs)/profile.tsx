@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,9 +9,12 @@ import {
   ActivityIndicator,
   TextInput,
   Switch,
+  Animated,
+  Dimensions,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Colors } from '../../../src/utils/colors';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,6 +22,23 @@ import { useAuth } from '../../../src/contexts/AuthContext';
 import { useAlert } from '../../../src/contexts/AlertContext';
 import { traineeAPI } from '../../../src/services/api';
 import * as ImagePicker from 'expo-image-picker';
+
+const { width } = Dimensions.get('window');
+
+// Brand colors
+const COLORS = {
+  teal: '#1FB8B4',
+  tealLight: '#22C1C3',
+  orange: '#F7931E',
+  orangeHot: '#FF6A00',
+  orangeLight: '#FF9F1C',
+  navy: '#1a2a5e',
+  white: '#FFFFFF',
+  offWhite: '#FAFBFC',
+  gray: '#8892b0',
+  grayLight: '#E8ECF0',
+  error: '#FF4757',
+};
 
 export default function TraineeProfileScreen() {
   const router = useRouter();
@@ -28,6 +48,10 @@ export default function TraineeProfileScreen() {
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
+
+  // Animation refs
+  const headerAnim = useRef(new Animated.Value(0)).current;
+  const cardAnims = useRef([...Array(6)].map(() => new Animated.Value(0))).current;
 
   const [formData, setFormData] = useState({
     profilePhoto: '',
@@ -47,13 +71,35 @@ export default function TraineeProfileScreen() {
     loadProfile();
   }, []);
 
+  useEffect(() => {
+    if (!loading) {
+      // Header animation
+      Animated.timing(headerAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }).start();
+
+      // Staggered cards
+      cardAnims.forEach((anim, index) => {
+        setTimeout(() => {
+          Animated.spring(anim, {
+            toValue: 1,
+            friction: 8,
+            tension: 40,
+            useNativeDriver: true,
+          }).start();
+        }, 150 + (index * 100));
+      });
+    }
+  }, [loading]);
+
   const loadProfile = async () => {
     try {
       setLoading(true);
       const profileData = await traineeAPI.getMyProfile();
       setProfile(profileData);
       
-      // Populate form data
       setFormData({
         profilePhoto: profileData.profilePhoto || '',
         fitnessGoals: profileData.fitnessGoals || '',
@@ -69,11 +115,6 @@ export default function TraineeProfileScreen() {
       });
     } catch (error) {
       console.error('Error loading profile:', error);
-      showAlert({
-        title: 'Loading Failed',
-        message: 'Could not load your profile. Please try again.',
-        type: 'error',
-      });
     } finally {
       setLoading(false);
     }
@@ -116,12 +157,9 @@ export default function TraineeProfileScreen() {
         userId: user?.id || profile?.userId
       };
       await traineeAPI.updateProfile(profileData);
-      
-      // Update UI directly without popup
       setIsEditing(false);
       loadProfile();
     } catch (error: any) {
-      console.error('Save error:', error);
       showAlert({
         title: 'Update Failed',
         message: error.response?.data?.detail || 'Failed to update profile',
@@ -154,7 +192,7 @@ export default function TraineeProfileScreen() {
   const handleDeleteAccount = async () => {
     showAlert({
       title: 'Delete Account',
-      message: 'This will permanently delete your account and all data. This action cannot be undone.',
+      message: 'This will permanently delete your account and all data. This cannot be undone.',
       type: 'warning',
       buttons: [
         { text: 'Cancel', style: 'cancel' },
@@ -165,24 +203,12 @@ export default function TraineeProfileScreen() {
             try {
               const { authAPI } = await import('../../../src/services/api');
               await authAPI.deleteMe();
-              showAlert({
-                title: 'Account Deleted',
-                message: 'Your account has been permanently deleted.',
-                type: 'success',
-                buttons: [
-                  {
-                    text: 'OK',
-                    onPress: () => {
-                      logout();
-                      router.replace('/');
-                    },
-                  },
-                ],
-              });
+              logout();
+              router.replace('/');
             } catch (error: any) {
               showAlert({
                 title: 'Error',
-                message: error?.response?.data?.detail || 'Unable to delete account. Please try again.',
+                message: error?.response?.data?.detail || 'Unable to delete account.',
                 type: 'error',
               });
             }
@@ -192,450 +218,577 @@ export default function TraineeProfileScreen() {
     });
   };
 
+  const headerTranslateY = headerAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-30, 0],
+  });
+
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-        <Text style={styles.loadingText}>Loading your profile...</Text>
-      </View>
+      <LinearGradient
+        colors={[COLORS.navy, COLORS.teal]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.loadingContainer}
+      >
+        <ActivityIndicator size="large" color={COLORS.white} />
+        <Text style={styles.loadingText}>Loading profile...</Text>
+      </LinearGradient>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <View style={styles.container}>
+      {/* Full gradient background */}
       <LinearGradient
-        colors={Colors.gradientTealStart}
+        colors={[COLORS.navy, '#2a3a6e', COLORS.teal]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={styles.header}
-      >
-        <View style={styles.headerTop}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={Colors.white} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>My Profile</Text>
-          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-            <Ionicons name="log-out-outline" size={24} color={Colors.white} />
-          </TouchableOpacity>
-        </View>
-      </LinearGradient>
+        style={StyleSheet.absoluteFill}
+      />
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Profile Photo Section */}
-        <View style={styles.photoSection}>
-          <TouchableOpacity onPress={pickImage} style={styles.photoContainer}>
-            {formData.profilePhoto ? (
-              <Image source={{ uri: formData.profilePhoto }} style={styles.profilePhoto} />
-            ) : (
-              <View style={styles.photoPlaceholder}>
-                <Ionicons name="person" size={60} color={Colors.textLight} />
-              </View>
-            )}
-            <View style={styles.editPhotoButton}>
-              <Ionicons name="camera" size={20} color={Colors.white} />
-            </View>
-          </TouchableOpacity>
-          <Text style={styles.profileName}>{user?.fullName}</Text>
-          <Text style={styles.profileEmail}>{user?.email}</Text>
-        </View>
-
-        {/* Profile Details */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Profile Details</Text>
-            {!isEditing && (
-              <TouchableOpacity onPress={() => setIsEditing(true)} style={styles.editButton}>
-                <Ionicons name="create-outline" size={20} color={Colors.secondary} />
-                <Text style={styles.editButtonText}>Edit</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {/* Fitness Goals */}
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Fitness Goals</Text>
-            <TextInput
-              style={[styles.input, !isEditing && styles.inputDisabled]}
-              value={formData.fitnessGoals}
-              onChangeText={(text) => setFormData({ ...formData, fitnessGoals: text })}
-              placeholder="e.g., Lose weight, build muscle, improve endurance"
-              placeholderTextColor={Colors.textLight}
-              multiline
-              editable={isEditing}
-            />
-          </View>
-
-          {/* Experience Level */}
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Experience Level</Text>
-            <TextInput
-              style={[styles.input, !isEditing && styles.inputDisabled]}
-              value={formData.experienceLevel}
-              onChangeText={(text) => setFormData({ ...formData, experienceLevel: text })}
-              placeholder="e.g., Beginner, Intermediate, Advanced"
-              placeholderTextColor={Colors.textLight}
-              editable={isEditing}
-            />
-          </View>
-
-          {/* Current Fitness Level */}
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Current Fitness Level</Text>
-            <TextInput
-              style={[styles.input, !isEditing && styles.inputDisabled]}
-              value={formData.currentFitnessLevel}
-              onChangeText={(text) => setFormData({ ...formData, currentFitnessLevel: text })}
-              placeholder="Describe your current fitness"
-              placeholderTextColor={Colors.textLight}
-              editable={isEditing}
-            />
-          </View>
-
-          {/* Injuries or Limitations */}
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Injuries or Limitations</Text>
-            <TextInput
-              style={[styles.input, !isEditing && styles.inputDisabled]}
-              value={formData.injuriesOrLimitations}
-              onChangeText={(text) => setFormData({ ...formData, injuriesOrLimitations: text })}
-              placeholder="Any injuries or limitations?"
-              placeholderTextColor={Colors.textLight}
-              multiline
-              editable={isEditing}
-            />
-          </View>
-
-          {/* Home Gym or Zip Code */}
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Home Gym / Zip Code</Text>
-            <TextInput
-              style={[styles.input, !isEditing && styles.inputDisabled]}
-              value={formData.homeGymOrZipCode}
-              onChangeText={(text) => setFormData({ ...formData, homeGymOrZipCode: text })}
-              placeholder="e.g., LA Fitness or 90210"
-              placeholderTextColor={Colors.textLight}
-              editable={isEditing}
-            />
-          </View>
-
-          {/* Training Preferences */}
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Training Preferences</Text>
-            <View style={styles.switchRow}>
-              <Text style={styles.switchLabel}>In-Person Training</Text>
-              <Switch
-                value={formData.prefersInPerson}
-                onValueChange={(value) => setFormData({ ...formData, prefersInPerson: value })}
-                trackColor={{ false: Colors.background, true: Colors.secondary }}
-                thumbColor={formData.prefersInPerson ? Colors.primary : Colors.textLight}
-                disabled={!isEditing}
-              />
-            </View>
-            <View style={styles.switchRow}>
-              <Text style={styles.switchLabel}>Virtual Training</Text>
-              <Switch
-                value={formData.prefersVirtual}
-                onValueChange={(value) => setFormData({ ...formData, prefersVirtual: value })}
-                trackColor={{ false: Colors.background, true: Colors.secondary }}
-                thumbColor={formData.prefersVirtual ? Colors.primary : Colors.textLight}
-                disabled={!isEditing}
-              />
-            </View>
-          </View>
-        </View>
-
-        {/* Save/Cancel Buttons */}
-        {isEditing && (
-          <View style={styles.actionButtons}>
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={() => {
-                setIsEditing(false);
-                loadProfile();
-              }}
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardView}
+        >
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Profile Header */}
+            <Animated.View
+              style={[
+                styles.profileHeader,
+                {
+                  opacity: headerAnim,
+                  transform: [{ translateY: headerTranslateY }],
+                },
+              ]}
             >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.saveButton}
-              onPress={handleSave}
-              disabled={saving}
+              <TouchableOpacity onPress={pickImage} style={styles.avatarContainer}>
+                {formData.profilePhoto ? (
+                  <Image source={{ uri: formData.profilePhoto }} style={styles.avatar} />
+                ) : (
+                  <LinearGradient
+                    colors={[COLORS.orange, COLORS.orangeLight]}
+                    style={styles.avatarPlaceholder}
+                  >
+                    <Ionicons name="person" size={50} color={COLORS.white} />
+                  </LinearGradient>
+                )}
+                <View style={styles.editBadge}>
+                  <Ionicons name="camera" size={16} color={COLORS.white} />
+                </View>
+              </TouchableOpacity>
+              <Text style={styles.userName}>{user?.fullName || 'Athlete'}</Text>
+              <Text style={styles.userEmail}>{user?.email}</Text>
+            </Animated.View>
+
+            {/* Stats Card */}
+            <Animated.View
+              style={[
+                styles.statsCard,
+                {
+                  opacity: cardAnims[0],
+                  transform: [{
+                    translateY: cardAnims[0].interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [30, 0],
+                    }),
+                  }],
+                },
+              ]}
             >
               <LinearGradient
-                colors={[Colors.secondary, Colors.primary]}
+                colors={[COLORS.orange, COLORS.orangeLight]}
                 start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.saveButtonGradient}
+                end={{ x: 1, y: 0 }}
+                style={styles.statsGradient}
               >
-                {saving ? (
-                  <ActivityIndicator size="small" color={Colors.white} />
+                <View style={styles.stat}>
+                  <Text style={styles.statValue}>{profile?.experienceLevel || 'N/A'}</Text>
+                  <Text style={styles.statLabel}>Experience</Text>
+                </View>
+                <View style={styles.statDivider} />
+                <View style={styles.stat}>
+                  <Text style={styles.statValue}>{formData.preferredTrainingStyles.length}</Text>
+                  <Text style={styles.statLabel}>Styles</Text>
+                </View>
+                <View style={styles.statDivider} />
+                <View style={styles.stat}>
+                  <Text style={styles.statValue}>{formData.prefersVirtual ? '✓' : '✗'}</Text>
+                  <Text style={styles.statLabel}>Virtual</Text>
+                </View>
+              </LinearGradient>
+            </Animated.View>
+
+            {/* Fitness Goals Card */}
+            <Animated.View
+              style={[
+                styles.sectionCard,
+                {
+                  opacity: cardAnims[1],
+                  transform: [{
+                    translateY: cardAnims[1].interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [30, 0],
+                    }),
+                  }],
+                },
+              ]}
+            >
+              <LinearGradient
+                colors={[COLORS.white, COLORS.offWhite]}
+                style={styles.sectionGradient}
+              >
+                <View style={styles.sectionHeader}>
+                  <Ionicons name="trophy" size={22} color={COLORS.orange} />
+                  <Text style={styles.sectionTitle}>Fitness Goals</Text>
+                </View>
+                {isEditing ? (
+                  <TextInput
+                    style={styles.textArea}
+                    value={formData.fitnessGoals}
+                    onChangeText={(text) => setFormData({ ...formData, fitnessGoals: text })}
+                    placeholder="What are you working towards?"
+                    placeholderTextColor={COLORS.gray}
+                    multiline
+                    numberOfLines={3}
+                  />
                 ) : (
-                  <Text style={styles.saveButtonText}>Save Changes 💪</Text>
+                  <Text style={styles.sectionContent}>
+                    {formData.fitnessGoals || 'No goals set yet'}
+                  </Text>
                 )}
               </LinearGradient>
+            </Animated.View>
+
+            {/* Training Preferences Card */}
+            <Animated.View
+              style={[
+                styles.sectionCard,
+                {
+                  opacity: cardAnims[2],
+                  transform: [{
+                    translateY: cardAnims[2].interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [30, 0],
+                    }),
+                  }],
+                },
+              ]}
+            >
+              <LinearGradient
+                colors={[COLORS.white, COLORS.offWhite]}
+                style={styles.sectionGradient}
+              >
+                <View style={styles.sectionHeader}>
+                  <Ionicons name="settings" size={22} color={COLORS.teal} />
+                  <Text style={styles.sectionTitle}>Training Preferences</Text>
+                </View>
+                <View style={styles.preferenceRow}>
+                  <Text style={styles.preferenceLabel}>In-Person Training</Text>
+                  <Switch
+                    value={formData.prefersInPerson}
+                    onValueChange={(value) => {
+                      setFormData({ ...formData, prefersInPerson: value });
+                      setIsEditing(true);
+                    }}
+                    trackColor={{ false: COLORS.grayLight, true: COLORS.teal }}
+                    thumbColor={COLORS.white}
+                  />
+                </View>
+                <View style={styles.preferenceRow}>
+                  <Text style={styles.preferenceLabel}>Virtual Training</Text>
+                  <Switch
+                    value={formData.prefersVirtual}
+                    onValueChange={(value) => {
+                      setFormData({ ...formData, prefersVirtual: value });
+                      setIsEditing(true);
+                    }}
+                    trackColor={{ false: COLORS.grayLight, true: COLORS.teal }}
+                    thumbColor={COLORS.white}
+                  />
+                </View>
+              </LinearGradient>
+            </Animated.View>
+
+            {/* Quick Actions */}
+            <Animated.View
+              style={[
+                styles.actionsCard,
+                {
+                  opacity: cardAnims[3],
+                  transform: [{
+                    translateY: cardAnims[3].interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [30, 0],
+                    }),
+                  }],
+                },
+              ]}
+            >
+              <LinearGradient
+                colors={[COLORS.white, COLORS.offWhite]}
+                style={styles.actionsGradient}
+              >
+                <TouchableOpacity 
+                  style={styles.actionItem}
+                  onPress={() => router.push('/trainee/achievements')}
+                >
+                  <View style={[styles.actionIconBg, { backgroundColor: 'rgba(253, 187, 45, 0.15)' }]}>
+                    <Ionicons name="trophy" size={22} color="#FDBB2D" />
+                  </View>
+                  <Text style={styles.actionText}>Achievements</Text>
+                  <Ionicons name="chevron-forward" size={20} color={COLORS.gray} />
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={styles.actionItem}
+                  onPress={() => router.push('/trainee/saved-trainers')}
+                >
+                  <View style={[styles.actionIconBg, { backgroundColor: 'rgba(31, 184, 180, 0.15)' }]}>
+                    <Ionicons name="heart" size={22} color={COLORS.teal} />
+                  </View>
+                  <Text style={styles.actionText}>Saved Trainers</Text>
+                  <Ionicons name="chevron-forward" size={20} color={COLORS.gray} />
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={styles.actionItem}
+                  onPress={() => router.push('/legal/terms')}
+                >
+                  <View style={[styles.actionIconBg, { backgroundColor: 'rgba(136, 146, 176, 0.15)' }]}>
+                    <Ionicons name="document-text" size={22} color={COLORS.gray} />
+                  </View>
+                  <Text style={styles.actionText}>Terms & Privacy</Text>
+                  <Ionicons name="chevron-forward" size={20} color={COLORS.gray} />
+                </TouchableOpacity>
+              </LinearGradient>
+            </Animated.View>
+
+            {/* Save / Edit Button */}
+            {isEditing ? (
+              <TouchableOpacity 
+                style={styles.saveButton}
+                onPress={handleSave}
+                disabled={saving}
+              >
+                <LinearGradient
+                  colors={[COLORS.teal, COLORS.tealLight]}
+                  style={styles.saveButtonGradient}
+                >
+                  {saving ? (
+                    <ActivityIndicator size="small" color={COLORS.white} />
+                  ) : (
+                    <>
+                      <Ionicons name="checkmark" size={20} color={COLORS.white} />
+                      <Text style={styles.saveButtonText}>Save Changes</Text>
+                    </>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity 
+                style={styles.editButton}
+                onPress={() => setIsEditing(true)}
+              >
+                <LinearGradient
+                  colors={[COLORS.white, COLORS.offWhite]}
+                  style={styles.editButtonGradient}
+                >
+                  <Ionicons name="pencil" size={18} color={COLORS.navy} />
+                  <Text style={styles.editButtonText}>Edit Profile</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            )}
+
+            {/* Logout Button */}
+            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+              <Ionicons name="log-out-outline" size={20} color={COLORS.white} />
+              <Text style={styles.logoutButtonText}>Logout</Text>
             </TouchableOpacity>
-          </View>
-        )}
 
-        {/* Delete Account Section */}
-        <View style={styles.dangerZone}>
-          <Text style={styles.dangerZoneTitle}>Danger Zone</Text>
-          <TouchableOpacity onPress={handleDeleteAccount} style={styles.deleteAccountButton}>
-            <Ionicons name="trash-outline" size={20} color={Colors.error} />
-            <Text style={styles.deleteAccountText}>Delete Account</Text>
-          </TouchableOpacity>
-          <Text style={styles.deleteAccountWarning}>
-            This will permanently delete your account and all data. This cannot be undone.
-          </Text>
-        </View>
+            {/* Delete Account */}
+            <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAccount}>
+              <Text style={styles.deleteButtonText}>Delete Account</Text>
+            </TouchableOpacity>
 
-        <View style={{ height: 40 }} />
-      </ScrollView>
-    </SafeAreaView>
+            <View style={{ height: 100 }} />
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+  },
+  safeArea: {
+    flex: 1,
+  },
+  keyboardView: {
+    flex: 1,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.background,
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: Colors.textLight,
+    fontWeight: '600',
+    color: COLORS.white,
   },
-  header: {
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 24,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-  },
-  headerTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '900',
-    color: Colors.white,
-    letterSpacing: 0.5,
-  },
-  logoutButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  content: {
+  scrollView: {
     flex: 1,
   },
-  photoSection: {
-    alignItems: 'center',
-    paddingVertical: 32,
-    backgroundColor: Colors.white,
-    marginBottom: 16,
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
-  photoContainer: {
+  // Profile Header
+  profileHeader: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  avatarContainer: {
     position: 'relative',
     marginBottom: 16,
   },
-  profilePhoto: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+  avatar: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
     borderWidth: 4,
-    borderColor: Colors.navy,
+    borderColor: COLORS.white,
   },
-  photoPlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: Colors.background,
-    borderWidth: 4,
-    borderColor: Colors.navy,
+  avatarPlaceholder: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 4,
+    borderColor: COLORS.white,
   },
-  editPhotoButton: {
+  editBadge: {
     position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: Colors.secondary,
-    borderWidth: 3,
-    borderColor: Colors.white,
+    bottom: 4,
+    right: 4,
+    backgroundColor: COLORS.teal,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 2,
+    borderColor: COLORS.white,
   },
-  profileName: {
-    fontSize: 24,
+  userName: {
+    fontSize: 26,
     fontWeight: '900',
-    color: Colors.navy,
+    color: COLORS.white,
     marginBottom: 4,
   },
-  profileEmail: {
+  userEmail: {
     fontSize: 14,
-    color: Colors.textLight,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.8)',
   },
-  section: {
-    backgroundColor: Colors.white,
-    padding: 24,
+  // Stats Card
+  statsCard: {
     marginBottom: 16,
+    borderRadius: 18,
+    overflow: 'hidden',
+    shadowColor: COLORS.orange,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  statsGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+  },
+  stat: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: COLORS.white,
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.85)',
+  },
+  statDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+  },
+  // Section Card
+  sectionCard: {
+    marginBottom: 14,
+    borderRadius: 18,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  sectionGradient: {
+    padding: 18,
   },
   sectionHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    gap: 10,
+    marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: Colors.navy,
+    fontSize: 16,
+    fontWeight: '800',
+    color: COLORS.navy,
   },
-  editButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    backgroundColor: Colors.background,
-  },
-  editButtonText: {
+  sectionContent: {
     fontSize: 14,
-    fontWeight: '600',
-    color: Colors.secondary,
+    fontWeight: '500',
+    color: COLORS.gray,
+    lineHeight: 20,
   },
-  field: {
-    marginBottom: 20,
-  },
-  fieldLabel: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: Colors.navy,
-    marginBottom: 8,
-  },
-  input: {
-    borderWidth: 2,
-    borderColor: Colors.navy,
+  textArea: {
+    backgroundColor: COLORS.grayLight,
     borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    color: Colors.text,
-    backgroundColor: Colors.white,
+    padding: 14,
+    fontSize: 14,
+    fontWeight: '500',
+    color: COLORS.navy,
+    minHeight: 80,
+    textAlignVertical: 'top',
   },
-  inputDisabled: {
-    backgroundColor: Colors.background,
-    borderColor: Colors.background,
-  },
-  switchRow: {
+  preferenceRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.background,
+    borderBottomColor: COLORS.grayLight,
   },
-  switchLabel: {
-    fontSize: 16,
+  preferenceLabel: {
+    fontSize: 14,
     fontWeight: '600',
-    color: Colors.text,
+    color: COLORS.navy,
   },
-  actionButtons: {
-    flexDirection: 'row',
-    gap: 12,
-    paddingHorizontal: 24,
-    marginTop: 16,
-  },
-  cancelButton: {
-    flex: 1,
-    paddingVertical: 16,
-    borderRadius: 16,
-    backgroundColor: Colors.background,
-    borderWidth: 3,
-    borderColor: Colors.navy,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    fontWeight: '900',
-    color: Colors.navy,
-  },
-  saveButton: {
-    flex: 2,
-    borderRadius: 16,
+  // Actions Card
+  actionsCard: {
+    marginBottom: 16,
+    borderRadius: 18,
     overflow: 'hidden',
-    borderWidth: 3,
-    borderColor: Colors.navy,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  actionsGradient: {
+    padding: 6,
+  },
+  actionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+  },
+  actionIconBg: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  actionText: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.navy,
+  },
+  // Buttons
+  saveButton: {
+    marginBottom: 12,
+    borderRadius: 14,
+    overflow: 'hidden',
   },
   saveButtonGradient: {
-    paddingVertical: 16,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 16,
+    gap: 8,
   },
   saveButtonText: {
     fontSize: 16,
-    fontWeight: '900',
-    color: Colors.white,
+    fontWeight: '700',
+    color: COLORS.white,
   },
-  dangerZone: {
-    marginTop: 32,
-    padding: 20,
-    backgroundColor: Colors.white,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: Colors.error,
+  editButton: {
+    marginBottom: 12,
+    borderRadius: 14,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  dangerZoneTitle: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: Colors.error,
-    marginBottom: 16,
-  },
-  deleteAccountButton: {
+  editButtonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 16,
     gap: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    backgroundColor: 'rgba(255, 0, 0, 0.1)',
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: Colors.error,
   },
-  deleteAccountText: {
+  editButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: Colors.error,
+    color: COLORS.navy,
   },
-  deleteAccountWarning: {
-    fontSize: 13,
-    color: Colors.textLight,
-    textAlign: 'center',
-    marginTop: 12,
-    lineHeight: 18,
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    gap: 8,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 14,
+    marginBottom: 16,
+  },
+  logoutButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: COLORS.white,
+  },
+  deleteButton: {
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  deleteButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.error,
+    textDecorationLine: 'underline',
   },
 });
