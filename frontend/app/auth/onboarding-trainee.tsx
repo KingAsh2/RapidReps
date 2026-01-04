@@ -192,7 +192,7 @@ export default function TraineeOnboardingScreen() {
         message: 'Your trainee profile has been created!',
         type: 'success',
         buttons: [
-          { text: 'OK', onPress: () => router.replace('/trainee/home') },
+          { text: 'OK', onPress: () => router.replace('/trainee/(tabs)/home') },
         ],
       });
     } catch (error: any) {
