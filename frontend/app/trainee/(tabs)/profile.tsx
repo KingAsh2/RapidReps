@@ -110,8 +110,12 @@ export default function TraineeProfileScreen() {
 
   const handleSave = async () => {
     setSaving(true);
-    try {
-      await traineeAPI.updateProfile(profile.userId, formData);
+    try:
+      const profileData = {
+        ...formData,
+        userId: user?.id || profile?.userId
+      };
+      await traineeAPI.updateProfile(profileData);
       
       showAlert({
         title: 'Success! 🎉',
