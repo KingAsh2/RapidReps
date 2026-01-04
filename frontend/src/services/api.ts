@@ -108,6 +108,11 @@ export const trainerAPI = {
     return response.data;
   },
 
+  cancelSession: async (sessionId: string): Promise<any> => {
+    const response = await api.patch(`/sessions/${sessionId}/cancel`);
+    return response.data;
+  },
+
   getEarnings: async (): Promise<any> => {
     const response = await api.get('/trainer/earnings');
     return response.data;
