@@ -735,6 +735,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
@@ -743,16 +746,17 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
   },
   chipSelected: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
+    backgroundColor: Colors.secondary,
+    borderColor: Colors.secondary,
   },
   chipText: {
     fontSize: 14,
+    fontWeight: '600',
     color: Colors.navy,
   },
   chipTextSelected: {
     color: Colors.white,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   toggleRow: {
     flexDirection: 'row',
