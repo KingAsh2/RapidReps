@@ -415,6 +415,22 @@ export default function TrainerDetailScreen() {
             </Text>
           </View>
 
+          {/* Message Button */}
+          <TouchableOpacity
+            style={styles.messageButton}
+            onPress={async () => {
+              try {
+                const result = await chatAPI.getOrCreateConversation(trainer.userId);
+                router.push(`/messages/chat?conversationId=${result.conversationId}&userId=${trainer.userId}&userName=${trainer.fullName}`);
+              } catch (error) {
+                console.error('Error creating conversation:', error);
+              }
+            }}
+          >
+            <Ionicons name="chatbubble-outline" size={20} color={Colors.secondary} />
+            <Text style={styles.messageButtonText}>Message Trainer</Text>
+          </TouchableOpacity>
+
           {/* Lock In Button with Long Press */}
           <Pressable
             onPressIn={handlePressIn}
