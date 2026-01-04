@@ -117,20 +117,9 @@ export default function TraineeProfileScreen() {
       };
       await traineeAPI.updateProfile(profileData);
       
-      showAlert({
-        title: 'Success! 🎉',
-        message: 'Your profile has been updated successfully!',
-        type: 'success',
-        buttons: [
-          {
-            text: 'OK',
-            onPress: () => {
-              setIsEditing(false);
-              loadProfile();
-            }
-          }
-        ],
-      });
+      // Update UI directly without popup
+      setIsEditing(false);
+      loadProfile();
     } catch (error: any) {
       console.error('Save error:', error);
       showAlert({
