@@ -143,12 +143,18 @@ export const traineeAPI = {
   },
 
   getMyProfile: async (): Promise<TraineeProfile> => {
-    const token = await AsyncStorage.getItem('token');
-    const userStr = await AsyncStorage.getItem('user');
-    const user = userStr ? JSON.parse(userStr) : null;
-    if (!user) throw new Error('User not found');
-    const response = await api.get(`/trainee-profiles/${user.id}`);
-    return response.data;
+    try {
+      // First get the current user to get their ID
+      const userResponse = await api.get('/auth/me');
+      const userId = userResponse.data._id;
+      
+      // Then get their trainee profile
+      const response = await api.get(`/trainee-profiles/${userId}`);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error in getMyProfile:', error);
+      throw error;
+    }
   },
 
   updateProfile: async (profile: any): Promise<TraineeProfile> => {
