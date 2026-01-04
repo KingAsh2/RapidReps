@@ -162,6 +162,17 @@ export default function TraineeHomeScreen() {
     }
   }, [loading]);
 
+  // Force exit loading state after timeout
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (loading) {
+        console.log('[TraineeHome] Force exiting loading state after timeout');
+        setLoading(false);
+      }
+    }, 3000);
+    return () => clearTimeout(timeout);
+  }, []);
+  
   useEffect(() => {
     if (user) {
       requestLocationPermission();
