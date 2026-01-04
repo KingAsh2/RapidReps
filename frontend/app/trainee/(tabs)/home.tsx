@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -25,11 +25,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
-import { AnimatedLogo } from '../../../src/components/AnimatedLogo';
 import TrainingModeDialog from '../../../src/components/TrainingModeDialog';
 import TrainerFilters from '../../../src/components/TrainerFilters';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 // Helper function to calculate distance between two points (Haversine formula)
 const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
@@ -61,15 +60,107 @@ export default function TraineeHomeScreen() {
   const [virtualTrainers, setVirtualTrainers] = useState([]);
   const dialogAnim = new Animated.Value(0);
   
+  // Animation refs for high-energy entrance
+  const heroAnim = useRef(new Animated.Value(0)).current;
+  const searchAnim = useRef(new Animated.Value(0)).current;
+  const urgentBannerAnim = useRef(new Animated.Value(0)).current;
+  const cardAnims = useRef([...Array(10)].map(() => new Animated.Value(0))).current;
+  const ctaPulseAnim = useRef(new Animated.Value(1)).current;
+  const fabPulseAnim = useRef(new Animated.Value(1)).current;
+  
   // Filter & Sort States
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
-    minRating: 0, // 0 = no filter, 3, 4, 5 = minimum rating
-    gender: 'any', // 'any', 'male', 'female'
-    specialties: [] as string[], // Array of selected specialties
+    minRating: 0,
+    gender: 'any',
+    specialties: [] as string[],
   });
-  const [sortBy, setSortBy] = useState('distance'); // 'distance', 'rating', 'price'
+  const [sortBy, setSortBy] = useState('distance');
   const [showSortMenu, setShowSortMenu] = useState(false);
+
+  // Start entrance animations
+  useEffect(() => {
+    const startAnimations = () => {
+      // Hero slide down + fade in
+      Animated.timing(heroAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }).start();
+
+      // Search card cascade
+      setTimeout(() => {
+        Animated.spring(searchAnim, {
+          toValue: 1,
+          friction: 8,
+          tension: 40,
+          useNativeDriver: true,
+        }).start();
+      }, 150);
+
+      // Urgent banner slide in
+      setTimeout(() => {
+        Animated.spring(urgentBannerAnim, {
+          toValue: 1,
+          friction: 6,
+          tension: 50,
+          useNativeDriver: true,
+        }).start();
+      }, 300);
+
+      // Staggered card animations
+      cardAnims.forEach((anim, index) => {
+        setTimeout(() => {
+          Animated.spring(anim, {
+            toValue: 1,
+            friction: 8,
+            tension: 40,
+            useNativeDriver: true,
+          }).start();
+        }, 400 + (index * 100));
+      });
+
+      // CTA pulse animation (every 6 seconds)
+      const startPulse = () => {
+        Animated.sequence([
+          Animated.timing(ctaPulseAnim, {
+            toValue: 1.05,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+          Animated.timing(ctaPulseAnim, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+        ]).start();
+      };
+      
+      const pulseInterval = setInterval(startPulse, 6000);
+      
+      // FAB glow pulse
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(fabPulseAnim, {
+            toValue: 1.08,
+            duration: 1500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(fabPulseAnim, {
+            toValue: 1,
+            duration: 1500,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+
+      return () => clearInterval(pulseInterval);
+    };
+
+    if (!loading) {
+      startAnimations();
+    }
+  }, [loading]);
 
   useEffect(() => {
     if (user) {
@@ -78,14 +169,12 @@ export default function TraineeHomeScreen() {
   }, [user]);
 
   useEffect(() => {
-    // Reload trainers when location is available to calculate distances
     if (userLocation) {
       loadTrainers();
     }
   }, [userLocation]);
 
   useEffect(() => {
-    // Initial load if no location permission or location not available yet
     if (!loading && trainers.length === 0) {
       loadTrainers();
     }
@@ -105,7 +194,6 @@ export default function TraineeHomeScreen() {
           longitude: location.coords.longitude,
         });
 
-        // Reverse geocode to get address
         const addresses = await Location.reverseGeocodeAsync({
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
@@ -123,26 +211,17 @@ export default function TraineeHomeScreen() {
 
   const loadTrainers = async () => {
     try {
-      console.log('[TraineeHome] Starting loadTrainers...');
-      // Build search params with location and virtual preferences
       const searchParams: any = {};
       
       if (userLocation) {
         searchParams.latitude = userLocation.latitude;
         searchParams.longitude = userLocation.longitude;
-        console.log('[TraineeHome] Using location:', userLocation);
-      } else {
-        console.log('[TraineeHome] No location available');
       }
       
-      // Pass wantsVirtual=true to include virtual trainers
       searchParams.wantsVirtual = true;
       
-      console.log('[TraineeHome] Calling trainerAPI.searchTrainers...');
       const data = await trainerAPI.searchTrainers(searchParams);
-      console.log('[TraineeHome] Received trainers:', data?.length || 0);
       
-      // Calculate distances and add to trainer objects
       let trainersWithDistance = data.map((trainer: any) => {
         let distance = null;
         
@@ -155,27 +234,16 @@ export default function TraineeHomeScreen() {
           );
         }
         
-        return {
-          ...trainer,
-          distance,
-        };
+        return { ...trainer, distance };
       });
       
-      // Backend now returns trainers in priority order:
-      // 1. In-person trainers within 15 miles (sorted by distance)
-      // 2. Virtual trainers within 20 miles (sorted by distance)
-      // No additional sorting needed here
-      
       setTrainers(trainersWithDistance);
-      console.log('[TraineeHome] Set trainers state with', trainersWithDistance.length, 'trainers');
       
-      // Check if no trainers available and if there are virtual trainers
       const hasLocalTrainers = trainersWithDistance.filter((t: any) => t.distance !== null).length > 0;
       const virtualTrainersAvailable = trainersWithDistance.filter((t: any) => t.isVirtualTrainingAvailable);
       
       if (!hasLocalTrainers && virtualTrainersAvailable.length > 0) {
         setVirtualTrainers(virtualTrainersAvailable);
-        // Show virtual training dialog after a short delay
         setTimeout(() => {
           setShowVirtualDialog(true);
           Animated.spring(dialogAnim, {
@@ -187,10 +255,8 @@ export default function TraineeHomeScreen() {
       }
     } catch (error) {
       console.error('[TraineeHome] Error loading trainers:', error);
-      // Set empty array on error so UI still renders
       setTrainers([]);
     } finally {
-      console.log('[TraineeHome] Setting loading to false');
       setLoading(false);
       setRefreshing(false);
     }
@@ -198,22 +264,16 @@ export default function TraineeHomeScreen() {
 
   const loadSessions = async () => {
     try {
-      // Only load sessions if user is authenticated
-      if (!user) {
-        console.log('User not authenticated, skipping session load');
-        return;
-      }
+      if (!user) return;
       const data = await traineeAPI.getSessions();
       setSessions(data || []);
     } catch (error) {
       console.error('Error loading sessions:', error);
-      // Set empty array on error to prevent undefined issues
       setSessions([]);
     }
   };
 
   useEffect(() => {
-    // Only load sessions if user is authenticated
     if (user) {
       loadSessions();
     }
@@ -229,31 +289,24 @@ export default function TraineeHomeScreen() {
     router.replace('/auth/login');
   };
 
-  // Filter and Sort Logic
   const getFilteredAndSortedTrainers = () => {
     let filtered = [...trainers];
 
-    // Apply filters
     if (filters.minRating > 0) {
       filtered = filtered.filter((t) => (t.averageRating || 0) >= filters.minRating);
     }
 
     if (filters.gender !== 'any' && filters.gender) {
-      // Assuming trainer object has a 'gender' field
       filtered = filtered.filter((t) => t.gender?.toLowerCase() === filters.gender);
     }
 
     if (filters.specialties.length > 0) {
       filtered = filtered.filter((t) => {
-        // Check if trainer has any of the selected specialties in their training styles
         const trainerStyles = t.trainingStyles || [];
-        return filters.specialties.some((specialty) =>
-          trainerStyles.includes(specialty)
-        );
+        return filters.specialties.some((specialty) => trainerStyles.includes(specialty));
       });
     }
 
-    // Apply sorting
     if (sortBy === 'distance') {
       filtered.sort((a, b) => (a.distance || 999) - (b.distance || 999));
     } else if (sortBy === 'rating') {
@@ -266,20 +319,18 @@ export default function TraineeHomeScreen() {
   };
 
   const displayedTrainers = getFilteredAndSortedTrainers();
+  const pendingSessions = sessions.filter((s: any) => s.status === 'requested');
 
   const initiateVideoCall = async (trainer: any) => {
-    // Get trainer's contact info (phone/email)
-    const trainerPhone = trainer.userId; // In real app, would have phone number
+    const trainerPhone = trainer.userId;
     
     if (Platform.OS === 'ios') {
-      // Try FaceTime first on iOS
       const facetimeUrl = `facetime://${trainerPhone}`;
       const canOpen = await Linking.canOpenURL(facetimeUrl);
       
       if (canOpen) {
         await Linking.openURL(facetimeUrl);
       } else {
-        // Fallback to regular phone call
         showAlert({
           title: 'FaceTime Not Available',
           message: 'Would you like to call the trainer instead?',
@@ -290,8 +341,7 @@ export default function TraineeHomeScreen() {
           ],
         });
       }
-    } else if (Platform.OS === 'android') {
-      // On Android, use Google Meet or Duo
+    } else {
       showAlert({
         title: 'Start Video Call',
         message: 'How would you like to connect with your trainer?',
@@ -307,21 +357,14 @@ export default function TraineeHomeScreen() {
 
   const handleVirtualTrainingYes = () => {
     setShowVirtualDialog(false);
-    // Show virtual trainers
     if (virtualTrainers.length > 0) {
       showAlert({
         title: `${virtualTrainers.length} Virtual Trainer${virtualTrainers.length > 1 ? 's' : ''} Available! 🎉`,
         message: 'Connecting you now...',
         type: 'success',
         buttons: [
-          {
-            text: 'Start Video Call',
-            onPress: () => initiateVideoCall(virtualTrainers[0]),
-          },
-          {
-            text: 'View All',
-            onPress: () => setTrainers(virtualTrainers),
-          },
+          { text: 'Start Video Call', onPress: () => initiateVideoCall(virtualTrainers[0]) },
+          { text: 'View All', onPress: () => setTrainers(virtualTrainers) },
         ],
       });
     }
@@ -329,454 +372,521 @@ export default function TraineeHomeScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-      </View>
+      <LinearGradient
+        colors={['#1FB8B4', '#F7931E']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.loadingContainer}
+      >
+        <ActivityIndicator size="large" color="#FFFFFF" />
+        <Text style={styles.loadingText}>Getting your workout ready...</Text>
+      </LinearGradient>
     );
   }
+
+  const heroTranslateY = heroAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-50, 0],
+  });
+
+  const searchTranslateY = searchAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [30, 0],
+  });
+
+  const urgentTranslateX = urgentBannerAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-width, 0],
+  });
 
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <View style={styles.container}>
+        {/* Full Screen Gradient Background */}
         <LinearGradient
-          colors={Colors.gradientMain}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={styles.backgroundGradient}
-        >
-          <SafeAreaView style={styles.safeArea} edges={['top']}>
-            {/* Header with Gradient */}
-        <LinearGradient
-          colors={Colors.gradientTealStart}
+          colors={['#1FB8B4', '#22C1C3', '#F7931E']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.header}
-        >
-          <View style={styles.headerTop}>
-            <View style={styles.logoContainer}>
-              <AnimatedLogo size={60} animationType="spin-bounce" />
-            </View>
-            <View style={styles.headerActions}>
-              <TouchableOpacity 
-                onPress={() => router.push('/trainee/(tabs)/profile')} 
-                style={styles.headerButton}
-              >
-                <Ionicons name="person-circle-outline" size={28} color={Colors.white} />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={handleLogout} style={styles.headerButton}>
-                <Ionicons name="log-out-outline" size={24} color={Colors.white} />
-              </TouchableOpacity>
-            </View>
-          </View>
-          <View style={styles.greetingContainer}>
-            <Text style={styles.greeting}>Hey there, {user?.fullName?.split(' ')[0] || 'there'}! 💪</Text>
-            <Text style={styles.subGreeting}>Let&apos;s get to work and find you a trainer</Text>
-          </View>
-        </LinearGradient>
-
-      {/* Search Bar with Filter & Sort */}
-      <View style={styles.searchSection}>
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={20} color={Colors.textLight} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search by location or gym..."
-            placeholderTextColor={Colors.textLight}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-        </View>
-        <View style={styles.filterSortRow}>
-          <TouchableOpacity 
-            onPress={() => setShowFilters(true)}
-            style={styles.filterButton}
-          >
-            <Ionicons name="options-outline" size={20} color={Colors.navy} />
-            <Text style={styles.filterButtonText}>Filters</Text>
-            {(filters.minRating > 0 || filters.gender !== 'any' || filters.specialties.length > 0) && (
-              <View style={styles.filterBadge}>
-                <Text style={styles.filterBadgeText}>•</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            onPress={() => setShowSortMenu(!showSortMenu)}
-            style={styles.sortButton}
-          >
-            <Ionicons name="swap-vertical" size={20} color={Colors.navy} />
-            <Text style={styles.sortButtonText}>
-              {sortBy === 'distance' ? 'Distance' : sortBy === 'rating' ? 'Rating' : 'Price'}
-            </Text>
-            <Ionicons name="chevron-down" size={16} color={Colors.navy} />
-          </TouchableOpacity>
-        </View>
+          style={styles.fullGradient}
+        />
         
-        {/* Sort Menu Dropdown */}
-        {showSortMenu && (
-          <View style={styles.sortMenu}>
-            {[
-              { value: 'distance', label: 'Distance', icon: 'location' },
-              { value: 'rating', label: 'Rating', icon: 'star' },
-              { value: 'price', label: 'Price (Low to High)', icon: 'cash' },
-            ].map((option) => (
-              <TouchableOpacity
-                key={option.value}
-                onPress={() => {
-                  setSortBy(option.value);
-                  setShowSortMenu(false);
-                }}
-                style={styles.sortMenuItem}
-              >
-                <Ionicons name={option.icon as any} size={18} color={sortBy === option.value ? Colors.secondary : Colors.text} />
-                <Text style={[styles.sortMenuText, sortBy === option.value && styles.sortMenuTextActive]}>
-                  {option.label}
-                </Text>
-                {sortBy === option.value && (
-                  <Ionicons name="checkmark" size={20} color={Colors.secondary} />
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-      </View>
-
-      {/* Location Info Banner */}
-      {userLocation && locationAddress && (
-        <View style={styles.locationBanner}>
-          <Ionicons name="location" size={20} color={Colors.primary} />
-          <View style={styles.locationTextContainer}>
-            <Text style={styles.locationLabel}>Your Location</Text>
-            <Text style={styles.locationText}>
-              {locationAddress}
-            </Text>
-          </View>
-          <TouchableOpacity onPress={requestLocationPermission} style={styles.refreshLocationButton}>
-            <Ionicons name="refresh" size={18} color={Colors.primary} />
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {!userLocation && locationPermission !== 'granted' && (
-        <View style={styles.locationBanner}>
-          <Ionicons name="location-outline" size={20} color={Colors.warning} />
-          <View style={styles.locationTextContainer}>
-            <Text style={styles.locationWarning}>
-              {locationPermission === 'denied' 
-                ? 'Location access denied. Enable in settings to see distances.' 
-                : 'Getting your location...'}
-            </Text>
-          </View>
-          {locationPermission === 'denied' && (
-            <TouchableOpacity onPress={requestLocationPermission} style={styles.refreshLocationButton}>
-              <Ionicons name="settings-outline" size={18} color={Colors.warning} />
-            </TouchableOpacity>
-          )}
-        </View>
-      )}
-
-      {/* Pending Session Requests */}
-      {sessions.filter((s: any) => s.status === 'requested').length > 0 && (
-        <View style={styles.pendingSection}>
-          <Text style={styles.sectionTitle}>
-            Pending Requests ({sessions.filter((s: any) => s.status === 'requested').length})
-          </Text>
-          {sessions.filter((s: any) => s.status === 'requested').map((session: any) => (
-            <View key={session.id} style={styles.pendingCard}>
-              <View style={styles.pendingHeader}>
-                <Ionicons name="time-outline" size={24} color={Colors.warning} />
-                <Text style={styles.pendingTitle}>Session Request Sent</Text>
-              </View>
-              <View style={styles.pendingDetails}>
-                <View style={styles.pendingDetail}>
-                  <Ionicons name="calendar-outline" size={16} color={Colors.textLight} />
-                  <Text style={styles.pendingDetailText}>
-                    {new Date(session.sessionDateTimeStart).toLocaleDateString()}
-                  </Text>
-                </View>
-                <View style={styles.pendingDetail}>
-                  <Ionicons name="time-outline" size={16} color={Colors.textLight} />
-                  <Text style={styles.pendingDetailText}>
-                    {session.durationMinutes} minutes
-                  </Text>
-                </View>
-                <View style={styles.pendingDetail}>
-                  <Ionicons name="location-outline" size={16} color={Colors.textLight} />
-                  <Text style={styles.pendingDetailText}>
-                    {session.locationType}
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.pendingStatusContainer}>
-                <Text style={styles.pendingStatus}>⏳ Waiting for trainer response...</Text>
-              </View>
-            </View>
-          ))}
-        </View>
-      )}
-      
-      {/* Main Content - Trainer List */}
-      <ScrollView
-          style={styles.scrollView}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />
-          }
-        >
-          {/* Virtual Upsell Banner */}
-          <TouchableOpacity 
-            onPress={() => setShowTrainingModeDialog(true)}
-            style={styles.virtualBanner}
-            activeOpacity={0.8}
-          >
-            <LinearGradient
-              colors={[Colors.secondary, Colors.primary]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.virtualBannerGradient}
+        <SafeAreaView style={styles.safeArea} edges={['top']}>
+          {/* Header Actions */}
+          <View style={styles.headerActions}>
+            <TouchableOpacity 
+              onPress={() => router.push('/trainee/(tabs)/profile')} 
+              style={styles.headerButton}
             >
-              <View style={styles.virtualBannerIcon}>
-                <Ionicons name="videocam" size={32} color={Colors.white} />
-              </View>
-              <View style={styles.virtualBannerContent}>
-                <Text style={styles.virtualBannerTitle}>Need a trainer NOW?</Text>
-                <Text style={styles.virtualBannerSubtitle}>Start a 30-minute virtual session for $18.</Text>
-              </View>
-              <View style={styles.virtualBannerArrow}>
-                <Ionicons name="arrow-forward-circle" size={40} color={Colors.white} />
-              </View>
-            </LinearGradient>
-          </TouchableOpacity>
+              <Ionicons name="person-circle" size={32} color="#FFFFFF" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleLogout} style={styles.headerButton}>
+              <Ionicons name="log-out-outline" size={26} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
 
-          <View style={styles.trainersList}>
-            <Text style={styles.sectionTitle}>Available Trainers</Text>
-            
-            {displayedTrainers.length === 0 ? (
-              <View style={styles.emptyState}>
-                <Ionicons name="fitness-outline" size={64} color={Colors.textLight} />
-                <Text style={styles.emptyStateText}>No trainers available yet</Text>
-                <Text style={styles.emptyStateSubtext}>Check back soon!</Text>
-              </View>
-            ) : (
-              displayedTrainers.map((trainer) => (
-                <View key={trainer.id} style={styles.trainerCard}>
-                  <View style={styles.trainerAvatar}>
-                    {trainer.avatarUrl ? (
-                      <Image
-                        source={{ uri: trainer.avatarUrl }}
-                        style={styles.trainerAvatarImage}
-                        defaultSource={require('../../../assets/rapidreps-logo.png')}
-                      />
-                    ) : (
-                      <Ionicons name="person" size={32} color={Colors.primary} />
-                    )}
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FFFFFF" />
+            }
+          >
+            {/* Hero Banner - Motivational Greeting */}
+            <Animated.View
+              style={[
+                styles.heroBanner,
+                {
+                  opacity: heroAnim,
+                  transform: [{ translateY: heroTranslateY }],
+                },
+              ]}
+            >
+              <LinearGradient
+                colors={['rgba(26, 42, 94, 0.95)', 'rgba(26, 42, 94, 0.85)']}
+                style={styles.heroGradient}
+              >
+                <View style={styles.heroGlow} />
+                <Text style={styles.heroTitle}>
+                  LET'S GET AFTER IT, {user?.fullName?.split(' ')[0]?.toUpperCase() || 'CHAMP'}! 💪🔥
+                </Text>
+                <Text style={styles.heroSubtitle}>
+                  Your next workout is just one tap away
+                </Text>
+                {locationAddress && (
+                  <View style={styles.heroLocation}>
+                    <Ionicons name="location" size={16} color="#22C1C3" />
+                    <Text style={styles.heroLocationText}>{locationAddress}</Text>
                   </View>
-                  
-                  <View style={styles.trainerInfo}>
-                    <View style={styles.trainerHeader}>
-                      <Text style={styles.trainerName}>{trainer.fullName || 'Trainer'}</Text>
-                      {trainer.isVerified && (
-                        <View style={styles.verifiedBadge}>
-                          <Ionicons name="checkmark-circle" size={16} color={Colors.success} />
-                          <Text style={styles.verifiedText}>Verified</Text>
-                        </View>
-                      )}
-                    </View>
-                    
-                    {trainer.bio && (
-                      <Text style={styles.trainerBio} numberOfLines={2}>
-                        {trainer.bio}
-                      </Text>
-                    )}
-                    
-                    {/* Location Display */}
-                    {trainer.locationAddress && (
-                      <View style={styles.locationRow}>
-                        <Ionicons name="location" size={16} color={Colors.secondary} />
-                        <Text style={styles.locationRowText}>
-                          {trainer.locationAddress}
-                          {trainer.distance !== null && ` • ${trainer.distance.toFixed(1)} mi away`}
-                        </Text>
-                      </View>
-                    )}
-                    
-                    {/* Virtual Badge */}
-                    {trainer.isVirtualTrainingAvailable && (
-                      <View style={styles.virtualBadge}>
-                        <Ionicons name="videocam" size={14} color={Colors.white} />
-                        <Text style={styles.virtualBadgeText}>Virtual Available</Text>
-                      </View>
-                    )}
+                )}
+              </LinearGradient>
+            </Animated.View>
 
-                    <View style={styles.trainerStats}>
-                      <View style={styles.stat}>
-                        <Ionicons name="star" size={16} color={Colors.warning} />
-                        <Text style={styles.statText}>
-                          {trainer.averageRating.toFixed(1)} ({trainer.totalSessionsCompleted} sessions)
+            {/* Urgent CTA Banner - Need a trainer NOW */}
+            <Animated.View
+              style={[
+                styles.urgentBannerContainer,
+                {
+                  opacity: urgentBannerAnim,
+                  transform: [
+                    { translateX: urgentTranslateX },
+                    { scale: ctaPulseAnim },
+                  ],
+                },
+              ]}
+            >
+              <TouchableOpacity 
+                onPress={() => setShowTrainingModeDialog(true)}
+                activeOpacity={0.9}
+              >
+                <LinearGradient
+                  colors={['#FF6A00', '#FF9F1C']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.urgentBanner}
+                >
+                  <View style={styles.urgentIconContainer}>
+                    <Ionicons name="flash" size={36} color="#FFFFFF" />
+                  </View>
+                  <View style={styles.urgentContent}>
+                    <Text style={styles.urgentTitle}>⚡ NEED A TRAINER NOW?</Text>
+                    <Text style={styles.urgentSubtitle}>30-min virtual session • Just $18</Text>
+                  </View>
+                  <View style={styles.urgentArrow}>
+                    <Ionicons name="chevron-forward-circle" size={44} color="#FFFFFF" />
+                  </View>
+                </LinearGradient>
+              </TouchableOpacity>
+            </Animated.View>
+
+            {/* Search Card */}
+            <Animated.View
+              style={[
+                styles.searchCard,
+                {
+                  opacity: searchAnim,
+                  transform: [{ translateY: searchTranslateY }],
+                },
+              ]}
+            >
+              <LinearGradient
+                colors={['rgba(255,255,255,0.98)', 'rgba(255,255,255,0.95)']}
+                style={styles.searchCardGradient}
+              >
+                <View style={styles.searchInputContainer}>
+                  <Ionicons name="search" size={22} color="#1a2a5e" />
+                  <TextInput
+                    style={styles.searchInput}
+                    placeholder="Search trainers, gyms..."
+                    placeholderTextColor="#8892b0"
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                  />
+                </View>
+                <View style={styles.filterRow}>
+                  <TouchableOpacity 
+                    onPress={() => setShowFilters(true)}
+                    style={styles.filterPill}
+                  >
+                    <Ionicons name="options" size={18} color="#1a2a5e" />
+                    <Text style={styles.filterPillText}>Filters</Text>
+                    {(filters.minRating > 0 || filters.gender !== 'any' || filters.specialties.length > 0) && (
+                      <View style={styles.filterDot} />
+                    )}
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity 
+                    onPress={() => setShowSortMenu(!showSortMenu)}
+                    style={styles.sortPill}
+                  >
+                    <Ionicons name="swap-vertical" size={18} color="#1a2a5e" />
+                    <Text style={styles.sortPillText}>
+                      {sortBy === 'distance' ? 'Distance' : sortBy === 'rating' ? 'Rating' : 'Price'}
+                    </Text>
+                    <Ionicons name="chevron-down" size={14} color="#1a2a5e" />
+                  </TouchableOpacity>
+                </View>
+                
+                {/* Sort Dropdown */}
+                {showSortMenu && (
+                  <View style={styles.sortDropdown}>
+                    {[
+                      { value: 'distance', label: 'Nearest First', icon: 'location' },
+                      { value: 'rating', label: 'Top Rated', icon: 'star' },
+                      { value: 'price', label: 'Best Price', icon: 'cash' },
+                    ].map((option) => (
+                      <TouchableOpacity
+                        key={option.value}
+                        onPress={() => {
+                          setSortBy(option.value);
+                          setShowSortMenu(false);
+                        }}
+                        style={[
+                          styles.sortOption,
+                          sortBy === option.value && styles.sortOptionActive,
+                        ]}
+                      >
+                        <Ionicons 
+                          name={option.icon as any} 
+                          size={18} 
+                          color={sortBy === option.value ? '#F7931E' : '#1a2a5e'} 
+                        />
+                        <Text style={[
+                          styles.sortOptionText,
+                          sortBy === option.value && styles.sortOptionTextActive,
+                        ]}>
+                          {option.label}
                         </Text>
-                      </View>
-                      <View style={styles.stat}>
-                        <Ionicons name="cash-outline" size={16} color={Colors.primary} />
-                        <Text style={styles.statText}>
-                          ${(trainer.ratePerMinuteCents / 100).toFixed(2)}/min
-                        </Text>
-                      </View>
+                        {sortBy === option.value && (
+                          <Ionicons name="checkmark-circle" size={20} color="#F7931E" />
+                        )}
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+              </LinearGradient>
+            </Animated.View>
+
+            {/* Pending Requests Card */}
+            {pendingSessions.length > 0 && (
+              <Animated.View
+                style={[
+                  styles.pendingCard,
+                  {
+                    opacity: searchAnim,
+                    transform: [{ translateY: searchTranslateY }],
+                  },
+                ]}
+              >
+                <LinearGradient
+                  colors={['#FDBB2D', '#F7931E']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.pendingGradient}
+                >
+                  <View style={styles.pendingHeader}>
+                    <View style={styles.pendingIconBg}>
+                      <Ionicons name="hourglass" size={24} color="#F7931E" />
                     </View>
-                    
-                    {trainer.trainingStyles.length > 0 && (
-                      <View style={styles.styleChips}>
-                        {trainer.trainingStyles.slice(0, 3).map((style, index) => (
-                          <View key={index} style={styles.styleChip}>
-                            <Text style={styles.styleChipText}>{style}</Text>
+                    <View style={styles.pendingTitleContainer}>
+                      <Text style={styles.pendingTitle}>PENDING REQUESTS</Text>
+                      <Text style={styles.pendingCount}>{pendingSessions.length} waiting</Text>
+                    </View>
+                  </View>
+                  {pendingSessions.slice(0, 2).map((session: any, index: number) => (
+                    <View key={session.id} style={styles.pendingItem}>
+                      <View style={styles.pendingItemRow}>
+                        <Ionicons name="calendar" size={16} color="rgba(255,255,255,0.9)" />
+                        <Text style={styles.pendingItemText}>
+                          {new Date(session.sessionDateTimeStart).toLocaleDateString()}
+                        </Text>
+                        <Text style={styles.pendingItemDot}>•</Text>
+                        <Text style={styles.pendingItemText}>{session.durationMinutes} min</Text>
+                      </View>
+                      <Text style={styles.pendingStatus}>⏳ Awaiting trainer response</Text>
+                    </View>
+                  ))}
+                </LinearGradient>
+              </Animated.View>
+            )}
+
+            {/* Available Trainers Section */}
+            <View style={styles.trainersSection}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>🏋️ AVAILABLE TRAINERS</Text>
+                <Text style={styles.trainerCount}>{displayedTrainers.length} ready</Text>
+              </View>
+              
+              {displayedTrainers.length === 0 ? (
+                <View style={styles.emptyCard}>
+                  <LinearGradient
+                    colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.9)']}
+                    style={styles.emptyGradient}
+                  >
+                    <Ionicons name="fitness-outline" size={64} color="#22C1C3" />
+                    <Text style={styles.emptyTitle}>No trainers nearby</Text>
+                    <Text style={styles.emptySubtitle}>Try virtual training instead!</Text>
+                    <TouchableOpacity 
+                      style={styles.emptyButton}
+                      onPress={() => setShowTrainingModeDialog(true)}
+                    >
+                      <LinearGradient
+                        colors={['#22C1C3', '#1FB8B4']}
+                        style={styles.emptyButtonGradient}
+                      >
+                        <Text style={styles.emptyButtonText}>Find Virtual Trainers</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  </LinearGradient>
+                </View>
+              ) : (
+                displayedTrainers.map((trainer, index) => (
+                  <Animated.View
+                    key={trainer.id}
+                    style={[
+                      styles.trainerCard,
+                      {
+                        opacity: cardAnims[index] || 1,
+                        transform: [{
+                          translateY: (cardAnims[index] || new Animated.Value(1)).interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [40, 0],
+                          }),
+                        }],
+                      },
+                    ]}
+                  >
+                    <LinearGradient
+                      colors={['#FFFFFF', '#F8F9FA']}
+                      style={styles.trainerCardGradient}
+                    >
+                      {/* Trainer Header */}
+                      <View style={styles.trainerHeader}>
+                        <View style={styles.trainerAvatarContainer}>
+                          {trainer.avatarUrl ? (
+                            <Image
+                              source={{ uri: trainer.avatarUrl }}
+                              style={styles.trainerAvatar}
+                            />
+                          ) : (
+                            <LinearGradient
+                              colors={['#22C1C3', '#1FB8B4']}
+                              style={styles.trainerAvatarPlaceholder}
+                            >
+                              <Ionicons name="person" size={28} color="#FFFFFF" />
+                            </LinearGradient>
+                          )}
+                          {trainer.isVerified && (
+                            <View style={styles.verifiedBadge}>
+                              <Ionicons name="checkmark-circle" size={18} color="#22C1C3" />
+                            </View>
+                          )}
+                        </View>
+                        
+                        <View style={styles.trainerInfo}>
+                          <Text style={styles.trainerName}>{trainer.fullName || 'Trainer'}</Text>
+                          
+                          <View style={styles.trainerStats}>
+                            <View style={styles.statBadge}>
+                              <Ionicons name="star" size={14} color="#FFB347" />
+                              <Text style={styles.statText}>
+                                {trainer.averageRating?.toFixed(1) || '5.0'}
+                              </Text>
+                            </View>
+                            <View style={styles.statBadge}>
+                              <Ionicons name="cash" size={14} color="#22C1C3" />
+                              <Text style={styles.statText}>
+                                ${(trainer.ratePerMinuteCents / 100).toFixed(2)}/min
+                              </Text>
+                            </View>
+                            {trainer.distance !== null && (
+                              <View style={styles.statBadge}>
+                                <Ionicons name="location" size={14} color="#F7931E" />
+                                <Text style={styles.statText}>
+                                  {trainer.distance.toFixed(1)} mi
+                                </Text>
+                              </View>
+                            )}
+                          </View>
+                        </View>
+                      </View>
+
+                      {/* Bio */}
+                      {trainer.bio && (
+                        <Text style={styles.trainerBio} numberOfLines={2}>
+                          {trainer.bio}
+                        </Text>
+                      )}
+
+                      {/* Tags */}
+                      <View style={styles.tagRow}>
+                        {trainer.isVirtualTrainingAvailable && (
+                          <View style={styles.virtualTag}>
+                            <Ionicons name="videocam" size={12} color="#FFFFFF" />
+                            <Text style={styles.virtualTagText}>VIRTUAL</Text>
+                          </View>
+                        )}
+                        {trainer.trainingStyles?.slice(0, 2).map((style: string, i: number) => (
+                          <View key={i} style={styles.styleTag}>
+                            <Text style={styles.styleTagText}>{style}</Text>
                           </View>
                         ))}
-                        {trainer.trainingStyles.length > 3 && (
-                          <Text style={styles.moreStyles}>+{trainer.trainingStyles.length - 3}</Text>
+                        {trainer.trainingStyles?.length > 2 && (
+                          <Text style={styles.moreTag}>+{trainer.trainingStyles.length - 2}</Text>
                         )}
                       </View>
-                    )}
-                    
-                    {trainer.primaryGym && (
-                      <View style={styles.gymInfo}>
-                        <Ionicons name="location" size={14} color={Colors.textLight} />
-                        <Text style={styles.gymText}>{trainer.primaryGym}</Text>
-                      </View>
-                    )}
-                    
-                    <TouchableOpacity 
-                      style={styles.bookButton}
-                      onPress={() => router.push(`/trainee/trainer-detail?trainerId=${trainer.userId}`)}
-                    >
-                      <Text style={styles.bookButtonText}>View Profile</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              ))
-            )}
-          </View>
-        </ScrollView>
 
-        {/* Floating Action Button - Start Training */}
-        <TouchableOpacity
-          style={styles.fab}
-          onPress={() => setShowTrainingModeDialog(true)}
-          activeOpacity={0.9}
-        >
-          <LinearGradient
-            colors={Colors.gradientOrangeStart}
-            style={styles.fabGradient}
-          >
-            <Ionicons name="fitness" size={28} color={Colors.white} />
-            <Text style={styles.fabText}>START TRAINING</Text>
-          </LinearGradient>
-        </TouchableOpacity>
+                      {/* CTA Button */}
+                      <TouchableOpacity 
+                        style={styles.viewProfileButton}
+                        onPress={() => router.push(`/trainee/trainer-detail?trainerId=${trainer.userId}`)}
+                        activeOpacity={0.8}
+                      >
+                        <LinearGradient
+                          colors={['#1FB8B4', '#22C1C3']}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={styles.viewProfileGradient}
+                        >
+                          <Text style={styles.viewProfileText}>VIEW PROFILE</Text>
+                          <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+                        </LinearGradient>
+                      </TouchableOpacity>
+                    </LinearGradient>
+                  </Animated.View>
+                ))
+              )}
+            </View>
 
-        {/* Training Mode Dialog */}
-        <TrainingModeDialog
-          visible={showTrainingModeDialog}
-          onClose={() => setShowTrainingModeDialog(false)}
-          onSelectInPerson={() => {
-            setShowTrainingModeDialog(false);
-            // Show in-person trainers (already shown by default)
-          }}
-          onSelectVirtual={() => {
-            setShowTrainingModeDialog(false);
-            router.push('/trainee/virtual-confirm');
-          }}
-        />
-        </SafeAreaView>
-      </LinearGradient>
+            {/* Bottom Spacer for FAB */}
+            <View style={{ height: 100 }} />
+          </ScrollView>
 
-      {/* Virtual Training Dialog */}
-      <Modal
-        visible={showVirtualDialog}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowVirtualDialog(false)}
-      >
-        <View style={styles.modalOverlay}>
+          {/* Floating Action Button */}
           <Animated.View
             style={[
-              styles.dialogContainer,
-              {
-                transform: [
-                  {
-                    scale: dialogAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0.8, 1],
-                    }),
-                  },
-                ],
-                opacity: dialogAnim,
-              },
+              styles.fabContainer,
+              { transform: [{ scale: fabPulseAnim }] },
             ]}
           >
-            <LinearGradient
-              colors={Colors.gradientMain}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.dialogGradient}
+            <TouchableOpacity
+              style={styles.fab}
+              onPress={() => setShowTrainingModeDialog(true)}
+              activeOpacity={0.9}
             >
-              {/* Animated Icon */}
-              <View style={styles.dialogIconContainer}>
-                <Ionicons name="videocam" size={64} color={Colors.white} />
-              </View>
+              <LinearGradient
+                colors={['#FF6A00', '#F7931E']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.fabGradient}
+              >
+                <Ionicons name="flash" size={28} color="#FFFFFF" />
+                <Text style={styles.fabText}>START TRAINING</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </Animated.View>
 
-              {/* Title */}
-              <Text style={styles.dialogTitle}>Don't Sweat Just Yet! 💪</Text>
+          {/* Training Mode Dialog */}
+          <TrainingModeDialog
+            visible={showTrainingModeDialog}
+            onClose={() => setShowTrainingModeDialog(false)}
+            onSelectInPerson={() => setShowTrainingModeDialog(false)}
+            onSelectVirtual={() => {
+              setShowTrainingModeDialog(false);
+              router.push('/trainee/virtual-confirm');
+            }}
+          />
+        </SafeAreaView>
 
-              {/* Message */}
-              <Text style={styles.dialogMessage}>
-                There are Virtual Trainers available RAPIDLY! 🚀
-              </Text>
-
-              <Text style={styles.dialogSubMessage}>
-                Would you like Virtual Training?
-              </Text>
-
-              {/* Buttons */}
-              <View style={styles.dialogButtons}>
+        {/* Virtual Training Dialog */}
+        <Modal
+          visible={showVirtualDialog}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowVirtualDialog(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <Animated.View
+              style={[
+                styles.dialogContainer,
+                {
+                  transform: [{ scale: dialogAnim.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] }) }],
+                  opacity: dialogAnim,
+                },
+              ]}
+            >
+              <LinearGradient
+                colors={['#1FB8B4', '#F7931E']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.dialogGradient}
+              >
+                <View style={styles.dialogIconContainer}>
+                  <Ionicons name="videocam" size={64} color="#FFFFFF" />
+                </View>
+                <Text style={styles.dialogTitle}>Don't Sweat Just Yet! 💪</Text>
+                <Text style={styles.dialogMessage}>Virtual Trainers available RAPIDLY! 🚀</Text>
+                <Text style={styles.dialogSubMessage}>Would you like Virtual Training?</Text>
+                <View style={styles.dialogButtons}>
+                  <TouchableOpacity
+                    style={styles.dialogButtonNo}
+                    onPress={() => setShowVirtualDialog(false)}
+                  >
+                    <Text style={styles.dialogButtonTextNo}>Maybe Later</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.dialogButtonYes}
+                    onPress={handleVirtualTrainingYes}
+                  >
+                    <Text style={styles.dialogButtonTextYes}>Yes, Let's Go! 🔥</Text>
+                  </TouchableOpacity>
+                </View>
                 <TouchableOpacity
-                  style={[styles.dialogButton, styles.dialogButtonNo]}
+                  style={styles.dialogCloseButton}
                   onPress={() => setShowVirtualDialog(false)}
                 >
-                  <Text style={styles.dialogButtonTextNo}>Maybe Later</Text>
+                  <Ionicons name="close-circle" size={32} color="rgba(255,255,255,0.8)" />
                 </TouchableOpacity>
+              </LinearGradient>
+            </Animated.View>
+          </View>
+        </Modal>
 
-                <TouchableOpacity
-                  style={[styles.dialogButton, styles.dialogButtonYes]}
-                  onPress={handleVirtualTrainingYes}
-                >
-                  <Text style={styles.dialogButtonTextYes}>Yes, Let's Go! 🔥</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Close button */}
-              <TouchableOpacity
-                style={styles.dialogCloseButton}
-                onPress={() => setShowVirtualDialog(false)}
-              >
-                <Ionicons name="close-circle" size={32} color="rgba(255,255,255,0.8)" />
-              </TouchableOpacity>
-            </LinearGradient>
-          </Animated.View>
-        </View>
-      </Modal>
-
-      {/* Trainer Filters Modal */}
-      <Modal
-        visible={showFilters}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowFilters(false)}
-      >
-        <TrainerFilters
-          filters={filters}
-          onFiltersChange={setFilters}
-          onClose={() => setShowFilters(false)}
-        />
-      </Modal>
-    </View>
+        {/* Trainer Filters Modal */}
+        <Modal
+          visible={showFilters}
+          animationType="slide"
+          presentationStyle="pageSheet"
+          onRequestClose={() => setShowFilters(false)}
+        >
+          <TrainerFilters
+            filters={filters}
+            onFiltersChange={setFilters}
+            onClose={() => setShowFilters(false)}
+          />
+        </Modal>
+      </View>
     </>
   );
 }
@@ -784,10 +894,10 @@ export default function TraineeHomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.primary,
+    backgroundColor: '#1FB8B4',
   },
-  backgroundGradient: {
-    flex: 1,
+  fullGradient: {
+    ...StyleSheet.absoluteFillObject,
   },
   safeArea: {
     flex: 1,
@@ -796,277 +906,523 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.primary,
   },
-  header: {
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 24,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-  },
-  headerTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  logoContainer: {
-    flex: 1,
-  },
-  greetingContainer: {
-    marginTop: 8,
-  },
-  greeting: {
-    fontSize: 26,
-    fontWeight: '900',
-    color: Colors.navy,
-    marginBottom: 6,
-    letterSpacing: 0.5,
-  },
-  subGreeting: {
+  loadingText: {
+    marginTop: 16,
     fontSize: 16,
-    fontWeight: '700',
-    color: Colors.navy,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   headerActions: {
     flexDirection: 'row',
+    justifyContent: 'flex-end',
     alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 8,
     gap: 12,
   },
   headerButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  searchSection: {
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+  scrollView: {
+    flex: 1,
   },
-  searchBar: {
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+  },
+  // Hero Banner
+  heroBanner: {
+    marginBottom: 16,
+    borderRadius: 24,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 12,
+  },
+  heroGradient: {
+    paddingVertical: 28,
+    paddingHorizontal: 24,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  heroGlow: {
+    position: 'absolute',
+    top: -50,
+    right: -50,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: 'rgba(34, 193, 195, 0.3)',
+  },
+  heroTitle: {
+    fontSize: 26,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 8,
+    letterSpacing: 0.5,
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  heroSubtitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.9)',
+    textAlign: 'center',
+  },
+  heroLocation: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.95)',
-    borderRadius: 12,
+    justifyContent: 'center',
+    marginTop: 12,
+    gap: 6,
+  },
+  heroLocationText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#22C1C3',
+  },
+  // Urgent Banner
+  urgentBannerContainer: {
+    marginBottom: 16,
+  },
+  urgentBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 18,
+    borderRadius: 20,
+    shadowColor: '#FF6A00',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 10,
+  },
+  urgentIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  urgentContent: {
+    flex: 1,
+  },
+  urgentTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    marginBottom: 4,
+    letterSpacing: 0.5,
+  },
+  urgentSubtitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.95)',
+  },
+  urgentArrow: {
+    opacity: 0.9,
+  },
+  // Search Card
+  searchCard: {
+    marginBottom: 16,
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  searchCardGradient: {
+    padding: 16,
+  },
+  searchInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0F4F8',
+    borderRadius: 14,
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 8,
+    paddingVertical: 14,
+    gap: 10,
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: Colors.navy,
+    fontWeight: '500',
+    color: '#1a2a5e',
   },
-  scrollView: {
+  filterRow: {
+    flexDirection: 'row',
+    marginTop: 12,
+    gap: 10,
+  },
+  filterPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0F4F8',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    gap: 6,
     flex: 1,
   },
-  trainersList: {
-    padding: 24,
+  filterPillText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1a2a5e',
+  },
+  filterDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#F7931E',
+  },
+  sortPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0F4F8',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    gap: 6,
+    flex: 1,
+  },
+  sortPillText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1a2a5e',
+    flex: 1,
+  },
+  sortDropdown: {
+    marginTop: 12,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 14,
+    overflow: 'hidden',
+  },
+  sortOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E8ECF0',
+  },
+  sortOptionActive: {
+    backgroundColor: 'rgba(247, 147, 30, 0.1)',
+  },
+  sortOptionText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1a2a5e',
+    flex: 1,
+  },
+  sortOptionTextActive: {
+    color: '#F7931E',
+  },
+  // Pending Card
+  pendingCard: {
+    marginBottom: 16,
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#F7931E',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  pendingGradient: {
+    padding: 18,
+  },
+  pendingHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  pendingIconBg: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  pendingTitleContainer: {
+    flex: 1,
+  },
+  pendingTitle: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+  },
+  pendingCount: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.9)',
+    marginTop: 2,
+  },
+  pendingItem: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 8,
+  },
+  pendingItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 6,
+  },
+  pendingItemText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  pendingItemDot: {
+    color: 'rgba(255,255,255,0.6)',
+  },
+  pendingStatus: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.85)',
+  },
+  // Trainers Section
+  trainersSection: {
+    marginTop: 8,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: Colors.navy,
-    marginBottom: 16,
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: 60,
-  },
-  emptyStateText: {
     fontSize: 18,
-    fontWeight: '600',
-    color: Colors.navy,
-    marginTop: 16,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
   },
-  emptyStateSubtext: {
+  trainerCount: {
     fontSize: 14,
-    color: Colors.textLight,
-    marginTop: 4,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.8)',
   },
-  trainerCard: {
-    flexDirection: 'row',
-    backgroundColor: Colors.white,
-    borderRadius: 12,
-    borderWidth: 3,
-    borderColor: Colors.navy,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: Colors.navy,
+  // Empty State
+  emptyCard: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 0,
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  emptyGradient: {
+    padding: 40,
+    alignItems: 'center',
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#1a2a5e',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#8892b0',
+    marginBottom: 20,
+  },
+  emptyButton: {
+    borderRadius: 14,
+    overflow: 'hidden',
+  },
+  emptyButtonGradient: {
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+  },
+  emptyButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  // Trainer Card
+  trainerCard: {
+    marginBottom: 16,
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  trainerCardGradient: {
+    padding: 18,
+  },
+  trainerHeader: {
+    flexDirection: 'row',
+    marginBottom: 12,
+  },
+  trainerAvatarContainer: {
+    position: 'relative',
+    marginRight: 14,
   },
   trainerAvatar: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: Colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-    overflow: 'hidden',
   },
-  trainerAvatarImage: {
+  trainerAvatarPlaceholder: {
     width: 60,
     height: 60,
     borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  verifiedBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    padding: 2,
   },
   trainerInfo: {
     flex: 1,
-  },
-  trainerHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
+    justifyContent: 'center',
   },
   trainerName: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: Colors.navy,
-    marginRight: 8,
-  },
-  verifiedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  verifiedText: {
-    fontSize: 12,
-    color: Colors.success,
-    fontWeight: '600',
-  },
-  trainerBio: {
-    fontSize: 14,
-    color: Colors.textLight,
-    marginBottom: 8,
+    fontWeight: '800',
+    color: '#1a2a5e',
+    marginBottom: 6,
   },
   trainerStats: {
     flexDirection: 'row',
-    gap: 16,
-    marginBottom: 8,
+    flexWrap: 'wrap',
+    gap: 8,
   },
-  stat: {
+  statBadge: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#F0F4F8',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
     gap: 4,
   },
   statText: {
-    fontSize: 13,
-    color: Colors.navy,
-  },
-  styleChips: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginBottom: 8,
-  },
-  styleChip: {
-    backgroundColor: Colors.secondary,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  styleChipText: {
     fontSize: 12,
-    color: Colors.navy,
+    fontWeight: '700',
+    color: '#1a2a5e',
+  },
+  trainerBio: {
+    fontSize: 14,
     fontWeight: '500',
-  },
-  moreStyles: {
-    fontSize: 12,
-    color: Colors.textLight,
-    alignSelf: 'center',
-  },
-  gymInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
+    color: '#5a6a8a',
+    lineHeight: 20,
     marginBottom: 12,
   },
-  gymText: {
-    fontSize: 13,
-    color: Colors.textLight,
+  tagRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 14,
   },
-  bookButton: {
-    backgroundColor: Colors.primary,
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  bookButtonText: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: Colors.white,
-  },
-  locationBanner: {
+  virtualTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    gap: 12,
-  },
-  locationTextContainer: {
-    flex: 1,
-  },
-  locationLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: Colors.textLight,
-    textTransform: 'uppercase',
-    marginBottom: 2,
-  },
-  locationText: {
-    fontSize: 14,
-    color: Colors.navy,
-    fontWeight: '500',
-  },
-  locationWarning: {
-    fontSize: 13,
-    color: Colors.text,
-  },
-  refreshLocationButton: {
-    padding: 8,
-  },
-  distanceText: {
-    fontSize: 13,
-    color: Colors.secondary,
-    fontWeight: '700',
-  },
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 8,
-  },
-  locationRowText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.secondary,
-  },
-  virtualBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: Colors.secondary,
+    backgroundColor: '#22C1C3',
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 5,
     borderRadius: 12,
-    alignSelf: 'flex-start',
-    marginBottom: 8,
+    gap: 4,
   },
-  virtualBadgeText: {
+  virtualTagText: {
     fontSize: 11,
-    fontWeight: '700',
-    color: Colors.white,
-    textTransform: 'uppercase',
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
   },
-  // Virtual Training Dialog Styles
+  styleTag: {
+    backgroundColor: '#FFF3E0',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+  },
+  styleTagText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#F7931E',
+  },
+  moreTag: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#8892b0',
+    alignSelf: 'center',
+  },
+  viewProfileButton: {
+    borderRadius: 14,
+    overflow: 'hidden',
+  },
+  viewProfileGradient: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 14,
+    gap: 8,
+  },
+  viewProfileText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+  },
+  // FAB
+  fabContainer: {
+    position: 'absolute',
+    bottom: 30,
+    right: 20,
+    left: 20,
+  },
+  fab: {
+    borderRadius: 28,
+    overflow: 'hidden',
+    shadowColor: '#FF6A00',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 12,
+  },
+  fabGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 18,
+    gap: 10,
+  },
+  fabText: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: 1,
+  },
+  // Modal
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.7)',
@@ -1094,273 +1450,57 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dialogTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: Colors.white,
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  dialogMessage: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: Colors.white,
+    fontSize: 26,
+    fontWeight: '900',
+    color: '#FFFFFF',
     textAlign: 'center',
     marginBottom: 12,
-    lineHeight: 28,
+  },
+  dialogMessage: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 8,
   },
   dialogSubMessage: {
-    fontSize: 18,
-    color: Colors.white,
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.9)',
     textAlign: 'center',
-    marginBottom: 32,
-    opacity: 0.95,
+    marginBottom: 28,
   },
   dialogButtons: {
     flexDirection: 'row',
     gap: 12,
     width: '100%',
   },
-  dialogButton: {
+  dialogButtonNo: {
     flex: 1,
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
   },
-  dialogButtonNo: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-  },
   dialogButtonYes: {
-    backgroundColor: Colors.white,
+    flex: 1,
+    paddingVertical: 16,
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
   },
   dialogButtonTextNo: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
-    color: Colors.white,
+    color: '#FFFFFF',
   },
   dialogButtonTextYes: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
-    color: Colors.primary,
+    color: '#1FB8B4',
   },
   dialogCloseButton: {
     position: 'absolute',
     top: 16,
     right: 16,
-  },
-  // Pending Session Styles
-  pendingSection: {
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-  },
-  pendingCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: Colors.warning,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: Colors.warning,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  pendingHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-    gap: 8,
-  },
-  pendingTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: Colors.warning,
-  },
-  pendingDetails: {
-    marginBottom: 12,
-    gap: 8,
-  },
-  pendingDetail: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  pendingDetailText: {
-    fontSize: 14,
-    color: Colors.textLight,
-    fontWeight: '500',
-  },
-  pendingStatusContainer: {
-    backgroundColor: 'rgba(255, 193, 7, 0.1)',
-    borderRadius: 8,
-    padding: 12,
-    alignItems: 'center',
-  },
-  pendingStatus: {
-    fontSize: 14,
-    color: Colors.warning,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  // Map styles
-  mapContainer: {
-    flex: 1,
-  },
-  map: {
-    width: '100%',
-    height: '100%',
-  },
-  // Floating Action Button styles
-  fab: {
-    position: 'absolute',
-    bottom: 30,
-    right: 24,
-    borderRadius: 28,
-    elevation: 8,
-    shadowColor: Colors.navy,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-  },
-  fabGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderRadius: 28,
-    gap: 8,
-  },
-  fabText: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: Colors.white,
-    letterSpacing: 0.5,
-  },
-  // Filter and Sort Styles
-  filterSortRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 12,
-    gap: 12,
-  },
-  filterButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.9)',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-    gap: 6,
-    flex: 1,
-  },
-  filterButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.navy,
-  },
-  filterBadge: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: Colors.secondary,
-    marginLeft: 4,
-  },
-  filterBadgeText: {
-    fontSize: 8,
-    color: Colors.white,
-  },
-  sortButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.9)',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-    gap: 6,
-    flex: 1,
-  },
-  sortButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.navy,
-  },
-  sortMenu: {
-    position: 'absolute',
-    top: 50,
-    right: 0,
-    backgroundColor: Colors.white,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: Colors.navy,
-    shadowColor: Colors.navy,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-    zIndex: 1000,
-    minWidth: 180,
-  },
-  sortMenuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 12,
-  },
-  sortMenuText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.text,
-    flex: 1,
-  },
-  sortMenuTextActive: {
-    color: Colors.secondary,
-    fontWeight: '700',
-  },
-  // Virtual Banner Styles
-  virtualBanner: {
-    marginHorizontal: 24,
-    marginBottom: 16,
-    borderRadius: 16,
-    overflow: 'hidden',
-    elevation: 8,
-    shadowColor: Colors.navy,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-  },
-  virtualBannerGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 20,
-    gap: 16,
-  },
-  virtualBannerIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  virtualBannerContent: {
-    flex: 1,
-  },
-  virtualBannerTitle: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: Colors.white,
-    marginBottom: 4,
-  },
-  virtualBannerSubtitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.white,
-    opacity: 0.9,
-  },
-  virtualBannerArrow: {
-    opacity: 0.8,
   },
 });
