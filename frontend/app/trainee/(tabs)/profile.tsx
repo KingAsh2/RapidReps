@@ -110,7 +110,7 @@ export default function TraineeProfileScreen() {
 
   const handleSave = async () => {
     setSaving(true);
-    try:
+    try {
       const profileData = {
         ...formData,
         userId: user?.id || profile?.userId
