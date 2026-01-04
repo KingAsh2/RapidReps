@@ -59,10 +59,27 @@ export default function SessionsScreen() {
   const pastSessions = sessions.filter(s => s.status === 'completed' || (s.status === 'confirmed' && new Date(s.sessionDateTimeStart) <= new Date()));
   const cancelledSessions = sessions.filter(s => s.status === 'cancelled');
 
-  const handleCancelSession = (sessionId: string) => {
+  const handleCancelSession = async (session: any) => {
+    const isAccepted = session.status === 'confirmed';
+    const sessionPrice = session.finalSessionPriceCents / 100;
+    const cancellationFee = isAccepted ? sessionPrice * 0.20 : 0;
+    const refundAmount = sessionPrice - cancellationFee;
+
+    let message = `Session Price: $${sessionPrice.toFixed(2)}\n\n`;
+    
+    if (isAccepted) {
+      message += `⚠️ This session was already accepted by the trainer.\n\n`;
+      message += `Cancellation Fee (20%): $${cancellationFee.toFixed(2)}\n`;
+      message += `Refund Amount (80%): $${refundAmount.toFixed(2)}\n\n`;
+      message += `Do you want to proceed?`;
+    } else {
+      message += `✓ No cancellation fee (session not yet accepted)\n`;
+      message += `Full Refund: $${refundAmount.toFixed(2)}`;
+    }
+
     showAlert({
       title: 'Cancel Session?',
-      message: 'Are you sure you want to cancel this session? You may be charged a cancellation fee.',
+      message: message,
       type: 'warning',
       buttons: [
         { text: 'Keep Session', style: 'cancel' },
@@ -71,17 +88,19 @@ export default function SessionsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await traineeAPI.cancelSession(sessionId);
+              const result = await traineeAPI.cancelSession(session._id);
+              
               showAlert({
-                title: 'Session Cancelled',
-                message: 'Your session has been cancelled. Refund will be processed if applicable.',
-                type: 'info',
+                title: 'Session Cancelled ✓',
+                message: result.message,
+                type: 'success',
               });
+              
               loadSessions();
-            } catch (error) {
+            } catch (error: any) {
               showAlert({
                 title: 'Cancellation Failed',
-                message: 'Could not cancel session. Please try again or contact support.',
+                message: error.response?.data?.detail || 'Could not cancel session. Please try again or contact support.',
                 type: 'error',
               });
             }
