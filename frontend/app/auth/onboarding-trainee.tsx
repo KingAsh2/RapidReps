@@ -454,38 +454,47 @@ export default function TraineeOnboardingScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <LinearGradient
-        colors={Colors.gradientTealStart}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.header}
-      >
-        <Text style={styles.title}>Trainee Setup</Text>
-        <Text style={styles.subtitle}>
-          Step {step} of {totalSteps}
-        </Text>
-        <View style={styles.progressBar}>
-          {[...Array(totalSteps)].map((_, index) => (
-            <View
-              key={index}
-              style={[
-                styles.progressDot,
-                index < step && styles.progressDotActive,
-              ]}
-            />
-          ))}
-        </View>
-      </LinearGradient>
+    <KeyboardAvoidingView 
+      style={{ flex: 1 }} 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
+      <View style={styles.container}>
+        {/* Header */}
+        <LinearGradient
+          colors={Colors.gradientTealStart}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.header}
+        >
+          <Text style={styles.title}>Trainee Setup</Text>
+          <Text style={styles.subtitle}>
+            Step {step} of {totalSteps}
+          </Text>
+          <View style={styles.progressBar}>
+            {[...Array(totalSteps)].map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.progressDot,
+                  index < step && styles.progressDotActive,
+                ]}
+              />
+            ))}
+          </View>
+        </LinearGradient>
 
-      {/* Form */}
-      <ScrollView style={styles.scrollView}>
-        {renderStep()}
-      </ScrollView>
+        {/* Form */}
+        <ScrollView 
+          style={styles.scrollView}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {renderStep()}
+        </ScrollView>
 
-      {/* Navigation Buttons */}
-      <View style={styles.footer}>
+        {/* Navigation Buttons */}
+        <View style={styles.footer}>
         {step > 1 && (
           <TouchableOpacity style={styles.backButton} onPress={handleBack}>
             <Text style={styles.backButtonText}>Back</Text>
