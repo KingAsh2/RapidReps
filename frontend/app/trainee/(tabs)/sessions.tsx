@@ -214,10 +214,18 @@ export default function SessionsScreen() {
             </>
           )}
           {isPending && (
-            <View style={styles.pendingInfo}>
-              <Ionicons name="hourglass-outline" size={16} color={Colors.warning} />
-              <Text style={styles.pendingText}>Waiting for trainer to accept...</Text>
-            </View>
+            <>
+              <View style={styles.pendingInfo}>
+                <Ionicons name="hourglass-outline" size={16} color={Colors.warning} />
+                <Text style={styles.pendingText}>Waiting for trainer to accept...</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.actionButtonSecondary}
+                onPress={() => handleCancelSession(session)}
+              >
+                <Text style={styles.actionButtonSecondaryText}>Withdraw Request</Text>
+              </TouchableOpacity>
+            </>
           )}
           {isPast && !session.hasRated && (
             <TouchableOpacity
