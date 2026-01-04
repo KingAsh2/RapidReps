@@ -43,7 +43,7 @@ export default function TrainerDetailScreen() {
                 reason: 'Reported from trainer profile',
                 contentType: 'profile',
               });
-              showAlert({ title: 'Submitted', message: 'Thanks — we received your report.', type: 'success' });
+              // Silent success - no popup
             } catch (e: any) {
               showAlert({ title: 'Error', message: e?.message || 'Unable to submit report.', type: 'error' });
             }
@@ -66,7 +66,7 @@ export default function TrainerDetailScreen() {
           onPress: async () => {
             try {
               await safetyAPI.blockUser(trainerId as string);
-              showAlert({ title: 'Blocked', message: 'Trainer blocked.', type: 'success' });
+              // Navigate back silently
               router.back();
             } catch (e: any) {
               showAlert({ title: 'Error', message: e?.message || 'Unable to block user.', type: 'error' });
