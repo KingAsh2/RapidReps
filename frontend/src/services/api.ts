@@ -123,6 +123,11 @@ export const trainerAPI = {
     });
     return response.data;
   },
+
+  getAchievements: async (): Promise<any> => {
+    const response = await api.get('/trainer/achievements');
+    return response.data;
+  },
 };
 
 // Trainee Profile API
