@@ -76,24 +76,12 @@ export default function SignupScreen() {
         roles: formData.roles,
       });
 
-      showAlert({
-        title: 'Success! 🎉',
-        message: 'Account created successfully!',
-        type: 'success',
-        buttons: [
-          { 
-            text: 'Continue', 
-            onPress: () => {
-              // If user selected trainer, go to trainer onboarding
-              if (formData.roles.includes(UserRole.TRAINER)) {
-                router.replace('/auth/onboarding-trainer');
-              } else {
-                router.replace('/auth/onboarding-trainee');
-              }
-            }
-          },
-        ],
-      });
+      // Navigate directly without success popup
+      if (formData.roles.includes(UserRole.TRAINER)) {
+        router.replace('/auth/onboarding-trainer');
+      } else {
+        router.replace('/auth/onboarding-trainee');
+      }
     } catch (error: any) {
       showAlert({
         title: 'Signup Failed',
