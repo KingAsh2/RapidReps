@@ -8,13 +8,16 @@ import {
   ScrollView,
   Image,
   ActivityIndicator,
+  Modal,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useAlert } from '../../src/contexts/AlertContext';
 import { traineeAPI } from '../../src/services/api';
 import { Colors } from '../../src/utils/colors';
-import { TrainingStyles, FitnessLevel } from '../../src/types';
+import { TrainingStyles, FitnessLevel, TrainingStyleDescriptions } from '../../src/types';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
