@@ -63,7 +63,7 @@ export default function SessionCompleteScreen() {
         buttons: [
           {
             text: 'Done',
-            onPress: () => router.replace('/trainee/home'),
+            onPress: () => router.replace('/trainee/(tabs)/home'),
           },
         ],
       });
@@ -84,11 +84,11 @@ export default function SessionCompleteScreen() {
   };
 
   const handleSkip = () => {
-    router.replace('/trainee/home');
+    router.replace('/trainee/(tabs)/home');
   };
 
   const handleBookAnother = () => {
-    router.replace('/trainee/home');
+    router.replace('/trainee/(tabs)/home');
   };
 
   return (
