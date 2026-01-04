@@ -137,6 +137,15 @@ export const traineeAPI = {
     return response.data;
   },
 
+  getMyProfile: async (): Promise<TraineeProfile> => {
+    const token = await AsyncStorage.getItem('token');
+    const userStr = await AsyncStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : null;
+    if (!user) throw new Error('User not found');
+    const response = await api.get(`/trainee-profiles/${user.id}`);
+    return response.data;
+  },
+
   updateProfile: async (profile: any): Promise<TraineeProfile> => {
     const response = await api.post('/trainee-profiles', profile);
     return response.data;
@@ -164,6 +173,11 @@ export const traineeAPI = {
       paymentMethod: 'mock',
       notes,
     });
+    return response.data;
+  },
+
+  getAchievements: async (): Promise<any> => {
+    const response = await api.get('/trainee/achievements');
     return response.data;
   },
 };
