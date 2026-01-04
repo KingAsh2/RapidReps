@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,18 +9,34 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Switch,
+  Animated,
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { trainerAPI } from '../../src/services/api';
-import { Colors } from '../../src/utils/colors';
 import { TrainerProfile, TrainingStyles } from '../../src/types';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useAlert } from '../../src/contexts/AlertContext';
-import { AnimatedLogo } from '../../src/components/AnimatedLogo';
 import * as Location from 'expo-location';
+
+// Brand colors
+const COLORS = {
+  teal: '#1FB8B4',
+  tealLight: '#22C1C3',
+  orange: '#F7931E',
+  orangeHot: '#FF6A00',
+  orangeLight: '#FF9F1C',
+  navy: '#1a2a5e',
+  white: '#FFFFFF',
+  offWhite: '#FAFBFC',
+  gray: '#8892b0',
+  grayLight: '#E8ECF0',
+  success: '#00C853',
+  error: '#FF4757',
+};
 
 export default function EditTrainerProfileScreen() {
   const router = useRouter();
@@ -29,12 +45,17 @@ export default function EditTrainerProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<TrainerProfile | null>(null);
+  const [gettingLocation, setGettingLocation] = useState(false);
+
+  // Animations
+  const headerAnim = useRef(new Animated.Value(0)).current;
+  const cardAnims = useRef([...Array(6)].map(() => new Animated.Value(0))).current;
 
   const [formData, setFormData] = useState({
     bio: '',
     experienceYears: '0',
     certifications: '',
-    trainingStyles: [],
+    trainingStyles: [] as string[],
     gymsWorkedAt: '',
     primaryGym: '',
     offersInPerson: true,
@@ -42,17 +63,36 @@ export default function EditTrainerProfileScreen() {
     sessionDurations: [30, 45, 60],
     travelRadiusMiles: '10',
     cancellationPolicy: 'Free cancellation before 24 hours',
-    latitude: null,
-    longitude: null,
+    latitude: null as number | null,
+    longitude: null as number | null,
     locationAddress: '',
     isAvailable: true,
   });
-  
-  const [gettingLocation, setGettingLocation] = useState(false);
 
   useEffect(() => {
     loadProfile();
   }, []);
+
+  useEffect(() => {
+    if (!loading) {
+      Animated.timing(headerAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }).start();
+
+      cardAnims.forEach((anim, index) => {
+        setTimeout(() => {
+          Animated.spring(anim, {
+            toValue: 1,
+            friction: 8,
+            tension: 40,
+            useNativeDriver: true,
+          }).start();
+        }, 150 + (index * 100));
+      });
+    }
+  }, [loading]);
 
   const loadProfile = async () => {
     if (!user) return;
@@ -85,7 +125,7 @@ export default function EditTrainerProfileScreen() {
     }
   };
 
-  const toggleStyle = (style) => {
+  const toggleStyle = (style: string) => {
     if (formData.trainingStyles.includes(style)) {
       setFormData({
         ...formData,
@@ -99,7 +139,7 @@ export default function EditTrainerProfileScreen() {
     }
   };
 
-  const toggleDuration = (duration) => {
+  const toggleDuration = (duration: number) => {
     if (formData.sessionDurations.includes(duration)) {
       setFormData({
         ...formData,
@@ -120,7 +160,7 @@ export default function EditTrainerProfileScreen() {
       if (status !== 'granted') {
         showAlert({
           title: 'Permission Denied',
-          message: 'Please enable location permissions to set your location',
+          message: 'Please enable location permissions',
           type: 'warning',
         });
         return;
@@ -130,7 +170,6 @@ export default function EditTrainerProfileScreen() {
         accuracy: Location.Accuracy.Balanced,
       });
 
-      // Reverse geocode to get address
       const addresses = await Location.reverseGeocodeAsync({
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
@@ -148,17 +187,11 @@ export default function EditTrainerProfileScreen() {
         longitude: location.coords.longitude,
         locationAddress: address || 'Location set',
       });
-
-      showAlert({
-        title: 'Success! 📍',
-        message: 'Location updated successfully',
-        type: 'success',
-      });
     } catch (error) {
       console.error('Error getting location:', error);
       showAlert({
         title: 'Location Error',
-        message: 'Failed to get your location. Please try again.',
+        message: 'Failed to get your location',
         type: 'error',
       });
     } finally {
@@ -167,137 +200,63 @@ export default function EditTrainerProfileScreen() {
   };
 
   const handleSave = async () => {
-    if (!user) {
-      console.log('Save failed: user missing', { user });
-      showAlert({
-        title: 'Authentication Error',
-        message: 'User not found. Please log in again.',
-        type: 'error',
-      });
-      return;
-    }
-
-    console.log('Starting save...', { userId: user.id, formData });
+    if (!user) return;
     setSaving(true);
+
     try {
-      const certList = formData.certifications
-        .split(',')
-        .map((c) => c.trim())
-        .filter((c) => c);
-      const gymsList = formData.gymsWorkedAt
-        .split(',')
-        .map((g) => g.trim())
-        .filter((g) => g);
-
-      console.log('Calling API with data:', {
+      const profileData = {
         userId: user.id,
-        locationAddress: formData.locationAddress,
-        latitude: formData.latitude,
-        longitude: formData.longitude,
-      });
-
-      await trainerAPI.updateProfile({
-        userId: user.id,
-        bio: formData.bio,
+        bio: formData.bio.trim(),
         experienceYears: parseInt(formData.experienceYears) || 0,
-        certifications: certList,
+        certifications: formData.certifications.split(',').map((c) => c.trim()).filter(Boolean),
         trainingStyles: formData.trainingStyles,
-        gymsWorkedAt: gymsList,
-        primaryGym: formData.primaryGym,
+        gymsWorkedAt: formData.gymsWorkedAt.split(',').map((g) => g.trim()).filter(Boolean),
+        primaryGym: formData.primaryGym.trim(),
         offersInPerson: formData.offersInPerson,
         offersVirtual: formData.offersVirtual,
         sessionDurationsOffered: formData.sessionDurations,
-        ratePerMinuteCents: 100,
         travelRadiusMiles: parseInt(formData.travelRadiusMiles) || 10,
         cancellationPolicy: formData.cancellationPolicy,
         latitude: formData.latitude,
         longitude: formData.longitude,
         locationAddress: formData.locationAddress,
-        isVirtualTrainingAvailable: formData.offersVirtual,
         isAvailable: formData.isAvailable,
-      });
+      };
 
-      console.log('Profile updated successfully!');
-      setSaving(false);
+      if (profile) {
+        await trainerAPI.updateProfile(profileData);
+      } else {
+        await trainerAPI.createProfile(profileData);
+      }
+
+      router.back();
+    } catch (error: any) {
       showAlert({
-        title: 'Success! 🎉',
-        message: 'Your profile has been updated successfully!',
-        type: 'success',
-        buttons: [
-          {
-            text: 'OK',
-            onPress: () => {
-              console.log('Navigating back...');
-              loadProfile(); // Reload to confirm save
-              router.back();
-            }
-          }
-        ],
-      });
-    } catch (error) {
-      console.error('Save error:', error);
-      setSaving(false);
-      showAlert({
-        title: 'Update Failed',
-        message: error.response?.data?.detail || error.message || 'Failed to update profile',
+        title: 'Save Failed',
+        message: error.response?.data?.detail || 'Failed to save profile',
         type: 'error',
       });
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleDeleteAccount = async () => {
-    showAlert({
-      title: 'Delete Account',
-      message: 'This will permanently delete your account and all data. This action cannot be undone.',
-      type: 'warning',
-      buttons: [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete Forever',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const { authAPI } = await import('../../src/services/api');
-              const { logout } = await import('../../src/contexts/AuthContext');
-              await authAPI.deleteMe();
-              showAlert({
-                title: 'Account Deleted',
-                message: 'Your account has been permanently deleted.',
-                type: 'success',
-                buttons: [
-                  {
-                    text: 'OK',
-                    onPress: () => {
-                      // Logout is handled by the auth context
-                      router.replace('/');
-                    },
-                  },
-                ],
-              });
-            } catch (error) {
-              showAlert({
-                title: 'Error',
-                message: error?.response?.data?.detail || 'Unable to delete account. Please try again.',
-                type: 'error',
-              });
-            }
-          },
-        },
-      ],
-    });
-  };
+  const headerTranslateY = headerAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-30, 0],
+  });
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <LinearGradient
-          colors={Colors.gradientMain}
-          style={styles.loadingGradient}
-        >
-          <ActivityIndicator size="large" color={Colors.white} />
-          <Text style={styles.loadingText}>Loading your profile...</Text>
-        </LinearGradient>
-      </View>
+      <LinearGradient
+        colors={[COLORS.orange, COLORS.orangeLight, COLORS.teal]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.loadingContainer}
+      >
+        <ActivityIndicator size="large" color={COLORS.white} />
+        <Text style={styles.loadingText}>Loading profile...</Text>
+      </LinearGradient>
     );
   }
 
@@ -306,443 +265,288 @@ export default function EditTrainerProfileScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <View style={styles.container}>
         <LinearGradient
-          colors={Colors.gradientMain}
+          colors={[COLORS.orange, COLORS.orangeLight, COLORS.teal]}
           start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={styles.backgroundGradient}
-        >
-          <SafeAreaView style={styles.safeArea} edges={['top']}>
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+
+        <SafeAreaView style={styles.safeArea} edges={['top']}>
           {/* Header */}
-          <LinearGradient
-            colors={Colors.gradientOrangeStart}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.header}
+          <Animated.View
+            style={[
+              styles.header,
+              {
+                opacity: headerAnim,
+                transform: [{ translateY: headerTranslateY }],
+              },
+            ]}
           >
-            <View style={styles.headerContent}>
-              <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                <Ionicons name="arrow-back" size={24} color={Colors.white} />
-              </TouchableOpacity>
-              <AnimatedLogo size={50} animationType="explosive-entry" />
-              <View style={{ width: 40 }} />
-            </View>
-            <Text style={styles.headerTitle}>Edit Profile 🔥</Text>
-            <Text style={styles.headerSubtitle}>Update your trainer details</Text>
-          </LinearGradient>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+              <Ionicons name="arrow-back" size={24} color={COLORS.white} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>EDIT PROFILE ✏️</Text>
+            <View style={{ width: 44 }} />
+          </Animated.View>
 
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={{ flex: 1 }}
+            style={styles.keyboardView}
           >
             <ScrollView
               style={styles.scrollView}
               contentContainerStyle={styles.scrollContent}
               showsVerticalScrollIndicator={false}
             >
-              {/* Availability Toggle Section */}
-              <View style={styles.section}>
-                <LinearGradient
-                  colors={formData.isAvailable ? Colors.gradientTealStart : ['rgba(200,200,200,0.95)', 'rgba(150,150,150,0.85)']}
-                  style={[styles.sectionCard, styles.availabilityCard]}
-                >
-                  <TouchableOpacity
-                    onPress={() => setFormData({ ...formData, isAvailable: !formData.isAvailable })}
-                    style={styles.availabilityToggle}
-                  >
-                    <View style={styles.availabilityContent}>
-                      <View style={styles.availabilityLeft}>
-                        <Ionicons 
-                          name={formData.isAvailable ? "radio-button-on" : "radio-button-off"} 
-                          size={32} 
-                          color={Colors.white} 
-                        />
-                        <View style={styles.availabilityText}>
-                          <Text style={styles.availabilityTitle}>
-                            {formData.isAvailable ? "🟢 Available for Training" : "🔴 Currently Unavailable"}
-                          </Text>
-                          <Text style={styles.availabilitySubtitle}>
-                            {formData.isAvailable 
-                              ? "Trainees can find and book you" 
-                              : "Hidden from trainee searches"
-                            }
-                          </Text>
-                        </View>
-                      </View>
-                      <Ionicons 
-                        name={formData.isAvailable ? "toggle" : "toggle-outline"} 
-                        size={40} 
-                        color={Colors.white} 
-                      />
-                    </View>
-                  </TouchableOpacity>
-                </LinearGradient>
-              </View>
-
-              {/* About You Section */}
-              <View style={styles.section}>
-                <LinearGradient
-                  colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.85)']}
-                  style={styles.sectionCard}
-                >
-                  <View style={styles.sectionHeader}>
-                    <Ionicons name="person" size={24} color={Colors.primary} />
-                    <Text style={styles.sectionTitle}>About You</Text>
+              {/* Bio Card */}
+              <Animated.View
+                style={[
+                  styles.card,
+                  {
+                    opacity: cardAnims[0],
+                    transform: [{
+                      translateY: cardAnims[0].interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [30, 0],
+                      }),
+                    }],
+                  },
+                ]}
+              >
+                <LinearGradient colors={[COLORS.white, COLORS.offWhite]} style={styles.cardGradient}>
+                  <View style={styles.cardHeader}>
+                    <Ionicons name="person-circle" size={22} color={COLORS.orange} />
+                    <Text style={styles.cardTitle}>About You</Text>
                   </View>
-
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Bio</Text>
-                    <LinearGradient
-                      colors={['rgba(91,192,190,0.1)', 'rgba(255,139,66,0.05)']}
-                      style={styles.inputGradient}
-                    >
-                      <TextInput
-                        style={[styles.input, styles.textArea]}
-                        value={formData.bio}
-                        onChangeText={(text) => setFormData({ ...formData, bio: text })}
-                        placeholder="Tell trainees about yourself..."
-                        placeholderTextColor={Colors.textLight}
-                        multiline
-                        numberOfLines={4}
-                      />
-                    </LinearGradient>
-                  </View>
-
-                  <View style={styles.inputRow}>
-                    <View style={[styles.inputGroup, { flex: 1 }]}>
-                      <Text style={styles.label}>Experience (years)</Text>
-                      <LinearGradient
-                        colors={['rgba(91,192,190,0.1)', 'rgba(255,139,66,0.05)']}
-                        style={styles.inputGradient}
-                      >
-                        <TextInput
-                          style={styles.input}
-                          value={formData.experienceYears}
-                          onChangeText={(text) => setFormData({ ...formData, experienceYears: text })}
-                          placeholder="0"
-                          placeholderTextColor={Colors.textLight}
-                          keyboardType="numeric"
-                        />
-                      </LinearGradient>
-                    </View>
-                  </View>
-
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Certifications (comma-separated)</Text>
-                    <LinearGradient
-                      colors={['rgba(91,192,190,0.1)', 'rgba(255,139,66,0.05)']}
-                      style={styles.inputGradient}
-                    >
+                  <TextInput
+                    style={styles.textArea}
+                    value={formData.bio}
+                    onChangeText={(text) => setFormData({ ...formData, bio: text })}
+                    placeholder="Tell clients about yourself..."
+                    placeholderTextColor={COLORS.gray}
+                    multiline
+                    numberOfLines={4}
+                  />
+                  <View style={styles.row}>
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.inputLabel}>Years Experience</Text>
                       <TextInput
                         style={styles.input}
-                        value={formData.certifications}
-                        onChangeText={(text) => setFormData({ ...formData, certifications: text })}
-                        placeholder="NASM CPT, ACE, ISSA"
-                        placeholderTextColor={Colors.textLight}
+                        value={formData.experienceYears}
+                        onChangeText={(text) => setFormData({ ...formData, experienceYears: text })}
+                        keyboardType="numeric"
+                        placeholder="5"
+                        placeholderTextColor={COLORS.gray}
                       />
-                    </LinearGradient>
-                  </View>
-                </LinearGradient>
-              </View>
-
-              {/* Training Styles Section */}
-              <View style={styles.section}>
-                <LinearGradient
-                  colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.85)']}
-                  style={styles.sectionCard}
-                >
-                  <View style={styles.sectionHeader}>
-                    <Ionicons name="fitness" size={24} color={Colors.secondary} />
-                    <Text style={styles.sectionTitle}>Training Styles</Text>
-                  </View>
-
-                  <View style={styles.chipsContainer}>
-                    {Object.values(TrainingStyles).map((style) => (
-                      <TouchableOpacity
-                        key={style}
-                        onPress={() => toggleStyle(style)}
-                        style={styles.chipWrapper}
-                      >
-                        <LinearGradient
-                          colors={
-                            formData.trainingStyles.includes(style)
-                              ? Colors.gradientOrangeStart
-                              : ['rgba(200,200,200,0.3)', 'rgba(150,150,150,0.2)']
-                          }
-                          style={[
-                            styles.chip,
-                            formData.trainingStyles.includes(style) && styles.chipSelected,
-                          ]}
-                        >
-                          <Text
-                            style={[
-                              styles.chipText,
-                              formData.trainingStyles.includes(style) && styles.chipTextSelected,
-                            ]}
-                          >
-                            {style}
-                          </Text>
-                        </LinearGradient>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </LinearGradient>
-              </View>
-
-              {/* Session Format Section */}
-              <View style={styles.section}>
-                <LinearGradient
-                  colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.85)']}
-                  style={styles.sectionCard}
-                >
-                  <View style={styles.sectionHeader}>
-                    <Ionicons name="time" size={24} color={Colors.neonBlue} />
-                    <Text style={styles.sectionTitle}>Session Format</Text>
-                  </View>
-
-                  <View style={styles.toggleRow}>
-                    <TouchableOpacity
-                      style={styles.toggleButton}
-                      onPress={() =>
-                        setFormData({ ...formData, offersInPerson: !formData.offersInPerson })
-                      }
-                    >
-                      <LinearGradient
-                        colors={
-                          formData.offersInPerson
-                            ? Colors.gradientTealStart
-                            : ['rgba(200,200,200,0.3)', 'rgba(150,150,150,0.2)']
-                        }
-                        style={styles.toggleGradient}
-                      >
-                        <Ionicons
-                          name="location"
-                          size={24}
-                          color={formData.offersInPerson ? Colors.white : Colors.text}
-                        />
-                        <Text
-                          style={[
-                            styles.toggleText,
-                            formData.offersInPerson && styles.toggleTextActive,
-                          ]}
-                        >
-                          In-Person
-                        </Text>
-                      </LinearGradient>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={styles.toggleButton}
-                      onPress={() =>
-                        setFormData({ ...formData, offersVirtual: !formData.offersVirtual })
-                      }
-                    >
-                      <LinearGradient
-                        colors={
-                          formData.offersVirtual
-                            ? Colors.gradientOrangeStart
-                            : ['rgba(200,200,200,0.3)', 'rgba(150,150,150,0.2)']
-                        }
-                        style={styles.toggleGradient}
-                      >
-                        <Ionicons
-                          name="videocam"
-                          size={24}
-                          color={formData.offersVirtual ? Colors.white : Colors.text}
-                        />
-                        <Text
-                          style={[
-                            styles.toggleText,
-                            formData.offersVirtual && styles.toggleTextActive,
-                          ]}
-                        >
-                          Virtual
-                        </Text>
-                      </LinearGradient>
-                    </TouchableOpacity>
-                  </View>
-
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Session Durations (minutes)</Text>
-                    <View style={styles.durationChips}>
-                      {[30, 45, 60, 90].map((duration) => (
-                        <TouchableOpacity
-                          key={duration}
-                          onPress={() => toggleDuration(duration)}
-                          style={styles.durationChipWrapper}
-                        >
-                          <LinearGradient
-                            colors={
-                              formData.sessionDurations.includes(duration)
-                                ? Colors.gradientMain
-                                : ['rgba(200,200,200,0.3)', 'rgba(150,150,150,0.2)']
-                            }
-                            style={styles.durationChip}
-                          >
-                            <Text
-                              style={[
-                                styles.durationText,
-                                formData.sessionDurations.includes(duration) &&
-                                  styles.durationTextSelected,
-                              ]}
-                            >
-                              {duration}min
-                            </Text>
-                          </LinearGradient>
-                        </TouchableOpacity>
-                      ))}
                     </View>
-                  </View>
-                </LinearGradient>
-              </View>
-
-              {/* Location Section */}
-              <View style={styles.section}>
-                <LinearGradient
-                  colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.85)']}
-                  style={styles.sectionCard}
-                >
-                  <View style={styles.sectionHeader}>
-                    <Ionicons name="map" size={24} color={Colors.success} />
-                    <Text style={styles.sectionTitle}>Location</Text>
-                  </View>
-
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Gyms Worked At (comma-separated)</Text>
-                    <LinearGradient
-                      colors={['rgba(91,192,190,0.1)', 'rgba(255,139,66,0.05)']}
-                      style={styles.inputGradient}
-                    >
-                      <TextInput
-                        style={styles.input}
-                        value={formData.gymsWorkedAt}
-                        onChangeText={(text) => setFormData({ ...formData, gymsWorkedAt: text })}
-                        placeholder="Equinox, Gold's Gym, Planet Fitness"
-                        placeholderTextColor={Colors.textLight}
-                      />
-                    </LinearGradient>
-                  </View>
-
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Primary Gym</Text>
-                    <LinearGradient
-                      colors={['rgba(91,192,190,0.1)', 'rgba(255,139,66,0.05)']}
-                      style={styles.inputGradient}
-                    >
-                      <TextInput
-                        style={styles.input}
-                        value={formData.primaryGym}
-                        onChangeText={(text) => setFormData({ ...formData, primaryGym: text })}
-                        placeholder="Equinox Downtown"
-                        placeholderTextColor={Colors.textLight}
-                      />
-                    </LinearGradient>
-                  </View>
-
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Travel Radius (miles)</Text>
-                    <LinearGradient
-                      colors={['rgba(91,192,190,0.1)', 'rgba(255,139,66,0.05)']}
-                      style={styles.inputGradient}
-                    >
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.inputLabel}>Travel Radius (mi)</Text>
                       <TextInput
                         style={styles.input}
                         value={formData.travelRadiusMiles}
                         onChangeText={(text) => setFormData({ ...formData, travelRadiusMiles: text })}
-                        placeholder="10"
-                        placeholderTextColor={Colors.textLight}
                         keyboardType="numeric"
+                        placeholder="10"
+                        placeholderTextColor={COLORS.gray}
                       />
-                    </LinearGradient>
+                    </View>
                   </View>
+                </LinearGradient>
+              </Animated.View>
 
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Location (City, State)</Text>
-                    <LinearGradient
-                      colors={['rgba(91,192,190,0.1)', 'rgba(255,139,66,0.05)']}
-                      style={styles.inputGradient}
-                    >
-                      <TextInput
-                        style={styles.input}
-                        value={formData.locationAddress}
-                        onChangeText={(text) => setFormData({ ...formData, locationAddress: text })}
-                        placeholder="Elkridge, MD"
-                        placeholderTextColor={Colors.textLight}
-                      />
-                    </LinearGradient>
-                    <Text style={styles.helpText}>
-                      Enter your city and state (e.g., &quot;Elkridge, MD&quot;)
-                    </Text>
+              {/* Training Styles */}
+              <Animated.View
+                style={[
+                  styles.card,
+                  {
+                    opacity: cardAnims[1],
+                    transform: [{
+                      translateY: cardAnims[1].interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [30, 0],
+                      }),
+                    }],
+                  },
+                ]}
+              >
+                <LinearGradient colors={[COLORS.white, COLORS.offWhite]} style={styles.cardGradient}>
+                  <View style={styles.cardHeader}>
+                    <Ionicons name="fitness" size={22} color={COLORS.teal} />
+                    <Text style={styles.cardTitle}>Training Styles</Text>
                   </View>
-
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.label}>GPS Location (for precise matching)</Text>
-                    <TouchableOpacity
-                      onPress={getCurrentLocation}
-                      disabled={gettingLocation}
-                      style={styles.locationButtonWrapper}
-                    >
-                      <LinearGradient
-                        colors={gettingLocation ? ['#CCCCCC', '#999999'] : Colors.gradientTealStart}
-                        style={styles.locationButton}
+                  <View style={styles.chipsContainer}>
+                    {TrainingStyles.map((style) => (
+                      <TouchableOpacity
+                        key={style}
+                        onPress={() => toggleStyle(style)}
+                        style={[
+                          styles.chip,
+                          formData.trainingStyles.includes(style) && styles.chipSelected,
+                        ]}
                       >
-                        <Ionicons 
-                          name={gettingLocation ? "hourglass" : "location"} 
-                          size={24} 
-                          color={Colors.white} 
-                        />
-                        <Text style={styles.locationButtonText}>
-                          {gettingLocation ? 'Getting GPS...' : 'Set GPS Location 📍'}
+                        <Text
+                          style={[
+                            styles.chipText,
+                            formData.trainingStyles.includes(style) && styles.chipTextSelected,
+                          ]}
+                        >
+                          {style}
                         </Text>
-                      </LinearGradient>
-                    </TouchableOpacity>
-                    {formData.latitude && formData.longitude && (
-                      <View style={styles.locationDisplay}>
-                        <Ionicons name="checkmark-circle" size={20} color={Colors.success} />
-                        <Text style={styles.locationDisplayText}>GPS Coordinates Set</Text>
-                      </View>
-                    )}
-                    <Text style={styles.helpText}>
-                      GPS helps calculate exact distances to trainees
-                    </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </LinearGradient>
+              </Animated.View>
+
+              {/* Session Options */}
+              <Animated.View
+                style={[
+                  styles.card,
+                  {
+                    opacity: cardAnims[2],
+                    transform: [{
+                      translateY: cardAnims[2].interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [30, 0],
+                      }),
+                    }],
+                  },
+                ]}
+              >
+                <LinearGradient colors={[COLORS.white, COLORS.offWhite]} style={styles.cardGradient}>
+                  <View style={styles.cardHeader}>
+                    <Ionicons name="time" size={22} color={COLORS.orange} />
+                    <Text style={styles.cardTitle}>Session Options</Text>
+                  </View>
+                  
+                  <Text style={styles.subLabel}>Session Durations</Text>
+                  <View style={styles.durationRow}>
+                    {[30, 45, 60, 90].map((duration) => (
+                      <TouchableOpacity
+                        key={duration}
+                        onPress={() => toggleDuration(duration)}
+                        style={[
+                          styles.durationChip,
+                          formData.sessionDurations.includes(duration) && styles.durationChipSelected,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.durationText,
+                            formData.sessionDurations.includes(duration) && styles.durationTextSelected,
+                          ]}
+                        >
+                          {duration} min
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
                   </View>
 
-                  {/* Save Button - Moved here for better UX */}
+                  <View style={styles.switchRow}>
+                    <Text style={styles.switchLabel}>In-Person Training</Text>
+                    <Switch
+                      value={formData.offersInPerson}
+                      onValueChange={(value) => setFormData({ ...formData, offersInPerson: value })}
+                      trackColor={{ false: COLORS.grayLight, true: COLORS.teal }}
+                      thumbColor={COLORS.white}
+                    />
+                  </View>
+                  <View style={styles.switchRow}>
+                    <Text style={styles.switchLabel}>Virtual Training</Text>
+                    <Switch
+                      value={formData.offersVirtual}
+                      onValueChange={(value) => setFormData({ ...formData, offersVirtual: value })}
+                      trackColor={{ false: COLORS.grayLight, true: COLORS.teal }}
+                      thumbColor={COLORS.white}
+                    />
+                  </View>
+                </LinearGradient>
+              </Animated.View>
+
+              {/* Location */}
+              <Animated.View
+                style={[
+                  styles.card,
+                  {
+                    opacity: cardAnims[3],
+                    transform: [{
+                      translateY: cardAnims[3].interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [30, 0],
+                      }),
+                    }],
+                  },
+                ]}
+              >
+                <LinearGradient colors={[COLORS.white, COLORS.offWhite]} style={styles.cardGradient}>
+                  <View style={styles.cardHeader}>
+                    <Ionicons name="location" size={22} color={COLORS.error} />
+                    <Text style={styles.cardTitle}>Location</Text>
+                  </View>
+                  
+                  {formData.locationAddress ? (
+                    <Text style={styles.locationText}>📍 {formData.locationAddress}</Text>
+                  ) : null}
+                  
                   <TouchableOpacity
-                    onPress={handleSave}
-                    disabled={saving}
-                    style={styles.saveButtonWrapper}
+                    style={styles.locationButton}
+                    onPress={getCurrentLocation}
+                    disabled={gettingLocation}
                   >
                     <LinearGradient
-                      colors={saving ? ['#CCCCCC', '#999999'] : Colors.gradientMain}
-                      style={styles.saveButton}
+                      colors={[COLORS.teal, COLORS.tealLight]}
+                      style={styles.locationButtonGradient}
                     >
-                      <Ionicons name="save" size={24} color={Colors.white} />
-                      <Text style={styles.saveButtonText}>
-                        {saving ? 'Saving...' : 'Save Changes 🔥'}
-                      </Text>
+                      {gettingLocation ? (
+                        <ActivityIndicator size="small" color={COLORS.white} />
+                      ) : (
+                        <>
+                          <Ionicons name="navigate" size={18} color={COLORS.white} />
+                          <Text style={styles.locationButtonText}>
+                            {formData.locationAddress ? 'Update Location' : 'Set Location'}
+                          </Text>
+                        </>
+                      )}
                     </LinearGradient>
                   </TouchableOpacity>
-                </LinearGradient>
-              </View>
 
-              {/* Delete Account Section */}
-              <View style={styles.dangerZone}>
-                <Text style={styles.dangerZoneTitle}>Danger Zone</Text>
-                <TouchableOpacity onPress={handleDeleteAccount} style={styles.deleteAccountButton}>
-                  <Ionicons name="trash-outline" size={20} color={Colors.error} />
-                  <Text style={styles.deleteAccountText}>Delete Account</Text>
-                </TouchableOpacity>
-                <Text style={styles.deleteAccountWarning}>
-                  This will permanently delete your account and all data. This cannot be undone.
-                </Text>
-              </View>
+                  <Text style={styles.inputLabel}>Primary Gym</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={formData.primaryGym}
+                    onChangeText={(text) => setFormData({ ...formData, primaryGym: text })}
+                    placeholder="e.g. LA Fitness Downtown"
+                    placeholderTextColor={COLORS.gray}
+                  />
+                </LinearGradient>
+              </Animated.View>
+
+              {/* Save Button */}
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={handleSave}
+                disabled={saving}
+              >
+                <LinearGradient
+                  colors={saving ? [COLORS.gray, COLORS.grayLight] : [COLORS.orangeHot, COLORS.orange]}
+                  style={styles.saveButtonGradient}
+                >
+                  {saving ? (
+                    <ActivityIndicator size="small" color={COLORS.white} />
+                  ) : (
+                    <>
+                      <Ionicons name="checkmark-circle" size={22} color={COLORS.white} />
+                      <Text style={styles.saveButtonText}>Save Changes</Text>
+                    </>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
 
               <View style={{ height: 40 }} />
             </ScrollView>
           </KeyboardAvoidingView>
         </SafeAreaView>
-      </LinearGradient>
-    </View>
+      </View>
     </>
   );
 }
@@ -751,317 +555,214 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  backgroundGradient: {
-    flex: 1,
-  },
   safeArea: {
     flex: 1,
   },
   loadingContainer: {
     flex: 1,
-  },
-  loadingGradient: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 16,
   },
   loadingText: {
+    marginTop: 16,
     fontSize: 16,
-    color: Colors.white,
     fontWeight: '600',
+    color: COLORS.white,
   },
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 24,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-  },
-  headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: Colors.white,
-    marginBottom: 6,
+    fontSize: 20,
+    fontWeight: '900',
+    color: COLORS.white,
+    letterSpacing: 0.5,
   },
-  headerSubtitle: {
-    fontSize: 15,
-    color: Colors.white,
-    opacity: 0.95,
+  keyboardView: {
+    flex: 1,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    padding: 20,
+    paddingHorizontal: 20,
   },
-  section: {
-    marginBottom: 20,
-  },
-  sectionCard: {
-    borderRadius: 20,
-    padding: 20,
+  card: {
+    marginBottom: 16,
+    borderRadius: 18,
+    overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 6,
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
   },
-  sectionHeader: {
+  cardGradient: {
+    padding: 18,
+  },
+  cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    marginBottom: 20,
+    gap: 10,
+    marginBottom: 16,
   },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: Colors.navy,
+  cardTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: COLORS.navy,
   },
-  inputGroup: {
-    marginBottom: 20,
+  textArea: {
+    backgroundColor: COLORS.grayLight,
+    borderRadius: 14,
+    padding: 14,
+    fontSize: 15,
+    fontWeight: '500',
+    color: COLORS.navy,
+    minHeight: 100,
+    textAlignVertical: 'top',
+    marginBottom: 14,
   },
-  inputRow: {
+  row: {
     flexDirection: 'row',
     gap: 12,
   },
-  label: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: Colors.navy,
-    marginBottom: 8,
+  inputGroup: {
+    flex: 1,
   },
-  inputGradient: {
-    borderRadius: 12,
-    overflow: 'hidden',
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: COLORS.navy,
+    marginBottom: 8,
+    marginTop: 8,
+  },
+  subLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: COLORS.navy,
+    marginBottom: 10,
   },
   input: {
-    padding: 16,
-    fontSize: 16,
-    color: Colors.navy,
+    backgroundColor: COLORS.grayLight,
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 15,
     fontWeight: '500',
-  },
-  textArea: {
-    height: 100,
-    textAlignVertical: 'top',
+    color: COLORS.navy,
   },
   chipsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
-  },
-  chipWrapper: {
-    borderRadius: 12,
-    overflow: 'hidden',
+    gap: 8,
   },
   chip: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingVertical: 10,
-    borderRadius: 12,
+    borderRadius: 20,
+    backgroundColor: COLORS.grayLight,
   },
   chipSelected: {
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
+    backgroundColor: COLORS.teal,
   },
   chipText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
-    color: Colors.text,
+    color: COLORS.navy,
   },
   chipTextSelected: {
-    color: Colors.white,
+    color: COLORS.white,
   },
-  toggleRow: {
+  durationRow: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 20,
-  },
-  toggleButton: {
-    flex: 1,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  toggleGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-  },
-  toggleText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: Colors.text,
-  },
-  toggleTextActive: {
-    color: Colors.white,
-  },
-  durationChips: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: 10,
-  },
-  durationChipWrapper: {
-    borderRadius: 10,
-    overflow: 'hidden',
+    marginBottom: 16,
   },
   durationChip: {
-    paddingHorizontal: 20,
+    flex: 1,
     paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: COLORS.grayLight,
+    alignItems: 'center',
+  },
+  durationChipSelected: {
+    backgroundColor: COLORS.orange,
   },
   durationText: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
-    color: Colors.text,
+    color: COLORS.navy,
   },
   durationTextSelected: {
-    color: Colors.white,
+    color: COLORS.white,
   },
-  saveButtonWrapper: {
-    marginTop: 12,
-    borderRadius: 16,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  saveButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-    paddingVertical: 18,
-  },
-  saveButtonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: Colors.white,
-  },
-  locationButtonWrapper: {
-    borderRadius: 12,
-    overflow: 'hidden',
-    marginBottom: 12,
-  },
-  locationButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-    paddingVertical: 16,
-  },
-  locationButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: Colors.white,
-  },
-  locationDisplay: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: 'rgba(76, 175, 80, 0.1)',
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: 8,
-  },
-  locationDisplayText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.success,
-    flex: 1,
-  },
-  helpText: {
-    fontSize: 12,
-    color: Colors.textLight,
-    fontStyle: 'italic',
-  },
-  availabilityCard: {
-    marginBottom: 8,
-  },
-  availabilityToggle: {
-    padding: 0,
-  },
-  availabilityContent: {
+  switchRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 20,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.grayLight,
   },
-  availabilityLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
+  switchLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.navy,
   },
-  availabilityText: {
-    marginLeft: 16,
-    flex: 1,
+  locationText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.teal,
+    marginBottom: 12,
   },
-  availabilityTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: Colors.white,
-    marginBottom: 4,
+  locationButton: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 14,
   },
-  availabilitySubtitle: {
-    fontSize: 14,
-    color: Colors.white,
-    opacity: 0.9,
-  },
-  dangerZone: {
-    marginTop: 32,
-    padding: 20,
-    backgroundColor: Colors.white,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: Colors.error,
-  },
-  dangerZoneTitle: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: Colors.error,
-    marginBottom: 16,
-  },
-  deleteAccountButton: {
+  locationButtonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
     paddingVertical: 14,
-    paddingHorizontal: 20,
-    backgroundColor: 'rgba(255, 0, 0, 0.1)',
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: Colors.error,
+    gap: 8,
   },
-  deleteAccountText: {
-    fontSize: 16,
+  locationButtonText: {
+    fontSize: 15,
     fontWeight: '700',
-    color: Colors.error,
+    color: COLORS.white,
   },
-  deleteAccountWarning: {
-    fontSize: 13,
-    color: Colors.textLight,
-    textAlign: 'center',
-    marginTop: 12,
-    lineHeight: 18,
+  saveButton: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginTop: 8,
+    shadowColor: COLORS.orange,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  saveButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 18,
+    gap: 10,
+  },
+  saveButtonText: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: COLORS.white,
   },
 });
