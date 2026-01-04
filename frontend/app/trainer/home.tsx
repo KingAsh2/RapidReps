@@ -491,6 +491,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
+  messagesButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   achievementsButton: {
     width: 44,
     height: 44,
