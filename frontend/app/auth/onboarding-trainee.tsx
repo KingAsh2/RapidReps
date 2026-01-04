@@ -120,12 +120,7 @@ export default function TraineeOnboardingScreen() {
           }));
           
           console.log('[Onboarding] Location successfully set:', locationAddress);
-          
-          showAlert({
-            title: 'Location Set! 📍',
-            message: `Your location: ${locationAddress}`,
-            type: 'success',
-          });
+          // Location set silently - no popup needed
         } else {
           // No address but we have coordinates
           setFormData(prev => ({
@@ -136,12 +131,7 @@ export default function TraineeOnboardingScreen() {
           }));
           
           console.log('[Onboarding] Coordinates saved (no address)');
-          
-          showAlert({
-            title: 'Location Set! 📍',
-            message: 'Your coordinates have been saved.',
-            type: 'success',
-          });
+          // Location set silently - no popup needed
         }
       } catch (geocodeError) {
         console.error('[Onboarding] Geocoding failed:', geocodeError);
@@ -152,12 +142,7 @@ export default function TraineeOnboardingScreen() {
           longitude,
           locationAddress: `${latitude.toFixed(2)}, ${longitude.toFixed(2)}`,
         }));
-        
-        showAlert({
-          title: 'Location Set! 📍',
-          message: 'Your coordinates have been saved.',
-          type: 'success',
-        });
+        // Location set silently - no popup needed
       }
     } catch (error: any) {
       console.error('[Onboarding] Error getting location:', error);
