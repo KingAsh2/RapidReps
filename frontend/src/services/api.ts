@@ -202,6 +202,11 @@ export const traineeAPI = {
     const response = await api.get('/trainee/achievements');
     return response.data;
   },
+
+  cancelSession: async (sessionId: string): Promise<any> => {
+    const response = await api.patch(`/sessions/${sessionId}/cancel`);
+    return response.data;
+  },
 };
 
 export default api;
