@@ -565,6 +565,179 @@ async def get_blocks(current_user: dict = Depends(get_current_user)):
     return BlockResponse(blockedUserIds=blocked)
 
 # ============================================================================
+# CHAT / MESSAGING ROUTES
+# ============================================================================
+
+@api_router.post("/messages", response_model=MessageResponse)
+async def send_message(message_data: MessageCreate, current_user: dict = Depends(get_current_user)):
+    """Send a message to another user"""
+    sender_id = str(current_user['_id'])
+    receiver_id = message_data.receiverId
+    
+    # Check if conversation exists
+    conversation = await db.conversations.find_one({
+        'participants': {'$all': [sender_id, receiver_id]}
+    })
+    
+    # Create conversation if it doesn't exist
+    if not conversation:
+        conversation_doc = {
+            '_id': str(uuid.uuid4()),
+            'participants': [sender_id, receiver_id],
+            'createdAt': datetime.utcnow(),
+            'updatedAt': datetime.utcnow()
+        }
+        await db.conversations.insert_one(conversation_doc)
+        conversation = conversation_doc
+    
+    # Create message
+    message_doc = {
+        '_id': str(uuid.uuid4()),
+        'conversationId': str(conversation['_id']),
+        'senderId': sender_id,
+        'receiverId': receiver_id,
+        'content': message_data.content,
+        'isRead': False,
+        'createdAt': datetime.utcnow()
+    }
+    
+    await db.messages.insert_one(message_doc)
+    
+    # Update conversation's last message time
+    await db.conversations.update_one(
+        {'_id': conversation['_id']},
+        {'$set': {'updatedAt': datetime.utcnow()}}
+    )
+    
+    return MessageResponse(
+        id=str(message_doc['_id']),
+        conversationId=str(message_doc['conversationId']),
+        senderId=message_doc['senderId'],
+        receiverId=message_doc['receiverId'],
+        content=message_doc['content'],
+        isRead=message_doc['isRead'],
+        createdAt=message_doc['createdAt']
+    )
+
+@api_router.get("/conversations", response_model=List[ConversationResponse])
+async def get_conversations(current_user: dict = Depends(get_current_user)):
+    """Get all conversations for the current user"""
+    user_id = str(current_user['_id'])
+    
+    # Find all conversations where user is a participant
+    cursor = db.conversations.find({'participants': user_id}).sort('updatedAt', -1)
+    
+    conversations = []
+    async for conv in cursor:
+        # Get other participant details
+        other_participant_id = next((p for p in conv['participants'] if p != user_id), None)
+        
+        participant_details = []
+        for participant_id in conv['participants']:
+            user = await db.users.find_one({'_id': ObjectId(participant_id)})
+            if user:
+                # Get profile photo from trainer or trainee profile
+                profile = await db.trainer_profiles.find_one({'userId': participant_id})
+                if not profile:
+                    profile = await db.trainee_profiles.find_one({'userId': participant_id})
+                
+                participant_details.append({
+                    'id': participant_id,
+                    'fullName': user.get('fullName', 'Unknown'),
+                    'avatarUrl': profile.get('avatarUrl') or profile.get('profilePhoto') if profile else None,
+                    'roles': user.get('roles', [])
+                })
+        
+        # Get last message
+        last_message_doc = await db.messages.find_one(
+            {'conversationId': str(conv['_id'])},
+            sort=[('createdAt', -1)]
+        )
+        
+        last_message = None
+        if last_message_doc:
+            last_message = {
+                'content': last_message_doc['content'],
+                'createdAt': last_message_doc['createdAt'].isoformat(),
+                'senderId': last_message_doc['senderId']
+            }
+        
+        # Count unread messages
+        unread_count = await db.messages.count_documents({
+            'conversationId': str(conv['_id']),
+            'receiverId': user_id,
+            'isRead': False
+        })
+        
+        conversations.append(ConversationResponse(
+            id=str(conv['_id']),
+            participants=conv['participants'],
+            participantDetails=participant_details,
+            lastMessage=last_message,
+            unreadCount=unread_count,
+            updatedAt=conv['updatedAt']
+        ))
+    
+    return conversations
+
+@api_router.get("/conversations/{conversation_id}/messages", response_model=List[MessageResponse])
+async def get_messages(conversation_id: str, current_user: dict = Depends(get_current_user)):
+    """Get all messages in a conversation"""
+    user_id = str(current_user['_id'])
+    
+    # Verify user is part of the conversation
+    conversation = await db.conversations.find_one({'_id': conversation_id})
+    if not conversation or user_id not in conversation['participants']:
+        raise HTTPException(status_code=403, detail="Not authorized to view this conversation")
+    
+    # Get messages
+    cursor = db.messages.find({'conversationId': conversation_id}).sort('createdAt', 1)
+    
+    messages = []
+    async for msg in cursor:
+        messages.append(MessageResponse(
+            id=str(msg['_id']),
+            conversationId=msg['conversationId'],
+            senderId=msg['senderId'],
+            receiverId=msg['receiverId'],
+            content=msg['content'],
+            isRead=msg.get('isRead', False),
+            createdAt=msg['createdAt']
+        ))
+    
+    # Mark messages as read
+    await db.messages.update_many(
+        {'conversationId': conversation_id, 'receiverId': user_id, 'isRead': False},
+        {'$set': {'isRead': True}}
+    )
+    
+    return messages
+
+@api_router.post("/conversations")
+async def get_or_create_conversation(receiver_id: str, current_user: dict = Depends(get_current_user)):
+    """Get or create a conversation with another user"""
+    sender_id = str(current_user['_id'])
+    
+    # Check if conversation exists
+    conversation = await db.conversations.find_one({
+        'participants': {'$all': [sender_id, receiver_id]}
+    })
+    
+    if conversation:
+        return {'conversationId': str(conversation['_id'])}
+    
+    # Create new conversation
+    conversation_doc = {
+        '_id': str(uuid.uuid4()),
+        'participants': [sender_id, receiver_id],
+        'createdAt': datetime.utcnow(),
+        'updatedAt': datetime.utcnow()
+    }
+    await db.conversations.insert_one(conversation_doc)
+    
+    return {'conversationId': str(conversation_doc['_id'])}
+
+# ============================================================================
 # TRAINER PROFILE ROUTES
 # ============================================================================
 
