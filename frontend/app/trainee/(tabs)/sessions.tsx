@@ -194,7 +194,7 @@ export default function SessionsScreen() {
             <>
               <TouchableOpacity
                 style={styles.actionButtonSecondary}
-                onPress={() => handleCancelSession(session.id)}
+                onPress={() => handleCancelSession(session)}
               >
                 <Text style={styles.actionButtonSecondaryText}>Cancel</Text>
               </TouchableOpacity>
