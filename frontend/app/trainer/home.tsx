@@ -127,6 +127,12 @@ export default function TrainerHomeScreen() {
           </View>
           <View style={styles.headerActions}>
             <TouchableOpacity 
+              onPress={() => router.push('/messages')} 
+              style={styles.messagesButton}
+            >
+              <Ionicons name="chatbubbles-outline" size={24} color={Colors.white} />
+            </TouchableOpacity>
+            <TouchableOpacity 
               onPress={() => router.push('/trainer/achievements')} 
               style={styles.achievementsButton}
             >
