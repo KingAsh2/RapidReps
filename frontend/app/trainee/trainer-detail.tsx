@@ -8,10 +8,11 @@ import {
   ActivityIndicator,
   Pressable,
   Animated,
+  Image,
+  Dimensions,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { trainerAPI, traineeAPI, chatAPI } from '../../src/services/api';
-import { Colors } from '../../src/utils/colors';
+import { trainerAPI, traineeAPI, chatAPI, safetyAPI } from '../../src/services/api';
 import { TrainerProfile } from '../../src/types';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -19,71 +20,40 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useAlert } from '../../src/contexts/AlertContext';
 
+const { width } = Dimensions.get('window');
+
+// Brand colors
+const COLORS = {
+  teal: '#1FB8B4',
+  tealLight: '#22C1C3',
+  orange: '#F7931E',
+  orangeHot: '#FF6A00',
+  orangeLight: '#FF9F1C',
+  navy: '#1a2a5e',
+  white: '#FFFFFF',
+  offWhite: '#FAFBFC',
+  gray: '#8892b0',
+  grayLight: '#E8ECF0',
+  success: '#00C853',
+  error: '#FF4757',
+  gold: '#FFD700',
+};
+
 export default function TrainerDetailScreen() {
   const router = useRouter();
   const { trainerId } = useLocalSearchParams();
   const { user } = useAuth();
   const { showAlert } = useAlert();
 
-
-  const handleReportTrainer = () => {
-    showAlert({
-      title: 'Report',
-      message: 'Report this trainer for spam, harassment, or inappropriate content?',
-      type: 'warning',
-      buttons: [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Report',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await safetyAPI.reportUser({
-                reportedUserId: trainerId as string,
-                reason: 'Reported from trainer profile',
-                contentType: 'profile',
-              });
-              // Silent success - no popup
-            } catch (e: any) {
-              showAlert({ title: 'Error', message: e?.message || 'Unable to submit report.', type: 'error' });
-            }
-          },
-        },
-      ],
-    });
-  };
-
-  const handleBlockTrainer = () => {
-    showAlert({
-      title: 'Block Trainer',
-      message: 'Blocking hides this trainer from your results and prevents future interactions.',
-      type: 'warning',
-      buttons: [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Block',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await safetyAPI.blockUser(trainerId as string);
-              // Navigate back silently
-              router.back();
-            } catch (e: any) {
-              showAlert({ title: 'Error', message: e?.message || 'Unable to block user.', type: 'error' });
-            }
-          },
-        },
-      ],
-    });
-  };
   const [loading, setLoading] = useState(true);
   const [trainer, setTrainer] = useState<TrainerProfile | null>(null);
   const [ratings, setRatings] = useState<any[]>([]);
   const [selectedDuration, setSelectedDuration] = useState<number>(60);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [booking, setBooking] = useState(false);
-  
-  // Long press animation states
+
+  // Animations
+  const headerAnim = useRef(new Animated.Value(0)).current;
+  const contentAnim = useRef(new Animated.Value(0)).current;
   const pressProgress = useRef(new Animated.Value(0)).current;
   const pressTimer = useRef<NodeJS.Timeout | null>(null);
   const [isHolding, setIsHolding] = useState(false);
@@ -91,6 +61,25 @@ export default function TrainerDetailScreen() {
   useEffect(() => {
     loadTrainerDetails();
   }, [trainerId]);
+
+  useEffect(() => {
+    if (!loading && trainer) {
+      Animated.timing(headerAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }).start();
+
+      setTimeout(() => {
+        Animated.spring(contentAnim, {
+          toValue: 1,
+          friction: 8,
+          tension: 40,
+          useNativeDriver: true,
+        }).start();
+      }, 200);
+    }
+  }, [loading, trainer]);
 
   const loadTrainerDetails = async () => {
     try {
@@ -113,31 +102,20 @@ export default function TrainerDetailScreen() {
   };
 
   const calculatePrice = () => {
-    if (!trainer) return { base: 0, discount: 0, final: 0, platformFee: 0, trainerEarns: 0 };
-    
+    if (!trainer) return { base: 0, final: 0, platformFee: 0 };
     const basePrice = (trainer.ratePerMinuteCents * selectedDuration) / 100;
-    // Note: Discount will be calculated by backend based on session history
-    const discount = 0; // Backend calculates this
-    const finalPrice = basePrice - discount;
-    const platformFee = finalPrice * 0.10;
-    const trainerEarns = finalPrice - platformFee;
-
-    return { base: basePrice, discount, final: finalPrice, platformFee, trainerEarns };
+    const platformFee = basePrice * 0.10;
+    return { base: basePrice, final: basePrice, platformFee };
   };
 
   const handlePressIn = () => {
     if (booking) return;
-    
     setIsHolding(true);
-    
-    // Animate the progress bar
     Animated.timing(pressProgress, {
       toValue: 1,
-      duration: 1500, // 1.5 seconds to complete
+      duration: 1500,
       useNativeDriver: false,
     }).start();
-    
-    // Set timer to complete the action
     pressTimer.current = setTimeout(() => {
       handleBookSession();
     }, 1500);
@@ -145,14 +123,10 @@ export default function TrainerDetailScreen() {
 
   const handlePressOut = () => {
     setIsHolding(false);
-    
-    // Cancel the timer
     if (pressTimer.current) {
       clearTimeout(pressTimer.current);
       pressTimer.current = null;
     }
-    
-    // Reset the animation
     Animated.timing(pressProgress, {
       toValue: 0,
       duration: 200,
@@ -162,14 +136,14 @@ export default function TrainerDetailScreen() {
 
   const handleBookSession = async () => {
     if (!trainer || !user) return;
-
     setBooking(true);
     setIsHolding(false);
     pressProgress.setValue(0);
-    
+
     try {
-      const sessionStart = new Date(selectedDate);
-      sessionStart.setHours(10, 0, 0, 0); // Default to 10 AM for now
+      const sessionStart = new Date();
+      sessionStart.setDate(sessionStart.getDate() + 1);
+      sessionStart.setHours(10, 0, 0, 0);
 
       await traineeAPI.createSession({
         traineeId: user.id,
@@ -180,7 +154,6 @@ export default function TrainerDetailScreen() {
         locationNameOrAddress: trainer.primaryGym || 'Virtual',
       });
 
-      // Navigate back directly - sessions page will show the new booking
       router.back();
     } catch (error: any) {
       showAlert({
@@ -193,467 +166,673 @@ export default function TrainerDetailScreen() {
     }
   };
 
+  const handleMessage = async () => {
+    if (!trainer) return;
+    try {
+      const conv = await chatAPI.createConversation(trainer.userId);
+      router.push(`/messages/chat?conversationId=${conv.id}&userId=${trainer.userId}&userName=${trainer.fullName}`);
+    } catch (error) {
+      console.error('Error starting chat:', error);
+    }
+  };
+
+  const handleReportTrainer = () => {
+    showAlert({
+      title: 'Report',
+      message: 'Report this trainer for spam, harassment, or inappropriate content?',
+      type: 'warning',
+      buttons: [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Report',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await safetyAPI.reportUser({
+                reportedUserId: trainerId as string,
+                reason: 'Reported from trainer profile',
+                contentType: 'profile',
+              });
+            } catch (e: any) {
+              showAlert({ title: 'Error', message: e?.message || 'Unable to submit report.', type: 'error' });
+            }
+          },
+        },
+      ],
+    });
+  };
+
+  const handleBlockTrainer = () => {
+    showAlert({
+      title: 'Block Trainer',
+      message: 'Blocking hides this trainer from your results.',
+      type: 'warning',
+      buttons: [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Block',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await safetyAPI.blockUser(trainerId as string);
+              router.back();
+            } catch (e: any) {
+              showAlert({ title: 'Error', message: e?.message || 'Unable to block user.', type: 'error' });
+            }
+          },
+        },
+      ],
+    });
+  };
+
+  const prices = calculatePrice();
+
+  const progressWidth = pressProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0%', '100%'],
+  });
+
+  const headerOpacity = headerAnim;
+  const contentTranslateY = contentAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [40, 0],
+  });
+
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-      </View>
+      <LinearGradient
+        colors={[COLORS.teal, COLORS.tealLight, COLORS.orange]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.loadingContainer}
+      >
+        <ActivityIndicator size="large" color={COLORS.white} />
+        <Text style={styles.loadingText}>Loading trainer...</Text>
+      </LinearGradient>
     );
   }
 
   if (!trainer) {
     return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.errorText}>Trainer not found</Text>
-      </View>
+      <LinearGradient colors={[COLORS.teal, COLORS.orange]} style={styles.loadingContainer}>
+        <Ionicons name="alert-circle" size={64} color={COLORS.white} />
+        <Text style={styles.loadingText}>Trainer not found</Text>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <Text style={styles.backBtnText}>Go Back</Text>
+        </TouchableOpacity>
+      </LinearGradient>
     );
   }
 
-  const pricing = calculatePrice();
-
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header */}
+    <View style={styles.container}>
       <LinearGradient
-        colors={Colors.gradientOrangeStart}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.header}
-      >
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={Colors.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Trainer Profile</Text>
-        <View style={{ width: 40 }} />
-      </LinearGradient>
+        colors={[COLORS.teal, COLORS.tealLight]}
+        style={styles.headerGradient}
+      />
 
-      <ScrollView style={styles.scrollView}>
-        {/* Trainer Info Card */}
-        <View style={styles.infoCard}>
-          <View style={styles.trainerHeader}>
-            <View style={styles.avatar}>
-              <Ionicons name="person" size={48} color={Colors.primary} />
-            </View>
-            <View style={styles.trainerInfo}>
-              <View style={styles.nameRow}>
-                <Text style={styles.trainerName}>Trainer</Text>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        {/* Header */}
+        <Animated.View style={[styles.header, { opacity: headerOpacity }]}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color={COLORS.white} />
+          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <TouchableOpacity onPress={handleMessage} style={styles.headerBtn}>
+              <Ionicons name="chatbubble" size={22} color={COLORS.white} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleReportTrainer} style={styles.headerBtn}>
+              <Ionicons name="flag" size={22} color={COLORS.white} />
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Profile Card */}
+          <Animated.View
+            style={[
+              styles.profileCard,
+              {
+                opacity: contentAnim,
+                transform: [{ translateY: contentTranslateY }],
+              },
+            ]}
+          >
+            <LinearGradient colors={[COLORS.white, COLORS.offWhite]} style={styles.profileGradient}>
+              {/* Avatar */}
+              <View style={styles.avatarSection}>
+                {trainer.avatarUrl ? (
+                  <Image source={{ uri: trainer.avatarUrl }} style={styles.avatar} />
+                ) : (
+                  <LinearGradient colors={[COLORS.orange, COLORS.orangeLight]} style={styles.avatarPlaceholder}>
+                    <Ionicons name="person" size={50} color={COLORS.white} />
+                  </LinearGradient>
+                )}
                 {trainer.isVerified && (
                   <View style={styles.verifiedBadge}>
-                    <Ionicons name="checkmark-circle" size={20} color={Colors.success} />
-                    <Text style={styles.verifiedText}>Verified</Text>
+                    <Ionicons name="checkmark-circle" size={28} color={COLORS.teal} />
                   </View>
                 )}
               </View>
+
+              {/* Name & Rating */}
+              <Text style={styles.trainerName}>{trainer.fullName || 'Trainer'}</Text>
               <View style={styles.ratingRow}>
-                <Ionicons name="star" size={18} color={Colors.warning} />
+                <Ionicons name="star" size={18} color={COLORS.gold} />
                 <Text style={styles.ratingText}>
-                  {trainer.averageRating.toFixed(1)} ({trainer.totalSessionsCompleted} sessions)
+                  {trainer.averageRating?.toFixed(1) || '5.0'}
                 </Text>
+                <Text style={styles.reviewCount}>({ratings.length} reviews)</Text>
               </View>
-              <View style={styles.priceRow}>
-                <Ionicons name="cash-outline" size={18} color={Colors.primary} />
-                <Text style={styles.priceText}>
-                  ${(trainer.ratePerMinuteCents / 100).toFixed(2)}/min
-                </Text>
+
+              {/* Bio */}
+              {trainer.bio && (
+                <Text style={styles.bio}>{trainer.bio}</Text>
+              )}
+
+              {/* Stats */}
+              <View style={styles.statsRow}>
+                <View style={styles.stat}>
+                  <Text style={styles.statValue}>{trainer.experienceYears || 0}</Text>
+                  <Text style={styles.statLabel}>Years Exp</Text>
+                </View>
+                <View style={styles.statDivider} />
+                <View style={styles.stat}>
+                  <Text style={styles.statValue}>${(trainer.ratePerMinuteCents / 100).toFixed(2)}</Text>
+                  <Text style={styles.statLabel}>Per Min</Text>
+                </View>
+                <View style={styles.statDivider} />
+                <View style={styles.stat}>
+                  <Text style={styles.statValue}>{trainer.travelRadiusMiles || 10}</Text>
+                  <Text style={styles.statLabel}>Mile Radius</Text>
+                </View>
               </View>
-            </View>
-          </View>
 
-          {trainer.bio && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>About</Text>
-              <Text style={styles.bioText}>{trainer.bio}</Text>
-            </View>
-          )}
-
-          {/* Experience & Certifications */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Experience</Text>
-            <View style={styles.experienceRow}>
-              <Ionicons name="trophy" size={20} color={Colors.primary} />
-              <Text style={styles.experienceText}>{trainer.experienceYears} years</Text>
-            </View>
-            {trainer.certifications.length > 0 && (
-              <View style={styles.certifications}>
-                {trainer.certifications.map((cert, index) => (
-                  <View key={index} style={styles.certBadge}>
-                    <Text style={styles.certText}>{cert}</Text>
+              {/* Training Styles */}
+              {trainer.trainingStyles && trainer.trainingStyles.length > 0 && (
+                <View style={styles.tagsSection}>
+                  <Text style={styles.sectionLabel}>SPECIALTIES</Text>
+                  <View style={styles.tagsRow}>
+                    {trainer.trainingStyles.map((style, i) => (
+                      <View key={i} style={styles.tag}>
+                        <Text style={styles.tagText}>{style}</Text>
+                      </View>
+                    ))}
                   </View>
-                ))}
-              </View>
-            )}
-          </View>
-
-          {/* Training Styles */}
-          {trainer.trainingStyles.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Training Styles</Text>
-              <View style={styles.stylesContainer}>
-                {trainer.trainingStyles.map((style, index) => (
-                  <View key={index} style={styles.styleChip}>
-                    <Text style={styles.styleText}>{style}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          )}
-
-          {/* Location */}
-          {trainer.primaryGym && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Location</Text>
-              <View style={styles.locationRow}>
-                <Ionicons name="location" size={20} color={Colors.primary} />
-                <Text style={styles.locationText}>{trainer.primaryGym}</Text>
-              </View>
-              {trainer.offersVirtual && (
-                <View style={styles.locationRow}>
-                  <Ionicons name="videocam" size={20} color={Colors.neonBlue} />
-                  <Text style={styles.locationText}>Virtual sessions available</Text>
                 </View>
               )}
-            </View>
-          )}
 
-          {/* Reviews */}
-          {ratings.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Reviews ({ratings.length})</Text>
-              {ratings.slice(0, 3).map((rating) => (
-                <View key={rating.id} style={styles.reviewCard}>
-                  <View style={styles.reviewHeader}>
-                    <View style={styles.reviewStars}>
-                      {[...Array(5)].map((_, i) => (
-                        <Ionicons
-                          key={i}
-                          name={i < rating.rating ? 'star' : 'star-outline'}
-                          size={16}
-                          color={Colors.warning}
-                        />
-                      ))}
-                    </View>
-                    <Text style={styles.reviewDate}>
-                      {new Date(rating.createdAt).toLocaleDateString()}
-                    </Text>
-                  </View>
-                  {rating.reviewText && (
-                    <Text style={styles.reviewText}>{rating.reviewText}</Text>
-                  )}
+              {/* Virtual Badge */}
+              {trainer.isVirtualTrainingAvailable && (
+                <View style={styles.virtualBadge}>
+                  <Ionicons name="videocam" size={16} color={COLORS.white} />
+                  <Text style={styles.virtualText}>Virtual Sessions Available</Text>
                 </View>
-              ))}
-            </View>
-          )}
-        </View>
+              )}
+            </LinearGradient>
+          </Animated.View>
 
-        {/* Booking Section */}
-        <View style={styles.bookingCard}>
-          <Text style={styles.bookingTitle}>Book a Session</Text>
+          {/* Booking Card */}
+          <Animated.View
+            style={[
+              styles.bookingCard,
+              {
+                opacity: contentAnim,
+                transform: [{ translateY: contentTranslateY }],
+              },
+            ]}
+          >
+            <LinearGradient colors={[COLORS.white, COLORS.offWhite]} style={styles.bookingGradient}>
+              <Text style={styles.bookingTitle}>Book a Session</Text>
 
-          {/* Duration Selection */}
-          <View style={styles.durationSection}>
-            <Text style={styles.inputLabel}>Session Duration</Text>
-            <View style={styles.durationButtons}>
-              {trainer.sessionDurationsOffered.map((duration) => (
-                <TouchableOpacity
-                  key={duration}
-                  onPress={() => setSelectedDuration(duration)}
-                  activeOpacity={0.8}
-                >
-                  <LinearGradient
-                    colors={
-                      selectedDuration === duration
-                        ? Colors.gradientOrangeStart
-                        : ['#FFFFFF', '#FFFFFF']
-                    }
+              {/* Duration Selection */}
+              <Text style={styles.sectionLabel}>SESSION DURATION</Text>
+              <View style={styles.durationRow}>
+                {(trainer.sessionDurationsOffered || [30, 45, 60]).map((duration) => (
+                  <TouchableOpacity
+                    key={duration}
+                    onPress={() => setSelectedDuration(duration)}
                     style={[
-                      styles.durationButton,
-                      selectedDuration === duration && styles.durationButtonSelected,
+                      styles.durationChip,
+                      selectedDuration === duration && styles.durationChipSelected,
                     ]}
                   >
                     <Text
                       style={[
-                        styles.durationButtonText,
-                        selectedDuration === duration && styles.durationButtonTextSelected,
+                        styles.durationText,
+                        selectedDuration === duration && styles.durationTextSelected,
                       ]}
                     >
                       {duration} min
                     </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
-          {/* Price Breakdown */}
-          <View style={styles.priceBreakdown}>
-            <Text style={styles.inputLabel}>Price Breakdown</Text>
-            <View style={styles.priceRow}>
-              <Text style={styles.priceLabel}>Session ({selectedDuration} min)</Text>
-              <Text style={styles.priceValue}>${pricing.base.toFixed(2)}</Text>
-            </View>
-            {pricing.discount > 0 && (
-              <View style={styles.priceRow}>
-                <Text style={styles.priceLabel}>Multi-session discount</Text>
-                <Text style={[styles.priceValue, styles.discountText]}>
-                  -${pricing.discount.toFixed(2)}
-                </Text>
+                  </TouchableOpacity>
+                ))}
               </View>
-            )}
-            <View style={styles.divider} />
-            <View style={styles.priceRow}>
-              <Text style={styles.totalLabel}>Total</Text>
-              <Text style={styles.totalValue}>${pricing.final.toFixed(2)}</Text>
-            </View>
-            <Text style={styles.feeNote}>
-              Includes 10% platform fee · Trainer earns ${pricing.trainerEarns.toFixed(2)}
-            </Text>
-          </View>
 
-          {/* Message Button */}
-          <TouchableOpacity
-            style={styles.messageButton}
-            onPress={async () => {
-              try {
-                const result = await chatAPI.getOrCreateConversation(trainer.userId);
-                router.push(`/messages/chat?conversationId=${result.conversationId}&userId=${trainer.userId}&userName=${trainer.fullName}`);
-              } catch (error) {
-                console.error('Error creating conversation:', error);
-              }
-            }}
-          >
-            <Ionicons name="chatbubble-outline" size={20} color={Colors.secondary} />
-            <Text style={styles.messageButtonText}>Message Trainer</Text>
+              {/* Price Summary */}
+              <View style={styles.priceRow}>
+                <Text style={styles.priceLabel}>Total Price</Text>
+                <Text style={styles.priceValue}>${prices.final.toFixed(2)}</Text>
+              </View>
+
+              {/* Hold to Book Button */}
+              <Pressable
+                onPressIn={handlePressIn}
+                onPressOut={handlePressOut}
+                disabled={booking}
+                style={styles.bookButtonWrapper}
+              >
+                <LinearGradient
+                  colors={booking ? [COLORS.gray, COLORS.grayLight] : [COLORS.orangeHot, COLORS.orange]}
+                  style={styles.bookButton}
+                >
+                  <Animated.View style={[styles.progressOverlay, { width: progressWidth }]} />
+                  <View style={styles.bookButtonContent}>
+                    {booking ? (
+                      <ActivityIndicator size="small" color={COLORS.white} />
+                    ) : (
+                      <>
+                        <Ionicons name={isHolding ? "finger-print" : "calendar"} size={22} color={COLORS.white} />
+                        <Text style={styles.bookButtonText}>
+                          {isHolding ? 'Hold to Confirm...' : 'Hold to Book Session'}
+                        </Text>
+                      </>
+                    )}
+                  </View>
+                </LinearGradient>
+              </Pressable>
+            </LinearGradient>
+          </Animated.View>
+
+          {/* Reviews */}
+          {ratings.length > 0 && (
+            <Animated.View
+              style={[
+                styles.reviewsCard,
+                {
+                  opacity: contentAnim,
+                  transform: [{ translateY: contentTranslateY }],
+                },
+              ]}
+            >
+              <LinearGradient colors={[COLORS.white, COLORS.offWhite]} style={styles.reviewsGradient}>
+                <Text style={styles.reviewsTitle}>Reviews ({ratings.length})</Text>
+                {ratings.slice(0, 3).map((review, i) => (
+                  <View key={i} style={styles.reviewItem}>
+                    <View style={styles.reviewHeader}>
+                      <View style={styles.reviewStars}>
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Ionicons
+                            key={star}
+                            name={star <= review.rating ? 'star' : 'star-outline'}
+                            size={14}
+                            color={COLORS.gold}
+                          />
+                        ))}
+                      </View>
+                      <Text style={styles.reviewDate}>
+                        {new Date(review.createdAt).toLocaleDateString()}
+                      </Text>
+                    </View>
+                    {review.reviewText && (
+                      <Text style={styles.reviewText}>{review.reviewText}</Text>
+                    )}
+                  </View>
+                ))}
+              </LinearGradient>
+            </Animated.View>
+          )}
+
+          {/* Block Option */}
+          <TouchableOpacity onPress={handleBlockTrainer} style={styles.blockButton}>
+            <Text style={styles.blockText}>Block this Trainer</Text>
           </TouchableOpacity>
 
-          {/* Lock In Button with Long Press */}
-          <Pressable
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
-            disabled={booking}
-            style={styles.lockInContainer}
-          >
-            <LinearGradient
-              colors={booking ? ['#CCCCCC', '#999999'] : Colors.gradientOrangeStart}
-              style={styles.bookButton}
-            >
-              {/* Animated Progress Fill */}
-              <Animated.View
-                style={[
-                  styles.progressFill,
-                  {
-                    width: pressProgress.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: ['0%', '100%'],
-                    }),
-                  },
-                ]}
-              />
-              
-              {/* Button Content */}
-              <View style={styles.buttonContent}>
-                <Text style={styles.bookButtonText}>
-                  {booking ? 'Booking...' : isHolding ? 'Hold to Lock In 💪🏾' : 'Lock In 💪🏾'}
-                </Text>
-                {!booking && !isHolding && (
-                  <Text style={styles.holdHintText}>
-                    Press & hold
-                  </Text>
-                )}
-              </View>
-            </LinearGradient>
-          </Pressable>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: COLORS.grayLight,
+  },
+  headerGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 200,
+  },
+  safeArea: {
+    flex: 1,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.background,
   },
-  errorText: {
+  loadingText: {
+    marginTop: 16,
     fontSize: 16,
-    color: Colors.textLight,
+    fontWeight: '600',
+    color: COLORS.white,
+  },
+  backBtn: {
+    marginTop: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  backBtnText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: COLORS.white,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: Colors.white,
+  headerActions: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  headerBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   scrollView: {
     flex: 1,
   },
-  infoCard: {
-    backgroundColor: Colors.white,
-    margin: 16,
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
   },
-  trainerHeader: {
-    flexDirection: 'row',
-    marginBottom: 20,
+  // Profile Card
+  profileCard: {
+    borderRadius: 24,
+    overflow: 'hidden',
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  profileGradient: {
+    padding: 24,
+    alignItems: 'center',
+  },
+  avatarSection: {
+    position: 'relative',
+    marginBottom: 16,
   },
   avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: Colors.background,
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    borderWidth: 4,
+    borderColor: COLORS.white,
+  },
+  avatarPlaceholder: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
-  },
-  trainerInfo: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  trainerName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: Colors.navy,
-    marginRight: 8,
+    borderWidth: 4,
+    borderColor: COLORS.white,
   },
   verifiedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: COLORS.white,
+    borderRadius: 14,
+    padding: 2,
   },
-  verifiedText: {
-    fontSize: 12,
-    color: Colors.success,
-    fontWeight: '600',
+  trainerName: {
+    fontSize: 26,
+    fontWeight: '900',
+    color: COLORS.navy,
+    marginBottom: 8,
   },
   ratingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    marginBottom: 6,
+    gap: 6,
+    marginBottom: 16,
   },
   ratingText: {
-    fontSize: 14,
-    color: Colors.navy,
-  },
-  priceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  priceText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.primary,
-  },
-  section: {
-    marginTop: 20,
-  },
-  sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: Colors.navy,
-    marginBottom: 12,
+    fontWeight: '800',
+    color: COLORS.navy,
   },
-  bioText: {
+  reviewCount: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.gray,
+  },
+  bio: {
     fontSize: 15,
-    color: Colors.text,
+    fontWeight: '500',
+    color: COLORS.gray,
+    textAlign: 'center',
     lineHeight: 22,
+    marginBottom: 20,
   },
-  experienceRow: {
+  statsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 12,
+    backgroundColor: COLORS.grayLight,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+    width: '100%',
   },
-  experienceText: {
-    fontSize: 15,
-    color: Colors.navy,
+  stat: {
+    flex: 1,
+    alignItems: 'center',
   },
-  certifications: {
+  statValue: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: COLORS.navy,
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: COLORS.gray,
+  },
+  statDivider: {
+    width: 1,
+    height: 36,
+    backgroundColor: '#D0D4D8',
+  },
+  tagsSection: {
+    width: '100%',
+    marginBottom: 16,
+  },
+  sectionLabel: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: COLORS.gray,
+    letterSpacing: 1,
+    marginBottom: 10,
+  },
+  tagsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
   },
-  certBadge: {
-    backgroundColor: Colors.secondary,
+  tag: {
+    backgroundColor: COLORS.teal,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
   },
-  certText: {
-    fontSize: 13,
-    color: Colors.navy,
-    fontWeight: '500',
+  tagText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.white,
   },
-  stylesContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  styleChip: {
-    backgroundColor: Colors.background,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Colors.primary,
-  },
-  styleText: {
-    fontSize: 13,
-    color: Colors.primary,
-    fontWeight: '500',
-  },
-  locationRow: {
+  virtualBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 8,
+    backgroundColor: COLORS.teal,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
   },
-  locationText: {
-    fontSize: 15,
-    color: Colors.navy,
+  virtualText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: COLORS.white,
   },
-  reviewCard: {
-    backgroundColor: Colors.background,
-    padding: 12,
+  // Booking Card
+  bookingCard: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  bookingGradient: {
+    padding: 20,
+  },
+  bookingTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: COLORS.navy,
+    marginBottom: 16,
+  },
+  durationRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 20,
+  },
+  durationChip: {
+    flex: 1,
+    paddingVertical: 14,
     borderRadius: 12,
-    marginBottom: 8,
+    backgroundColor: COLORS.grayLight,
+    alignItems: 'center',
+  },
+  durationChipSelected: {
+    backgroundColor: COLORS.orange,
+  },
+  durationText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: COLORS.navy,
+  },
+  durationTextSelected: {
+    color: COLORS.white,
+  },
+  priceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.grayLight,
+  },
+  priceLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.gray,
+  },
+  priceValue: {
+    fontSize: 28,
+    fontWeight: '900',
+    color: COLORS.navy,
+  },
+  bookButtonWrapper: {
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  bookButton: {
+    paddingVertical: 18,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  progressOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+  },
+  bookButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  bookButtonText: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: COLORS.white,
+  },
+  // Reviews
+  reviewsCard: {
+    borderRadius: 18,
+    overflow: 'hidden',
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  reviewsGradient: {
+    padding: 20,
+  },
+  reviewsTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: COLORS.navy,
+    marginBottom: 16,
+  },
+  reviewItem: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.grayLight,
   },
   reviewHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 8,
   },
   reviewStars: {
     flexDirection: 'row',
@@ -661,196 +840,23 @@ const styles = StyleSheet.create({
   },
   reviewDate: {
     fontSize: 12,
-    color: Colors.textLight,
+    fontWeight: '500',
+    color: COLORS.gray,
   },
   reviewText: {
     fontSize: 14,
-    color: Colors.text,
+    fontWeight: '500',
+    color: COLORS.navy,
     lineHeight: 20,
   },
-  bookingCard: {
-    backgroundColor: Colors.white,
-    margin: 16,
-    marginTop: 0,
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+  blockButton: {
+    alignItems: 'center',
+    paddingVertical: 12,
   },
-  bookingTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: Colors.navy,
-    marginBottom: 20,
-  },
-  durationSection: {
-    marginBottom: 20,
-  },
-  inputLabel: {
+  blockText: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.navy,
-    marginBottom: 12,
-  },
-  durationButtons: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  durationButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: Colors.border,
-  },
-  durationButtonSelected: {
-    borderColor: 'transparent',
-  },
-  durationButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.navy,
-  },
-  durationButtonTextSelected: {
-    color: Colors.white,
-  },
-  priceBreakdown: {
-    backgroundColor: Colors.background,
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 20,
-  },
-  priceLabel: {
-    fontSize: 15,
-    color: Colors.navy,
-  },
-  priceValue: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: Colors.navy,
-  },
-  discountText: {
-    color: Colors.success,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: Colors.border,
-    marginVertical: 12,
-  },
-  totalLabel: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: Colors.navy,
-  },
-  totalValue: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: Colors.primary,
-  },
-  feeNote: {
-    fontSize: 12,
-    color: Colors.textLight,
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  lockInContainer: {
-    position: 'relative',
-    overflow: 'hidden',
-    borderRadius: 12,
-  },
-  bookButton: {
-    paddingVertical: 20,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
-    borderWidth: 3,
-    borderColor: Colors.navy,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    zIndex: 0,
-  },
-  buttonContent: {
-    zIndex: 1,
-    alignItems: 'center',
-  },
-  bookButtonText: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: Colors.white,
-    letterSpacing: 0.5,
-  },
-  holdHintText: {
-    fontSize: 12,
-    color: Colors.white,
-    marginTop: 4,
-    opacity: 0.9,
-    fontWeight: '600',
-  },
-  messageButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    backgroundColor: Colors.white,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: Colors.secondary,
-    marginBottom: 12,
-  },
-  messageButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: Colors.secondary,
-  },
-
-  section: {
-    marginTop: 20,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: Colors.textPrimary,
-    marginBottom: 8,
-  },
-  actionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    backgroundColor: Colors.surface,
-    marginTop: 10,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  actionText: {
-    color: Colors.textPrimary,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  dangerRow: {
-    borderColor: Colors.error,
-  },
-  dangerText: {
-    color: Colors.error,
+    color: COLORS.error,
+    textDecorationLine: 'underline',
   },
 });
