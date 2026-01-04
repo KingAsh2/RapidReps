@@ -69,12 +69,18 @@ export const trainerAPI = {
   },
 
   getMyProfile: async (): Promise<TrainerProfile> => {
-    const token = await AsyncStorage.getItem('token');
-    const userStr = await AsyncStorage.getItem('user');
-    const user = userStr ? JSON.parse(userStr) : null;
-    if (!user) throw new Error('User not found');
-    const response = await api.get(`/trainer-profiles/${user.id}`);
-    return response.data;
+    try {
+      // First get the current user to get their ID
+      const userResponse = await api.get('/auth/me');
+      const userId = userResponse.data._id;
+      
+      // Then get their trainer profile
+      const response = await api.get(`/trainer-profiles/${userId}`);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error in trainer getMyProfile:', error);
+      throw error;
+    }
   },
 
   searchTrainers: async (filters: any): Promise<TrainerProfile[]> => {
