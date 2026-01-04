@@ -388,6 +388,29 @@ class ReportCreate(BaseModel):
 class BlockResponse(BaseModel):
     blockedUserIds: List[str]
 
+# Chat/Message Models
+class MessageCreate(BaseModel):
+    conversationId: Optional[str] = None
+    receiverId: str
+    content: str
+
+class MessageResponse(BaseModel):
+    id: str
+    conversationId: str
+    senderId: str
+    receiverId: str
+    content: str
+    isRead: bool = False
+    createdAt: datetime
+
+class ConversationResponse(BaseModel):
+    id: str
+    participants: List[str]
+    participantDetails: List[dict]  # Will include user details
+    lastMessage: Optional[dict] = None
+    unreadCount: int = 0
+    updatedAt: datetime
+
 # ============================================================================
 # AUTH ROUTES
 # ============================================================================
