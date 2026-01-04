@@ -38,7 +38,7 @@ export default function LoginScreen() {
         if (activeRole === 'trainer') {
           router.replace('/trainer/home');
         } else if (activeRole === 'trainee') {
-          router.replace('/trainee/home');
+          router.replace('/trainee/(tabs)/home');
         }
       }, 2500); // Increased from 1500ms to 2500ms
       return () => clearTimeout(timer);
