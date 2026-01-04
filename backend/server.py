@@ -1150,6 +1150,77 @@ async def decline_session(session_id: str, current_user: dict = Depends(get_curr
     updated_session = await db.sessions.find_one({'_id': ObjectId(session_id)})
     return SessionResponse(**serialize_doc(updated_session))
 
+@api_router.patch("/sessions/{session_id}/cancel")
+async def cancel_session(session_id: str, current_user: dict = Depends(get_current_user)):
+    """Trainee cancels/withdraws a session request
+    
+    Cancellation Policy:
+    - If status is REQUESTED (pending): Full refund, no fee
+    - If status is ACCEPTED: 20% cancellation fee charged, 80% refund
+    - If status is IN_PROGRESS or COMPLETED: Cannot cancel
+    """
+    session = await db.sessions.find_one({'_id': ObjectId(session_id)})
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Verify it's the trainee's session
+    if session['traineeId'] != str(current_user['_id']):
+        raise HTTPException(status_code=403, detail="Not authorized to cancel this session")
+    
+    # Check session status
+    current_status = session.get('status')
+    
+    if current_status in [SessionStatus.COMPLETED, SessionStatus.IN_PROGRESS]:
+        raise HTTPException(
+            status_code=400, 
+            detail="Cannot cancel session that is in progress or completed"
+        )
+    
+    if current_status == SessionStatus.CANCELLED:
+        raise HTTPException(status_code=400, detail="Session already cancelled")
+    
+    if current_status == SessionStatus.DECLINED:
+        raise HTTPException(status_code=400, detail="Session was already declined by trainer")
+    
+    # Calculate cancellation fee
+    cancellation_fee_cents = 0
+    refund_amount_cents = 0
+    
+    if current_status == SessionStatus.ACCEPTED:
+        # 20% cancellation fee if trainer already accepted
+        final_price = session.get('finalSessionPriceCents', 0)
+        cancellation_fee_cents = int(final_price * 0.20)
+        refund_amount_cents = final_price - cancellation_fee_cents
+    elif current_status == SessionStatus.REQUESTED:
+        # No fee if still pending
+        refund_amount_cents = session.get('finalSessionPriceCents', 0)
+        cancellation_fee_cents = 0
+    
+    # Update session status
+    await db.sessions.update_one(
+        {'_id': ObjectId(session_id)},
+        {
+            '$set': {
+                'status': SessionStatus.CANCELLED,
+                'updatedAt': datetime.utcnow(),
+                'cancelledAt': datetime.utcnow(),
+                'cancelledBy': 'trainee',
+                'cancellationFeeCents': cancellation_fee_cents,
+                'refundAmountCents': refund_amount_cents
+            }
+        }
+    )
+    
+    updated_session = await db.sessions.find_one({'_id': ObjectId(session_id)})
+    
+    return {
+        'success': True,
+        'session': SessionResponse(**serialize_doc(updated_session)),
+        'cancellationFeeCents': cancellation_fee_cents,
+        'refundAmountCents': refund_amount_cents,
+        'message': f'Session cancelled. {"No cancellation fee." if cancellation_fee_cents == 0 else f"Cancellation fee: ${cancellation_fee_cents/100:.2f}. Refund: ${refund_amount_cents/100:.2f}"}'
+    }
+
 @api_router.patch("/sessions/{session_id}/complete", response_model=SessionResponse)
 async def complete_session(session_id: str, current_user: dict = Depends(get_current_user)):
     """Mark session as completed"""
