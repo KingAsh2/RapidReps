@@ -1,4 +1,28 @@
-import React, { useState, useEffect } from 'react';
+i
+
+  const handleDeleteAccount = () => {
+    showAlert({
+      title: 'Delete Account',
+      message: 'This permanently deletes your account and profile. This cannot be undone.',
+      type: 'warning',
+      buttons: [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteAccount();
+              router.replace('/');
+            } catch (e: any) {
+              showAlert({ title: 'Error', message: e?.message || 'Unable to delete account. Please try again.', type: 'error' });
+            }
+          },
+        },
+      ],
+    });
+  };
+mport React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -22,7 +46,7 @@ import * as ImagePicker from 'expo-image-picker';
 
 export default function TraineeProfileScreen() {
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, logout, deleteAccount } = useAuth();
   const { showAlert } = useAlert();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -344,7 +368,28 @@ export default function TraineeProfileScreen() {
         )}
 
         <View style={{ height: 40 }} />
-      </ScrollView>
+      
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Legal & Safety</Text>
+
+          <TouchableOpacity style={styles.actionRow} onPress={() => router.push('/legal/terms')}>
+            <Text style={styles.actionText}>Terms of Service</Text>
+            <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionRow} onPress={() => router.push('/legal/privacy')}>
+            <Text style={styles.actionText}>Privacy Policy</Text>
+            <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={[styles.actionRow, styles.dangerRow]} onPress={handleDeleteAccount}>
+            <Text style={[styles.actionText, styles.dangerText]}>Delete Account</Text>
+            <Ionicons name="trash-outline" size={20} color={Colors.error} />
+          </TouchableOpacity>
+        </View>
+
+</ScrollView>
     </SafeAreaView>
   );
 }
@@ -553,5 +598,39 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '900',
     color: Colors.white,
+  },
+
+  section: {
+    paddingHorizontal: 24,
+    marginTop: 24,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: Colors.textPrimary,
+    marginBottom: 8,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    backgroundColor: Colors.surface,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  actionText: {
+    color: Colors.textPrimary,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  dangerRow: {
+    borderColor: Colors.error,
+  },
+  dangerText: {
+    color: Colors.error,
   },
 });
