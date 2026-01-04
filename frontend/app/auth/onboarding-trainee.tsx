@@ -836,12 +836,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: Colors.white,
   },
-  labelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
-  },
   labelHint: {
     fontSize: 12,
     color: Colors.textLight,
