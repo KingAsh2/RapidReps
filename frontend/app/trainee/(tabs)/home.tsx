@@ -349,7 +349,7 @@ export default function TraineeHomeScreen() {
             </View>
             <View style={styles.headerActions}>
               <TouchableOpacity 
-                onPress={() => router.push('/trainee/profile')} 
+                onPress={() => router.push('/trainee/(tabs)/profile')} 
                 style={styles.headerButton}
               >
                 <Ionicons name="person-circle-outline" size={28} color={Colors.white} />
