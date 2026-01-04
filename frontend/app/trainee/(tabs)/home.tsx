@@ -79,7 +79,7 @@ export default function TraineeHomeScreen() {
   const [sortBy, setSortBy] = useState('distance');
   const [showSortMenu, setShowSortMenu] = useState(false);
 
-  // Start entrance animations
+  // Start entrance animations immediately
   useEffect(() => {
     const startAnimations = () => {
       // Hero slide down + fade in
@@ -158,10 +158,9 @@ export default function TraineeHomeScreen() {
       return () => clearInterval(pulseInterval);
     };
 
-    if (!loading) {
-      startAnimations();
-    }
-  }, [loading]);
+    // Start animations immediately
+    startAnimations();
+  }, []);
 
   // Force exit loading state after timeout
   useEffect(() => {
