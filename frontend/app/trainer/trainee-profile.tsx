@@ -13,13 +13,65 @@ import { Colors } from '../../src/utils/colors';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { trainerAPI } from '../../src/services/api';
+import { trainerAPI, safetyAPI } from '../../src/services/api';
 import { useAlert } from '../../src/contexts/AlertContext';
 
 export default function TraineeProfileScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { showAlert } = useAlert();
+
+
+  const handleReportTrainee = () => {
+    showAlert({
+      title: 'Report',
+      message: 'Report this trainee for spam, harassment, or inappropriate content?',
+      type: 'warning',
+      buttons: [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Report',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await safetyAPI.reportUser({
+                reportedUserId: traineeId as string,
+                reason: 'Reported from trainee profile',
+                contentType: 'profile',
+              });
+              showAlert({ title: 'Submitted', message: 'Thanks — we received your report.', type: 'success' });
+            } catch (e: any) {
+              showAlert({ title: 'Error', message: e?.message || 'Unable to submit report.', type: 'error' });
+            }
+          },
+        },
+      ],
+    });
+  };
+
+  const handleBlockTrainee = () => {
+    showAlert({
+      title: 'Block Trainee',
+      message: 'Blocking hides this trainee from your results and prevents future interactions.',
+      type: 'warning',
+      buttons: [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Block',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await safetyAPI.blockUser(traineeId as string);
+              showAlert({ title: 'Blocked', message: 'Trainee blocked.', type: 'success' });
+              router.back();
+            } catch (e: any) {
+              showAlert({ title: 'Error', message: e?.message || 'Unable to block user.', type: 'error' });
+            }
+          },
+        },
+      ],
+    });
+  };
   
   const sessionId = params.sessionId as string;
   const traineeId = params.traineeId as string;
@@ -481,5 +533,40 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '900',
     color: Colors.white,
+  },
+
+  section: {
+    marginTop: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+    marginBottom: 8,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    backgroundColor: Colors.surface,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  actionText: {
+    color: Colors.textPrimary,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  dangerRow: {
+    borderColor: Colors.error,
+  },
+  dangerText: {
+    color: Colors.error,
   },
 });
