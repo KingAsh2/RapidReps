@@ -88,14 +88,8 @@ export default function SessionsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              const result = await traineeAPI.cancelSession(session._id);
-              
-              showAlert({
-                title: 'Session Cancelled ✓',
-                message: result.message,
-                type: 'success',
-              });
-              
+              await traineeAPI.cancelSession(session._id);
+              // Refresh the list silently - UI will update
               loadSessions();
             } catch (error: any) {
               showAlert({
