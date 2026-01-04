@@ -166,11 +166,7 @@ export default function LoginScreen() {
     try {
       await login(email.trim().toLowerCase(), password);
       setLoginSuccess(true);
-      showAlert({
-        title: 'Welcome Back! 💪',
-        message: "Let's crush those goals!",
-        type: 'success',
-      });
+      // Navigate immediately without popup
     } catch (error: any) {
       showAlert({
         title: 'Login Failed',
