@@ -47,7 +47,8 @@ export default function TraineeHomeScreen() {
   const router = useRouter();
   const { user, logout } = useAuth();
   const { showAlert } = useAlert();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Start with false to show UI immediately
+  const [initialLoad, setInitialLoad] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [trainers, setTrainers] = useState([]);
   const [sessions, setSessions] = useState([]);
