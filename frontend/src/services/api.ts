@@ -212,3 +212,33 @@ export const safetyAPI = {
     return response.data;
   },
 };
+
+// Chat / Messaging API
+export const chatAPI = {
+  sendMessage: async (receiverId: string, content: string, conversationId?: string): Promise<any> => {
+    const response = await api.post('/messages', {
+      receiverId,
+      content,
+      conversationId,
+    });
+    return response.data;
+  },
+
+  getConversations: async (): Promise<any[]> => {
+    const response = await api.get('/conversations');
+    return response.data;
+  },
+
+  getMessages: async (conversationId: string): Promise<any[]> => {
+    const response = await api.get(`/conversations/${conversationId}/messages`);
+    return response.data;
+  },
+
+  getOrCreateConversation: async (receiverId: string): Promise<{ conversationId: string }> => {
+    const response = await api.post('/conversations', null, {
+      params: { receiver_id: receiverId },
+    });
+    return response.data;
+  },
+};
+
