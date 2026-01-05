@@ -239,16 +239,9 @@ export default function TraineeHomeScreen() {
       const hasLocalTrainers = trainersWithDistance.filter((t: any) => t.distance !== null).length > 0;
       const virtualTrainersAvailable = trainersWithDistance.filter((t: any) => t.isVirtualTrainingAvailable);
       
-      if (!hasLocalTrainers && virtualTrainersAvailable.length > 0) {
+      // Store virtual trainers but don't auto-show dialog - let user discover via the CTA button
+      if (virtualTrainersAvailable.length > 0) {
         setVirtualTrainers(virtualTrainersAvailable);
-        setTimeout(() => {
-          setShowVirtualDialog(true);
-          Animated.spring(dialogAnim, {
-            toValue: 1,
-            useNativeDriver: true,
-            friction: 6,
-          }).start();
-        }, 800);
       }
     } catch (error) {
       console.error('[TraineeHome] Error loading trainers:', error);
