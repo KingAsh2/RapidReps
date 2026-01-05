@@ -13,7 +13,6 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
 
 const { width } = Dimensions.get('window');
 
@@ -37,20 +36,20 @@ interface AthleticAlertProps {
   onInputSubmit?: (value: string) => void;
 }
 
-// Brand colors
+// Brand colors - consistent with app
 const COLORS = {
   teal: '#1FB8B4',
   tealLight: '#22C1C3',
   orange: '#F7931E',
   orangeHot: '#FF6A00',
   orangeLight: '#FF9F1C',
-  yellow: '#FDBB2D',
   navy: '#1a2a5e',
+  navyLight: '#2a3a6e',
   white: '#FFFFFF',
   error: '#FF4757',
-  errorDark: '#E84118',
-  warning: '#FFA502',
-  warningDark: '#FF8C00',
+  errorDark: '#D63031',
+  warning: '#F7931E',
+  warningDark: '#FF6A00',
 };
 
 export default function AthleticAlert({
@@ -71,7 +70,6 @@ export default function AthleticAlert({
 
   useEffect(() => {
     if (visible) {
-      // Entrance animation
       Animated.parallel([
         Animated.spring(scaleAnim, {
           toValue: 1,
@@ -86,25 +84,24 @@ export default function AthleticAlert({
         }),
       ]).start();
 
-      // Icon pulse for error/warning
+      // Pulse animation for error/warning
       if (type === 'error' || type === 'warning') {
         Animated.loop(
           Animated.sequence([
             Animated.timing(iconPulseAnim, {
-              toValue: 1.1,
-              duration: 500,
+              toValue: 1.15,
+              duration: 600,
               useNativeDriver: true,
             }),
             Animated.timing(iconPulseAnim, {
               toValue: 1,
-              duration: 500,
+              duration: 600,
               useNativeDriver: true,
             }),
           ])
         ).start();
       }
     } else {
-      // Exit animation
       Animated.parallel([
         Animated.timing(scaleAnim, {
           toValue: 0,
@@ -126,29 +123,25 @@ export default function AthleticAlert({
         return {
           icon: 'alert-circle' as const,
           gradientColors: [COLORS.error, COLORS.errorDark] as [string, string],
-          iconBgColors: ['rgba(255,71,87,0.2)', 'rgba(232,65,24,0.2)'] as [string, string],
-          accentColor: COLORS.error,
+          iconColor: COLORS.white,
         };
       case 'warning':
         return {
           icon: 'warning' as const,
           gradientColors: [COLORS.orangeHot, COLORS.orange] as [string, string],
-          iconBgColors: ['rgba(255,106,0,0.2)', 'rgba(247,147,30,0.2)'] as [string, string],
-          accentColor: COLORS.orangeHot,
+          iconColor: COLORS.white,
         };
       case 'success':
         return {
           icon: 'checkmark-circle' as const,
           gradientColors: [COLORS.teal, COLORS.tealLight] as [string, string],
-          iconBgColors: ['rgba(31,184,180,0.2)', 'rgba(34,193,195,0.2)'] as [string, string],
-          accentColor: COLORS.teal,
+          iconColor: COLORS.white,
         };
       default: // info
         return {
           icon: 'information-circle' as const,
-          gradientColors: [COLORS.navy, '#2a3a6e'] as [string, string],
-          iconBgColors: ['rgba(26,42,94,0.15)', 'rgba(42,58,110,0.15)'] as [string, string],
-          accentColor: COLORS.navy,
+          gradientColors: [COLORS.navy, COLORS.navyLight] as [string, string],
+          iconColor: COLORS.white,
         };
     }
   };
@@ -166,15 +159,24 @@ export default function AthleticAlert({
     setInputValue('');
   };
 
-  const getButtonGradient = (button: AlertButton): [string, string] => {
+  const getButtonStyle = (button: AlertButton) => {
     if (button.style === 'destructive') {
-      return [COLORS.error, COLORS.errorDark];
+      return {
+        colors: [COLORS.error, COLORS.errorDark] as [string, string],
+        textColor: COLORS.white,
+      };
     }
     if (button.style === 'cancel') {
-      return ['#F0F4F8', '#E8ECF0'];
+      return {
+        colors: ['rgba(255,255,255,0.15)', 'rgba(255,255,255,0.1)'] as [string, string],
+        textColor: COLORS.white,
+      };
     }
-    // Default - use accent gradient
-    return [COLORS.teal, COLORS.tealLight];
+    // Default - white button
+    return {
+      colors: [COLORS.white, '#F5F5F5'] as [string, string],
+      textColor: COLORS.navy,
+    };
   };
 
   return (
@@ -190,13 +192,8 @@ export default function AthleticAlert({
         style={styles.keyboardView}
       >
         <Animated.View style={[styles.overlay, { opacity: opacityAnim }]}>
-          {/* Backdrop blur effect */}
-          <View style={StyleSheet.absoluteFill}>
-            <LinearGradient
-              colors={['rgba(0,0,0,0.7)', 'rgba(26,42,94,0.85)']}
-              style={StyleSheet.absoluteFill}
-            />
-          </View>
+          {/* Dark overlay */}
+          <View style={styles.backdrop} />
 
           <Animated.View
             style={[
@@ -207,53 +204,47 @@ export default function AthleticAlert({
               },
             ]}
           >
-            {/* Main Alert Card */}
-            <View style={styles.alertCard}>
-              {/* Top Gradient Accent Bar */}
-              <LinearGradient
-                colors={config.gradientColors}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.accentBar}
-              />
-
-              {/* Icon Container */}
-              <View style={styles.iconWrapper}>
-                <LinearGradient
-                  colors={config.iconBgColors}
-                  style={styles.iconBackground}
-                >
-                  <Animated.View style={{ transform: [{ scale: iconPulseAnim }] }}>
-                    <Ionicons 
-                      name={config.icon} 
-                      size={48} 
-                      color={config.accentColor} 
-                    />
-                  </Animated.View>
-                </LinearGradient>
-              </View>
+            {/* Main Alert Card with Gradient */}
+            <LinearGradient
+              colors={config.gradientColors}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.alertCard}
+            >
+              {/* Decorative glow */}
+              <View style={styles.glowCircle} />
+              
+              {/* Icon */}
+              <Animated.View 
+                style={[
+                  styles.iconContainer,
+                  { transform: [{ scale: iconPulseAnim }] }
+                ]}
+              >
+                <View style={styles.iconBg}>
+                  <Ionicons name={config.icon} size={36} color={config.gradientColors[0]} />
+                </View>
+              </Animated.View>
 
               {/* Content */}
-              <View style={styles.contentContainer}>
-                <Text style={styles.title}>{title}</Text>
-                <Text style={styles.message}>{message}</Text>
+              <Text style={styles.title}>{title}</Text>
+              <Text style={styles.message}>{message}</Text>
 
-                {/* Optional Input Field */}
-                {showInput && (
-                  <View style={styles.inputContainer}>
-                    <TextInput
-                      style={styles.textInput}
-                      placeholder={inputPlaceholder}
-                      placeholderTextColor="#8892b0"
-                      value={inputValue}
-                      onChangeText={setInputValue}
-                      multiline
-                      numberOfLines={3}
-                      textAlignVertical="top"
-                    />
-                  </View>
-                )}
-              </View>
+              {/* Optional Input */}
+              {showInput && (
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder={inputPlaceholder}
+                    placeholderTextColor="rgba(255,255,255,0.5)"
+                    value={inputValue}
+                    onChangeText={setInputValue}
+                    multiline
+                    numberOfLines={3}
+                    textAlignVertical="top"
+                  />
+                </View>
+              )}
 
               {/* Buttons */}
               <View style={[
@@ -261,8 +252,7 @@ export default function AthleticAlert({
                 buttons.length === 2 && styles.buttonsRow,
               ]}>
                 {buttons.map((button, index) => {
-                  const isCancel = button.style === 'cancel';
-                  const isDestructive = button.style === 'destructive';
+                  const btnStyle = getButtonStyle(button);
                   
                   return (
                     <TouchableOpacity
@@ -275,25 +265,12 @@ export default function AthleticAlert({
                       activeOpacity={0.8}
                     >
                       <LinearGradient
-                        colors={getButtonGradient(button)}
+                        colors={btnStyle.colors}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
                         style={styles.buttonGradient}
                       >
-                        {isDestructive && (
-                          <Ionicons 
-                            name="trash-outline" 
-                            size={18} 
-                            color={COLORS.white} 
-                            style={styles.buttonIcon}
-                          />
-                        )}
-                        <Text
-                          style={[
-                            styles.buttonText,
-                            isCancel && styles.buttonTextCancel,
-                          ]}
-                        >
+                        <Text style={[styles.buttonText, { color: btnStyle.textColor }]}>
                           {button.text}
                         </Text>
                       </LinearGradient>
@@ -301,7 +278,7 @@ export default function AthleticAlert({
                   );
                 })}
               </View>
-            </View>
+            </LinearGradient>
           </Animated.View>
         </Animated.View>
       </KeyboardAvoidingView>
@@ -317,113 +294,112 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
+    padding: 28,
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.75)',
   },
   alertWrapper: {
     width: '100%',
     maxWidth: 340,
   },
   alertCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: 24,
+    borderRadius: 28,
+    padding: 28,
+    alignItems: 'center',
     overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 12 },
+    shadowOffset: { width: 0, height: 16 },
     shadowOpacity: 0.4,
-    shadowRadius: 24,
-    elevation: 20,
+    shadowRadius: 32,
+    elevation: 24,
   },
-  accentBar: {
-    height: 6,
-    width: '100%',
+  glowCircle: {
+    position: 'absolute',
+    top: -60,
+    right: -60,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: 'rgba(255,255,255,0.1)',
   },
-  iconWrapper: {
-    alignItems: 'center',
-    marginTop: 28,
-    marginBottom: 8,
+  iconContainer: {
+    marginBottom: 20,
   },
-  iconBackground: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
+  iconBg: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: COLORS.white,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  contentContainer: {
-    paddingHorizontal: 28,
-    paddingBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
   },
   title: {
     fontSize: 22,
-    fontWeight: '800',
-    color: COLORS.navy,
+    fontWeight: '900',
+    color: COLORS.white,
     textAlign: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
     letterSpacing: 0.3,
   },
   message: {
     fontSize: 15,
     fontWeight: '500',
-    color: '#5a6a8a',
+    color: 'rgba(255,255,255,0.9)',
     textAlign: 'center',
     lineHeight: 22,
+    marginBottom: 24,
   },
   inputContainer: {
-    marginTop: 20,
-    backgroundColor: '#F5F7FA',
-    borderRadius: 14,
-    borderWidth: 2,
-    borderColor: '#E8ECF0',
+    width: '100%',
+    marginBottom: 20,
   },
   textInput: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.25)',
     padding: 14,
     fontSize: 15,
     fontWeight: '500',
-    color: COLORS.navy,
+    color: COLORS.white,
     minHeight: 80,
   },
   buttonsContainer: {
-    padding: 20,
-    gap: 12,
+    width: '100%',
+    gap: 10,
   },
   buttonsRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 10,
   },
   button: {
     borderRadius: 14,
     overflow: 'hidden',
-    shadowColor: COLORS.teal,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
   },
   buttonHalf: {
     flex: 1,
   },
   buttonGradient: {
-    flexDirection: 'row',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-  },
-  buttonIcon: {
-    marginRight: 8,
   },
   buttonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: COLORS.white,
     letterSpacing: 0.3,
-  },
-  buttonTextCancel: {
-    color: COLORS.navy,
   },
 });
 
-// Static method to show alerts programmatically
+// Static controller
 let alertController: {
   show: (config: {
     title: string;
