@@ -393,11 +393,11 @@ export default function TraineeHomeScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <View style={styles.container}>
-        {/* Full Screen Gradient Background */}
+        {/* Full Screen Gradient Background - Vibrant Teal */}
         <LinearGradient
-          colors={['#1FB8B4', '#22C1C3', '#F7931E']}
+          colors={['#1FB8B4', '#14A3A0', '#0D8B88']}
           start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+          end={{ x: 0, y: 1 }}
           style={styles.fullGradient}
         />
         
