@@ -161,21 +161,8 @@ export default function MySessionsScreen() {
         {/* Tab Switcher */}
         <View style={styles.tabContainer}>
           <View style={styles.tabBackground}>
-            <Animated.View 
-              style={[
-                styles.tabIndicator,
-                {
-                  transform: [{
-                    translateX: tabIndicatorAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0, (width - 64) / 2]
-                    })
-                  }]
-                }
-              ]}
-            />
             <TouchableOpacity
-              style={styles.tabButton}
+              style={[styles.tabButton, activeTab === 'upcoming' && styles.tabButtonActive]}
               onPress={() => setActiveTab('upcoming')}
               activeOpacity={0.8}
             >
@@ -192,7 +179,7 @@ export default function MySessionsScreen() {
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.tabButton}
+              style={[styles.tabButton, activeTab === 'past' && styles.tabButtonActive]}
               onPress={() => setActiveTab('past')}
               activeOpacity={0.8}
             >
