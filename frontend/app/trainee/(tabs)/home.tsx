@@ -59,7 +59,7 @@ export default function TraineeHomeScreen() {
   const [showTrainingModeDialog, setShowTrainingModeDialog] = useState(false);
   const [showVirtualDialog, setShowVirtualDialog] = useState(false);
   const [virtualTrainers, setVirtualTrainers] = useState([]);
-  const dialogAnim = new Animated.Value(0);
+  const dialogAnim = useRef(new Animated.Value(0)).current;
   
   // Animation refs for high-energy entrance
   const heroAnim = useRef(new Animated.Value(0)).current;
