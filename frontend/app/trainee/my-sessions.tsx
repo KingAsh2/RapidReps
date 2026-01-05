@@ -391,16 +391,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.15)',
     borderRadius: 16,
     padding: 4,
-    position: 'relative',
-  },
-  tabIndicator: {
-    position: 'absolute',
-    width: (width - 64 - 8) / 2,
-    height: '100%',
-    backgroundColor: COLORS.white,
-    borderRadius: 12,
-    left: 4,
-    top: 4,
   },
   tabButton: {
     flex: 1,
@@ -409,7 +399,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 12,
     gap: 6,
-    zIndex: 1,
+    borderRadius: 12,
+  },
+  tabButtonActive: {
+    backgroundColor: COLORS.white,
   },
   tabText: {
     fontSize: 14,
