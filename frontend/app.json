@@ -11,8 +11,11 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.kingash.rapidreps",
+      "config": {
+        "googleMapsApiKey": "AIzaSyDPQjkEm9BIaB6t-v_IZ4AQXCcPssqEJQU"
+      },
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "RapidReps uses your location to show nearby trainers/trainees and match sessions.",
+        "NSLocationWhenInUseUsageDescription": "RapidReps uses your location to show nearby trainers and estimate their arrival time for your workouts.",
         "NSCameraUsageDescription": "RapidReps uses the camera for profile photos, verification, and uploading session media.",
         "NSPhotoLibraryUsageDescription": "RapidReps lets you upload photos and videos for profiles and session content."
       }
@@ -24,6 +27,11 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.kingash.rapidreps",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDPQjkEm9BIaB6t-v_IZ4AQXCcPssqEJQU"
+        }
+      },
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
@@ -60,7 +68,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Allow RapidReps to use your location to show nearby trainers and trainees."
+          "locationWhenInUsePermission": "RapidReps uses your location to show nearby trainers and estimate their arrival time for your workouts."
         }
       ]
     ],
