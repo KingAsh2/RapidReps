@@ -380,21 +380,15 @@ class RapidRepsAPITester:
         # Test 2: Update trainer location without being a trainer (should fail with 403)
         if self.trainee_token:
             try:
-                location_data = {
-                    "latitude": 39.20,
-                    "longitude": -76.80
-                }
-                
-                response = self.make_request("PATCH", "/trainer-profiles/toggle-availability", {"isAvailable": True}, self.trainee_token)
+                availability_data = {"isAvailable": True}
+                response = self.make_request("PUT", "/trainer/availability", availability_data, self.trainee_token)
                 
                 if response.status_code == 403:
-                    self.log_test("Non-trainer Location Update", True, "Correctly rejected with 403")
-                elif response.status_code == 404:
-                    self.log_test("Non-trainer Location Update", True, "Correctly rejected with 404 (no trainer profile)")
+                    self.log_test("Non-trainer Availability Update", True, "Correctly rejected with 403")
                 else:
-                    self.log_test("Non-trainer Location Update", False, f"Unexpected status: {response.status_code}")
+                    self.log_test("Non-trainer Availability Update", False, f"Unexpected status: {response.status_code}")
             except Exception as e:
-                self.log_test("Non-trainer Location Update", False, f"Exception: {str(e)}")
+                self.log_test("Non-trainer Availability Update", False, f"Exception: {str(e)}")
         
         # Test 3: Invalid location coordinates
         try:
