@@ -481,13 +481,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Virtual Training Flow - FAB Button & Training Mode Dialog"
-    - "Trainee Authentication & Home Screen"
-  stuck_tasks:
-    - "Virtual Training Flow - FAB Button & Training Mode Dialog"
-    - "Trainee Authentication & Home Screen"
+    - "In-App Messaging/Chat System Frontend"
+  stuck_tasks: []
   test_all: false
-  test_priority: "stuck_first"
+  test_priority: "high_first"
 
 agent_communication:
     - agent: "testing"
