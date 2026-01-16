@@ -227,17 +227,34 @@ export default function TrainerHomeScreen() {
 
   const loadData = async () => {
     try {
-      const [sessionsData, earningsData, traineesData, profileData] = await Promise.all([
+      const [sessionsData, earningsData, traineesData, profileData, locationStatus] = await Promise.all([
         trainerAPI.getSessions(),
         trainerAPI.getEarnings(),
         trainerAPI.getNearbyTrainees(),
         trainerAPI.getMyProfile().catch(() => null),
+        trainerAPI.getLocationStatus().catch(() => null),
       ]);
       setSessions(sessionsData);
       setEarnings(earningsData);
       setNearbyTrainees(traineesData.trainees || []);
+      
       if (profileData) {
-        setIsAvailable(profileData.isAvailable ?? true);
+        const available = profileData.isAvailable ?? false;
+        setIsAvailable(available);
+        
+        // If trainer was already available, resume location tracking
+        if (available && locationPermission) {
+          startLocationTracking();
+        }
+      }
+      
+      if (locationStatus) {
+        if (locationStatus.latitude && locationStatus.longitude) {
+          setCurrentLocation({
+            latitude: locationStatus.latitude,
+            longitude: locationStatus.longitude,
+          });
+        }
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -255,10 +272,58 @@ export default function TrainerHomeScreen() {
   const handleToggleAvailability = async (value: boolean) => {
     setAvailabilityLoading(true);
     try {
-      await trainerAPI.toggleAvailability(value);
-      setIsAvailable(value);
+      // If turning ON availability, need location permission
+      if (value) {
+        let hasPermission = locationPermission;
+        
+        if (!hasPermission) {
+          hasPermission = await requestLocationPermission();
+        }
+        
+        if (!hasPermission) {
+          showAlert({
+            type: 'warning',
+            title: 'Location Required',
+            message: 'To go online and be visible to clients, please enable location access.',
+          });
+          setAvailabilityLoading(false);
+          return;
+        }
+        
+        // Get current location
+        const location = await getCurrentLocation();
+        if (!location) {
+          showAlert({
+            type: 'error',
+            title: 'Location Error',
+            message: 'Could not get your location. Please try again.',
+          });
+          setAvailabilityLoading(false);
+          return;
+        }
+        
+        // Update availability with location
+        await trainerAPI.updateAvailability(true, location.latitude, location.longitude);
+        setIsAvailable(true);
+        setCurrentLocation(location);
+        
+        // Start location tracking
+        startLocationTracking();
+      } else {
+        // Turning OFF availability
+        await trainerAPI.updateAvailability(false);
+        setIsAvailable(false);
+        
+        // Stop location tracking
+        stopLocationTracking();
+      }
     } catch (error) {
       console.error('Error toggling availability:', error);
+      showAlert({
+        type: 'error',
+        title: 'Error',
+        message: 'Could not update your availability. Please try again.',
+      });
     } finally {
       setAvailabilityLoading(false);
     }
