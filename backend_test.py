@@ -192,7 +192,8 @@ class RapidRepsAPITester:
         
         # Test 3: Toggle trainer availability back to available
         try:
-            response = self.make_request("PATCH", "/trainer-profiles/toggle-availability", {"isAvailable": True}, self.trainer_token)
+            params = {"isAvailable": True}
+            response = self.make_request("PATCH", "/trainer-profiles/toggle-availability", params=params, token=self.trainer_token)
             
             if response.status_code == 200:
                 self.log_test("Toggle Trainer Availability (Available)", True, "Trainer set to available")
