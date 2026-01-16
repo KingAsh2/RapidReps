@@ -2020,6 +2020,217 @@ async def check_trainee_badges(current_user: dict = Depends(get_current_user)):
 
 
 # ============================================================================
+# LOCATION & AVAILABILITY ENDPOINTS (Uber-style)
+# ============================================================================
+
+class LocationUpdate(BaseModel):
+    latitude: float
+    longitude: float
+
+class AvailabilityUpdate(BaseModel):
+    isAvailable: bool
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+
+class NearbyTrainerResponse(BaseModel):
+    id: str
+    trainerId: str
+    fullName: str
+    avatarUrl: Optional[str] = None
+    latitude: float
+    longitude: float
+    isAvailable: bool
+    lastLocationUpdate: Optional[datetime] = None
+    distanceMiles: float
+    etaMinutes: int
+    averageRating: float = 0.0
+    ratePerMinuteCents: int = 100
+    trainingStyles: List[str] = []
+    sessionDurationsOffered: List[int] = []
+
+def calculate_distance_miles(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Calculate distance between two coordinates using Haversine formula"""
+    from math import radians, sin, cos, sqrt, atan2
+    
+    R = 3959  # Earth's radius in miles
+    
+    lat1_rad = radians(lat1)
+    lat2_rad = radians(lat2)
+    delta_lat = radians(lat2 - lat1)
+    delta_lon = radians(lon2 - lon1)
+    
+    a = sin(delta_lat/2)**2 + cos(lat1_rad) * cos(lat2_rad) * sin(delta_lon/2)**2
+    c = 2 * atan2(sqrt(a), sqrt(1-a))
+    
+    return R * c
+
+def estimate_eta_minutes(distance_miles: float) -> int:
+    """Estimate ETA based on distance - assumes average urban driving speed"""
+    # Average speed: 20 mph in urban areas (accounting for traffic, stops)
+    # Plus 3 minutes for getting ready/to car
+    if distance_miles < 0.5:
+        return 5  # Walking distance
+    
+    driving_time = (distance_miles / 20) * 60  # Convert to minutes
+    buffer_time = 3  # Getting ready time
+    
+    return max(5, int(driving_time + buffer_time))
+
+@api_router.put("/trainer/location")
+async def update_trainer_location(
+    location: LocationUpdate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update trainer's current location (call every 30-60 seconds when available)"""
+    if UserRole.TRAINER not in current_user.get('roles', []):
+        raise HTTPException(status_code=403, detail="Trainer access required")
+    
+    user_id = str(current_user['_id'])
+    
+    # Update trainer profile with new location
+    result = await db.trainer_profiles.update_one(
+        {'userId': user_id},
+        {
+            '$set': {
+                'latitude': location.latitude,
+                'longitude': location.longitude,
+                'lastLocationUpdate': datetime.utcnow()
+            }
+        }
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Trainer profile not found")
+    
+    return {"success": True, "message": "Location updated"}
+
+@api_router.put("/trainer/availability")
+async def update_trainer_availability(
+    update: AvailabilityUpdate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Toggle trainer availability status"""
+    if UserRole.TRAINER not in current_user.get('roles', []):
+        raise HTTPException(status_code=403, detail="Trainer access required")
+    
+    user_id = str(current_user['_id'])
+    
+    update_data = {
+        'isAvailable': update.isAvailable,
+        'lastAvailabilityChange': datetime.utcnow()
+    }
+    
+    # If going available and location provided, update that too
+    if update.isAvailable and update.latitude and update.longitude:
+        update_data['latitude'] = update.latitude
+        update_data['longitude'] = update.longitude
+        update_data['lastLocationUpdate'] = datetime.utcnow()
+    
+    result = await db.trainer_profiles.update_one(
+        {'userId': user_id},
+        {'$set': update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Trainer profile not found")
+    
+    return {
+        "success": True, 
+        "isAvailable": update.isAvailable,
+        "message": "You are now available for sessions" if update.isAvailable else "You are now offline"
+    }
+
+@api_router.get("/trainer/my-location-status")
+async def get_trainer_location_status(current_user: dict = Depends(get_current_user)):
+    """Get current trainer's location and availability status"""
+    if UserRole.TRAINER not in current_user.get('roles', []):
+        raise HTTPException(status_code=403, detail="Trainer access required")
+    
+    user_id = str(current_user['_id'])
+    
+    profile = await db.trainer_profiles.find_one({'userId': user_id})
+    if not profile:
+        raise HTTPException(status_code=404, detail="Trainer profile not found")
+    
+    return {
+        "isAvailable": profile.get('isAvailable', False),
+        "latitude": profile.get('latitude'),
+        "longitude": profile.get('longitude'),
+        "lastLocationUpdate": profile.get('lastLocationUpdate'),
+        "lastAvailabilityChange": profile.get('lastAvailabilityChange')
+    }
+
+@api_router.get("/trainers/nearby")
+async def get_nearby_trainers(
+    latitude: float,
+    longitude: float,
+    radius_miles: float = 25,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all available trainers near a location with distance and ETA"""
+    
+    # Get all available trainers with valid locations
+    trainers = await db.trainer_profiles.find({
+        'isAvailable': True,
+        'latitude': {'$exists': True, '$ne': None},
+        'longitude': {'$exists': True, '$ne': None}
+    }).to_list(100)
+    
+    nearby_trainers = []
+    
+    for trainer in trainers:
+        trainer_lat = trainer.get('latitude')
+        trainer_lng = trainer.get('longitude')
+        
+        if trainer_lat is None or trainer_lng is None:
+            continue
+        
+        # Calculate distance
+        distance = calculate_distance_miles(latitude, longitude, trainer_lat, trainer_lng)
+        
+        # Filter by radius
+        if distance > radius_miles:
+            continue
+        
+        # Get trainer's user info for name
+        user = await db.users.find_one({'_id': ObjectId(trainer['userId'])})
+        full_name = user.get('fullName', 'Trainer') if user else 'Trainer'
+        
+        # Calculate ETA
+        eta = estimate_eta_minutes(distance)
+        
+        nearby_trainers.append({
+            'id': str(trainer['_id']),
+            'trainerId': trainer['userId'],
+            'fullName': full_name,
+            'avatarUrl': trainer.get('avatarUrl'),
+            'latitude': trainer_lat,
+            'longitude': trainer_lng,
+            'isAvailable': True,
+            'lastLocationUpdate': trainer.get('lastLocationUpdate'),
+            'distanceMiles': round(distance, 1),
+            'etaMinutes': eta,
+            'averageRating': trainer.get('averageRating', 0.0),
+            'ratePerMinuteCents': trainer.get('ratePerMinuteCents', 100),
+            'trainingStyles': trainer.get('trainingStyles', []),
+            'sessionDurationsOffered': trainer.get('sessionDurationsOffered', [30, 45, 60]),
+            'bio': trainer.get('bio', ''),
+            'experienceYears': trainer.get('experienceYears', 0),
+            'totalSessionsCompleted': trainer.get('totalSessionsCompleted', 0)
+        })
+    
+    # Sort by distance
+    nearby_trainers.sort(key=lambda x: x['distanceMiles'])
+    
+    return {
+        "trainers": nearby_trainers,
+        "count": len(nearby_trainers),
+        "searchLocation": {"latitude": latitude, "longitude": longitude},
+        "radiusMiles": radius_miles
+    }
+
+
+# ============================================================================
 # ROOT ROUTES
 # ============================================================================
 
