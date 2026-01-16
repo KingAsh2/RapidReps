@@ -169,22 +169,12 @@ class RapidRepsAPITester:
             self.log_test("Trainer Profile Creation", False, f"Exception: {str(e)}")
         
         # Test 2: Toggle trainer availability (PUT /api/trainer/availability)
-        # Note: The actual endpoint might be different, let's try the documented one
         try:
-            # Try the endpoint mentioned in review request
-            response = self.make_request("PUT", "/trainer/availability", {"isAvailable": False}, self.trainer_token)
+            availability_data = {"isAvailable": False}
+            response = self.make_request("PUT", "/trainer/availability", availability_data, self.trainer_token)
             
-            if response.status_code in [200, 404]:  # 404 means endpoint doesn't exist as expected
-                if response.status_code == 404:
-                    # Try the actual endpoint from the code
-                    response = self.make_request("PATCH", "/trainer-profiles/toggle-availability", {"isAvailable": False}, self.trainer_token)
-                    
-                    if response.status_code == 200:
-                        self.log_test("Toggle Trainer Availability (Unavailable)", True, "Trainer set to unavailable")
-                    else:
-                        self.log_test("Toggle Trainer Availability (Unavailable)", False, f"Status: {response.status_code}", response.text)
-                else:
-                    self.log_test("Toggle Trainer Availability (Unavailable)", True, "Trainer set to unavailable")
+            if response.status_code == 200:
+                self.log_test("Toggle Trainer Availability (Unavailable)", True, "Trainer set to unavailable")
             else:
                 self.log_test("Toggle Trainer Availability (Unavailable)", False, f"Status: {response.status_code}", response.text)
         except Exception as e:
@@ -192,11 +182,11 @@ class RapidRepsAPITester:
         
         # Test 3: Toggle trainer availability back to available
         try:
-            params = {"isAvailable": True}
-            response = self.make_request("PATCH", "/trainer-profiles/toggle-availability", params=params, token=self.trainer_token)
+            availability_data = {"isAvailable": True, "latitude": 39.17, "longitude": -76.77}
+            response = self.make_request("PUT", "/trainer/availability", availability_data, self.trainer_token)
             
             if response.status_code == 200:
-                self.log_test("Toggle Trainer Availability (Available)", True, "Trainer set to available")
+                self.log_test("Toggle Trainer Availability (Available)", True, "Trainer set to available with location")
             else:
                 self.log_test("Toggle Trainer Availability (Available)", False, f"Status: {response.status_code}", response.text)
         except Exception as e:
