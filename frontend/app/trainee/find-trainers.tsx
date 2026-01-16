@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -21,8 +21,18 @@ import { traineeAPI } from '../../src/services/api';
 import { useAlert } from '../../src/contexts/AlertContext';
 
 const { width, height } = Dimensions.get('window');
-const BOTTOM_SHEET_HEIGHT = 280;
+const CARD_WIDTH = width * 0.75;
+const CARD_MARGIN = 10;
 const IS_WEB = Platform.OS === 'web';
+
+// Polling interval for live updates (10 seconds)
+const LOCATION_POLL_INTERVAL = 10000;
+
+// ETA thresholds for notifications
+const ETA_THRESHOLDS = {
+  ARRIVING_SOON: 5,  // 5 minutes
+  ALMOST_HERE: 2,    // 2 minutes
+};
 
 // Brand colors
 const COLORS = {
@@ -38,6 +48,7 @@ const COLORS = {
   grayLight: '#E8ECF0',
   success: '#00D68F',
   error: '#FF4757',
+  black: '#000000',
 };
 
 // Uber-style dark map theme
@@ -78,25 +89,45 @@ interface NearbyTrainer {
   bio?: string;
   experienceYears?: number;
   totalSessionsCompleted?: number;
+  // For animation
+  animatedCoord?: {
+    latitude: Animated.Value;
+    longitude: Animated.Value;
+  };
+  previousEta?: number;
+}
+
+interface ArrivingNotification {
+  trainerId: string;
+  trainerName: string;
+  etaMinutes: number;
+  type: 'arriving_soon' | 'almost_here';
 }
 
 export default function FindTrainersMapScreen() {
   const router = useRouter();
   const { showAlert } = useAlert();
+  const flatListRef = useRef<FlatList>(null);
 
   // State
   const [loading, setLoading] = useState(true);
   const [locationPermission, setLocationPermission] = useState<boolean | null>(null);
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [trainers, setTrainers] = useState<NearbyTrainer[]>([]);
-  const [selectedTrainer, setSelectedTrainer] = useState<NearbyTrainer | null>(null);
+  const [selectedTrainerIndex, setSelectedTrainerIndex] = useState<number>(0);
   const [refreshing, setRefreshing] = useState(false);
+  const [arrivingNotification, setArrivingNotification] = useState<ArrivingNotification | null>(null);
+
+  // Refs for polling
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const previousTrainersRef = useRef<Map<string, NearbyTrainer>>(new Map());
 
   // Animations
-  const bottomSheetAnim = useRef(new Animated.Value(0)).current;
+  const notificationAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const carouselScrollX = useRef(new Animated.Value(0)).current;
 
-  // Start pulse animation for user location
+  // Start pulse animation
   useEffect(() => {
     const pulse = Animated.loop(
       Animated.sequence([
@@ -108,26 +139,77 @@ export default function FindTrainersMapScreen() {
     return () => pulse.stop();
   }, []);
 
-  // Animate bottom sheet
-  useEffect(() => {
-    Animated.spring(bottomSheetAnim, {
-      toValue: selectedTrainer ? 1 : 0,
-      friction: 8,
-      tension: 65,
-      useNativeDriver: true,
-    }).start();
-  }, [selectedTrainer]);
-
   // Request location and load trainers
   useEffect(() => {
     requestLocationAndLoadTrainers();
+    
+    return () => {
+      // Cleanup polling on unmount
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+      }
+    };
   }, []);
+
+  // Start live polling when we have location
+  useEffect(() => {
+    if (userLocation && locationPermission) {
+      startLivePolling();
+    }
+    
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+      }
+    };
+  }, [userLocation, locationPermission]);
+
+  // Show/hide arriving notification
+  useEffect(() => {
+    if (arrivingNotification) {
+      Animated.spring(notificationAnim, {
+        toValue: 1,
+        friction: 8,
+        useNativeDriver: true,
+      }).start();
+
+      // Auto-hide after 5 seconds
+      const timeout = setTimeout(() => {
+        hideNotification();
+      }, 5000);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [arrivingNotification]);
+
+  const hideNotification = () => {
+    Animated.timing(notificationAnim, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      setArrivingNotification(null);
+    });
+  };
+
+  const startLivePolling = () => {
+    // Clear existing interval
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+    }
+
+    // Start new polling interval
+    pollIntervalRef.current = setInterval(() => {
+      if (userLocation) {
+        loadNearbyTrainers(userLocation.latitude, userLocation.longitude, true);
+      }
+    }, LOCATION_POLL_INTERVAL);
+  };
 
   const requestLocationAndLoadTrainers = async () => {
     try {
       setLoading(true);
 
-      // Request location permission
       const { status } = await Location.requestForegroundPermissionsAsync();
       
       if (status !== 'granted') {
@@ -138,7 +220,6 @@ export default function FindTrainersMapScreen() {
 
       setLocationPermission(true);
 
-      // Get current location
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       });
@@ -149,9 +230,7 @@ export default function FindTrainersMapScreen() {
       };
 
       setUserLocation(coords);
-
-      // Load nearby trainers
-      await loadNearbyTrainers(coords.latitude, coords.longitude);
+      await loadNearbyTrainers(coords.latitude, coords.longitude, false);
 
     } catch (error) {
       console.error('Error getting location:', error);
@@ -165,33 +244,79 @@ export default function FindTrainersMapScreen() {
     }
   };
 
-  const loadNearbyTrainers = async (lat: number, lng: number) => {
+  const loadNearbyTrainers = async (lat: number, lng: number, isPolling: boolean = false) => {
     try {
-      setRefreshing(true);
+      if (!isPolling) setRefreshing(true);
+      
       const response = await traineeAPI.getNearbyTrainers(lat, lng, 25);
-      setTrainers(response.trainers || []);
+      const newTrainers: NearbyTrainer[] = response.trainers || [];
+
+      // Check for ETA changes and trigger notifications
+      newTrainers.forEach((trainer) => {
+        const previousTrainer = previousTrainersRef.current.get(trainer.trainerId);
+        
+        if (previousTrainer) {
+          // Check if trainer is now arriving soon (crossed 5 min threshold)
+          if (previousTrainer.etaMinutes > ETA_THRESHOLDS.ARRIVING_SOON && 
+              trainer.etaMinutes <= ETA_THRESHOLDS.ARRIVING_SOON) {
+            triggerArrivingNotification(trainer, 'arriving_soon');
+          }
+          // Check if trainer is almost here (crossed 2 min threshold)
+          else if (previousTrainer.etaMinutes > ETA_THRESHOLDS.ALMOST_HERE && 
+                   trainer.etaMinutes <= ETA_THRESHOLDS.ALMOST_HERE) {
+            triggerArrivingNotification(trainer, 'almost_here');
+          }
+        }
+
+        // Store previous ETA for next comparison
+        trainer.previousEta = previousTrainer?.etaMinutes;
+      });
+
+      // Update previous trainers map
+      const newPreviousMap = new Map<string, NearbyTrainer>();
+      newTrainers.forEach(t => newPreviousMap.set(t.trainerId, t));
+      previousTrainersRef.current = newPreviousMap;
+
+      setTrainers(newTrainers);
     } catch (error) {
       console.error('Error loading trainers:', error);
     } finally {
-      setRefreshing(false);
+      if (!isPolling) setRefreshing(false);
     }
+  };
+
+  const triggerArrivingNotification = (trainer: NearbyTrainer, type: 'arriving_soon' | 'almost_here') => {
+    setArrivingNotification({
+      trainerId: trainer.trainerId,
+      trainerName: trainer.fullName,
+      etaMinutes: trainer.etaMinutes,
+      type,
+    });
   };
 
   const handleRefresh = async () => {
     if (userLocation) {
-      await loadNearbyTrainers(userLocation.latitude, userLocation.longitude);
+      await loadNearbyTrainers(userLocation.latitude, userLocation.longitude, false);
     }
   };
 
-  const handleTrainerPress = (trainer: NearbyTrainer) => {
-    setSelectedTrainer(trainer);
+  const handleTrainerCardPress = (index: number) => {
+    setSelectedTrainerIndex(index);
+    flatListRef.current?.scrollToIndex({ index, animated: true });
   };
 
-  const handleBookSession = (trainer?: NearbyTrainer) => {
-    const t = trainer || selectedTrainer;
-    if (t) {
-      router.push(`/trainee/trainer-detail?trainerId=${t.trainerId}`);
-    }
+  const handleBookSession = (trainer: NearbyTrainer) => {
+    router.push(`/trainee/trainer-detail?trainerId=${trainer.trainerId}`);
+  };
+
+  const onCarouselScroll = Animated.event(
+    [{ nativeEvent: { contentOffset: { x: carouselScrollX } } }],
+    { useNativeDriver: false }
+  );
+
+  const onMomentumScrollEnd = (event: any) => {
+    const index = Math.round(event.nativeEvent.contentOffset.x / (CARD_WIDTH + CARD_MARGIN * 2));
+    setSelectedTrainerIndex(index);
   };
 
   // Permission denied view
@@ -248,60 +373,135 @@ export default function FindTrainersMapScreen() {
     );
   }
 
-  // Trainer Card Component for list view
-  const TrainerCard = ({ trainer }: { trainer: NearbyTrainer }) => (
-    <TouchableOpacity 
-      style={styles.trainerCard}
-      onPress={() => handleBookSession(trainer)}
-      activeOpacity={0.8}
-    >
-      <View style={styles.trainerCardContent}>
-        <View style={styles.trainerAvatar}>
-          {trainer.avatarUrl ? (
-            <Image source={{ uri: trainer.avatarUrl }} style={styles.trainerAvatarImage} />
-          ) : (
+  // Trainer Card Component for carousel
+  const TrainerCarouselCard = ({ trainer, index }: { trainer: NearbyTrainer; index: number }) => {
+    const isSelected = index === selectedTrainerIndex;
+    
+    const inputRange = [
+      (index - 1) * (CARD_WIDTH + CARD_MARGIN * 2),
+      index * (CARD_WIDTH + CARD_MARGIN * 2),
+      (index + 1) * (CARD_WIDTH + CARD_MARGIN * 2),
+    ];
+
+    const scale = carouselScrollX.interpolate({
+      inputRange,
+      outputRange: [0.9, 1, 0.9],
+      extrapolate: 'clamp',
+    });
+
+    const opacity = carouselScrollX.interpolate({
+      inputRange,
+      outputRange: [0.7, 1, 0.7],
+      extrapolate: 'clamp',
+    });
+
+    return (
+      <Animated.View style={[
+        styles.carouselCard,
+        { transform: [{ scale }], opacity }
+      ]}>
+        <TouchableOpacity 
+          activeOpacity={0.95}
+          onPress={() => handleBookSession(trainer)}
+          style={styles.carouselCardInner}
+        >
+          {/* Trainer Avatar & Info Row */}
+          <View style={styles.carouselTopRow}>
+            <View style={styles.carouselAvatar}>
+              {trainer.avatarUrl ? (
+                <Image source={{ uri: trainer.avatarUrl }} style={styles.carouselAvatarImage} />
+              ) : (
+                <LinearGradient
+                  colors={[COLORS.teal, COLORS.tealDark]}
+                  style={styles.carouselAvatarPlaceholder}
+                >
+                  <Text style={styles.carouselAvatarText}>
+                    {trainer.fullName.charAt(0).toUpperCase()}
+                  </Text>
+                </LinearGradient>
+              )}
+              {/* Online indicator */}
+              <View style={styles.onlineIndicator} />
+            </View>
+
+            <View style={styles.carouselInfo}>
+              <Text style={styles.carouselName} numberOfLines={1}>{trainer.fullName}</Text>
+              <View style={styles.carouselRatingRow}>
+                <Ionicons name="star" size={14} color={COLORS.orange} />
+                <Text style={styles.carouselRating}>{trainer.averageRating.toFixed(1)}</Text>
+                <Text style={styles.carouselSessions}>• {trainer.totalSessionsCompleted || 0} sessions</Text>
+              </View>
+              {trainer.trainingStyles.length > 0 && (
+                <Text style={styles.carouselStyles} numberOfLines={1}>
+                  {trainer.trainingStyles.slice(0, 2).join(' • ')}
+                </Text>
+              )}
+            </View>
+          </View>
+
+          {/* ETA & Distance Row */}
+          <View style={styles.carouselMetaRow}>
+            <View style={styles.carouselMetaItem}>
+              <View style={styles.etaIconContainer}>
+                <Ionicons name="time" size={20} color={COLORS.white} />
+              </View>
+              <View>
+                <Text style={styles.carouselMetaValue}>{trainer.etaMinutes} min</Text>
+                <Text style={styles.carouselMetaLabel}>arrival</Text>
+              </View>
+            </View>
+
+            <View style={styles.carouselMetaDivider} />
+
+            <View style={styles.carouselMetaItem}>
+              <View style={[styles.etaIconContainer, { backgroundColor: COLORS.orange }]}>
+                <Ionicons name="location" size={20} color={COLORS.white} />
+              </View>
+              <View>
+                <Text style={styles.carouselMetaValue}>{trainer.distanceMiles} mi</Text>
+                <Text style={styles.carouselMetaLabel}>away</Text>
+              </View>
+            </View>
+
+            <View style={styles.carouselMetaDivider} />
+
+            <View style={styles.carouselMetaItem}>
+              <View style={[styles.etaIconContainer, { backgroundColor: COLORS.success }]}>
+                <Ionicons name="cash" size={20} color={COLORS.white} />
+              </View>
+              <View>
+                <Text style={styles.carouselMetaValue}>${(trainer.ratePerMinuteCents / 100).toFixed(0)}</Text>
+                <Text style={styles.carouselMetaLabel}>per min</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Book Button */}
+          <TouchableOpacity
+            style={styles.carouselBookButton}
+            onPress={() => handleBookSession(trainer)}
+            activeOpacity={0.8}
+          >
             <LinearGradient
-              colors={[COLORS.teal, COLORS.tealDark]}
-              style={styles.trainerAvatarPlaceholder}
+              colors={[COLORS.orange, COLORS.orangeHot]}
+              style={styles.carouselBookButtonGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
             >
-              <Text style={styles.trainerAvatarText}>
-                {trainer.fullName.charAt(0).toUpperCase()}
-              </Text>
+              <Text style={styles.carouselBookButtonText}>Book Session</Text>
+              <Ionicons name="arrow-forward" size={18} color={COLORS.white} />
             </LinearGradient>
-          )}
-        </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Animated.View>
+    );
+  };
 
-        <View style={styles.trainerDetails}>
-          <Text style={styles.trainerName}>{trainer.fullName}</Text>
-          <View style={styles.ratingRow}>
-            <Ionicons name="star" size={14} color={COLORS.orange} />
-            <Text style={styles.ratingText}>
-              {trainer.averageRating.toFixed(1)} • {trainer.totalSessionsCompleted || 0} sessions
-            </Text>
-          </View>
-          {trainer.trainingStyles.length > 0 && (
-            <Text style={styles.stylesText} numberOfLines={1}>
-              {trainer.trainingStyles.slice(0, 2).join(' • ')}
-            </Text>
-          )}
-        </View>
-
-        <View style={styles.trainerMeta}>
-          <View style={styles.etaBadge}>
-            <Ionicons name="time" size={14} color={COLORS.teal} />
-            <Text style={styles.etaBadgeText}>{trainer.etaMinutes} min</Text>
-          </View>
-          <Text style={styles.distanceText}>{trainer.distanceMiles} mi</Text>
-          <Text style={styles.rateText}>${(trainer.ratePerMinuteCents / 100).toFixed(0)}/min</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-
+  // Main render
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={[COLORS.navy, COLORS.navyLight, COLORS.teal]}
+        colors={[COLORS.navy, COLORS.navyLight, '#0D8B88']}
         style={StyleSheet.absoluteFill}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
@@ -318,9 +518,10 @@ export default function FindTrainersMapScreen() {
           </TouchableOpacity>
           <View style={styles.headerTitleContainer}>
             <Text style={styles.headerTitle}>Find Trainers</Text>
-            <Text style={styles.headerSubtitle}>
-              {trainers.length} available nearby
-            </Text>
+            <View style={styles.liveIndicator}>
+              <View style={styles.liveDot} />
+              <Text style={styles.liveText}>LIVE</Text>
+            </View>
           </View>
           <TouchableOpacity
             style={styles.headerButton}
@@ -334,29 +535,139 @@ export default function FindTrainersMapScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Location Info */}
-        {userLocation && (
-          <View style={styles.locationBanner}>
+        {/* Arriving Notification Banner */}
+        {arrivingNotification && (
+          <Animated.View style={[
+            styles.notificationBanner,
+            {
+              opacity: notificationAnim,
+              transform: [{
+                translateY: notificationAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [-100, 0],
+                }),
+              }],
+            },
+          ]}>
             <LinearGradient
-              colors={['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)']}
-              style={styles.locationBannerGradient}
+              colors={arrivingNotification.type === 'almost_here' 
+                ? [COLORS.success, '#00B377'] 
+                : [COLORS.orange, COLORS.orangeHot]}
+              style={styles.notificationGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
             >
-              <Ionicons name="location" size={20} color={COLORS.teal} />
-              <Text style={styles.locationText}>
-                Showing trainers within 25 miles of your location
-              </Text>
+              <View style={styles.notificationIconContainer}>
+                <Ionicons 
+                  name={arrivingNotification.type === 'almost_here' ? 'walk' : 'car'} 
+                  size={24} 
+                  color={COLORS.white} 
+                />
+              </View>
+              <View style={styles.notificationContent}>
+                <Text style={styles.notificationTitle}>
+                  {arrivingNotification.type === 'almost_here' 
+                    ? '🏃 Almost Here!' 
+                    : '🚗 Trainer Approaching!'}
+                </Text>
+                <Text style={styles.notificationText}>
+                  {arrivingNotification.trainerName} is {arrivingNotification.etaMinutes} min away
+                </Text>
+              </View>
+              <TouchableOpacity onPress={hideNotification} style={styles.notificationClose}>
+                <Ionicons name="close" size={20} color={COLORS.white} />
+              </TouchableOpacity>
             </LinearGradient>
-          </View>
+          </Animated.View>
         )}
 
-        {/* Trainer List */}
-        {trainers.length === 0 ? (
+        {/* Map Placeholder / Trainer Count */}
+        <View style={styles.mapPlaceholder}>
+          <View style={styles.mapContent}>
+            {/* User Location Indicator */}
+            <Animated.View style={[styles.userLocationPulse, { transform: [{ scale: pulseAnim }] }]}>
+              <View style={styles.userLocationDot}>
+                <Ionicons name="person" size={20} color={COLORS.white} />
+              </View>
+            </Animated.View>
+            
+            <Text style={styles.mapPlaceholderTitle}>
+              {trainers.length} Trainer{trainers.length !== 1 ? 's' : ''} Available
+            </Text>
+            <Text style={styles.mapPlaceholderSubtitle}>
+              Swipe cards below to see trainers
+            </Text>
+
+            {/* Mini trainer indicators */}
+            <View style={styles.trainerIndicators}>
+              {trainers.slice(0, 5).map((trainer, index) => (
+                <View 
+                  key={trainer.id} 
+                  style={[
+                    styles.miniTrainerDot,
+                    index === selectedTrainerIndex && styles.miniTrainerDotSelected
+                  ]}
+                >
+                  {trainer.avatarUrl ? (
+                    <Image source={{ uri: trainer.avatarUrl }} style={styles.miniTrainerImage} />
+                  ) : (
+                    <Text style={styles.miniTrainerInitial}>
+                      {trainer.fullName.charAt(0)}
+                    </Text>
+                  )}
+                </View>
+              ))}
+              {trainers.length > 5 && (
+                <View style={styles.miniTrainerMore}>
+                  <Text style={styles.miniTrainerMoreText}>+{trainers.length - 5}</Text>
+                </View>
+              )}
+            </View>
+          </View>
+        </View>
+
+        {/* Trainer Carousel */}
+        {trainers.length > 0 ? (
+          <View style={styles.carouselContainer}>
+            <Animated.FlatList
+              ref={flatListRef}
+              data={trainers}
+              keyExtractor={(item) => item.id}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              snapToInterval={CARD_WIDTH + CARD_MARGIN * 2}
+              decelerationRate="fast"
+              contentContainerStyle={styles.carouselContent}
+              onScroll={onCarouselScroll}
+              onMomentumScrollEnd={onMomentumScrollEnd}
+              scrollEventThrottle={16}
+              renderItem={({ item, index }) => (
+                <TrainerCarouselCard trainer={item} index={index} />
+              )}
+            />
+            
+            {/* Pagination dots */}
+            <View style={styles.paginationContainer}>
+              {trainers.map((_, index) => (
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => handleTrainerCardPress(index)}
+                >
+                  <View style={[
+                    styles.paginationDot,
+                    index === selectedTrainerIndex && styles.paginationDotActive
+                  ]} />
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        ) : (
           <View style={styles.emptyState}>
             <View style={styles.emptyCard}>
               <Ionicons name="fitness-outline" size={64} color={COLORS.white} />
               <Text style={styles.emptyTitle}>No Trainers Available</Text>
               <Text style={styles.emptySubtitle}>
-                No trainers are currently available in your area. Try again later!
+                No trainers are currently online in your area. Try again later!
               </Text>
               <TouchableOpacity
                 style={styles.refreshButton}
@@ -372,14 +683,6 @@ export default function FindTrainersMapScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        ) : (
-          <FlatList
-            data={trainers}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => <TrainerCard trainer={item} />}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-          />
         )}
       </SafeAreaView>
     </View>
@@ -466,7 +769,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 12,
   },
   headerButton: {
     width: 44,
@@ -484,132 +787,327 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: COLORS.white,
   },
-  headerSubtitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: 'rgba(255,255,255,0.7)',
-    marginTop: 2,
-  },
-
-  // Location Banner
-  locationBanner: {
-    marginHorizontal: 20,
-    marginBottom: 16,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  locationBannerGradient: {
+  liveIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    gap: 10,
+    marginTop: 4,
+    backgroundColor: 'rgba(0, 214, 143, 0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
   },
-  locationText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: 'rgba(255,255,255,0.8)',
+  liveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: COLORS.success,
+    marginRight: 4,
+  },
+  liveText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: COLORS.success,
+    letterSpacing: 0.5,
   },
 
-  // List
-  listContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-  },
-
-  // Trainer Card
-  trainerCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: 16,
+  // Notification Banner
+  notificationBanner: {
+    marginHorizontal: 20,
     marginBottom: 12,
+    borderRadius: 16,
+    overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 8,
   },
-  trainerCardContent: {
+  notificationGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
   },
-  trainerAvatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    marginRight: 14,
+  notificationIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  notificationContent: {
+    flex: 1,
+  },
+  notificationTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: COLORS.white,
+    marginBottom: 2,
+  },
+  notificationText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.9)',
+  },
+  notificationClose: {
+    padding: 4,
+  },
+
+  // Map Placeholder
+  mapPlaceholder: {
+    flex: 1,
+    marginHorizontal: 20,
+    marginBottom: 16,
+    borderRadius: 24,
+    backgroundColor: 'rgba(0,0,0,0.3)',
     overflow: 'hidden',
   },
-  trainerAvatarImage: {
+  mapContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  userLocationPulse: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(31, 184, 180, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  userLocationDot: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: COLORS.teal,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 4,
+    borderColor: COLORS.white,
+  },
+  mapPlaceholderTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: COLORS.white,
+    marginBottom: 8,
+  },
+  mapPlaceholderSubtitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.7)',
+    marginBottom: 24,
+  },
+  trainerIndicators: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  miniTrainerDot: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.navy,
+    marginHorizontal: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.3)',
+    overflow: 'hidden',
+  },
+  miniTrainerDotSelected: {
+    borderColor: COLORS.orange,
+    borderWidth: 3,
+  },
+  miniTrainerImage: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+  },
+  miniTrainerInitial: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.white,
+  },
+  miniTrainerMore: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    marginHorizontal: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  miniTrainerMoreText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.white,
+  },
+
+  // Carousel
+  carouselContainer: {
+    paddingBottom: 20,
+  },
+  carouselContent: {
+    paddingHorizontal: (width - CARD_WIDTH) / 2 - CARD_MARGIN,
+  },
+  carouselCard: {
+    width: CARD_WIDTH,
+    marginHorizontal: CARD_MARGIN,
+  },
+  carouselCardInner: {
+    backgroundColor: COLORS.white,
+    borderRadius: 20,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  carouselTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  carouselAvatar: {
+    position: 'relative',
+    marginRight: 12,
+  },
+  carouselAvatarImage: {
     width: 56,
     height: 56,
     borderRadius: 28,
   },
-  trainerAvatarPlaceholder: {
+  carouselAvatarPlaceholder: {
     width: 56,
     height: 56,
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  trainerAvatarText: {
+  carouselAvatarText: {
     fontSize: 22,
     fontWeight: '800',
     color: COLORS.white,
   },
-  trainerDetails: {
+  onlineIndicator: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: COLORS.success,
+    borderWidth: 2,
+    borderColor: COLORS.white,
+  },
+  carouselInfo: {
     flex: 1,
   },
-  trainerName: {
-    fontSize: 17,
+  carouselName: {
+    fontSize: 18,
     fontWeight: '800',
     color: COLORS.navy,
     marginBottom: 4,
   },
-  ratingRow: {
+  carouselRatingRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 2,
   },
-  ratingText: {
+  carouselRating: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.navy,
+    marginLeft: 4,
+  },
+  carouselSessions: {
     fontSize: 13,
     fontWeight: '600',
     color: COLORS.gray,
     marginLeft: 4,
   },
-  stylesText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: COLORS.teal,
-  },
-  trainerMeta: {
-    alignItems: 'flex-end',
-  },
-  etaBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(31, 184, 180, 0.1)',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 8,
-    gap: 4,
-    marginBottom: 4,
-  },
-  etaBadgeText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.teal,
-  },
-  distanceText: {
+  carouselStyles: {
     fontSize: 12,
     fontWeight: '600',
-    color: COLORS.gray,
-    marginBottom: 2,
+    color: COLORS.teal,
   },
-  rateText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: COLORS.orange,
+
+  // Meta Row
+  carouselMetaRow: {
+    flexDirection: 'row',
+    backgroundColor: COLORS.offWhite,
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 16,
+  },
+  carouselMetaItem: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  etaIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLORS.teal,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  carouselMetaValue: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: COLORS.navy,
+  },
+  carouselMetaLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: COLORS.gray,
+  },
+  carouselMetaDivider: {
+    width: 1,
+    backgroundColor: COLORS.grayLight,
+    marginHorizontal: 8,
+  },
+
+  // Book Button
+  carouselBookButton: {
+    borderRadius: 14,
+    overflow: 'hidden',
+  },
+  carouselBookButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    gap: 8,
+  },
+  carouselBookButtonText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: COLORS.white,
+  },
+
+  // Pagination
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  paginationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    marginHorizontal: 4,
+  },
+  paginationDotActive: {
+    backgroundColor: COLORS.orange,
+    width: 24,
   },
 
   // Empty State
