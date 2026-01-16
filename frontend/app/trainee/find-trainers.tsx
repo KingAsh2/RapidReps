@@ -213,6 +213,20 @@ export default function FindTrainersMapScreen() {
       const { status } = await Location.requestForegroundPermissionsAsync();
       
       if (status !== 'granted') {
+        // On web, use a default location for demo purposes
+        if (IS_WEB) {
+          console.log('Using demo location for web preview');
+          const demoCoords = {
+            latitude: 39.17,
+            longitude: -76.77,
+          };
+          setLocationPermission(true);
+          setUserLocation(demoCoords);
+          await loadNearbyTrainers(demoCoords.latitude, demoCoords.longitude, false);
+          setLoading(false);
+          return;
+        }
+        
         setLocationPermission(false);
         setLoading(false);
         return;
@@ -234,6 +248,19 @@ export default function FindTrainersMapScreen() {
 
     } catch (error) {
       console.error('Error getting location:', error);
+      
+      // On web, use demo location as fallback
+      if (IS_WEB) {
+        const demoCoords = {
+          latitude: 39.17,
+          longitude: -76.77,
+        };
+        setLocationPermission(true);
+        setUserLocation(demoCoords);
+        await loadNearbyTrainers(demoCoords.latitude, demoCoords.longitude, false);
+        return;
+      }
+      
       showAlert({
         type: 'error',
         title: 'Location Error',
