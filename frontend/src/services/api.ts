@@ -227,6 +227,14 @@ export const traineeAPI = {
     const response = await api.patch(`/sessions/${sessionId}/cancel`);
     return response.data;
   },
+
+  // Get nearby available trainers (Uber-style)
+  getNearbyTrainers: async (latitude: number, longitude: number, radiusMiles: number = 25): Promise<any> => {
+    const response = await api.get('/trainers/nearby', {
+      params: { latitude, longitude, radius_miles: radiusMiles }
+    });
+    return response.data;
+  },
 };
 
 export default api;
