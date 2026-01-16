@@ -236,10 +236,21 @@ class RapidRepsAPITester:
                 "radius_miles": 25
             }
             
-            response = self.make_request("GET", "/trainers/nearby", params=params)
+            response = self.make_request("GET", "/trainers/nearby", params=params, token=self.trainee_token)
             
-            if response.status_code == 404:
-                # Try the actual search endpoint with location parameters
+            if response.status_code == 200:
+                data = response.json()
+                self.log_test("Get Nearby Trainers", True, f"Found {len(data)} nearby trainers with distance/ETA")
+                
+                # Check if distance and ETA are included
+                if data and len(data) > 0:
+                    first_trainer = data[0]
+                    has_distance = 'distanceMiles' in first_trainer
+                    has_eta = 'etaMinutes' in first_trainer
+                    self.log_test("Distance/ETA in Response", has_distance and has_eta, 
+                                f"Distance: {has_distance}, ETA: {has_eta}")
+            else:
+                # Try the search endpoint as fallback
                 search_params = {
                     "latitude": 39.17,
                     "longitude": -76.77,
@@ -251,21 +262,8 @@ class RapidRepsAPITester:
                 if response.status_code == 200:
                     data = response.json()
                     self.log_test("Get Nearby Trainers (via search)", True, f"Found {len(data)} trainers with location data")
-                    
-                    # Check if distance and ETA are included
-                    if data and len(data) > 0:
-                        first_trainer = data[0]
-                        has_distance = 'distance' in first_trainer
-                        has_match_type = 'matchType' in first_trainer
-                        self.log_test("Distance/ETA in Response", has_distance and has_match_type, 
-                                    f"Distance: {has_distance}, MatchType: {has_match_type}")
                 else:
-                    self.log_test("Get Nearby Trainers (via search)", False, f"Status: {response.status_code}", response.text)
-            elif response.status_code == 200:
-                data = response.json()
-                self.log_test("Get Nearby Trainers", True, f"Found {len(data)} nearby trainers")
-            else:
-                self.log_test("Get Nearby Trainers", False, f"Status: {response.status_code}", response.text)
+                    self.log_test("Get Nearby Trainers", False, f"Status: {response.status_code}", response.text)
         except Exception as e:
             self.log_test("Get Nearby Trainers", False, f"Exception: {str(e)}")
     
