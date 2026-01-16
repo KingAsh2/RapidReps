@@ -139,6 +139,26 @@ export const trainerAPI = {
     const response = await api.get('/trainer/achievements');
     return response.data;
   },
+
+  // Location & Availability APIs (Uber-style)
+  updateLocation: async (latitude: number, longitude: number): Promise<any> => {
+    const response = await api.put('/trainer/location', { latitude, longitude });
+    return response.data;
+  },
+
+  updateAvailability: async (isAvailable: boolean, latitude?: number, longitude?: number): Promise<any> => {
+    const response = await api.put('/trainer/availability', { 
+      isAvailable, 
+      latitude, 
+      longitude 
+    });
+    return response.data;
+  },
+
+  getLocationStatus: async (): Promise<any> => {
+    const response = await api.get('/trainer/my-location-status');
+    return response.data;
+  },
 };
 
 // Trainee Profile API
