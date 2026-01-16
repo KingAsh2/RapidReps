@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
 """
-RapidReps Backend API Comprehensive Test Suite
-Tests all backend functionality including authentication, profiles, sessions, and ratings
+RapidReps API Comprehensive Testing Suite - LOCATION/MAP FEATURES FOCUS
+Focus on location/map features and all critical endpoints as requested in review
 """
 
 import requests
 import json
 import time
-import random
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+from typing import Dict, Any, Optional
 
 # Configuration
 BASE_URL = "https://athletic-revamp.preview.emergentagent.com/api"
-HEADERS = {"Content-Type": "application/json"}
+TEST_CREDENTIALS = {
+    "trainee": {"email": "mobile@test.com", "password": "test123"},
+    "trainer": {"email": "trainer@test.com", "password": "test123"}  # Will create if needed
+}
 
 class RapidRepsAPITester:
     def __init__(self):
