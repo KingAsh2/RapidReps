@@ -247,8 +247,14 @@ class RapidRepsAPITester:
                     first_trainer = data[0]
                     has_distance = 'distanceMiles' in first_trainer
                     has_eta = 'etaMinutes' in first_trainer
-                    self.log_test("Distance/ETA in Response", has_distance and has_eta, 
-                                f"Distance: {has_distance}, ETA: {has_eta}")
+                    if has_distance and has_eta:
+                        self.log_test("Distance/ETA in Response", True, 
+                                    f"Distance: {first_trainer.get('distanceMiles')}mi, ETA: {first_trainer.get('etaMinutes')}min")
+                    else:
+                        self.log_test("Distance/ETA in Response", False, 
+                                    f"Missing fields - Distance: {has_distance}, ETA: {has_eta}")
+                else:
+                    self.log_test("Distance/ETA in Response", False, "No trainers returned to check fields")
             else:
                 # Try the search endpoint as fallback
                 search_params = {
