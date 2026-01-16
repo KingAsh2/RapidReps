@@ -1039,6 +1039,48 @@ const styles = StyleSheet.create({
   urgentArrow: {
     opacity: 0.9,
   },
+  // Map Banner
+  mapBannerContainer: {
+    marginHorizontal: 20,
+    marginBottom: 16,
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  mapBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    gap: 14,
+  },
+  mapIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(31, 184, 180, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  mapBannerContent: {
+    flex: 1,
+  },
+  mapBannerTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
+    marginBottom: 2,
+  },
+  mapBannerSubtitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.7)',
+  },
   // Search Card
   searchCard: {
     marginBottom: 16,
