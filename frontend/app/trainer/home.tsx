@@ -45,16 +45,25 @@ const COLORS = {
   error: '#FF4757',
 };
 
+// Location update interval in ms (30 seconds)
+const LOCATION_UPDATE_INTERVAL = 30000;
+
 export default function TrainerHomeScreen() {
   const router = useRouter();
   const { user, logout } = useAuth();
+  const { showAlert } = useAlert();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [earnings, setEarnings] = useState<any>(null);
-  const [isAvailable, setIsAvailable] = useState(true);
+  const [isAvailable, setIsAvailable] = useState(false);
   const [nearbyTrainees, setNearbyTrainees] = useState<any[]>([]);
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [locationPermission, setLocationPermission] = useState<boolean | null>(null);
+
+  // Location tracking interval ref
+  const locationIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Animation refs
   const heroAnim = useRef(new Animated.Value(0)).current;
@@ -65,7 +74,96 @@ export default function TrainerHomeScreen() {
 
   useEffect(() => {
     loadData();
+    checkLocationPermission();
+    
+    // Cleanup on unmount
+    return () => {
+      if (locationIntervalRef.current) {
+        clearInterval(locationIntervalRef.current);
+      }
+    };
   }, []);
+
+  // Handle app state changes
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'background' && isAvailable) {
+        // Stop location updates when app goes to background (Option A - foreground only)
+        if (locationIntervalRef.current) {
+          clearInterval(locationIntervalRef.current);
+          locationIntervalRef.current = null;
+        }
+      } else if (nextAppState === 'active' && isAvailable) {
+        // Resume location updates when app comes back to foreground
+        startLocationTracking();
+      }
+    });
+
+    return () => subscription.remove();
+  }, [isAvailable]);
+
+  const checkLocationPermission = async () => {
+    const { status } = await Location.getForegroundPermissionsAsync();
+    setLocationPermission(status === 'granted');
+  };
+
+  const requestLocationPermission = async (): Promise<boolean> => {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    setLocationPermission(status === 'granted');
+    return status === 'granted';
+  };
+
+  const getCurrentLocation = async () => {
+    try {
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+      return {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      };
+    } catch (error) {
+      console.error('Error getting location:', error);
+      return null;
+    }
+  };
+
+  const updateLocationOnServer = async (lat: number, lng: number) => {
+    try {
+      await trainerAPI.updateLocation(lat, lng);
+      setCurrentLocation({ latitude: lat, longitude: lng });
+    } catch (error) {
+      console.error('Error updating location on server:', error);
+    }
+  };
+
+  const startLocationTracking = async () => {
+    // Get initial location
+    const location = await getCurrentLocation();
+    if (location) {
+      await updateLocationOnServer(location.latitude, location.longitude);
+    }
+
+    // Clear any existing interval
+    if (locationIntervalRef.current) {
+      clearInterval(locationIntervalRef.current);
+    }
+
+    // Start periodic updates
+    locationIntervalRef.current = setInterval(async () => {
+      const newLocation = await getCurrentLocation();
+      if (newLocation) {
+        await updateLocationOnServer(newLocation.latitude, newLocation.longitude);
+      }
+    }, LOCATION_UPDATE_INTERVAL);
+  };
+
+  const stopLocationTracking = () => {
+    if (locationIntervalRef.current) {
+      clearInterval(locationIntervalRef.current);
+      locationIntervalRef.current = null;
+    }
+  };
 
   // Start animations when loading completes
   useEffect(() => {
