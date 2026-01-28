@@ -640,16 +640,14 @@ const styles = StyleSheet.create({
     height: 40,
     backgroundColor: 'rgba(255,255,255,0.3)',
   },
-  // Section Card
+  // Section Card - Glass Style
   sectionCard: {
     marginBottom: 14,
     borderRadius: 18,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
   },
   sectionGradient: {
     padding: 18,
@@ -663,21 +661,21 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: COLORS.white,
   },
   sectionContent: {
     fontSize: 14,
     fontWeight: '500',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.8)',
     lineHeight: 20,
   },
   textArea: {
-    backgroundColor: COLORS.grayLight,
+    backgroundColor: 'rgba(255,255,255,0.15)',
     borderRadius: 12,
     padding: 14,
     fontSize: 14,
     fontWeight: '500',
-    color: COLORS.navy,
+    color: COLORS.white,
     minHeight: 80,
     textAlignVertical: 'top',
   },
@@ -687,23 +685,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.grayLight,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
   },
   preferenceLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.navy,
+    color: COLORS.white,
   },
-  // Actions Card
+  // Actions Card - Glass Style
   actionsCard: {
     marginBottom: 16,
     borderRadius: 18,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
   },
   actionsGradient: {
     padding: 6,
