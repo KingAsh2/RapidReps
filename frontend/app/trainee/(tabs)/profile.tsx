@@ -364,7 +364,7 @@ export default function TraineeProfileScreen() {
                     {formData.fitnessGoals || 'No goals set yet'}
                   </Text>
                 )}
-              </LinearGradient>
+              </View>
             </Animated.View>
 
             {/* Training Preferences Card */}
