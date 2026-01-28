@@ -25,19 +25,24 @@ import * as ImagePicker from 'expo-image-picker';
 
 const { width } = Dimensions.get('window');
 
-// Brand colors
+// Brand colors - UNIFIED DESIGN SYSTEM
 const COLORS = {
   teal: '#1FB8B4',
   tealLight: '#22C1C3',
+  tealDark: '#0D8B88',
   orange: '#F7931E',
   orangeHot: '#FF6A00',
   orangeLight: '#FF9F1C',
   navy: '#1a2a5e',
+  navyLight: '#2a3a6e',
   white: '#FFFFFF',
   offWhite: '#FAFBFC',
   gray: '#8892b0',
   grayLight: '#E8ECF0',
   error: '#FF4757',
+  // Glass card colors
+  cardBg: 'rgba(255,255,255,0.12)',
+  cardBorder: 'rgba(255,255,255,0.2)',
 };
 
 export default function TraineeProfileScreen() {
