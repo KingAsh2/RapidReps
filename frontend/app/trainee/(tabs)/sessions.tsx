@@ -572,11 +572,9 @@ const styles = StyleSheet.create({
   emptyCard: {
     borderRadius: 20,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 6,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
   },
   emptyGradient: {
     padding: 40,
@@ -585,14 +583,14 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: COLORS.white,
     marginTop: 16,
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.7)',
     textAlign: 'center',
     marginBottom: 20,
   },
@@ -609,16 +607,14 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: COLORS.white,
   },
-  // Session Card
+  // Session Card - Glass style
   sessionCard: {
     marginBottom: 14,
     borderRadius: 18,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
   },
   sessionGradient: {
     padding: 18,
