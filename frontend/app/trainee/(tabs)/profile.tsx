@@ -722,7 +722,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     fontWeight: '600',
-    color: COLORS.navy,
+    color: COLORS.white,
   },
   // Buttons
   saveButton: {
