@@ -1033,7 +1033,7 @@ const styles = StyleSheet.create({
   carouselName: {
     fontSize: 18,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: COLORS.white,
     marginBottom: 4,
   },
   carouselRatingRow: {
@@ -1044,13 +1044,13 @@ const styles = StyleSheet.create({
   carouselRating: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: COLORS.white,
     marginLeft: 4,
   },
   carouselSessions: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.7)',
     marginLeft: 4,
   },
   carouselStyles: {
@@ -1062,7 +1062,7 @@ const styles = StyleSheet.create({
   // Meta Row
   carouselMetaRow: {
     flexDirection: 'row',
-    backgroundColor: COLORS.offWhite,
+    backgroundColor: 'rgba(0,0,0,0.2)',
     borderRadius: 14,
     padding: 12,
     marginBottom: 16,
