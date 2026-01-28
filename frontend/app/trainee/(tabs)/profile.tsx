@@ -382,10 +382,7 @@ export default function TraineeProfileScreen() {
                 },
               ]}
             >
-              <LinearGradient
-                colors={[COLORS.white, COLORS.offWhite]}
-                style={styles.sectionGradient}
-              >
+              <View style={styles.sectionGradient}>
                 <View style={styles.sectionHeader}>
                   <Ionicons name="settings" size={22} color={COLORS.teal} />
                   <Text style={styles.sectionTitle}>Training Preferences</Text>
@@ -414,7 +411,7 @@ export default function TraineeProfileScreen() {
                     thumbColor={COLORS.white}
                   />
                 </View>
-              </LinearGradient>
+              </View>
             </Animated.View>
 
             {/* Quick Actions */}
