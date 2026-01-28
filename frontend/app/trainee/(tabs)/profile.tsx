@@ -429,43 +429,40 @@ export default function TraineeProfileScreen() {
                 },
               ]}
             >
-              <LinearGradient
-                colors={[COLORS.white, COLORS.offWhite]}
-                style={styles.actionsGradient}
-              >
+              <View style={styles.actionsGradient}>
                 <TouchableOpacity 
                   style={styles.actionItem}
                   onPress={() => router.push('/trainee/achievements')}
                 >
-                  <View style={[styles.actionIconBg, { backgroundColor: 'rgba(253, 187, 45, 0.15)' }]}>
+                  <View style={[styles.actionIconBg, { backgroundColor: 'rgba(253, 187, 45, 0.2)' }]}>
                     <Ionicons name="trophy" size={22} color="#FDBB2D" />
                   </View>
                   <Text style={styles.actionText}>Achievements</Text>
-                  <Ionicons name="chevron-forward" size={20} color={COLORS.gray} />
+                  <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.5)" />
                 </TouchableOpacity>
 
                 <TouchableOpacity 
                   style={styles.actionItem}
                   onPress={() => router.push('/trainee/saved-trainers')}
                 >
-                  <View style={[styles.actionIconBg, { backgroundColor: 'rgba(31, 184, 180, 0.15)' }]}>
+                  <View style={[styles.actionIconBg, { backgroundColor: 'rgba(31, 184, 180, 0.2)' }]}>
                     <Ionicons name="heart" size={22} color={COLORS.teal} />
                   </View>
                   <Text style={styles.actionText}>Saved Trainers</Text>
-                  <Ionicons name="chevron-forward" size={20} color={COLORS.gray} />
+                  <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.5)" />
                 </TouchableOpacity>
 
                 <TouchableOpacity 
                   style={styles.actionItem}
                   onPress={() => router.push('/legal/terms')}
                 >
-                  <View style={[styles.actionIconBg, { backgroundColor: 'rgba(136, 146, 176, 0.15)' }]}>
+                  <View style={[styles.actionIconBg, { backgroundColor: 'rgba(136, 146, 176, 0.2)' }]}>
                     <Ionicons name="document-text" size={22} color={COLORS.gray} />
                   </View>
                   <Text style={styles.actionText}>Terms & Privacy</Text>
-                  <Ionicons name="chevron-forward" size={20} color={COLORS.gray} />
+                  <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.5)" />
                 </TouchableOpacity>
-              </LinearGradient>
+              </View>
             </Animated.View>
 
             {/* Save / Edit Button */}
