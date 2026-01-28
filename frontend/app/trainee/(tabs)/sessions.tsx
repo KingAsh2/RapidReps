@@ -366,10 +366,7 @@ export default function SessionsScreen() {
                     },
                   ]}
                 >
-                  <LinearGradient
-                    colors={[COLORS.white, COLORS.offWhite]}
-                    style={styles.sessionGradient}
-                  >
+                  <View style={styles.sessionGradient}>
                     {/* Status Badge */}
                     <View style={[
                       styles.statusBadge,
