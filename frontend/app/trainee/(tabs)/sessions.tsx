@@ -312,14 +312,11 @@ export default function SessionsScreen() {
         >
           {getActiveData().length === 0 ? (
             <View style={styles.emptyCard}>
-              <LinearGradient
-                colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.9)']}
-                style={styles.emptyGradient}
-              >
+              <View style={styles.emptyGradient}>
                 <Ionicons 
                   name={activeTab === 'upcoming' ? 'calendar-outline' : activeTab === 'pending' ? 'time-outline' : 'archive-outline'} 
                   size={56} 
-                  color={COLORS.teal} 
+                  color={COLORS.white} 
                 />
                 <Text style={styles.emptyTitle}>
                   {activeTab === 'upcoming' ? 'No upcoming sessions' : 
