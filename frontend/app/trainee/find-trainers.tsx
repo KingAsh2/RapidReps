@@ -984,14 +984,11 @@ const styles = StyleSheet.create({
     marginHorizontal: CARD_MARGIN,
   },
   carouselCardInner: {
-    backgroundColor: COLORS.white,
+    backgroundColor: 'rgba(255,255,255,0.15)',
     borderRadius: 20,
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.25)',
   },
   carouselTopRow: {
     flexDirection: 'row',
