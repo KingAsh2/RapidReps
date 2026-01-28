@@ -21,16 +21,18 @@ import { traineeAPI } from '../../../src/services/api';
 
 const { width } = Dimensions.get('window');
 
-// Brand colors
+// Brand colors - UNIFIED DESIGN SYSTEM
 const COLORS = {
   teal: '#1FB8B4',
   tealLight: '#22C1C3',
+  tealDark: '#0D8B88',
   orange: '#F7931E',
   orangeHot: '#FF6A00',
   orangeLight: '#FF9F1C',
   orangeGlow: '#FFB347',
   yellow: '#FDBB2D',
   navy: '#1a2a5e',
+  navyLight: '#2a3a6e',
   white: '#FFFFFF',
   offWhite: '#FAFBFC',
   gray: '#8892b0',
@@ -38,6 +40,9 @@ const COLORS = {
   success: '#00C853',
   error: '#FF4757',
   warning: '#FFA502',
+  // Glass card colors
+  cardBg: 'rgba(255,255,255,0.12)',
+  cardBorder: 'rgba(255,255,255,0.2)',
 };
 
 export default function SessionsScreen() {
