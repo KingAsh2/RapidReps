@@ -1084,12 +1084,12 @@ const styles = StyleSheet.create({
   carouselMetaValue: {
     fontSize: 15,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: COLORS.white,
   },
   carouselMetaLabel: {
     fontSize: 11,
     fontWeight: '600',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.6)',
   },
   carouselMetaDivider: {
     width: 1,
