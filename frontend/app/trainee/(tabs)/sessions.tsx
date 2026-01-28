@@ -455,7 +455,7 @@ export default function SessionsScreen() {
                         </LinearGradient>
                       </TouchableOpacity>
                     )}
-                  </LinearGradient>
+                  </View>
                 </Animated.View>
               );
             })
