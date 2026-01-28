@@ -673,13 +673,13 @@ const styles = StyleSheet.create({
   trainerName: {
     fontSize: 17,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: COLORS.white,
     marginBottom: 4,
   },
   sessionDate: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.7)',
   },
   sessionStats: {
     flexDirection: 'row',
@@ -694,7 +694,7 @@ const styles = StyleSheet.create({
   sessionStatText: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.8)',
   },
   cancelButton: {
     flexDirection: 'row',
@@ -704,12 +704,13 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: COLORS.error,
+    borderColor: 'rgba(255,71,87,0.6)',
+    backgroundColor: 'rgba(255,71,87,0.1)',
   },
   cancelButtonText: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.error,
+    color: '#FF6B7A',
   },
   rateButton: {
     borderRadius: 12,
