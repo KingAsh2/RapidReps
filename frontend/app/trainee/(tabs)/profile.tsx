@@ -344,10 +344,7 @@ export default function TraineeProfileScreen() {
                 },
               ]}
             >
-              <LinearGradient
-                colors={[COLORS.white, COLORS.offWhite]}
-                style={styles.sectionGradient}
-              >
+              <View style={styles.sectionGradient}>
                 <View style={styles.sectionHeader}>
                   <Ionicons name="trophy" size={22} color={COLORS.orange} />
                   <Text style={styles.sectionTitle}>Fitness Goals</Text>
