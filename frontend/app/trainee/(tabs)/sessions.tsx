@@ -341,7 +341,7 @@ export default function SessionsScreen() {
                     </LinearGradient>
                   </TouchableOpacity>
                 )}
-              </LinearGradient>
+              </View>
             </View>
           ) : (
             getActiveData().map((session, index) => {
