@@ -919,11 +919,15 @@ async def search_trainers(
     # Combine: In-person first (priority), then virtual
     filtered_trainers = in_person_trainers + virtual_trainers
     
-    # Add fullName from users collection
-    for trainer in filtered_trainers:
-        user = await db.users.find_one({'_id': ObjectId(trainer['userId'])})
-        if user:
-            trainer['fullName'] = user.get('fullName', 'Unknown Trainer')
+    # Batch fetch fullNames from users collection
+    if filtered_trainers:
+        user_ids = [ObjectId(t['userId']) for t in filtered_trainers]
+        users_cursor = db.users.find({'_id': {'$in': user_ids}})
+        users_list = await users_cursor.to_list(len(user_ids))
+        users_map = {str(u['_id']): u.get('fullName', 'Unknown Trainer') for u in users_list}
+        
+        for trainer in filtered_trainers:
+            trainer['fullName'] = users_map.get(trainer['userId'], 'Unknown Trainer')
     
     return [TrainerProfileResponse(**serialize_doc(t)) for t in filtered_trainers]
 
