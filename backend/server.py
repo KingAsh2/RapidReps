@@ -623,26 +623,44 @@ async def send_message(message_data: MessageCreate, current_user: dict = Depends
 
 @api_router.get("/conversations", response_model=List[ConversationResponse])
 async def get_conversations(current_user: dict = Depends(get_current_user)):
-    """Get all conversations for the current user"""
+    """Get all conversations for the current user - optimized with batch queries"""
     user_id = str(current_user['_id'])
     
     # Find all conversations where user is a participant
-    cursor = db.conversations.find({'participants': user_id}).sort('updatedAt', -1)
+    conversations_list = await db.conversations.find({'participants': user_id}).sort('updatedAt', -1).to_list(100)
     
+    if not conversations_list:
+        return []
+    
+    # Collect all unique participant IDs
+    all_participant_ids = set()
+    for conv in conversations_list:
+        all_participant_ids.update(conv['participants'])
+    
+    # Batch fetch all users
+    users_cursor = db.users.find({'_id': {'$in': [ObjectId(pid) for pid in all_participant_ids]}})
+    users_list = await users_cursor.to_list(len(all_participant_ids))
+    users_map = {str(u['_id']): u for u in users_list}
+    
+    # Batch fetch all profiles (trainer and trainee)
+    trainer_profiles = await db.trainer_profiles.find({'userId': {'$in': list(all_participant_ids)}}).to_list(len(all_participant_ids))
+    trainee_profiles = await db.trainee_profiles.find({'userId': {'$in': list(all_participant_ids)}}).to_list(len(all_participant_ids))
+    
+    profiles_map = {}
+    for p in trainer_profiles:
+        profiles_map[p['userId']] = p
+    for p in trainee_profiles:
+        if p['userId'] not in profiles_map:
+            profiles_map[p['userId']] = p
+    
+    # Build conversations response
     conversations = []
-    async for conv in cursor:
-        # Get other participant details
-        other_participant_id = next((p for p in conv['participants'] if p != user_id), None)
-        
+    for conv in conversations_list:
         participant_details = []
         for participant_id in conv['participants']:
-            user = await db.users.find_one({'_id': ObjectId(participant_id)})
+            user = users_map.get(participant_id)
             if user:
-                # Get profile photo from trainer or trainee profile
-                profile = await db.trainer_profiles.find_one({'userId': participant_id})
-                if not profile:
-                    profile = await db.trainee_profiles.find_one({'userId': participant_id})
-                
+                profile = profiles_map.get(participant_id)
                 participant_details.append({
                     'id': participant_id,
                     'fullName': user.get('fullName', 'Unknown'),
