@@ -1,9 +1,34 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 import { AuthResponse, User, TrainerProfile, TraineeProfile, Session } from '../types';
 
-const EXPO_PUBLIC_BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
-const API_BASE_URL = `${EXPO_PUBLIC_BACKEND_URL}/api`;
+// Get the backend URL - prioritize environment variable, then fall back to production URL
+const getBackendUrl = (): string => {
+  // First check for environment variable
+  const envUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
+  if (envUrl && !envUrl.includes('preview.emergentagent.com')) {
+    return envUrl;
+  }
+  
+  // For production builds, use the deployed backend URL
+  // This should be your production backend URL
+  const productionUrl = Constants.expoConfig?.extra?.productionBackendUrl;
+  if (productionUrl) {
+    return productionUrl;
+  }
+  
+  // Default to the environment variable if set
+  if (envUrl) {
+    return envUrl;
+  }
+  
+  // Fallback for development
+  return 'https://trainer-finder-9.preview.emergentagent.com';
+};
+
+const API_BASE_URL = `${getBackendUrl()}/api`;
 
 const api = axios.create({
   baseURL: API_BASE_URL,
