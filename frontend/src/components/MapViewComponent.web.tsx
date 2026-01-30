@@ -1,8 +1,10 @@
-// MapViewComponent.web.tsx - Web fallback
+// MapViewComponent.web.tsx - Web fallback (NO react-native-maps import)
 import React, { forwardRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+
+// NOTE: This is the WEB version - it should NEVER import react-native-maps
 
 const COLORS = {
   teal: '#1FB8B4',
