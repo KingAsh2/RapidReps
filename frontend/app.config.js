@@ -1,99 +1,20 @@
-// Dynamic Expo configuration with environment variables
-export default {
-  expo: {
-    name: "RapidReps",
-    slug: "rapidreps",
-    version: "1.0.0",
-    orientation: "portrait",
-    icon: "./assets/images/icon.png",
-    scheme: "rapidreps",
-    userInterfaceStyle: "automatic",
-    newArchEnabled: true,
-    runtimeVersion: {
-      policy: "appVersion"
-    },
-    updates: {
-      url: "https://u.expo.dev/rapidreps",
-      enabled: true,
-      fallbackToCacheTimeout: 0
-    },
+// Dynamic Expo configuration - extends app.json with environment variables
+export default ({ config }) => {
+  return {
+    ...config,
     ios: {
-      supportsTablet: true,
-      bundleIdentifier: "com.kingash.rapidreps",
+      ...config.ios,
       config: {
-        googleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
-      },
-      infoPlist: {
-        NSLocationWhenInUseUsageDescription: "RapidReps uses your location to show nearby trainers and estimate their arrival time for your workouts.",
-        NSCameraUsageDescription: "RapidReps uses the camera for profile photos, verification, and uploading session media.",
-        NSPhotoLibraryUsageDescription: "RapidReps lets you upload photos and videos for profiles and session content."
+        googleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || ''
       }
     },
     android: {
-      adaptiveIcon: {
-        foregroundImage: "./assets/images/adaptive-icon.png",
-        backgroundColor: "#000"
-      },
-      edgeToEdgeEnabled: true,
-      package: "com.kingash.rapidreps",
+      ...config.android,
       config: {
         googleMaps: {
-          apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
+          apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || ''
         }
-      },
-      permissions: [
-        "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION",
-        "CAMERA",
-        "READ_MEDIA_IMAGES",
-        "READ_MEDIA_VIDEO"
-      ]
-    },
-    web: {
-      bundler: "metro",
-      output: "static",
-      favicon: "./assets/images/favicon.png"
-    },
-    plugins: [
-      "expo-router",
-      [
-        "expo-splash-screen",
-        {
-          image: "./assets/images/splash-icon.png",
-          imageWidth: 200,
-          resizeMode: "contain",
-          backgroundColor: "#000"
-        }
-      ],
-      "expo-font",
-      "expo-web-browser",
-      [
-        "expo-image-picker",
-        {
-          photosPermission: "Allow RapidReps to access your photos/videos so you can upload profile and session content.",
-          cameraPermission: "Allow RapidReps to use your camera for profile photos and session media."
-        }
-      ],
-      [
-        "expo-location",
-        {
-          locationWhenInUsePermission: "RapidReps uses your location to show nearby trainers and estimate their arrival time for your workouts."
-        }
-      ],
-      [
-        "react-native-maps",
-        {
-          googleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
-        }
-      ]
-    ],
-    experiments: {
-      typedRoutes: true
-    },
-    extra: {
-      eas: {
-        projectId: "rapidreps"
       }
     }
-  }
+  };
 };
