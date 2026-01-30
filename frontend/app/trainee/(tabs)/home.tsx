@@ -266,6 +266,35 @@ export default function TraineeHomeScreen() {
     }
   };
 
+  // Load nearby trainers for the map
+  const loadNearbyTrainers = async () => {
+    try {
+      if (!userLocation) return;
+      setMapRefreshing(true);
+      const response = await traineeAPI.getNearbyTrainers(
+        userLocation.latitude,
+        userLocation.longitude,
+        25
+      );
+      setNearbyTrainers(response.trainers || []);
+    } catch (error) {
+      console.error('Error loading nearby trainers:', error);
+      setNearbyTrainers([]);
+    } finally {
+      setMapRefreshing(false);
+    }
+  };
+
+  // Handle trainer selection from map
+  const handleMapTrainerSelect = (trainer: any) => {
+    console.log('Selected trainer from map:', trainer.fullName);
+  };
+
+  // Refresh map trainers
+  const handleMapRefresh = () => {
+    loadNearbyTrainers();
+  };
+
   useEffect(() => {
     if (user) {
       loadSessions();
