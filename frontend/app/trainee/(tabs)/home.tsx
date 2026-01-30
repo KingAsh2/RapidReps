@@ -1208,19 +1208,22 @@ const styles = StyleSheet.create({
   sortOptionTextActive: {
     color: '#F7931E',
   },
-  // Pending Card
+  // Pending Card - Polished with border and more padding
   pendingCard: {
-    marginBottom: 16,
+    marginBottom: 20,
     borderRadius: 20,
     overflow: 'hidden',
     shadowColor: '#F7931E',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.25,
     shadowRadius: 10,
-    elevation: 8,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(247, 147, 30, 0.3)',
   },
   pendingGradient: {
-    padding: 18,
+    paddingVertical: 20,
+    paddingHorizontal: 18,
   },
   pendingHeader: {
     flexDirection: 'row',
@@ -1228,9 +1231,9 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   pendingIconBg: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
