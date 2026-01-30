@@ -632,10 +632,12 @@ async def get_conversations(current_user: dict = Depends(get_current_user)):
     if not conversations_list:
         return []
     
-    # Collect all unique participant IDs
+    # Collect all unique participant IDs and conversation IDs
     all_participant_ids = set()
+    conversation_ids = []
     for conv in conversations_list:
         all_participant_ids.update(conv['participants'])
+        conversation_ids.append(str(conv['_id']))
     
     # Batch fetch all users
     users_cursor = db.users.find({'_id': {'$in': [ObjectId(pid) for pid in all_participant_ids]}})
@@ -653,6 +655,35 @@ async def get_conversations(current_user: dict = Depends(get_current_user)):
         if p['userId'] not in profiles_map:
             profiles_map[p['userId']] = p
     
+    # OPTIMIZATION: Batch fetch last messages for all conversations using aggregation
+    last_messages_pipeline = [
+        {'$match': {'conversationId': {'$in': conversation_ids}}},
+        {'$sort': {'createdAt': -1}},
+        {'$group': {
+            '_id': '$conversationId',
+            'lastMessage': {'$first': '$$ROOT'}
+        }}
+    ]
+    last_messages_cursor = db.messages.aggregate(last_messages_pipeline)
+    last_messages_list = await last_messages_cursor.to_list(len(conversation_ids))
+    last_messages_map = {lm['_id']: lm['lastMessage'] for lm in last_messages_list}
+    
+    # OPTIMIZATION: Batch fetch unread counts for all conversations using aggregation
+    unread_counts_pipeline = [
+        {'$match': {
+            'conversationId': {'$in': conversation_ids},
+            'receiverId': user_id,
+            'isRead': False
+        }},
+        {'$group': {
+            '_id': '$conversationId',
+            'count': {'$sum': 1}
+        }}
+    ]
+    unread_counts_cursor = db.messages.aggregate(unread_counts_pipeline)
+    unread_counts_list = await unread_counts_cursor.to_list(len(conversation_ids))
+    unread_counts_map = {uc['_id']: uc['count'] for uc in unread_counts_list}
+    
     # Build conversations response
     conversations = []
     for conv in conversations_list:
@@ -668,11 +699,9 @@ async def get_conversations(current_user: dict = Depends(get_current_user)):
                     'roles': user.get('roles', [])
                 })
         
-        # Get last message
-        last_message_doc = await db.messages.find_one(
-            {'conversationId': str(conv['_id'])},
-            sort=[('createdAt', -1)]
-        )
+        # Get last message from batch-fetched map
+        conv_id_str = str(conv['_id'])
+        last_message_doc = last_messages_map.get(conv_id_str)
         
         last_message = None
         if last_message_doc:
@@ -682,15 +711,11 @@ async def get_conversations(current_user: dict = Depends(get_current_user)):
                 'senderId': last_message_doc['senderId']
             }
         
-        # Count unread messages
-        unread_count = await db.messages.count_documents({
-            'conversationId': str(conv['_id']),
-            'receiverId': user_id,
-            'isRead': False
-        })
+        # Get unread count from batch-fetched map
+        unread_count = unread_counts_map.get(conv_id_str, 0)
         
         conversations.append(ConversationResponse(
-            id=str(conv['_id']),
+            id=conv_id_str,
             participants=conv['participants'],
             participantDetails=participant_details,
             lastMessage=last_message,
@@ -699,6 +724,7 @@ async def get_conversations(current_user: dict = Depends(get_current_user)):
         ))
     
     return conversations
+
 
 @api_router.get("/conversations/{conversation_id}/messages", response_model=List[MessageResponse])
 async def get_messages(conversation_id: str, current_user: dict = Depends(get_current_user)):
