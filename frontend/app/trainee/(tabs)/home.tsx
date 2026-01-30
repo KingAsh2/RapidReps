@@ -395,17 +395,22 @@ export default function TraineeHomeScreen() {
         />
         
         <SafeAreaView style={styles.safeArea} edges={['top']}>
-          {/* Header Actions */}
-          <View style={styles.headerActions}>
-            <TouchableOpacity 
-              onPress={() => router.push('/trainee/(tabs)/profile')} 
-              style={styles.headerButton}
-            >
-              <Ionicons name="person-circle" size={32} color="#FFFFFF" />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleLogout} style={styles.headerButton}>
-              <Ionicons name="log-out-outline" size={26} color="#FFFFFF" />
-            </TouchableOpacity>
+          {/* Header with Logo and Actions */}
+          <View style={styles.header}>
+            <View style={styles.headerLogo}>
+              <Text style={styles.logoText}>RapidReps</Text>
+            </View>
+            <View style={styles.headerActions}>
+              <TouchableOpacity 
+                onPress={() => router.push('/trainee/(tabs)/profile')} 
+                style={styles.headerButton}
+              >
+                <Ionicons name="person-circle" size={30} color="#FFFFFF" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleLogout} style={styles.headerButton}>
+                <Ionicons name="log-out-outline" size={24} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
           </View>
 
           <ScrollView
