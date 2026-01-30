@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
 
 # Configuration
-BASE_URL = "https://rapidmap.preview.emergentagent.com/api"
+BASE_URL = "https://trainer-finder-9.preview.emergentagent.com/api"
 TEST_CREDENTIALS = {
     "trainee": {"email": "mobile@test.com", "password": "test123"},
     "trainer": {"email": "trainer@test.com", "password": "test123"}  # Will create if needed
