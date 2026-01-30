@@ -35,6 +35,15 @@ security = HTTPBearer()
 # Create the main app
 app = FastAPI(title="RapidReps API")
 
+# Root-level health check endpoints (for Kubernetes health checks)
+@app.get("/")
+async def app_root():
+    return {"message": "RapidReps API", "status": "healthy"}
+
+@app.get("/health")
+async def app_health():
+    return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}
+
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
