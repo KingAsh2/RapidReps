@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import {
   View,
   Text,
@@ -18,7 +18,6 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { traineeAPI } from '../../src/services/api';
 import { useAlert } from '../../src/contexts/AlertContext';
-import MapViewComponent, { MapView } from '../../src/components/MapViewComponent';
 
 const { width, height } = Dimensions.get('window');
 const CARD_HEIGHT = 180;
@@ -42,6 +41,28 @@ const COLORS = {
   error: '#FF4757',
 };
 
+// Uber-style dark map theme (only used on native)
+const darkMapStyle = [
+  { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] },
+  { featureType: 'administrative.locality', elementType: 'labels.text.fill', stylers: [{ color: '#d59563' }] },
+  { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#d59563' }] },
+  { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#263c3f' }] },
+  { featureType: 'poi.park', elementType: 'labels.text.fill', stylers: [{ color: '#6b9a76' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#38414e' }] },
+  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#212a37' }] },
+  { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#9ca5b3' }] },
+  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#746855' }] },
+  { featureType: 'road.highway', elementType: 'geometry.stroke', stylers: [{ color: '#1f2835' }] },
+  { featureType: 'road.highway', elementType: 'labels.text.fill', stylers: [{ color: '#f3d19c' }] },
+  { featureType: 'transit', elementType: 'geometry', stylers: [{ color: '#2f3948' }] },
+  { featureType: 'transit.station', elementType: 'labels.text.fill', stylers: [{ color: '#d59563' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#17263c' }] },
+  { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#515c6d' }] },
+  { featureType: 'water', elementType: 'labels.text.stroke', stylers: [{ color: '#17263c' }] },
+];
+
 interface NearbyTrainer {
   id: string;
   trainerId: string;
@@ -58,10 +79,27 @@ interface NearbyTrainer {
   totalSessionsCompleted?: number;
 }
 
+// Conditionally require react-native-maps ONLY on native platforms
+// This prevents the web bundler from trying to include it
+let MapView: any = null;
+let Marker: any = null;
+let PROVIDER_GOOGLE: any = null;
+
+if (!IS_WEB) {
+  try {
+    const RNMaps = require('react-native-maps');
+    MapView = RNMaps.default;
+    Marker = RNMaps.Marker;
+    PROVIDER_GOOGLE = RNMaps.PROVIDER_GOOGLE;
+  } catch (e) {
+    console.warn('react-native-maps not available');
+  }
+}
+
 export default function FindTrainersMapScreen() {
   const router = useRouter();
   const { showAlert } = useAlert();
-  const mapRef = useRef<MapView>(null);
+  const mapRef = useRef<any>(null);
 
   // State
   const [loading, setLoading] = useState(true);
@@ -281,24 +319,94 @@ export default function FindTrainersMapScreen() {
     );
   }
 
-  return (
-    <View style={styles.container}>
-      {/* Full Screen Map */}
-      <MapViewComponent
+  // Web fallback view - shows a nice placeholder with trainer list
+  const renderWebFallback = () => (
+    <View style={styles.webFallbackContainer}>
+      <LinearGradient colors={[COLORS.navy, COLORS.navyLight]} style={StyleSheet.absoluteFill} />
+      <View style={styles.webFallbackContent}>
+        <View style={styles.webMapIconContainer}>
+          <Ionicons name="map-outline" size={64} color={COLORS.orange} />
+        </View>
+        <Text style={styles.webFallbackTitle}>Map View</Text>
+        <Text style={styles.webFallbackSubtitle}>
+          Open in Expo Go app to see the interactive map with trainer locations
+        </Text>
+        <View style={styles.webStatsRow}>
+          <View style={styles.webStatItem}>
+            <Ionicons name="people" size={24} color={COLORS.teal} />
+            <Text style={styles.webStatValue}>{trainers.length}</Text>
+            <Text style={styles.webStatLabel}>Trainers Nearby</Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+
+  // Native map view
+  const renderNativeMap = () => {
+    if (!MapView || !Marker) {
+      return renderWebFallback();
+    }
+
+    return (
+      <MapView
         ref={mapRef}
-        userLocation={userLocation}
-        trainers={trainers}
-        selectedTrainerId={selectedTrainer?.id || null}
-        pulseAnim={pulseAnim}
-        onTrainerPress={handleTrainerPress}
-        onMapPress={handleMapPress}
+        style={StyleSheet.absoluteFillObject}
+        provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
+        customMapStyle={darkMapStyle}
         initialRegion={{
           latitude: userLocation?.latitude || 34.0522,
           longitude: userLocation?.longitude || -118.2437,
           latitudeDelta: 0.02,
           longitudeDelta: 0.02,
         }}
-      />
+        showsUserLocation={false}
+        showsMyLocationButton={false}
+        onPress={handleMapPress}
+      >
+        {/* User Location Marker - Pulsing Blue Dot */}
+        {userLocation && (
+          <Marker coordinate={userLocation} anchor={{ x: 0.5, y: 0.5 }}>
+            <View style={styles.userMarkerContainer}>
+              <Animated.View style={[styles.userMarkerPulse, { transform: [{ scale: pulseAnim }] }]} />
+              <View style={styles.userMarkerDot}>
+                <View style={styles.userMarkerInner} />
+              </View>
+            </View>
+          </Marker>
+        )}
+
+        {/* Trainer Markers */}
+        {trainers.map((trainer) => (
+          <Marker
+            key={trainer.id}
+            coordinate={{ latitude: trainer.latitude, longitude: trainer.longitude }}
+            onPress={() => handleTrainerPress(trainer)}
+            anchor={{ x: 0.5, y: 0.5 }}
+          >
+            <View style={[
+              styles.trainerMarker,
+              selectedTrainer?.id === trainer.id && styles.trainerMarkerSelected
+            ]}>
+              {trainer.avatarUrl ? (
+                <Image source={{ uri: trainer.avatarUrl }} style={styles.trainerMarkerImage} />
+              ) : (
+                <View style={styles.trainerMarkerIcon}>
+                  <Ionicons name="fitness" size={18} color={COLORS.white} />
+                </View>
+              )}
+              <View style={styles.trainerMarkerArrow} />
+            </View>
+          </Marker>
+        ))}
+      </MapView>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Full Screen Map or Web Fallback */}
+      {IS_WEB ? renderWebFallback() : renderNativeMap()}
 
       {/* Header Overlay */}
       <SafeAreaView style={styles.headerOverlay} edges={['top']}>
@@ -332,101 +440,21 @@ export default function FindTrainersMapScreen() {
       </SafeAreaView>
 
       {/* Recenter Button - Only show on native */}
-      {!IS_WEB && (
+      {!IS_WEB && MapView && (
         <TouchableOpacity style={styles.recenterButton} onPress={centerOnUser}>
           <Ionicons name="locate" size={24} color={COLORS.navy} />
         </TouchableOpacity>
       )}
 
-      {/* Selected Trainer Card - Uber style bottom card */}
-      <Animated.View
-        style={[
-          styles.trainerCard,
-          {
-            transform: [{
-              translateY: cardAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [CARD_HEIGHT + 100, 0],
-              }),
-            }],
-          },
-        ]}
-      >
-        {selectedTrainer && (
-          <View style={styles.trainerCardContent}>
-            {/* Drag Handle */}
-            <View style={styles.dragHandle} />
-
-            {/* Trainer Info Row */}
-            <View style={styles.trainerInfoRow}>
-              <View style={styles.trainerAvatar}>
-                {selectedTrainer.avatarUrl ? (
-                  <Image source={{ uri: selectedTrainer.avatarUrl }} style={styles.trainerAvatarImage} />
-                ) : (
-                  <LinearGradient colors={[COLORS.teal, COLORS.tealDark]} style={styles.trainerAvatarPlaceholder}>
-                    <Text style={styles.trainerAvatarText}>{selectedTrainer.fullName.charAt(0)}</Text>
-                  </LinearGradient>
-                )}
-                <View style={styles.onlineIndicator} />
-              </View>
-
-              <View style={styles.trainerInfo}>
-                <Text style={styles.trainerName}>{selectedTrainer.fullName}</Text>
-                <View style={styles.ratingRow}>
-                  <Ionicons name="star" size={14} color={COLORS.orange} />
-                  <Text style={styles.ratingText}>
-                    {selectedTrainer.averageRating.toFixed(1)} • {selectedTrainer.totalSessionsCompleted || 0} sessions
-                  </Text>
-                </View>
-                {selectedTrainer.trainingStyles.length > 0 && (
-                  <Text style={styles.stylesText} numberOfLines={1}>
-                    {selectedTrainer.trainingStyles.slice(0, 3).join(' • ')}
-                  </Text>
-                )}
-              </View>
-            </View>
-
-            {/* ETA Row - Uber style */}
-            <View style={styles.etaRow}>
-              <View style={styles.etaItem}>
-                <Ionicons name="time" size={20} color={COLORS.teal} />
-                <Text style={styles.etaValue}>{selectedTrainer.etaMinutes} min</Text>
-                <Text style={styles.etaLabel}>away</Text>
-              </View>
-              <View style={styles.etaDivider} />
-              <View style={styles.etaItem}>
-                <Ionicons name="location" size={20} color={COLORS.orange} />
-                <Text style={styles.etaValue}>{selectedTrainer.distanceMiles} mi</Text>
-                <Text style={styles.etaLabel}>distance</Text>
-              </View>
-              <View style={styles.etaDivider} />
-              <View style={styles.etaItem}>
-                <Ionicons name="cash" size={20} color={COLORS.success} />
-                <Text style={styles.etaValue}>${(selectedTrainer.ratePerMinuteCents / 100).toFixed(0)}</Text>
-                <Text style={styles.etaLabel}>per min</Text>
-              </View>
-            </View>
-
-            {/* Book Button */}
-            <TouchableOpacity style={styles.bookButton} onPress={handleBookSession} activeOpacity={0.8}>
-              <LinearGradient
-                colors={[COLORS.orange, COLORS.orangeHot]}
-                style={styles.bookButtonGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              >
-                <Text style={styles.bookButtonText}>Book Session</Text>
-                <Ionicons name="arrow-forward" size={20} color={COLORS.white} />
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
-        )}
-      </Animated.View>
-
-      {/* Trainer List for Web - shows as scrollable list at bottom */}
+      {/* Trainer List for Web */}
       {IS_WEB && trainers.length > 0 && (
-        <View style={styles.webTrainerList}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.webTrainerScroll}>
+        <View style={styles.webTrainerListContainer}>
+          <Text style={styles.webTrainerListTitle}>Available Trainers</Text>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false} 
+            contentContainerStyle={styles.webTrainerScroll}
+          >
             {trainers.map((trainer) => (
               <TouchableOpacity
                 key={trainer.id}
@@ -450,11 +478,104 @@ export default function FindTrainersMapScreen() {
                   <Ionicons name="star" size={12} color={COLORS.orange} />
                   <Text style={styles.webTrainerRating}>{trainer.averageRating.toFixed(1)}</Text>
                 </View>
-                <Text style={styles.webTrainerDistance}>{trainer.distanceMiles} mi</Text>
+                <Text style={styles.webTrainerDistance}>{trainer.distanceMiles} mi • {trainer.etaMinutes} min</Text>
+                <TouchableOpacity 
+                  style={styles.webBookButton}
+                  onPress={() => router.push(`/trainee/trainer-detail?trainerId=${trainer.trainerId}`)}
+                >
+                  <Text style={styles.webBookButtonText}>View</Text>
+                </TouchableOpacity>
               </TouchableOpacity>
             ))}
           </ScrollView>
         </View>
+      )}
+
+      {/* Selected Trainer Card - Uber style bottom card (Native only) */}
+      {!IS_WEB && (
+        <Animated.View
+          style={[
+            styles.trainerCard,
+            {
+              transform: [{
+                translateY: cardAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [CARD_HEIGHT + 100, 0],
+                }),
+              }],
+            },
+          ]}
+        >
+          {selectedTrainer && (
+            <View style={styles.trainerCardContent}>
+              {/* Drag Handle */}
+              <View style={styles.dragHandle} />
+
+              {/* Trainer Info Row */}
+              <View style={styles.trainerInfoRow}>
+                <View style={styles.trainerAvatar}>
+                  {selectedTrainer.avatarUrl ? (
+                    <Image source={{ uri: selectedTrainer.avatarUrl }} style={styles.trainerAvatarImage} />
+                  ) : (
+                    <LinearGradient colors={[COLORS.teal, COLORS.tealDark]} style={styles.trainerAvatarPlaceholder}>
+                      <Text style={styles.trainerAvatarText}>{selectedTrainer.fullName.charAt(0)}</Text>
+                    </LinearGradient>
+                  )}
+                  <View style={styles.onlineIndicator} />
+                </View>
+
+                <View style={styles.trainerInfo}>
+                  <Text style={styles.trainerName}>{selectedTrainer.fullName}</Text>
+                  <View style={styles.ratingRow}>
+                    <Ionicons name="star" size={14} color={COLORS.orange} />
+                    <Text style={styles.ratingText}>
+                      {selectedTrainer.averageRating.toFixed(1)} • {selectedTrainer.totalSessionsCompleted || 0} sessions
+                    </Text>
+                  </View>
+                  {selectedTrainer.trainingStyles.length > 0 && (
+                    <Text style={styles.stylesText} numberOfLines={1}>
+                      {selectedTrainer.trainingStyles.slice(0, 3).join(' • ')}
+                    </Text>
+                  )}
+                </View>
+              </View>
+
+              {/* ETA Row - Uber style */}
+              <View style={styles.etaRow}>
+                <View style={styles.etaItem}>
+                  <Ionicons name="time" size={20} color={COLORS.teal} />
+                  <Text style={styles.etaValue}>{selectedTrainer.etaMinutes} min</Text>
+                  <Text style={styles.etaLabel}>away</Text>
+                </View>
+                <View style={styles.etaDivider} />
+                <View style={styles.etaItem}>
+                  <Ionicons name="location" size={20} color={COLORS.orange} />
+                  <Text style={styles.etaValue}>{selectedTrainer.distanceMiles} mi</Text>
+                  <Text style={styles.etaLabel}>distance</Text>
+                </View>
+                <View style={styles.etaDivider} />
+                <View style={styles.etaItem}>
+                  <Ionicons name="cash" size={20} color={COLORS.success} />
+                  <Text style={styles.etaValue}>${(selectedTrainer.ratePerMinuteCents / 100).toFixed(0)}</Text>
+                  <Text style={styles.etaLabel}>per min</Text>
+                </View>
+              </View>
+
+              {/* Book Button */}
+              <TouchableOpacity style={styles.bookButton} onPress={handleBookSession} activeOpacity={0.8}>
+                <LinearGradient
+                  colors={[COLORS.orange, COLORS.orangeHot]}
+                  style={styles.bookButtonGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <Text style={styles.bookButtonText}>Book Session</Text>
+                  <Ionicons name="arrow-forward" size={20} color={COLORS.white} />
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          )}
+        </Animated.View>
       )}
     </View>
   );
@@ -529,6 +650,62 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.6)',
   },
 
+  // Web Fallback
+  webFallbackContainer: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  webFallbackContent: {
+    alignItems: 'center',
+    padding: 32,
+    maxWidth: 360,
+  },
+  webMapIconContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(247, 147, 30, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  webFallbackTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: COLORS.white,
+    marginBottom: 8,
+  },
+  webFallbackSubtitle: {
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.7)',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  webStatsRow: {
+    flexDirection: 'row',
+    marginBottom: 24,
+  },
+  webStatItem: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 16,
+  },
+  webStatValue: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: COLORS.white,
+    marginTop: 8,
+  },
+  webStatLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: COLORS.gray,
+    marginTop: 4,
+  },
+
   // Header Overlay
   headerOverlay: {
     position: 'absolute',
@@ -550,20 +727,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(26, 42, 94, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 5,
-      },
-      web: {
-        boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-      },
-    }),
   },
   headerCenter: {
     alignItems: 'center',
@@ -572,21 +735,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '800',
     color: COLORS.white,
-    ...Platform.select({
-      ios: {
-        textShadowColor: 'rgba(0,0,0,0.5)',
-        textShadowOffset: { width: 0, height: 1 },
-        textShadowRadius: 3,
-      },
-      android: {
-        textShadowColor: 'rgba(0,0,0,0.5)',
-        textShadowOffset: { width: 0, height: 1 },
-        textShadowRadius: 3,
-      },
-      web: {
-        textShadow: '0 1px 3px rgba(0,0,0,0.5)',
-      },
-    }),
   },
   liveIndicator: {
     flexDirection: 'row',
@@ -620,20 +768,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginTop: 8,
     gap: 6,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 5,
-      },
-      web: {
-        boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-      },
-    }),
   },
   countText: {
     fontSize: 13,
@@ -652,20 +786,76 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     justifyContent: 'center',
     alignItems: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 5,
-      },
-    }),
   },
 
-  // Bottom Trainer Card - Uber style
+  // User Marker
+  userMarkerContainer: {
+    width: 50,
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  userMarkerPulse: {
+    position: 'absolute',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(31, 184, 180, 0.25)',
+  },
+  userMarkerDot: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: COLORS.teal,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: COLORS.white,
+  },
+  userMarkerInner: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: COLORS.white,
+  },
+
+  // Trainer Marker
+  trainerMarker: {
+    alignItems: 'center',
+  },
+  trainerMarkerSelected: {
+    transform: [{ scale: 1.2 }],
+  },
+  trainerMarkerIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.navy,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: COLORS.white,
+  },
+  trainerMarkerImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 3,
+    borderColor: COLORS.white,
+  },
+  trainerMarkerArrow: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 8,
+    borderRightWidth: 8,
+    borderTopWidth: 10,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderTopColor: COLORS.white,
+    marginTop: -2,
+  },
+
+  // Bottom Trainer Card
   trainerCard: {
     position: 'absolute',
     bottom: 0,
@@ -674,20 +864,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 16,
-      },
-      android: {
-        elevation: 10,
-      },
-      web: {
-        boxShadow: '0 -4px 16px rgba(0,0,0,0.15)',
-      },
-    }),
   },
   trainerCardContent: {
     padding: 20,
@@ -701,8 +877,6 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: 16,
   },
-
-  // Trainer Info
   trainerInfoRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -765,8 +939,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: COLORS.teal,
   },
-
-  // ETA Row
   etaRow: {
     flexDirection: 'row',
     backgroundColor: '#F5F7FA',
@@ -794,8 +966,6 @@ const styles = StyleSheet.create({
     color: COLORS.gray,
     marginTop: 2,
   },
-
-  // Book Button
   bookButton: {
     borderRadius: 14,
     overflow: 'hidden',
@@ -814,12 +984,19 @@ const styles = StyleSheet.create({
   },
 
   // Web Trainer List
-  webTrainerList: {
+  webTrainerListContainer: {
     position: 'absolute',
-    bottom: 100,
+    bottom: 40,
     left: 0,
     right: 0,
     paddingVertical: 12,
+  },
+  webTrainerListTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.white,
+    marginLeft: 16,
+    marginBottom: 12,
   },
   webTrainerScroll: {
     paddingHorizontal: 16,
@@ -829,13 +1006,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.95)',
     borderRadius: 16,
     padding: 12,
-    width: 120,
+    width: 140,
     alignItems: 'center',
-    ...Platform.select({
-      web: {
-        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-      },
-    }),
   },
   webTrainerCardSelected: {
     borderWidth: 2,
@@ -883,5 +1055,17 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     color: COLORS.teal,
+    marginBottom: 8,
+  },
+  webBookButton: {
+    backgroundColor: COLORS.orange,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  webBookButtonText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.white,
   },
 });
