@@ -13,11 +13,10 @@ import {
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import * as Location from 'expo-location';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 
 const { width } = Dimensions.get('window');
 const MAP_HEIGHT = 280;
+const IS_NATIVE = Platform.OS === 'ios' || Platform.OS === 'android';
 
 // Brand colors
 const COLORS = {
@@ -54,6 +53,22 @@ const darkMapStyle = [
   { featureType: 'water', elementType: 'labels.text.stroke', stylers: [{ color: '#17263c' }] },
 ];
 
+// Conditionally import react-native-maps only on native
+let MapView: any = null;
+let Marker: any = null;
+let PROVIDER_GOOGLE: any = null;
+
+if (IS_NATIVE) {
+  try {
+    const RNMaps = require('react-native-maps');
+    MapView = RNMaps.default;
+    Marker = RNMaps.Marker;
+    PROVIDER_GOOGLE = RNMaps.PROVIDER_GOOGLE;
+  } catch (e) {
+    console.warn('react-native-maps not available');
+  }
+}
+
 interface NearbyTrainer {
   id: string;
   trainerId: string;
@@ -84,7 +99,7 @@ export default function TrainerMapView({
   refreshing 
 }: TrainerMapProps) {
   const router = useRouter();
-  const mapRef = useRef<MapView>(null);
+  const mapRef = useRef<any>(null);
   const [selectedTrainer, setSelectedTrainer] = useState<NearbyTrainer | null>(null);
   
   // Animations
@@ -150,6 +165,11 @@ export default function TrainerMapView({
       }, 500);
     }
   };
+
+  // Show nothing on web - the parent component handles the Platform check
+  if (!IS_NATIVE || !MapView || !Marker) {
+    return null;
+  }
 
   if (!userLocation) {
     return (
