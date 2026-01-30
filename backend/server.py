@@ -1013,11 +1013,15 @@ async def get_nearby_trainees(current_user: dict = Depends(get_current_user)):
             'message': 'Trainer location not set. Please update your profile with location.'
         }
     
-    # Get all trainee profiles
-    all_trainees = await db.trainee_profiles.find({}).to_list(1000)
+    # OPTIMIZATION: Only fetch trainee profiles with location data and required fields
+    all_trainees = await db.trainee_profiles.find(
+        {'latitude': {'$exists': True, '$ne': None}, 'longitude': {'$exists': True, '$ne': None}},
+        {'userId': 1, 'latitude': 1, 'longitude': 1, 'avatarUrl': 1, 'fitnessGoals': 1, 'fitnessLevel': 1}
+    ).to_list(1000)
     
     # Filter trainees within 15 miles
     nearby_trainees = []
+    nearby_user_ids = []
     for trainee in all_trainees:
         trainee_lat = trainee.get('latitude')
         trainee_lon = trainee.get('longitude')
@@ -1026,12 +1030,20 @@ async def get_nearby_trainees(current_user: dict = Depends(get_current_user)):
             distance = calculate_distance(trainer_lat, trainer_lon, trainee_lat, trainee_lon)
             
             if distance <= 15:
-                # Get user info for trainee
-                user = await db.users.find_one({'_id': ObjectId(trainee['userId'])})
                 trainee_data = serialize_doc(trainee)
                 trainee_data['distance'] = round(distance, 1)
-                trainee_data['fullName'] = user.get('fullName', 'Unknown') if user else 'Unknown'
                 nearby_trainees.append(trainee_data)
+                nearby_user_ids.append(ObjectId(trainee['userId']))
+    
+    # OPTIMIZATION: Batch fetch all user details in a single query instead of N+1
+    if nearby_user_ids:
+        users_cursor = db.users.find({'_id': {'$in': nearby_user_ids}}, {'fullName': 1})
+        users_list = await users_cursor.to_list(len(nearby_user_ids))
+        users_map = {str(u['_id']): u.get('fullName', 'Unknown') for u in users_list}
+        
+        # Attach user names to trainee data
+        for trainee_data in nearby_trainees:
+            trainee_data['fullName'] = users_map.get(trainee_data.get('userId'), 'Unknown')
     
     # Sort by distance
     nearby_trainees.sort(key=lambda x: x['distance'])
