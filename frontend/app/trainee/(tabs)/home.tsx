@@ -1340,16 +1340,16 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
   },
-  // Trainer Card
+  // Trainer Card - Polished with consistent border radius
   trainerCard: {
     marginBottom: 16,
     borderRadius: 20,
     overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.12,
-    shadowRadius: 12,
-    elevation: 6,
+    shadowRadius: 10,
+    elevation: 5,
   },
   trainerCardGradient: {
     padding: 18,
