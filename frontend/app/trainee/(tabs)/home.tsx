@@ -1279,15 +1279,15 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: 'rgba(255,255,255,0.85)',
   },
-  // Trainers Section
+  // Trainers Section - Improved spacing
   trainersSection: {
-    marginTop: 8,
+    marginTop: 12,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 14,
+    marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 18,
