@@ -610,35 +610,41 @@ export default function TraineeHomeScreen() {
                   },
                 ]}
               >
-                <LinearGradient
-                  colors={['#FDBB2D', '#F7931E']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.pendingGradient}
+                <TouchableOpacity 
+                  activeOpacity={0.9}
+                  onPress={() => router.push('/trainee/(tabs)/sessions')}
                 >
-                  <View style={styles.pendingHeader}>
-                    <View style={styles.pendingIconBg}>
-                      <Ionicons name="hourglass" size={24} color="#F7931E" />
-                    </View>
-                    <View style={styles.pendingTitleContainer}>
-                      <Text style={styles.pendingTitle}>PENDING REQUESTS</Text>
-                      <Text style={styles.pendingCount}>{pendingSessions.length} waiting</Text>
-                    </View>
-                  </View>
-                  {pendingSessions.slice(0, 2).map((session: any, index: number) => (
-                    <View key={session.id} style={styles.pendingItem}>
-                      <View style={styles.pendingItemRow}>
-                        <Ionicons name="calendar" size={16} color="rgba(255,255,255,0.9)" />
-                        <Text style={styles.pendingItemText}>
-                          {new Date(session.sessionDateTimeStart).toLocaleDateString()}
-                        </Text>
-                        <Text style={styles.pendingItemDot}>•</Text>
-                        <Text style={styles.pendingItemText}>{session.durationMinutes} min</Text>
+                  <LinearGradient
+                    colors={['#FDBB2D', '#F7931E']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.pendingGradient}
+                  >
+                    <View style={styles.pendingHeader}>
+                      <View style={styles.pendingIconBg}>
+                        <Ionicons name="hourglass" size={22} color="#F7931E" />
                       </View>
-                      <Text style={styles.pendingStatus}>⏳ Awaiting trainer response</Text>
+                      <View style={styles.pendingTitleContainer}>
+                        <Text style={styles.pendingTitle}>PENDING REQUESTS</Text>
+                        <Text style={styles.pendingCount}>{pendingSessions.length} waiting for response</Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={24} color="rgba(255,255,255,0.8)" />
                     </View>
-                  ))}
-                </LinearGradient>
+                    {pendingSessions.slice(0, 2).map((session: any, index: number) => (
+                      <View key={session.id} style={styles.pendingItem}>
+                        <View style={styles.pendingItemRow}>
+                          <Ionicons name="calendar" size={16} color="rgba(255,255,255,0.9)" />
+                          <Text style={styles.pendingItemText}>
+                            {new Date(session.sessionDateTimeStart).toLocaleDateString()}
+                          </Text>
+                          <Text style={styles.pendingItemDot}>•</Text>
+                          <Text style={styles.pendingItemText}>{session.durationMinutes} min</Text>
+                        </View>
+                        <Text style={styles.pendingStatus}>⏳ Awaiting trainer response</Text>
+                      </View>
+                    ))}
+                  </LinearGradient>
+                </TouchableOpacity>
               </Animated.View>
             )}
 
