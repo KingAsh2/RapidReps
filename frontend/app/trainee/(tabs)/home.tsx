@@ -602,13 +602,6 @@ export default function TraineeHomeScreen() {
             </View>
 
             {/* Available Trainers Header */}
-                        )}
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                )}
-              </LinearGradient>
-            </Animated.View>
 
             {/* Pending Requests Card */}
             {pendingSessions.length > 0 && (
