@@ -301,6 +301,13 @@ export default function TraineeHomeScreen() {
     }
   }, [user]);
 
+  // Load nearby trainers when location becomes available
+  useEffect(() => {
+    if (userLocation) {
+      loadNearbyTrainers();
+    }
+  }, [userLocation]);
+
   const onRefresh = () => {
     setRefreshing(true);
     loadTrainers();
