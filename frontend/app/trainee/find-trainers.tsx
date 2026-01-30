@@ -18,18 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { traineeAPI } from '../../src/services/api';
 import { useAlert } from '../../src/contexts/AlertContext';
-
-// Conditionally import react-native-maps only on native platforms
-let MapView: any = null;
-let Marker: any = null;
-let PROVIDER_GOOGLE: any = null;
-
-if (Platform.OS !== 'web') {
-  const Maps = require('react-native-maps');
-  MapView = Maps.default;
-  Marker = Maps.Marker;
-  PROVIDER_GOOGLE = Maps.PROVIDER_GOOGLE;
-}
+import MapViewComponent, { MapView } from '../../src/components/MapViewComponent';
 
 const { width, height } = Dimensions.get('window');
 const CARD_HEIGHT = 180;
@@ -52,28 +41,6 @@ const COLORS = {
   success: '#00D68F',
   error: '#FF4757',
 };
-
-// Uber-style dark map theme
-const darkMapStyle = [
-  { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] },
-  { featureType: 'administrative.locality', elementType: 'labels.text.fill', stylers: [{ color: '#d59563' }] },
-  { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#d59563' }] },
-  { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#263c3f' }] },
-  { featureType: 'poi.park', elementType: 'labels.text.fill', stylers: [{ color: '#6b9a76' }] },
-  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#38414e' }] },
-  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#212a37' }] },
-  { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#9ca5b3' }] },
-  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#746855' }] },
-  { featureType: 'road.highway', elementType: 'geometry.stroke', stylers: [{ color: '#1f2835' }] },
-  { featureType: 'road.highway', elementType: 'labels.text.fill', stylers: [{ color: '#f3d19c' }] },
-  { featureType: 'transit', elementType: 'geometry', stylers: [{ color: '#2f3948' }] },
-  { featureType: 'transit.station', elementType: 'labels.text.fill', stylers: [{ color: '#d59563' }] },
-  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#17263c' }] },
-  { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#515c6d' }] },
-  { featureType: 'water', elementType: 'labels.text.stroke', stylers: [{ color: '#17263c' }] },
-];
 
 interface NearbyTrainer {
   id: string;
@@ -237,7 +204,7 @@ export default function FindTrainersMapScreen() {
   };
 
   const centerOnUser = () => {
-    if (mapRef.current && userLocation) {
+    if (mapRef.current && userLocation && !IS_WEB) {
       mapRef.current.animateToRegion({
         ...userLocation,
         latitudeDelta: 0.02,
@@ -249,8 +216,8 @@ export default function FindTrainersMapScreen() {
   const handleTrainerPress = (trainer: NearbyTrainer) => {
     setSelectedTrainer(trainer);
     
-    // Center map between user and trainer
-    if (mapRef.current && userLocation) {
+    // Center map between user and trainer (native only)
+    if (mapRef.current && userLocation && !IS_WEB) {
       const midLat = (userLocation.latitude + trainer.latitude) / 2;
       const midLng = (userLocation.longitude + trainer.longitude) / 2;
       const latDelta = Math.abs(userLocation.latitude - trainer.latitude) * 2 + 0.01;
@@ -317,57 +284,21 @@ export default function FindTrainersMapScreen() {
   return (
     <View style={styles.container}>
       {/* Full Screen Map */}
-      <MapView
+      <MapViewComponent
         ref={mapRef}
-        style={styles.map}
-        provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
-        customMapStyle={darkMapStyle}
+        userLocation={userLocation}
+        trainers={trainers}
+        selectedTrainerId={selectedTrainer?.id || null}
+        pulseAnim={pulseAnim}
+        onTrainerPress={handleTrainerPress}
+        onMapPress={handleMapPress}
         initialRegion={{
           latitude: userLocation?.latitude || 34.0522,
           longitude: userLocation?.longitude || -118.2437,
           latitudeDelta: 0.02,
           longitudeDelta: 0.02,
         }}
-        showsUserLocation={false}
-        showsMyLocationButton={false}
-        onPress={handleMapPress}
-      >
-        {/* User Location Marker - Pulsing Blue Dot */}
-        {userLocation && (
-          <Marker coordinate={userLocation} anchor={{ x: 0.5, y: 0.5 }}>
-            <View style={styles.userMarkerContainer}>
-              <Animated.View style={[styles.userMarkerPulse, { transform: [{ scale: pulseAnim }] }]} />
-              <View style={styles.userMarkerDot}>
-                <View style={styles.userMarkerInner} />
-              </View>
-            </View>
-          </Marker>
-        )}
-
-        {/* Trainer Markers - Uber-style car icons */}
-        {trainers.map((trainer) => (
-          <Marker
-            key={trainer.id}
-            coordinate={{ latitude: trainer.latitude, longitude: trainer.longitude }}
-            onPress={() => handleTrainerPress(trainer)}
-            anchor={{ x: 0.5, y: 0.5 }}
-          >
-            <View style={[
-              styles.trainerMarker,
-              selectedTrainer?.id === trainer.id && styles.trainerMarkerSelected
-            ]}>
-              {trainer.avatarUrl ? (
-                <Image source={{ uri: trainer.avatarUrl }} style={styles.trainerMarkerImage} />
-              ) : (
-                <View style={styles.trainerMarkerIcon}>
-                  <Ionicons name="fitness" size={18} color={COLORS.white} />
-                </View>
-              )}
-              <View style={styles.trainerMarkerArrow} />
-            </View>
-          </Marker>
-        ))}
-      </MapView>
+      />
 
       {/* Header Overlay */}
       <SafeAreaView style={styles.headerOverlay} edges={['top']}>
@@ -400,10 +331,12 @@ export default function FindTrainersMapScreen() {
         </View>
       </SafeAreaView>
 
-      {/* Recenter Button */}
-      <TouchableOpacity style={styles.recenterButton} onPress={centerOnUser}>
-        <Ionicons name="locate" size={24} color={COLORS.navy} />
-      </TouchableOpacity>
+      {/* Recenter Button - Only show on native */}
+      {!IS_WEB && (
+        <TouchableOpacity style={styles.recenterButton} onPress={centerOnUser}>
+          <Ionicons name="locate" size={24} color={COLORS.navy} />
+        </TouchableOpacity>
+      )}
 
       {/* Selected Trainer Card - Uber style bottom card */}
       <Animated.View
@@ -489,6 +422,40 @@ export default function FindTrainersMapScreen() {
           </View>
         )}
       </Animated.View>
+
+      {/* Trainer List for Web - shows as scrollable list at bottom */}
+      {IS_WEB && trainers.length > 0 && (
+        <View style={styles.webTrainerList}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.webTrainerScroll}>
+            {trainers.map((trainer) => (
+              <TouchableOpacity
+                key={trainer.id}
+                style={[
+                  styles.webTrainerCard,
+                  selectedTrainer?.id === trainer.id && styles.webTrainerCardSelected
+                ]}
+                onPress={() => handleTrainerPress(trainer)}
+              >
+                <View style={styles.webTrainerAvatar}>
+                  {trainer.avatarUrl ? (
+                    <Image source={{ uri: trainer.avatarUrl }} style={styles.webTrainerAvatarImage} />
+                  ) : (
+                    <LinearGradient colors={[COLORS.teal, COLORS.tealDark]} style={styles.webTrainerAvatarPlaceholder}>
+                      <Text style={styles.webTrainerInitial}>{trainer.fullName.charAt(0)}</Text>
+                    </LinearGradient>
+                  )}
+                </View>
+                <Text style={styles.webTrainerName} numberOfLines={1}>{trainer.fullName}</Text>
+                <View style={styles.webTrainerMeta}>
+                  <Ionicons name="star" size={12} color={COLORS.orange} />
+                  <Text style={styles.webTrainerRating}>{trainer.averageRating.toFixed(1)}</Text>
+                </View>
+                <Text style={styles.webTrainerDistance}>{trainer.distanceMiles} mi</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
     </View>
   );
 }
@@ -497,9 +464,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.navy,
-  },
-  map: {
-    ...StyleSheet.absoluteFillObject,
   },
 
   // Loading & Permission
@@ -586,11 +550,20 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(26, 42, 94, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 5,
+      },
+      web: {
+        boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+      },
+    }),
   },
   headerCenter: {
     alignItems: 'center',
@@ -599,9 +572,21 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '800',
     color: COLORS.white,
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
+    ...Platform.select({
+      ios: {
+        textShadowColor: 'rgba(0,0,0,0.5)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 3,
+      },
+      android: {
+        textShadowColor: 'rgba(0,0,0,0.5)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 3,
+      },
+      web: {
+        textShadow: '0 1px 3px rgba(0,0,0,0.5)',
+      },
+    }),
   },
   liveIndicator: {
     flexDirection: 'row',
@@ -635,11 +620,20 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginTop: 8,
     gap: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 5,
+      },
+      web: {
+        boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+      },
+    }),
   },
   countText: {
     fontSize: 13,
@@ -658,88 +652,17 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-
-  // User Marker - Pulsing blue dot like Uber
-  userMarkerContainer: {
-    width: 50,
-    height: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  userMarkerPulse: {
-    position: 'absolute',
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: 'rgba(31, 184, 180, 0.25)',
-  },
-  userMarkerDot: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: COLORS.teal,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 3,
-    borderColor: COLORS.white,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  userMarkerInner: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: COLORS.white,
-  },
-
-  // Trainer Marker - Uber-style
-  trainerMarker: {
-    alignItems: 'center',
-  },
-  trainerMarkerSelected: {
-    transform: [{ scale: 1.2 }],
-  },
-  trainerMarkerIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: COLORS.navy,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 3,
-    borderColor: COLORS.white,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  trainerMarkerImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 3,
-    borderColor: COLORS.white,
-  },
-  trainerMarkerArrow: {
-    width: 0,
-    height: 0,
-    borderLeftWidth: 8,
-    borderRightWidth: 8,
-    borderTopWidth: 10,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderTopColor: COLORS.white,
-    marginTop: -2,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 5,
+      },
+    }),
   },
 
   // Bottom Trainer Card - Uber style
@@ -751,11 +674,20 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 10,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 10,
+      },
+      web: {
+        boxShadow: '0 -4px 16px rgba(0,0,0,0.15)',
+      },
+    }),
   },
   trainerCardContent: {
     padding: 20,
@@ -879,5 +811,77 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '800',
     color: COLORS.white,
+  },
+
+  // Web Trainer List
+  webTrainerList: {
+    position: 'absolute',
+    bottom: 100,
+    left: 0,
+    right: 0,
+    paddingVertical: 12,
+  },
+  webTrainerScroll: {
+    paddingHorizontal: 16,
+    gap: 12,
+  },
+  webTrainerCard: {
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderRadius: 16,
+    padding: 12,
+    width: 120,
+    alignItems: 'center',
+    ...Platform.select({
+      web: {
+        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+      },
+    }),
+  },
+  webTrainerCardSelected: {
+    borderWidth: 2,
+    borderColor: COLORS.orange,
+  },
+  webTrainerAvatar: {
+    marginBottom: 8,
+  },
+  webTrainerAvatarImage: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+  },
+  webTrainerAvatarPlaceholder: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  webTrainerInitial: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: COLORS.white,
+  },
+  webTrainerName: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: COLORS.navy,
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  webTrainerMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 2,
+  },
+  webTrainerRating: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: COLORS.gray,
+  },
+  webTrainerDistance: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: COLORS.teal,
   },
 });
