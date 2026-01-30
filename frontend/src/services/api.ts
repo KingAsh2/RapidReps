@@ -72,7 +72,7 @@ export const trainerAPI = {
     try {
       // First get the current user to get their ID
       const userResponse = await api.get('/auth/me');
-      const userId = userResponse.data._id;
+      const userId = userResponse.data.id;  // Fixed: was _id, now id
       
       // Then get their trainer profile
       const response = await api.get(`/trainer-profiles/${userId}`);
