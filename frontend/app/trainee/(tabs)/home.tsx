@@ -527,80 +527,13 @@ export default function TraineeHomeScreen() {
               </TouchableOpacity>
             </Animated.View>
 
-            {/* Nearby Trainers Section */}
-            <View style={styles.nearbySection}>
-              <View style={styles.nearbySectionHeader}>
-                <View style={styles.nearbySectionLeft}>
-                  <Text style={styles.nearbySectionTitle}>Trainers Near You</Text>
-                  <View style={styles.liveBadge}>
-                    <View style={styles.liveDotSmall} />
-                    <Text style={styles.liveTextSmall}>LIVE</Text>
-                  </View>
-                </View>
-                <View style={styles.nearbySectionRight}>
-                  <View style={styles.trainerCountBadge}>
-                    <Ionicons name="people" size={14} color="#1FB8B4" />
-                    <Text style={styles.trainerCountText}>{nearbyTrainers.length}</Text>
-                  </View>
-                  <TouchableOpacity 
-                    style={styles.refreshBtnSmall} 
-                    onPress={handleMapRefresh}
-                  >
-                    {mapRefreshing ? (
-                      <ActivityIndicator size="small" color="#F7931E" />
-                    ) : (
-                      <Ionicons name="refresh" size={18} color="#F7931E" />
-                    )}
-                  </TouchableOpacity>
-                </View>
-              </View>
-              
-              {nearbyTrainers.length > 0 ? (
-                <ScrollView 
-                  horizontal 
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.nearbyTrainersScroll}
-                >
-                  {nearbyTrainers.map((trainer: any) => (
-                    <TouchableOpacity
-                      key={trainer.id}
-                      style={styles.nearbyTrainerCard}
-                      onPress={() => router.push(`/trainee/trainer-detail?trainerId=${trainer.trainerId}`)}
-                      activeOpacity={0.8}
-                    >
-                      <View style={styles.nearbyTrainerAvatar}>
-                        {trainer.avatarUrl ? (
-                          <Image source={{ uri: trainer.avatarUrl }} style={styles.nearbyAvatarImage} />
-                        ) : (
-                          <LinearGradient 
-                            colors={['#1FB8B4', '#0D8B88']} 
-                            style={styles.nearbyAvatarPlaceholder}
-                          >
-                            <Text style={styles.nearbyAvatarText}>{trainer.fullName?.charAt(0) || 'T'}</Text>
-                          </LinearGradient>
-                        )}
-                        <View style={styles.onlineDot} />
-                      </View>
-                      <Text style={styles.nearbyTrainerName} numberOfLines={1}>{trainer.fullName}</Text>
-                      <View style={styles.nearbyTrainerMeta}>
-                        <Ionicons name="star" size={12} color="#F7931E" />
-                        <Text style={styles.nearbyRating}>{trainer.averageRating?.toFixed(1) || '5.0'}</Text>
-                      </View>
-                      <Text style={styles.nearbyDistance}>{trainer.distanceMiles?.toFixed(1) || '0'} mi • {trainer.etaMinutes || '5'} min</Text>
-                      <View style={styles.nearbyPriceTag}>
-                        <Text style={styles.nearbyPrice}>${((trainer.ratePerMinuteCents || 100) / 100).toFixed(0)}/min</Text>
-                      </View>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              ) : (
-                <View style={styles.noTrainersNearby}>
-                  <Ionicons name="location-outline" size={32} color="#8892b0" />
-                  <Text style={styles.noTrainersText}>No trainers available nearby</Text>
-                  <Text style={styles.noTrainersSubtext}>Check back soon!</Text>
-                </View>
-              )}
-            </View>
+            {/* MAP - Trainers Near You */}
+            <NearbyTrainersMap
+              userLocation={userLocation}
+              trainers={nearbyTrainers}
+              onRefresh={handleMapRefresh}
+              refreshing={mapRefreshing}
+            />
 
             {/* Available Trainers Header */}
 
