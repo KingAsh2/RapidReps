@@ -527,97 +527,82 @@ export default function TraineeHomeScreen() {
               </TouchableOpacity>
             </Animated.View>
 
-            {/* Embedded Trainer Map */}
-            {Platform.OS !== 'web' && (
-              <TrainerMapView
-                userLocation={userLocation}
-                trainers={nearbyTrainers}
-                onTrainerSelect={handleMapTrainerSelect}
-                onRefresh={handleMapRefresh}
-                refreshing={mapRefreshing}
-              />
-            )}
-
-            {/* Search Card */}
-            <Animated.View
-              style={[
-                styles.searchCard,
-                {
-                  opacity: searchAnim,
-                  transform: [{ translateY: searchTranslateY }],
-                },
-              ]}
-            >
-              <LinearGradient
-                colors={['rgba(255,255,255,0.98)', 'rgba(255,255,255,0.95)']}
-                style={styles.searchCardGradient}
-              >
-                <View style={styles.searchInputContainer}>
-                  <Ionicons name="search" size={22} color="#1a2a5e" />
-                  <TextInput
-                    style={styles.searchInput}
-                    placeholder="Search trainers, gyms..."
-                    placeholderTextColor="#8892b0"
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                  />
+            {/* Nearby Trainers Section */}
+            <View style={styles.nearbySection}>
+              <View style={styles.nearbySectionHeader}>
+                <View style={styles.nearbySectionLeft}>
+                  <Text style={styles.nearbySectionTitle}>Trainers Near You</Text>
+                  <View style={styles.liveBadge}>
+                    <View style={styles.liveDotSmall} />
+                    <Text style={styles.liveTextSmall}>LIVE</Text>
+                  </View>
                 </View>
-                <View style={styles.filterRow}>
+                <View style={styles.nearbySectionRight}>
+                  <View style={styles.trainerCountBadge}>
+                    <Ionicons name="people" size={14} color="#1FB8B4" />
+                    <Text style={styles.trainerCountText}>{nearbyTrainers.length}</Text>
+                  </View>
                   <TouchableOpacity 
-                    onPress={() => setShowFilters(true)}
-                    style={styles.filterPill}
+                    style={styles.refreshBtnSmall} 
+                    onPress={handleMapRefresh}
                   >
-                    <Ionicons name="options" size={18} color="#1a2a5e" />
-                    <Text style={styles.filterPillText}>Filters</Text>
-                    {(filters.minRating > 0 || filters.gender !== 'any' || filters.specialties.length > 0) && (
-                      <View style={styles.filterDot} />
+                    {mapRefreshing ? (
+                      <ActivityIndicator size="small" color="#F7931E" />
+                    ) : (
+                      <Ionicons name="refresh" size={18} color="#F7931E" />
                     )}
                   </TouchableOpacity>
-                  
-                  <TouchableOpacity 
-                    onPress={() => setShowSortMenu(!showSortMenu)}
-                    style={styles.sortPill}
-                  >
-                    <Ionicons name="swap-vertical" size={18} color="#1a2a5e" />
-                    <Text style={styles.sortPillText}>
-                      {sortBy === 'distance' ? 'Distance' : sortBy === 'rating' ? 'Rating' : 'Price'}
-                    </Text>
-                    <Ionicons name="chevron-down" size={14} color="#1a2a5e" />
-                  </TouchableOpacity>
                 </View>
-                
-                {/* Sort Dropdown */}
-                {showSortMenu && (
-                  <View style={styles.sortDropdown}>
-                    {[
-                      { value: 'distance', label: 'Nearest First', icon: 'location' },
-                      { value: 'rating', label: 'Top Rated', icon: 'star' },
-                      { value: 'price', label: 'Best Price', icon: 'cash' },
-                    ].map((option) => (
-                      <TouchableOpacity
-                        key={option.value}
-                        onPress={() => {
-                          setSortBy(option.value);
-                          setShowSortMenu(false);
-                        }}
-                        style={[
-                          styles.sortOption,
-                          sortBy === option.value && styles.sortOptionActive,
-                        ]}
-                      >
-                        <Ionicons 
-                          name={option.icon as any} 
-                          size={18} 
-                          color={sortBy === option.value ? '#F7931E' : '#1a2a5e'} 
-                        />
-                        <Text style={[
-                          styles.sortOptionText,
-                          sortBy === option.value && styles.sortOptionTextActive,
-                        ]}>
-                          {option.label}
-                        </Text>
-                        {sortBy === option.value && (
-                          <Ionicons name="checkmark-circle" size={20} color="#F7931E" />
+              </View>
+              
+              {nearbyTrainers.length > 0 ? (
+                <ScrollView 
+                  horizontal 
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.nearbyTrainersScroll}
+                >
+                  {nearbyTrainers.map((trainer: any) => (
+                    <TouchableOpacity
+                      key={trainer.id}
+                      style={styles.nearbyTrainerCard}
+                      onPress={() => router.push(`/trainee/trainer-detail?trainerId=${trainer.trainerId}`)}
+                      activeOpacity={0.8}
+                    >
+                      <View style={styles.nearbyTrainerAvatar}>
+                        {trainer.avatarUrl ? (
+                          <Image source={{ uri: trainer.avatarUrl }} style={styles.nearbyAvatarImage} />
+                        ) : (
+                          <LinearGradient 
+                            colors={['#1FB8B4', '#0D8B88']} 
+                            style={styles.nearbyAvatarPlaceholder}
+                          >
+                            <Text style={styles.nearbyAvatarText}>{trainer.fullName?.charAt(0) || 'T'}</Text>
+                          </LinearGradient>
+                        )}
+                        <View style={styles.onlineDot} />
+                      </View>
+                      <Text style={styles.nearbyTrainerName} numberOfLines={1}>{trainer.fullName}</Text>
+                      <View style={styles.nearbyTrainerMeta}>
+                        <Ionicons name="star" size={12} color="#F7931E" />
+                        <Text style={styles.nearbyRating}>{trainer.averageRating?.toFixed(1) || '5.0'}</Text>
+                      </View>
+                      <Text style={styles.nearbyDistance}>{trainer.distanceMiles?.toFixed(1) || '0'} mi • {trainer.etaMinutes || '5'} min</Text>
+                      <View style={styles.nearbyPriceTag}>
+                        <Text style={styles.nearbyPrice}>${((trainer.ratePerMinuteCents || 100) / 100).toFixed(0)}/min</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              ) : (
+                <View style={styles.noTrainersNearby}>
+                  <Ionicons name="location-outline" size={32} color="#8892b0" />
+                  <Text style={styles.noTrainersText}>No trainers available nearby</Text>
+                  <Text style={styles.noTrainersSubtext}>Check back soon!</Text>
+                </View>
+              )}
+            </View>
+
+            {/* Available Trainers Header */}
                         )}
                       </TouchableOpacity>
                     ))}
