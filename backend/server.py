@@ -2239,7 +2239,9 @@ async def get_nearby_trainers(
         'longitude': {'$exists': True, '$ne': None}
     }).to_list(100)
     
-    nearby_trainers = []
+    # First pass: filter trainers within radius
+    nearby_trainers_data = []
+    trainer_user_ids = []
     
     for trainer in trainers:
         trainer_lat = trainer.get('latitude')
@@ -2255,9 +2257,27 @@ async def get_nearby_trainers(
         if distance > radius_miles:
             continue
         
-        # Get trainer's user info for name
-        user = await db.users.find_one({'_id': ObjectId(trainer['userId'])})
-        full_name = user.get('fullName', 'Trainer') if user else 'Trainer'
+        nearby_trainers_data.append({
+            'trainer': trainer,
+            'distance': distance
+        })
+        trainer_user_ids.append(ObjectId(trainer['userId']))
+    
+    # OPTIMIZATION: Batch fetch all user details in a single query
+    users_map = {}
+    if trainer_user_ids:
+        users_cursor = db.users.find({'_id': {'$in': trainer_user_ids}}, {'fullName': 1})
+        users_list = await users_cursor.to_list(len(trainer_user_ids))
+        users_map = {str(u['_id']): u.get('fullName', 'Trainer') for u in users_list}
+    
+    # Build response with user names from map
+    nearby_trainers = []
+    for item in nearby_trainers_data:
+        trainer = item['trainer']
+        distance = item['distance']
+        
+        # Get trainer's user name from batch-fetched map
+        full_name = users_map.get(trainer['userId'], 'Trainer')
         
         # Calculate ETA
         eta = estimate_eta_minutes(distance)
@@ -2267,8 +2287,8 @@ async def get_nearby_trainers(
             'trainerId': trainer['userId'],
             'fullName': full_name,
             'avatarUrl': trainer.get('avatarUrl'),
-            'latitude': trainer_lat,
-            'longitude': trainer_lng,
+            'latitude': trainer.get('latitude'),
+            'longitude': trainer.get('longitude'),
             'isAvailable': True,
             'lastLocationUpdate': trainer.get('lastLocationUpdate'),
             'distanceMiles': round(distance, 1),
