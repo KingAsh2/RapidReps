@@ -284,10 +284,7 @@ export default function LoginScreen() {
                     styles.inputContainer,
                     {
                       borderColor: passwordBorderColor,
-                      borderWidth: passwordFocusAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [2, 3],
-                      }),
+                      borderWidth: 2,
                       transform: [{ translateX: lockShakeAnim }],
                     },
                   ]}
