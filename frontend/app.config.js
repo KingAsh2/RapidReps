@@ -9,6 +9,14 @@ export default {
     scheme: "rapidreps",
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
+    runtimeVersion: {
+      policy: "appVersion"
+    },
+    updates: {
+      url: "https://u.expo.dev/rapidreps",
+      enabled: true,
+      fallbackToCacheTimeout: 0
+    },
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.kingash.rapidreps",
@@ -81,6 +89,11 @@ export default {
     ],
     experiments: {
       typedRoutes: true
+    },
+    extra: {
+      eas: {
+        projectId: "rapidreps"
+      }
     }
   }
 };
