@@ -256,10 +256,7 @@ export default function LoginScreen() {
                     styles.inputContainer,
                     {
                       borderColor: emailBorderColor,
-                      borderWidth: emailFocusAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [2, 3],
-                      }),
+                      borderWidth: 2,
                     },
                   ]}
                 >
