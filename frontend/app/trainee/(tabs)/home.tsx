@@ -1476,12 +1476,13 @@ const styles = StyleSheet.create({
   // FAB
   fabContainer: {
     position: 'absolute',
-    bottom: 30,
+    bottom: 32,
     right: 20,
     left: 20,
+    marginTop: 16,
   },
   fab: {
-    borderRadius: 28,
+    borderRadius: 20,
     overflow: 'hidden',
     shadowColor: '#FF6A00',
     shadowOffset: { width: 0, height: 6 },
