@@ -1552,10 +1552,11 @@ async def calculate_badge_progress(trainer_id: str) -> TrainerAchievements:
     """Calculate all badge progress for a trainer"""
     
     # Get all completed sessions for this trainer
-    completed_sessions = await db.sessions.find({
-        'trainerId': trainer_id,
-        'status': SessionStatus.COMPLETED
-    }).to_list(1000)
+    # OPTIMIZATION: Only fetch required fields for counting
+    completed_sessions = await db.sessions.find(
+        {'trainerId': trainer_id, 'status': SessionStatus.COMPLETED},
+        {'_id': 1, 'sessionDateTimeStart': 1, 'traineeId': 1}
+    ).to_list(1000)
     
     # Get trainer achievement doc
     achievement_doc = await db.trainer_achievements.find_one({'trainerId': trainer_id})
