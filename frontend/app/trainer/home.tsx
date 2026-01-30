@@ -339,12 +339,36 @@ export default function TrainerHomeScreen() {
   };
 
   const handleDecline = async (sessionId: string) => {
-    try {
-      await trainerAPI.declineSession(sessionId);
-      loadData();
-    } catch (error) {
-      console.error('Error declining session:', error);
-    }
+    showAlert({
+      title: 'Decline Session Request?',
+      message: 'Are you sure you want to decline this session request? The trainee will be notified.',
+      type: 'warning',
+      buttons: [
+        { text: 'Keep Request', style: 'cancel' },
+        {
+          text: 'Decline',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await trainerAPI.declineSession(sessionId);
+              loadData();
+              showAlert({
+                title: 'Session Declined',
+                message: 'The session request has been declined.',
+                type: 'info',
+              });
+            } catch (error) {
+              console.error('Error declining session:', error);
+              showAlert({
+                title: 'Error',
+                message: 'Could not decline the session. Please try again.',
+                type: 'error',
+              });
+            }
+          },
+        },
+      ],
+    });
   };
 
   const handleLogout = async () => {
