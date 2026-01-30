@@ -527,28 +527,16 @@ export default function TraineeHomeScreen() {
               </TouchableOpacity>
             </Animated.View>
 
-            {/* Find Trainers Map Button */}
-            <TouchableOpacity 
-              onPress={() => router.push('/trainee/find-trainers')}
-              activeOpacity={0.9}
-              style={styles.mapBannerContainer}
-            >
-              <LinearGradient
-                colors={['#1a2a5e', '#2a3a6e']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.mapBanner}
-              >
-                <View style={styles.mapIconContainer}>
-                  <Ionicons name="map" size={28} color="#1FB8B4" />
-                </View>
-                <View style={styles.mapBannerContent}>
-                  <Text style={styles.mapBannerTitle}>🗺️ FIND TRAINERS NEARBY</Text>
-                  <Text style={styles.mapBannerSubtitle}>See who's available on the map</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={24} color="rgba(255,255,255,0.6)" />
-              </LinearGradient>
-            </TouchableOpacity>
+            {/* Embedded Trainer Map */}
+            {Platform.OS !== 'web' && (
+              <TrainerMapView
+                userLocation={userLocation}
+                trainers={nearbyTrainers}
+                onTrainerSelect={handleMapTrainerSelect}
+                onRefresh={handleMapRefresh}
+                refreshing={mapRefreshing}
+              />
+            )}
 
             {/* Search Card */}
             <Animated.View
