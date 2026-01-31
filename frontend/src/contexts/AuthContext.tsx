@@ -54,31 +54,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signup = async (data: any) => {
-    const response = await authAPI.signup(data);
-    await AsyncStorage.setItem('auth_token', response.access_token);
-    setUser(response.user);
-    
-    // Set initial active role
-    if (response.user.roles.length > 0) {
-      const initialRole = response.user.roles[0];
-      setActiveRoleState(initialRole);
-      await AsyncStorage.setItem('active_role', initialRole);
+    try {
+      console.log('[Auth] Attempting signup for:', data.email);
+      const response = await authAPI.signup(data);
+      console.log('[Auth] Signup successful');
+      await AsyncStorage.setItem('auth_token', response.access_token);
+      setUser(response.user);
+      
+      // Set initial active role
+      if (response.user.roles.length > 0) {
+        const initialRole = response.user.roles[0];
+        setActiveRoleState(initialRole);
+        await AsyncStorage.setItem('active_role', initialRole);
+      }
+    } catch (error: any) {
+      console.error('[Auth] Signup error:', error?.message, error?.response?.data);
+      throw error;
     }
   };
 
   const login = async (email: string, password: string) => {
-    const response = await authAPI.login(email, password);
-    await AsyncStorage.setItem('auth_token', response.access_token);
-    setUser(response.user);
-    
-    // Set active role
-    const savedRole = await AsyncStorage.getItem('active_role');
-    if (savedRole && response.user.roles.includes(savedRole)) {
-      setActiveRoleState(savedRole);
-    } else if (response.user.roles.length > 0) {
-      const initialRole = response.user.roles[0];
-      setActiveRoleState(initialRole);
-      await AsyncStorage.setItem('active_role', initialRole);
+    try {
+      console.log('[Auth] Attempting login for:', email);
+      const response = await authAPI.login(email, password);
+      console.log('[Auth] Login successful');
+      await AsyncStorage.setItem('auth_token', response.access_token);
+      setUser(response.user);
+      
+      // Set active role
+      const savedRole = await AsyncStorage.getItem('active_role');
+      if (savedRole && response.user.roles.includes(savedRole)) {
+        setActiveRoleState(savedRole);
+      } else if (response.user.roles.length > 0) {
+        const initialRole = response.user.roles[0];
+        setActiveRoleState(initialRole);
+        await AsyncStorage.setItem('active_role', initialRole);
+      }
+    } catch (error: any) {
+      console.error('[Auth] Login error:', error?.message, error?.response?.data);
+      throw error;
     }
   };
 
