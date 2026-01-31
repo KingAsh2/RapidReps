@@ -484,9 +484,15 @@ metadata:
 
 test_plan:
   current_focus:
-    - "In-App Messaging/Chat System Frontend"
+    - "Authentication System - Login and Signup"
+    - "Logo Display on Auth Screens"
+    - "Trainee Home Screen and Features"
+    - "Trainer Home Screen and Features"
+    - "Virtual Training Flow"
+    - "Messaging System"
+    - "Profile Management"
   stuck_tasks: []
-  test_all: false
+  test_all: true
   test_priority: "high_first"
 
 agent_communication:
