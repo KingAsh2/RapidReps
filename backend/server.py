@@ -1263,7 +1263,7 @@ async def cancel_session(session_id: str, current_user: dict = Depends(get_curre
     cancellation_fee_cents = 0
     refund_amount_cents = 0
     
-    if current_status == SessionStatus.ACCEPTED:
+    if current_status == SessionStatus.CONFIRMED:
         # 20% cancellation fee if trainer already accepted
         final_price = session.get('finalSessionPriceCents', 0)
         cancellation_fee_cents = int(final_price * 0.20)
