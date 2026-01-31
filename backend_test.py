@@ -1,20 +1,24 @@
 #!/usr/bin/env python3
 """
-RapidReps API Comprehensive Testing Suite - LOCATION/MAP FEATURES FOCUS
-Focus on location/map features and all critical endpoints as requested in review
+RapidReps API Authentication Testing Suite
+Focus on authentication API endpoints as requested in the review:
+1. POST /api/auth/login - Test with valid/invalid credentials
+2. POST /api/auth/signup - Test with valid data and duplicate email
+3. GET /api/auth/me - Test with token from login
 """
 
 import requests
 import json
-import time
+import uuid
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
 
 # Configuration
 BASE_URL = "https://login-logo-rapdreps.preview.emergentagent.com/api"
 TEST_CREDENTIALS = {
-    "trainee": {"email": "mobile@test.com", "password": "test123"},
-    "trainer": {"email": "trainer@test.com", "password": "test123"}  # Will create if needed
+    "valid_trainer": {"email": "trainer1@test.com", "password": "test123"},
+    "invalid_email": {"email": "nonexistent@test.com", "password": "test123"},
+    "wrong_password": {"email": "trainer1@test.com", "password": "wrongpassword"}
 }
 
 class RapidRepsAPITester:
