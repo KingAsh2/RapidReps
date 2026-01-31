@@ -250,8 +250,8 @@ class ComprehensiveAPITester:
                 
         # Toggle availability
         try:
-            params = {"isAvailable": "true"}
-            response = self.make_request("PATCH", "/trainer-profiles/toggle-availability", params=params, token=token)
+            # Send isAvailable as query parameter, not in params dict
+            response = self.make_request("PATCH", "/trainer-profiles/toggle-availability?isAvailable=true", token=token)
             success = response.status_code == 200
             self.log_test("Trainer", "Toggle availability", success,
                          f"Status: {response.status_code}")
