@@ -534,8 +534,8 @@ class ComprehensiveAPITester:
             
         # Create/get conversation
         try:
-            params = {"receiver_id": trainer_id}
-            response = self.make_request("POST", "/conversations", params=params, token=trainee_token)
+            # Send receiver_id as query parameter in the URL
+            response = self.make_request("POST", f"/conversations?receiver_id={trainer_id}", token=trainee_token)
             success = response.status_code == 200
             conversation_id = None
             if success:
