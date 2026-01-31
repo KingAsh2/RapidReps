@@ -68,6 +68,7 @@ class SessionStatus:
     CANCELLED = "cancelled"
     COMPLETED = "completed"
     NO_SHOW = "no_show"
+    IN_PROGRESS = "in_progress"
 
 # User Models
 class UserSignUp(BaseModel):
