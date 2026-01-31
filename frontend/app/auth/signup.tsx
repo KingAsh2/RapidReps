@@ -604,18 +604,11 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     marginBottom: 16,
-  },
-  logoBg: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 8,
+  },
+  heroLogo: {
+    width: 180,
+    height: 70,
   },
   heroTitle: {
     fontSize: 28,
