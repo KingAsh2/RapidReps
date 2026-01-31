@@ -21,14 +21,11 @@ TEST_CREDENTIALS = {
     "wrong_password": {"email": "trainer1@test.com", "password": "wrongpassword"}
 }
 
-class RapidRepsAPITester:
+class AuthenticationTester:
     def __init__(self):
         self.session = requests.Session()
-        self.trainee_token = None
-        self.trainer_token = None
-        self.trainee_user = None
-        self.trainer_user = None
         self.test_results = []
+        self.access_token = None
         
     def log_test(self, test_name: str, success: bool, details: str = "", response_data: Any = None):
         """Log test results"""
@@ -73,6 +70,172 @@ class RapidRepsAPITester:
         except Exception as e:
             print(f"Request failed: {e}")
             raise
+
+    def test_login_valid_credentials(self):
+        """Test POST /api/auth/login with valid credentials: trainer1@test.com / test123"""
+        print("🔐 Testing Login with Valid Credentials")
+        try:
+            response = self.make_request("POST", "/auth/login", TEST_CREDENTIALS["valid_trainer"])
+            
+            if response.status_code == 200:
+                data = response.json()
+                if 'access_token' in data and 'user' in data:
+                    self.access_token = data['access_token']  # Store for later tests
+                    user_email = data['user'].get('email', 'Unknown')
+                    user_roles = data['user'].get('roles', [])
+                    self.log_test("Login with Valid Credentials", True, 
+                                f"Successfully logged in as {user_email} with roles {user_roles}")
+                    return True
+                else:
+                    self.log_test("Login with Valid Credentials", False, 
+                                "Response missing access_token or user object", data)
+                    return False
+            else:
+                self.log_test("Login with Valid Credentials", False, 
+                            f"Login failed with status {response.status_code}", response.text)
+                return False
+                
+        except Exception as e:
+            self.log_test("Login with Valid Credentials", False, f"Exception occurred: {str(e)}")
+            return False
+
+    def test_login_invalid_email(self):
+        """Test POST /api/auth/login with invalid email"""
+        print("🔐 Testing Login with Invalid Email")
+        try:
+            response = self.make_request("POST", "/auth/login", TEST_CREDENTIALS["invalid_email"])
+            
+            if response.status_code == 401:
+                self.log_test("Login with Invalid Email", True, 
+                            "Correctly rejected invalid email with 401 Unauthorized")
+                return True
+            else:
+                self.log_test("Login with Invalid Email", False, 
+                            f"Expected 401 status but got {response.status_code}", response.text)
+                return False
+                
+        except Exception as e:
+            self.log_test("Login with Invalid Email", False, f"Exception occurred: {str(e)}")
+            return False
+
+    def test_login_wrong_password(self):
+        """Test POST /api/auth/login with wrong password"""
+        print("🔐 Testing Login with Wrong Password")
+        try:
+            response = self.make_request("POST", "/auth/login", TEST_CREDENTIALS["wrong_password"])
+            
+            if response.status_code == 401:
+                self.log_test("Login with Wrong Password", True, 
+                            "Correctly rejected wrong password with 401 Unauthorized")
+                return True
+            else:
+                self.log_test("Login with Wrong Password", False, 
+                            f"Expected 401 status but got {response.status_code}", response.text)
+                return False
+                
+        except Exception as e:
+            self.log_test("Login with Wrong Password", False, f"Exception occurred: {str(e)}")
+            return False
+
+    def test_signup_valid_data(self):
+        """Test POST /api/auth/signup with valid data"""
+        print("📝 Testing Signup with Valid Data")
+        try:
+            # Generate unique email to avoid duplicates
+            random_string = str(uuid.uuid4())[:8]
+            signup_data = {
+                "fullName": "Test User",
+                "email": f"testsignup_{random_string}@test.com",
+                "phone": "1234567890",
+                "password": "testpassword123",
+                "roles": ["trainee"]
+            }
+            
+            response = self.make_request("POST", "/auth/signup", signup_data)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if 'access_token' in data and 'user' in data:
+                    user_email = data['user'].get('email', 'Unknown')
+                    user_roles = data['user'].get('roles', [])
+                    self.log_test("Signup with Valid Data", True, 
+                                f"Successfully created user {user_email} with roles {user_roles}")
+                    return True
+                else:
+                    self.log_test("Signup with Valid Data", False, 
+                                "Response missing access_token or user object", data)
+                    return False
+            else:
+                self.log_test("Signup with Valid Data", False, 
+                            f"Signup failed with status {response.status_code}", response.text)
+                return False
+                
+        except Exception as e:
+            self.log_test("Signup with Valid Data", False, f"Exception occurred: {str(e)}")
+            return False
+
+    def test_signup_duplicate_email(self):
+        """Test POST /api/auth/signup with duplicate email (should fail with 400)"""
+        print("📝 Testing Signup with Duplicate Email")
+        try:
+            duplicate_signup_data = {
+                "fullName": "Duplicate User",
+                "email": "trainer1@test.com",  # This should already exist
+                "phone": "1234567890",
+                "password": "testpassword123",
+                "roles": ["trainee"]
+            }
+            
+            response = self.make_request("POST", "/auth/signup", duplicate_signup_data)
+            
+            if response.status_code == 400:
+                self.log_test("Signup with Duplicate Email", True, 
+                            "Correctly rejected duplicate email with 400 Bad Request")
+                return True
+            else:
+                self.log_test("Signup with Duplicate Email", False, 
+                            f"Expected 400 status but got {response.status_code}", response.text)
+                return False
+                
+        except Exception as e:
+            self.log_test("Signup with Duplicate Email", False, f"Exception occurred: {str(e)}")
+            return False
+
+    def test_get_me_with_token(self):
+        """Test GET /api/auth/me with valid token"""
+        print("👤 Testing Get Me with Token")
+        if not self.access_token:
+            self.log_test("Get Me with Token", False, 
+                        "No access token available from previous login test")
+            return False
+            
+        try:
+            response = self.make_request("GET", "/auth/me", token=self.access_token)
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ['id', 'email', 'fullName', 'roles']
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if not missing_fields:
+                    user_email = data.get('email', 'Unknown')
+                    user_name = data.get('fullName', 'Unknown')
+                    user_roles = data.get('roles', [])
+                    self.log_test("Get Me with Token", True, 
+                                f"Successfully retrieved user info: {user_name} ({user_email}) with roles {user_roles}")
+                    return True
+                else:
+                    self.log_test("Get Me with Token", False, 
+                                f"Response missing required fields: {missing_fields}", data)
+                    return False
+            else:
+                self.log_test("Get Me with Token", False, 
+                            f"Get me failed with status {response.status_code}", response.text)
+                return False
+                
+        except Exception as e:
+            self.log_test("Get Me with Token", False, f"Exception occurred: {str(e)}")
+            return False
     
     def test_authentication(self):
         """Test authentication endpoints"""
