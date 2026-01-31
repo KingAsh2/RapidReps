@@ -4,29 +4,44 @@ import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 import { AuthResponse, User, TrainerProfile, TraineeProfile, Session } from '../types';
 
-// Get the backend URL - use production URL for builds, env var for development
+// Get the backend URL - prioritize environment variable, then production URL
 const getBackendUrl = (): string => {
-  // Check if running in production (TestFlight/App Store build)
-  const isProduction = !__DEV__;
-  
-  if (isProduction) {
-    // Use the production Emergent backend URL
-    return 'https://trainer-finder-9.emergent.sh';
+  // First, try to get the URL from Expo's extra config
+  const extraUrl = Constants.expoConfig?.extra?.backendUrl;
+  if (extraUrl) {
+    console.log('[API] Using URL from expoConfig.extra:', extraUrl);
+    return extraUrl;
   }
   
-  // For development, use the environment variable
+  // Then try process.env (works in development with Metro)
   const envUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
   if (envUrl) {
+    console.log('[API] Using URL from process.env:', envUrl);
     return envUrl;
   }
   
-  // Fallback
+  // For production builds (TestFlight/App Store), use the production URL
+  const isProduction = !__DEV__;
+  if (isProduction) {
+    console.log('[API] Using production URL (non-dev build)');
+    return 'https://trainer-finder-9.emergent.sh';
+  }
+  
+  // Final fallback - use the current hostname for development
+  const hostname = Constants.expoConfig?.hostUri?.split(':')[0];
+  if (hostname) {
+    const fallbackUrl = `https://${hostname}`;
+    console.log('[API] Using hostname fallback:', fallbackUrl);
+    return fallbackUrl;
+  }
+  
+  console.log('[API] Using hardcoded fallback URL');
   return 'https://trainer-finder-9.emergent.sh';
 };
 
 const API_BASE_URL = `${getBackendUrl()}/api`;
 
-console.log('[API] Using backend URL:', API_BASE_URL);
+console.log('[API] Final API_BASE_URL:', API_BASE_URL);
 
 const api = axios.create({
   baseURL: API_BASE_URL,
