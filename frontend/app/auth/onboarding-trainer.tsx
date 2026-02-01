@@ -488,11 +488,19 @@ export default function TrainerOnboardingScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Full background gradient */}
+      <LinearGradient
+        colors={Colors.gradientBackground}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+      
       {/* Header */}
       <LinearGradient
-        colors={Colors.gradientOrangeStart}
+        colors={Colors.gradientOrangeYellow}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 1, y: 0 }}
         style={styles.header}
       >
         <Text style={styles.title}>Trainer Setup</Text>
