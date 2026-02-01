@@ -73,9 +73,15 @@ export default function VirtualConfirmScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <LinearGradient
-        colors={Colors.gradientBackground}
+        colors={['#0E151E', '#1A2030', '#2A1A15', '#3D2010', '#4A2508']}
         start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
+        end={{ x: 0.3, y: 1 }}
+        style={StyleSheet.absoluteFillObject}
+      />
+      
+      {/* Orange glow overlay */}
+      <LinearGradient
+        colors={['transparent', 'transparent', 'rgba(242, 101, 34, 0.15)', 'rgba(242, 101, 34, 0.3)']}
         style={StyleSheet.absoluteFillObject}
       />
 
