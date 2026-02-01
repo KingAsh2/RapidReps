@@ -24,22 +24,25 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
+import { Colors, Shadows } from '../../src/utils/colors';
 
 const { width } = Dimensions.get('window');
 
-// Brand colors
+// Brand colors - RAPIDREPS BOLD DESIGN
 const COLORS = {
-  teal: '#1FB8B4',
-  tealLight: '#22C1C3',
-  orange: '#F7931E',
-  orangeHot: '#FF6A00',
-  orangeLight: '#FF9F1C',
-  navy: '#1a2a5e',
-  white: '#FFFFFF',
-  offWhite: '#FAFBFC',
-  gray: '#8892b0',
-  grayLight: '#E8ECF0',
-  success: '#00C853',
+  teal: Colors.secondary,
+  tealLight: Colors.secondaryLight,
+  orange: Colors.primary,
+  orangeHot: '#F26522',
+  orangeLight: Colors.primaryLight,
+  navy: Colors.navy,
+  navyDark: Colors.navyDark,
+  white: Colors.white,
+  offWhite: '#F0F0F0',
+  gray: Colors.textMuted,
+  grayLight: '#E0E0E0',
+  success: Colors.secondary,
+  cardBg: Colors.cardBg,
 };
 
 export default function TraineeOnboardingScreen() {
