@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../src/contexts/AuthContext';
-import { Colors } from '../src/utils/colors';
+import { Colors, Shadows } from '../src/utils/colors';
 import { Ionicons } from '@expo/vector-icons';
 import { AthleticButton } from '../src/components/AthleticButton';
 import { Video, ResizeMode } from 'expo-av';
