@@ -22,27 +22,34 @@ import { useAuth } from '../../../src/contexts/AuthContext';
 import { useAlert } from '../../../src/contexts/AlertContext';
 import { traineeAPI } from '../../../src/services/api';
 import * as ImagePicker from 'expo-image-picker';
+import { Colors, Shadows } from '../../../src/utils/colors';
 
 const { width } = Dimensions.get('window');
 
-// Brand colors - UNIFIED DESIGN SYSTEM
+// Brand colors - RAPIDREPS BOLD DESIGN
 const COLORS = {
-  teal: '#1FB8B4',
-  tealLight: '#22C1C3',
-  tealDark: '#0D8B88',
-  orange: '#F7931E',
-  orangeHot: '#FF6A00',
-  orangeLight: '#FF9F1C',
-  navy: '#1a2a5e',
-  navyLight: '#2a3a6e',
-  white: '#FFFFFF',
-  offWhite: '#FAFBFC',
-  gray: '#8892b0',
-  grayLight: '#E8ECF0',
-  error: '#FF4757',
-  // Glass card colors
-  cardBg: 'rgba(255,255,255,0.12)',
-  cardBorder: 'rgba(255,255,255,0.2)',
+  // Primary - Rapid Orange
+  orange: Colors.primary,
+  orangeHot: '#F26522',
+  orangeLight: Colors.primaryLight,
+  // Secondary - Teal
+  teal: Colors.secondary,
+  tealLight: Colors.secondaryLight,
+  tealDark: Colors.secondaryDark,
+  // Navy
+  navy: Colors.navy,
+  navyLight: Colors.navyLight,
+  navyDark: Colors.navyDark,
+  // Neutral
+  white: Colors.white,
+  offWhite: '#F0F0F0',
+  gray: Colors.textMuted,
+  grayLight: '#E0E0E0',
+  // Status
+  error: '#FF4444',
+  // Card styling
+  cardBg: Colors.cardBg,
+  cardBorder: Colors.borderLight,
 };
 
 export default function TraineeProfileScreen() {
