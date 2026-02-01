@@ -134,7 +134,9 @@ export default function SessionActiveScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <LinearGradient
-        colors={Colors.gradientOrangeStart}
+        colors={Colors.gradientBackground}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
         style={StyleSheet.absoluteFillObject}
       />
 
@@ -143,7 +145,7 @@ export default function SessionActiveScreen() {
         {/* Session Icon */}
         <View style={styles.iconContainer}>
           <View style={styles.iconCircle}>
-            <Ionicons name="videocam" size={80} color={Colors.secondary} />
+            <Ionicons name="videocam" size={80} color={Colors.primary} />
           </View>
           <View style={styles.liveIndicator}>
             <View style={styles.liveDot} />
