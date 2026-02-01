@@ -32,7 +32,6 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [loginSuccess, setLoginSuccess] = useState(false);
 
-  // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
 
@@ -91,11 +90,17 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Dark Navy Background */}
+      {/* EXPLOSIVE Navy-to-Orange Gradient Background */}
       <LinearGradient
-        colors={Colors.gradientBackground}
+        colors={['#0E151E', '#1A2030', '#2A1A15', '#3D2010', '#4A2508']}
         start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
+        end={{ x: 0.3, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+      
+      {/* Orange glow overlay at bottom */}
+      <LinearGradient
+        colors={['transparent', 'transparent', 'rgba(242, 101, 34, 0.15)', 'rgba(242, 101, 34, 0.25)']}
         style={StyleSheet.absoluteFill}
       />
       
@@ -127,7 +132,7 @@ export default function LoginScreen() {
               />
             </View>
 
-            {/* Card Container */}
+            {/* Card */}
             <View style={styles.card}>
               {/* Header */}
               <View style={styles.header}>
@@ -139,7 +144,7 @@ export default function LoginScreen() {
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Email</Text>
                 <View style={styles.inputContainer}>
-                  <Ionicons name="mail-outline" size={20} color={Colors.secondary} style={styles.inputIcon} />
+                  <Ionicons name="mail-outline" size={20} color={Colors.primary} style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
                     placeholder="john@example.com"
@@ -160,7 +165,7 @@ export default function LoginScreen() {
                   <Ionicons
                     name={showPassword ? 'lock-open-outline' : 'lock-closed-outline'}
                     size={20}
-                    color={Colors.secondary}
+                    color={Colors.primary}
                     style={styles.inputIcon}
                   />
                   <TextInput
@@ -193,14 +198,14 @@ export default function LoginScreen() {
                 <Text style={styles.forgotText}>Forgot password?</Text>
               </TouchableOpacity>
 
-              {/* Login Button - Orange to Yellow Gradient */}
+              {/* Login Button - ORANGE GRADIENT */}
               <TouchableOpacity
                 onPress={handleLogin}
                 disabled={loading}
                 activeOpacity={0.8}
               >
                 <LinearGradient
-                  colors={Colors.gradientOrangeYellow}
+                  colors={['#F26522', '#F9A825']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.loginButton}
@@ -249,10 +254,12 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: 'rgba(34, 49, 75, 0.8)',
+    backgroundColor: 'rgba(242, 101, 34, 0.3)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(242, 101, 34, 0.5)',
   },
   content: {
     flex: 1,
@@ -268,9 +275,11 @@ const styles = StyleSheet.create({
     height: 80,
   },
   card: {
-    backgroundColor: Colors.cardBg,
+    backgroundColor: 'rgba(34, 49, 75, 0.9)',
     borderRadius: BorderRadius.cardLarge,
     padding: Spacing.cardPadding + 8,
+    borderWidth: 1,
+    borderColor: 'rgba(242, 101, 34, 0.3)',
     ...Shadows.card,
   },
   header: {
@@ -286,7 +295,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.textLight,
+    color: Colors.primary,
   },
   inputGroup: {
     marginBottom: 20,
@@ -294,7 +303,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.textLight,
+    color: Colors.primary,
     marginBottom: 10,
   },
   inputContainer: {
@@ -304,6 +313,8 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.input,
     paddingHorizontal: Spacing.inputPadding,
     height: 56,
+    borderWidth: 1,
+    borderColor: 'rgba(242, 101, 34, 0.3)',
   },
   inputIcon: {
     marginRight: 12,
@@ -321,7 +332,7 @@ const styles = StyleSheet.create({
   forgotText: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.secondary,
+    color: Colors.primary,
   },
   loginButton: {
     borderRadius: BorderRadius.button,
@@ -354,6 +365,6 @@ const styles = StyleSheet.create({
   signupLink: {
     fontSize: 15,
     fontWeight: '700',
-    color: Colors.secondary,
+    color: Colors.primary,
   },
 });
