@@ -1,46 +1,90 @@
-// RapidReps Athletic Brand Colors - Sports Team Style
+// RapidReps Official Brand Colors - Bold, Sporty, High-Energy
 
 export const Colors = {
-  // PRIMARY - Athletic Orange (Main Brand)
-  primary: '#FF7F00',
-  primaryLight: '#FFA526',
-  primaryDark: '#E65C00',
+  // PRIMARY - Rapid Orange
+  primary: '#FF7A00',
+  primaryLight: '#FF9A3E',
+  primaryDark: '#E66D00',
   
-  // SECONDARY - Teal Accent (Energy & Pop)
-  secondary: '#30C7C9',
-  secondaryDark: '#1FA6A9',
+  // SECONDARY - Teal Accent
+  secondary: '#0AAABF',
+  secondaryLight: '#0CC4D3',
+  secondaryDark: '#0199A7',
   
-  // BASE - Deep Navy (Strength & Authority)
-  navy: '#002C4B',
-  navyLight: '#003E66',
+  // BASE - Deep Navy
+  navy: '#002A4A',
+  navyLight: '#003D6B',
+  navyDark: '#00172C',
   
   // NEUTRAL
   white: '#FFFFFF',
-  background: '#F7F7F7',
+  background: '#001E36',
   lightGray: '#E0E0E0',
+  darkGray: '#1A3A52',
   
   // STATUS COLORS
-  success: '#30C7C9',  // Teal
+  success: '#0AAABF',
   error: '#FF4444',
-  danger: '#FF4444',  // Alias for error
-  warning: '#FFA526',  // Light Orange
+  danger: '#FF4444',
+  warning: '#FF9A3E',
   
   // TEXT
-  text: '#002C4B',  // Navy for body text
-  textLight: '#666666',
+  text: '#FFFFFF',
+  textLight: '#A8C4D9',
   textWhite: '#FFFFFF',
+  textNavy: '#002A4A',
   
   // UI ELEMENTS
-  border: '#003E66',  // Navy border
-  shadow: '#002C4B',
+  border: '#0AAABF',
+  borderLight: 'rgba(10, 170, 191, 0.3)',
+  shadow: 'rgba(0, 23, 44, 0.4)',
+  cardBg: 'rgba(0, 42, 74, 0.8)',
+  inputBg: 'rgba(0, 42, 74, 0.9)',
   
-  // GRADIENTS (Used sparingly for backgrounds only)
-  gradientOrange: ['#FFA526', '#FF7F00', '#E65C00'],
-  gradientTeal: ['#30C7C9', '#1FA6A9'],
-  gradientNavy: ['#003E66', '#002C4B'],
+  // GRADIENTS
+  gradientBackground: ['#002A4A', '#0199A7'],
+  gradientBackgroundDark: ['#00172C', '#002A4A'],
+  gradientOrange: ['#FF7A00', '#FF9A3E'],
+  gradientTeal: ['#0199A7', '#0CC4D3'],
+  gradientButton: ['#FF7A00', '#0BBAC2'],
+  gradientCard: ['#FF7A00', '#FF9A3E'],
+  gradientNavy: ['#002A4A', '#003D6B'],
   
-  // LEGACY (for backwards compatibility - will remove)
-  gradientMain: ['#FFA526', '#FF7F00', '#E65C00'],
-  gradientTealStart: ['#30C7C9', '#1FA6A9'],
-  gradientOrangeStart: ['#FFA526', '#FF7F00'],
+  // LEGACY (for backwards compatibility)
+  gradientMain: ['#FF7A00', '#FF9A3E'],
+  gradientTealStart: ['#0199A7', '#0CC4D3'],
+  gradientOrangeStart: ['#FF7A00', '#FF9A3E'],
+};
+
+// Typography configuration
+export const Typography = {
+  headerFont: 'System', // Would use Montserrat ExtraBold in production
+  subheaderFont: 'System', // Would use Montserrat SemiBold in production
+  bodyFont: 'System', // Would use Inter Regular in production
+  numberFont: 'System', // Would use Inter SemiBold in production
+};
+
+// Shadow configuration
+export const Shadows = {
+  card: {
+    shadowColor: '#00172C',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  button: {
+    shadowColor: '#00172C',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 10,
+  },
+  input: {
+    shadowColor: '#00172C',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
 };
