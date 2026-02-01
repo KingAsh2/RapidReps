@@ -1,165 +1,180 @@
-// RapidReps EXPLOSIVE Brand Colors - BOLD, VIBRANT, HIGH-ENERGY!
-// Navy-to-Orange gradients EVERYWHERE!
+// 🔥🔥🔥 RAPIDREPS EXPLOSIVE FIRE DESIGN 🔥🔥🔥
+// HIGH-ENERGY • BOLD • FITNESS-CENTRIC • EXPLOSIVE GRADIENTS
 
 export const Colors = {
-  // PRIMARY - Rapid Orange (Fiery Orange)
-  primary: '#F26522',
-  primaryLight: '#F9A825',
-  primaryDark: '#EA3807',
-  primaryYellow: '#FFC107',
+  // 🔥 PRIMARY - FIERY ORANGE
+  primary: '#FF6B00',
+  primaryLight: '#FF8C00',
+  primaryDark: '#E65000',
+  primaryYellow: '#FFB800',
+  primaryHot: '#FF4500',
   
-  // SECONDARY - Teal (MINIMAL USE - mostly for subtle accents only)
-  secondary: '#00BCD4',
-  secondaryLight: '#26C6DA',
-  secondaryDark: '#0097A7',
+  // 💪 SECONDARY - POWER TEAL (minimal)
+  secondary: '#00D4AA',
+  secondaryLight: '#00FFD4',
+  secondaryDark: '#00A885',
   
-  // BASE - Deep Navy
-  navy: '#1A2536',
-  navyLight: '#22314B',
-  navyDark: '#0E151E',
-  navyCard: '#283C5C',
+  // 🌙 BASE - DEEP NAVY (with orange undertones)
+  navy: '#0F1A2A',
+  navyLight: '#1A2A40',
+  navyDark: '#080D15',
+  navyWarm: '#1A1A2E',
   
-  // CARD BACKGROUNDS
-  cardBg: '#22314B',
-  cardBgDark: '#1A2536',
-  inputBg: '#364C73',
-  inputBgAlt: '#2D3E5A',
+  // 🔥 FIRE COLORS
+  fire: '#FF4500',
+  fireGlow: '#FF6B35',
+  fireBright: '#FF8C00',
+  ember: '#FF5722',
+  
+  // ⚡ ENERGY COLORS
+  energy: '#FFD700',
+  energyBright: '#FFEA00',
+  spark: '#FFA500',
+  
+  // CARD BACKGROUNDS - Warm tinted
+  cardBg: 'rgba(255, 107, 0, 0.15)',
+  cardBgDark: 'rgba(255, 69, 0, 0.1)',
+  cardBgSolid: '#1F1A25',
+  inputBg: 'rgba(255, 107, 0, 0.08)',
+  inputBgSolid: '#1A1520',
   
   // NEUTRAL
   white: '#FFFFFF',
-  offWhite: '#F0F0F0',
-  background: '#0E151E',
-  lightGray: '#E0E0E0',
-  mediumGray: '#C0C0C0',
-  darkGray: '#111A2A',
+  offWhite: '#FFF5F0',
+  background: '#080D15',
+  lightGray: '#FFE4D6',
+  mediumGray: '#D4A88A',
+  darkGray: '#0D0A12',
   
-  // STATUS COLORS
-  success: '#4CAF50',
+  // STATUS
+  success: '#00D4AA',
   error: '#FF4444',
-  danger: '#FF4444',
-  warning: '#F9A825',
+  danger: '#FF2222',
+  warning: '#FFB800',
   
-  // TEXT
+  // TEXT - Warm tinted
   text: '#FFFFFF',
-  textLight: '#D0D0D0',
-  textMuted: '#A0A0A0',
+  textLight: '#FFD4C4',
+  textMuted: '#CC9080',
   textWhite: '#FFFFFF',
-  textNavy: '#1A2536',
-  textAccent: '#F26522',
+  textNavy: '#0F1A2A',
+  textAccent: '#FF6B00',
+  textFire: '#FF4500',
   
-  // UI ELEMENTS
-  border: '#364C73',
-  borderLight: 'rgba(54, 76, 115, 0.5)',
-  borderAccent: '#F26522',
-  borderOrange: '#F26522',
-  shadow: 'rgba(14, 21, 30, 0.6)',
+  // UI ELEMENTS - Orange accented
+  border: 'rgba(255, 107, 0, 0.4)',
+  borderLight: 'rgba(255, 107, 0, 0.2)',
+  borderBright: 'rgba(255, 107, 0, 0.6)',
+  borderAccent: '#FF6B00',
+  shadow: 'rgba(255, 69, 0, 0.4)',
   
-  // GRADIENTS - EXPLOSIVE ORANGE EVERYWHERE!
+  // 🔥🔥🔥 EXPLOSIVE GRADIENTS 🔥🔥🔥
   
-  // Main background - Navy to Orange (VISIBLE gradient!)
-  gradientBackground: ['#0E151E', '#1A2536', '#2D1810', '#4A1A08'],
-  gradientBackgroundAlt: ['#1A2536', '#3D2015', '#5A2810'],
-  gradientBackgroundExplosive: ['#0E151E', '#2A1A10', '#4A2510', '#6B3000'],
+  // Main Background - FIERY!
+  gradientBackground: ['#0F1A2A', '#1A1520', '#2A1A18', '#3D2015', '#4A2510', '#5A3010'],
+  gradientBackgroundHot: ['#080D15', '#1A1015', '#2D1510', '#401A10', '#552008'],
+  gradientBackgroundFire: ['#0F1A2A', '#2A1515', '#451810', '#601A08', '#7A1A00'],
   
-  // Button gradients - ALL ORANGE!
-  gradientButton: ['#F26522', '#F9A825'],
-  gradientButtonAlt: ['#EA3807', '#F26522'],
-  gradientButtonHot: ['#FF4500', '#FFA500'],
+  // EXPLOSIVE Button - ALL ORANGE FIRE
+  gradientButton: ['#FF4500', '#FF6B00', '#FF8C00'],
+  gradientButtonHot: ['#FF2200', '#FF4500', '#FF6B00'],
+  gradientButtonFire: ['#E64500', '#FF5500', '#FF7700', '#FF9900'],
   
-  // Card gradients - Orange accents
-  gradientOrange: ['#F26522', '#F9A825'],
-  gradientOrangeYellow: ['#E74C2B', '#FFC107'],
-  gradientOrangeHot: ['#FF4500', '#FF8C00', '#FFA500'],
-  gradientOrangeFire: ['#FF4500', '#FF6B35', '#FFA500'],
+  // Card gradients - Fiery
+  gradientOrange: ['#FF4500', '#FF6B00', '#FF8C00'],
+  gradientOrangeYellow: ['#FF4500', '#FF6B00', '#FFB800'],
+  gradientOrangeHot: ['#FF2200', '#FF4500', '#FF6B00', '#FF8C00'],
+  gradientFire: ['#FF4500', '#FF5500', '#FF6B00', '#FF8000'],
+  gradientEmber: ['#FF3300', '#FF4500', '#FF5722'],
   
-  // Navy with orange glow
-  gradientNavyOrange: ['#1A2536', '#3A2520', '#5A3018'],
-  gradientNavyFire: ['#0E151E', '#2A1A15', '#4A2A1A', '#6A3A1F'],
+  // Navy with HEAVY orange
+  gradientNavyFire: ['#0F1A2A', '#2A1510', '#451508', '#601500'],
+  gradientNavyEmber: ['#1A1520', '#2D1815', '#401810', '#551808'],
   
-  // Card backgrounds with subtle orange
-  gradientCard: ['#22314B', '#2A2520'],
-  gradientCardOrange: ['#2A2015', '#3A2A1A'],
+  // Card with fire tint
+  gradientCard: ['rgba(255, 69, 0, 0.2)', 'rgba(255, 107, 0, 0.1)'],
+  gradientCardFire: ['rgba(255, 69, 0, 0.25)', 'rgba(255, 140, 0, 0.15)'],
   
-  // Legacy compatibility
-  gradientMain: ['#F26522', '#F9A825'],
-  gradientTeal: ['#00BCD4', '#26C6DA'],
-  gradientTealStart: ['#00BCD4', '#26C6DA'],
-  gradientOrangeStart: ['#F26522', '#F9A825'],
+  // Legacy
+  gradientMain: ['#FF4500', '#FF6B00', '#FF8C00'],
+  gradientTeal: ['#00D4AA', '#00FFD4'],
+  gradientTealStart: ['#00D4AA', '#00FFD4'],
+  gradientOrangeStart: ['#FF4500', '#FF6B00'],
 };
 
-// Typography configuration
+// Typography
 export const Typography = {
   headerWeight: '900',
-  subheaderWeight: '700',
-  bodyWeight: '500',
-  labelWeight: '600',
-  headerSize: 28,
-  titleSize: 24,
-  subtitleSize: 18,
+  subheaderWeight: '800',
+  bodyWeight: '600',
+  labelWeight: '700',
+  headerSize: 32,
+  titleSize: 28,
+  subtitleSize: 20,
   bodySize: 16,
-  labelSize: 12,
+  labelSize: 13,
   smallSize: 11,
 };
 
-// Shadow configurations
+// 🔥 FIRE SHADOWS
 export const Shadows = {
   card: {
-    shadowColor: '#FF6B35',
+    shadowColor: '#FF4500',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 15,
+  },
+  button: {
+    shadowColor: '#FF4500',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.6,
     shadowRadius: 16,
     elevation: 12,
   },
-  button: {
-    shadowColor: '#F26522',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.5,
-    shadowRadius: 12,
-    elevation: 10,
-  },
   input: {
-    shadowColor: '#0E151E',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  subtle: {
-    shadowColor: '#F26522',
+    shadowColor: '#FF4500',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
   },
   glow: {
-    shadowColor: '#FF6B35',
+    shadowColor: '#FF6B00',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 20,
-    elevation: 15,
+    shadowOpacity: 0.8,
+    shadowRadius: 30,
+    elevation: 20,
+  },
+  fire: {
+    shadowColor: '#FF4500',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.7,
+    shadowRadius: 25,
+    elevation: 18,
   },
 };
 
-// Border radius values
+// Border radius
 export const BorderRadius = {
-  button: 25,
+  button: 30,
   buttonLarge: 40,
-  input: 12,
-  card: 20,
-  cardLarge: 25,
-  small: 8,
-  medium: 15,
+  input: 16,
+  card: 24,
+  cardLarge: 28,
+  small: 12,
+  medium: 18,
 };
 
-// Spacing values
+// Spacing
 export const Spacing = {
-  xs: 4,
-  sm: 8,
-  md: 16,
-  lg: 24,
-  xl: 32,
-  xxl: 40,
+  xs: 6,
+  sm: 10,
+  md: 18,
+  lg: 28,
+  xl: 36,
+  xxl: 48,
   screenPadding: 24,
-  cardPadding: 20,
-  inputPadding: 16,
+  cardPadding: 24,
+  inputPadding: 18,
 };
