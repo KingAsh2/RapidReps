@@ -395,9 +395,9 @@ export default function TraineeHomeScreen() {
   if (loading) {
     return (
       <LinearGradient
-        colors={['#1FB8B4', '#F7931E']}
+        colors={Colors.gradientBackground}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 0, y: 1 }}
         style={styles.loadingContainer}
       >
         <ActivityIndicator size="large" color="#FFFFFF" />
@@ -425,9 +425,9 @@ export default function TraineeHomeScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <View style={styles.container}>
-        {/* Full Screen Gradient Background - Vibrant Teal */}
+        {/* Full Screen Gradient Background - Dark Navy */}
         <LinearGradient
-          colors={['#1FB8B4', '#14A3A0', '#0D8B88']}
+          colors={Colors.gradientBackground}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
           style={styles.fullGradient}
