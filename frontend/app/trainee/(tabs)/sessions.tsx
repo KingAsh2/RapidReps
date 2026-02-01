@@ -188,9 +188,9 @@ export default function SessionsScreen() {
   if (loading) {
     return (
       <LinearGradient
-        colors={[COLORS.teal, COLORS.tealLight, COLORS.orange]}
+        colors={Colors.gradientBackground}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 0, y: 1 }}
         style={styles.loadingContainer}
       >
         <ActivityIndicator size="large" color={COLORS.white} />
@@ -201,11 +201,11 @@ export default function SessionsScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Full gradient background */}
+      {/* Full gradient background - Dark Navy */}
       <LinearGradient
-        colors={[COLORS.teal, COLORS.tealLight, COLORS.orange]}
+        colors={Colors.gradientBackground}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 0, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
 
