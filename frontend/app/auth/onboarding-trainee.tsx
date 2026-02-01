@@ -245,7 +245,9 @@ export default function TraineeOnboardingScreen() {
                 <Image source={{ uri: formData.profilePhoto }} style={styles.photo} />
               ) : (
                 <LinearGradient
-                  colors={[COLORS.teal, COLORS.tealLight]}
+                  colors={Colors.gradientOrangeYellow}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
                   style={styles.photoPlaceholder}
                 >
                   <Ionicons name="camera" size={40} color={COLORS.white} />
