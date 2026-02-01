@@ -238,12 +238,12 @@ export default function TraineeProfileScreen() {
   if (loading) {
     return (
       <LinearGradient
-        colors={Colors.gradientBackground}
+        colors={['#0E151E', '#1A2030', '#2A1A15', '#3D2010', '#4A2508']}
         start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
+        end={{ x: 0.3, y: 1 }}
         style={styles.loadingContainer}
       >
-        <ActivityIndicator size="large" color={COLORS.white} />
+        <ActivityIndicator size="large" color="#F26522" />
         <Text style={styles.loadingText}>Loading profile...</Text>
       </LinearGradient>
     );
@@ -251,11 +251,17 @@ export default function TraineeProfileScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Full gradient background - Dark Navy */}
+      {/* EXPLOSIVE Navy-to-Orange Gradient Background */}
       <LinearGradient
-        colors={Colors.gradientBackground}
+        colors={['#0E151E', '#1A2030', '#2A1A15', '#3D2010', '#4A2508']}
         start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
+        end={{ x: 0.3, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+      
+      {/* Orange glow overlay */}
+      <LinearGradient
+        colors={['transparent', 'transparent', 'rgba(242, 101, 34, 0.1)', 'rgba(242, 101, 34, 0.2)']}
         style={StyleSheet.absoluteFill}
       />
 
