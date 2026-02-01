@@ -449,9 +449,9 @@ export default function TraineeOnboardingScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={[COLORS.teal, COLORS.tealLight, COLORS.orange]}
+        colors={Colors.gradientBackground}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 0, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
 
