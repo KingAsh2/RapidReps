@@ -838,6 +838,7 @@ export default function TrainerHomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Colors.navyDark,
   },
   safeArea: {
     flex: 1,
@@ -851,7 +852,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: 16,
     fontWeight: '600',
-    color: COLORS.white,
+    color: Colors.white,
   },
   headerActions: {
     flexDirection: 'row',
