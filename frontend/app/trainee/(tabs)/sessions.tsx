@@ -18,31 +18,37 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { useAlert } from '../../../src/contexts/AlertContext';
 import { traineeAPI } from '../../../src/services/api';
+import { Colors, Shadows } from '../../../src/utils/colors';
 
 const { width } = Dimensions.get('window');
 
-// Brand colors - UNIFIED DESIGN SYSTEM
+// Brand colors - RAPIDREPS BOLD DESIGN
 const COLORS = {
-  teal: '#1FB8B4',
-  tealLight: '#22C1C3',
-  tealDark: '#0D8B88',
-  orange: '#F7931E',
-  orangeHot: '#FF6A00',
-  orangeLight: '#FF9F1C',
-  orangeGlow: '#FFB347',
-  yellow: '#FDBB2D',
-  navy: '#1a2a5e',
-  navyLight: '#2a3a6e',
-  white: '#FFFFFF',
-  offWhite: '#FAFBFC',
-  gray: '#8892b0',
-  grayLight: '#E8ECF0',
-  success: '#00C853',
-  error: '#FF4757',
-  warning: '#FFA502',
-  // Glass card colors
-  cardBg: 'rgba(255,255,255,0.12)',
-  cardBorder: 'rgba(255,255,255,0.2)',
+  // Primary - Rapid Orange
+  orange: Colors.primary,
+  orangeHot: '#F26522',
+  orangeLight: Colors.primaryLight,
+  orangeGlow: '#FFC107',
+  // Secondary - Teal
+  teal: Colors.secondary,
+  tealLight: Colors.secondaryLight,
+  tealDark: Colors.secondaryDark,
+  // Navy
+  navy: Colors.navy,
+  navyLight: Colors.navyLight,
+  navyDark: Colors.navyDark,
+  // Neutral
+  white: Colors.white,
+  offWhite: '#F0F0F0',
+  gray: Colors.textMuted,
+  grayLight: '#E0E0E0',
+  // Status
+  success: Colors.secondary,
+  error: '#FF4444',
+  warning: Colors.primaryLight,
+  // Card styling
+  cardBg: Colors.cardBg,
+  cardBorder: Colors.borderLight,
 };
 
 export default function SessionsScreen() {
