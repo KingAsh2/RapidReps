@@ -59,13 +59,15 @@ export default function ForgotPasswordScreen() {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <LinearGradient
-          colors={Colors.gradientOrangeStart}
+          colors={Colors.gradientBackground}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
           style={StyleSheet.absoluteFillObject}
         />
         
         <View style={styles.content}>
           <View style={styles.successIconContainer}>
-            <Ionicons name="checkmark-circle" size={100} color={Colors.white} />
+            <Ionicons name="checkmark-circle" size={100} color={Colors.primary} />
           </View>
           
           <Text style={styles.successTitle}>Check Your Email</Text>
@@ -91,7 +93,9 @@ export default function ForgotPasswordScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <LinearGradient
-        colors={Colors.gradientOrangeStart}
+        colors={Colors.gradientBackground}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
         style={StyleSheet.absoluteFillObject}
       />
       
