@@ -154,16 +154,18 @@ export default function PaymentScreen() {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <LinearGradient
-          colors={Colors.gradientOrangeStart}
+          colors={Colors.gradientBackground}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
           style={StyleSheet.absoluteFillObject}
         />
         <View style={styles.successContainer}>
           <View style={styles.successIconContainer}>
-            <Ionicons name="checkmark-circle" size={120} color={Colors.white} />
+            <Ionicons name="checkmark-circle" size={120} color={Colors.primary} />
           </View>
           <Text style={styles.successTitle}>Payment Successful!</Text>
           <Text style={styles.successSubtitle}>Finding your trainer...</Text>
-          <ActivityIndicator size="large" color={Colors.white} style={styles.loader} />
+          <ActivityIndicator size="large" color={Colors.primary} style={styles.loader} />
         </View>
       </SafeAreaView>
     );
@@ -172,14 +174,16 @@ export default function PaymentScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <LinearGradient
-        colors={Colors.gradientOrangeStart}
+        colors={Colors.gradientBackground}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
         style={StyleSheet.absoluteFillObject}
       />
 
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={28} color={Colors.navy} />
+          <Ionicons name="arrow-back" size={28} color={Colors.white} />
         </Pressable>
         <Text style={styles.headerTitle}>Payment</Text>
         <View style={{ width: 48 }} />
@@ -189,7 +193,7 @@ export default function PaymentScreen() {
       <View style={styles.content}>
         {/* Demo Mode Notice */}
         <View style={styles.demoNotice}>
-          <Ionicons name="information-circle" size={24} color={Colors.warning} />
+          <Ionicons name="information-circle" size={24} color={Colors.primary} />
           <View style={styles.demoNoticeText}>
             <Text style={styles.demoNoticeTitle}>Demo Mode</Text>
             <Text style={styles.demoNoticeSubtitle}>
