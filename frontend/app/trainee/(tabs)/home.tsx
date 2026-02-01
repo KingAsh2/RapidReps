@@ -395,13 +395,13 @@ export default function TraineeHomeScreen() {
   if (loading) {
     return (
       <LinearGradient
-        colors={['#0E151E', '#1A2030', '#2A1A15', '#3D2010', '#4A2508']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0.3, y: 1 }}
+        colors={['#080D15', '#150D10', '#2A1008', '#451505', '#601800', '#802000']}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
         style={styles.loadingContainer}
       >
-        <ActivityIndicator size="large" color="#F26522" />
-        <Text style={styles.loadingText}>Getting your workout ready...</Text>
+        <ActivityIndicator size="large" color="#FF6B00" />
+        <Text style={styles.loadingText}>🔥 WARMING UP... 🔥</Text>
       </LinearGradient>
     );
   }
@@ -425,17 +425,19 @@ export default function TraineeHomeScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <View style={styles.container}>
-        {/* EXPLOSIVE Navy-to-Orange Gradient Background */}
+        {/* 🔥 EXPLOSIVE FIRE GRADIENT BACKGROUND 🔥 */}
         <LinearGradient
-          colors={['#0E151E', '#1A2030', '#2A1A15', '#3D2010', '#4A2508']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0.3, y: 1 }}
+          colors={['#080D15', '#150D10', '#2A1008', '#451505', '#601800', '#802000']}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
           style={styles.fullGradient}
         />
         
-        {/* Orange glow overlay */}
+        {/* Fire glow overlay */}
         <LinearGradient
-          colors={['transparent', 'transparent', 'rgba(242, 101, 34, 0.1)', 'rgba(242, 101, 34, 0.2)']}
+          colors={['transparent', 'rgba(255, 69, 0, 0.1)', 'rgba(255, 107, 0, 0.2)', 'rgba(255, 140, 0, 0.35)']}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
           style={styles.fullGradient}
         />
         
@@ -443,17 +445,17 @@ export default function TraineeHomeScreen() {
           {/* Header with Logo and Actions */}
           <View style={styles.header}>
             <View style={styles.headerLogo}>
-              <Text style={styles.logoText}>RapidReps</Text>
+              <Text style={styles.logoText}>🔥 RapidReps</Text>
             </View>
             <View style={styles.headerActions}>
               <TouchableOpacity 
                 onPress={() => router.push('/trainee/(tabs)/profile')} 
                 style={styles.headerButton}
               >
-                <Ionicons name="person-circle" size={30} color="#F26522" />
+                <Ionicons name="person-circle" size={30} color="#FF6B00" />
               </TouchableOpacity>
               <TouchableOpacity onPress={handleLogout} style={styles.headerButton}>
-                <Ionicons name="log-out-outline" size={24} color="#F26522" />
+                <Ionicons name="log-out-outline" size={24} color="#FF6B00" />
               </TouchableOpacity>
             </View>
           </View>
