@@ -16,7 +16,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Shadows } from '../../src/utils/colors';
+import { Colors, Shadows, BorderRadius, Spacing } from '../../src/utils/colors';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useAlert } from '../../src/contexts/AlertContext';
 
@@ -90,12 +90,15 @@ export default function LoginScreen() {
   };
 
   return (
-    <LinearGradient
-      colors={Colors.gradientBackground}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 0, y: 1 }}
-      style={styles.container}
-    >
+    <View style={styles.container}>
+      {/* Dark Navy Background */}
+      <LinearGradient
+        colors={Colors.gradientBackground}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+      
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -124,23 +127,23 @@ export default function LoginScreen() {
               />
             </View>
 
-            {/* Header */}
-            <View style={styles.header}>
-              <Text style={styles.title}>WELCOME BACK</Text>
-              <Text style={styles.subtitle}>Let's get after it 💪</Text>
-            </View>
-
-            {/* Card */}
+            {/* Card Container */}
             <View style={styles.card}>
+              {/* Header */}
+              <View style={styles.header}>
+                <Text style={styles.title}>Let's Finish What{"\n"}You Started</Text>
+                <Text style={styles.subtitle}>Time to lock in 💪⚡</Text>
+              </View>
+
               {/* Email Input */}
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>EMAIL</Text>
+                <Text style={styles.label}>Email</Text>
                 <View style={styles.inputContainer}>
-                  <Ionicons name="mail" size={20} color={Colors.primary} style={styles.inputIcon} />
+                  <Ionicons name="mail-outline" size={20} color={Colors.secondary} style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
-                    placeholder="your@email.com"
-                    placeholderTextColor={Colors.textLight}
+                    placeholder="john@example.com"
+                    placeholderTextColor={Colors.textMuted}
                     value={email}
                     onChangeText={setEmail}
                     keyboardType="email-address"
@@ -152,18 +155,18 @@ export default function LoginScreen() {
 
               {/* Password Input */}
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>PASSWORD</Text>
+                <Text style={styles.label}>Password</Text>
                 <View style={styles.inputContainer}>
                   <Ionicons
-                    name={showPassword ? 'lock-open' : 'lock-closed'}
+                    name={showPassword ? 'lock-open-outline' : 'lock-closed-outline'}
                     size={20}
-                    color={Colors.primary}
+                    color={Colors.secondary}
                     style={styles.inputIcon}
                   />
                   <TextInput
                     style={styles.input}
                     placeholder="••••••••"
-                    placeholderTextColor={Colors.textLight}
+                    placeholderTextColor={Colors.textMuted}
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry={!showPassword}
@@ -174,9 +177,9 @@ export default function LoginScreen() {
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                   >
                     <Ionicons
-                      name={showPassword ? 'eye-off' : 'eye'}
+                      name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                       size={20}
-                      color={Colors.secondary}
+                      color={Colors.textMuted}
                     />
                   </TouchableOpacity>
                 </View>
@@ -190,14 +193,14 @@ export default function LoginScreen() {
                 <Text style={styles.forgotText}>Forgot password?</Text>
               </TouchableOpacity>
 
-              {/* Login Button */}
+              {/* Login Button - Orange to Yellow Gradient */}
               <TouchableOpacity
                 onPress={handleLogin}
                 disabled={loading}
                 activeOpacity={0.8}
               >
                 <LinearGradient
-                  colors={Colors.gradientButton}
+                  colors={Colors.gradientOrangeYellow}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.loginButton}
@@ -206,31 +209,32 @@ export default function LoginScreen() {
                     <ActivityIndicator size="small" color={Colors.white} />
                   ) : (
                     <View style={styles.loginButtonContent}>
-                      <Text style={styles.loginButtonText}>LOG IN</Text>
-                      <Ionicons name="arrow-forward" size={20} color={Colors.white} />
+                      <Ionicons name="flash" size={22} color={Colors.white} />
+                      <Text style={styles.loginButtonText}>Log In</Text>
                     </View>
                   )}
                 </LinearGradient>
               </TouchableOpacity>
-            </View>
 
-            {/* Sign Up Link */}
-            <View style={styles.signupContainer}>
-              <Text style={styles.signupText}>Don't have an account? </Text>
-              <TouchableOpacity onPress={() => router.push('/auth/signup')}>
-                <Text style={styles.signupLink}>Sign Up</Text>
-              </TouchableOpacity>
+              {/* Sign Up Link */}
+              <View style={styles.signupContainer}>
+                <Text style={styles.signupText}>Don't have an account? </Text>
+                <TouchableOpacity onPress={() => router.push('/auth/signup')}>
+                  <Text style={styles.signupLink}>Sign Up</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </Animated.View>
         </KeyboardAvoidingView>
       </SafeAreaView>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Colors.navyDark,
   },
   safeArea: {
     flex: 1,
@@ -245,70 +249,61 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: 'rgba(0, 42, 74, 0.6)',
+    backgroundColor: 'rgba(34, 49, 75, 0.8)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 24,
+    paddingHorizontal: Spacing.screenPadding,
     justifyContent: 'center',
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 32,
   },
   logo: {
     width: 200,
     height: 80,
   },
+  card: {
+    backgroundColor: Colors.cardBg,
+    borderRadius: BorderRadius.cardLarge,
+    padding: Spacing.cardPadding + 8,
+    ...Shadows.card,
+  },
   header: {
-    alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 28,
   },
   title: {
-    fontSize: 32,
-    fontWeight: '900',
+    fontSize: 26,
+    fontWeight: '800',
     color: Colors.white,
-    letterSpacing: 2,
+    lineHeight: 32,
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
-    color: Colors.secondary,
-  },
-  card: {
-    backgroundColor: Colors.cardBg,
-    borderRadius: 24,
-    padding: 28,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    ...Shadows.card,
+    color: Colors.textLight,
   },
   inputGroup: {
     marginBottom: 20,
   },
   label: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: Colors.secondary,
-    letterSpacing: 1.5,
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.textLight,
     marginBottom: 10,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.inputBg,
-    borderRadius: 16,
-    paddingHorizontal: 16,
+    borderRadius: BorderRadius.input,
+    paddingHorizontal: Spacing.inputPadding,
     height: 56,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    ...Shadows.input,
   },
   inputIcon: {
     marginRight: 12,
@@ -326,10 +321,10 @@ const styles = StyleSheet.create({
   forgotText: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.primary,
+    color: Colors.secondary,
   },
   loginButton: {
-    borderRadius: 16,
+    borderRadius: BorderRadius.button,
     paddingVertical: 18,
     alignItems: 'center',
     justifyContent: 'center',
@@ -342,24 +337,23 @@ const styles = StyleSheet.create({
   },
   loginButtonText: {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '800',
     color: Colors.white,
-    letterSpacing: 2,
   },
   signupContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 32,
+    marginTop: 24,
   },
   signupText: {
     fontSize: 15,
     fontWeight: '500',
-    color: Colors.textLight,
+    color: Colors.textMuted,
   },
   signupLink: {
     fontSize: 15,
-    fontWeight: '800',
-    color: Colors.primary,
+    fontWeight: '700',
+    color: Colors.secondary,
   },
 });
