@@ -94,7 +94,9 @@ export default function SessionCompleteScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <LinearGradient
-        colors={Colors.gradientOrangeStart}
+        colors={Colors.gradientBackground}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
         style={StyleSheet.absoluteFillObject}
       />
 
@@ -106,7 +108,7 @@ export default function SessionCompleteScreen() {
         {/* Success Icon */}
         <View style={styles.iconContainer}>
           <View style={styles.iconCircle}>
-            <Ionicons name="checkmark-circle" size={100} color={Colors.success} />
+            <Ionicons name="checkmark-circle" size={100} color={Colors.primary} />
           </View>
         </View>
 
@@ -117,7 +119,7 @@ export default function SessionCompleteScreen() {
 
           <View style={styles.summaryDetails}>
             <View style={styles.summaryRow}>
-              <Ionicons name="person-outline" size={20} color={Colors.navy} />
+              <Ionicons name="person-outline" size={20} color={Colors.white} />
               <Text style={styles.summaryText}>Trainer: {trainerName}</Text>
             </View>
             <View style={styles.summaryRow}>
