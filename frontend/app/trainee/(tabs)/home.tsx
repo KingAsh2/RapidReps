@@ -395,12 +395,12 @@ export default function TraineeHomeScreen() {
   if (loading) {
     return (
       <LinearGradient
-        colors={Colors.gradientBackground}
+        colors={['#0E151E', '#1A2030', '#2A1A15', '#3D2010', '#4A2508']}
         start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
+        end={{ x: 0.3, y: 1 }}
         style={styles.loadingContainer}
       >
-        <ActivityIndicator size="large" color="#FFFFFF" />
+        <ActivityIndicator size="large" color="#F26522" />
         <Text style={styles.loadingText}>Getting your workout ready...</Text>
       </LinearGradient>
     );
@@ -425,11 +425,17 @@ export default function TraineeHomeScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <View style={styles.container}>
-        {/* Full Screen Gradient Background - Dark Navy */}
+        {/* EXPLOSIVE Navy-to-Orange Gradient Background */}
         <LinearGradient
-          colors={Colors.gradientBackground}
+          colors={['#0E151E', '#1A2030', '#2A1A15', '#3D2010', '#4A2508']}
           start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
+          end={{ x: 0.3, y: 1 }}
+          style={styles.fullGradient}
+        />
+        
+        {/* Orange glow overlay */}
+        <LinearGradient
+          colors={['transparent', 'transparent', 'rgba(242, 101, 34, 0.1)', 'rgba(242, 101, 34, 0.2)']}
           style={styles.fullGradient}
         />
         
@@ -444,10 +450,10 @@ export default function TraineeHomeScreen() {
                 onPress={() => router.push('/trainee/(tabs)/profile')} 
                 style={styles.headerButton}
               >
-                <Ionicons name="person-circle" size={30} color="#FFFFFF" />
+                <Ionicons name="person-circle" size={30} color="#F26522" />
               </TouchableOpacity>
               <TouchableOpacity onPress={handleLogout} style={styles.headerButton}>
-                <Ionicons name="log-out-outline" size={24} color="#FFFFFF" />
+                <Ionicons name="log-out-outline" size={24} color="#F26522" />
               </TouchableOpacity>
             </View>
           </View>
