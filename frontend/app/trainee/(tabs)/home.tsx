@@ -847,6 +847,7 @@ export default function TraineeHomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  // Updated with RapidReps Bold Branding
   container: {
     flex: 1,
     backgroundColor: '#1FB8B4',
