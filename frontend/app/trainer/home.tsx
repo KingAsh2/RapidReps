@@ -22,27 +22,28 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, Stack } from 'expo-router';
 import * as Location from 'expo-location';
 import { useAlert } from '../../src/contexts/AlertContext';
+import { Colors, Shadows } from '../../src/utils/colors';
 
 const { width } = Dimensions.get('window');
 
-// Brand colors
+// Brand colors - RapidReps Bold Branding
 const COLORS = {
-  teal: '#1FB8B4',
-  tealLight: '#22C1C3',
-  orange: '#F7931E',
-  orangeHot: '#FF6A00',
-  orangeLight: '#FF9F1C',
-  orangeGlow: '#FFB347',
-  yellow: '#FDBB2D',
-  navy: '#1a2a5e',
-  navyLight: '#2a3a6e',
-  white: '#FFFFFF',
-  offWhite: '#FAFBFC',
-  gray: '#8892b0',
-  grayLight: '#E8ECF0',
-  success: '#00C853',
-  successDark: '#00A844',
-  error: '#FF4757',
+  teal: Colors.secondary,
+  tealLight: Colors.secondaryLight,
+  orange: Colors.primary,
+  orangeHot: '#FF7A00',
+  orangeLight: Colors.primaryLight,
+  orangeGlow: '#FF9A3E',
+  yellow: '#FFB74D',
+  navy: Colors.navy,
+  navyLight: Colors.navyLight,
+  white: Colors.white,
+  offWhite: '#F8FAFC',
+  gray: Colors.textLight,
+  grayLight: '#E2E8F0',
+  success: '#10B981',
+  successDark: '#059669',
+  error: '#EF4444',
 };
 
 // Location update interval in ms (30 seconds)
