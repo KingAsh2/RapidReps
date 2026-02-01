@@ -19,26 +19,9 @@ import { UserRole } from '../../src/types';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Colors, Shadows } from '../../src/utils/colors';
 
 const { width } = Dimensions.get('window');
-
-// Brand colors
-const COLORS = {
-  teal: '#1FB8B4',
-  tealLight: '#22C1C3',
-  orange: '#F7931E',
-  orangeHot: '#FF6A00',
-  orangeLight: '#FF9F1C',
-  orangeGlow: '#FFB347',
-  yellow: '#FDBB2D',
-  navy: '#1a2a5e',
-  navyLight: '#2a3a6e',
-  white: '#FFFFFF',
-  offWhite: '#FAFBFC',
-  gray: '#8892b0',
-  grayLight: '#E8ECF0',
-  border: '#E0E4E8',
-};
 
 export default function SignupScreen() {
   const router = useRouter();
@@ -55,72 +38,22 @@ export default function SignupScreen() {
   });
 
   // Animation refs
-  const heroAnim = useRef(new Animated.Value(0)).current;
-  const formCardAnim = useRef(new Animated.Value(0)).current;
-  const roleCardsAnim = useRef(new Animated.Value(0)).current;
-  const ctaAnim = useRef(new Animated.Value(0)).current;
-  const ctaPulseAnim = useRef(new Animated.Value(1)).current;
-  const traineeCardScale = useRef(new Animated.Value(1)).current;
-  const trainerCardScale = useRef(new Animated.Value(1)).current;
-  const traineeCardOpacity = useRef(new Animated.Value(1)).current;
-  const trainerCardOpacity = useRef(new Animated.Value(1)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
 
-  // Entrance animations
   useEffect(() => {
-    // Hero fade + slide down
-    Animated.timing(heroAnim, {
-      toValue: 1,
-      duration: 400,
-      useNativeDriver: true,
-    }).start();
-
-    // Form card cascade
-    setTimeout(() => {
-      Animated.spring(formCardAnim, {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
         toValue: 1,
-        friction: 8,
-        tension: 40,
+        duration: 500,
         useNativeDriver: true,
-      }).start();
-    }, 200);
-
-    // Role cards stagger
-    setTimeout(() => {
-      Animated.spring(roleCardsAnim, {
-        toValue: 1,
-        friction: 8,
-        tension: 40,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 500,
         useNativeDriver: true,
-      }).start();
-    }, 350);
-
-    // CTA button
-    setTimeout(() => {
-      Animated.spring(ctaAnim, {
-        toValue: 1,
-        friction: 8,
-        tension: 40,
-        useNativeDriver: true,
-      }).start();
-    }, 500);
-
-    // CTA pulse every 7 seconds
-    const pulseInterval = setInterval(() => {
-      Animated.sequence([
-        Animated.timing(ctaPulseAnim, {
-          toValue: 1.03,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(ctaPulseAnim, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }, 7000);
-
-    return () => clearInterval(pulseInterval);
+      }),
+    ]).start();
   }, []);
 
   const handleSignup = async () => {
@@ -196,63 +129,20 @@ export default function SignupScreen() {
   };
 
   const selectRole = (role: UserRole) => {
-    // Animate selection
-    if (role === UserRole.TRAINEE) {
-      Animated.parallel([
-        Animated.spring(traineeCardScale, { toValue: 1.02, friction: 6, useNativeDriver: true }),
-        Animated.timing(trainerCardOpacity, { toValue: 0.5, duration: 200, useNativeDriver: true }),
-      ]).start(() => {
-        Animated.spring(traineeCardScale, { toValue: 1, friction: 6, useNativeDriver: true }).start();
-      });
-      Animated.timing(trainerCardOpacity, { toValue: 1, duration: 300, useNativeDriver: true }).start();
-    } else {
-      Animated.parallel([
-        Animated.spring(trainerCardScale, { toValue: 1.02, friction: 6, useNativeDriver: true }),
-        Animated.timing(traineeCardOpacity, { toValue: 0.5, duration: 200, useNativeDriver: true }),
-      ]).start(() => {
-        Animated.spring(trainerCardScale, { toValue: 1, friction: 6, useNativeDriver: true }).start();
-      });
-      Animated.timing(traineeCardOpacity, { toValue: 1, duration: 300, useNativeDriver: true }).start();
-    }
-
-    // Toggle role
     if (formData.roles.includes(role)) {
       setFormData({ ...formData, roles: formData.roles.filter(r => r !== role) });
     } else {
-      setFormData({ ...formData, roles: [role] }); // Single selection
+      setFormData({ ...formData, roles: [role] });
     }
   };
 
-  const heroTranslateY = heroAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-30, 0],
-  });
-
-  const formTranslateY = formCardAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [50, 0],
-  });
-
-  const roleTranslateY = roleCardsAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [40, 0],
-  });
-
-  const ctaTranslateY = ctaAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [30, 0],
-  });
-
   return (
-    <View style={styles.container}>
-      {/* Full gradient background */}
-      <LinearGradient
-        colors={[COLORS.orange, COLORS.orangeLight, COLORS.orangeGlow]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFill}
-      />
-
+    <LinearGradient
+      colors={Colors.gradientBackground}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.container}
+    >
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -264,67 +154,55 @@ export default function SignupScreen() {
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            {/* Hero Section */}
             <Animated.View
-              style={[
-                styles.heroSection,
-                {
-                  opacity: heroAnim,
-                  transform: [{ translateY: heroTranslateY }],
-                },
-              ]}
+              style={{
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              }}
             >
+              {/* Logo */}
               <View style={styles.logoContainer}>
                 <Image
                   source={require('../../assets/rapidreps-logo.png')}
-                  style={styles.heroLogo}
+                  style={styles.logo}
                   resizeMode="contain"
                 />
               </View>
-              <Text style={styles.heroTitle}>Let's Build Your{'\n'}Fitness Momentum 🔥</Text>
-              <Text style={styles.heroSubtitle}>Train smarter. Move faster. Get real results.</Text>
-            </Animated.View>
 
-            {/* Form Card */}
-            <Animated.View
-              style={[
-                styles.formCard,
-                {
-                  opacity: formCardAnim,
-                  transform: [{ translateY: formTranslateY }],
-                },
-              ]}
-            >
-              <LinearGradient
-                colors={[COLORS.offWhite, COLORS.white]}
-                style={styles.formCardGradient}
-              >
+              {/* Header */}
+              <View style={styles.header}>
+                <Text style={styles.title}>JOIN THE TEAM</Text>
+                <Text style={styles.subtitle}>Your fitness journey starts here 🔥</Text>
+              </View>
+
+              {/* Form Card */}
+              <View style={styles.card}>
                 {/* Name Input */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>What should we call you?</Text>
-                  <View style={styles.inputWrapper}>
-                    <Ionicons name="person-outline" size={20} color={COLORS.gray} style={styles.inputIcon} />
+                  <Text style={styles.label}>FULL NAME</Text>
+                  <View style={styles.inputContainer}>
+                    <Ionicons name="person" size={20} color={Colors.primary} style={styles.inputIcon} />
                     <TextInput
                       style={styles.input}
                       value={formData.fullName}
                       onChangeText={(text) => setFormData({ ...formData, fullName: text })}
-                      placeholder="Your full name"
-                      placeholderTextColor={COLORS.gray}
+                      placeholder="John Smith"
+                      placeholderTextColor={Colors.textLight}
                     />
                   </View>
                 </View>
 
                 {/* Email Input */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Where should we send your wins?</Text>
-                  <View style={styles.inputWrapper}>
-                    <Ionicons name="mail-outline" size={20} color={COLORS.gray} style={styles.inputIcon} />
+                  <Text style={styles.label}>EMAIL</Text>
+                  <View style={styles.inputContainer}>
+                    <Ionicons name="mail" size={20} color={Colors.primary} style={styles.inputIcon} />
                     <TextInput
                       style={styles.input}
                       value={formData.email}
                       onChangeText={(text) => setFormData({ ...formData, email: text })}
                       placeholder="your@email.com"
-                      placeholderTextColor={COLORS.gray}
+                      placeholderTextColor={Colors.textLight}
                       keyboardType="email-address"
                       autoCapitalize="none"
                     />
@@ -333,15 +211,15 @@ export default function SignupScreen() {
 
                 {/* Phone Input */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Best number to reach you</Text>
-                  <View style={styles.inputWrapper}>
-                    <Ionicons name="call-outline" size={20} color={COLORS.gray} style={styles.inputIcon} />
+                  <Text style={styles.label}>PHONE</Text>
+                  <View style={styles.inputContainer}>
+                    <Ionicons name="call" size={20} color={Colors.primary} style={styles.inputIcon} />
                     <TextInput
                       style={styles.input}
                       value={formData.phone}
                       onChangeText={(text) => setFormData({ ...formData, phone: text })}
                       placeholder="(555) 123-4567"
-                      placeholderTextColor={COLORS.gray}
+                      placeholderTextColor={Colors.textLight}
                       keyboardType="phone-pad"
                     />
                   </View>
@@ -349,234 +227,167 @@ export default function SignupScreen() {
 
                 {/* Password Input */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Create a strong password</Text>
-                  <View style={styles.inputWrapper}>
-                    <Ionicons name="lock-closed-outline" size={20} color={COLORS.gray} style={styles.inputIcon} />
+                  <Text style={styles.label}>PASSWORD</Text>
+                  <View style={styles.inputContainer}>
+                    <Ionicons name="lock-closed" size={20} color={Colors.primary} style={styles.inputIcon} />
                     <TextInput
                       style={styles.input}
                       value={formData.password}
                       onChangeText={(text) => setFormData({ ...formData, password: text })}
                       placeholder="••••••••"
-                      placeholderTextColor={COLORS.gray}
+                      placeholderTextColor={Colors.textLight}
                       secureTextEntry
                     />
                   </View>
-                  <Text style={styles.helperText}>At least 8 characters. Strength matters. 💪</Text>
+                  <Text style={styles.helperText}>At least 8 characters</Text>
                 </View>
 
                 {/* Confirm Password Input */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Lock it in</Text>
-                  <View style={styles.inputWrapper}>
-                    <Ionicons name="shield-checkmark-outline" size={20} color={COLORS.gray} style={styles.inputIcon} />
+                  <Text style={styles.label}>CONFIRM PASSWORD</Text>
+                  <View style={styles.inputContainer}>
+                    <Ionicons name="shield-checkmark" size={20} color={Colors.primary} style={styles.inputIcon} />
                     <TextInput
                       style={styles.input}
                       value={formData.confirmPassword}
                       onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })}
                       placeholder="••••••••"
-                      placeholderTextColor={COLORS.gray}
+                      placeholderTextColor={Colors.textLight}
                       secureTextEntry
                     />
                   </View>
                 </View>
-              </LinearGradient>
-            </Animated.View>
+              </View>
 
-            {/* Role Selection */}
-            <Animated.View
-              style={[
-                styles.roleSection,
-                {
-                  opacity: roleCardsAnim,
-                  transform: [{ translateY: roleTranslateY }],
-                },
-              ]}
-            >
-              <Text style={styles.roleSectionTitle}>I'm here to...</Text>
+              {/* Role Selection */}
+              <View style={styles.roleSection}>
+                <Text style={styles.roleSectionTitle}>I WANT TO...</Text>
 
-              {/* Trainee Card */}
-              <Animated.View style={{ transform: [{ scale: traineeCardScale }], opacity: traineeCardOpacity }}>
+                {/* Trainee Card */}
                 <TouchableOpacity
                   onPress={() => selectRole(UserRole.TRAINEE)}
-                  activeOpacity={0.9}
+                  activeOpacity={0.8}
                 >
                   <LinearGradient
-                    colors={
-                      formData.roles.includes(UserRole.TRAINEE)
-                        ? [COLORS.teal, COLORS.tealLight]
-                        : [COLORS.white, COLORS.offWhite]
-                    }
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
+                    colors={formData.roles.includes(UserRole.TRAINEE) ? Colors.gradientTeal : ['transparent', 'transparent']}
                     style={[
                       styles.roleCard,
                       formData.roles.includes(UserRole.TRAINEE) && styles.roleCardSelected,
                     ]}
                   >
-                    <View style={styles.roleCardContent}>
-                      <View style={[
-                        styles.roleIconBg,
-                        formData.roles.includes(UserRole.TRAINEE) && styles.roleIconBgSelected,
+                    <View style={styles.roleIconContainer}>
+                      <Ionicons 
+                        name="search" 
+                        size={28} 
+                        color={formData.roles.includes(UserRole.TRAINEE) ? Colors.white : Colors.secondary} 
+                      />
+                    </View>
+                    <View style={styles.roleTextContainer}>
+                      <Text style={[
+                        styles.roleCardTitle,
+                        formData.roles.includes(UserRole.TRAINEE) && styles.roleCardTitleSelected,
                       ]}>
-                        <Ionicons 
-                          name="search" 
-                          size={28} 
-                          color={formData.roles.includes(UserRole.TRAINEE) ? COLORS.teal : COLORS.navy} 
-                        />
-                      </View>
-                      <View style={styles.roleTextContainer}>
-                        <Text style={[
-                          styles.roleCardTitle,
-                          formData.roles.includes(UserRole.TRAINEE) && styles.roleCardTitleSelected,
-                        ]}>
-                          Find a Trainer 💪
-                        </Text>
-                        <Text style={[
-                          styles.roleCardSubtitle,
-                          formData.roles.includes(UserRole.TRAINEE) && styles.roleCardSubtitleSelected,
-                        ]}>
-                          Book fast, train anywhere, level up on your schedule.
-                        </Text>
-                      </View>
+                        FIND A TRAINER
+                      </Text>
+                      <Text style={[
+                        styles.roleCardSubtitle,
+                        formData.roles.includes(UserRole.TRAINEE) && styles.roleCardSubtitleSelected,
+                      ]}>
+                        Book sessions & achieve your goals
+                      </Text>
                     </View>
                     {formData.roles.includes(UserRole.TRAINEE) && (
-                      <View style={styles.selectedBadge}>
-                        <Ionicons name="checkmark-circle" size={24} color={COLORS.white} />
-                      </View>
+                      <Ionicons name="checkmark-circle" size={24} color={Colors.white} />
                     )}
                   </LinearGradient>
                 </TouchableOpacity>
-              </Animated.View>
 
-              {/* Trainer Card */}
-              <Animated.View style={{ transform: [{ scale: trainerCardScale }], opacity: trainerCardOpacity }}>
+                {/* Trainer Card */}
                 <TouchableOpacity
                   onPress={() => selectRole(UserRole.TRAINER)}
-                  activeOpacity={0.9}
+                  activeOpacity={0.8}
                 >
                   <LinearGradient
-                    colors={
-                      formData.roles.includes(UserRole.TRAINER)
-                        ? [COLORS.orangeHot, COLORS.orange]
-                        : [COLORS.white, COLORS.offWhite]
-                    }
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
+                    colors={formData.roles.includes(UserRole.TRAINER) ? Colors.gradientOrange : ['transparent', 'transparent']}
                     style={[
                       styles.roleCard,
                       formData.roles.includes(UserRole.TRAINER) && styles.roleCardSelected,
                     ]}
                   >
-                    <View style={styles.roleCardContent}>
-                      <View style={[
-                        styles.roleIconBg,
-                        formData.roles.includes(UserRole.TRAINER) && styles.roleIconBgSelectedOrange,
+                    <View style={styles.roleIconContainer}>
+                      <Ionicons 
+                        name="flash" 
+                        size={28} 
+                        color={formData.roles.includes(UserRole.TRAINER) ? Colors.white : Colors.primary} 
+                      />
+                    </View>
+                    <View style={styles.roleTextContainer}>
+                      <Text style={[
+                        styles.roleCardTitle,
+                        formData.roles.includes(UserRole.TRAINER) && styles.roleCardTitleSelected,
                       ]}>
-                        <Ionicons 
-                          name="flash" 
-                          size={28} 
-                          color={formData.roles.includes(UserRole.TRAINER) ? COLORS.orangeHot : COLORS.navy} 
-                        />
-                      </View>
-                      <View style={styles.roleTextContainer}>
-                        <Text style={[
-                          styles.roleCardTitle,
-                          formData.roles.includes(UserRole.TRAINER) && styles.roleCardTitleSelected,
-                        ]}>
-                          Become a Trainer 🔥
-                        </Text>
-                        <Text style={[
-                          styles.roleCardSubtitle,
-                          formData.roles.includes(UserRole.TRAINER) && styles.roleCardSubtitleSelected,
-                        ]}>
-                          Earn more, build your brand, train clients on demand.
-                        </Text>
-                      </View>
+                        BECOME A TRAINER
+                      </Text>
+                      <Text style={[
+                        styles.roleCardSubtitle,
+                        formData.roles.includes(UserRole.TRAINER) && styles.roleCardSubtitleSelected,
+                      ]}>
+                        Build your business & earn more
+                      </Text>
                     </View>
                     {formData.roles.includes(UserRole.TRAINER) && (
-                      <View style={styles.selectedBadge}>
-                        <Ionicons name="checkmark-circle" size={24} color={COLORS.white} />
-                      </View>
+                      <Ionicons name="checkmark-circle" size={24} color={Colors.white} />
                     )}
                   </LinearGradient>
                 </TouchableOpacity>
-              </Animated.View>
+              </View>
 
-              {/* Selection Confirmation */}
-              {formData.roles.length > 0 && (
-                <Animated.Text style={styles.selectionConfirm}>
-                  Perfect — we'll tailor RapidReps for you ✨
-                </Animated.Text>
-              )}
-            </Animated.View>
-
-            {/* CTA Button */}
-            <Animated.View
-              style={[
-                styles.ctaContainer,
-                {
-                  opacity: ctaAnim,
-                  transform: [
-                    { translateY: ctaTranslateY },
-                    { scale: ctaPulseAnim },
-                  ],
-                },
-              ]}
-            >
+              {/* CTA Button */}
               <TouchableOpacity
                 onPress={handleSignup}
                 disabled={loading}
-                activeOpacity={0.9}
+                activeOpacity={0.8}
               >
                 <LinearGradient
-                  colors={loading ? ['#CCCCCC', '#999999'] : [COLORS.orangeHot, COLORS.orangeGlow]}
+                  colors={loading ? ['#666', '#888'] : Colors.gradientButton}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.ctaButton}
                 >
                   {loading ? (
-                    <Text style={styles.ctaText}>Creating Your Account...</Text>
+                    <Text style={styles.ctaText}>Creating Account...</Text>
                   ) : (
                     <>
-                      <Ionicons name="rocket" size={22} color={COLORS.white} />
-                      <Text style={styles.ctaText}>Start My Journey</Text>
+                      <Ionicons name="rocket" size={22} color={Colors.white} />
+                      <Text style={styles.ctaText}>START MY JOURNEY</Text>
                     </>
                   )}
                 </LinearGradient>
               </TouchableOpacity>
-            </Animated.View>
 
-            {/* Reassurance Text */}
-            <Text style={styles.reassuranceText}>
-              No commitments. Train when you want. 🏋️
-            </Text>
-
-            {/* Terms & Login */}
-            <View style={styles.footerSection}>
-              <Text style={styles.termsText}>
-                By continuing, you agree to the{' '}
-                <Text style={styles.termsLink} onPress={() => router.push('/legal/terms')}>
-                  Terms of Service
+              {/* Footer */}
+              <View style={styles.footer}>
+                <Text style={styles.termsText}>
+                  By signing up, you agree to our{' '}
+                  <Text style={styles.termsLink}>Terms</Text>
+                  {' '}and{' '}
+                  <Text style={styles.termsLink}>Privacy Policy</Text>
                 </Text>
-                {' '}and{' '}
-                <Text style={styles.termsLink} onPress={() => router.push('/legal/privacy')}>
-                  Privacy Policy
-                </Text>
-              </Text>
 
-              <View style={styles.loginRow}>
-                <Text style={styles.loginText}>Already crushing it?</Text>
-                <TouchableOpacity onPress={() => router.push('/auth/login')}>
-                  <Text style={styles.loginLink}>Log In →</Text>
-                </TouchableOpacity>
+                <View style={styles.loginRow}>
+                  <Text style={styles.loginText}>Already have an account? </Text>
+                  <TouchableOpacity onPress={() => router.push('/auth/login')}>
+                    <Text style={styles.loginLink}>Log In</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
 
-            <View style={{ height: 40 }} />
+              <View style={{ height: 40 }} />
+            </Animated.View>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
-    </View>
+    </LinearGradient>
   );
 }
 
@@ -594,174 +405,131 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 20,
-  },
-  // Hero
-  heroSection: {
-    alignItems: 'center',
+    paddingHorizontal: 24,
     paddingTop: 20,
-    paddingBottom: 24,
   },
   logoContainer: {
-    marginBottom: 16,
     alignItems: 'center',
+    marginBottom: 16,
   },
-  heroLogo: {
+  logo: {
     width: 180,
     height: 70,
   },
-  heroTitle: {
+  header: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  title: {
     fontSize: 28,
     fontWeight: '900',
-    color: COLORS.white,
-    textAlign: 'center',
-    lineHeight: 36,
-    textShadowColor: 'rgba(0,0,0,0.2)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    color: Colors.white,
+    letterSpacing: 2,
+    marginBottom: 8,
   },
-  heroSubtitle: {
+  subtitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: 'rgba(255,255,255,0.95)',
-    textAlign: 'center',
-    marginTop: 8,
+    color: Colors.secondary,
   },
-  // Form Card
-  formCard: {
+  card: {
+    backgroundColor: Colors.cardBg,
     borderRadius: 24,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 10,
-    marginBottom: 20,
-  },
-  formCardGradient: {
     padding: 24,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    marginBottom: 24,
+    ...Shadows.card,
   },
   inputGroup: {
     marginBottom: 18,
   },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: COLORS.navy,
+  label: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: Colors.secondary,
+    letterSpacing: 1.5,
     marginBottom: 8,
   },
-  inputWrapper: {
+  inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.white,
-    borderWidth: 2,
-    borderColor: COLORS.grayLight,
+    backgroundColor: Colors.inputBg,
     borderRadius: 14,
     paddingHorizontal: 14,
+    height: 52,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   inputIcon: {
     marginRight: 10,
   },
   input: {
     flex: 1,
-    paddingVertical: 14,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '500',
-    color: COLORS.navy,
+    color: Colors.white,
   },
   helperText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '500',
-    color: COLORS.gray,
+    color: Colors.textLight,
     marginTop: 6,
     marginLeft: 4,
   },
-  // Role Section
   roleSection: {
-    marginBottom: 20,
+    marginBottom: 24,
   },
   roleSectionTitle: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: '800',
-    color: COLORS.white,
-    marginBottom: 14,
-    textShadowColor: 'rgba(0,0,0,0.2)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    color: Colors.white,
+    letterSpacing: 1.5,
+    marginBottom: 16,
   },
   roleCard: {
-    borderRadius: 18,
-    padding: 18,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 6,
-    position: 'relative',
-  },
-  roleCardSelected: {
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-  },
-  roleCardContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: Colors.cardBg,
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    ...Shadows.card,
   },
-  roleIconBg: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: COLORS.grayLight,
+  roleCardSelected: {
+    borderColor: 'transparent',
+  },
+  roleIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
-  },
-  roleIconBgSelected: {
-    backgroundColor: 'rgba(255,255,255,0.3)',
-  },
-  roleIconBgSelectedOrange: {
-    backgroundColor: 'rgba(255,255,255,0.3)',
   },
   roleTextContainer: {
     flex: 1,
   },
   roleCardTitle: {
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: Colors.white,
+    letterSpacing: 0.5,
     marginBottom: 4,
   },
   roleCardTitleSelected: {
-    color: COLORS.white,
+    color: Colors.white,
   },
   roleCardSubtitle: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '500',
-    color: COLORS.gray,
-    lineHeight: 18,
+    color: Colors.textLight,
   },
   roleCardSubtitleSelected: {
-    color: 'rgba(255,255,255,0.9)',
-  },
-  selectedBadge: {
-    position: 'absolute',
-    top: 14,
-    right: 14,
-  },
-  selectionConfirm: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.white,
-    textAlign: 'center',
-    marginTop: 8,
-    textShadowColor: 'rgba(0,0,0,0.2)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
-  // CTA
-  ctaContainer: {
-    marginBottom: 16,
+    color: 'rgba(255, 255, 255, 0.9)',
   },
   ctaButton: {
     flexDirection: 'row',
@@ -770,55 +538,41 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     borderRadius: 16,
     gap: 10,
-    shadowColor: COLORS.orangeHot,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 10,
+    ...Shadows.button,
   },
   ctaText: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: COLORS.white,
-    letterSpacing: 0.5,
+    fontSize: 16,
+    fontWeight: '900',
+    color: Colors.white,
+    letterSpacing: 1.5,
   },
-  reassuranceText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: 'rgba(255,255,255,0.9)',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  // Footer
-  footerSection: {
+  footer: {
     alignItems: 'center',
+    marginTop: 24,
   },
   termsText: {
     fontSize: 12,
     fontWeight: '500',
-    color: 'rgba(255,255,255,0.8)',
+    color: Colors.textLight,
     textAlign: 'center',
-    lineHeight: 18,
     marginBottom: 16,
   },
   termsLink: {
     fontWeight: '700',
-    color: COLORS.white,
-    textDecorationLine: 'underline',
+    color: Colors.secondary,
   },
   loginRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
   },
   loginText: {
     fontSize: 14,
     fontWeight: '500',
-    color: 'rgba(255,255,255,0.9)',
+    color: Colors.textLight,
   },
   loginLink: {
     fontSize: 14,
     fontWeight: '800',
-    color: COLORS.white,
+    color: Colors.primary,
   },
 });
