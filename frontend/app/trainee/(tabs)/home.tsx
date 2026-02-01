@@ -19,7 +19,7 @@ import { useRouter, Stack } from 'expo-router';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { useAlert } from '../../../src/contexts/AlertContext';
 import { trainerAPI, traineeAPI } from '../../../src/services/api';
-import { Colors } from '../../../src/utils/colors';
+import { Colors, Shadows } from '../../../src/utils/colors';
 import { TrainerProfile } from '../../../src/types';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
