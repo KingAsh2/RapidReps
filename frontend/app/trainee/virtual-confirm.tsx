@@ -73,14 +73,16 @@ export default function VirtualConfirmScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <LinearGradient
-        colors={Colors.gradientOrangeStart}
+        colors={Colors.gradientBackground}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
         style={StyleSheet.absoluteFillObject}
       />
 
       {/* Back Button */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={28} color={Colors.navy} />
+          <Ionicons name="arrow-back" size={28} color={Colors.white} />
         </Pressable>
       </View>
 
@@ -88,7 +90,7 @@ export default function VirtualConfirmScreen() {
       <View style={styles.content}>
         {/* Icon */}
         <View style={styles.iconContainer}>
-          <Ionicons name="videocam" size={80} color={Colors.secondary} />
+          <Ionicons name="videocam" size={80} color={Colors.primary} />
         </View>
 
         {/* Title */}
