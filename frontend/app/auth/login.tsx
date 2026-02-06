@@ -434,6 +434,14 @@ const styles = StyleSheet.create({
     shadowRadius: 30,
     elevation: 10,
   },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  logo: {
+    width: 120,
+    height: 60,
+  },
   header: {
     marginBottom: 32,
     alignItems: 'center',
