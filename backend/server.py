@@ -177,12 +177,28 @@ class TrainerProfileCreate(BaseModel):
     primaryGym: Optional[str] = None
     offersInPerson: bool = True
     offersVirtual: bool = False
+    offersOutdoor: bool = True  # NEW: Outdoor sessions
+    offersInHome: bool = False  # NEW: In-home sessions
     sessionDurationsOffered: List[int] = [30, 45, 60]
-    ratePerMinuteCents: int = 100  # $1 per minute default
+    # NEW: Session-type specific pricing (in cents)
+    virtualRateCents: int = PricingRules.VIRTUAL_MIN_CENTS  # $30 min
+    outdoorRateCents: int = PricingRules.OUTDOOR_MIN_CENTS  # $40 min
+    inHomeRateCents: int = PricingRules.IN_HOME_MIN_CENTS   # $60 min
+    ratePerMinuteCents: int = 100  # Legacy field - $1/min default
     travelRadiusMiles: Optional[int] = 10
     cancellationPolicy: Optional[str] = "Free cancellation before 24 hours"
     availability: Optional[dict] = None
+    # Verification documents
     verificationDocs: List[str] = []
+    governmentIdUploaded: bool = False
+    ssnVerified: bool = False
+    backgroundCheckPassed: bool = False
+    sexOffenderCheckPassed: bool = False
+    cprAedCertUploaded: bool = False
+    fitnessCertUploaded: bool = False
+    # NEW: Intro video (mandatory)
+    introVideoUrl: Optional[str] = None
+    introVideoUploaded: bool = False
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     locationAddress: Optional[str] = None
@@ -202,13 +218,34 @@ class TrainerProfileResponse(BaseModel):
     primaryGym: Optional[str] = None
     offersInPerson: bool = True
     offersVirtual: bool = False
+    offersOutdoor: bool = True  # NEW
+    offersInHome: bool = False  # NEW
     sessionDurationsOffered: List[int] = []
+    # NEW: Session-type specific pricing
+    virtualRateCents: int = PricingRules.VIRTUAL_MIN_CENTS
+    outdoorRateCents: int = PricingRules.OUTDOOR_MIN_CENTS
+    inHomeRateCents: int = PricingRules.IN_HOME_MIN_CENTS
     ratePerMinuteCents: int = 100
     travelRadiusMiles: Optional[int] = 10
     cancellationPolicy: Optional[str] = None
     averageRating: float = 0.0
+    totalReviews: int = 0  # NEW: For tier calculation
     totalSessionsCompleted: int = 0
     isVerified: bool = False
+    # NEW: Trainer Tier
+    trainerTier: str = TrainerTier.BASIC
+    # NEW: Verification status
+    verificationStatus: str = VerificationStatus.PENDING
+    governmentIdUploaded: bool = False
+    ssnVerified: bool = False
+    backgroundCheckPassed: bool = False
+    sexOffenderCheckPassed: bool = False
+    cprAedCertUploaded: bool = False
+    fitnessCertUploaded: bool = False
+    introVideoUrl: Optional[str] = None
+    introVideoUploaded: bool = False
+    # NEW: Can trainer go live?
+    canGoLive: bool = False
     availability: Optional[dict] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
