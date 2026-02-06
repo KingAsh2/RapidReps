@@ -1618,33 +1618,70 @@ async def toggle_trainer_availability(isAvailable: bool, current_user: dict = De
 
 @api_router.post("/sessions", response_model=SessionResponse)
 async def create_session(session: SessionCreate, current_user: dict = Depends(get_current_user)):
-    """Create a new session booking"""
-    # Get trainer profile to get rate
+    """
+    Create a new session booking with full pricing calculation.
+    PRD Rules #1, #2: Pricing, travel fees, platform commission.
+    PRD Rule #7: Generate safety PIN for in-home sessions.
+    """
+    # Get trainer profile to get rates
     trainer_profile = await db.trainer_profiles.find_one({'userId': session.trainerId})
     if not trainer_profile:
         raise HTTPException(status_code=404, detail="Trainer not found")
     
-    base_rate = trainer_profile['ratePerMinuteCents']
-    base_price = base_rate * session.durationMinutes
+    # Check if trainer can accept sessions (PRD Rule #10)
+    can_go_live, missing = check_trainer_can_go_live(trainer_profile)
+    if not can_go_live:
+        raise HTTPException(
+            status_code=403, 
+            detail=f"Trainer is not verified yet. Missing: {', '.join(missing)}"
+        )
     
-    # Check for multi-session discount (3+ sessions in last 30 days)
-    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
-    recent_sessions = await db.sessions.count_documents({
+    # Map legacy locationType to new sessionType
+    session_type = session.sessionType
+    if session.locationType == "virtual":
+        session_type = SessionType.VIRTUAL
+    elif session.locationType == "home":
+        session_type = SessionType.IN_HOME
+    elif session.locationType == "outdoor" or session.locationType == "gym":
+        session_type = SessionType.OUTDOOR
+    
+    # Calculate distance for in-home sessions
+    distance_miles = 0
+    if session_type == SessionType.IN_HOME:
+        trainer_lat = trainer_profile.get('latitude')
+        trainer_lng = trainer_profile.get('longitude')
+        trainee_lat = session.traineeLatitude
+        trainee_lng = session.traineeLongitude
+        
+        if trainer_lat and trainer_lng and trainee_lat and trainee_lng:
+            distance_miles = calculate_distance(trainer_lat, trainer_lng, trainee_lat, trainee_lng)
+            
+            # Check if within travel radius
+            if distance_miles > 20:
+                raise HTTPException(
+                    status_code=400, 
+                    detail="Distance exceeds maximum travel radius (20 miles)"
+                )
+    
+    # Check for multi-session discount (3+ sessions with this trainer)
+    previous_sessions = await db.sessions.count_documents({
         'traineeId': session.traineeId,
         'trainerId': session.trainerId,
-        'createdAt': {'$gte': thirty_days_ago},
-        'status': {'$ne': SessionStatus.DECLINED}
+        'status': SessionStatus.COMPLETED
     })
     
-    discount_amount = 0
-    discount_type = None
-    if recent_sessions >= 2:  # This will be the 3rd session
-        discount_amount = int(base_price * 0.05)  # 5% discount
-        discount_type = "multi_session"
+    # Calculate full pricing
+    pricing = calculate_session_pricing(
+        session_type=session_type,
+        trainer_profile=trainer_profile,
+        distance_miles=distance_miles,
+        trainee_session_count=previous_sessions
+    )
     
-    final_price = base_price - discount_amount
-    platform_fee = int(final_price * 0.10)  # 10% platform fee
-    trainer_earnings = final_price - platform_fee
+    # Generate safety PIN for in-home sessions (PRD Rule #7)
+    safety_pin = None
+    if session_type == SessionType.IN_HOME:
+        safety_pin = generate_safety_pin()
     
     session_doc = {
         'traineeId': session.traineeId,
@@ -1653,16 +1690,34 @@ async def create_session(session: SessionCreate, current_user: dict = Depends(ge
         'sessionDateTimeStart': session.sessionDateTimeStart,
         'sessionDateTimeEnd': session.sessionDateTimeStart + timedelta(minutes=session.durationMinutes),
         'durationMinutes': session.durationMinutes,
-        'basePricePerMinuteCents': base_rate,
-        'baseSessionPriceCents': base_price,
-        'discountType': discount_type,
-        'discountAmountCents': discount_amount,
-        'finalSessionPriceCents': final_price,
-        'platformFeePercent': 10,
-        'platformFeeCents': platform_fee,
-        'trainerEarningsCents': trainer_earnings,
+        'sessionType': session_type,
+        # Pricing breakdown
+        'basePricePerMinuteCents': pricing['baseSessionPriceCents'] // session.durationMinutes if session.durationMinutes > 0 else 0,
+        'baseSessionPriceCents': pricing['baseSessionPriceCents'],
+        'travelDistanceMiles': pricing['travelDistanceMiles'],
+        'travelFeeCents': pricing['travelFeeCents'],
+        'trainerTravelEarningsCents': pricing['trainerTravelEarningsCents'],
+        'platformTravelFeeCents': pricing['platformTravelFeeCents'],
+        'discountType': pricing['discountType'],
+        'discountAmountCents': pricing['discountAmountCents'],
+        'finalSessionPriceCents': pricing['finalSessionPriceCents'],
+        'platformFeePercent': pricing['platformFeePercent'],
+        'platformFeeCents': pricing['platformFeeCents'],
+        'trainerEarningsCents': pricing['trainerEarningsCents'],
+        'cancellationFeeCents': pricing['cancellationFeeCents'],
+        'noShowFeeCents': pricing['finalSessionPriceCents'],  # Full amount for no-show
+        # Safety PIN
+        'safetyPin': safety_pin,
+        'safetyPinVerified': False,
+        'trainerGpsConfirmed': False,
+        'sessionStartedAt': None,
+        'sessionEndedAt': None,
+        'clientConfirmedEnd': False,
+        # Location
         'locationType': session.locationType,
         'locationNameOrAddress': session.locationNameOrAddress,
+        'traineeLatitude': session.traineeLatitude,
+        'traineeLongitude': session.traineeLongitude,
         'notes': session.notes,
         'paymentIntentId': None,
         'createdAt': datetime.utcnow(),
@@ -1673,6 +1728,189 @@ async def create_session(session: SessionCreate, current_user: dict = Depends(ge
     session_doc['_id'] = result.inserted_id
     
     return SessionResponse(**serialize_doc(session_doc))
+
+@api_router.post("/sessions/{session_id}/verify-pin")
+async def verify_session_pin(
+    session_id: str,
+    pin: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Trainer enters PIN to start in-home session.
+    PRD Rule #7 & #12: PIN verification required to start session.
+    """
+    try:
+        oid = ObjectId(session_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid session ID format")
+    
+    session = await db.sessions.find_one({'_id': oid})
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Verify current user is the trainer
+    if str(current_user['_id']) != session['trainerId']:
+        raise HTTPException(status_code=403, detail="Only the trainer can verify the PIN")
+    
+    # Check PIN
+    if session.get('safetyPin') != pin:
+        return {
+            'success': False,
+            'message': 'Invalid PIN. Please ask the client for the correct 4-digit PIN.'
+        }
+    
+    # Update session
+    await db.sessions.update_one(
+        {'_id': oid},
+        {
+            '$set': {
+                'safetyPinVerified': True,
+                'sessionStartedAt': datetime.utcnow(),
+                'status': SessionStatus.CONFIRMED,
+                'updatedAt': datetime.utcnow()
+            }
+        }
+    )
+    
+    return {
+        'success': True,
+        'message': 'PIN verified! Session started.',
+        'sessionStartedAt': datetime.utcnow().isoformat()
+    }
+
+@api_router.post("/sessions/{session_id}/confirm-gps")
+async def confirm_trainer_gps(
+    session_id: str,
+    latitude: float,
+    longitude: float,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Confirm trainer GPS arrival for in-home/outdoor sessions.
+    PRD Rule #7: Real-time GPS tracking for trainer arrival.
+    """
+    try:
+        oid = ObjectId(session_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid session ID format")
+    
+    session = await db.sessions.find_one({'_id': oid})
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Calculate distance from session location
+    if session.get('traineeLatitude') and session.get('traineeLongitude'):
+        distance = calculate_distance(
+            latitude, longitude,
+            session['traineeLatitude'], session['traineeLongitude']
+        )
+        
+        # Trainer should be within 0.1 miles (about 500 feet)
+        if distance > 0.1:
+            return {
+                'success': False,
+                'message': f'You are {distance:.2f} miles from the session location. Please get closer.',
+                'distanceMiles': distance
+            }
+    
+    await db.sessions.update_one(
+        {'_id': oid},
+        {
+            '$set': {
+                'trainerGpsConfirmed': True,
+                'updatedAt': datetime.utcnow()
+            }
+        }
+    )
+    
+    return {
+        'success': True,
+        'message': 'Location confirmed! You are at the session location.'
+    }
+
+@api_router.post("/sessions/{session_id}/end")
+async def end_session(
+    session_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Trainer presses "End Session" to complete.
+    PRD Rule #12: Session end triggers payment release.
+    """
+    try:
+        oid = ObjectId(session_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid session ID format")
+    
+    session = await db.sessions.find_one({'_id': oid})
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Verify current user is the trainer
+    if str(current_user['_id']) != session['trainerId']:
+        raise HTTPException(status_code=403, detail="Only the trainer can end the session")
+    
+    await db.sessions.update_one(
+        {'_id': oid},
+        {
+            '$set': {
+                'sessionEndedAt': datetime.utcnow(),
+                'status': SessionStatus.COMPLETED,
+                'updatedAt': datetime.utcnow()
+            }
+        }
+    )
+    
+    return {
+        'success': True,
+        'message': 'Session ended. Awaiting client confirmation.',
+        'sessionEndedAt': datetime.utcnow().isoformat()
+    }
+
+@api_router.post("/sessions/{session_id}/client-confirm-end")
+async def client_confirm_session_end(
+    session_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Client confirms session end, triggers payment release.
+    PRD Rule #12: Client confirms, payment auto-releases.
+    """
+    try:
+        oid = ObjectId(session_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid session ID format")
+    
+    session = await db.sessions.find_one({'_id': oid})
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Verify current user is the trainee
+    if str(current_user['_id']) != session['traineeId']:
+        raise HTTPException(status_code=403, detail="Only the client can confirm session end")
+    
+    await db.sessions.update_one(
+        {'_id': oid},
+        {
+            '$set': {
+                'clientConfirmedEnd': True,
+                'status': SessionStatus.COMPLETED,
+                'updatedAt': datetime.utcnow()
+            }
+        }
+    )
+    
+    # Update trainer stats
+    await db.trainer_profiles.update_one(
+        {'userId': session['trainerId']},
+        {'$inc': {'totalSessionsCompleted': 1}}
+    )
+    
+    return {
+        'success': True,
+        'message': 'Session confirmed! Payment has been released.',
+        'trainerEarningsCents': session['trainerEarningsCents']
+    }
 
 @api_router.get("/sessions/{session_id}", response_model=SessionResponse)
 async def get_session(session_id: str):
