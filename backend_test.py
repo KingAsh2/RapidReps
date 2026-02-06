@@ -156,6 +156,38 @@ class RapidRepsAPITester:
             
         trainer_token = list(self.trainer_tokens.values())[0]
         
+        # First, get trainer user ID
+        success, trainer_user = self.make_request("GET", "/auth/me", token=trainer_token)
+        if not success:
+            self.log_test("Trainer Onboarding Tests", False, "Failed to get trainer user ID")
+            return
+            
+        trainer_id = trainer_user["id"]
+        
+        # Create trainer profile first (required for verification)
+        trainer_profile_data = {
+            "userId": trainer_id,
+            "bio": "Experienced personal trainer with 5+ years of experience",
+            "experienceYears": 5,
+            "certifications": ["NASM-CPT", "CPR/AED"],
+            "trainingStyles": ["Personal Training", "Strength Training", "HIIT"],
+            "virtualRateCents": 3000,  # $30 minimum
+            "outdoorRateCents": 4000,  # $40 minimum
+            "inHomeRateCents": 6000,   # $60 minimum
+            "offersVirtual": True,
+            "offersOutdoor": True,
+            "offersInHome": True,
+            "latitude": 40.7128,
+            "longitude": -74.0060,
+            "locationAddress": "New York, NY"
+        }
+        
+        success, response = self.make_request("POST", "/trainer-profiles", trainer_profile_data, token=trainer_token)
+        if success:
+            self.log_test("Trainer Profile Creation", True, "Trainer profile created successfully")
+        else:
+            self.log_test("Trainer Profile Creation", False, "Failed to create trainer profile", response)
+        
         # Test 1: Get onboarding status
         success, response = self.make_request("GET", "/trainer/onboarding-status", token=trainer_token)
         if success:
