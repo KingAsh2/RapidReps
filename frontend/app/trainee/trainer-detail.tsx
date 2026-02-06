@@ -182,13 +182,32 @@ export default function TrainerDetailScreen() {
       sessionStart.setDate(sessionStart.getDate() + 1);
       sessionStart.setHours(10, 0, 0, 0);
 
+      // Map session type to location type (for backward compatibility)
+      let locationType = 'gym';
+      if (selectedSessionType === 'virtual') {
+        locationType = 'virtual';
+      } else if (selectedSessionType === 'in_home') {
+        locationType = 'home';
+      } else {
+        locationType = 'outdoor';
+      }
+
       await traineeAPI.createSession({
         traineeId: user.id,
         trainerId: trainer.userId,
         sessionDateTimeStart: sessionStart.toISOString(),
         durationMinutes: selectedDuration,
-        locationType: trainer.offersInPerson ? 'gym' : 'virtual',
-        locationNameOrAddress: trainer.primaryGym || 'Virtual',
+        sessionType: selectedSessionType, // NEW: PRD session type
+        locationType: locationType,
+        locationNameOrAddress: selectedSessionType === 'virtual' ? 'Virtual' : (trainer.primaryGym || 'TBD'),
+      });
+
+      showAlert({
+        title: 'Session Booked! 🎉',
+        message: selectedSessionType === 'in_home' 
+          ? 'You will receive a 4-digit safety PIN before your session.'
+          : 'Your trainer will confirm shortly.',
+        type: 'success',
       });
 
       router.back();
