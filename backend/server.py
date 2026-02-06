@@ -1181,6 +1181,236 @@ async def get_my_verification_documents(current_user: dict = Depends(get_current
         'totalDocuments': len(profile.get('verificationDocs', []))
     }
 
+# ============================================================================
+# TRAINER ONBOARDING & VERIFICATION ROUTES (NEW - PRD Rules)
+# ============================================================================
+
+@api_router.get("/trainer/onboarding-status")
+async def get_trainer_onboarding_status(current_user: dict = Depends(get_current_user)):
+    """
+    Get trainer's onboarding status - check all requirements before going live.
+    PRD Rule #10: Trainer must complete all steps before accepting sessions.
+    """
+    user_id = str(current_user['_id'])
+    profile = await db.trainer_profiles.find_one({'userId': user_id})
+    
+    if not profile:
+        return {
+            'canGoLive': False,
+            'profileExists': False,
+            'missingRequirements': ['Create trainer profile'],
+            'completedRequirements': [],
+            'verificationStatus': VerificationStatus.PENDING,
+            'trainerTier': TrainerTier.BASIC
+        }
+    
+    # Check all requirements
+    can_go_live, missing = check_trainer_can_go_live(profile)
+    
+    # Get completed requirements
+    completed = []
+    if profile.get('governmentIdUploaded', False):
+        completed.append('Government ID verification')
+    if profile.get('ssnVerified', False):
+        completed.append('SSN identity check')
+    if profile.get('backgroundCheckPassed', False):
+        completed.append('Background check')
+    if profile.get('sexOffenderCheckPassed', False):
+        completed.append('Sex offender screening')
+    if profile.get('cprAedCertUploaded', False):
+        completed.append('CPR/AED certification')
+    if profile.get('fitnessCertUploaded', False):
+        completed.append('Fitness certification')
+    if profile.get('introVideoUploaded', False):
+        completed.append('Intro video')
+    if profile.get('bio') and len(profile.get('bio', '')) >= 50:
+        completed.append('Profile bio')
+    if profile.get('trainingStyles') and len(profile.get('trainingStyles', [])) > 0:
+        completed.append('Training styles')
+    
+    # Calculate tier
+    total_reviews = profile.get('totalReviews', 0)
+    avg_rating = profile.get('averageRating', 0.0)
+    certs_verified = profile.get('fitnessCertUploaded', False)
+    tier = calculate_trainer_tier(total_reviews, avg_rating, certs_verified)
+    
+    # Determine verification status
+    if can_go_live:
+        verification_status = VerificationStatus.VERIFIED
+    elif len(completed) > 0:
+        verification_status = VerificationStatus.PENDING
+    else:
+        verification_status = VerificationStatus.PENDING
+    
+    return {
+        'canGoLive': can_go_live,
+        'profileExists': True,
+        'missingRequirements': missing,
+        'completedRequirements': completed,
+        'verificationStatus': verification_status,
+        'trainerTier': tier,
+        'totalReviews': total_reviews,
+        'averageRating': avg_rating
+    }
+
+@api_router.post("/trainer/upload-intro-video")
+async def upload_intro_video(
+    video_url: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Upload trainer intro video URL (10-30 seconds).
+    PRD Rule #8: Every trainer must upload intro video before going live.
+    """
+    user_id = str(current_user['_id'])
+    
+    result = await db.trainer_profiles.update_one(
+        {'userId': user_id},
+        {
+            '$set': {
+                'introVideoUrl': video_url,
+                'introVideoUploaded': True,
+                'updatedAt': datetime.utcnow()
+            }
+        }
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Trainer profile not found")
+    
+    return {
+        'success': True,
+        'message': 'Intro video uploaded successfully'
+    }
+
+@api_router.post("/trainer/update-verification")
+async def update_verification_status(
+    verification_type: str,
+    passed: bool = True,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Update a specific verification check status.
+    PRD Rule #4: Trainer must complete all verification requirements.
+    """
+    user_id = str(current_user['_id'])
+    
+    # Map verification type to field
+    field_map = {
+        'government_id': 'governmentIdUploaded',
+        'ssn_check': 'ssnVerified',
+        'background_check': 'backgroundCheckPassed',
+        'sex_offender_check': 'sexOffenderCheckPassed',
+        'cpr_aed_cert': 'cprAedCertUploaded',
+        'fitness_cert': 'fitnessCertUploaded',
+    }
+    
+    if verification_type not in field_map:
+        raise HTTPException(status_code=400, detail=f"Invalid verification type. Valid types: {list(field_map.keys())}")
+    
+    field_name = field_map[verification_type]
+    
+    result = await db.trainer_profiles.update_one(
+        {'userId': user_id},
+        {
+            '$set': {
+                field_name: passed,
+                'updatedAt': datetime.utcnow()
+            }
+        }
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Trainer profile not found")
+    
+    # Check if trainer can now go live
+    profile = await db.trainer_profiles.find_one({'userId': user_id})
+    can_go_live, missing = check_trainer_can_go_live(profile)
+    
+    # Update canGoLive and isVerified status
+    if can_go_live:
+        await db.trainer_profiles.update_one(
+            {'userId': user_id},
+            {
+                '$set': {
+                    'canGoLive': True,
+                    'isVerified': True,
+                    'verificationStatus': VerificationStatus.VERIFIED
+                }
+            }
+        )
+    
+    return {
+        'success': True,
+        'verificationType': verification_type,
+        'passed': passed,
+        'canGoLive': can_go_live,
+        'missingRequirements': missing
+    }
+
+@api_router.get("/trainer/pricing-limits")
+async def get_trainer_pricing_limits(current_user: dict = Depends(get_current_user)):
+    """
+    Get pricing limits based on trainer tier.
+    PRD Rules #1 and #3: Pricing minimums and tier-based bonuses.
+    """
+    user_id = str(current_user['_id'])
+    profile = await db.trainer_profiles.find_one({'userId': user_id})
+    
+    if not profile:
+        raise HTTPException(status_code=404, detail="Trainer profile not found")
+    
+    # Calculate tier
+    total_reviews = profile.get('totalReviews', 0)
+    avg_rating = profile.get('averageRating', 0.0)
+    certs_verified = profile.get('fitnessCertUploaded', False)
+    tier = calculate_trainer_tier(total_reviews, avg_rating, certs_verified)
+    
+    # Base minimums
+    virtual_min = PricingRules.VIRTUAL_MIN_CENTS
+    outdoor_min = PricingRules.OUTDOOR_MIN_CENTS
+    in_home_min = PricingRules.IN_HOME_MIN_CENTS
+    
+    # Max pricing based on tier
+    if tier == TrainerTier.BASIC:
+        # Basic can only charge minimum to mid-level
+        virtual_max = virtual_min + 1500  # $15 above min
+        outdoor_max = outdoor_min + 2000  # $20 above min
+        in_home_max = in_home_min + 2000  # $20 above min
+    elif tier == TrainerTier.PRO:
+        # Pro can charge +$10 to +$20 above minimum
+        virtual_max = virtual_min + PricingRules.PRO_TIER_MAX_BONUS
+        outdoor_max = outdoor_min + PricingRules.PRO_TIER_MAX_BONUS
+        in_home_max = in_home_min + PricingRules.PRO_TIER_MAX_BONUS
+    else:  # ELITE
+        # Elite can charge premium (+$30-$50)
+        virtual_max = virtual_min + PricingRules.ELITE_TIER_MAX_BONUS
+        outdoor_max = outdoor_min + PricingRules.ELITE_TIER_MAX_BONUS
+        in_home_max = in_home_min + PricingRules.ELITE_TIER_MAX_BONUS
+    
+    return {
+        'trainerTier': tier,
+        'totalReviews': total_reviews,
+        'averageRating': avg_rating,
+        'pricingLimits': {
+            'virtual': {'minCents': virtual_min, 'maxCents': virtual_max},
+            'outdoor': {'minCents': outdoor_min, 'maxCents': outdoor_max},
+            'inHome': {'minCents': in_home_min, 'maxCents': in_home_max}
+        },
+        'travelFees': {
+            '0-5 miles': PricingRules.TRAVEL_FEE_0_5_MILES,
+            '5-10 miles': PricingRules.TRAVEL_FEE_5_10_MILES,
+            '10-15 miles': PricingRules.TRAVEL_FEE_10_15_MILES,
+            '15-20 miles': PricingRules.TRAVEL_FEE_15_20_MILES
+        },
+        'cancellationFees': {
+            'virtual': PricingRules.CANCELLATION_FEE_VIRTUAL,
+            'outdoor': PricingRules.CANCELLATION_FEE_OUTDOOR,
+            'inHome': PricingRules.CANCELLATION_FEE_IN_HOME
+        },
+        'platformFeePercent': PricingRules.PLATFORM_FEE_PERCENT
+    }
+
 @api_router.get("/trainers/search", response_model=List[TrainerProfileResponse])
 async def search_trainers(
     location: Optional[str] = None,
