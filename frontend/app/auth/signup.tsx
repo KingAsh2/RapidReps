@@ -275,12 +275,11 @@ export default function SignupScreen() {
               ]}
             >
               <View style={styles.logoContainer}>
-                <LinearGradient
-                  colors={[COLORS.white, 'rgba(255,255,255,0.95)']}
-                  style={styles.logoBg}
-                >
-                  <Ionicons name="fitness" size={40} color={COLORS.orange} />
-                </LinearGradient>
+                <Image 
+                  source={require('../../assets/rapidreps-logo.png')} 
+                  style={styles.logoImage}
+                  resizeMode="contain"
+                />
               </View>
               <Text style={styles.heroTitle}>Let's Build Your{'\n'}Fitness Momentum 🔥</Text>
               <Text style={styles.heroSubtitle}>Train smarter. Move faster. Get real results.</Text>
