@@ -894,6 +894,61 @@ const styles = StyleSheet.create({
     color: COLORS.navy,
     marginBottom: 16,
   },
+  // Session Type Selection (NEW)
+  sessionTypeRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 16,
+  },
+  sessionTypeChip: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+    backgroundColor: '#FFF5EB',
+    borderWidth: 2,
+    borderColor: COLORS.orange,
+    alignItems: 'center',
+    gap: 4,
+  },
+  sessionTypeChipSelected: {
+    backgroundColor: COLORS.orange,
+    borderColor: COLORS.orange,
+  },
+  sessionTypeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.orange,
+  },
+  sessionTypeTextSelected: {
+    color: COLORS.white,
+  },
+  sessionTypePrice: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: COLORS.gray,
+  },
+  sessionTypePriceSelected: {
+    color: 'rgba(255,255,255,0.85)',
+  },
+  // Safety Notice
+  safetyNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#E8FFF5',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 10,
+    marginBottom: 16,
+  },
+  safetyNoticeText: {
+    flex: 1,
+    fontSize: 12,
+    fontWeight: '600',
+    color: COLORS.navy,
+    lineHeight: 16,
+  },
   durationRow: {
     flexDirection: 'row',
     gap: 10,
@@ -907,7 +962,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   durationChipSelected: {
-    backgroundColor: COLORS.orange,
+    backgroundColor: COLORS.teal,
   },
   durationText: {
     fontSize: 15,
@@ -917,24 +972,64 @@ const styles = StyleSheet.create({
   durationTextSelected: {
     color: COLORS.white,
   },
+  // Price Summary (NEW)
+  priceSummary: {
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
+  },
   priceRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.grayLight,
+    marginBottom: 6,
   },
   priceLabel: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '500',
     color: COLORS.gray,
   },
   priceValue: {
-    fontSize: 28,
-    fontWeight: '900',
+    fontSize: 14,
+    fontWeight: '700',
     color: COLORS.navy,
+  },
+  priceDivider: {
+    height: 1,
+    backgroundColor: '#E0E0E0',
+    marginVertical: 8,
+  },
+  priceTotalLabel: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.navy,
+  },
+  priceTotalValue: {
+    fontSize: 24,
+    fontWeight: '900',
+    color: COLORS.orange,
+  },
+  platformFeeNote: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: COLORS.gray,
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  // Cancellation Policy
+  cancellationPolicy: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 6,
+    marginBottom: 16,
+  },
+  cancellationText: {
+    flex: 1,
+    fontSize: 11,
+    fontWeight: '500',
+    color: COLORS.gray,
+    lineHeight: 16,
   },
   bookButtonWrapper: {
     borderRadius: 16,
