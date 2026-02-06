@@ -69,6 +69,76 @@ class SessionStatus:
     COMPLETED = "completed"
     NO_SHOW = "no_show"
 
+# ============================================================================
+# RAPIDREPS BUSINESS RULES - PRD CONSTANTS
+# ============================================================================
+
+class SessionType:
+    VIRTUAL = "virtual"
+    OUTDOOR = "outdoor"
+    IN_HOME = "in_home"
+
+class TrainerTier:
+    BASIC = "basic"       # 0-29 reviews
+    PRO = "pro"           # 30-99 reviews, 4.7+ stars
+    ELITE = "elite"       # 100+ reviews, verified certifications
+
+# PRICING MINIMUMS (in cents)
+class PricingRules:
+    # Minimum session prices
+    VIRTUAL_MIN_CENTS = 3000       # $30 minimum
+    OUTDOOR_MIN_CENTS = 4000       # $40 minimum
+    IN_HOME_MIN_CENTS = 6000       # $60 minimum
+    
+    # Platform commission (service fee)
+    PLATFORM_FEE_PERCENT = 20      # 20% commission
+    
+    # Travel fee brackets for in-home sessions (in cents)
+    TRAVEL_FEE_0_5_MILES = 0       # $0
+    TRAVEL_FEE_5_10_MILES = 500    # $5
+    TRAVEL_FEE_10_15_MILES = 1000  # $10
+    TRAVEL_FEE_15_20_MILES = 1500  # $15
+    
+    # Travel fee split
+    TRAINER_TRAVEL_FEE_PERCENT = 70  # Trainer keeps 70%
+    PLATFORM_TRAVEL_FEE_PERCENT = 30 # Platform keeps 30%
+    
+    # Cancellation fees (in cents)
+    CANCELLATION_FEE_VIRTUAL = 1500   # $15
+    CANCELLATION_FEE_OUTDOOR = 2500   # $25
+    CANCELLATION_FEE_IN_HOME = 3500   # $35
+    
+    # No-show: full session amount charged
+    
+    # Trainer tier price bonuses (in cents)
+    PRO_TIER_MIN_BONUS = 1000     # +$10 to +$20
+    PRO_TIER_MAX_BONUS = 2000
+    ELITE_TIER_MIN_BONUS = 3000   # +$30 to +$50
+    ELITE_TIER_MAX_BONUS = 5000
+
+# Trainer Tier Thresholds
+class TierThresholds:
+    PRO_MIN_REVIEWS = 30
+    PRO_MIN_RATING = 4.7
+    ELITE_MIN_REVIEWS = 100
+
+# Verification Requirements
+class VerificationStatus:
+    PENDING = "pending"
+    VERIFIED = "verified"
+    REJECTED = "rejected"
+    
+class VerificationRequirements:
+    GOVERNMENT_ID = "government_id"
+    SSN_CHECK = "ssn_check"
+    BACKGROUND_CHECK = "background_check"
+    SEX_OFFENDER_CHECK = "sex_offender_check"
+    CPR_AED_CERT = "cpr_aed_cert"
+    FITNESS_CERT = "fitness_cert"  # Optional
+    INTRO_VIDEO = "intro_video"
+    PROFILE_COMPLETE = "profile_complete"
+    PRICING_SET = "pricing_set"
+
 # User Models
 class UserSignUp(BaseModel):
     fullName: str
