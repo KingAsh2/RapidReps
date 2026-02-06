@@ -232,7 +232,7 @@ class RapidRepsAPITester:
                          "Failed to upload intro video", response)
         
         # Test 4: Update verification status (using query parameters)
-        verification_types = ["government_id", "background_check", "cpr_aed_cert"]
+        verification_types = ["government_id", "background_check", "cpr_aed_cert", "ssn_check", "sex_offender_check"]
         for verification_type in verification_types:
             success, response = self.make_request("POST", f"/trainer/update-verification?verification_type={verification_type}&passed=true", 
                                                 {}, token=trainer_token)
