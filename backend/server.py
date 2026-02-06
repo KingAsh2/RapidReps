@@ -1994,12 +1994,12 @@ async def decline_session(session_id: str, current_user: dict = Depends(get_curr
 
 @api_router.patch("/sessions/{session_id}/cancel")
 async def cancel_session(session_id: str, current_user: dict = Depends(get_current_user)):
-    """Trainee cancels/withdraws a session request
-    
-    Cancellation Policy:
-    - If status is REQUESTED (pending): Full refund, no fee
-    - If status is ACCEPTED: 20% cancellation fee charged, 80% refund
-    - If status is IN_PROGRESS or COMPLETED: Cannot cancel
+    """
+    Trainee cancels/withdraws a session request.
+    PRD Rule #5: Cancellation Fees by session type.
+    - Virtual: $15
+    - Outdoor: $25
+    - In-Home: $35
     """
     session = await db.sessions.find_one({'_id': ObjectId(session_id)})
     if not session:
@@ -2012,10 +2012,10 @@ async def cancel_session(session_id: str, current_user: dict = Depends(get_curre
     # Check session status
     current_status = session.get('status')
     
-    if current_status in [SessionStatus.COMPLETED, SessionStatus.IN_PROGRESS]:
+    if current_status in [SessionStatus.COMPLETED]:
         raise HTTPException(
             status_code=400, 
-            detail="Cannot cancel session that is in progress or completed"
+            detail="Cannot cancel completed session"
         )
     
     if current_status == SessionStatus.CANCELLED:
@@ -2024,18 +2024,19 @@ async def cancel_session(session_id: str, current_user: dict = Depends(get_curre
     if current_status == SessionStatus.DECLINED:
         raise HTTPException(status_code=400, detail="Session was already declined by trainer")
     
-    # Calculate cancellation fee
+    # Calculate cancellation fee based on PRD rules
+    session_type = session.get('sessionType', SessionType.OUTDOOR)
     cancellation_fee_cents = 0
     refund_amount_cents = 0
+    final_price = session.get('finalSessionPriceCents', 0)
     
-    if current_status == SessionStatus.ACCEPTED:
-        # 20% cancellation fee if trainer already accepted
-        final_price = session.get('finalSessionPriceCents', 0)
-        cancellation_fee_cents = int(final_price * 0.20)
-        refund_amount_cents = final_price - cancellation_fee_cents
+    if current_status in [SessionStatus.CONFIRMED, 'accepted']:
+        # PRD cancellation fees by session type
+        cancellation_fee_cents = get_cancellation_fee(session_type)
+        refund_amount_cents = max(0, final_price - cancellation_fee_cents)
     elif current_status == SessionStatus.REQUESTED:
-        # No fee if still pending
-        refund_amount_cents = session.get('finalSessionPriceCents', 0)
+        # No fee if still pending/requested
+        refund_amount_cents = final_price
         cancellation_fee_cents = 0
     
     # Update session status
@@ -2061,6 +2062,49 @@ async def cancel_session(session_id: str, current_user: dict = Depends(get_curre
         'cancellationFeeCents': cancellation_fee_cents,
         'refundAmountCents': refund_amount_cents,
         'message': f'Session cancelled. {"No cancellation fee." if cancellation_fee_cents == 0 else f"Cancellation fee: ${cancellation_fee_cents/100:.2f}. Refund: ${refund_amount_cents/100:.2f}"}'
+    }
+
+@api_router.patch("/sessions/{session_id}/no-show")
+async def mark_no_show(session_id: str, current_user: dict = Depends(get_current_user)):
+    """
+    Mark session as no-show (trainee didn't show up).
+    PRD Rule #5: No-Show charges full session amount.
+    RapidReps takes normal 20% commission.
+    """
+    session = await db.sessions.find_one({'_id': ObjectId(session_id)})
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Verify it's the trainer's session
+    if session['trainerId'] != str(current_user['_id']):
+        raise HTTPException(status_code=403, detail="Only the trainer can mark a session as no-show")
+    
+    # Full amount charged for no-show
+    final_price = session.get('finalSessionPriceCents', 0)
+    platform_fee = int(final_price * PricingRules.PLATFORM_FEE_PERCENT / 100)  # 20%
+    trainer_earnings = final_price - platform_fee
+    
+    await db.sessions.update_one(
+        {'_id': ObjectId(session_id)},
+        {
+            '$set': {
+                'status': SessionStatus.NO_SHOW,
+                'noShowFeeCents': final_price,
+                'platformFeeCents': platform_fee,
+                'trainerEarningsCents': trainer_earnings,
+                'updatedAt': datetime.utcnow()
+            }
+        }
+    )
+    
+    updated_session = await db.sessions.find_one({'_id': ObjectId(session_id)})
+    
+    return {
+        'success': True,
+        'session': SessionResponse(**serialize_doc(updated_session)),
+        'noShowFeeCents': final_price,
+        'trainerEarningsCents': trainer_earnings,
+        'message': f'No-show recorded. Client charged full session amount: ${final_price/100:.2f}. Trainer earns: ${trainer_earnings/100:.2f}'
     }
 
 @api_router.patch("/sessions/{session_id}/complete", response_model=SessionResponse)
