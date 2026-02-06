@@ -243,6 +243,15 @@ export default function LoginScreen() {
           >
             {/* Glassmorphism Card */}
             <View style={styles.glassCard}>
+              {/* Logo */}
+              <View style={styles.logoContainer}>
+                <Image 
+                  source={require('../../assets/rapidreps-logo.png')} 
+                  style={styles.logo}
+                  resizeMode="contain"
+                />
+              </View>
+
               {/* Header */}
               <View style={styles.header}>
                 <Text style={styles.title}>Let's Finish What{"\n"}You Started</Text>
