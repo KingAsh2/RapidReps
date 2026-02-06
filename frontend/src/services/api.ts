@@ -174,6 +174,113 @@ export const trainerAPI = {
     const response = await api.get('/trainer/my-location-status');
     return response.data;
   },
+
+  // NEW: Trainer Onboarding & Verification APIs (PRD Rules)
+  getOnboardingStatus: async (): Promise<{
+    canGoLive: boolean;
+    profileExists: boolean;
+    missingRequirements: string[];
+    completedRequirements: string[];
+    verificationStatus: string;
+    trainerTier: string;
+    totalReviews: number;
+    averageRating: number;
+  }> => {
+    const response = await api.get('/trainer/onboarding-status');
+    return response.data;
+  },
+
+  getPricingLimits: async (): Promise<{
+    trainerTier: string;
+    totalReviews: number;
+    averageRating: number;
+    pricingLimits: {
+      virtual: { minCents: number; maxCents: number };
+      outdoor: { minCents: number; maxCents: number };
+      inHome: { minCents: number; maxCents: number };
+    };
+    travelFees: Record<string, number>;
+    cancellationFees: { virtual: number; outdoor: number; inHome: number };
+    platformFeePercent: number;
+  }> => {
+    const response = await api.get('/trainer/pricing-limits');
+    return response.data;
+  },
+
+  uploadIntroVideo: async (videoUrl: string): Promise<{ success: boolean; message: string }> => {
+    const response = await api.post('/trainer/upload-intro-video', null, {
+      params: { video_url: videoUrl }
+    });
+    return response.data;
+  },
+
+  updateVerification: async (
+    verificationType: 'government_id' | 'ssn_check' | 'background_check' | 'sex_offender_check' | 'cpr_aed_cert' | 'fitness_cert',
+    passed: boolean = true
+  ): Promise<{
+    success: boolean;
+    verificationType: string;
+    passed: boolean;
+    canGoLive: boolean;
+    missingRequirements: string[];
+  }> => {
+    const response = await api.post('/trainer/update-verification', null, {
+      params: { verification_type: verificationType, passed }
+    });
+    return response.data;
+  },
+
+  // NEW: Session Safety PIN Flow (PRD Rule #7, #12)
+  verifySessionPin: async (sessionId: string, pin: string): Promise<{
+    success: boolean;
+    message: string;
+    sessionStartedAt?: string;
+  }> => {
+    const response = await api.post(`/sessions/${sessionId}/verify-pin`, null, {
+      params: { pin }
+    });
+    return response.data;
+  },
+
+  confirmGpsArrival: async (sessionId: string, latitude: number, longitude: number): Promise<{
+    success: boolean;
+    message: string;
+    distanceMiles?: number;
+  }> => {
+    const response = await api.post(`/sessions/${sessionId}/confirm-gps`, null, {
+      params: { latitude, longitude }
+    });
+    return response.data;
+  },
+
+  endSession: async (sessionId: string): Promise<{
+    success: boolean;
+    message: string;
+    sessionEndedAt: string;
+  }> => {
+    const response = await api.post(`/sessions/${sessionId}/end`);
+    return response.data;
+  },
+
+  clientConfirmEnd: async (sessionId: string): Promise<{
+    success: boolean;
+    message: string;
+    trainerEarningsCents: number;
+  }> => {
+    const response = await api.post(`/sessions/${sessionId}/client-confirm-end`);
+    return response.data;
+  },
+
+  markNoShow: async (sessionId: string): Promise<{
+    success: boolean;
+    session: Session;
+    noShowFeeCents: number;
+    trainerEarningsCents: number;
+    message: string;
+  }> => {
+    const response = await api.patch(`/sessions/${sessionId}/no-show`);
+    return response.data;
+  },
 };
 
 // Trainee Profile API
