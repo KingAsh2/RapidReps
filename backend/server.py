@@ -305,8 +305,11 @@ class SessionCreate(BaseModel):
     trainerId: str
     sessionDateTimeStart: datetime
     durationMinutes: int
-    locationType: str  # "gym", "home", "virtual"
+    sessionType: str = SessionType.OUTDOOR  # NEW: "virtual", "outdoor", "in_home"
+    locationType: str  # "gym", "home", "virtual" - legacy
     locationNameOrAddress: Optional[str] = None
+    traineeLatitude: Optional[float] = None  # NEW: For travel fee calculation
+    traineeLongitude: Optional[float] = None
     notes: Optional[str] = None
 
 class SessionResponse(BaseModel):
@@ -317,16 +320,39 @@ class SessionResponse(BaseModel):
     sessionDateTimeStart: datetime
     sessionDateTimeEnd: datetime
     durationMinutes: int
-    basePricePerMinuteCents: int
+    sessionType: str = SessionType.OUTDOOR  # NEW
+    # Pricing breakdown
     baseSessionPriceCents: int
+    basePricePerMinuteCents: int
+    # Travel fee (for in-home sessions)
+    travelDistanceMiles: Optional[float] = None
+    travelFeeCents: int = 0
+    trainerTravelEarningsCents: int = 0  # 70% of travel fee
+    platformTravelFeeCents: int = 0  # 30% of travel fee
+    # Discounts
     discountType: Optional[str] = None
     discountAmountCents: int = 0
+    # Final amounts
     finalSessionPriceCents: int
-    platformFeePercent: int = 10
+    platformFeePercent: int = PricingRules.PLATFORM_FEE_PERCENT  # 20%
     platformFeeCents: int
     trainerEarningsCents: int
+    # Cancellation/No-show
+    cancellationFeeCents: int = 0
+    noShowFeeCents: int = 0
+    # Safety PIN (for in-home sessions)
+    safetyPin: Optional[str] = None  # 4-digit PIN for client
+    safetyPinVerified: bool = False
+    # Session tracking
+    trainerGpsConfirmed: bool = False
+    sessionStartedAt: Optional[datetime] = None
+    sessionEndedAt: Optional[datetime] = None
+    clientConfirmedEnd: bool = False
+    # Location
     locationType: str
     locationNameOrAddress: Optional[str] = None
+    traineeLatitude: Optional[float] = None
+    traineeLongitude: Optional[float] = None
     notes: Optional[str] = None
     createdAt: datetime
 
