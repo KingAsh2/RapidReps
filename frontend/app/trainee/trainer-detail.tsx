@@ -101,11 +101,48 @@ export default function TrainerDetailScreen() {
     }
   };
 
+  // Session type state
+  const [selectedSessionType, setSelectedSessionType] = useState<'virtual' | 'outdoor' | 'in_home'>('outdoor');
+
   const calculatePrice = () => {
-    if (!trainer) return { base: 0, final: 0, platformFee: 0 };
-    const basePrice = (trainer.ratePerMinuteCents * selectedDuration) / 100;
-    const platformFee = basePrice * 0.10;
-    return { base: basePrice, final: basePrice, platformFee };
+    if (!trainer) return { base: 0, final: 0, platformFee: 0, travelFee: 0 };
+    
+    // Get rate based on session type (PRD Rule #1)
+    let baseRateCents: number;
+    switch (selectedSessionType) {
+      case 'virtual':
+        baseRateCents = (trainer as any).virtualRateCents || 3000; // $30 min
+        break;
+      case 'in_home':
+        baseRateCents = (trainer as any).inHomeRateCents || 6000; // $60 min
+        break;
+      default:
+        baseRateCents = (trainer as any).outdoorRateCents || 4000; // $40 min
+    }
+    
+    const basePrice = baseRateCents / 100;
+    const platformFee = basePrice * 0.20; // 20% platform fee (PRD Rule #2)
+    const travelFee = selectedSessionType === 'in_home' ? 5 : 0; // Example travel fee
+    const finalPrice = basePrice + travelFee;
+    
+    return { 
+      base: basePrice, 
+      final: finalPrice, 
+      platformFee,
+      travelFee,
+      trainerEarnings: finalPrice - platformFee
+    };
+  };
+
+  // Get trainer tier badge
+  const getTrainerTier = () => {
+    const totalReviews = (trainer as any)?.totalReviews || 0;
+    const avgRating = trainer?.averageRating || 0;
+    const certsVerified = (trainer as any)?.fitnessCertUploaded || false;
+    
+    if (totalReviews >= 100 && certsVerified) return 'elite';
+    if (totalReviews >= 30 && avgRating >= 4.7) return 'pro';
+    return 'basic';
   };
 
   const handlePressIn = () => {
