@@ -426,6 +426,102 @@ export default function TrainerDetailScreen() {
             <LinearGradient colors={[COLORS.white, COLORS.offWhite]} style={styles.bookingGradient}>
               <Text style={styles.bookingTitle}>Book a Session</Text>
 
+              {/* Session Type Selection - NEW PRD */}
+              <Text style={styles.sectionLabel}>SESSION TYPE</Text>
+              <View style={styles.sessionTypeRow}>
+                {trainer.offersVirtual && (
+                  <TouchableOpacity
+                    onPress={() => setSelectedSessionType('virtual')}
+                    style={[
+                      styles.sessionTypeChip,
+                      selectedSessionType === 'virtual' && styles.sessionTypeChipSelected,
+                    ]}
+                  >
+                    <Ionicons 
+                      name="videocam" 
+                      size={18} 
+                      color={selectedSessionType === 'virtual' ? COLORS.white : COLORS.orange} 
+                    />
+                    <Text style={[
+                      styles.sessionTypeText,
+                      selectedSessionType === 'virtual' && styles.sessionTypeTextSelected
+                    ]}>
+                      Virtual
+                    </Text>
+                    <Text style={[
+                      styles.sessionTypePrice,
+                      selectedSessionType === 'virtual' && styles.sessionTypePriceSelected
+                    ]}>
+                      from $30
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                {(trainer.offersInPerson || trainer.offersOutdoor) && (
+                  <TouchableOpacity
+                    onPress={() => setSelectedSessionType('outdoor')}
+                    style={[
+                      styles.sessionTypeChip,
+                      selectedSessionType === 'outdoor' && styles.sessionTypeChipSelected,
+                    ]}
+                  >
+                    <Ionicons 
+                      name="sunny" 
+                      size={18} 
+                      color={selectedSessionType === 'outdoor' ? COLORS.white : COLORS.orange} 
+                    />
+                    <Text style={[
+                      styles.sessionTypeText,
+                      selectedSessionType === 'outdoor' && styles.sessionTypeTextSelected
+                    ]}>
+                      Outdoor
+                    </Text>
+                    <Text style={[
+                      styles.sessionTypePrice,
+                      selectedSessionType === 'outdoor' && styles.sessionTypePriceSelected
+                    ]}>
+                      from $40
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                {(trainer as any).offersInHome && (
+                  <TouchableOpacity
+                    onPress={() => setSelectedSessionType('in_home')}
+                    style={[
+                      styles.sessionTypeChip,
+                      selectedSessionType === 'in_home' && styles.sessionTypeChipSelected,
+                    ]}
+                  >
+                    <Ionicons 
+                      name="home" 
+                      size={18} 
+                      color={selectedSessionType === 'in_home' ? COLORS.white : COLORS.orange} 
+                    />
+                    <Text style={[
+                      styles.sessionTypeText,
+                      selectedSessionType === 'in_home' && styles.sessionTypeTextSelected
+                    ]}>
+                      In-Home
+                    </Text>
+                    <Text style={[
+                      styles.sessionTypePrice,
+                      selectedSessionType === 'in_home' && styles.sessionTypePriceSelected
+                    ]}>
+                      from $60
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              {/* Safety PIN Notice for In-Home */}
+              {selectedSessionType === 'in_home' && (
+                <View style={styles.safetyNotice}>
+                  <Ionicons name="shield-checkmark" size={18} color={COLORS.teal} />
+                  <Text style={styles.safetyNoticeText}>
+                    You'll receive a 4-digit safety PIN to verify your trainer
+                  </Text>
+                </View>
+              )}
+
               {/* Duration Selection */}
               <Text style={styles.sectionLabel}>SESSION DURATION</Text>
               <View style={styles.durationRow}>
@@ -450,10 +546,37 @@ export default function TrainerDetailScreen() {
                 ))}
               </View>
 
-              {/* Price Summary */}
-              <View style={styles.priceRow}>
-                <Text style={styles.priceLabel}>Total Price</Text>
-                <Text style={styles.priceValue}>${prices.final.toFixed(2)}</Text>
+              {/* Price Summary - Updated for PRD */}
+              <View style={styles.priceSummary}>
+                <View style={styles.priceRow}>
+                  <Text style={styles.priceLabel}>Session Rate</Text>
+                  <Text style={styles.priceValue}>${prices.base.toFixed(2)}</Text>
+                </View>
+                {prices.travelFee > 0 && (
+                  <View style={styles.priceRow}>
+                    <Text style={styles.priceLabel}>Travel Fee</Text>
+                    <Text style={styles.priceValue}>${prices.travelFee.toFixed(2)}</Text>
+                  </View>
+                )}
+                <View style={styles.priceDivider} />
+                <View style={styles.priceRow}>
+                  <Text style={styles.priceTotalLabel}>Total</Text>
+                  <Text style={styles.priceTotalValue}>${prices.final.toFixed(2)}</Text>
+                </View>
+                <Text style={styles.platformFeeNote}>
+                  20% service fee included • Trainer earns ${prices.trainerEarnings?.toFixed(2) || prices.final.toFixed(2)}
+                </Text>
+              </View>
+
+              {/* Cancellation Policy */}
+              <View style={styles.cancellationPolicy}>
+                <Ionicons name="information-circle" size={16} color={COLORS.gray} />
+                <Text style={styles.cancellationText}>
+                  Free cancellation if pending • 
+                  {selectedSessionType === 'virtual' && ' $15 fee after confirmed'}
+                  {selectedSessionType === 'outdoor' && ' $25 fee after confirmed'}
+                  {selectedSessionType === 'in_home' && ' $35 fee after confirmed'}
+                </Text>
               </View>
 
               {/* Hold to Book Button */}
