@@ -521,6 +521,171 @@ def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
     
     return distance
 
+# ============================================================================
+# RAPIDREPS BUSINESS LOGIC HELPERS
+# ============================================================================
+
+import random
+import string
+
+def generate_safety_pin() -> str:
+    """Generate a 4-digit safety PIN for in-home sessions"""
+    return ''.join(random.choices(string.digits, k=4))
+
+def calculate_travel_fee(distance_miles: float) -> int:
+    """Calculate travel fee based on distance for in-home sessions"""
+    if distance_miles <= 5:
+        return PricingRules.TRAVEL_FEE_0_5_MILES
+    elif distance_miles <= 10:
+        return PricingRules.TRAVEL_FEE_5_10_MILES
+    elif distance_miles <= 15:
+        return PricingRules.TRAVEL_FEE_10_15_MILES
+    elif distance_miles <= 20:
+        return PricingRules.TRAVEL_FEE_15_20_MILES
+    else:
+        # Beyond 20 miles - not supported
+        return -1  # Signal that booking should be rejected
+
+def get_session_minimum_price(session_type: str) -> int:
+    """Get minimum price for session type (in cents)"""
+    if session_type == SessionType.VIRTUAL:
+        return PricingRules.VIRTUAL_MIN_CENTS
+    elif session_type == SessionType.OUTDOOR:
+        return PricingRules.OUTDOOR_MIN_CENTS
+    elif session_type == SessionType.IN_HOME:
+        return PricingRules.IN_HOME_MIN_CENTS
+    return PricingRules.OUTDOOR_MIN_CENTS  # Default
+
+def get_cancellation_fee(session_type: str) -> int:
+    """Get cancellation fee for session type (in cents)"""
+    if session_type == SessionType.VIRTUAL:
+        return PricingRules.CANCELLATION_FEE_VIRTUAL
+    elif session_type == SessionType.OUTDOOR:
+        return PricingRules.CANCELLATION_FEE_OUTDOOR
+    elif session_type == SessionType.IN_HOME:
+        return PricingRules.CANCELLATION_FEE_IN_HOME
+    return PricingRules.CANCELLATION_FEE_OUTDOOR
+
+def calculate_trainer_tier(total_reviews: int, average_rating: float, certs_verified: bool = False) -> str:
+    """Calculate trainer tier based on reviews, rating, and certifications"""
+    if total_reviews >= TierThresholds.ELITE_MIN_REVIEWS and certs_verified:
+        return TrainerTier.ELITE
+    elif total_reviews >= TierThresholds.PRO_MIN_REVIEWS and average_rating >= TierThresholds.PRO_MIN_RATING:
+        return TrainerTier.PRO
+    return TrainerTier.BASIC
+
+def check_trainer_can_go_live(profile: dict) -> tuple:
+    """
+    Check if trainer has completed all requirements to go live.
+    Returns (can_go_live: bool, missing_requirements: list)
+    """
+    missing = []
+    
+    # Check identity verification
+    if not profile.get('governmentIdUploaded', False):
+        missing.append('Government ID verification')
+    if not profile.get('ssnVerified', False):
+        missing.append('SSN identity check')
+    
+    # Check background checks
+    if not profile.get('backgroundCheckPassed', False):
+        missing.append('Background check')
+    if not profile.get('sexOffenderCheckPassed', False):
+        missing.append('Sex offender screening')
+    
+    # Check certifications
+    if not profile.get('cprAedCertUploaded', False):
+        missing.append('CPR/AED certification')
+    # Fitness cert is optional
+    
+    # Check intro video (mandatory)
+    if not profile.get('introVideoUploaded', False):
+        missing.append('Intro video (10-30 seconds)')
+    
+    # Check profile completion
+    if not profile.get('bio') or len(profile.get('bio', '')) < 50:
+        missing.append('Complete bio (min 50 characters)')
+    if not profile.get('trainingStyles') or len(profile.get('trainingStyles', [])) == 0:
+        missing.append('Training styles')
+    
+    # Check pricing is set above minimums
+    virtual_rate = profile.get('virtualRateCents', 0)
+    outdoor_rate = profile.get('outdoorRateCents', 0)
+    in_home_rate = profile.get('inHomeRateCents', 0)
+    
+    if profile.get('offersVirtual', False) and virtual_rate < PricingRules.VIRTUAL_MIN_CENTS:
+        missing.append(f'Virtual rate (min ${PricingRules.VIRTUAL_MIN_CENTS/100})')
+    if profile.get('offersOutdoor', True) and outdoor_rate < PricingRules.OUTDOOR_MIN_CENTS:
+        missing.append(f'Outdoor rate (min ${PricingRules.OUTDOOR_MIN_CENTS/100})')
+    if profile.get('offersInHome', False) and in_home_rate < PricingRules.IN_HOME_MIN_CENTS:
+        missing.append(f'In-home rate (min ${PricingRules.IN_HOME_MIN_CENTS/100})')
+    
+    can_go_live = len(missing) == 0
+    return (can_go_live, missing)
+
+def calculate_session_pricing(
+    session_type: str,
+    trainer_profile: dict,
+    distance_miles: float = 0,
+    trainee_session_count: int = 0
+) -> dict:
+    """
+    Calculate full session pricing including travel fees and discounts.
+    Returns a dict with all pricing components.
+    """
+    # Get base rate based on session type
+    if session_type == SessionType.VIRTUAL:
+        base_rate = trainer_profile.get('virtualRateCents', PricingRules.VIRTUAL_MIN_CENTS)
+    elif session_type == SessionType.OUTDOOR:
+        base_rate = trainer_profile.get('outdoorRateCents', PricingRules.OUTDOOR_MIN_CENTS)
+    elif session_type == SessionType.IN_HOME:
+        base_rate = trainer_profile.get('inHomeRateCents', PricingRules.IN_HOME_MIN_CENTS)
+    else:
+        base_rate = PricingRules.OUTDOOR_MIN_CENTS
+    
+    # Enforce minimums
+    minimum = get_session_minimum_price(session_type)
+    if base_rate < minimum:
+        base_rate = minimum
+    
+    # Calculate travel fee for in-home sessions
+    travel_fee = 0
+    trainer_travel_earning = 0
+    platform_travel_fee = 0
+    
+    if session_type == SessionType.IN_HOME and distance_miles > 0:
+        travel_fee = calculate_travel_fee(distance_miles)
+        if travel_fee > 0:
+            trainer_travel_earning = int(travel_fee * PricingRules.TRAINER_TRAVEL_FEE_PERCENT / 100)
+            platform_travel_fee = travel_fee - trainer_travel_earning
+    
+    # Multi-session discount (5% on 3rd+ session with same trainer)
+    discount_type = None
+    discount_amount = 0
+    if trainee_session_count >= 2:  # This is their 3rd+ session
+        discount_type = "multi_session_5pct"
+        discount_amount = int(base_rate * 0.05)
+    
+    # Calculate final amounts
+    subtotal = base_rate + travel_fee - discount_amount
+    platform_fee = int(subtotal * PricingRules.PLATFORM_FEE_PERCENT / 100)
+    trainer_earnings = subtotal - platform_fee + trainer_travel_earning
+    
+    return {
+        'baseSessionPriceCents': base_rate,
+        'travelFeeCents': travel_fee,
+        'travelDistanceMiles': distance_miles if travel_fee > 0 else None,
+        'trainerTravelEarningsCents': trainer_travel_earning,
+        'platformTravelFeeCents': platform_travel_fee,
+        'discountType': discount_type,
+        'discountAmountCents': discount_amount,
+        'finalSessionPriceCents': subtotal,
+        'platformFeePercent': PricingRules.PLATFORM_FEE_PERCENT,
+        'platformFeeCents': platform_fee,
+        'trainerEarningsCents': trainer_earnings,
+        'cancellationFeeCents': get_cancellation_fee(session_type),
+    }
+
 
 class ReportCreate(BaseModel):
     reportedUserId: str
