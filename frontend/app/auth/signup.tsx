@@ -604,6 +604,11 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     marginBottom: 16,
+    alignItems: 'center',
+  },
+  logoImage: {
+    width: 140,
+    height: 70,
   },
   logoBg: {
     width: 72,
