@@ -188,10 +188,10 @@ class RapidRepsAPITester:
             self.log_test("Trainer Onboarding - Pricing Limits", False, 
                          "Failed to get pricing limits", response)
         
-        # Test 3: Upload intro video
+        # Test 3: Upload intro video (using query parameters)
         video_url = "https://example.com/intro-video.mp4"
-        success, response = self.make_request("POST", "/trainer/upload-intro-video", 
-                                            {"video_url": video_url}, token=trainer_token)
+        success, response = self.make_request("POST", f"/trainer/upload-intro-video?video_url={video_url}", 
+                                            {}, token=trainer_token)
         if success:
             self.log_test("Trainer Onboarding - Upload Intro Video", True, 
                          "Intro video uploaded successfully")
@@ -199,12 +199,11 @@ class RapidRepsAPITester:
             self.log_test("Trainer Onboarding - Upload Intro Video", False, 
                          "Failed to upload intro video", response)
         
-        # Test 4: Update verification status
+        # Test 4: Update verification status (using query parameters)
         verification_types = ["government_id", "background_check", "cpr_aed_cert"]
         for verification_type in verification_types:
-            success, response = self.make_request("POST", "/trainer/update-verification", 
-                                                {"verification_type": verification_type, "passed": True}, 
-                                                token=trainer_token)
+            success, response = self.make_request("POST", f"/trainer/update-verification?verification_type={verification_type}&passed=true", 
+                                                {}, token=trainer_token)
             if success:
                 self.log_test(f"Trainer Onboarding - Update {verification_type}", True, 
                              f"Verification updated: {verification_type}")
