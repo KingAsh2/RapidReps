@@ -1928,30 +1928,30 @@ async def get_session(session_id: str):
 
 @api_router.get("/trainer/sessions", response_model=List[SessionResponse])
 async def get_trainer_sessions(
-    status: Optional[str] = None,
+    session_status: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
     """Get sessions for a trainer"""
     user_id = str(current_user['_id'])
     query = {'trainerId': user_id}
     
-    if status:
-        query['status'] = status
+    if session_status:
+        query['status'] = session_status
     
     sessions = await db.sessions.find(query).sort('sessionDateTimeStart', -1).to_list(100)
     return [SessionResponse(**serialize_doc(s)) for s in sessions]
 
 @api_router.get("/trainee/sessions", response_model=List[SessionResponse])
 async def get_trainee_sessions(
-    status: Optional[str] = None,
+    session_status: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
     """Get sessions for a trainee"""
     user_id = str(current_user['_id'])
     query = {'traineeId': user_id}
     
-    if status:
-        query['status'] = status
+    if session_status:
+        query['status'] = session_status
     
     sessions = await db.sessions.find(query).sort('sessionDateTimeStart', -1).to_list(100)
     return [SessionResponse(**serialize_doc(s)) for s in sessions]
