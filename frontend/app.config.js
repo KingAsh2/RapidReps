@@ -1,7 +1,7 @@
 // Dynamic Expo configuration - extends app.json with environment variables
 export default ({ config }) => {
-  // Production backend URL for Emergent deployment
-  const productionBackendUrl = 'https://trainer-finder-9.emergent.sh';
+  // Backend URL from environment variable - no hardcoded URLs
+  const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL || '';
   
   return {
     ...config,
@@ -21,7 +21,7 @@ export default ({ config }) => {
     },
     extra: {
       ...config.extra,
-      productionBackendUrl: productionBackendUrl,
+      backendUrl: backendUrl,
     }
   };
 };
