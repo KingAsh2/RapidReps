@@ -846,7 +846,7 @@ export default function TraineeHomeScreen() {
             onClose={() => setShowFilters(false)}
           />
         </Modal>
-      </View>
+      </ImageBackground>
     </>
   );
 }
