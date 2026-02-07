@@ -608,6 +608,50 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: COLORS.success,
   },
+  // Safety PIN Styles
+  safetyPinContainer: {
+    marginTop: 16,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  safetyPinGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    gap: 14,
+  },
+  safetyPinContent: {
+    flex: 1,
+  },
+  safetyPinLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.85)',
+    marginBottom: 6,
+  },
+  safetyPinDigits: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 4,
+  },
+  safetyPinDigit: {
+    width: 36,
+    height: 42,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  safetyPinDigitText: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: COLORS.white,
+  },
+  safetyPinNote: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.75)',
+  },
   rateButton: {
     marginTop: 16,
     borderRadius: 14,
