@@ -425,9 +425,15 @@ export default function TraineeHomeScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <View style={styles.container}>
-        {/* Full Screen Gradient Background - Vibrant Teal */}
+        {/* Full Screen Hero Background Image */}
+        <Image
+          source={require('../../../assets/images/rapidreps-hero-bg.png')}
+          style={styles.heroBackgroundImage}
+          resizeMode="cover"
+        />
+        {/* Overlay gradient for text readability */}
         <LinearGradient
-          colors={['#1FB8B4', '#14A3A0', '#0D8B88']}
+          colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.1)', 'rgba(31,184,180,0.85)']}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
           style={styles.fullGradient}
