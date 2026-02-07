@@ -430,9 +430,9 @@ export default function TraineeHomeScreen() {
         style={styles.container}
         resizeMode="cover"
       >
-        {/* Subtle overlay gradient for text readability */}
+        {/* Very subtle overlay for text readability - allows image to show */}
         <LinearGradient
-          colors={['rgba(0,0,0,0.15)', 'rgba(31,184,180,0.7)', 'rgba(31,184,180,0.9)']}
+          colors={['rgba(31,184,180,0.3)', 'rgba(31,184,180,0.5)', 'rgba(31,184,180,0.7)']}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
           style={styles.fullGradient}
