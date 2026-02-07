@@ -313,6 +313,34 @@ export default function MySessionsScreen() {
                       </View>
                     )}
 
+                    {/* Safety PIN for In-Home Sessions */}
+                    {(session as any).sessionType === 'in_home' && 
+                     (session as any).safetyPin && 
+                     session.status !== SessionStatus.COMPLETED && 
+                     session.status !== SessionStatus.CANCELLED && (
+                      <View style={styles.safetyPinContainer}>
+                        <LinearGradient
+                          colors={[COLORS.orangeHot, COLORS.orange]}
+                          style={styles.safetyPinGradient}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                        >
+                          <Ionicons name="shield-checkmark" size={20} color={COLORS.white} />
+                          <View style={styles.safetyPinContent}>
+                            <Text style={styles.safetyPinLabel}>Your Safety PIN</Text>
+                            <View style={styles.safetyPinDigits}>
+                              {String((session as any).safetyPin).split('').map((digit: string, i: number) => (
+                                <View key={i} style={styles.safetyPinDigit}>
+                                  <Text style={styles.safetyPinDigitText}>{digit}</Text>
+                                </View>
+                              ))}
+                            </View>
+                            <Text style={styles.safetyPinNote}>Share with trainer to start</Text>
+                          </View>
+                        </LinearGradient>
+                      </View>
+                    )}
+
                     {/* Rate Button for Completed Sessions */}
                     {session.status === SessionStatus.COMPLETED && activeTab === 'past' && (
                       <TouchableOpacity
