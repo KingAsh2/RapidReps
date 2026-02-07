@@ -857,6 +857,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#1FB8B4',
   },
+  heroBackgroundImage: {
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
+  },
   fullGradient: {
     ...StyleSheet.absoluteFillObject,
   },
