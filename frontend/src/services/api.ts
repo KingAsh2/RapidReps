@@ -8,12 +8,12 @@ import { AuthResponse, User, TrainerProfile, TraineeProfile, Session } from '../
 const getBackendUrl = (): string => {
   // Always use the environment variable - works for both dev and production
   const envUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
-  if (envUrl) {
-    return envUrl;
+  if (!envUrl) {
+    console.error('[API] EXPO_PUBLIC_BACKEND_URL environment variable is not set');
+    // In development, this might not be fatal - use a warning
+    // In production builds, this should fail
   }
-  
-  // Fallback to current deployment URL
-  return 'https://trainer-app-19.preview.emergentagent.com';
+  return envUrl || '';
 };
 
 const API_BASE_URL = `${getBackendUrl()}/api`;
