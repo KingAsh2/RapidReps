@@ -2348,12 +2348,14 @@ async def get_platform_revenue(current_user: dict = Depends(get_current_user)):
     if not current_user.get('isAdmin'):
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    completed_sessions = await db.sessions.find({
-        'status': SessionStatus.COMPLETED
-    }).to_list(1000)
+    # Optimized query with projection - only fetch required fields
+    completed_sessions = await db.sessions.find(
+        {'status': SessionStatus.COMPLETED},
+        {'platformFeeCents': 1, 'finalSessionPriceCents': 1}
+    ).to_list(1000)
     
-    total_platform_fees = sum(s['platformFeeCents'] for s in completed_sessions)
-    total_session_value = sum(s['finalSessionPriceCents'] for s in completed_sessions)
+    total_platform_fees = sum(s.get('platformFeeCents', 0) for s in completed_sessions)
+    total_session_value = sum(s.get('finalSessionPriceCents', 0) for s in completed_sessions)
     
     return {
         'totalPlatformFeesCents': total_platform_fees,
