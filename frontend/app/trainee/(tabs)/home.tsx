@@ -14,6 +14,7 @@ import {
   Linking,
   Animated,
   Image,
+  ImageBackground,
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { useAuth } from '../../../src/contexts/AuthContext';
