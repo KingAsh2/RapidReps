@@ -425,13 +425,11 @@ export default function TraineeHomeScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <View style={styles.container}>
-        {/* Full Screen Hero Background Image */}
-        <Image
-          source={require('../../../assets/images/rapidreps-hero-bg.png')}
-          style={styles.heroBackgroundImage}
-          resizeMode="cover"
-        />
+      <ImageBackground
+        source={require('../../../assets/images/rapidreps-hero-bg.png')}
+        style={styles.container}
+        resizeMode="cover"
+      >
         {/* Subtle overlay gradient for text readability */}
         <LinearGradient
           colors={['rgba(0,0,0,0.15)', 'rgba(31,184,180,0.7)', 'rgba(31,184,180,0.9)']}
