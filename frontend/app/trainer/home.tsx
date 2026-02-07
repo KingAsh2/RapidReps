@@ -584,7 +584,7 @@ export default function TrainerHomeScreen() {
               </TouchableOpacity>
               <TouchableOpacity 
                 style={styles.quickAction}
-                onPress={() => router.push('/trainer/verification')}
+                onPress={() => router.push('/trainer/onboarding')}
               >
                 <LinearGradient
                   colors={[COLORS.white, COLORS.offWhite]}
