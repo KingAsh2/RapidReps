@@ -431,9 +431,9 @@ export default function TraineeHomeScreen() {
           style={styles.heroBackgroundImage}
           resizeMode="cover"
         />
-        {/* Overlay gradient for text readability */}
+        {/* Subtle overlay gradient for text readability */}
         <LinearGradient
-          colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.1)', 'rgba(31,184,180,0.85)']}
+          colors={['rgba(0,0,0,0.15)', 'rgba(31,184,180,0.7)', 'rgba(31,184,180,0.9)']}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
           style={styles.fullGradient}
