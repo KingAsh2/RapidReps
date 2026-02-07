@@ -1043,8 +1043,8 @@ async def get_messages(conversation_id: str, current_user: dict = Depends(get_cu
     if not conversation or user_id not in conversation['participants']:
         raise HTTPException(status_code=403, detail="Not authorized to view this conversation")
     
-    # Get messages
-    cursor = db.messages.find({'conversationId': conversation_id}).sort('createdAt', 1)
+    # Get messages with limit for performance
+    cursor = db.messages.find({'conversationId': conversation_id}).sort('createdAt', 1).limit(500)
     
     messages = []
     async for msg in cursor:
