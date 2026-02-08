@@ -12,7 +12,7 @@ from typing import Dict, Any, Optional
 import uuid
 
 # Backend URL
-BACKEND_URL = 'https://trainer-app-19.preview.emergentagent.com'
+BACKEND_URL = 'https://health-deploy.preview.emergentagent.com'
 API_BASE = f"{BACKEND_URL}/api"
 
 class VirtualSessionTester:
