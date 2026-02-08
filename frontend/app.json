@@ -70,10 +70,6 @@
         {
           "locationWhenInUsePermission": "RapidReps uses your location to show nearby trainers and estimate their arrival time for your workouts."
         }
-      ],
-      [
-        "react-native-maps",
-        {}
       ]
     ],
     "experiments": {
