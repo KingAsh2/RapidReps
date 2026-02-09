@@ -49,6 +49,9 @@ const COLORS = {
 // Location update interval in ms (30 seconds)
 const LOCATION_UPDATE_INTERVAL = 30000;
 
+// Background image
+const heroBackground = require('../../assets/images/rapidreps-hero-bg.png');
+
 export default function TrainerHomeScreen() {
   const router = useRouter();
   const { user, logout } = useAuth();
