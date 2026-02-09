@@ -399,7 +399,7 @@ export default function WelcomeScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        </>
+        </ImageBackground>
       )}
     </View>
   );
