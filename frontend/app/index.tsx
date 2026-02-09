@@ -410,6 +410,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.primary,
   },
+  backgroundImage: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(247, 147, 30, 0.7)',
+  },
   videoContainer: {
     flex: 1,
     backgroundColor: '#000',
