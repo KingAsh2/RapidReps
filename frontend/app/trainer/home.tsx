@@ -415,14 +415,13 @@ export default function TrainerHomeScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <View style={styles.container}>
-        {/* Full gradient background */}
-        <LinearGradient
-          colors={[COLORS.orangeHot, COLORS.orange, COLORS.orangeGlow]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
+      <ImageBackground 
+        source={heroBackground} 
+        style={styles.container}
+        resizeMode="cover"
+      >
+        {/* Dark overlay for better text readability */}
+        <View style={styles.overlay} />
 
         <SafeAreaView style={styles.safeArea} edges={['top']}>
           {/* Header Actions */}
