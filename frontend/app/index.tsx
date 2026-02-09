@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   Image,
+  ImageBackground,
   TouchableOpacity,
   ActivityIndicator,
   Dimensions,
