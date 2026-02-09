@@ -832,7 +832,7 @@ export default function TrainerHomeScreen() {
             <View style={{ height: 40 }} />
           </ScrollView>
         </SafeAreaView>
-      </View>
+      </ImageBackground>
     </>
   );
 }
