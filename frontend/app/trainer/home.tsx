@@ -841,6 +841,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(247, 147, 30, 0.75)',
+  },
   safeArea: {
     flex: 1,
   },
