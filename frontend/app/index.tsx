@@ -20,6 +20,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 const { width, height } = Dimensions.get('window');
 
+// Welcome background image
+const welcomeBackground = require('../assets/images/welcome-bg.png');
+
 export default function WelcomeScreen() {
   const router = useRouter();
   const { setDemoMode } = useAuth();
