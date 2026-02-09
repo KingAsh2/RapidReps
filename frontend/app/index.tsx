@@ -14,7 +14,6 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../src/contexts/AuthContext';
 import { Colors } from '../src/utils/colors';
 import { Ionicons } from '@expo/vector-icons';
-import { AthleticButton } from '../src/components/AthleticButton';
 import { Video, ResizeMode } from 'expo-av';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -22,7 +21,7 @@ const { width, height } = Dimensions.get('window');
 
 export default function WelcomeScreen() {
   const router = useRouter();
-  const { user, loading, activeRole } = useAuth();
+  const { setDemoMode } = useAuth();
   const [isReady, setIsReady] = useState(false);
   const [showVideo, setShowVideo] = useState(true);
   const [showTransition, setShowTransition] = useState(false);
@@ -35,15 +34,11 @@ export default function WelcomeScreen() {
   const backgroundOpacity = useRef(new Animated.Value(0)).current;
   const contentOpacity = useRef(new Animated.Value(0)).current;
   
-  // DELIVERED RAPIDLY animation values - smooth energetic effect
+  // DELIVERED RAPIDLY animation values
   const phraseScale = useRef(new Animated.Value(1)).current;
   const phraseRotate = useRef(new Animated.Value(0)).current;
   const flameScale = useRef(new Animated.Value(1)).current;
   const flameRotate = useRef(new Animated.Value(0)).current;
-
-  // Lock-In button long-press animation
-  const [isHoldingLockIn, setIsHoldingLockIn] = useState(false);
-  const lockInProgress = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const timer = setTimeout(() => setIsReady(true), 100);
@@ -55,7 +50,6 @@ export default function WelcomeScreen() {
     const createPhraseAnimation = () => {
       return Animated.loop(
         Animated.sequence([
-          // Smooth pulse in with slight rotation
           Animated.parallel([
             Animated.timing(phraseScale, {
               toValue: 1.15,
@@ -68,7 +62,6 @@ export default function WelcomeScreen() {
               useNativeDriver: true,
             }),
           ]),
-          // Smooth pulse back
           Animated.parallel([
             Animated.timing(phraseScale, {
               toValue: 1,
@@ -81,7 +74,6 @@ export default function WelcomeScreen() {
               useNativeDriver: true,
             }),
           ]),
-          // Brief pause
           Animated.delay(400),
         ])
       );
@@ -90,7 +82,6 @@ export default function WelcomeScreen() {
     const createFlameAnimation = () => {
       return Animated.loop(
         Animated.sequence([
-          // Flame blow effect - quick scale and rotate
           Animated.parallel([
             Animated.timing(flameScale, {
               toValue: 1.4,
@@ -103,7 +94,6 @@ export default function WelcomeScreen() {
               useNativeDriver: true,
             }),
           ]),
-          // Blow back
           Animated.parallel([
             Animated.spring(flameScale, {
               toValue: 1,
@@ -117,7 +107,6 @@ export default function WelcomeScreen() {
               useNativeDriver: true,
             }),
           ]),
-          // Quick second blow
           Animated.parallel([
             Animated.timing(flameScale, {
               toValue: 1.2,
@@ -130,7 +119,6 @@ export default function WelcomeScreen() {
             duration: 200,
             useNativeDriver: true,
           }),
-          // Pause before repeating
           Animated.delay(600),
         ])
       );
@@ -148,44 +136,25 @@ export default function WelcomeScreen() {
     };
   }, []);
 
-  // Remove automatic navigation from index - let login screen handle it
-  // This prevents race conditions with multiple navigation attempts
-
-  const handleLockInPressIn = () => {
-    setIsHoldingLockIn(true);
-    Animated.timing(lockInProgress, {
-      toValue: 1,
-      duration: 1500, // 1.5 seconds hold
-      useNativeDriver: false,
-    }).start(({ finished }) => {
-      if (finished) {
-        handleLockInComplete();
-      }
-    });
+  const handleBeginAsTrainee = () => {
+    if (setDemoMode) {
+      setDemoMode('trainee');
+    }
+    router.replace('/trainee/(tabs)/home');
   };
 
-  const handleLockInPressOut = () => {
-    setIsHoldingLockIn(false);
-    Animated.timing(lockInProgress, {
-      toValue: 0,
-      duration: 200,
-      useNativeDriver: false,
-    }).start();
-  };
-
-  const handleLockInComplete = () => {
-    setIsHoldingLockIn(false);
-    lockInProgress.setValue(0);
-    router.push('/auth/signup');
+  const handleBeginAsTrainer = () => {
+    if (setDemoMode) {
+      setDemoMode('trainer');
+    }
+    router.replace('/trainer/home');
   };
 
   const handleVideoEnd = () => {
     setVideoEnded(true);
     setShowTransition(true);
     
-    // Sequence of animations for smooth transition
     Animated.sequence([
-      // 1. Fade in logo and background
       Animated.parallel([
         Animated.spring(logoScale, {
           toValue: 1.2,
@@ -204,9 +173,7 @@ export default function WelcomeScreen() {
           useNativeDriver: true,
         }),
       ]),
-      // 2. Brief pause
       Animated.delay(200),
-      // 3. Scale down logo and fade in content
       Animated.parallel([
         Animated.spring(logoScale, {
           toValue: 1,
@@ -221,7 +188,6 @@ export default function WelcomeScreen() {
         }),
       ]),
     ]).start(() => {
-      // Hide video after transition complete
       setTimeout(() => {
         setShowVideo(false);
         setShowTransition(false);
@@ -233,7 +199,7 @@ export default function WelcomeScreen() {
     setShowVideo(false);
   };
 
-  if (loading || !isReady) {
+  if (!isReady) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={Colors.primary} />
@@ -276,7 +242,7 @@ export default function WelcomeScreen() {
         </View>
       )}
 
-      {/* Transition Layer - Full Screen Logo Only */}
+      {/* Transition Layer */}
       {showTransition && (
         <Animated.View 
           style={[
@@ -289,7 +255,6 @@ export default function WelcomeScreen() {
             style={StyleSheet.absoluteFillObject}
           />
           
-          {/* Full Screen Animated Logo */}
           <Animated.View
             style={[
               styles.transitionFullScreenLogo,
@@ -316,7 +281,7 @@ export default function WelcomeScreen() {
           
           {/* MAIN CONTENT */}
           <View style={styles.content}>
-            {/* LOGO SECTION - LARGER */}
+            {/* LOGO SECTION */}
             <View style={styles.logoContainer}>
               <Image
                 source={require('../assets/rapidreps-logo.png')}
@@ -393,44 +358,36 @@ export default function WelcomeScreen() {
               </View>
             </View>
 
-            {/* CTA BUTTONS */}
+            {/* CTA BUTTONS - Begin as Trainee or Trainer */}
             <View style={styles.ctaContainer}>
-              {/* Lock-In Button with Long Press */}
-              <Pressable
-                onPressIn={handleLockInPressIn}
-                onPressOut={handleLockInPressOut}
-                style={styles.lockInButton}
+              {/* Begin as Trainee Button */}
+              <TouchableOpacity
+                onPress={handleBeginAsTrainee}
+                style={styles.primaryButton}
+                activeOpacity={0.9}
+              >
+                <LinearGradient
+                  colors={[Colors.teal || '#1FB8B4', '#22C1C3']}
+                  style={styles.buttonGradient}
+                >
+                  <Ionicons name="fitness" size={28} color={Colors.white} />
+                  <Text style={styles.buttonText}>FIND A TRAINER 🏋️</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+
+              {/* Begin as Trainer Button */}
+              <TouchableOpacity
+                onPress={handleBeginAsTrainer}
+                style={styles.secondaryButton}
+                activeOpacity={0.9}
               >
                 <LinearGradient
                   colors={[Colors.secondary, Colors.primary]}
-                  style={styles.lockInGradient}
+                  style={styles.buttonGradient}
                 >
-                  {/* Progress Bar Background */}
-                  <Animated.View
-                    style={[
-                      styles.lockInProgressBar,
-                      {
-                        width: lockInProgress.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: ['0%', '100%'],
-                        }),
-                      },
-                    ]}
-                  />
-                  
-                  {/* Button Content */}
-                  <View style={styles.lockInContent}>
-                    <Ionicons name="barbell" size={28} color={Colors.white} />
-                    <Text style={styles.lockInText}>LOCK-IN 💪</Text>
-                  </View>
+                  <Ionicons name="barbell" size={28} color={Colors.white} />
+                  <Text style={styles.buttonText}>BECOME A TRAINER 💪</Text>
                 </LinearGradient>
-              </Pressable>
-
-              <TouchableOpacity
-                onPress={() => router.push('/auth/login')}
-                style={styles.loginLink}
-              >
-                <Text style={styles.loginLinkText}>ALREADY A MEMBER? LOG IN</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -487,14 +444,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     zIndex: 5,
   },
-  transitionLogoContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  transitionLogo: {
-    width: 200,
-    height: 200,
-  },
   transitionFullScreenLogo: {
     flex: 1,
     justifyContent: 'center',
@@ -506,56 +455,6 @@ const styles = StyleSheet.create({
     height: height * 0.5,
     maxWidth: 500,
     maxHeight: 500,
-  },
-  transitionContent: {
-    position: 'absolute',
-    bottom: height * 0.3,
-    alignItems: 'center',
-    paddingHorizontal: 40,
-  },
-  welcomeText: {
-    fontSize: 48,
-    fontWeight: '900',
-    color: Colors.navy,
-    letterSpacing: 2,
-    textAlign: 'center',
-    textShadowColor: 'rgba(0,0,0,0.2)',
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 0,
-  },
-  welcomeSubtext: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: Colors.white,
-    letterSpacing: 1,
-    textAlign: 'center',
-    marginTop: 12,
-  },
-  sloganContainer: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 12,
-  },
-  animatedPhraseContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 8,
-  },
-  animatedPhrase: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: Colors.white,
-    letterSpacing: 1,
-    textAlign: 'center',
-    textShadowColor: 'rgba(0,0,0,0.3)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
-  },
-  flameEmoji: {
-    fontSize: 24,
-    marginLeft: 6,
   },
   backgroundOrange: {
     position: 'absolute',
@@ -574,44 +473,36 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingTop: 80,
+    paddingTop: 60,
     paddingBottom: 40,
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 32,
-  },
-  logo: {
-    width: 140,
-    height: 140,
+    marginBottom: 20,
   },
   logoLarge: {
-    width: 312,
-    height: 312,
+    width: 280,
+    height: 280,
   },
   brandSection: {
     alignItems: 'center',
-    marginBottom: 40,
-  },
-  brandName: {
-    fontSize: 48,
-    fontWeight: '900',
-    color: Colors.navy,
-    letterSpacing: 2,
-    marginBottom: 16,
-    textShadowColor: 'rgba(0,0,0,0.2)',
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 0,
+    marginBottom: 30,
   },
   slogan: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '800',
     color: Colors.white,
     letterSpacing: 1,
     textTransform: 'uppercase',
   },
+  animatedPhraseContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+  },
   sloganBold: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: '900',
     fontStyle: 'italic',
     color: Colors.navy,
@@ -621,11 +512,15 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: -1, height: -1 },
     textShadowRadius: 0,
   },
+  flameEmoji: {
+    fontSize: 24,
+    marginLeft: 6,
+  },
   featuresContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 50,
-    gap: 12,
+    marginBottom: 30,
+    gap: 10,
   },
   featureCard: {
     flex: 1,
@@ -633,7 +528,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 3,
     borderColor: Colors.navy,
-    padding: 16,
+    padding: 12,
     alignItems: 'center',
     shadowColor: Colors.navy,
     shadowOffset: { width: 0, height: 4 },
@@ -642,83 +537,61 @@ const styles = StyleSheet.create({
     elevation: 0,
   },
   featureIconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     backgroundColor: Colors.secondary,
     borderWidth: 3,
     borderColor: Colors.navy,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   featureTitle: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '900',
     color: Colors.navy,
     textAlign: 'center',
     letterSpacing: 0.5,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   featureText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
     color: Colors.text,
     textAlign: 'center',
   },
   ctaContainer: {
     marginTop: 'auto',
-    gap: 20,
+    gap: 16,
   },
-  loginLink: {
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  loginLinkText: {
-    fontSize: 16,
-    fontWeight: '900',
-    color: Colors.navy,
-    letterSpacing: 1,
-    textDecorationLine: 'underline',
-    textDecorationColor: Colors.navy,
-    textDecorationStyle: 'solid',
-  },
-  lockInButton: {
+  primaryButton: {
     width: '100%',
-    height: 70,
-    borderRadius: 20,
+    height: 65,
+    borderRadius: 18,
     overflow: 'hidden',
-    marginBottom: 20,
   },
-  lockInGradient: {
-    flex: 1,
-    borderWidth: 4,
-    borderColor: Colors.navy,
-    borderRadius: 20,
+  secondaryButton: {
+    width: '100%',
+    height: 65,
+    borderRadius: 18,
     overflow: 'hidden',
-    position: 'relative',
   },
-  lockInProgressBar: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    zIndex: 1,
-  },
-  lockInContent: {
+  buttonGradient: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
-    zIndex: 2,
+    borderWidth: 4,
+    borderColor: Colors.navy,
+    borderRadius: 18,
   },
-  lockInText: {
-    fontSize: 22,
+  buttonText: {
+    fontSize: 18,
     fontWeight: '900',
     color: Colors.white,
-    letterSpacing: 1.5,
+    letterSpacing: 1,
     textShadowColor: Colors.navy,
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
