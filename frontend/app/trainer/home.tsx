@@ -9,6 +9,7 @@ import {
   RefreshControl,
   Switch,
   Image,
+  ImageBackground,
   Animated,
   Dimensions,
   AppState,
