@@ -279,9 +279,13 @@ export default function WelcomeScreen() {
 
       {/* Welcome Screen (shows after transition) */}
       {!showVideo && !showTransition && (
-        <>
-          {/* BACKGROUND - Solid Orange */}
-          <View style={styles.backgroundOrange} />
+        <ImageBackground 
+          source={welcomeBackground} 
+          style={styles.backgroundImage}
+          resizeMode="cover"
+        >
+          {/* Dark overlay for better text readability */}
+          <View style={styles.overlay} />
           
           {/* MAIN CONTENT */}
           <View style={styles.content}>
