@@ -1,46 +1,69 @@
-// RapidReps Athletic Brand Colors - Sports Team Style
+// RapidReps Brand Colors - Unified Design System
+// Used across all screens for consistent styling
 
 export const Colors = {
   // PRIMARY - Athletic Orange (Main Brand)
   primary: '#FF7F00',
   primaryLight: '#FFA526',
   primaryDark: '#E65C00',
+  orange: '#FF7F00',
+  orangeLight: '#FFA526',
+  orangeHot: '#FF6A00',
+  orangeGlow: '#FFB347',
   
   // SECONDARY - Teal Accent (Energy & Pop)
-  secondary: '#30C7C9',
-  secondaryDark: '#1FA6A9',
+  secondary: '#1FB8B4',
+  secondaryDark: '#18A09D',
+  teal: '#1FB8B4',
+  tealLight: '#22C1C3',
+  tealDark: '#0D8B88',
   
   // BASE - Deep Navy (Strength & Authority)
-  navy: '#002C4B',
-  navyLight: '#003E66',
+  navy: '#1a2a5e',
+  navyLight: '#2a3a6e',
+  navyDark: '#0f1a3e',
   
   // NEUTRAL
   white: '#FFFFFF',
-  background: '#F7F7F7',
-  lightGray: '#E0E0E0',
+  offWhite: '#FAFBFC',
+  background: '#F5F6F8',
+  lightGray: '#E8ECF0',
+  grayLight: '#E8ECF0',
   
   // STATUS COLORS
-  success: '#30C7C9',  // Teal
-  error: '#FF4444',
-  danger: '#FF4444',  // Alias for error
-  warning: '#FFA526',  // Light Orange
+  success: '#00C853',
+  successLight: '#E8F5E9',
+  error: '#FF4757',
+  danger: '#FF4757',
+  errorLight: '#FFEBEE',
+  warning: '#FFB300',
+  warningLight: '#FFF8E1',
   
   // TEXT
-  text: '#002C4B',  // Navy for body text
-  textLight: '#666666',
+  text: '#1a2a5e',
+  textPrimary: '#1a2a5e',
+  textSecondary: '#5a6785',
+  textLight: '#8892b0',
+  textMuted: '#8892b0',
   textWhite: '#FFFFFF',
+  gray: '#8892b0',
   
   // UI ELEMENTS
-  border: '#003E66',  // Navy border
-  shadow: '#002C4B',
+  border: '#E8ECF0',
+  shadow: '#1a2a5e',
   
-  // GRADIENTS (Used sparingly for backgrounds only)
+  // GRADIENTS (Array format for LinearGradient)
   gradientOrange: ['#FFA526', '#FF7F00', '#E65C00'],
-  gradientTeal: ['#30C7C9', '#1FA6A9'],
-  gradientNavy: ['#003E66', '#002C4B'],
-  
-  // LEGACY (for backwards compatibility - will remove)
+  gradientTeal: ['#1FB8B4', '#18A09D'],
+  gradientNavy: ['#2a3a6e', '#1a2a5e'],
   gradientMain: ['#FFA526', '#FF7F00', '#E65C00'],
-  gradientTealStart: ['#30C7C9', '#1FA6A9'],
+  gradientTealStart: ['#1FB8B4', '#18A09D'],
   gradientOrangeStart: ['#FFA526', '#FF7F00'],
+  
+  // GLASS CARD EFFECTS
+  cardBg: 'rgba(255,255,255,0.12)',
+  cardBorder: 'rgba(255,255,255,0.2)',
 };
+
+// Export default for backwards compatibility
+export default Colors;
