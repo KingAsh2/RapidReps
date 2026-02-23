@@ -374,7 +374,7 @@ export default function LoginScreen() {
           </Animated.View>
         </KeyboardAvoidingView>
       </SafeAreaView>
-    </View>
+    </ImageBackground>
   );
 }
 
