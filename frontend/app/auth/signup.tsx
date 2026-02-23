@@ -23,6 +23,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
+// Background image
+const backgroundImage = require('../../assets/images/welcome-bg.png');
+
 // Brand colors
 const COLORS = {
   teal: '#1FB8B4',
