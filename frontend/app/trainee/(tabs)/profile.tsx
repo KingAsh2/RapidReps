@@ -247,12 +247,16 @@ export default function TraineeProfileScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      {/* Full gradient background */}
+    <ImageBackground 
+      source={backgroundImage} 
+      style={styles.container}
+      resizeMode="cover"
+    >
+      {/* Orange overlay for consistency */}
       <LinearGradient
-        colors={[COLORS.navy, '#2a3a6e', COLORS.teal]}
+        colors={['rgba(247, 147, 30, 0.85)', 'rgba(247, 147, 30, 0.75)', 'rgba(255, 165, 38, 0.7)']}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 0, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
 
