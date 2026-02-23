@@ -6,6 +6,7 @@ import {
   FlatList,
   TouchableOpacity,
   Image,
+  ImageBackground,
   ActivityIndicator,
   Animated,
   RefreshControl,
@@ -19,16 +20,19 @@ import { chatAPI } from '../../src/services/api';
 
 // Brand colors
 const COLORS = {
+  orange: '#FF7F00',
+  orangeLight: '#FFA526',
   teal: '#1FB8B4',
   tealLight: '#22C1C3',
-  orange: '#F7931E',
-  orangeHot: '#FF6A00',
   navy: '#1a2a5e',
   white: '#FFFFFF',
   offWhite: '#FAFBFC',
   gray: '#8892b0',
   grayLight: '#E8ECF0',
 };
+
+// Background image
+const backgroundImage = require('../../assets/images/welcome-bg.png');
 
 export default function MessagesScreen() {
   const router = useRouter();
@@ -127,10 +131,7 @@ export default function MessagesScreen() {
         onPress={() => router.push(`/messages/chat?conversationId=${item.id}&userId=${otherUser.id}&userName=${otherUser.fullName}`)}
         activeOpacity={0.8}
       >
-        <LinearGradient
-          colors={[COLORS.white, COLORS.offWhite]}
-          style={styles.conversationGradient}
-        >
+        <View style={styles.conversationCard}>
           {otherUser.avatarUrl ? (
             <Image source={{ uri: otherUser.avatarUrl }} style={styles.avatar} />
           ) : (
@@ -162,46 +163,42 @@ export default function MessagesScreen() {
               >
                 {isMyMessage ? 'You: ' : ''}{preview}
               </Text>
-              {item.unreadCount > 0 && (
+              {item.unreadCount > 0 && !isMyMessage && (
                 <View style={styles.unreadBadge}>
                   <Text style={styles.unreadCount}>{item.unreadCount}</Text>
                 </View>
               )}
             </View>
           </View>
-
-          <Ionicons name="chevron-forward" size={20} color={COLORS.grayLight} />
-        </LinearGradient>
+        </View>
       </TouchableOpacity>
     );
   };
 
   if (loading) {
     return (
-      <LinearGradient
-        colors={[COLORS.teal, COLORS.tealLight, COLORS.orange]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.loadingContainer}
-      >
-        <ActivityIndicator size="large" color={COLORS.white} />
-        <Text style={styles.loadingText}>Loading messages...</Text>
-      </LinearGradient>
+      <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
+        <LinearGradient
+          colors={['rgba(247, 147, 30, 0.85)', 'rgba(247, 147, 30, 0.75)', 'rgba(255, 165, 38, 0.7)']}
+          style={styles.loadingContainer}
+        >
+          <ActivityIndicator size="large" color={COLORS.white} />
+          <Text style={styles.loadingText}>Loading messages...</Text>
+        </LinearGradient>
+      </ImageBackground>
     );
   }
 
   return (
-    <View style={styles.container}>
-      {/* Full gradient background */}
+    <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
+      {/* Orange overlay */}
       <LinearGradient
-        colors={[COLORS.teal, COLORS.tealLight, COLORS.orange]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        colors={['rgba(247, 147, 30, 0.85)', 'rgba(247, 147, 30, 0.75)', 'rgba(255, 165, 38, 0.7)']}
         style={StyleSheet.absoluteFill}
       />
 
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        {/* Header */}
+        {/* Header - No back button since this is a tab */}
         <Animated.View
           style={[
             styles.header,
@@ -211,11 +208,7 @@ export default function MessagesScreen() {
             },
           ]}
         >
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={COLORS.white} />
-          </TouchableOpacity>
           <Text style={styles.headerTitle}>MESSAGES 💬</Text>
-          <View style={{ width: 44 }} />
         </Animated.View>
 
         {/* Conversation Count */}
@@ -234,18 +227,15 @@ export default function MessagesScreen() {
         >
           {conversations.length === 0 ? (
             <View style={styles.emptyCard}>
-              <LinearGradient
-                colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.9)']}
-                style={styles.emptyGradient}
-              >
+              <View style={styles.emptyContent}>
                 <View style={styles.emptyIconBg}>
-                  <Ionicons name="chatbubbles" size={48} color={COLORS.teal} />
+                  <Ionicons name="chatbubbles" size={48} color={COLORS.orange} />
                 </View>
                 <Text style={styles.emptyTitle}>No messages yet</Text>
                 <Text style={styles.emptySubtext}>
-                  Start a conversation with a trainer or trainee from their profile
+                  Start a conversation with a trainer from their profile
                 </Text>
-              </LinearGradient>
+              </View>
             </View>
           ) : (
             <FlatList
@@ -261,7 +251,7 @@ export default function MessagesScreen() {
           )}
         </Animated.View>
       </SafeAreaView>
-    </View>
+    </ImageBackground>
   );
 }
 
@@ -284,70 +274,65 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
+    paddingTop: 12,
+    paddingBottom: 8,
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '900',
     color: COLORS.white,
-    letterSpacing: 0.5,
+    letterSpacing: 1,
+    textShadowColor: 'rgba(0,0,0,0.2)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   countText: {
+    textAlign: 'center',
     fontSize: 14,
     fontWeight: '600',
-    color: 'rgba(255,255,255,0.85)',
-    paddingHorizontal: 20,
+    color: 'rgba(255,255,255,0.8)',
     marginBottom: 16,
   },
   listContainer: {
     flex: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
   },
   listContent: {
-    paddingBottom: 20,
+    paddingBottom: 100,
   },
   conversationItem: {
     marginBottom: 12,
-    borderRadius: 16,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
   },
-  conversationGradient: {
+  conversationCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 14,
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   avatar: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    marginRight: 14,
   },
   avatarPlaceholder: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 14,
   },
   conversationContent: {
     flex: 1,
-    marginLeft: 14,
   },
   conversationHeader: {
     flexDirection: 'row',
@@ -362,52 +347,58 @@ const styles = StyleSheet.create({
   },
   time: {
     fontSize: 12,
-    fontWeight: '600',
     color: COLORS.gray,
+    fontWeight: '500',
   },
   messagePreview: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
   previewText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: COLORS.gray,
     flex: 1,
+    fontSize: 14,
+    color: COLORS.gray,
+    marginRight: 8,
   },
   unreadText: {
+    fontWeight: '600',
     color: COLORS.navy,
-    fontWeight: '700',
   },
   unreadBadge: {
     backgroundColor: COLORS.orange,
     borderRadius: 12,
-    minWidth: 22,
-    height: 22,
+    minWidth: 24,
+    height: 24,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 6,
-    marginLeft: 8,
+    paddingHorizontal: 8,
   },
   unreadCount: {
-    fontSize: 11,
-    fontWeight: '800',
+    fontSize: 12,
+    fontWeight: '700',
     color: COLORS.white,
   },
   emptyCard: {
+    marginTop: 40,
     borderRadius: 20,
     overflow: 'hidden',
-    marginTop: 40,
+    backgroundColor: COLORS.white,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5,
   },
-  emptyGradient: {
+  emptyContent: {
     padding: 40,
     alignItems: 'center',
   },
   emptyIconBg: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: 'rgba(31, 184, 180, 0.15)',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255, 127, 0, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
@@ -420,7 +411,6 @@ const styles = StyleSheet.create({
   },
   emptySubtext: {
     fontSize: 14,
-    fontWeight: '500',
     color: COLORS.gray,
     textAlign: 'center',
     lineHeight: 20,
