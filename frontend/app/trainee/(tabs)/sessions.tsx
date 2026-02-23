@@ -472,7 +472,7 @@ export default function SessionsScreen() {
           <View style={{ height: 100 }} />
         </ScrollView>
       </SafeAreaView>
-    </View>
+    </ImageBackground>
   );
 }
 
