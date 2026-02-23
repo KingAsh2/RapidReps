@@ -8,17 +8,26 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Dimensions,
-  Pressable,
   Animated,
+  StatusBar,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../src/contexts/AuthContext';
-import { Colors } from '../src/utils/colors';
 import { Ionicons } from '@expo/vector-icons';
 import { Video, ResizeMode } from 'expo-av';
 import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width, height } = Dimensions.get('window');
+
+// Brand Colors
+const BRAND = {
+  orange: '#FF7F00',
+  orangeLight: '#FFA526',
+  teal: '#1FB8B4',
+  navy: '#1a2a5e',
+  white: '#FFFFFF',
+};
 
 // Welcome background image
 const welcomeBackground = require('../assets/images/welcome-bg.png');
@@ -28,117 +37,42 @@ export default function WelcomeScreen() {
   const { setDemoMode } = useAuth();
   const [isReady, setIsReady] = useState(false);
   const [showVideo, setShowVideo] = useState(true);
-  const [showTransition, setShowTransition] = useState(false);
-  const [videoEnded, setVideoEnded] = useState(false);
   const videoRef = useRef<Video>(null);
   
-  // Transition animation values
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
   const logoScale = useRef(new Animated.Value(0.8)).current;
-  const logoOpacity = useRef(new Animated.Value(0)).current;
-  const backgroundOpacity = useRef(new Animated.Value(0)).current;
-  const contentOpacity = useRef(new Animated.Value(0)).current;
-  
-  // DELIVERED RAPIDLY animation values
-  const phraseScale = useRef(new Animated.Value(1)).current;
-  const phraseRotate = useRef(new Animated.Value(0)).current;
-  const flameScale = useRef(new Animated.Value(1)).current;
-  const flameRotate = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const timer = setTimeout(() => setIsReady(true), 100);
     return () => clearTimeout(timer);
   }, []);
 
-  // Smooth energetic animation for "DELIVERED RAPIDLY" phrase
   useEffect(() => {
-    const createPhraseAnimation = () => {
-      return Animated.loop(
-        Animated.sequence([
-          Animated.parallel([
-            Animated.timing(phraseScale, {
-              toValue: 1.15,
-              duration: 600,
-              useNativeDriver: true,
-            }),
-            Animated.timing(phraseRotate, {
-              toValue: 2,
-              duration: 600,
-              useNativeDriver: true,
-            }),
-          ]),
-          Animated.parallel([
-            Animated.timing(phraseScale, {
-              toValue: 1,
-              duration: 600,
-              useNativeDriver: true,
-            }),
-            Animated.timing(phraseRotate, {
-              toValue: 0,
-              duration: 600,
-              useNativeDriver: true,
-            }),
-          ]),
-          Animated.delay(400),
-        ])
-      );
-    };
-
-    const createFlameAnimation = () => {
-      return Animated.loop(
-        Animated.sequence([
-          Animated.parallel([
-            Animated.timing(flameScale, {
-              toValue: 1.4,
-              duration: 300,
-              useNativeDriver: true,
-            }),
-            Animated.timing(flameRotate, {
-              toValue: 1,
-              duration: 300,
-              useNativeDriver: true,
-            }),
-          ]),
-          Animated.parallel([
-            Animated.spring(flameScale, {
-              toValue: 1,
-              friction: 4,
-              tension: 80,
-              useNativeDriver: true,
-            }),
-            Animated.timing(flameRotate, {
-              toValue: 0,
-              duration: 200,
-              useNativeDriver: true,
-            }),
-          ]),
-          Animated.parallel([
-            Animated.timing(flameScale, {
-              toValue: 1.2,
-              duration: 200,
-              useNativeDriver: true,
-            }),
-          ]),
-          Animated.timing(flameScale, {
-            toValue: 1,
-            duration: 200,
-            useNativeDriver: true,
-          }),
-          Animated.delay(600),
-        ])
-      );
-    };
-
-    const phraseAnim = createPhraseAnimation();
-    const flameAnim = createFlameAnimation();
-    
-    phraseAnim.start();
-    flameAnim.start();
-
-    return () => {
-      phraseAnim.stop();
-      flameAnim.stop();
-    };
-  }, []);
+    if (!showVideo && isReady) {
+      // Animate content in
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.spring(slideAnim, {
+          toValue: 0,
+          friction: 8,
+          tension: 40,
+          useNativeDriver: true,
+        }),
+        Animated.spring(logoScale, {
+          toValue: 1,
+          friction: 6,
+          tension: 40,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [showVideo, isReady]);
 
   const handleBeginAsTrainee = () => {
     if (setDemoMode) {
@@ -155,48 +89,7 @@ export default function WelcomeScreen() {
   };
 
   const handleVideoEnd = () => {
-    setVideoEnded(true);
-    setShowTransition(true);
-    
-    Animated.sequence([
-      Animated.parallel([
-        Animated.spring(logoScale, {
-          toValue: 1.2,
-          useNativeDriver: true,
-          friction: 8,
-          tension: 40,
-        }),
-        Animated.timing(logoOpacity, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true,
-        }),
-        Animated.timing(backgroundOpacity, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true,
-        }),
-      ]),
-      Animated.delay(200),
-      Animated.parallel([
-        Animated.spring(logoScale, {
-          toValue: 1,
-          useNativeDriver: true,
-          friction: 7,
-          tension: 40,
-        }),
-        Animated.timing(contentOpacity, {
-          toValue: 1,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-      ]),
-    ]).start(() => {
-      setTimeout(() => {
-        setShowVideo(false);
-        setShowTransition(false);
-      }, 100);
-    });
+    setShowVideo(false);
   };
 
   const handleSkipVideo = () => {
@@ -206,199 +99,177 @@ export default function WelcomeScreen() {
   if (!isReady) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.primary} />
+        <StatusBar barStyle="light-content" />
+        <ActivityIndicator size="large" color={BRAND.orange} />
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="light-content" />
+      
       {/* Intro Video */}
       {showVideo && (
         <View style={styles.videoContainer}>
-          <View style={styles.videoWrapper}>
-            <Video
-              ref={videoRef}
-              source={require('../assets/videos/intro.mp4')}
-              style={styles.video}
-              resizeMode={ResizeMode.CONTAIN}
-              shouldPlay={true}
-              isLooping={false}
-              isMuted={false}
-              useNativeControls={false}
-              volume={1.0}
-              onPlaybackStatusUpdate={(status) => {
-                if (status.isLoaded && status.didJustFinish) {
-                  handleVideoEnd();
-                }
-              }}
-            />
-          </View>
+          <Video
+            ref={videoRef}
+            source={require('../assets/videos/intro.mp4')}
+            style={styles.video}
+            resizeMode={ResizeMode.COVER}
+            shouldPlay={true}
+            isLooping={false}
+            isMuted={false}
+            useNativeControls={false}
+            volume={1.0}
+            onPlaybackStatusUpdate={(status) => {
+              if (status.isLoaded && status.didJustFinish) {
+                handleVideoEnd();
+              }
+            }}
+          />
           
           {/* Skip Button */}
-          <Pressable 
+          <TouchableOpacity 
             onPress={handleSkipVideo}
             style={styles.skipButton}
+            activeOpacity={0.8}
           >
-            <Text style={styles.skipText}>SKIP</Text>
-            <Ionicons name="arrow-forward" size={20} color={Colors.white} />
-          </Pressable>
+            <Text style={styles.skipText}>Skip</Text>
+            <Ionicons name="arrow-forward" size={18} color={BRAND.white} />
+          </TouchableOpacity>
         </View>
       )}
 
-      {/* Transition Layer */}
-      {showTransition && (
-        <Animated.View 
-          style={[
-            styles.transitionContainer,
-            { opacity: backgroundOpacity }
-          ]}
-        >
-          <LinearGradient
-            colors={Colors.gradientOrangeStart}
-            style={StyleSheet.absoluteFillObject}
-          />
-          
-          <Animated.View
-            style={[
-              styles.transitionFullScreenLogo,
-              {
-                opacity: logoOpacity,
-                transform: [{ scale: logoScale }],
-              },
-            ]}
-          >
-            <Image
-              source={require('../assets/rapidreps-logo.png')}
-              style={styles.transitionLogoFull}
-              resizeMode="contain"
-            />
-          </Animated.View>
-        </Animated.View>
-      )}
-
-      {/* Welcome Screen (shows after transition) */}
-      {!showVideo && !showTransition && (
+      {/* Main Welcome Screen */}
+      {!showVideo && (
         <ImageBackground 
           source={welcomeBackground} 
           style={styles.backgroundImage}
           resizeMode="cover"
         >
-          {/* Dark overlay for better text readability */}
-          <View style={styles.overlay} />
+          {/* Gradient Overlay */}
+          <LinearGradient
+            colors={['rgba(255, 127, 0, 0.85)', 'rgba(255, 127, 0, 0.75)', 'rgba(255, 165, 38, 0.7)']}
+            style={styles.overlay}
+          />
           
-          {/* MAIN CONTENT */}
-          <View style={styles.content}>
-            {/* LOGO SECTION */}
-            <View style={styles.logoContainer}>
-              <Image
-                source={require('../assets/rapidreps-logo.png')}
-                style={styles.logoLarge}
-                resizeMode="contain"
-              />
-            </View>
-
-            {/* BRAND TEXT */}
-            <View style={styles.brandSection}>
-              <Text style={styles.slogan}>YOUR WORKOUT,</Text>
+          <SafeAreaView style={styles.safeArea}>
+            <View style={styles.content}>
+              {/* Logo Section */}
               <Animated.View 
                 style={[
-                  styles.animatedPhraseContainer,
+                  styles.logoSection,
                   {
-                    transform: [
-                      { scale: phraseScale },
-                      { 
-                        rotate: phraseRotate.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: ['0deg', '2deg']
-                        })
-                      }
-                    ]
+                    opacity: fadeAnim,
+                    transform: [{ scale: logoScale }],
                   }
                 ]}
               >
-                <Text style={styles.sloganBold}>DELIVERED RAPIDLY</Text>
-                <Animated.Text 
-                  style={[
-                    styles.flameEmoji,
-                    {
-                      transform: [
-                        { scale: flameScale },
-                        { 
-                          rotate: flameRotate.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: ['0deg', '-15deg']
-                          })
-                        }
-                      ]
-                    }
-                  ]}
+                <Image
+                  source={require('../assets/rapidreps-logo.png')}
+                  style={styles.logo}
+                  resizeMode="contain"
+                />
+              </Animated.View>
+
+              {/* Tagline */}
+              <Animated.View 
+                style={[
+                  styles.taglineSection,
+                  {
+                    opacity: fadeAnim,
+                    transform: [{ translateY: slideAnim }],
+                  }
+                ]}
+              >
+                <Text style={styles.tagline}>YOUR WORKOUT</Text>
+                <View style={styles.taglineHighlight}>
+                  <Text style={styles.taglineBold}>DELIVERED RAPIDLY</Text>
+                  <Text style={styles.fireEmoji}>🔥</Text>
+                </View>
+              </Animated.View>
+
+              {/* Value Props */}
+              <Animated.View 
+                style={[
+                  styles.valuePropsSection,
+                  {
+                    opacity: fadeAnim,
+                    transform: [{ translateY: slideAnim }],
+                  }
+                ]}
+              >
+                <View style={styles.valueProp}>
+                  <View style={styles.valuePropIcon}>
+                    <Ionicons name="location" size={22} color={BRAND.navy} />
+                  </View>
+                  <Text style={styles.valuePropText}>Trainers Near You</Text>
+                </View>
+                <View style={styles.valueProp}>
+                  <View style={styles.valuePropIcon}>
+                    <Ionicons name="flash" size={22} color={BRAND.navy} />
+                  </View>
+                  <Text style={styles.valuePropText}>Book Instantly</Text>
+                </View>
+                <View style={styles.valueProp}>
+                  <View style={styles.valuePropIcon}>
+                    <Ionicons name="shield-checkmark" size={22} color={BRAND.navy} />
+                  </View>
+                  <Text style={styles.valuePropText}>Verified Pros</Text>
+                </View>
+              </Animated.View>
+
+              {/* CTA Buttons */}
+              <Animated.View 
+                style={[
+                  styles.ctaSection,
+                  {
+                    opacity: fadeAnim,
+                    transform: [{ translateY: slideAnim }],
+                  }
+                ]}
+              >
+                {/* Find a Trainer Button */}
+                <TouchableOpacity
+                  onPress={handleBeginAsTrainee}
+                  style={styles.primaryButton}
+                  activeOpacity={0.9}
                 >
-                  🔥
-                </Animated.Text>
+                  <LinearGradient
+                    colors={[BRAND.teal, '#18A09D']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.buttonGradient}
+                  >
+                    <Ionicons name="search" size={24} color={BRAND.white} />
+                    <Text style={styles.buttonText}>Find a Trainer</Text>
+                    <Ionicons name="arrow-forward" size={20} color={BRAND.white} />
+                  </LinearGradient>
+                </TouchableOpacity>
+
+                {/* Become a Trainer Button */}
+                <TouchableOpacity
+                  onPress={handleBeginAsTrainer}
+                  style={styles.secondaryButton}
+                  activeOpacity={0.9}
+                >
+                  <View style={styles.outlineButtonInner}>
+                    <Ionicons name="barbell" size={24} color={BRAND.white} />
+                    <Text style={styles.outlineButtonText}>Become a Trainer</Text>
+                    <Ionicons name="arrow-forward" size={20} color={BRAND.white} />
+                  </View>
+                </TouchableOpacity>
+
+                {/* Terms */}
+                <Text style={styles.termsText}>
+                  By continuing, you agree to our{' '}
+                  <Text style={styles.termsLink}>Terms</Text> &{' '}
+                  <Text style={styles.termsLink}>Privacy Policy</Text>
+                </Text>
               </Animated.View>
             </View>
-
-            {/* FEATURES */}
-            <View style={styles.featuresContainer}>
-              <View style={styles.featureCard}>
-                <View style={styles.featureIconContainer}>
-                  <Ionicons name="search" size={32} color={Colors.navy} />
-                </View>
-                <Text style={styles.featureTitle}>FIND TRAINERS</Text>
-                <Text style={styles.featureText}>Local pros near you</Text>
-              </View>
-
-              <View style={styles.featureCard}>
-                <View style={styles.featureIconContainer}>
-                  <Ionicons name="flash" size={32} color={Colors.navy} />
-                </View>
-                <Text style={styles.featureTitle}>BOOK FAST</Text>
-                <Text style={styles.featureText}>Sessions on demand</Text>
-              </View>
-
-              <View style={styles.featureCard}>
-                <View style={styles.featureIconContainer}>
-                  <Ionicons name="cash" size={32} color={Colors.navy} />
-                </View>
-                <Text style={styles.featureTitle}>PAY EASY</Text>
-                <Text style={styles.featureText}>Simple pricing</Text>
-              </View>
-            </View>
-
-            {/* CTA BUTTONS - Begin as Trainee or Trainer */}
-            <View style={styles.ctaContainer}>
-              {/* Begin as Trainee Button */}
-              <TouchableOpacity
-                onPress={handleBeginAsTrainee}
-                style={styles.primaryButton}
-                activeOpacity={0.9}
-              >
-                <LinearGradient
-                  colors={[Colors.teal || '#1FB8B4', '#22C1C3']}
-                  style={styles.buttonGradient}
-                >
-                  <Ionicons name="fitness" size={28} color={Colors.white} />
-                  <Text style={styles.buttonText}>FIND A TRAINER 🏋️</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-
-              {/* Begin as Trainer Button */}
-              <TouchableOpacity
-                onPress={handleBeginAsTrainer}
-                style={styles.secondaryButton}
-                activeOpacity={0.9}
-              >
-                <LinearGradient
-                  colors={[Colors.secondary, Colors.primary]}
-                  style={styles.buttonGradient}
-                >
-                  <Ionicons name="barbell" size={28} color={Colors.white} />
-                  <Text style={styles.buttonText}>BECOME A TRAINER 💪</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
-          </View>
+          </SafeAreaView>
         </ImageBackground>
       )}
     </View>
@@ -408,33 +279,22 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.primary,
+    backgroundColor: BRAND.orange,
   },
-  backgroundImage: {
+  loadingContainer: {
     flex: 1,
-    width: '100%',
-    height: '100%',
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(247, 147, 30, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: BRAND.orange,
   },
   videoContainer: {
     flex: 1,
     backgroundColor: '#000',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  videoWrapper: {
-    width: width,
-    height: height,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#000',
   },
   video: {
-    width: width,
-    height: height,
+    flex: 1,
+    width: '100%',
+    height: '100%',
   },
   skipButton: {
     position: 'absolute',
@@ -442,167 +302,151 @@ const styles = StyleSheet.create({
     right: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
     gap: 6,
-    zIndex: 10,
   },
   skipText: {
-    color: Colors.white,
+    color: BRAND.white,
     fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 1,
+    fontWeight: '600',
   },
-  transitionContainer: {
+  backgroundImage: {
+    flex: 1,
+  },
+  overlay: {
     ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 5,
   },
-  transitionFullScreenLogo: {
+  safeArea: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
-  },
-  transitionLogoFull: {
-    width: width * 0.8,
-    height: height * 0.5,
-    maxWidth: 500,
-    maxHeight: 500,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Colors.primary,
   },
   content: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingTop: 60,
-    paddingBottom: 40,
-  },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  logoLarge: {
-    width: 280,
-    height: 280,
-  },
-  brandSection: {
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  slogan: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: Colors.white,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-  },
-  animatedPhraseContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 8,
-  },
-  sloganBold: {
-    fontSize: 28,
-    fontWeight: '900',
-    fontStyle: 'italic',
-    color: Colors.navy,
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-    textShadowColor: 'rgba(255,255,255,0.3)',
-    textShadowOffset: { width: -1, height: -1 },
-    textShadowRadius: 0,
-  },
-  flameEmoji: {
-    fontSize: 24,
-    marginLeft: 6,
-  },
-  featuresContainer: {
-    flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 30,
-    gap: 10,
+    paddingTop: 20,
+    paddingBottom: 20,
   },
-  featureCard: {
-    flex: 1,
-    backgroundColor: Colors.white,
-    borderRadius: 12,
-    borderWidth: 3,
-    borderColor: Colors.navy,
-    padding: 12,
+  logoSection: {
     alignItems: 'center',
-    shadowColor: Colors.navy,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 0,
+    marginTop: 20,
   },
-  featureIconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: Colors.secondary,
-    borderWidth: 3,
-    borderColor: Colors.navy,
+  logo: {
+    width: width * 0.65,
+    height: width * 0.65,
+    maxWidth: 280,
+    maxHeight: 280,
+  },
+  taglineSection: {
+    alignItems: 'center',
+    marginTop: -20,
+  },
+  tagline: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: BRAND.white,
+    letterSpacing: 2,
+  },
+  taglineHighlight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  taglineBold: {
+    fontSize: 26,
+    fontWeight: '900',
+    color: BRAND.navy,
+    letterSpacing: 1,
+  },
+  fireEmoji: {
+    fontSize: 26,
+    marginLeft: 8,
+  },
+  valuePropsSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingHorizontal: 10,
+  },
+  valueProp: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  valuePropIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: BRAND.white,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  featureTitle: {
+  valuePropText: {
     fontSize: 12,
-    fontWeight: '900',
-    color: Colors.navy,
-    textAlign: 'center',
-    letterSpacing: 0.5,
-    marginBottom: 2,
-  },
-  featureText: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: Colors.text,
+    fontWeight: '700',
+    color: BRAND.white,
     textAlign: 'center',
   },
-  ctaContainer: {
-    marginTop: 'auto',
-    gap: 16,
+  ctaSection: {
+    gap: 14,
   },
   primaryButton: {
-    width: '100%',
-    height: 65,
-    borderRadius: 18,
+    borderRadius: 16,
     overflow: 'hidden',
-  },
-  secondaryButton: {
-    width: '100%',
-    height: 65,
-    borderRadius: 18,
-    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
   },
   buttonGradient: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 18,
     gap: 12,
-    borderWidth: 4,
-    borderColor: Colors.navy,
-    borderRadius: 18,
   },
   buttonText: {
     fontSize: 18,
-    fontWeight: '900',
-    color: Colors.white,
-    letterSpacing: 1,
-    textShadowColor: Colors.navy,
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
+    fontWeight: '800',
+    color: BRAND.white,
+    flex: 1,
+    textAlign: 'center',
+  },
+  secondaryButton: {
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: BRAND.white,
+    overflow: 'hidden',
+  },
+  outlineButtonInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    gap: 12,
+  },
+  outlineButtonText: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: BRAND.white,
+    flex: 1,
+    textAlign: 'center',
+  },
+  termsText: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.8)',
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  termsLink: {
+    textDecorationLine: 'underline',
+    fontWeight: '600',
   },
 });
