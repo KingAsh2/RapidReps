@@ -432,7 +432,7 @@ export default function TraineeHomeScreen() {
       >
         {/* Very subtle overlay for text readability - allows image to show */}
         <LinearGradient
-          colors={['rgba(31,184,180,0.3)', 'rgba(31,184,180,0.5)', 'rgba(31,184,180,0.7)']}
+          colors={['rgba(247, 147, 30, 0.85)', 'rgba(247, 147, 30, 0.75)', 'rgba(255, 165, 38, 0.7)']}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
           style={styles.fullGradient}
