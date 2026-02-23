@@ -50,7 +50,7 @@ const COLORS = {
 const LOCATION_UPDATE_INTERVAL = 30000;
 
 // Background image
-const heroBackground = require('../../assets/images/rapidreps-hero-bg.png');
+const heroBackground = require('../../assets/images/welcome-bg.png');
 
 export default function TrainerHomeScreen() {
   const router = useRouter();
