@@ -8,6 +8,7 @@ import {
   RefreshControl,
   ActivityIndicator,
   Image,
+  ImageBackground,
   Animated,
   Dimensions,
 } from 'react-native';
