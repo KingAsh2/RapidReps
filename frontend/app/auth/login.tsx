@@ -204,26 +204,12 @@ export default function LoginScreen() {
   });
 
   return (
-    <View style={styles.container}>
-      {/* Animated Gradient Background */}
-      <Animated.View
-        style={[
-          styles.gradientBackground,
-          {
-            transform: [
-              { translateX: gradientTranslateX },
-              { scale: 1.2 },
-            ],
-          },
-        ]}
-      >
-        <LinearGradient
-          colors={['#FF6B35', '#F7931E', '#00CFC1', '#1a2a5e']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFillObject}
-        />
-      </Animated.View>
+    <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
+      {/* Orange overlay */}
+      <LinearGradient
+        colors={['rgba(247, 147, 30, 0.85)', 'rgba(247, 147, 30, 0.75)', 'rgba(255, 165, 38, 0.7)']}
+        style={StyleSheet.absoluteFill}
+      />
 
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView
