@@ -4,27 +4,38 @@ import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 import { AuthResponse, User, TrainerProfile, TraineeProfile, Session } from '../types';
 
-// Get the backend URL from environment variable
+// Get the backend URL - supports both development and production
 const getBackendUrl = (): string => {
-  // Always use the environment variable - works for both dev and production
-  const envUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
-  if (!envUrl) {
-    console.error('[API] EXPO_PUBLIC_BACKEND_URL environment variable is not set');
-    // In development, this might not be fatal - use a warning
-    // In production builds, this should fail
+  // First try expo-constants (works in production builds)
+  const extraBackendUrl = Constants.expoConfig?.extra?.backendUrl;
+  if (extraBackendUrl) {
+    console.log('[API] Using backend URL from Constants.extra:', extraBackendUrl);
+    return extraBackendUrl;
   }
-  return envUrl || '';
+  
+  // Then try environment variable (works in development)
+  const envUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
+  if (envUrl) {
+    console.log('[API] Using backend URL from env:', envUrl);
+    return envUrl;
+  }
+  
+  // Fallback - hardcoded production URL as last resort
+  const fallbackUrl = 'https://health-deploy.preview.emergentagent.com';
+  console.log('[API] Using fallback backend URL:', fallbackUrl);
+  return fallbackUrl;
 };
 
 const API_BASE_URL = `${getBackendUrl()}/api`;
 
-console.log('[API] Using backend URL:', API_BASE_URL);
+console.log('[API] Final backend URL:', API_BASE_URL);
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 15000, // 15 second timeout
 });
 
 // Add auth token to requests
@@ -33,8 +44,24 @@ api.interceptors.request.use(async (config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  console.log('[API] Request:', config.method?.toUpperCase(), config.url);
   return config;
 });
+
+// Add response/error logging
+api.interceptors.response.use(
+  (response) => {
+    console.log('[API] Response OK:', response.config.url);
+    return response;
+  },
+  (error) => {
+    console.error('[API] Error:', error.config?.url, error.message);
+    if (error.response) {
+      console.error('[API] Status:', error.response.status, error.response.data);
+    }
+    throw error;
+  }
+);
 
 // Auth API
 export const authAPI = {
