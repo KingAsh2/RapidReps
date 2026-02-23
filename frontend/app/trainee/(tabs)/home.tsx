@@ -426,7 +426,7 @@ export default function TraineeHomeScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <ImageBackground
-        source={require('../../../assets/images/rapidreps-hero-bg.png')}
+        source={require('../../../assets/images/welcome-bg.png')}
         style={styles.container}
         resizeMode="cover"
       >
