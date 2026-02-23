@@ -23,6 +23,9 @@ import { useAlert } from '../../src/contexts/AlertContext';
 
 const { width } = Dimensions.get('window');
 
+// Background image
+const backgroundImage = require('../../assets/images/welcome-bg.png');
+
 export default function LoginScreen() {
   const router = useRouter();
   const { login, user, activeRole } = useAuth();
