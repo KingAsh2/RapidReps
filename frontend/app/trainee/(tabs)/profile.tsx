@@ -26,6 +26,9 @@ import * as ImagePicker from 'expo-image-picker';
 
 const { width } = Dimensions.get('window');
 
+// Background image
+const backgroundImage = require('../../../assets/images/welcome-bg.png');
+
 // Brand colors - UNIFIED DESIGN SYSTEM
 const COLORS = {
   teal: '#1FB8B4',
