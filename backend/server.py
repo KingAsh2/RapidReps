@@ -727,6 +727,10 @@ class ConversationResponse(BaseModel):
 @api_router.post("/auth/signup", response_model=TokenResponse)
 async def signup(user_data: UserSignUp):
     """Register a new user"""
+    # Validate password length
+    if len(user_data.password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+    
     # Check if user already exists
     existing_user = await db.users.find_one({'email': user_data.email})
     if existing_user:
