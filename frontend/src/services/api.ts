@@ -21,7 +21,7 @@ const getBackendUrl = (): string => {
   }
   
   // Fallback - hardcoded production URL as last resort
-  const fallbackUrl = 'https://health-deploy.preview.emergentagent.com';
+  const fallbackUrl = 'https://session-hub-9.preview.emergentagent.com';
   console.log('[API] Using fallback backend URL:', fallbackUrl);
   return fallbackUrl;
 };

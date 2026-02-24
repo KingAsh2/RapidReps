@@ -757,7 +757,7 @@ agent_communication:
       ❌ App Status: NOT DEPLOYED - Shows Expo welcome screen instead of RapidReps app
       ❌ Expected: RapidReps fitness app with trainer/trainee interface
       ❌ Actual: Expo development setup screen with 'Welcome to Expo' message
-      ❌ URL: https://health-deploy.preview.emergentagent.com shows setup instructions
+      ❌ URL: https://session-hub-9.preview.emergentagent.com shows setup instructions
 
       **BUTTON TESTING RESULTS:**
       📱 Mobile Viewport: ✅ 390x844 (iPhone 14) - Correctly configured
