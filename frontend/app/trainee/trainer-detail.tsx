@@ -1127,6 +1127,49 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: COLORS.white,
   },
+  // Quick Actions Card
+  quickActionsCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 18,
+    marginBottom: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  quickActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    gap: 14,
+  },
+  quickActionIconBg: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  quickActionContent: {
+    flex: 1,
+  },
+  quickActionTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: COLORS.navy,
+    marginBottom: 2,
+  },
+  quickActionSubtitle: {
+    fontSize: 12,
+    color: COLORS.gray,
+  },
+  quickActionDivider: {
+    height: 1,
+    backgroundColor: COLORS.grayLight,
+    marginHorizontal: 16,
+  },
   // Reviews
   reviewsCard: {
     borderRadius: 18,
