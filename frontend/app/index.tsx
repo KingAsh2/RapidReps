@@ -459,4 +459,17 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
     fontWeight: '600',
   },
+  loginLinkContainer: {
+    marginTop: 16,
+    paddingVertical: 8,
+  },
+  loginLinkText: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.9)',
+    textAlign: 'center',
+  },
+  loginLinkBold: {
+    fontWeight: '700',
+    textDecorationLine: 'underline',
+  },
 });
