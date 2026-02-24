@@ -627,6 +627,56 @@ export default function TrainerDetailScreen() {
             </LinearGradient>
           </Animated.View>
 
+          {/* Quick Actions - Safety & Schedule */}
+          <Animated.View
+            style={[
+              styles.quickActionsCard,
+              {
+                opacity: contentAnim,
+                transform: [{ translateY: contentTranslateY }],
+              },
+            ]}
+          >
+            <TouchableOpacity 
+              style={styles.quickActionButton}
+              onPress={() => router.push({
+                pathname: '/trainee/schedule-training',
+                params: { trainerName: trainer?.fullName, trainerId: trainerId }
+              })}
+            >
+              <View style={[styles.quickActionIconBg, { backgroundColor: 'rgba(31, 184, 180, 0.1)' }]}>
+                <Ionicons name="calendar" size={24} color={COLORS.teal} />
+              </View>
+              <View style={styles.quickActionContent}>
+                <Text style={styles.quickActionTitle}>Schedule Ahead</Text>
+                <Text style={styles.quickActionSubtitle}>Book for a future date</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={COLORS.gray} />
+            </TouchableOpacity>
+
+            <View style={styles.quickActionDivider} />
+
+            <TouchableOpacity 
+              style={styles.quickActionButton}
+              onPress={() => router.push({
+                pathname: '/trainee/share-status',
+                params: { 
+                  trainerName: trainer?.fullName,
+                  sessionType: selectedSessionType === 'virtual' ? 'Virtual Training' : 'In-Person Training'
+                }
+              })}
+            >
+              <View style={[styles.quickActionIconBg, { backgroundColor: 'rgba(255, 127, 0, 0.1)' }]}>
+                <Ionicons name="shield-checkmark" size={24} color={COLORS.orange} />
+              </View>
+              <View style={styles.quickActionContent}>
+                <Text style={styles.quickActionTitle}>Safety Sharing</Text>
+                <Text style={styles.quickActionSubtitle}>Share session with contacts</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={COLORS.gray} />
+            </TouchableOpacity>
+          </Animated.View>
+
           {/* Reviews */}
           {ratings.length > 0 && (
             <Animated.View
