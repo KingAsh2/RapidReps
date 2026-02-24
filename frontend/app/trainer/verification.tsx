@@ -5,357 +5,424 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  ImageBackground,
   ActivityIndicator,
-  Image,
-  Dimensions,
+  Alert,
+  Animated,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
-import { Colors } from '../../src/utils/colors';
-import { useAlert } from '../../src/contexts/AlertContext';
-import axios from 'axios';
-import Constants from 'expo-constants';
 
-const { width } = Dimensions.get('window');
-const BACKEND_URL = Constants.expoConfig?.extra?.backendUrl || process.env.EXPO_PUBLIC_BACKEND_URL;
+// Brand colors
+const COLORS = {
+  orange: '#FF7F00',
+  orangeLight: '#FFA526',
+  teal: '#1FB8B4',
+  tealLight: '#22C1C3',
+  navy: '#1a2a5e',
+  white: '#FFFFFF',
+  gray: '#8892b0',
+  grayLight: '#F5F6F8',
+  success: '#00C853',
+  error: '#FF4757',
+  warning: '#FFB300',
+};
 
-export default function VerificationScreen() {
+// Background image
+const backgroundImage = require('../../assets/images/welcome-bg.png');
+
+// Verification steps
+const VERIFICATION_STEPS = [
+  {
+    id: 'identity',
+    title: 'Identity Verification',
+    description: 'Upload a valid government ID (Driver\'s License or Passport)',
+    icon: 'id-card',
+    required: true,
+  },
+  {
+    id: 'background',
+    title: 'Background Check',
+    description: 'Authorize a secure background screening through Checkr',
+    icon: 'shield-checkmark',
+    required: true,
+  },
+  {
+    id: 'certification',
+    title: 'Fitness Certification',
+    description: 'Upload your personal training certification (NASM, ACE, ISSA, etc.)',
+    icon: 'ribbon',
+    required: true,
+  },
+  {
+    id: 'cpr',
+    title: 'CPR/AED Certification',
+    description: 'Upload your current CPR/AED certification',
+    icon: 'heart',
+    required: true,
+  },
+  {
+    id: 'insurance',
+    title: 'Liability Insurance',
+    description: 'Upload proof of professional liability insurance',
+    icon: 'document-text',
+    required: false,
+  },
+  {
+    id: 'photo',
+    title: 'Profile Photo',
+    description: 'Upload a professional headshot for your profile',
+    icon: 'camera',
+    required: true,
+  },
+  {
+    id: 'video',
+    title: 'Intro Video',
+    description: 'Record a 30-60 second introduction video',
+    icon: 'videocam',
+    required: true,
+  },
+];
+
+export default function TrainerVerificationScreen() {
   const router = useRouter();
-  const { showAlert } = useAlert();
-  const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const [documents, setDocuments] = useState<string[]>([]);
-  const [isVerified, setIsVerified] = useState(false);
-  const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const [verificationStatus, setVerificationStatus] = useState<Record<string, 'pending' | 'uploading' | 'submitted' | 'approved' | 'rejected'>>({});
+  const [expandedStep, setExpandedStep] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const fadeAnim = useState(new Animated.Value(0))[0];
 
   useEffect(() => {
-    loadDocuments();
-    requestPermissions();
+    // Load current verification status
+    loadVerificationStatus();
+    
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
   }, []);
 
-  const requestPermissions = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      showAlert({
-        title: 'Permission Required',
-        message: 'Please grant camera roll permissions to upload documents.',
-        type: 'warning',
-      });
+  const loadVerificationStatus = async () => {
+    // In real app, fetch from API
+    setVerificationStatus({
+      identity: 'pending',
+      background: 'pending',
+      certification: 'pending',
+      cpr: 'pending',
+      insurance: 'pending',
+      photo: 'pending',
+      video: 'pending',
+    });
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return { name: 'checkmark-circle', color: COLORS.success };
+      case 'submitted':
+        return { name: 'time', color: COLORS.warning };
+      case 'rejected':
+        return { name: 'close-circle', color: COLORS.error };
+      case 'uploading':
+        return { name: 'cloud-upload', color: COLORS.teal };
+      default:
+        return { name: 'ellipse-outline', color: COLORS.gray };
     }
   };
 
-  const loadDocuments = async () => {
-    try {
-      const token = await getToken();
-      const response = await axios.get(`${BACKEND_URL}/api/trainer-profiles/my-documents`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      
-      setDocuments(response.data.documents || []);
-      setIsVerified(response.data.isVerified || false);
-    } catch (error) {
-      console.error('Error loading documents:', error);
-    } finally {
-      setLoading(false);
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return 'Approved';
+      case 'submitted':
+        return 'Under Review';
+      case 'rejected':
+        return 'Needs Attention';
+      case 'uploading':
+        return 'Uploading...';
+      default:
+        return 'Not Started';
     }
   };
 
-  const getToken = async () => {
-    // Get token from AsyncStorage or SecureStore
-    const { default: AsyncStorage } = await import('@react-native-async-storage/async-storage');
-    return await AsyncStorage.getItem('token');
-  };
-
-  const pickImage = async () => {
+  const handleUploadDocument = async (stepId: string) => {
     try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsMultipleSelection: false,
-        quality: 0.7,
-        base64: true,
-      });
+      setVerificationStatus(prev => ({ ...prev, [stepId]: 'uploading' }));
 
-      if (!result.canceled && result.assets[0].base64) {
-        const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
-        setSelectedImages([...selectedImages, base64Image]);
-      }
-    } catch (error) {
-      console.error('Error picking image:', error);
-      showAlert({
-        title: 'Error',
-        message: 'Failed to pick image',
-        type: 'error',
-      });
-    }
-  };
-
-  const takePhoto = async () => {
-    try {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== 'granted') {
-        showAlert({
-          title: 'Permission Required',
-          message: 'Camera permission is required to take photos.',
-          type: 'warning',
+      if (stepId === 'photo') {
+        const result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          aspect: [1, 1],
+          quality: 0.8,
         });
-        return;
-      }
 
-      const result = await ImagePicker.launchCameraAsync({
-        quality: 0.7,
-        base64: true,
-      });
+        if (!result.canceled) {
+          // Simulate upload
+          setTimeout(() => {
+            setVerificationStatus(prev => ({ ...prev, [stepId]: 'submitted' }));
+            Alert.alert('Success', 'Profile photo uploaded successfully!');
+          }, 1500);
+        } else {
+          setVerificationStatus(prev => ({ ...prev, [stepId]: 'pending' }));
+        }
+      } else if (stepId === 'video') {
+        const result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+          allowsEditing: true,
+          quality: 0.8,
+          videoMaxDuration: 60,
+        });
 
-      if (!result.canceled && result.assets[0].base64) {
-        const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
-        setSelectedImages([...selectedImages, base64Image]);
+        if (!result.canceled) {
+          setTimeout(() => {
+            setVerificationStatus(prev => ({ ...prev, [stepId]: 'submitted' }));
+            Alert.alert('Success', 'Intro video uploaded successfully!');
+          }, 2000);
+        } else {
+          setVerificationStatus(prev => ({ ...prev, [stepId]: 'pending' }));
+        }
+      } else {
+        const result = await DocumentPicker.getDocumentAsync({
+          type: ['application/pdf', 'image/*'],
+          copyToCacheDirectory: true,
+        });
+
+        if (!result.canceled) {
+          setTimeout(() => {
+            setVerificationStatus(prev => ({ ...prev, [stepId]: 'submitted' }));
+            Alert.alert('Success', 'Document uploaded successfully!');
+          }, 1500);
+        } else {
+          setVerificationStatus(prev => ({ ...prev, [stepId]: 'pending' }));
+        }
       }
     } catch (error) {
-      console.error('Error taking photo:', error);
-      showAlert({
-        title: 'Error',
-        message: 'Failed to take photo',
-        type: 'error',
-      });
+      console.error('Upload error:', error);
+      setVerificationStatus(prev => ({ ...prev, [stepId]: 'pending' }));
+      Alert.alert('Error', 'Failed to upload. Please try again.');
     }
   };
 
-  const removeImage = (index: number) => {
-    const updated = selectedImages.filter((_, i) => i !== index);
-    setSelectedImages(updated);
-  };
-
-  const uploadDocuments = async () => {
-    if (selectedImages.length === 0) {
-      showAlert({
-        title: 'No Documents',
-        message: 'Please select at least one document to upload',
-        type: 'warning',
-      });
-      return;
-    }
-
-    setUploading(true);
-    try {
-      const token = await getToken();
-      const response = await axios.post(
-        `${BACKEND_URL}/api/trainer-profiles/upload-documents`,
-        { documents: selectedImages },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      showAlert({
-        title: 'Success!',
-        message: response.data.message,
-        type: 'success',
-        buttons: [
-          {
-            text: 'OK',
-            style: 'default',
-            onPress: () => {
-              setSelectedImages([]);
-              loadDocuments();
-            },
-          },
-        ],
-      });
-    } catch (error: any) {
-      console.error('Error uploading documents:', error);
-      showAlert({
-        title: 'Error',
-        message: error.response?.data?.detail || 'Failed to upload documents',
-        type: 'error',
-      });
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-      </View>
+  const handleStartBackgroundCheck = () => {
+    Alert.alert(
+      'Background Check',
+      'You will be redirected to Checkr to complete your background check. This typically takes 2-5 business days.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Continue', 
+          onPress: () => {
+            setVerificationStatus(prev => ({ ...prev, background: 'submitted' }));
+            // In real app, redirect to Checkr
+            Alert.alert('Background Check Started', 'You will receive an email from Checkr to complete the process.');
+          }
+        },
+      ]
     );
-  }
+  };
+
+  const completedCount = Object.values(verificationStatus).filter(
+    s => s === 'approved' || s === 'submitted'
+  ).length;
+
+  const totalRequired = VERIFICATION_STEPS.filter(s => s.required).length;
+  const progress = (completedCount / VERIFICATION_STEPS.length) * 100;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header */}
+    <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
       <LinearGradient
-        colors={Colors.gradientOrangeStart}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.header}
-      >
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={Colors.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Verification</Text>
-        <View style={{ width: 40 }} />
-      </LinearGradient>
+        colors={['rgba(247, 147, 30, 0.9)', 'rgba(247, 147, 30, 0.85)', 'rgba(255, 165, 38, 0.8)']}
+        style={StyleSheet.absoluteFill}
+      />
 
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        {/* Verification Status Card */}
-        <View style={styles.statusCard}>
-          <View style={styles.statusHeader}>
-            <Ionicons
-              name={isVerified ? 'checkmark-circle' : 'time-outline'}
-              size={48}
-              color={isVerified ? Colors.success : Colors.warning}
-            />
-            <Text style={styles.statusTitle}>
-              {isVerified ? 'Verified Trainer ✓' : 'Pending Verification'}
-            </Text>
-            <Text style={styles.statusSubtitle}>
-              {isVerified
-                ? 'Your profile has been verified by our admin team'
-                : 'Upload your certification documents for verification'}
-            </Text>
-          </View>
-
-          <View style={styles.statusInfo}>
-            <View style={styles.infoRow}>
-              <Ionicons name="document-text" size={20} color={Colors.primary} />
-              <Text style={styles.infoText}>
-                Documents Uploaded: {documents.length}
-              </Text>
-            </View>
-          </View>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color={COLORS.white} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Trainer Verification</Text>
+          <View style={{ width: 40 }} />
         </View>
 
-        {/* Instructions Card */}
-        <View style={styles.instructionsCard}>
-          <Text style={styles.instructionsTitle}>📋 What to Upload</Text>
-          <View style={styles.instructionsList}>
-            <View style={styles.instructionItem}>
-              <Ionicons name="checkmark-circle" size={20} color={Colors.success} />
-              <Text style={styles.instructionText}>Certification documents (NASM, ACE, etc.)</Text>
-            </View>
-            <View style={styles.instructionItem}>
-              <Ionicons name="checkmark-circle" size={20} color={Colors.success} />
-              <Text style={styles.instructionText}>Valid government ID</Text>
-            </View>
-            <View style={styles.instructionItem}>
-              <Ionicons name="checkmark-circle" size={20} color={Colors.success} />
-              <Text style={styles.instructionText}>Proof of insurance (if applicable)</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Upload Actions */}
-        {!isVerified && (
-          <>
-            <View style={styles.uploadSection}>
-              <Text style={styles.sectionTitle}>Add Documents</Text>
-              <View style={styles.uploadButtons}>
-                <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-                  <LinearGradient
-                    colors={Colors.gradientTealStart}
-                    style={styles.uploadButtonGradient}
-                  >
-                    <Ionicons name="images" size={28} color={Colors.white} />
-                    <Text style={styles.uploadButtonText}>Choose from Gallery</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.uploadButton} onPress={takePhoto}>
-                  <LinearGradient
-                    colors={Colors.gradientOrangeStart}
-                    style={styles.uploadButtonGradient}
-                  >
-                    <Ionicons name="camera" size={28} color={Colors.white} />
-                    <Text style={styles.uploadButtonText}>Take Photo</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          <Animated.View style={{ opacity: fadeAnim }}>
+            {/* Progress Card */}
+            <View style={styles.progressCard}>
+              <View style={styles.progressHeader}>
+                <Ionicons name="shield-checkmark" size={32} color={COLORS.teal} />
+                <View style={styles.progressTextContainer}>
+                  <Text style={styles.progressTitle}>Verification Progress</Text>
+                  <Text style={styles.progressSubtitle}>
+                    {completedCount} of {VERIFICATION_STEPS.length} steps completed
+                  </Text>
+                </View>
               </View>
-            </View>
+              
+              <View style={styles.progressBarContainer}>
+                <View style={styles.progressBarBg}>
+                  <View style={[styles.progressBarFill, { width: `${progress}%` }]} />
+                </View>
+                <Text style={styles.progressPercent}>{Math.round(progress)}%</Text>
+              </View>
 
-            {/* Selected Images Preview */}
-            {selectedImages.length > 0 && (
-              <View style={styles.previewSection}>
-                <Text style={styles.sectionTitle}>
-                  Selected Documents ({selectedImages.length})
+              <View style={styles.infoBox}>
+                <Ionicons name="information-circle" size={20} color={COLORS.teal} />
+                <Text style={styles.infoText}>
+                  Complete all required steps to start accepting clients. Verification typically takes 1-3 business days.
                 </Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  <View style={styles.previewContainer}>
-                    {selectedImages.map((img, index) => (
-                      <View key={index} style={styles.previewItem}>
-                        <Image source={{ uri: img }} style={styles.previewImage} />
-                        <TouchableOpacity
-                          style={styles.removeButton}
-                          onPress={() => removeImage(index)}
-                        >
-                          <Ionicons name="close-circle" size={24} color={Colors.error} />
-                        </TouchableOpacity>
-                      </View>
-                    ))}
-                  </View>
-                </ScrollView>
-
-                {/* Upload Button */}
-                <TouchableOpacity
-                  onPress={uploadDocuments}
-                  disabled={uploading}
-                  style={styles.submitButtonContainer}
-                >
-                  <LinearGradient colors={Colors.gradientMain} style={styles.submitButton}>
-                    <Ionicons name="cloud-upload" size={24} color={Colors.white} />
-                    <Text style={styles.submitButtonText}>
-                      {uploading ? 'Uploading...' : `Upload ${selectedImages.length} Document(s)`}
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
               </View>
-            )}
-          </>
-        )}
-
-        {/* Uploaded Documents */}
-        {documents.length > 0 && (
-          <View style={styles.uploadedSection}>
-            <Text style={styles.sectionTitle}>Uploaded Documents</Text>
-            <Text style={styles.uploadedCount}>{documents.length} document(s) uploaded</Text>
-            <View style={styles.uploadedGrid}>
-              {documents.slice(0, 3).map((doc, index) => (
-                <View key={index} style={styles.uploadedItem}>
-                  <Image source={{ uri: doc }} style={styles.uploadedThumbnail} />
-                  <Text style={styles.uploadedLabel}>Doc {index + 1}</Text>
-                </View>
-              ))}
-              {documents.length > 3 && (
-                <View style={[styles.uploadedItem, styles.moreItem]}>
-                  <Text style={styles.moreText}>+{documents.length - 3}</Text>
-                </View>
-              )}
             </View>
-          </View>
-        )}
-      </ScrollView>
-    </SafeAreaView>
+
+            {/* Verification Steps */}
+            <Text style={styles.sectionTitle}>Required Documents</Text>
+
+            {VERIFICATION_STEPS.map((step, index) => {
+              const status = verificationStatus[step.id] || 'pending';
+              const statusInfo = getStatusIcon(status);
+              const isExpanded = expandedStep === step.id;
+
+              return (
+                <TouchableOpacity
+                  key={step.id}
+                  style={[
+                    styles.stepCard,
+                    status === 'approved' && styles.stepCardApproved,
+                    status === 'rejected' && styles.stepCardRejected,
+                  ]}
+                  onPress={() => setExpandedStep(isExpanded ? null : step.id)}
+                  activeOpacity={0.9}
+                >
+                  <View style={styles.stepHeader}>
+                    <View style={[styles.stepIconContainer, { backgroundColor: `${statusInfo.color}20` }]}>
+                      <Ionicons name={step.icon as any} size={24} color={statusInfo.color} />
+                    </View>
+                    
+                    <View style={styles.stepContent}>
+                      <View style={styles.stepTitleRow}>
+                        <Text style={styles.stepTitle}>{step.title}</Text>
+                        {step.required && status === 'pending' && (
+                          <View style={styles.requiredBadge}>
+                            <Text style={styles.requiredText}>REQUIRED</Text>
+                          </View>
+                        )}
+                      </View>
+                      <View style={styles.statusRow}>
+                        <Ionicons name={statusInfo.name as any} size={16} color={statusInfo.color} />
+                        <Text style={[styles.statusText, { color: statusInfo.color }]}>
+                          {getStatusText(status)}
+                        </Text>
+                      </View>
+                    </View>
+
+                    <Ionicons 
+                      name={isExpanded ? 'chevron-up' : 'chevron-down'} 
+                      size={20} 
+                      color={COLORS.gray} 
+                    />
+                  </View>
+
+                  {isExpanded && (
+                    <View style={styles.stepExpanded}>
+                      <Text style={styles.stepDescription}>{step.description}</Text>
+                      
+                      {status !== 'approved' && status !== 'uploading' && (
+                        <TouchableOpacity
+                          style={styles.uploadButton}
+                          onPress={() => {
+                            if (step.id === 'background') {
+                              handleStartBackgroundCheck();
+                            } else {
+                              handleUploadDocument(step.id);
+                            }
+                          }}
+                        >
+                          <LinearGradient
+                            colors={[COLORS.teal, '#18A09D']}
+                            style={styles.uploadButtonGradient}
+                          >
+                            <Ionicons 
+                              name={step.id === 'background' ? 'open-outline' : 'cloud-upload'} 
+                              size={20} 
+                              color={COLORS.white} 
+                            />
+                            <Text style={styles.uploadButtonText}>
+                              {step.id === 'background' ? 'Start Check' : 
+                               step.id === 'photo' || step.id === 'video' ? 'Select File' : 'Upload Document'}
+                            </Text>
+                          </LinearGradient>
+                        </TouchableOpacity>
+                      )}
+
+                      {status === 'uploading' && (
+                        <View style={styles.uploadingContainer}>
+                          <ActivityIndicator size="small" color={COLORS.teal} />
+                          <Text style={styles.uploadingText}>Uploading...</Text>
+                        </View>
+                      )}
+
+                      {status === 'rejected' && (
+                        <View style={styles.rejectedInfo}>
+                          <Ionicons name="alert-circle" size={16} color={COLORS.error} />
+                          <Text style={styles.rejectedText}>
+                            Document was rejected. Please upload a clearer image.
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+
+            {/* Trust & Safety */}
+            <View style={styles.trustCard}>
+              <View style={styles.trustHeader}>
+                <Ionicons name="lock-closed" size={24} color={COLORS.teal} />
+                <Text style={styles.trustTitle}>Trust & Safety</Text>
+              </View>
+              <Text style={styles.trustText}>
+                Your documents are encrypted and stored securely. We partner with Checkr for background checks, 
+                the same service used by Uber, Lyft, and other major platforms.
+              </Text>
+              <View style={styles.trustBadges}>
+                <View style={styles.trustBadge}>
+                  <Ionicons name="shield-checkmark" size={16} color={COLORS.success} />
+                  <Text style={styles.trustBadgeText}>SSL Encrypted</Text>
+                </View>
+                <View style={styles.trustBadge}>
+                  <Ionicons name="eye-off" size={16} color={COLORS.success} />
+                  <Text style={styles.trustBadgeText}>Privacy Protected</Text>
+                </View>
+              </View>
+            </View>
+
+            <View style={{ height: 100 }} />
+          </Animated.View>
+        </ScrollView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
-  loadingContainer: {
+  safeArea: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Colors.background,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingVertical: 12,
   },
   backButton: {
     width: 40,
@@ -366,200 +433,245 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: Colors.white,
+    fontSize: 18,
+    fontWeight: '800',
+    color: COLORS.white,
   },
-  scrollView: {
+  content: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  progressCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 14,
+  },
+  progressTextContainer: {
     flex: 1,
   },
-  scrollContent: {
-    padding: 20,
+  progressTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: COLORS.navy,
   },
-  statusCard: {
-    backgroundColor: Colors.white,
+  progressSubtitle: {
+    fontSize: 13,
+    color: COLORS.gray,
+    marginTop: 2,
+  },
+  progressBarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 16,
+  },
+  progressBarBg: {
+    flex: 1,
+    height: 8,
+    backgroundColor: COLORS.grayLight,
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: COLORS.teal,
+    borderRadius: 4,
+  },
+  progressPercent: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.teal,
+    width: 45,
+  },
+  infoBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: 'rgba(31, 184, 180, 0.1)',
+    borderRadius: 12,
+    padding: 12,
+    gap: 10,
+  },
+  infoText: {
+    flex: 1,
+    fontSize: 13,
+    color: COLORS.gray,
+    lineHeight: 18,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.white,
+    marginBottom: 16,
+  },
+  stepCard: {
+    backgroundColor: COLORS.white,
     borderRadius: 16,
-    padding: 24,
-    marginBottom: 20,
+    marginBottom: 12,
+    overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 3,
   },
-  statusHeader: {
-    alignItems: 'center',
-    marginBottom: 20,
+  stepCardApproved: {
+    borderLeftWidth: 4,
+    borderLeftColor: COLORS.success,
   },
-  statusTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: Colors.navy,
-    marginTop: 12,
-    marginBottom: 8,
+  stepCardRejected: {
+    borderLeftWidth: 4,
+    borderLeftColor: COLORS.error,
   },
-  statusSubtitle: {
-    fontSize: 14,
-    color: Colors.textLight,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  statusInfo: {
-    paddingTop: 20,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-  },
-  infoRow: {
+  stepHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    padding: 16,
+    gap: 14,
   },
-  infoText: {
+  stepIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stepContent: {
+    flex: 1,
+  },
+  stepTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  stepTitle: {
     fontSize: 15,
-    color: Colors.navy,
+    fontWeight: '700',
+    color: COLORS.navy,
+  },
+  requiredBadge: {
+    backgroundColor: COLORS.error,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  requiredText: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: COLORS.white,
+    letterSpacing: 0.5,
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  statusText: {
+    fontSize: 12,
     fontWeight: '600',
   },
-  instructionsCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 20,
+  stepExpanded: {
+    padding: 16,
+    paddingTop: 0,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.grayLight,
   },
-  instructionsTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: Colors.navy,
+  stepDescription: {
+    fontSize: 13,
+    color: COLORS.gray,
+    lineHeight: 20,
     marginBottom: 16,
-  },
-  instructionsList: {
-    gap: 12,
-  },
-  instructionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  instructionText: {
-    fontSize: 14,
-    color: Colors.text,
-    flex: 1,
-  },
-  uploadSection: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: Colors.navy,
-    marginBottom: 16,
-  },
-  uploadButtons: {
-    flexDirection: 'row',
-    gap: 12,
+    marginTop: 12,
   },
   uploadButton: {
-    flex: 1,
     borderRadius: 12,
     overflow: 'hidden',
   },
   uploadButtonGradient: {
-    padding: 20,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
     gap: 8,
   },
   uploadButtonText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: Colors.white,
-    textAlign: 'center',
+    fontSize: 15,
+    fontWeight: '700',
+    color: COLORS.white,
   },
-  previewSection: {
-    marginBottom: 20,
-  },
-  previewContainer: {
-    flexDirection: 'row',
-    gap: 12,
-    paddingVertical: 8,
-  },
-  previewItem: {
-    position: 'relative',
-  },
-  previewImage: {
-    width: 120,
-    height: 160,
-    borderRadius: 12,
-    backgroundColor: Colors.background,
-  },
-  removeButton: {
-    position: 'absolute',
-    top: -8,
-    right: -8,
-    backgroundColor: Colors.white,
-    borderRadius: 12,
-  },
-  submitButtonContainer: {
-    marginTop: 16,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  submitButton: {
+  uploadingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
-    paddingVertical: 16,
+    gap: 10,
+    paddingVertical: 14,
   },
-  submitButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: Colors.white,
+  uploadingText: {
+    fontSize: 14,
+    color: COLORS.teal,
+    fontWeight: '600',
   },
-  uploadedSection: {
-    backgroundColor: Colors.white,
+  rejectedInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 71, 87, 0.1)',
+    borderRadius: 8,
+    padding: 12,
+    gap: 8,
+    marginTop: 12,
+  },
+  rejectedText: {
+    flex: 1,
+    fontSize: 12,
+    color: COLORS.error,
+  },
+  trustCard: {
+    backgroundColor: 'rgba(255,255,255,0.95)',
     borderRadius: 16,
     padding: 20,
-    marginBottom: 20,
+    marginTop: 8,
   },
-  uploadedCount: {
-    fontSize: 14,
-    color: Colors.textLight,
+  trustHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 12,
+  },
+  trustTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.navy,
+  },
+  trustText: {
+    fontSize: 13,
+    color: COLORS.gray,
+    lineHeight: 20,
     marginBottom: 16,
   },
-  uploadedGrid: {
+  trustBadges: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
+    gap: 16,
   },
-  uploadedItem: {
-    width: (width - 76) / 3,
-    aspectRatio: 0.75,
-    borderRadius: 12,
-    overflow: 'hidden',
-    backgroundColor: Colors.background,
-  },
-  uploadedThumbnail: {
-    width: '100%',
-    height: '100%',
-  },
-  uploadedLabel: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    padding: 4,
-    fontSize: 11,
-    color: Colors.white,
-    textAlign: 'center',
-  },
-  moreItem: {
-    justifyContent: 'center',
+  trustBadge: {
+    flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.primary,
+    gap: 6,
   },
-  moreText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: Colors.white,
+  trustBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: COLORS.success,
   },
 });
