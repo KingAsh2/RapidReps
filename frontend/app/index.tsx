@@ -267,6 +267,16 @@ export default function WelcomeScreen() {
                   <Text style={styles.termsLink}>Terms</Text> &{' '}
                   <Text style={styles.termsLink}>Privacy Policy</Text>
                 </Text>
+
+                {/* Login Link */}
+                <TouchableOpacity 
+                  onPress={() => router.push('/auth/login')}
+                  style={styles.loginLinkContainer}
+                >
+                  <Text style={styles.loginLinkText}>
+                    Already have an account? <Text style={styles.loginLinkBold}>Log In</Text>
+                  </Text>
+                </TouchableOpacity>
               </Animated.View>
             </View>
           </SafeAreaView>
