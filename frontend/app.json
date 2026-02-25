@@ -79,7 +79,8 @@
           "contactsPermission": "Share your training session status with emergency contacts for safety."
         }
       ],
-      "expo-document-picker"
+      "expo-document-picker",
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true
