@@ -28,8 +28,8 @@ const BRAND = {
   white: '#FFFFFF',
 };
 
-// Welcome background image
-const welcomeBackground = require('../assets/images/welcome-bg.png');
+// Welcome background image - Battle ropes (intense action for intro)
+const welcomeBackground = require('../assets/images/bg-battle-ropes.png');
 
 export default function WelcomeScreen() {
   const router = useRouter();
