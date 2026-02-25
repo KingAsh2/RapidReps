@@ -34,7 +34,6 @@ const welcomeBackground = require('../assets/images/welcome-bg.png');
 
 export default function WelcomeScreen() {
   const router = useRouter();
-  const { setDemoMode } = useAuth();
   const [isReady, setIsReady] = useState(false);
   const [showVideo, setShowVideo] = useState(true);
   const videoRef = useRef<Video>(null);
