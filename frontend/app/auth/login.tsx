@@ -413,16 +413,10 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   glassCard: {
-    backgroundColor: 'rgba(26, 42, 94, 0.85)',
+    backgroundColor: 'transparent',
     borderRadius: 24,
     padding: 32,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 20 },
-    shadowOpacity: 0.3,
-    shadowRadius: 30,
-    elevation: 10,
+    borderWidth: 0,
   },
   logoContainer: {
     alignItems: 'center',
