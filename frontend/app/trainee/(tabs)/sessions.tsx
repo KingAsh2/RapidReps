@@ -23,7 +23,7 @@ import { traineeAPI } from '../../../src/services/api';
 const { width } = Dimensions.get('window');
 
 // Background image
-const backgroundImage = require('../../../assets/images/welcome-bg.png');
+const backgroundImage = require('../../../assets/images/bg-spin-class.png');
 
 // Brand colors - UNIFIED DESIGN SYSTEM
 const COLORS = {

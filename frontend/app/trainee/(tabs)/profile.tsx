@@ -27,7 +27,7 @@ import * as ImagePicker from 'expo-image-picker';
 const { width } = Dimensions.get('window');
 
 // Background image
-const backgroundImage = require('../../../assets/images/welcome-bg.png');
+const backgroundImage = require('../../../assets/images/bg-box-jumps.png');
 
 // Brand colors - UNIFIED DESIGN SYSTEM
 const COLORS = {

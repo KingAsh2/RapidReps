@@ -37,7 +37,7 @@ const COLORS = {
 };
 
 // Background image
-const backgroundImage = require('../../../assets/images/welcome-bg.png');
+const backgroundImage = require('../../../assets/images/bg-battle-ropes.png');
 
 export default function SavedTrainersScreen() {
   const router = useRouter();
