@@ -23,8 +23,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
-// Background image
-const backgroundImage = require('../../assets/images/welcome-bg.png');
+// Background image - Box jumps (high energy, getting started)
+const backgroundImage = require('../../assets/images/bg-box-jumps.png');
 
 // Brand colors
 const COLORS = {
