@@ -217,7 +217,7 @@ export default function LoginScreen() {
           style={styles.keyboardView}
         >
           {/* Back Button */}
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <TouchableOpacity onPress={() => router.replace('/')} style={styles.backButton}>
             <Ionicons name="arrow-back" size={28} color={Colors.white} />
           </TouchableOpacity>
 
