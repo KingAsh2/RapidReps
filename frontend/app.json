@@ -38,7 +38,8 @@
         "ACCESS_FINE_LOCATION",
         "CAMERA",
         "READ_MEDIA_IMAGES",
-        "READ_MEDIA_VIDEO"
+        "READ_MEDIA_VIDEO",
+        "READ_CONTACTS"
       ]
     },
     "web": {
