@@ -35,10 +35,10 @@ export default function ConfirmBookingScreen() {
   const params = useLocalSearchParams();
   const [isBooking, setIsBooking] = useState(false);
 
-  const trainerName = params.trainerName as string || 'Your Trainer';
-  const date = params.date as string || 'Today';
-  const time = params.time as string || '10:00 AM';
-  const duration = params.duration as string || '60';
+  const trainerName = (params.trainerName || 'Your Trainer') as string;
+  const date = (params.date || 'Today') as string;
+  const time = (params.time || '10:00 AM') as string;
+  const duration = (params.duration || '60') as string;
 
   // Calculate price based on duration
   const getPriceForDuration = (mins: string) => {
