@@ -20,10 +20,10 @@ const getBackendUrl = (): string => {
     return envUrl;
   }
   
-  // Fallback - hardcoded production URL as last resort
-  const fallbackUrl = 'https://session-hub-9.preview.emergentagent.com';
-  console.log('[API] Using fallback backend URL:', fallbackUrl);
-  return fallbackUrl;
+  // Fallback - use relative URL (works when backend and frontend are on same domain)
+  // In production, EXPO_PUBLIC_BACKEND_URL will be set by the deployment system
+  console.log('[API] Using relative URL fallback (same-origin deployment)');
+  return '';
 };
 
 const API_BASE_URL = `${getBackendUrl()}/api`;
