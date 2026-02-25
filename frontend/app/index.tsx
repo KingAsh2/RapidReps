@@ -74,18 +74,20 @@ export default function WelcomeScreen() {
     }
   }, [showVideo, isReady]);
 
-  const handleBeginAsTrainee = () => {
-    if (setDemoMode) {
-      setDemoMode('trainee');
-    }
-    router.replace('/trainee/(tabs)/home');
+  const handleFindTrainer = () => {
+    // Navigate to signup with trainee role pre-selected
+    router.push({
+      pathname: '/auth/signup',
+      params: { role: 'trainee' }
+    });
   };
 
-  const handleBeginAsTrainer = () => {
-    if (setDemoMode) {
-      setDemoMode('trainer');
-    }
-    router.replace('/trainer/home');
+  const handleBecomeTrainer = () => {
+    // Navigate to signup with trainer role pre-selected
+    router.push({
+      pathname: '/auth/signup',
+      params: { role: 'trainer' }
+    });
   };
 
   const handleVideoEnd = () => {
