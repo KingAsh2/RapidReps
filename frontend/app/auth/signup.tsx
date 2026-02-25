@@ -620,6 +620,18 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 24,
   },
+  backButton: {
+    position: 'absolute',
+    top: 12,
+    left: 16,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
   logoContainer: {
     marginBottom: 16,
     alignItems: 'center',
