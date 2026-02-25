@@ -46,6 +46,7 @@ const COLORS = {
 
 export default function SignupScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const { signup } = useAuth();
   const { showAlert } = useAlert();
   const [loading, setLoading] = useState(false);
@@ -57,6 +58,16 @@ export default function SignupScreen() {
     phone: '',
     roles: [] as UserRole[],
   });
+
+  // Pre-select role from URL params (coming from welcome screen)
+  useEffect(() => {
+    const roleParam = params.role as string;
+    if (roleParam === 'trainee' && !formData.roles.includes(UserRole.TRAINEE)) {
+      setFormData(prev => ({ ...prev, roles: [UserRole.TRAINEE] }));
+    } else if (roleParam === 'trainer' && !formData.roles.includes(UserRole.TRAINER)) {
+      setFormData(prev => ({ ...prev, roles: [UserRole.TRAINER] }));
+    }
+  }, [params.role]);
 
   // Animation refs
   const heroAnim = useRef(new Animated.Value(0)).current;
