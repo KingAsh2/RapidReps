@@ -234,7 +234,7 @@ export default function WelcomeScreen() {
               >
                 {/* Find a Trainer Button */}
                 <TouchableOpacity
-                  onPress={handleBeginAsTrainee}
+                  onPress={handleFindTrainer}
                   style={styles.primaryButton}
                   activeOpacity={0.9}
                 >
@@ -252,7 +252,7 @@ export default function WelcomeScreen() {
 
                 {/* Become a Trainer Button */}
                 <TouchableOpacity
-                  onPress={handleBeginAsTrainer}
+                  onPress={handleBecomeTrainer}
                   style={styles.secondaryButton}
                   activeOpacity={0.9}
                 >
