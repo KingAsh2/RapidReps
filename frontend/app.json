@@ -22,7 +22,8 @@
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "RapidReps uses your location to show nearby trainers and estimate their arrival time for your workouts.",
         "NSCameraUsageDescription": "RapidReps uses the camera for profile photos, verification, and uploading session media.",
-        "NSPhotoLibraryUsageDescription": "RapidReps lets you upload photos and videos for profiles and session content."
+        "NSPhotoLibraryUsageDescription": "RapidReps lets you upload photos and videos for profiles and session content.",
+        "NSContactsUsageDescription": "Share your training session status with emergency contacts for safety."
       }
     },
     "android": {
