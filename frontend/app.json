@@ -72,7 +72,14 @@
         {
           "locationWhenInUsePermission": "RapidReps uses your location to show nearby trainers and estimate their arrival time for your workouts."
         }
-      ]
+      ],
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "Share your training session status with emergency contacts for safety."
+        }
+      ],
+      "expo-document-picker"
     ],
     "experiments": {
       "typedRoutes": true
