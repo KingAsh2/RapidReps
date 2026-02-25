@@ -451,7 +451,7 @@ export default function TraineeProfileScreen() {
 
                 <TouchableOpacity 
                   style={styles.actionItem}
-                  onPress={() => router.push('/trainee/saved-trainers')}
+                  onPress={() => router.push('/trainee/(tabs)/saved')}
                 >
                   <View style={[styles.actionIconBg, { backgroundColor: 'rgba(31, 184, 180, 0.2)' }]}>
                     <Ionicons name="heart" size={22} color={COLORS.teal} />
