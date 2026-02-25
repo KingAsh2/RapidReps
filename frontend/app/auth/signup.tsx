@@ -267,6 +267,11 @@ export default function SignupScreen() {
       />
 
       <SafeAreaView style={styles.safeArea} edges={['top']}>
+        {/* Back Button */}
+        <TouchableOpacity onPress={() => router.replace('/')} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={28} color={COLORS.white} />
+        </TouchableOpacity>
+
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardView}
