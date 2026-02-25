@@ -50,7 +50,7 @@ const COLORS = {
 const LOCATION_UPDATE_INTERVAL = 30000;
 
 // Background image
-const heroBackground = require('../../assets/images/welcome-bg.png');
+const heroBackground = require('../../assets/images/bg-battle-ropes.png');
 
 export default function TrainerHomeScreen() {
   const router = useRouter();

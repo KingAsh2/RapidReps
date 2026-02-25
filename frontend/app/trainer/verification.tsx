@@ -33,7 +33,7 @@ const COLORS = {
 };
 
 // Background image
-const backgroundImage = require('../../assets/images/welcome-bg.png');
+const backgroundImage = require('../../assets/images/bg-gym-weights.png');
 
 // Verification steps
 const VERIFICATION_STEPS = [

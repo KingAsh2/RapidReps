@@ -33,7 +33,7 @@ const COLORS = {
 };
 
 // Background image
-const backgroundImage = require('../../assets/images/welcome-bg.png');
+const backgroundImage = require('../../assets/images/bg-box-jumps.png');
 
 interface EmergencyContact {
   id: string;

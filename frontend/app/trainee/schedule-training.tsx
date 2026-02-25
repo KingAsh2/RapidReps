@@ -29,7 +29,7 @@ const COLORS = {
 };
 
 // Background image
-const backgroundImage = require('../../assets/images/welcome-bg.png');
+const backgroundImage = require('../../assets/images/bg-spin-class.png');
 
 // Quick schedule options
 const QUICK_OPTIONS = [
