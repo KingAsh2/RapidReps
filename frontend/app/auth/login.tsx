@@ -23,8 +23,8 @@ import { useAlert } from '../../src/contexts/AlertContext';
 
 const { width } = Dimensions.get('window');
 
-// Background image
-const backgroundImage = require('../../assets/images/welcome-bg.png');
+// Background image - Gym weights (strength/professional)
+const backgroundImage = require('../../assets/images/bg-gym-weights.png');
 
 export default function LoginScreen() {
   const router = useRouter();
