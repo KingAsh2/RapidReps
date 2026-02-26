@@ -2603,37 +2603,177 @@ async def get_trainer_ratings(trainer_id: str):
 
 @api_router.get("/trainer/earnings")
 async def get_trainer_earnings(current_user: dict = Depends(get_current_user)):
-    """Get trainer earnings summary"""
+    """Get trainer earnings summary with weekly/monthly breakdown and payout history"""
     user_id = str(current_user['_id'])
-    
+    now = datetime.utcnow()
+
     # Get all completed sessions
     completed_sessions = await db.sessions.find({
         'trainerId': user_id,
         'status': SessionStatus.COMPLETED
-    }).to_list(1000)
-    
-    total_earnings = sum(s['trainerEarningsCents'] for s in completed_sessions)
-    
+    }).sort('createdAt', -1).to_list(1000)
+
+    total_earnings = sum(s.get('trainerEarningsCents', 0) for s in completed_sessions)
+
     # This month
-    now = datetime.utcnow()
     month_start = datetime(now.year, now.month, 1)
-    month_sessions = [s for s in completed_sessions if s['createdAt'] >= month_start]
-    month_earnings = sum(s['trainerEarningsCents'] for s in month_sessions)
-    
-    # This week
+    month_sessions = [s for s in completed_sessions if s.get('createdAt', now) >= month_start]
+    month_earnings = sum(s.get('trainerEarningsCents', 0) for s in month_sessions)
+
+    # Last month
+    if now.month == 1:
+        last_month_start = datetime(now.year - 1, 12, 1)
+    else:
+        last_month_start = datetime(now.year, now.month - 1, 1)
+    last_month_sessions = [s for s in completed_sessions if last_month_start <= s.get('createdAt', now) < month_start]
+    last_month_earnings = sum(s.get('trainerEarningsCents', 0) for s in last_month_sessions)
+
+    # This week (Monday start)
     week_start = now - timedelta(days=now.weekday())
-    week_sessions = [s for s in completed_sessions if s['createdAt'] >= week_start]
-    week_earnings = sum(s['trainerEarningsCents'] for s in week_sessions)
-    
+    week_start = datetime(week_start.year, week_start.month, week_start.day)
+    week_sessions = [s for s in completed_sessions if s.get('createdAt', now) >= week_start]
+    week_earnings = sum(s.get('trainerEarningsCents', 0) for s in week_sessions)
+
+    # Last week
+    last_week_start = week_start - timedelta(days=7)
+    last_week_sessions = [s for s in completed_sessions if last_week_start <= s.get('createdAt', now) < week_start]
+    last_week_earnings = sum(s.get('trainerEarningsCents', 0) for s in last_week_sessions)
+
+    # Daily breakdown for the current week (Mon-Sun)
+    daily_breakdown = []
+    for i in range(7):
+        day_start = week_start + timedelta(days=i)
+        day_end = day_start + timedelta(days=1)
+        day_sessions = [s for s in completed_sessions if day_start <= s.get('createdAt', now) < day_end]
+        daily_breakdown.append({
+            'day': day_start.strftime('%a'),
+            'date': day_start.strftime('%m/%d'),
+            'earningsCents': sum(s.get('trainerEarningsCents', 0) for s in day_sessions),
+            'sessions': len(day_sessions),
+        })
+
+    # Weekly breakdown for the current month (up to 5 weeks)
+    weekly_breakdown = []
+    current_week_start = month_start
+    week_num = 1
+    while current_week_start < now and week_num <= 5:
+        current_week_end = min(current_week_start + timedelta(days=7), now)
+        w_sessions = [s for s in completed_sessions if current_week_start <= s.get('createdAt', now) < current_week_end]
+        weekly_breakdown.append({
+            'week': f'Week {week_num}',
+            'startDate': current_week_start.strftime('%m/%d'),
+            'earningsCents': sum(s.get('trainerEarningsCents', 0) for s in w_sessions),
+            'sessions': len(w_sessions),
+        })
+        current_week_start = current_week_end
+        week_num += 1
+
+    # Get processed payouts
+    payouts = await db.trainer_payouts.find({'trainerId': user_id}).sort('createdAt', -1).to_list(50)
+    total_paid_out = sum(p.get('amountCents', 0) for p in payouts)
+
+    # Get pending payout requests
+    payout_requests = await db.payout_requests.find({'trainerId': user_id}).sort('createdAt', -1).to_list(20)
+
+    # Pending balance = total earnings - total paid out
+    pending_balance = total_earnings - total_paid_out
+
+    # Recent sessions for display (last 10)
+    recent_sessions = []
+    for s in completed_sessions[:10]:
+        trainee = await db.users.find_one({'_id': ObjectId(s['traineeId'])}) if s.get('traineeId') else None
+        recent_sessions.append({
+            'id': str(s['_id']),
+            'sessionType': s.get('sessionType', 'Training'),
+            'earningsCents': s.get('trainerEarningsCents', 0),
+            'date': s.get('createdAt', now).isoformat(),
+            'traineeName': trainee.get('fullName', 'Unknown') if trainee else 'Unknown',
+            'durationMinutes': s.get('durationMinutes', 60),
+        })
+
     return {
         'totalEarningsCents': total_earnings,
         'monthEarningsCents': month_earnings,
+        'lastMonthEarningsCents': last_month_earnings,
         'weekEarningsCents': week_earnings,
+        'lastWeekEarningsCents': last_week_earnings,
         'totalSessions': len(completed_sessions),
         'monthSessions': len(month_sessions),
         'weekSessions': len(week_sessions),
-        'sessions': [serialize_doc(s) for s in completed_sessions]
+        'pendingBalanceCents': pending_balance,
+        'totalPaidOutCents': total_paid_out,
+        'dailyBreakdown': daily_breakdown,
+        'weeklyBreakdown': weekly_breakdown,
+        'recentSessions': recent_sessions,
+        'payouts': [serialize_doc(p) for p in payouts],
+        'payoutRequests': [serialize_doc(pr) for pr in payout_requests],
     }
+
+
+class PayoutRequestCreate(BaseModel):
+    paymentMethod: str  # 'cashapp', 'zelle', 'stripe'
+    paymentHandle: Optional[str] = None  # CashApp tag, Zelle email/phone
+    notes: Optional[str] = None
+
+
+@api_router.post("/trainer/request-payout")
+async def request_payout(
+    request: PayoutRequestCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Trainer requests a payout of their pending balance."""
+    user_id = str(current_user['_id'])
+
+    # Calculate pending balance
+    completed_sessions = await db.sessions.find({
+        'trainerId': user_id,
+        'status': SessionStatus.COMPLETED
+    }).to_list(1000)
+    total_earnings = sum(s.get('trainerEarningsCents', 0) for s in completed_sessions)
+
+    payouts = await db.trainer_payouts.find({'trainerId': user_id}).to_list(1000)
+    total_paid = sum(p.get('amountCents', 0) for p in payouts)
+
+    pending = total_earnings - total_paid
+    if pending <= 0:
+        raise HTTPException(status_code=400, detail="No pending balance to pay out")
+
+    # Check for existing pending payout request
+    existing = await db.payout_requests.find_one({
+        'trainerId': user_id,
+        'status': 'pending'
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="You already have a pending payout request")
+
+    payout_request = {
+        'trainerId': user_id,
+        'trainerName': current_user.get('fullName', ''),
+        'trainerEmail': current_user.get('email', ''),
+        'amountCents': pending,
+        'paymentMethod': request.paymentMethod,
+        'paymentHandle': request.paymentHandle,
+        'notes': request.notes,
+        'status': 'pending',
+        'createdAt': datetime.utcnow(),
+        'updatedAt': datetime.utcnow(),
+    }
+    result = await db.payout_requests.insert_one(payout_request)
+
+    return {
+        'success': True,
+        'requestId': str(result.inserted_id),
+        'amountCents': pending,
+        'message': f'Payout request for ${pending/100:.2f} submitted. You will be paid via {request.paymentMethod}.'
+    }
+
+
+@api_router.get("/trainer/payout-requests")
+async def get_payout_requests(current_user: dict = Depends(get_current_user)):
+    """Get trainer's payout request history."""
+    user_id = str(current_user['_id'])
+    requests = await db.payout_requests.find({'trainerId': user_id}).sort('createdAt', -1).to_list(50)
+    return {'requests': [serialize_doc(r) for r in requests]}
 
 # ============================================================================
 # ADMIN ROUTES
