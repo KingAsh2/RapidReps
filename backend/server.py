@@ -512,6 +512,126 @@ class TraineeAchievements(BaseModel):
 
 
 # ============================================================================
+# MEMBERSHIP & BOOST MODELS
+# ============================================================================
+
+class MembershipStatus:
+    ACTIVE = "active"
+    CANCELLED = "cancelled"
+    EXPIRED = "expired"
+    
+class MembershipCreate(BaseModel):
+    userId: str
+    stripeSubscriptionId: Optional[str] = None
+
+class MembershipResponse(BaseModel):
+    id: str
+    userId: str
+    status: str = MembershipStatus.ACTIVE
+    monthlyPriceCents: int = PricingRules.MEMBERSHIP_MONTHLY_CENTS
+    startDate: datetime
+    nextBillingDate: Optional[datetime] = None
+    cancelledAt: Optional[datetime] = None
+    benefits: List[str] = [
+        "Discounted sessions",
+        "1 free profile Boost per month",
+        "Priority customer support",
+        "Early access to elite trainers"
+    ]
+    freeBoostsRemaining: int = 1
+    stripeSubscriptionId: Optional[str] = None
+
+class BoostType:
+    DAILY = "daily"
+    WEEKLY = "weekly"
+    MONTHLY = "monthly"
+
+class BoostCreate(BaseModel):
+    trainerId: str
+    boostType: str
+    paymentMethodId: Optional[str] = None
+    isFreeBoost: bool = False
+
+class BoostResponse(BaseModel):
+    id: str
+    trainerId: str
+    boostType: str
+    priceCents: int
+    startDate: datetime
+    endDate: datetime
+    isActive: bool = True
+    isFreeBoost: bool = False
+    stripePaymentIntentId: Optional[str] = None
+
+# ============================================================================
+# PAYMENT/TRANSACTION MODELS
+# ============================================================================
+
+class TransactionType:
+    SESSION_PAYMENT = "session_payment"
+    CANCELLATION_FEE = "cancellation_fee"
+    NO_SHOW_FEE = "no_show_fee"
+    TRAVEL_FEE = "travel_fee"
+    BOOST_PURCHASE = "boost_purchase"
+    MEMBERSHIP_PAYMENT = "membership_payment"
+    TRAINER_PAYOUT = "trainer_payout"
+    REFUND = "refund"
+
+class PaymentStatus:
+    PENDING = "pending"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    REFUNDED = "refunded"
+
+class TransactionCreate(BaseModel):
+    userId: str
+    sessionId: Optional[str] = None
+    transactionType: str
+    amountCents: int
+    trainerPayoutCents: int = 0
+    platformFeeCents: int = 0
+    description: Optional[str] = None
+    stripePaymentIntentId: Optional[str] = None
+
+class TransactionResponse(BaseModel):
+    id: str
+    userId: str
+    sessionId: Optional[str] = None
+    transactionType: str
+    amountCents: int
+    trainerPayoutCents: int = 0
+    platformFeeCents: int = 0
+    status: str = PaymentStatus.PENDING
+    description: Optional[str] = None
+    stripePaymentIntentId: Optional[str] = None
+    createdAt: datetime
+
+# Trainer Payout Info
+class TrainerPayoutInfo(BaseModel):
+    trainerId: str
+    paymentMethod: str = "stripe"  # stripe, cashapp, applepay, zelle
+    stripeAccountId: Optional[str] = None
+    cashAppTag: Optional[str] = None
+    applePayEmail: Optional[str] = None
+    zelleEmail: Optional[str] = None
+    zellePhone: Optional[str] = None
+
+# Admin Models
+class AdminDashboardStats(BaseModel):
+    totalUsers: int
+    totalTrainers: int
+    totalTrainees: int
+    totalSessions: int
+    completedSessions: int
+    totalRevenueCents: int
+    platformRevenueCents: int
+    trainerPayoutsCents: int
+    activeMemberships: int
+    activeBoosts: int
+    pendingVerifications: int
+
+
+# ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
 
