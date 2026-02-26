@@ -179,6 +179,8 @@ export default function TrainerOnboardingScreen() {
     }
   };
 
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+
   const handleSubmit = async () => {
     if (!user) {
       showAlert({
@@ -214,9 +216,9 @@ export default function TrainerOnboardingScreen() {
         offersInPerson: formData.offersInPerson,
         offersVirtual: formData.offersVirtual,
         sessionDurationsOffered: formData.sessionDurations,
-        ratePerMinuteCents: 100, // Default $1/min
+        ratePerMinuteCents: 100,
         travelRadiusMiles: formData.travelRadiusMiles,
-        cancellationPolicy: 'Free cancellation before 24 hours', // Default policy
+        cancellationPolicy: 'Free cancellation before 24 hours',
         latitude: formData.latitude,
         longitude: formData.longitude,
         locationAddress: formData.locationAddress,
@@ -225,11 +227,8 @@ export default function TrainerOnboardingScreen() {
       });
 
       console.log('Profile created successfully!');
-      
       setLoading(false);
-      
-      // Navigate directly without success popup
-      router.replace('/trainer/home');
+      setShowVerificationModal(true);
     } catch (error: any) {
       console.error('Profile creation error:', error);
       setLoading(false);
