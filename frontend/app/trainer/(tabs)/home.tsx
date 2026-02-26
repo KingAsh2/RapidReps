@@ -377,7 +377,7 @@ export default function TrainerHomeScreen() {
 
   const handleLogout = async () => {
     await logout();
-    router.replace('/auth/login');
+    router.replace('/');
   };
 
   const pendingSessions = sessions.filter(s => s.status === SessionStatus.REQUESTED);
