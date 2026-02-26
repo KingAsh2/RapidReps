@@ -1536,6 +1536,149 @@ async def update_verification_status(
         'missingRequirements': missing
     }
 
+@api_router.get("/trainer/verification-status")
+async def get_verification_status(current_user: dict = Depends(get_current_user)):
+    """Get detailed step-by-step verification status for the frontend."""
+    user_id = str(current_user['_id'])
+    profile = await db.trainer_profiles.find_one({'userId': user_id})
+
+    default_steps = {
+        'identity': 'pending',
+        'background': 'pending',
+        'certification': 'pending',
+        'cpr': 'pending',
+        'insurance': 'pending',
+        'photo': 'pending',
+        'video': 'pending',
+    }
+
+    if not profile:
+        return {'steps': default_steps, 'canGoLive': False}
+
+    field_map = {
+        'identity': 'governmentIdUploaded',
+        'background': 'backgroundCheckPassed',
+        'certification': 'fitnessCertUploaded',
+        'cpr': 'cprAedCertUploaded',
+        'insurance': 'insuranceUploaded',
+        'photo': 'profilePhotoUploaded',
+        'video': 'introVideoUploaded',
+    }
+
+    steps = {}
+    for step_id, field in field_map.items():
+        if profile.get(field, False):
+            steps[step_id] = 'submitted'
+        else:
+            steps[step_id] = 'pending'
+
+    can_go_live, missing = check_trainer_can_go_live(profile)
+    return {'steps': steps, 'canGoLive': can_go_live, 'missingRequirements': missing}
+
+
+class VerificationSubmission(BaseModel):
+    stepId: str
+    fileUri: Optional[str] = None
+    fileName: Optional[str] = None
+
+
+@api_router.post("/trainer/submit-verification-step")
+async def submit_verification_step(
+    submission: VerificationSubmission,
+    current_user: dict = Depends(get_current_user)
+):
+    """Submit a single verification step (mark it as uploaded/submitted)."""
+    user_id = str(current_user['_id'])
+
+    field_map = {
+        'identity': 'governmentIdUploaded',
+        'background': 'backgroundCheckPassed',
+        'certification': 'fitnessCertUploaded',
+        'cpr': 'cprAedCertUploaded',
+        'insurance': 'insuranceUploaded',
+        'photo': 'profilePhotoUploaded',
+        'video': 'introVideoUploaded',
+    }
+
+    if submission.stepId not in field_map:
+        raise HTTPException(status_code=400, detail=f"Invalid step ID: {submission.stepId}")
+
+    field_name = field_map[submission.stepId]
+
+    update_data = {
+        field_name: True,
+        'updatedAt': datetime.utcnow()
+    }
+
+    # If it's a photo, also save the URI as avatar
+    if submission.stepId == 'photo' and submission.fileUri:
+        update_data['avatarUrl'] = submission.fileUri
+    if submission.stepId == 'video' and submission.fileUri:
+        update_data['introVideoUrl'] = submission.fileUri
+        update_data['introVideoUploaded'] = True
+
+    result = await db.trainer_profiles.update_one(
+        {'userId': user_id},
+        {'$set': update_data}
+    )
+
+    if result.matched_count == 0:
+        # Create a minimal profile if it doesn't exist
+        profile_doc = {
+            'userId': user_id,
+            field_name: True,
+            'createdAt': datetime.utcnow(),
+            'updatedAt': datetime.utcnow(),
+            'isAvailable': False,
+            'isVerified': False,
+            'averageRating': 0.0,
+            'totalSessionsCompleted': 0,
+            'totalReviews': 0,
+        }
+        if submission.stepId == 'photo' and submission.fileUri:
+            profile_doc['avatarUrl'] = submission.fileUri
+        if submission.stepId == 'video' and submission.fileUri:
+            profile_doc['introVideoUrl'] = submission.fileUri
+            profile_doc['introVideoUploaded'] = True
+        await db.trainer_profiles.insert_one(profile_doc)
+
+    # Check if trainer can now go live
+    profile = await db.trainer_profiles.find_one({'userId': user_id})
+    can_go_live, missing = check_trainer_can_go_live(profile)
+
+    if can_go_live:
+        await db.trainer_profiles.update_one(
+            {'userId': user_id},
+            {'$set': {'canGoLive': True, 'isVerified': True, 'verificationStatus': VerificationStatus.VERIFIED}}
+        )
+
+    return {
+        'success': True,
+        'stepId': submission.stepId,
+        'canGoLive': can_go_live,
+        'missingRequirements': missing,
+    }
+
+
+@api_router.post("/trainer/submit-all-verification")
+async def submit_all_verification(current_user: dict = Depends(get_current_user)):
+    """Submit the full verification package for admin review."""
+    user_id = str(current_user['_id'])
+    profile = await db.trainer_profiles.find_one({'userId': user_id})
+    if not profile:
+        raise HTTPException(status_code=404, detail="Trainer profile not found")
+
+    await db.trainer_profiles.update_one(
+        {'userId': user_id},
+        {'$set': {
+            'verificationStatus': VerificationStatus.PENDING,
+            'verificationSubmittedAt': datetime.utcnow(),
+            'updatedAt': datetime.utcnow()
+        }}
+    )
+    return {'success': True, 'message': 'Verification submitted for review. You will be notified once approved.'}
+
+
 @api_router.get("/trainer/pricing-limits")
 async def get_trainer_pricing_limits(current_user: dict = Depends(get_current_user)):
     """
