@@ -126,8 +126,8 @@ export default function WelcomeScreen() {
       <StatusBar barStyle="light-content" />
       
       {/* Intro Video */}
-      {showVideo && (
-        <View style={styles.videoContainer}>
+      {videoVisible && (
+        <Animated.View style={[styles.videoContainer, { opacity: videoFadeOut }]}>
           <Video
             ref={videoRef}
             source={require('../assets/videos/intro.mp4')}
@@ -154,7 +154,7 @@ export default function WelcomeScreen() {
             <Text style={styles.skipText}>Skip</Text>
             <Ionicons name="arrow-forward" size={18} color={BRAND.white} />
           </TouchableOpacity>
-        </View>
+        </Animated.View>
       )}
 
       {/* Main Welcome Screen */}
