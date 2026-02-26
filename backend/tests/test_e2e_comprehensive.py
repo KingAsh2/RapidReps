@@ -512,8 +512,8 @@ class TestFlow8_StripePayments:
         
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         data = response.json()
-        # Check for payment breakdown fields
-        assert "trainerPayoutCents" in data or "platformFeeCents" in data or "total_cents" in data
+        # Check for payment breakdown fields - response has nested structure
+        assert "sessionPrice" in data or "totals" in data, f"Expected sessionPrice or totals in response"
         print(f"PASS: Calculate session cost - got keys: {list(data.keys())}")
 
 
