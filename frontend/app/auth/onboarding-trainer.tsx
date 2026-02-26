@@ -8,6 +8,9 @@ import {
   ScrollView,
   ActivityIndicator,
   Image,
+  ImageBackground,
+  Modal,
+  Linking,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
@@ -19,6 +22,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+// Background image
+const backgroundImage = require('../../assets/images/bg-battle-ropes.png');
 
 export default function TrainerOnboardingScreen() {
   const router = useRouter();
