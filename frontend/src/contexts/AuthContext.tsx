@@ -133,6 +133,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     setActiveRoleState(null);
     setIsDemoMode(false);
+    // Navigation to '/' is handled by the root layout detecting null user
   };
 
   const setActiveRole = async (role: string) => {

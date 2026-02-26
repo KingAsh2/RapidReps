@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
+  Pressable,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,8 +17,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
+import api from '../../src/services/api';
 
-// Brand colors
 const COLORS = {
   orange: '#FF7F00',
   orangeLight: '#FFA526',
@@ -32,15 +33,13 @@ const COLORS = {
   warning: '#FFB300',
 };
 
-// Background image
 const backgroundImage = require('../../assets/images/bg-gym-weights.png');
 
-// Verification steps
 const VERIFICATION_STEPS = [
   {
     id: 'identity',
     title: 'Identity Verification',
-    description: 'Upload a valid government ID (Driver\'s License or Passport)',
+    description: "Upload a valid government ID (Driver's License or Passport)",
     icon: 'id-card',
     required: true,
   },
@@ -56,7 +55,7 @@ const VERIFICATION_STEPS = [
     title: 'Fitness Certification',
     description: 'Upload your personal training certification (NASM, ACE, ISSA, etc.)',
     icon: 'ribbon',
-    required: true,
+    required: false,
   },
   {
     id: 'cpr',
@@ -88,17 +87,19 @@ const VERIFICATION_STEPS = [
   },
 ];
 
+type StepStatus = 'pending' | 'uploading' | 'submitted' | 'approved' | 'rejected';
+
 export default function TrainerVerificationScreen() {
   const router = useRouter();
-  const [verificationStatus, setVerificationStatus] = useState<Record<string, 'pending' | 'uploading' | 'submitted' | 'approved' | 'rejected'>>({});
+  const [verificationStatus, setVerificationStatus] = useState<Record<string, StepStatus>>({});
   const [expandedStep, setExpandedStep] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [holdProgress] = useState(new Animated.Value(0));
+  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fadeAnim = useState(new Animated.Value(0))[0];
 
   useEffect(() => {
-    // Load current verification status
     loadVerificationStatus();
-    
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 500,
@@ -107,16 +108,22 @@ export default function TrainerVerificationScreen() {
   }, []);
 
   const loadVerificationStatus = async () => {
-    // In real app, fetch from API
-    setVerificationStatus({
-      identity: 'pending',
-      background: 'pending',
-      certification: 'pending',
-      cpr: 'pending',
-      insurance: 'pending',
-      photo: 'pending',
-      video: 'pending',
-    });
+    try {
+      const response = await api.get('/trainer/verification-status');
+      const steps = response.data.steps || {};
+      setVerificationStatus(steps);
+    } catch (err) {
+      console.log('Could not load verification status, using defaults');
+      setVerificationStatus({
+        identity: 'pending',
+        background: 'pending',
+        certification: 'pending',
+        cpr: 'pending',
+        insurance: 'pending',
+        photo: 'pending',
+        video: 'pending',
+      });
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -149,6 +156,18 @@ export default function TrainerVerificationScreen() {
     }
   };
 
+  const submitStepToBackend = async (stepId: string, fileUri?: string, fileName?: string) => {
+    try {
+      await api.post('/trainer/submit-verification-step', {
+        stepId,
+        fileUri: fileUri || null,
+        fileName: fileName || null,
+      });
+    } catch (err) {
+      console.error('Failed to submit verification step:', err);
+    }
+  };
+
   const handleUploadDocument = async (stepId: string) => {
     try {
       setVerificationStatus(prev => ({ ...prev, [stepId]: 'uploading' }));
@@ -160,13 +179,11 @@ export default function TrainerVerificationScreen() {
           aspect: [1, 1],
           quality: 0.8,
         });
-
-        if (!result.canceled) {
-          // Simulate upload
-          setTimeout(() => {
-            setVerificationStatus(prev => ({ ...prev, [stepId]: 'submitted' }));
-            Alert.alert('Success', 'Profile photo uploaded successfully!');
-          }, 1500);
+        if (!result.canceled && result.assets?.[0]) {
+          const asset = result.assets[0];
+          await submitStepToBackend(stepId, asset.uri, 'profile_photo.jpg');
+          setVerificationStatus(prev => ({ ...prev, [stepId]: 'submitted' }));
+          Alert.alert('Success', 'Profile photo uploaded successfully!');
         } else {
           setVerificationStatus(prev => ({ ...prev, [stepId]: 'pending' }));
         }
@@ -177,12 +194,11 @@ export default function TrainerVerificationScreen() {
           quality: 0.8,
           videoMaxDuration: 60,
         });
-
-        if (!result.canceled) {
-          setTimeout(() => {
-            setVerificationStatus(prev => ({ ...prev, [stepId]: 'submitted' }));
-            Alert.alert('Success', 'Intro video uploaded successfully!');
-          }, 2000);
+        if (!result.canceled && result.assets?.[0]) {
+          const asset = result.assets[0];
+          await submitStepToBackend(stepId, asset.uri, 'intro_video.mp4');
+          setVerificationStatus(prev => ({ ...prev, [stepId]: 'submitted' }));
+          Alert.alert('Success', 'Intro video uploaded successfully!');
         } else {
           setVerificationStatus(prev => ({ ...prev, [stepId]: 'pending' }));
         }
@@ -191,12 +207,11 @@ export default function TrainerVerificationScreen() {
           type: ['application/pdf', 'image/*'],
           copyToCacheDirectory: true,
         });
-
-        if (!result.canceled) {
-          setTimeout(() => {
-            setVerificationStatus(prev => ({ ...prev, [stepId]: 'submitted' }));
-            Alert.alert('Success', 'Document uploaded successfully!');
-          }, 1500);
+        if (!result.canceled && result.assets?.[0]) {
+          const asset = result.assets[0];
+          await submitStepToBackend(stepId, asset.uri, asset.name);
+          setVerificationStatus(prev => ({ ...prev, [stepId]: 'submitted' }));
+          Alert.alert('Success', 'Document uploaded successfully!');
         } else {
           setVerificationStatus(prev => ({ ...prev, [stepId]: 'pending' }));
         }
@@ -214,24 +229,64 @@ export default function TrainerVerificationScreen() {
       'You will be redirected to Checkr to complete your background check. This typically takes 2-5 business days.',
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Continue', 
-          onPress: () => {
+        {
+          text: 'Continue',
+          onPress: async () => {
+            await submitStepToBackend('background');
             setVerificationStatus(prev => ({ ...prev, background: 'submitted' }));
-            // In real app, redirect to Checkr
             Alert.alert('Background Check Started', 'You will receive an email from Checkr to complete the process.');
-          }
+          },
         },
       ]
     );
   };
 
+  const handleHoldSubmitStart = () => {
+    holdProgress.setValue(0);
+    Animated.timing(holdProgress, {
+      toValue: 1,
+      duration: 2000,
+      useNativeDriver: false,
+    }).start();
+
+    holdTimer.current = setTimeout(async () => {
+      setIsSubmitting(true);
+      try {
+        await api.post('/trainer/submit-all-verification');
+        Alert.alert(
+          'Verification Submitted!',
+          'Your documents have been submitted for review. You will be notified once your account is approved.',
+          [{ text: 'OK', onPress: () => router.back() }]
+        );
+      } catch (err: any) {
+        Alert.alert('Error', err?.response?.data?.detail || 'Failed to submit verification.');
+      } finally {
+        setIsSubmitting(false);
+      }
+    }, 2000);
+  };
+
+  const handleHoldSubmitEnd = () => {
+    if (holdTimer.current) {
+      clearTimeout(holdTimer.current);
+      holdTimer.current = null;
+    }
+    holdProgress.setValue(0);
+  };
+
   const completedCount = Object.values(verificationStatus).filter(
     s => s === 'approved' || s === 'submitted'
   ).length;
-
-  const totalRequired = VERIFICATION_STEPS.filter(s => s.required).length;
   const progress = (completedCount / VERIFICATION_STEPS.length) * 100;
+
+  const requiredComplete = VERIFICATION_STEPS.filter(s => s.required).every(
+    s => verificationStatus[s.id] === 'submitted' || verificationStatus[s.id] === 'approved'
+  );
+
+  const holdBarWidth = holdProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0%', '100%'],
+  });
 
   return (
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
@@ -241,9 +296,8 @@ export default function TrainerVerificationScreen() {
       />
 
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton} data-testid="verification-back-btn">
             <Ionicons name="arrow-back" size={24} color={COLORS.white} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Trainer Verification</Text>
@@ -263,7 +317,7 @@ export default function TrainerVerificationScreen() {
                   </Text>
                 </View>
               </View>
-              
+
               <View style={styles.progressBarContainer}>
                 <View style={styles.progressBarBg}>
                   <View style={[styles.progressBarFill, { width: `${progress}%` }]} />
@@ -279,10 +333,9 @@ export default function TrainerVerificationScreen() {
               </View>
             </View>
 
-            {/* Verification Steps */}
             <Text style={styles.sectionTitle}>Required Documents</Text>
 
-            {VERIFICATION_STEPS.map((step, index) => {
+            {VERIFICATION_STEPS.map((step) => {
               const status = verificationStatus[step.id] || 'pending';
               const statusInfo = getStatusIcon(status);
               const isExpanded = expandedStep === step.id;
@@ -297,12 +350,13 @@ export default function TrainerVerificationScreen() {
                   ]}
                   onPress={() => setExpandedStep(isExpanded ? null : step.id)}
                   activeOpacity={0.9}
+                  data-testid={`verification-step-${step.id}`}
                 >
                   <View style={styles.stepHeader}>
                     <View style={[styles.stepIconContainer, { backgroundColor: `${statusInfo.color}20` }]}>
                       <Ionicons name={step.icon as any} size={24} color={statusInfo.color} />
                     </View>
-                    
+
                     <View style={styles.stepContent}>
                       <View style={styles.stepTitleRow}>
                         <Text style={styles.stepTitle}>{step.title}</Text>
@@ -320,17 +374,17 @@ export default function TrainerVerificationScreen() {
                       </View>
                     </View>
 
-                    <Ionicons 
-                      name={isExpanded ? 'chevron-up' : 'chevron-down'} 
-                      size={20} 
-                      color={COLORS.gray} 
+                    <Ionicons
+                      name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                      size={20}
+                      color={COLORS.gray}
                     />
                   </View>
 
                   {isExpanded && (
                     <View style={styles.stepExpanded}>
                       <Text style={styles.stepDescription}>{step.description}</Text>
-                      
+
                       {status !== 'approved' && status !== 'uploading' && (
                         <TouchableOpacity
                           style={styles.uploadButton}
@@ -341,18 +395,20 @@ export default function TrainerVerificationScreen() {
                               handleUploadDocument(step.id);
                             }
                           }}
+                          data-testid={`upload-btn-${step.id}`}
                         >
                           <LinearGradient
                             colors={[COLORS.teal, '#18A09D']}
                             style={styles.uploadButtonGradient}
                           >
-                            <Ionicons 
-                              name={step.id === 'background' ? 'open-outline' : 'cloud-upload'} 
-                              size={20} 
-                              color={COLORS.white} 
+                            <Ionicons
+                              name={step.id === 'background' ? 'open-outline' : 'cloud-upload'}
+                              size={20}
+                              color={COLORS.white}
                             />
                             <Text style={styles.uploadButtonText}>
-                              {step.id === 'background' ? 'Start Check' : 
+                              {status === 'submitted' ? 'Re-upload' :
+                               step.id === 'background' ? 'Start Check' :
                                step.id === 'photo' || step.id === 'video' ? 'Select File' : 'Upload Document'}
                             </Text>
                           </LinearGradient>
@@ -387,7 +443,7 @@ export default function TrainerVerificationScreen() {
                 <Text style={styles.trustTitle}>Trust & Safety</Text>
               </View>
               <Text style={styles.trustText}>
-                Your documents are encrypted and stored securely. We partner with Checkr for background checks, 
+                Your documents are encrypted and stored securely. We partner with Checkr for background checks,
                 the same service used by Uber, Lyft, and other major platforms.
               </Text>
               <View style={styles.trustBadges}>
@@ -402,6 +458,45 @@ export default function TrainerVerificationScreen() {
               </View>
             </View>
 
+            {/* Hold to Submit Button */}
+            <View style={styles.submitSection}>
+              <Text style={styles.submitHint}>
+                {requiredComplete
+                  ? 'Hold the button below for 2 seconds to submit your verification.'
+                  : 'Complete all required steps above before submitting.'}
+              </Text>
+              <Pressable
+                onPressIn={requiredComplete && !isSubmitting ? handleHoldSubmitStart : undefined}
+                onPressOut={handleHoldSubmitEnd}
+                disabled={!requiredComplete || isSubmitting}
+                style={({ pressed }) => [
+                  styles.holdButton,
+                  !requiredComplete && styles.holdButtonDisabled,
+                  pressed && requiredComplete && styles.holdButtonPressed,
+                ]}
+                data-testid="hold-to-submit-btn"
+              >
+                <View style={styles.holdButtonInner}>
+                  <Animated.View
+                    style={[
+                      styles.holdProgressBar,
+                      { width: holdBarWidth, backgroundColor: COLORS.success },
+                    ]}
+                  />
+                  <View style={styles.holdButtonContent}>
+                    {isSubmitting ? (
+                      <ActivityIndicator size="small" color={COLORS.white} />
+                    ) : (
+                      <Ionicons name="hand-left" size={24} color={COLORS.white} />
+                    )}
+                    <Text style={styles.holdButtonText}>
+                      {isSubmitting ? 'Submitting...' : 'Hold to Submit Verification'}
+                    </Text>
+                  </View>
+                </View>
+              </Pressable>
+            </View>
+
             <View style={{ height: 100 }} />
           </Animated.View>
         </ScrollView>
@@ -411,12 +506,8 @@ export default function TrainerVerificationScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  safeArea: {
-    flex: 1,
-  },
+  container: { flex: 1 },
+  safeArea: { flex: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -432,15 +523,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: COLORS.white,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
+  headerTitle: { fontSize: 18, fontWeight: '800', color: COLORS.white },
+  content: { flex: 1, paddingHorizontal: 16 },
   progressCard: {
     backgroundColor: COLORS.white,
     borderRadius: 20,
@@ -452,49 +536,14 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 5,
   },
-  progressHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    gap: 14,
-  },
-  progressTextContainer: {
-    flex: 1,
-  },
-  progressTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: COLORS.navy,
-  },
-  progressSubtitle: {
-    fontSize: 13,
-    color: COLORS.gray,
-    marginTop: 2,
-  },
-  progressBarContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 16,
-  },
-  progressBarBg: {
-    flex: 1,
-    height: 8,
-    backgroundColor: COLORS.grayLight,
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: COLORS.teal,
-    borderRadius: 4,
-  },
-  progressPercent: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: COLORS.teal,
-    width: 45,
-  },
+  progressHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 16, gap: 14 },
+  progressTextContainer: { flex: 1 },
+  progressTitle: { fontSize: 18, fontWeight: '800', color: COLORS.navy },
+  progressSubtitle: { fontSize: 13, color: COLORS.gray, marginTop: 2 },
+  progressBarContainer: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
+  progressBarBg: { flex: 1, height: 8, backgroundColor: COLORS.grayLight, borderRadius: 4, overflow: 'hidden' },
+  progressBarFill: { height: '100%', backgroundColor: COLORS.teal, borderRadius: 4 },
+  progressPercent: { fontSize: 14, fontWeight: '700', color: COLORS.teal, width: 45 },
   infoBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -503,18 +552,8 @@ const styles = StyleSheet.create({
     padding: 12,
     gap: 10,
   },
-  infoText: {
-    flex: 1,
-    fontSize: 13,
-    color: COLORS.gray,
-    lineHeight: 18,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: COLORS.white,
-    marginBottom: 16,
-  },
+  infoText: { flex: 1, fontSize: 13, color: COLORS.gray, lineHeight: 18 },
+  sectionTitle: { fontSize: 16, fontWeight: '700', color: COLORS.white, marginBottom: 16 },
   stepCard: {
     backgroundColor: COLORS.white,
     borderRadius: 16,
@@ -526,103 +565,24 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
-  stepCardApproved: {
-    borderLeftWidth: 4,
-    borderLeftColor: COLORS.success,
-  },
-  stepCardRejected: {
-    borderLeftWidth: 4,
-    borderLeftColor: COLORS.error,
-  },
-  stepHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    gap: 14,
-  },
-  stepIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  stepContent: {
-    flex: 1,
-  },
-  stepTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 4,
-  },
-  stepTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: COLORS.navy,
-  },
-  requiredBadge: {
-    backgroundColor: COLORS.error,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  requiredText: {
-    fontSize: 9,
-    fontWeight: '700',
-    color: COLORS.white,
-    letterSpacing: 0.5,
-  },
-  statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  stepExpanded: {
-    padding: 16,
-    paddingTop: 0,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.grayLight,
-  },
-  stepDescription: {
-    fontSize: 13,
-    color: COLORS.gray,
-    lineHeight: 20,
-    marginBottom: 16,
-    marginTop: 12,
-  },
-  uploadButton: {
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  uploadButtonGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    gap: 8,
-  },
-  uploadButtonText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: COLORS.white,
-  },
-  uploadingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    paddingVertical: 14,
-  },
-  uploadingText: {
-    fontSize: 14,
-    color: COLORS.teal,
-    fontWeight: '600',
-  },
+  stepCardApproved: { borderLeftWidth: 4, borderLeftColor: COLORS.success },
+  stepCardRejected: { borderLeftWidth: 4, borderLeftColor: COLORS.error },
+  stepHeader: { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 14 },
+  stepIconContainer: { width: 48, height: 48, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+  stepContent: { flex: 1 },
+  stepTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
+  stepTitle: { fontSize: 15, fontWeight: '700', color: COLORS.navy },
+  requiredBadge: { backgroundColor: COLORS.error, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  requiredText: { fontSize: 9, fontWeight: '700', color: COLORS.white, letterSpacing: 0.5 },
+  statusRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  statusText: { fontSize: 12, fontWeight: '600' },
+  stepExpanded: { padding: 16, paddingTop: 0, borderTopWidth: 1, borderTopColor: COLORS.grayLight },
+  stepDescription: { fontSize: 13, color: COLORS.gray, lineHeight: 20, marginBottom: 16, marginTop: 12 },
+  uploadButton: { borderRadius: 12, overflow: 'hidden' },
+  uploadButtonGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, gap: 8 },
+  uploadButtonText: { fontSize: 15, fontWeight: '700', color: COLORS.white },
+  uploadingContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 14 },
+  uploadingText: { fontSize: 14, color: COLORS.teal, fontWeight: '600' },
   rejectedInfo: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -632,46 +592,34 @@ const styles = StyleSheet.create({
     gap: 8,
     marginTop: 12,
   },
-  rejectedText: {
-    flex: 1,
-    fontSize: 12,
-    color: COLORS.error,
-  },
-  trustCard: {
-    backgroundColor: 'rgba(255,255,255,0.95)',
+  rejectedText: { flex: 1, fontSize: 12, color: COLORS.error },
+  trustCard: { backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: 16, padding: 20, marginTop: 8 },
+  trustHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
+  trustTitle: { fontSize: 16, fontWeight: '700', color: COLORS.navy },
+  trustText: { fontSize: 13, color: COLORS.gray, lineHeight: 20, marginBottom: 16 },
+  trustBadges: { flexDirection: 'row', gap: 16 },
+  trustBadge: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  trustBadgeText: { fontSize: 12, fontWeight: '600', color: COLORS.success },
+  // Hold to Submit
+  submitSection: { marginTop: 24, alignItems: 'center' },
+  submitHint: { fontSize: 13, color: COLORS.white, textAlign: 'center', marginBottom: 16, lineHeight: 18, opacity: 0.9 },
+  holdButton: { width: '100%', borderRadius: 16, overflow: 'hidden' },
+  holdButtonDisabled: { opacity: 0.5 },
+  holdButtonPressed: { transform: [{ scale: 0.98 }] },
+  holdButtonInner: {
+    backgroundColor: COLORS.navy,
     borderRadius: 16,
-    padding: 20,
-    marginTop: 8,
+    overflow: 'hidden',
+    position: 'relative',
   },
-  trustHeader: {
+  holdProgressBar: { position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: 16 },
+  holdButtonContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginBottom: 12,
+    justifyContent: 'center',
+    paddingVertical: 18,
+    gap: 12,
+    zIndex: 1,
   },
-  trustTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: COLORS.navy,
-  },
-  trustText: {
-    fontSize: 13,
-    color: COLORS.gray,
-    lineHeight: 20,
-    marginBottom: 16,
-  },
-  trustBadges: {
-    flexDirection: 'row',
-    gap: 16,
-  },
-  trustBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  trustBadgeText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: COLORS.success,
-  },
+  holdButtonText: { fontSize: 17, fontWeight: '800', color: COLORS.white },
 });

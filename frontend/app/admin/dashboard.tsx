@@ -56,7 +56,7 @@ export default function AdminDashboardScreen() {
 
   const loadDashboard = async () => {
     try {
-      const token = await AsyncStorage.getItem('token');
+      const token = await AsyncStorage.getItem('auth_token');
       const response = await axios.get(
         `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/admin/dashboard`,
         { headers: { Authorization: `Bearer ${token}` } }
