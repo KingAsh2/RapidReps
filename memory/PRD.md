@@ -4,6 +4,9 @@
 ### Original Problem Statement
 Build a production-ready mobile app that functions like "Uber" for personal training. The app connects trainees with personal trainers, handles session booking, payments, verification, and admin management.
 
+### Deployment Fix Log (Feb 26, 2026)
+- **Fixed**: Import path error in `app/trainer/(tabs)/home.tsx` — changed `../../src/` to `../../../src/` for 4 imports (AuthContext, api, types, AlertContext). This was causing EAS update Metro bundling to fail during production deployment.
+
 ### Architecture
 - **Frontend**: React Native (Expo) with Expo Router
 - **Backend**: FastAPI (Python) with MongoDB
