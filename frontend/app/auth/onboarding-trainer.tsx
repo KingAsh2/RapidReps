@@ -494,18 +494,26 @@ export default function TrainerOnboardingScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
+    <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
       <LinearGradient
-        colors={Colors.gradientOrangeStart}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.header}
-      >
-        <Text style={styles.title}>Trainer Setup</Text>
-        <Text style={styles.subtitle}>
-          Step {step} of {totalSteps}
-        </Text>
+        colors={['rgba(247, 147, 30, 0.92)', 'rgba(255, 106, 0, 0.88)']}
+        style={StyleSheet.absoluteFill}
+      />
+      
+      {/* Header */}
+      <SafeAreaView edges={['top']}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.headerBackButton}>
+            <Ionicons name="arrow-back" size={24} color={Colors.white} />
+          </TouchableOpacity>
+          <View>
+            <Text style={styles.title}>Trainer Setup</Text>
+            <Text style={styles.subtitle}>
+              Step {step} of {totalSteps}
+            </Text>
+          </View>
+          <View style={{ width: 44 }} />
+        </View>
         <View style={styles.progressBar}>
           {[...Array(totalSteps)].map((_, index) => (
             <View
@@ -517,7 +525,7 @@ export default function TrainerOnboardingScreen() {
             />
           ))}
         </View>
-      </LinearGradient>
+      </SafeAreaView>
 
       {/* Form */}
       <ScrollView style={styles.scrollView}>
@@ -542,7 +550,7 @@ export default function TrainerOnboardingScreen() {
           </Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </ImageBackground>
   );
 }
 
