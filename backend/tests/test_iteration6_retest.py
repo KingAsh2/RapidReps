@@ -214,7 +214,7 @@ class TestRegression_TrainerEarnings:
         # Check required fields (API returns different field names)
         assert "totalEarningsCents" in data, "Should have totalEarningsCents"
         assert "monthEarningsCents" in data, "Should have monthEarningsCents"
-        assert "pendingPayoutCents" in data, "Should have pendingPayoutCents"
+        assert "weekEarningsCents" in data, "Should have weekEarningsCents"
         
         print(f"REGRESSION PASS: Earnings - total: ${data['totalEarningsCents']/100:.2f}, month: ${data['monthEarningsCents']/100:.2f}")
 
@@ -469,8 +469,10 @@ class TestRegression_Misc:
         
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         data = response.json()
-        assert isinstance(data, list), "Should return a list of trainers"
-        print(f"REGRESSION PASS: Nearby trainers - found {len(data)} trainers")
+        # API returns {trainers: [...], count: N} structure
+        assert "trainers" in data, "Should have 'trainers' key"
+        assert isinstance(data["trainers"], list), "Trainers should be a list"
+        print(f"REGRESSION PASS: Nearby trainers - found {len(data['trainers'])} trainers")
 
 
 if __name__ == "__main__":
