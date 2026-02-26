@@ -761,6 +761,66 @@ export default function TrainerDetailScreen() {
           <View style={{ height: 40 }} />
         </ScrollView>
       </SafeAreaView>
+
+      {/* Trainee's Home Consent Modal */}
+      <Modal
+        visible={showTraineeHomeConsent}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowTraineeHomeConsent(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.consentModal}>
+            <View style={styles.consentIconContainer}>
+              <Ionicons name="shield-checkmark" size={48} color={COLORS.teal} />
+            </View>
+            <Text style={styles.consentTitle}>Home Session Safety</Text>
+            
+            <View style={styles.consentItem}>
+              <Ionicons name="checkmark-circle" size={22} color={COLORS.success} />
+              <Text style={styles.consentText}>All trainers are background-checked and verified</Text>
+            </View>
+            
+            <View style={styles.consentItem}>
+              <Ionicons name="location" size={22} color={COLORS.orange} />
+              <Text style={styles.consentText}>Your address will be temporarily shared with the trainer for this session only</Text>
+            </View>
+            
+            <View style={styles.consentItem}>
+              <Ionicons name="time" size={22} color={COLORS.teal} />
+              <Text style={styles.consentText}>Trainer's time at your location is tracked and monitored for safety</Text>
+            </View>
+            
+            <View style={styles.consentItem}>
+              <Ionicons name="call" size={22} color={COLORS.navy} />
+              <Text style={styles.consentText}>Emergency support available 24/7 during your session</Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.consentAgreeButton}
+              onPress={() => {
+                setTraineeHomeConsented(true);
+                setSelectedSessionType('trainee_home');
+                setShowTraineeHomeConsent(false);
+              }}
+            >
+              <LinearGradient
+                colors={[COLORS.teal, '#18A09D']}
+                style={styles.consentAgreeGradient}
+              >
+                <Text style={styles.consentAgreeText}>I Understand & Agree</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.consentCancelButton}
+              onPress={() => setShowTraineeHomeConsent(false)}
+            >
+              <Text style={styles.consentCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
