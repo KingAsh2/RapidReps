@@ -355,7 +355,7 @@ export const traineeAPI = {
     try {
       // First get the current user to get their ID
       const userResponse = await api.get('/auth/me');
-      const userId = userResponse.data._id;
+      const userId = userResponse.data.id;
       
       // Then get their trainee profile
       const response = await api.get(`/trainee-profiles/${userId}`);
