@@ -481,7 +481,7 @@ const styles = StyleSheet.create({
   forgotText: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.warning,
+    color: Colors.white,
     textDecorationLine: 'underline',
   },
   loginButtonContainer: {
