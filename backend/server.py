@@ -70,51 +70,111 @@ class SessionStatus:
     NO_SHOW = "no_show"
 
 # ============================================================================
-# RAPIDREPS BUSINESS RULES - PRD CONSTANTS
+# RAPIDREPS BUSINESS RULES - PAYMENT MODEL
 # ============================================================================
 
 class SessionType:
     VIRTUAL = "virtual"
     OUTDOOR = "outdoor"
     IN_HOME = "in_home"
+    TRAINEE_HOME = "trainee_home"  # NEW: At trainee's home
 
 class TrainerTier:
     BASIC = "basic"       # 0-29 reviews
     PRO = "pro"           # 30-99 reviews, 4.7+ stars
     ELITE = "elite"       # 100+ reviews, verified certifications
 
-# PRICING MINIMUMS (in cents)
+# PRICING & REVENUE SPLIT RULES
 class PricingRules:
-    # Minimum session prices
+    # Revenue Split - Trainer keeps 75%, RapidReps keeps 25%
+    TRAINER_REVENUE_PERCENT = 75
+    PLATFORM_REVENUE_PERCENT = 25
+    
+    # Minimum session prices (in cents)
     VIRTUAL_MIN_CENTS = 3000       # $30 minimum
     OUTDOOR_MIN_CENTS = 4000       # $40 minimum
     IN_HOME_MIN_CENTS = 6000       # $60 minimum
+    TRAINEE_HOME_MIN_CENTS = 6000  # $60 minimum (same as in-home)
     
-    # Platform commission (service fee)
-    PLATFORM_FEE_PERCENT = 20      # 20% commission
+    # Travel fee for In-Home/Trainee-Home sessions
+    # Range: $0-$15, Trainer keeps 70%, Platform keeps 30%
+    TRAVEL_FEE_MIN_CENTS = 0       # $0
+    TRAVEL_FEE_MAX_CENTS = 1500    # $15
+    TRAINER_TRAVEL_FEE_PERCENT = 70
+    PLATFORM_TRAVEL_FEE_PERCENT = 30
     
-    # Travel fee brackets for in-home sessions (in cents)
-    TRAVEL_FEE_0_5_MILES = 0       # $0
-    TRAVEL_FEE_5_10_MILES = 500    # $5
-    TRAVEL_FEE_10_15_MILES = 1000  # $10
-    TRAVEL_FEE_15_20_MILES = 1500  # $15
-    
-    # Travel fee split
-    TRAINER_TRAVEL_FEE_PERCENT = 70  # Trainer keeps 70%
-    PLATFORM_TRAVEL_FEE_PERCENT = 30 # Platform keeps 30%
-    
-    # Cancellation fees (in cents)
+    # Cancellation fees (in cents) - 75/25 split
     CANCELLATION_FEE_VIRTUAL = 1500   # $15
     CANCELLATION_FEE_OUTDOOR = 2500   # $25
     CANCELLATION_FEE_IN_HOME = 3500   # $35
+    CANCELLATION_FEE_TRAINEE_HOME = 3500  # $35
     
-    # No-show: full session amount charged
+    # No-show fee = full session price (75/25 split)
+    
+    # Paid Boosts - 100% to RapidReps
+    BOOST_DAILY_CENTS = 999        # $9.99/day
+    BOOST_WEEKLY_CENTS = 4999      # $49.99/week
+    BOOST_MONTHLY_CENTS = 14999    # $149.99/month
+    
+    # Membership Program - 100% to RapidReps
+    MEMBERSHIP_MONTHLY_CENTS = 1999  # $19.99/month
+    
+    # Legacy fields for backward compatibility
+    PLATFORM_FEE_PERCENT = 25  # Kept for compatibility
+    TRAVEL_FEE_0_5_MILES = 0
+    TRAVEL_FEE_5_10_MILES = 500
+    TRAVEL_FEE_10_15_MILES = 1000
+    TRAVEL_FEE_15_20_MILES = 1500
     
     # Trainer tier price bonuses (in cents)
-    PRO_TIER_MIN_BONUS = 1000     # +$10 to +$20
+    PRO_TIER_MIN_BONUS = 1000
     PRO_TIER_MAX_BONUS = 2000
-    ELITE_TIER_MIN_BONUS = 3000   # +$30 to +$50
+    ELITE_TIER_MIN_BONUS = 3000
     ELITE_TIER_MAX_BONUS = 5000
+
+# Helper functions for payment calculations
+def calculate_session_payout(session_price_cents: int, session_type: str) -> dict:
+    """Calculate trainer payout and platform fee for a session"""
+    trainer_amount = int(session_price_cents * PricingRules.TRAINER_REVENUE_PERCENT / 100)
+    platform_amount = session_price_cents - trainer_amount
+    return {
+        "total_cents": session_price_cents,
+        "trainer_payout_cents": trainer_amount,
+        "platform_fee_cents": platform_amount,
+        "trainer_percent": PricingRules.TRAINER_REVENUE_PERCENT,
+        "platform_percent": PricingRules.PLATFORM_REVENUE_PERCENT
+    }
+
+def calculate_travel_fee_split(travel_fee_cents: int) -> dict:
+    """Calculate travel fee split (70% trainer, 30% platform)"""
+    trainer_amount = int(travel_fee_cents * PricingRules.TRAINER_TRAVEL_FEE_PERCENT / 100)
+    platform_amount = travel_fee_cents - trainer_amount
+    return {
+        "total_cents": travel_fee_cents,
+        "trainer_payout_cents": trainer_amount,
+        "platform_fee_cents": platform_amount
+    }
+
+def calculate_cancellation_fee(session_type: str) -> dict:
+    """Get cancellation fee for session type with 75/25 split"""
+    fee_map = {
+        SessionType.VIRTUAL: PricingRules.CANCELLATION_FEE_VIRTUAL,
+        SessionType.OUTDOOR: PricingRules.CANCELLATION_FEE_OUTDOOR,
+        SessionType.IN_HOME: PricingRules.CANCELLATION_FEE_IN_HOME,
+        SessionType.TRAINEE_HOME: PricingRules.CANCELLATION_FEE_TRAINEE_HOME,
+    }
+    fee_cents = fee_map.get(session_type, PricingRules.CANCELLATION_FEE_VIRTUAL)
+    return calculate_session_payout(fee_cents, session_type)
+
+def get_minimum_price(session_type: str) -> int:
+    """Get minimum price for session type in cents"""
+    min_prices = {
+        SessionType.VIRTUAL: PricingRules.VIRTUAL_MIN_CENTS,
+        SessionType.OUTDOOR: PricingRules.OUTDOOR_MIN_CENTS,
+        SessionType.IN_HOME: PricingRules.IN_HOME_MIN_CENTS,
+        SessionType.TRAINEE_HOME: PricingRules.TRAINEE_HOME_MIN_CENTS,
+    }
+    return min_prices.get(session_type, PricingRules.VIRTUAL_MIN_CENTS)
 
 # Trainer Tier Thresholds
 class TierThresholds:
