@@ -50,6 +50,8 @@ export default function TrainerDetailScreen() {
   const [ratings, setRatings] = useState<any[]>([]);
   const [selectedDuration, setSelectedDuration] = useState<number>(60);
   const [booking, setBooking] = useState(false);
+  const [showTraineeHomeConsent, setShowTraineeHomeConsent] = useState(false);
+  const [traineeHomeConsented, setTraineeHomeConsented] = useState(false);
 
   // Animations
   const headerAnim = useRef(new Animated.Value(0)).current;
