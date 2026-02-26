@@ -381,31 +381,31 @@ class SessionResponse(BaseModel):
     traineeId: str
     trainerId: str
     status: str
-    sessionDateTimeStart: datetime
-    sessionDateTimeEnd: datetime
-    durationMinutes: int
-    sessionType: str = SessionType.OUTDOOR  # NEW
+    sessionDateTimeStart: Optional[datetime] = None
+    sessionDateTimeEnd: Optional[datetime] = None
+    durationMinutes: int = 60
+    sessionType: str = SessionType.OUTDOOR
     # Pricing breakdown
-    baseSessionPriceCents: int
-    basePricePerMinuteCents: int
+    baseSessionPriceCents: int = 0
+    basePricePerMinuteCents: int = 0
     # Travel fee (for in-home sessions)
     travelDistanceMiles: Optional[float] = None
     travelFeeCents: int = 0
-    trainerTravelEarningsCents: int = 0  # 70% of travel fee
-    platformTravelFeeCents: int = 0  # 30% of travel fee
+    trainerTravelEarningsCents: int = 0
+    platformTravelFeeCents: int = 0
     # Discounts
     discountType: Optional[str] = None
     discountAmountCents: int = 0
     # Final amounts
-    finalSessionPriceCents: int
-    platformFeePercent: int = PricingRules.PLATFORM_FEE_PERCENT  # 20%
-    platformFeeCents: int
-    trainerEarningsCents: int
+    finalSessionPriceCents: int = 0
+    platformFeePercent: int = PricingRules.PLATFORM_FEE_PERCENT
+    platformFeeCents: int = 0
+    trainerEarningsCents: int = 0
     # Cancellation/No-show
     cancellationFeeCents: int = 0
     noShowFeeCents: int = 0
     # Safety PIN (for in-home sessions)
-    safetyPin: Optional[str] = None  # 4-digit PIN for client
+    safetyPin: Optional[str] = None
     safetyPinVerified: bool = False
     # Session tracking
     trainerGpsConfirmed: bool = False
@@ -413,12 +413,14 @@ class SessionResponse(BaseModel):
     sessionEndedAt: Optional[datetime] = None
     clientConfirmedEnd: bool = False
     # Location
-    locationType: str
+    locationType: Optional[str] = None
     locationNameOrAddress: Optional[str] = None
     traineeLatitude: Optional[float] = None
     traineeLongitude: Optional[float] = None
+    scheduledDate: Optional[str] = None
+    scheduledTime: Optional[str] = None
     notes: Optional[str] = None
-    createdAt: datetime
+    createdAt: Optional[datetime] = None
 
 # Rating Models
 class RatingCreate(BaseModel):
