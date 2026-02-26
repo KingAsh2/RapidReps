@@ -549,6 +549,57 @@ export default function TrainerOnboardingScreen() {
           </Text>
         </TouchableOpacity>
       </View>
+
+      {/* Post-Signup Verification Modal */}
+      <Modal visible={showVerificationModal} animationType="fade" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalIconContainer}>
+              <Ionicons name="checkmark-circle" size={56} color="#00C853" />
+            </View>
+            <Text style={styles.modalTitle}>Profile Created!</Text>
+            <Text style={styles.modalSubtitle}>
+              Your trainer profile is set up. To start accepting clients, you need to complete identity verification.
+            </Text>
+
+            <View style={styles.modalSteps}>
+              {['Upload Government ID', 'Complete Background Check', 'Upload Certifications', 'Add Profile Photo & Video'].map((s, i) => (
+                <View key={i} style={styles.modalStepRow}>
+                  <View style={styles.modalStepDot}>
+                    <Text style={styles.modalStepNum}>{i + 1}</Text>
+                  </View>
+                  <Text style={styles.modalStepText}>{s}</Text>
+                </View>
+              ))}
+            </View>
+
+            <TouchableOpacity
+              style={styles.modalPrimaryBtn}
+              onPress={() => {
+                setShowVerificationModal(false);
+                router.replace('/trainer/verification');
+              }}
+              data-testid="start-verification-btn"
+            >
+              <LinearGradient colors={['#1FB8B4', '#18A09D']} style={styles.modalPrimaryGradient}>
+                <Ionicons name="shield-checkmark" size={20} color="#FFFFFF" />
+                <Text style={styles.modalPrimaryText}>Start Verification</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.modalSecondaryBtn}
+              onPress={() => {
+                setShowVerificationModal(false);
+                router.replace('/trainer/home');
+              }}
+              data-testid="skip-verification-btn"
+            >
+              <Text style={styles.modalSecondaryText}>I'll do this later</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ImageBackground>
   );
 }
