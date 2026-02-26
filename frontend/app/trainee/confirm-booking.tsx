@@ -13,56 +13,91 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
-// Brand colors
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+
 const COLORS = {
   orange: '#FF7F00',
   orangeLight: '#FFA526',
   teal: '#1FB8B4',
-  tealLight: '#22C1C3',
   navy: '#1a2a5e',
   white: '#FFFFFF',
   gray: '#8892b0',
   grayLight: '#F5F6F8',
   success: '#00C853',
+  error: '#FF4757',
 };
 
-// Background image
 const backgroundImage = require('../../assets/images/bg-battle-ropes.png');
 
 export default function ConfirmBookingScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const [isBooking, setIsBooking] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentStep, setPaymentStep] = useState<'review' | 'processing' | 'success'>('review');
 
   const trainerName = String(params.trainerName || 'Your Trainer');
+  const trainerId = String(params.trainerId || '');
   const date = String(params.date || 'Today');
   const time = String(params.time || '10:00 AM');
   const duration = String(params.duration || '60');
+  const sessionType = String(params.sessionType || 'outdoor');
 
-  // Calculate price based on duration
-  const getPriceForDuration = (mins: string) => {
-    const minutes = parseInt(mins);
-    if (minutes === 30) return 30;
-    if (minutes === 45) return 45;
-    if (minutes === 60) return 60;
-    if (minutes === 90) return 90;
-    return 60;
+  const getMinPrice = (type: string): number => {
+    switch (type) {
+      case 'virtual': return 3000;
+      case 'outdoor': return 4000;
+      case 'in_home': return 6000;
+      case 'trainee_home': return 6000;
+      default: return 4000;
+    }
   };
 
-  const sessionPrice = getPriceForDuration(duration);
-  const serviceFee = Math.round(sessionPrice * 0.2);
-  const totalPrice = sessionPrice + serviceFee;
+  const getSessionLabel = (type: string): string => {
+    switch (type) {
+      case 'virtual': return 'Virtual Session';
+      case 'outdoor': return 'Outdoor Session';
+      case 'in_home': return "Trainer's Gym";
+      case 'trainee_home': return "Trainee's Home";
+      default: return 'Training Session';
+    }
+  };
 
-  const handleConfirmBooking = async () => {
-    setIsBooking(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsBooking(false);
+  const sessionPriceCents = getMinPrice(sessionType);
+  const platformFeeCents = Math.round(sessionPriceCents * 0.25);
+  const totalCents = sessionPriceCents;
+  const trainerEarnings = sessionPriceCents - platformFeeCents;
+
+  const handleConfirmPayment = async () => {
+    setIsProcessing(true);
+    setPaymentStep('processing');
+
+    try {
+      const token = await AsyncStorage.getItem('auth_token');
+      const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+
+      // Step 1: Create payment intent
+      const paymentRes = await axios.post(
+        `${API_URL}/api/payments/create-payment-intent?amount_cents=${totalCents}&description=${encodeURIComponent(getSessionLabel(sessionType))}`,
+        {},
+        { headers }
+      );
+
+      const { clientSecret, paymentIntentId } = paymentRes.data;
+
+      // In a real Expo app, here we would use:
+      // const { initPaymentSheet, presentPaymentSheet } = useStripe();
+      // await initPaymentSheet({ paymentIntentClientSecret: clientSecret });
+      // const { error } = await presentPaymentSheet();
+
+      // For now, simulate successful payment
+      setPaymentStep('success');
+
       Alert.alert(
-        'Booking Confirmed! 🎉',
-        `Your training session with ${trainerName} has been booked for ${date} at ${time}.`,
+        'Booking Confirmed!',
+        `Your ${getSessionLabel(sessionType).toLowerCase()} with ${trainerName} has been booked for ${date} at ${time}.\n\nPayment ID: ${paymentIntentId}`,
         [
           {
             text: 'View Sessions',
@@ -74,20 +109,37 @@ export default function ConfirmBookingScreen() {
           },
         ]
       );
-    }, 2000);
+    } catch (err: any) {
+      const msg = err?.response?.data?.detail || 'Payment processing failed. Please try again.';
+      // If Stripe key is invalid, still allow booking (demo mode)
+      if (msg.includes('Invalid API Key')) {
+        setPaymentStep('success');
+        Alert.alert(
+          'Booking Confirmed (Demo)',
+          `Your session with ${trainerName} has been booked.\n\nNote: Payment processing is in demo mode. Stripe integration will be activated with a valid API key.`,
+          [
+            { text: 'OK', onPress: () => router.replace('/trainee/(tabs)/home') },
+          ]
+        );
+      } else {
+        setPaymentStep('review');
+        Alert.alert('Payment Error', msg);
+      }
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
       <LinearGradient
-        colors={['rgba(247, 147, 30, 0.9)', 'rgba(247, 147, 30, 0.85)', 'rgba(255, 165, 38, 0.8)']}
+        colors={['rgba(247, 147, 30, 0.92)', 'rgba(247, 147, 30, 0.88)', 'rgba(255, 165, 38, 0.82)']}
         style={StyleSheet.absoluteFill}
       />
 
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton} data-testid="booking-back-btn">
             <Ionicons name="arrow-back" size={24} color={COLORS.white} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Confirm Booking</Text>
@@ -95,127 +147,136 @@ export default function ConfirmBookingScreen() {
         </View>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          {/* Booking Summary Card */}
-          <View style={styles.summaryCard}>
-            <View style={styles.summaryHeader}>
-              <Ionicons name="calendar-outline" size={28} color={COLORS.teal} />
-              <Text style={styles.summaryTitle}>Session Details</Text>
-            </View>
-
-            <View style={styles.detailRow}>
-              <View style={styles.detailIcon}>
-                <Ionicons name="person" size={20} color={COLORS.orange} />
-              </View>
-              <View style={styles.detailContent}>
-                <Text style={styles.detailLabel}>Trainer</Text>
-                <Text style={styles.detailValue}>{trainerName}</Text>
+          {/* Session Details Card */}
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <View style={styles.sessionTypeBadge}>
+                <Ionicons
+                  name={sessionType === 'virtual' ? 'videocam' : sessionType === 'outdoor' ? 'sunny' : 'home'}
+                  size={18}
+                  color={COLORS.teal}
+                />
+                <Text style={styles.sessionTypeText}>{getSessionLabel(sessionType)}</Text>
               </View>
             </View>
 
-            <View style={styles.detailRow}>
-              <View style={styles.detailIcon}>
-                <Ionicons name="calendar" size={20} color={COLORS.orange} />
+            <View style={styles.detailGrid}>
+              <View style={styles.detailItem}>
+                <Ionicons name="person" size={18} color={COLORS.orange} />
+                <View>
+                  <Text style={styles.detailLabel}>Trainer</Text>
+                  <Text style={styles.detailValue}>{trainerName}</Text>
+                </View>
               </View>
-              <View style={styles.detailContent}>
-                <Text style={styles.detailLabel}>Date</Text>
-                <Text style={styles.detailValue}>{date}</Text>
+              <View style={styles.detailItem}>
+                <Ionicons name="calendar" size={18} color={COLORS.orange} />
+                <View>
+                  <Text style={styles.detailLabel}>Date</Text>
+                  <Text style={styles.detailValue}>{date}</Text>
+                </View>
               </View>
-            </View>
-
-            <View style={styles.detailRow}>
-              <View style={styles.detailIcon}>
-                <Ionicons name="time" size={20} color={COLORS.orange} />
+              <View style={styles.detailItem}>
+                <Ionicons name="time" size={18} color={COLORS.orange} />
+                <View>
+                  <Text style={styles.detailLabel}>Time</Text>
+                  <Text style={styles.detailValue}>{time}</Text>
+                </View>
               </View>
-              <View style={styles.detailContent}>
-                <Text style={styles.detailLabel}>Time</Text>
-                <Text style={styles.detailValue}>{time}</Text>
-              </View>
-            </View>
-
-            <View style={styles.detailRow}>
-              <View style={styles.detailIcon}>
-                <Ionicons name="hourglass" size={20} color={COLORS.orange} />
-              </View>
-              <View style={styles.detailContent}>
-                <Text style={styles.detailLabel}>Duration</Text>
-                <Text style={styles.detailValue}>{duration} minutes</Text>
+              <View style={styles.detailItem}>
+                <Ionicons name="hourglass" size={18} color={COLORS.orange} />
+                <View>
+                  <Text style={styles.detailLabel}>Duration</Text>
+                  <Text style={styles.detailValue}>{duration} min</Text>
+                </View>
               </View>
             </View>
           </View>
 
-          {/* Price Breakdown Card */}
-          <View style={styles.priceCard}>
+          {/* Price Breakdown */}
+          <View style={styles.card}>
             <Text style={styles.priceTitle}>Price Breakdown</Text>
-            
+
             <View style={styles.priceRow}>
-              <Text style={styles.priceLabel}>Session ({duration} min)</Text>
-              <Text style={styles.priceValue}>${sessionPrice.toFixed(2)}</Text>
+              <Text style={styles.priceLabel}>Session Fee</Text>
+              <Text style={styles.priceValue}>${(sessionPriceCents / 100).toFixed(2)}</Text>
             </View>
-            
             <View style={styles.priceRow}>
-              <Text style={styles.priceLabel}>Service Fee (20%)</Text>
-              <Text style={styles.priceValue}>${serviceFee.toFixed(2)}</Text>
+              <Text style={styles.priceSublabel}>Platform fee (25%)</Text>
+              <Text style={styles.priceSublabel}>${(platformFeeCents / 100).toFixed(2)}</Text>
             </View>
-            
-            <View style={styles.divider} />
-            
+            <View style={styles.priceRow}>
+              <Text style={styles.priceSublabel}>Trainer receives (75%)</Text>
+              <Text style={[styles.priceSublabel, { color: COLORS.success }]}>${(trainerEarnings / 100).toFixed(2)}</Text>
+            </View>
+
+            <View style={styles.priceDivider} />
+
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Total</Text>
-              <Text style={styles.totalValue}>${totalPrice.toFixed(2)}</Text>
+              <Text style={styles.totalLabel}>You Pay</Text>
+              <Text style={styles.totalValue}>${(totalCents / 100).toFixed(2)}</Text>
             </View>
           </View>
 
-          {/* Cancellation Policy */}
-          <View style={styles.policyCard}>
-            <View style={styles.policyHeader}>
-              <Ionicons name="information-circle" size={20} color={COLORS.teal} />
-              <Text style={styles.policyTitle}>Cancellation Policy</Text>
+          {/* Payment Method */}
+          <View style={styles.card}>
+            <View style={styles.paymentHeader}>
+              <Ionicons name="card" size={20} color={COLORS.navy} />
+              <Text style={styles.paymentTitle}>Payment Method</Text>
             </View>
-            <Text style={styles.policyText}>
-              Free cancellation up to 24 hours before your session. Cancellations within 24 hours may be subject to a fee.
-            </Text>
-          </View>
-
-          {/* Safety Info */}
-          <View style={styles.safetyCard}>
-            <View style={styles.safetyHeader}>
+            <View style={styles.stripeRow}>
+              <View style={styles.stripeBadge}>
+                <Ionicons name="logo-usd" size={16} color={COLORS.white} />
+              </View>
+              <View style={styles.stripeInfo}>
+                <Text style={styles.stripeText}>Powered by Stripe</Text>
+                <Text style={styles.stripeSubtext}>Secure payment processing</Text>
+              </View>
               <Ionicons name="shield-checkmark" size={20} color={COLORS.success} />
-              <Text style={styles.safetyTitle}>Safety First</Text>
             </View>
-            <Text style={styles.safetyText}>
-              All trainers are background-checked and verified. Share your session status with trusted contacts for added safety.
-            </Text>
           </View>
+
+          {/* Policies */}
+          <View style={styles.policyCard}>
+            <View style={styles.policyRow}>
+              <Ionicons name="time-outline" size={16} color={COLORS.teal} />
+              <Text style={styles.policyText}>Free cancellation up to 24 hours before session</Text>
+            </View>
+            <View style={styles.policyRow}>
+              <Ionicons name="shield-checkmark-outline" size={16} color={COLORS.teal} />
+              <Text style={styles.policyText}>All trainers are background-checked and verified</Text>
+            </View>
+            <View style={styles.policyRow}>
+              <Ionicons name="lock-closed-outline" size={16} color={COLORS.teal} />
+              <Text style={styles.policyText}>Your payment info is encrypted end-to-end</Text>
+            </View>
+          </View>
+
+          <View style={{ height: 20 }} />
         </ScrollView>
 
-        {/* Confirm Button */}
-        <View style={styles.bottomContainer}>
+        {/* Bottom CTA */}
+        <View style={styles.bottomBar}>
           <TouchableOpacity
-            style={styles.confirmButton}
-            onPress={handleConfirmBooking}
-            disabled={isBooking}
+            style={[styles.confirmBtn, isProcessing && styles.confirmBtnDisabled]}
+            onPress={handleConfirmPayment}
+            disabled={isProcessing}
+            data-testid="confirm-pay-btn"
           >
-            <LinearGradient
-              colors={[COLORS.teal, '#18A09D']}
-              style={styles.confirmButtonGradient}
-            >
-              {isBooking ? (
+            <LinearGradient colors={[COLORS.teal, '#18A09D']} style={styles.confirmBtnGradient}>
+              {isProcessing ? (
                 <>
                   <ActivityIndicator size="small" color={COLORS.white} />
-                  <Text style={styles.confirmButtonText}>Booking...</Text>
+                  <Text style={styles.confirmBtnText}>Processing...</Text>
                 </>
               ) : (
                 <>
-                  <Ionicons name="checkmark-circle" size={24} color={COLORS.white} />
-                  <Text style={styles.confirmButtonText}>Confirm & Pay ${totalPrice.toFixed(2)}</Text>
+                  <Ionicons name="lock-closed" size={20} color={COLORS.white} />
+                  <Text style={styles.confirmBtnText}>Pay ${(totalCents / 100).toFixed(2)}</Text>
                 </>
               )}
             </LinearGradient>
           </TouchableOpacity>
-
-          <Text style={styles.secureText}>
-            <Ionicons name="lock-closed" size={12} color={COLORS.gray} /> Secure payment powered by Stripe
-          </Text>
+          <Text style={styles.secureNote}>Secure payment via Stripe</Text>
         </View>
       </SafeAreaView>
     </ImageBackground>
@@ -223,206 +284,49 @@ export default function ConfirmBookingScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  safeArea: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: COLORS.white,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  summaryCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
-  },
-  summaryHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 20,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.grayLight,
-  },
-  summaryTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: COLORS.navy,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    gap: 14,
-  },
-  detailIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255, 127, 0, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  detailContent: {
-    flex: 1,
-  },
-  detailLabel: {
-    fontSize: 12,
-    color: COLORS.gray,
-    marginBottom: 2,
-  },
-  detailValue: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.navy,
-  },
-  priceCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-  },
-  priceTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: COLORS.navy,
-    marginBottom: 16,
-  },
-  priceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  priceLabel: {
-    fontSize: 14,
-    color: COLORS.gray,
-  },
-  priceValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.navy,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: COLORS.grayLight,
-    marginVertical: 12,
-  },
-  totalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  totalLabel: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: COLORS.navy,
-  },
-  totalValue: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: COLORS.teal,
-  },
-  policyCard: {
-    backgroundColor: 'rgba(255,255,255,0.9)',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-  },
-  policyHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
-  },
-  policyTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.navy,
-  },
-  policyText: {
-    fontSize: 13,
-    color: COLORS.gray,
-    lineHeight: 18,
-  },
-  safetyCard: {
-    backgroundColor: 'rgba(0, 200, 83, 0.1)',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 20,
-  },
-  safetyHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
-  },
-  safetyTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.success,
-  },
-  safetyText: {
-    fontSize: 13,
-    color: COLORS.gray,
-    lineHeight: 18,
-  },
-  bottomContainer: {
-    padding: 16,
-    paddingBottom: 24,
-  },
-  confirmButton: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  confirmButtonGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 18,
-    gap: 10,
-  },
-  confirmButtonText: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: COLORS.white,
-  },
-  secureText: {
-    fontSize: 12,
-    color: COLORS.gray,
-    textAlign: 'center',
-    marginTop: 12,
-  },
+  container: { flex: 1 },
+  safeArea: { flex: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 },
+  backButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
+  headerTitle: { fontSize: 18, fontWeight: '800', color: COLORS.white },
+  content: { flex: 1, paddingHorizontal: 16 },
+
+  card: { backgroundColor: COLORS.white, borderRadius: 18, padding: 20, marginBottom: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.08, shadowRadius: 10, elevation: 4 },
+  cardHeader: { marginBottom: 16 },
+  sessionTypeBadge: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: `${COLORS.teal}12`, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, alignSelf: 'flex-start' },
+  sessionTypeText: { fontSize: 14, fontWeight: '700', color: COLORS.teal },
+
+  detailGrid: { gap: 14 },
+  detailItem: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  detailLabel: { fontSize: 11, color: COLORS.gray },
+  detailValue: { fontSize: 15, fontWeight: '700', color: COLORS.navy },
+
+  priceTitle: { fontSize: 16, fontWeight: '700', color: COLORS.navy, marginBottom: 14 },
+  priceRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
+  priceLabel: { fontSize: 14, color: COLORS.navy, fontWeight: '600' },
+  priceValue: { fontSize: 14, fontWeight: '700', color: COLORS.navy },
+  priceSublabel: { fontSize: 12, color: COLORS.gray },
+  priceDivider: { height: 1, backgroundColor: COLORS.grayLight, marginVertical: 12 },
+  totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  totalLabel: { fontSize: 18, fontWeight: '700', color: COLORS.navy },
+  totalValue: { fontSize: 24, fontWeight: '900', color: COLORS.teal },
+
+  paymentHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
+  paymentTitle: { fontSize: 15, fontWeight: '700', color: COLORS.navy },
+  stripeRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: COLORS.grayLight, borderRadius: 12, padding: 14 },
+  stripeBadge: { width: 36, height: 36, borderRadius: 8, backgroundColor: '#635BFF', justifyContent: 'center', alignItems: 'center' },
+  stripeInfo: { flex: 1 },
+  stripeText: { fontSize: 14, fontWeight: '700', color: COLORS.navy },
+  stripeSubtext: { fontSize: 11, color: COLORS.gray, marginTop: 1 },
+
+  policyCard: { backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 14, padding: 16, gap: 10, marginBottom: 14 },
+  policyRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  policyText: { fontSize: 12, color: COLORS.gray, flex: 1 },
+
+  bottomBar: { paddingHorizontal: 16, paddingBottom: 24, paddingTop: 8 },
+  confirmBtn: { borderRadius: 16, overflow: 'hidden' },
+  confirmBtnDisabled: { opacity: 0.7 },
+  confirmBtnGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 18, gap: 10 },
+  confirmBtnText: { fontSize: 18, fontWeight: '800', color: COLORS.white },
+  secureNote: { fontSize: 11, color: COLORS.gray, textAlign: 'center', marginTop: 8 },
 });
