@@ -308,6 +308,35 @@ export const trainerAPI = {
     const response = await api.patch(`/sessions/${sessionId}/no-show`);
     return response.data;
   },
+
+  // Verification Flow
+  getVerificationStatus: async (): Promise<{
+    steps: Record<string, string>;
+    canGoLive: boolean;
+    missingRequirements?: string[];
+  }> => {
+    const response = await api.get('/trainer/verification-status');
+    return response.data;
+  },
+
+  submitVerificationStep: async (stepId: string, fileUri?: string, fileName?: string): Promise<{
+    success: boolean;
+    stepId: string;
+    canGoLive: boolean;
+    missingRequirements: string[];
+  }> => {
+    const response = await api.post('/trainer/submit-verification-step', {
+      stepId,
+      fileUri: fileUri || null,
+      fileName: fileName || null,
+    });
+    return response.data;
+  },
+
+  submitAllVerification: async (): Promise<{ success: boolean; message: string }> => {
+    const response = await api.post('/trainer/submit-all-verification');
+    return response.data;
+  },
 };
 
 // Trainee Profile API
