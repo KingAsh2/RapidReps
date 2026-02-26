@@ -166,11 +166,13 @@ export default function WelcomeScreen() {
                   }
                 ]}
               >
-                <Image
-                  source={require('../assets/rapidreps-logo.png')}
-                  style={styles.logo}
-                  resizeMode="contain"
-                />
+                <View style={styles.logoBacking}>
+                  <Image
+                    source={require('../assets/rapidreps-logo.png')}
+                    style={styles.logo}
+                    resizeMode="contain"
+                  />
+                </View>
               </Animated.View>
 
               {/* Tagline */}
@@ -342,6 +344,13 @@ const styles = StyleSheet.create({
   logoSection: {
     alignItems: 'center',
     marginTop: 20,
+  },
+  logoBacking: {
+    backgroundColor: 'rgba(255, 127, 0, 1)',
+    borderRadius: 140,
+    padding: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   logo: {
     width: width * 0.65,
