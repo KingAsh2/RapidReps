@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 import bcrypt
 import jwt
 from bson import ObjectId
+import stripe
 
 
 ROOT_DIR = Path(__file__).parent
@@ -22,6 +23,9 @@ load_dotenv(ROOT_DIR / '.env')
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
+
+# Stripe configuration
+stripe.api_key = os.environ.get('STRIPE_SECRET_KEY', '')
 
 # JWT Configuration
 JWT_SECRET = os.environ.get('JWT_SECRET')
