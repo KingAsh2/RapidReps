@@ -2664,15 +2664,6 @@ async def verify_trainer(trainer_id: str, verified: bool, current_user: dict = D
     
     return {'success': True, 'verified': verified}
 
-@api_router.get("/admin/sessions")
-async def get_all_sessions(current_user: dict = Depends(get_current_user)):
-    """Admin: Get all sessions"""
-    if not current_user.get('isAdmin'):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
-    sessions = await db.sessions.find().sort('createdAt', -1).to_list(1000)
-    return [serialize_doc(s) for s in sessions]
-
 @api_router.get("/admin/revenue")
 async def get_platform_revenue(current_user: dict = Depends(get_current_user)):
     """Admin: Get platform revenue statistics"""
