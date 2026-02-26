@@ -447,9 +447,9 @@ export default function TraineeOnboardingScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
       <LinearGradient
-        colors={[COLORS.teal, COLORS.tealLight, COLORS.orange]}
+        colors={['rgba(247, 147, 30, 0.92)', 'rgba(255, 106, 0, 0.88)', 'rgba(31, 184, 180, 0.85)']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
@@ -463,7 +463,9 @@ export default function TraineeOnboardingScreen() {
               <Ionicons name="arrow-back" size={24} color={COLORS.white} />
             </TouchableOpacity>
           ) : (
-            <View style={{ width: 44 }} />
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+              <Ionicons name="arrow-back" size={24} color={COLORS.white} />
+            </TouchableOpacity>
           )}
           <Text style={styles.headerTitle}>Step {step} of {totalSteps}</Text>
           <View style={{ width: 44 }} />
