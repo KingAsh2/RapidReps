@@ -343,20 +343,50 @@ export default function TrainerAchievementsScreen() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      setBadges(response.data.badges);
-      setTotalSessions(response.data.totalCompletedSessions);
-      setDiscountRemaining(response.data.discountSessionsRemaining);
-    } catch (error) {
-      console.error('Error loading achievements:', error);
-      showAlert({
-        title: 'Loading Failed',
-        message: 'Could not load your achievements. Please try again.',
-        type: 'error',
-      });
+      setBadges(response.data.badges || []);
+      setTotalSessions(response.data.totalCompletedSessions || 0);
+      setDiscountRemaining(response.data.discountSessionsRemaining || 0);
+    } catch (error: any) {
+      console.log('Achievements response:', error?.response?.status);
+      // If 404 or empty, show empty state instead of error
+      if (error?.response?.status === 404 || error?.response?.status === 500) {
+        setBadges([]);
+        setTotalSessions(0);
+        setDiscountRemaining(0);
+      } else {
+        showAlert({
+          title: 'Connection Issue',
+          message: 'Unable to connect. Your achievements will appear when you complete sessions.',
+          type: 'info',
+        });
+      }
     } finally {
       setLoading(false);
     }
   };
+
+  // Empty state component
+  const EmptyAchievements = () => (
+    <View style={styles.emptyContainer}>
+      <Ionicons name="trophy-outline" size={80} color="rgba(255,255,255,0.3)" />
+      <Text style={styles.emptyTitle}>Your Wins & Gains Start Here! 🏆</Text>
+      <Text style={styles.emptyText}>
+        Complete training sessions to unlock achievements, earn badges, and track your fitness journey.
+      </Text>
+      <TouchableOpacity 
+        style={styles.emptyButton}
+        onPress={() => router.push('/trainee/(tabs)/home')}
+      >
+        <LinearGradient
+          colors={[Colors.secondary, Colors.primary]}
+          style={styles.emptyButtonGradient}
+        >
+          <Ionicons name="barbell" size={20} color={Colors.white} />
+          <Text style={styles.emptyButtonText}>Find a Trainer</Text>
+        </LinearGradient>
+      </TouchableOpacity>
+    </View>
+  );
 
   const handleBadgePress = (badge: Badge) => {
     setSelectedBadge(badge);
