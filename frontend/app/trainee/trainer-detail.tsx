@@ -1323,4 +1323,67 @@ const styles = StyleSheet.create({
     color: COLORS.error,
     textDecorationLine: 'underline',
   },
+  // Consent Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  consentModal: {
+    backgroundColor: COLORS.white,
+    borderRadius: 24,
+    padding: 24,
+    width: '100%',
+    maxWidth: 380,
+  },
+  consentIconContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  consentTitle: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: COLORS.navy,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  consentItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    marginBottom: 16,
+    paddingRight: 8,
+  },
+  consentText: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '500',
+    color: COLORS.gray,
+    lineHeight: 22,
+  },
+  consentAgreeButton: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginTop: 16,
+  },
+  consentAgreeGradient: {
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  consentAgreeText: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: COLORS.white,
+  },
+  consentCancelButton: {
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  consentCancelText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.gray,
+  },
 });
