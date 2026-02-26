@@ -417,7 +417,7 @@ class SessionResponse(BaseModel):
     locationNameOrAddress: Optional[str] = None
     traineeLatitude: Optional[float] = None
     traineeLongitude: Optional[float] = None
-    scheduledDate: Optional[Any] = None
+    scheduledDate: Optional[str] = None
     scheduledTime: Optional[str] = None
     notes: Optional[str] = None
     createdAt: Optional[datetime] = None
