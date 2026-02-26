@@ -2592,11 +2592,24 @@ async def create_rating(rating: RatingCreate, current_user: dict = Depends(get_c
     
     return RatingResponse(**serialize_doc(rating_doc))
 
-@api_router.get("/trainers/{trainer_id}/ratings", response_model=List[RatingResponse])
+@api_router.get("/trainers/{trainer_id}/ratings")
 async def get_trainer_ratings(trainer_id: str):
-    """Get all ratings for a trainer"""
+    """Get all ratings for a trainer with reviewer names"""
     ratings = await db.ratings.find({'trainerId': trainer_id}).sort('createdAt', -1).to_list(100)
-    return [RatingResponse(**serialize_doc(r)) for r in ratings]
+    results = []
+    for r in ratings:
+        doc = serialize_doc(r)
+        # Look up trainee name
+        if r.get('traineeId'):
+            try:
+                trainee = await db.users.find_one({'_id': ObjectId(r['traineeId'])})
+                doc['traineeName'] = trainee.get('fullName', 'Anonymous') if trainee else 'Anonymous'
+            except Exception:
+                doc['traineeName'] = 'Anonymous'
+        else:
+            doc['traineeName'] = 'Anonymous'
+        results.append(RatingResponse(**doc))
+    return results
 
 # ============================================================================
 # TRAINER EARNINGS
