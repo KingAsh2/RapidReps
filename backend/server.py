@@ -3323,6 +3323,480 @@ async def get_nearby_trainers(
 
 
 # ============================================================================
+# PAYMENT & MEMBERSHIP ENDPOINTS
+# ============================================================================
+
+@api_router.post("/payments/create-payment-intent")
+async def create_payment_intent(
+    amount_cents: int,
+    session_id: Optional[str] = None,
+    description: str = "RapidReps Session",
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a Stripe payment intent for a session"""
+    try:
+        intent = stripe.PaymentIntent.create(
+            amount=amount_cents,
+            currency='usd',
+            metadata={
+                'user_id': str(current_user['_id']),
+                'session_id': session_id or '',
+                'description': description
+            }
+        )
+        return {
+            "clientSecret": intent.client_secret,
+            "paymentIntentId": intent.id
+        }
+    except stripe.error.StripeError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@api_router.get("/payments/pricing-rules")
+async def get_pricing_rules():
+    """Get current pricing rules for the platform"""
+    return {
+        "revenueSplit": {
+            "trainerPercent": PricingRules.TRAINER_REVENUE_PERCENT,
+            "platformPercent": PricingRules.PLATFORM_REVENUE_PERCENT
+        },
+        "minimumPrices": {
+            "virtual": PricingRules.VIRTUAL_MIN_CENTS / 100,
+            "outdoor": PricingRules.OUTDOOR_MIN_CENTS / 100,
+            "inHome": PricingRules.IN_HOME_MIN_CENTS / 100,
+            "traineeHome": PricingRules.TRAINEE_HOME_MIN_CENTS / 100
+        },
+        "travelFee": {
+            "minCents": PricingRules.TRAVEL_FEE_MIN_CENTS,
+            "maxCents": PricingRules.TRAVEL_FEE_MAX_CENTS,
+            "trainerPercent": PricingRules.TRAINER_TRAVEL_FEE_PERCENT,
+            "platformPercent": PricingRules.PLATFORM_TRAVEL_FEE_PERCENT
+        },
+        "cancellationFees": {
+            "virtual": PricingRules.CANCELLATION_FEE_VIRTUAL / 100,
+            "outdoor": PricingRules.CANCELLATION_FEE_OUTDOOR / 100,
+            "inHome": PricingRules.CANCELLATION_FEE_IN_HOME / 100
+        },
+        "boostPrices": {
+            "daily": PricingRules.BOOST_DAILY_CENTS / 100,
+            "weekly": PricingRules.BOOST_WEEKLY_CENTS / 100,
+            "monthly": PricingRules.BOOST_MONTHLY_CENTS / 100
+        },
+        "membership": {
+            "monthlyPrice": PricingRules.MEMBERSHIP_MONTHLY_CENTS / 100,
+            "benefits": [
+                "Discounted sessions",
+                "1 free profile Boost per month",
+                "Priority customer support",
+                "Early access to elite trainers"
+            ]
+        }
+    }
+
+@api_router.post("/payments/calculate-session-cost")
+async def calculate_session_cost(
+    session_type: str,
+    session_price_cents: int,
+    travel_fee_cents: int = 0
+):
+    """Calculate cost breakdown for a session"""
+    session_split = calculate_session_payout(session_price_cents, session_type)
+    travel_split = calculate_travel_fee_split(travel_fee_cents) if travel_fee_cents > 0 else None
+    
+    total_cost = session_price_cents + travel_fee_cents
+    trainer_total = session_split['trainer_payout_cents'] + (travel_split['trainer_payout_cents'] if travel_split else 0)
+    platform_total = session_split['platform_fee_cents'] + (travel_split['platform_fee_cents'] if travel_split else 0)
+    
+    return {
+        "sessionPrice": session_split,
+        "travelFee": travel_split,
+        "totals": {
+            "totalCents": total_cost,
+            "trainerPayoutCents": trainer_total,
+            "platformFeeCents": platform_total,
+            "totalDollars": total_cost / 100,
+            "trainerPayoutDollars": trainer_total / 100,
+            "platformFeeDollars": platform_total / 100
+        }
+    }
+
+@api_router.post("/memberships/subscribe")
+async def subscribe_membership(current_user: dict = Depends(get_current_user)):
+    """Subscribe to RapidReps membership ($19.99/month)"""
+    user_id = str(current_user['_id'])
+    
+    # Check if already has active membership
+    existing = await db.memberships.find_one({
+        'userId': user_id,
+        'status': MembershipStatus.ACTIVE
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="Already have an active membership")
+    
+    # Create membership
+    now = datetime.utcnow()
+    membership = {
+        'userId': user_id,
+        'status': MembershipStatus.ACTIVE,
+        'monthlyPriceCents': PricingRules.MEMBERSHIP_MONTHLY_CENTS,
+        'startDate': now,
+        'nextBillingDate': now + timedelta(days=30),
+        'freeBoostsRemaining': 1,
+        'createdAt': now
+    }
+    
+    result = await db.memberships.insert_one(membership)
+    membership['id'] = str(result.inserted_id)
+    
+    return serialize_doc(membership)
+
+@api_router.get("/memberships/my-membership")
+async def get_my_membership(current_user: dict = Depends(get_current_user)):
+    """Get current user's membership status"""
+    user_id = str(current_user['_id'])
+    
+    membership = await db.memberships.find_one({
+        'userId': user_id,
+        'status': MembershipStatus.ACTIVE
+    })
+    
+    if not membership:
+        return {"hasMembership": False, "membership": None}
+    
+    return {
+        "hasMembership": True,
+        "membership": serialize_doc(membership)
+    }
+
+@api_router.post("/boosts/purchase")
+async def purchase_boost(
+    boost_type: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Purchase a visibility boost for trainer profile"""
+    if UserRole.TRAINER not in current_user.get('roles', []):
+        raise HTTPException(status_code=403, detail="Only trainers can purchase boosts")
+    
+    user_id = str(current_user['_id'])
+    
+    # Get price for boost type
+    price_map = {
+        BoostType.DAILY: PricingRules.BOOST_DAILY_CENTS,
+        BoostType.WEEKLY: PricingRules.BOOST_WEEKLY_CENTS,
+        BoostType.MONTHLY: PricingRules.BOOST_MONTHLY_CENTS
+    }
+    duration_map = {
+        BoostType.DAILY: 1,
+        BoostType.WEEKLY: 7,
+        BoostType.MONTHLY: 30
+    }
+    
+    price_cents = price_map.get(boost_type)
+    duration_days = duration_map.get(boost_type)
+    
+    if not price_cents:
+        raise HTTPException(status_code=400, detail="Invalid boost type")
+    
+    now = datetime.utcnow()
+    boost = {
+        'trainerId': user_id,
+        'boostType': boost_type,
+        'priceCents': price_cents,
+        'startDate': now,
+        'endDate': now + timedelta(days=duration_days),
+        'isActive': True,
+        'isFreeBoost': False,
+        'createdAt': now
+    }
+    
+    result = await db.boosts.insert_one(boost)
+    boost['id'] = str(result.inserted_id)
+    
+    return serialize_doc(boost)
+
+
+# ============================================================================
+# ADMIN ENDPOINTS
+# ============================================================================
+
+async def require_admin(current_user: dict = Depends(get_current_user)):
+    """Dependency to ensure user is admin"""
+    if not current_user.get('isAdmin', False) and UserRole.ADMIN not in current_user.get('roles', []):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return current_user
+
+@api_router.get("/admin/dashboard")
+async def get_admin_dashboard(admin_user: dict = Depends(require_admin)):
+    """Get admin dashboard statistics"""
+    
+    # Count users
+    total_users = await db.users.count_documents({})
+    total_trainers = await db.users.count_documents({'roles': {'$in': ['trainer']}})
+    total_trainees = await db.users.count_documents({'roles': {'$in': ['trainee']}})
+    
+    # Count sessions
+    total_sessions = await db.sessions.count_documents({})
+    completed_sessions = await db.sessions.count_documents({'status': SessionStatus.COMPLETED})
+    
+    # Calculate revenue (from completed sessions)
+    sessions = await db.sessions.find({'status': SessionStatus.COMPLETED}).to_list(None)
+    total_revenue = sum(s.get('finalSessionPriceCents', 0) for s in sessions)
+    platform_revenue = int(total_revenue * PricingRules.PLATFORM_REVENUE_PERCENT / 100)
+    trainer_payouts = total_revenue - platform_revenue
+    
+    # Count memberships and boosts
+    active_memberships = await db.memberships.count_documents({'status': MembershipStatus.ACTIVE})
+    active_boosts = await db.boosts.count_documents({'isActive': True, 'endDate': {'$gte': datetime.utcnow()}})
+    
+    # Pending verifications
+    pending_verifications = await db.trainer_profiles.count_documents({
+        'verificationStatus': VerificationStatus.PENDING
+    })
+    
+    return {
+        "totalUsers": total_users,
+        "totalTrainers": total_trainers,
+        "totalTrainees": total_trainees,
+        "totalSessions": total_sessions,
+        "completedSessions": completed_sessions,
+        "totalRevenueCents": total_revenue,
+        "totalRevenueDollars": total_revenue / 100,
+        "platformRevenueCents": platform_revenue,
+        "platformRevenueDollars": platform_revenue / 100,
+        "trainerPayoutsCents": trainer_payouts,
+        "trainerPayoutsDollars": trainer_payouts / 100,
+        "activeMemberships": active_memberships,
+        "activeBoosts": active_boosts,
+        "pendingVerifications": pending_verifications
+    }
+
+@api_router.get("/admin/users")
+async def admin_get_users(
+    skip: int = 0,
+    limit: int = 50,
+    role: Optional[str] = None,
+    admin_user: dict = Depends(require_admin)
+):
+    """Get all users for admin"""
+    query = {}
+    if role:
+        query['roles'] = {'$in': [role]}
+    
+    users = await db.users.find(query).skip(skip).limit(limit).to_list(limit)
+    total = await db.users.count_documents(query)
+    
+    return {
+        "users": [serialize_doc(u) for u in users],
+        "total": total,
+        "skip": skip,
+        "limit": limit
+    }
+
+@api_router.get("/admin/users/{user_id}")
+async def admin_get_user_detail(user_id: str, admin_user: dict = Depends(require_admin)):
+    """Get detailed user information for admin"""
+    user = await db.users.find_one({'_id': ObjectId(user_id)})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get profile
+    trainer_profile = await db.trainer_profiles.find_one({'userId': user_id})
+    trainee_profile = await db.trainee_profiles.find_one({'userId': user_id})
+    
+    # Get sessions
+    sessions = await db.sessions.find({
+        '$or': [{'traineeId': user_id}, {'trainerId': user_id}]
+    }).sort('createdAt', -1).limit(20).to_list(20)
+    
+    # Get transactions
+    transactions = await db.transactions.find({
+        'userId': user_id
+    }).sort('createdAt', -1).limit(20).to_list(20)
+    
+    # Get achievements
+    achievements = await db.achievements.find_one({'userId': user_id})
+    
+    return {
+        "user": serialize_doc(user),
+        "trainerProfile": serialize_doc(trainer_profile) if trainer_profile else None,
+        "traineeProfile": serialize_doc(trainee_profile) if trainee_profile else None,
+        "recentSessions": [serialize_doc(s) for s in sessions],
+        "recentTransactions": [serialize_doc(t) for t in transactions],
+        "achievements": serialize_doc(achievements) if achievements else None
+    }
+
+@api_router.put("/admin/users/{user_id}")
+async def admin_update_user(
+    user_id: str,
+    updates: dict,
+    admin_user: dict = Depends(require_admin)
+):
+    """Update user details (admin only)"""
+    # Don't allow changing password directly
+    updates.pop('password', None)
+    updates.pop('passwordHash', None)
+    updates['updatedAt'] = datetime.utcnow()
+    updates['updatedBy'] = str(admin_user['_id'])
+    
+    result = await db.users.update_one(
+        {'_id': ObjectId(user_id)},
+        {'$set': updates}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {"success": True, "message": "User updated"}
+
+@api_router.get("/admin/sessions")
+async def admin_get_sessions(
+    skip: int = 0,
+    limit: int = 50,
+    status: Optional[str] = None,
+    admin_user: dict = Depends(require_admin)
+):
+    """Get all sessions for admin"""
+    query = {}
+    if status:
+        query['status'] = status
+    
+    sessions = await db.sessions.find(query).sort('createdAt', -1).skip(skip).limit(limit).to_list(limit)
+    total = await db.sessions.count_documents(query)
+    
+    return {
+        "sessions": [serialize_doc(s) for s in sessions],
+        "total": total,
+        "skip": skip,
+        "limit": limit
+    }
+
+@api_router.get("/admin/transactions")
+async def admin_get_transactions(
+    skip: int = 0,
+    limit: int = 50,
+    transaction_type: Optional[str] = None,
+    admin_user: dict = Depends(require_admin)
+):
+    """Get all transactions for admin"""
+    query = {}
+    if transaction_type:
+        query['transactionType'] = transaction_type
+    
+    transactions = await db.transactions.find(query).sort('createdAt', -1).skip(skip).limit(limit).to_list(limit)
+    total = await db.transactions.count_documents(query)
+    
+    return {
+        "transactions": [serialize_doc(t) for t in transactions],
+        "total": total,
+        "skip": skip,
+        "limit": limit
+    }
+
+@api_router.get("/admin/verifications/pending")
+async def admin_get_pending_verifications(admin_user: dict = Depends(require_admin)):
+    """Get all pending trainer verifications"""
+    pending = await db.trainer_profiles.find({
+        'verificationStatus': VerificationStatus.PENDING
+    }).to_list(None)
+    
+    # Get user names
+    result = []
+    for profile in pending:
+        user = await db.users.find_one({'_id': ObjectId(profile['userId'])})
+        result.append({
+            "profile": serialize_doc(profile),
+            "user": serialize_doc(user) if user else None
+        })
+    
+    return {"pendingVerifications": result, "count": len(result)}
+
+@api_router.post("/admin/verifications/{trainer_id}/approve")
+async def admin_approve_verification(
+    trainer_id: str,
+    admin_user: dict = Depends(require_admin)
+):
+    """Approve trainer verification"""
+    result = await db.trainer_profiles.update_one(
+        {'userId': trainer_id},
+        {
+            '$set': {
+                'verificationStatus': VerificationStatus.VERIFIED,
+                'isVerified': True,
+                'canGoLive': True,
+                'verifiedAt': datetime.utcnow(),
+                'verifiedBy': str(admin_user['_id'])
+            }
+        }
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Trainer profile not found")
+    
+    return {"success": True, "message": "Trainer verification approved"}
+
+@api_router.post("/admin/verifications/{trainer_id}/reject")
+async def admin_reject_verification(
+    trainer_id: str,
+    reason: str = "Verification requirements not met",
+    admin_user: dict = Depends(require_admin)
+):
+    """Reject trainer verification"""
+    result = await db.trainer_profiles.update_one(
+        {'userId': trainer_id},
+        {
+            '$set': {
+                'verificationStatus': VerificationStatus.REJECTED,
+                'isVerified': False,
+                'canGoLive': False,
+                'rejectionReason': reason,
+                'rejectedAt': datetime.utcnow(),
+                'rejectedBy': str(admin_user['_id'])
+            }
+        }
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Trainer profile not found")
+    
+    return {"success": True, "message": "Trainer verification rejected"}
+
+@api_router.get("/admin/trainer-payout-info/{trainer_id}")
+async def admin_get_trainer_payout_info(
+    trainer_id: str,
+    admin_user: dict = Depends(require_admin)
+):
+    """Get trainer's payout information for admin to process payment"""
+    payout_info = await db.trainer_payout_info.find_one({'trainerId': trainer_id})
+    if not payout_info:
+        return {"hasPayoutInfo": False, "payoutInfo": None}
+    
+    return {"hasPayoutInfo": True, "payoutInfo": serialize_doc(payout_info)}
+
+@api_router.post("/admin/process-payout")
+async def admin_process_payout(
+    trainer_id: str,
+    amount_cents: int,
+    payment_method: str,
+    notes: Optional[str] = None,
+    admin_user: dict = Depends(require_admin)
+):
+    """Record a payout to trainer (manual process via CashApp/Zelle/etc)"""
+    payout = {
+        'trainerId': trainer_id,
+        'amountCents': amount_cents,
+        'paymentMethod': payment_method,
+        'notes': notes,
+        'processedBy': str(admin_user['_id']),
+        'processedAt': datetime.utcnow(),
+        'createdAt': datetime.utcnow()
+    }
+    
+    result = await db.trainer_payouts.insert_one(payout)
+    payout['id'] = str(result.inserted_id)
+    
+    return {"success": True, "payout": serialize_doc(payout)}
+
+
+# ============================================================================
 # ROOT ROUTES
 # ============================================================================
 
