@@ -2639,11 +2639,11 @@ async def get_trainer_earnings(current_user: dict = Depends(get_current_user)):
     user_id = str(current_user['_id'])
     now = datetime.utcnow()
 
-    # Get all completed sessions
-    completed_sessions = await db.sessions.find({
-        'trainerId': user_id,
-        'status': SessionStatus.COMPLETED
-    }).sort('createdAt', -1).to_list(1000)
+    # Get all completed sessions with projection (only needed fields)
+    completed_sessions = await db.sessions.find(
+        {'trainerId': user_id, 'status': SessionStatus.COMPLETED},
+        {'trainerEarningsCents': 1, 'createdAt': 1, 'sessionType': 1, 'durationMinutes': 1, 'traineeId': 1}
+    ).sort('createdAt', -1).to_list(1000)
 
     total_earnings = sum(s.get('trainerEarningsCents', 0) for s in completed_sessions)
 
