@@ -2587,33 +2587,45 @@ async def create_rating(rating: RatingCreate, current_user: dict = Depends(get_c
     result = await db.ratings.insert_one(rating_doc)
     rating_doc['_id'] = result.inserted_id
     
-    # Update trainer average rating
-    all_ratings = await db.ratings.find({'trainerId': rating.trainerId}).to_list(1000)
-    if all_ratings:
-        avg_rating = sum(r['rating'] for r in all_ratings) / len(all_ratings)
+    # Update trainer average rating using aggregation
+    avg_result = await db.ratings.aggregate([
+        {'$match': {'trainerId': rating.trainerId}},
+        {'$group': {'_id': None, 'avg': {'$avg': '$rating'}, 'count': {'$sum': 1}}}
+    ]).to_list(1)
+    if avg_result:
         await db.trainer_profiles.update_one(
             {'userId': rating.trainerId},
-            {'$set': {'averageRating': round(avg_rating, 2)}}
+            {'$set': {
+                'averageRating': round(avg_result[0]['avg'], 2),
+                'totalReviews': avg_result[0]['count']
+            }}
         )
     
     return RatingResponse(**serialize_doc(rating_doc))
 
 @api_router.get("/trainers/{trainer_id}/ratings")
 async def get_trainer_ratings(trainer_id: str):
-    """Get all ratings for a trainer with reviewer names"""
-    ratings = await db.ratings.find({'trainerId': trainer_id}).sort('createdAt', -1).to_list(100)
+    """Get all ratings for a trainer with reviewer names via aggregation"""
+    pipeline = [
+        {'$match': {'trainerId': trainer_id}},
+        {'$sort': {'createdAt': -1}},
+        {'$limit': 100},
+        {'$addFields': {'traineeObjId': {'$toObjectId': '$traineeId'}}},
+        {'$lookup': {
+            'from': 'users',
+            'localField': 'traineeObjId',
+            'foreignField': '_id',
+            'as': 'traineeUser'
+        }},
+        {'$addFields': {
+            'traineeName': {'$ifNull': [{'$arrayElemAt': ['$traineeUser.fullName', 0]}, 'Anonymous']}
+        }},
+        {'$project': {'traineeUser': 0, 'traineeObjId': 0}}
+    ]
+    ratings = await db.ratings.aggregate(pipeline).to_list(100)
     results = []
     for r in ratings:
         doc = serialize_doc(r)
-        # Look up trainee name
-        if r.get('traineeId'):
-            try:
-                trainee = await db.users.find_one({'_id': ObjectId(r['traineeId'])})
-                doc['traineeName'] = trainee.get('fullName', 'Anonymous') if trainee else 'Anonymous'
-            except Exception:
-                doc['traineeName'] = 'Anonymous'
-        else:
-            doc['traineeName'] = 'Anonymous'
         results.append(RatingResponse(**doc))
     return results
 
