@@ -171,7 +171,24 @@ export default function LoginScreen() {
     try {
       await login(email.trim().toLowerCase(), password);
       setLoginSuccess(true);
-      // Navigate immediately without popup
+      
+      // Check if user is admin after login
+      const token = await AsyncStorage.getItem('auth_token');
+      if (token) {
+        try {
+          const response = await axios.get(
+            `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/auth/me`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          if (response.data.isAdmin || response.data.roles?.includes('admin')) {
+            router.replace('/admin/dashboard');
+            return;
+          }
+        } catch (e) {
+          console.log('Error checking admin status:', e);
+        }
+      }
+      // Navigate immediately without popup for regular users
     } catch (error: any) {
       showAlert({
         title: 'Login Failed',
