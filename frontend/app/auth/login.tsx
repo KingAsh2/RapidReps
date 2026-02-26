@@ -525,7 +525,7 @@ const styles = StyleSheet.create({
   signupLink: {
     fontSize: 14,
     fontWeight: '900',
-    color: Colors.warning,
+    color: Colors.white,
     textDecorationLine: 'underline',
   },
 });
