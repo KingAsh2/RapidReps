@@ -51,12 +51,22 @@ Build a production-ready mobile app that functions like "Uber" for personal trai
 - [x] Earnings (full dashboard)
 - [x] Messages (redirect to shared messages)
 
+#### Messaging System
+- [x] Backend: Conversations, messages CRUD with participant validation
+- [x] Frontend: Conversation list and chat screens (already existed, verified working)
+
+#### Rating & Review System
+- [x] Backend: Create ratings with duplicate prevention, get ratings with reviewer names
+- [x] Frontend: Post-session review screen with star rating (session-complete.tsx)
+- [x] Frontend: Trainer detail page shows reviews with reviewer names
+
 #### UI/UX Fixes
 - [x] Logo overlap on welcome page (solid backing)
 - [x] Logout flow (→ welcome screen)
 - [x] Profile photo saving (`_id` → `id` mismatch)
 - [x] Admin dashboard auth token key
 - [x] Post-signup verification modal for trainers
+- [x] Intro video glitch (crossfade transition on video end/skip)
 
 ### Known Issues
 - Stripe Secret Key invalid (both `sk_` and `mk_` variants provided are rejected by Stripe)- Web preview non-functional (Expo environment limitation)
