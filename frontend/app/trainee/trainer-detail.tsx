@@ -531,6 +531,40 @@ export default function TrainerDetailScreen() {
                     </Text>
                   </TouchableOpacity>
                 )}
+                {/* Trainee's Home Option */}
+                {(trainer as any).offersInHome && (
+                  <TouchableOpacity
+                    onPress={() => {
+                      if (!traineeHomeConsented) {
+                        setShowTraineeHomeConsent(true);
+                      } else {
+                        setSelectedSessionType('trainee_home');
+                      }
+                    }}
+                    style={[
+                      styles.sessionTypeChip,
+                      selectedSessionType === 'trainee_home' && styles.sessionTypeChipSelected,
+                    ]}
+                  >
+                    <Ionicons 
+                      name="location" 
+                      size={18} 
+                      color={selectedSessionType === 'trainee_home' ? COLORS.white : COLORS.orange} 
+                    />
+                    <Text style={[
+                      styles.sessionTypeText,
+                      selectedSessionType === 'trainee_home' && styles.sessionTypeTextSelected
+                    ]}>
+                      Your Home
+                    </Text>
+                    <Text style={[
+                      styles.sessionTypePrice,
+                      selectedSessionType === 'trainee_home' && styles.sessionTypePriceSelected
+                    ]}>
+                      from $60
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
 
               {/* Safety PIN Notice for In-Home */}
