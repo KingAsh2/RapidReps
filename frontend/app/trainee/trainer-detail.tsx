@@ -10,6 +10,7 @@ import {
   Animated,
   Image,
   Dimensions,
+  Modal,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { trainerAPI, traineeAPI, chatAPI, safetyAPI } from '../../src/services/api';
