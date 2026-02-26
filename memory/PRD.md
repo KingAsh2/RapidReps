@@ -7,7 +7,7 @@ Build a production-ready mobile app that functions like "Uber" for personal trai
 ### Architecture
 - **Frontend**: React Native (Expo) with Expo Router
 - **Backend**: FastAPI (Python) with MongoDB
-- **Payments**: Stripe (requires valid `sk_live_` or `sk_test_` key — current key is invalid)
+- **Payments**: Stripe (LIVE key configured and working)
 - **Maps**: Google Maps API
 - **Build**: EAS (Expo Application Services)
 
@@ -59,8 +59,7 @@ Build a production-ready mobile app that functions like "Uber" for personal trai
 - [x] Post-signup verification modal for trainers
 
 ### Known Issues
-- Stripe Secret Key invalid (both `sk_` and `mk_` variants provided are rejected by Stripe)
-- Web preview non-functional (Expo environment limitation)
+- Stripe Secret Key invalid (both `sk_` and `mk_` variants provided are rejected by Stripe)- Web preview non-functional (Expo environment limitation)
 - Intro video glitch on app open (P3, never investigated)
 
 ### Backend Test Results: 59/59 PASSED
