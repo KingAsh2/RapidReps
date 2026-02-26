@@ -547,7 +547,7 @@ export default function TraineeOnboardingScreen() {
           </View>
         </TouchableOpacity>
       </Modal>
-    </View>
+    </ImageBackground>
   );
 }
 
