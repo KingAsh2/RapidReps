@@ -741,7 +741,7 @@ export default function TrainerDetailScreen() {
                         ))}
                       </View>
                       <Text style={styles.reviewDate}>
-                        {new Date(review.createdAt).toLocaleDateString()}
+                        {review.traineeName || 'Anonymous'} | {new Date(review.createdAt).toLocaleDateString()}
                       </Text>
                     </View>
                     {review.reviewText && (
