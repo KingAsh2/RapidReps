@@ -13,6 +13,8 @@ import {
   Platform,
   Animated,
   Dimensions,
+  ImageBackground,
+  Linking,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
@@ -26,6 +28,9 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 
 const { width } = Dimensions.get('window');
+
+// Background image
+const backgroundImage = require('../../assets/images/bg-box-jumps.png');
 
 // Brand colors
 const COLORS = {
