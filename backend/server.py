@@ -3788,6 +3788,14 @@ async def purchase_boost(
     return serialize_doc(boost)
 
 
+@api_router.get("/boosts/my-boosts")
+async def get_my_boosts(current_user: dict = Depends(get_current_user)):
+    """Get trainer's active and past boosts"""
+    user_id = str(current_user['_id'])
+    boosts = await db.boosts.find({'trainerId': user_id}).sort('createdAt', -1).to_list(50)
+    return {'boosts': [serialize_doc(b) for b in boosts]}
+
+
 # ============================================================================
 # ADMIN ENDPOINTS
 # ============================================================================
