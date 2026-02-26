@@ -557,37 +557,48 @@ export default function TrainerOnboardingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
   },
   header: {
-    paddingTop: 60,
-    paddingHorizontal: 24,
-    paddingBottom: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  headerBackButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: Colors.white,
-    marginBottom: 4,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
     color: Colors.white,
     opacity: 0.9,
-    marginBottom: 16,
+    textAlign: 'center',
   },
   progressBar: {
     flexDirection: 'row',
     gap: 8,
+    paddingHorizontal: 24,
+    marginBottom: 16,
   },
   progressDot: {
     flex: 1,
     height: 4,
-    backgroundColor: Colors.white,
+    backgroundColor: 'rgba(255,255,255,0.3)',
     borderRadius: 2,
   },
   progressDotActive: {
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.white,
   },
   scrollView: {
     flex: 1,
