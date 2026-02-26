@@ -182,15 +182,24 @@ export default function LoginScreen() {
             `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/auth/me`,
             { headers: { Authorization: `Bearer ${token}` } }
           );
+          // Admin redirect
           if (response.data.isAdmin || response.data.roles?.includes('admin')) {
             router.replace('/admin/dashboard');
             return;
           }
+          // Trainer redirect
+          if (response.data.roles?.includes('trainer')) {
+            router.replace('/trainer/(tabs)/home');
+            return;
+          }
+          // Trainee redirect (default)
+          router.replace('/trainee/(tabs)/home');
         } catch (e) {
-          console.log('Error checking admin status:', e);
+          console.log('Error checking user role:', e);
+          // Default to trainee on error
+          router.replace('/trainee/(tabs)/home');
         }
       }
-      // Navigate immediately without popup for regular users
     } catch (error: any) {
       showAlert({
         title: 'Login Failed',
