@@ -5,15 +5,17 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  RefreshControl,
   ImageBackground,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
-import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 const COLORS = {
   orange: '#FF7F00',
@@ -21,16 +23,21 @@ const COLORS = {
   navy: '#1a2a5e',
   white: '#FFFFFF',
   gray: '#8892b0',
+  grayLight: '#F5F6F8',
   success: '#00C853',
+  warning: '#FFB300',
+  error: '#FF4757',
 };
 
-const backgroundImage = require('../../../assets/images/bg-spin-class.png');
+const backgroundImage = require('../../../assets/images/bg-box-jumps.png');
+
+type TabFilter = 'upcoming' | 'completed' | 'cancelled';
 
 export default function TrainerSessionsScreen() {
-  const router = useRouter();
-  const [sessions, setSessions] = useState([]);
+  const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<TabFilter>('upcoming');
 
   useEffect(() => {
     loadSessions();
@@ -39,51 +46,135 @@ export default function TrainerSessionsScreen() {
   const loadSessions = async () => {
     try {
       const token = await AsyncStorage.getItem('auth_token');
-      const response = await axios.get(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/sessions/trainer`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setSessions(response.data.sessions || []);
-    } catch (error) {
-      console.error('Error loading sessions:', error);
+      const res = await axios.get(`${API_URL}/api/sessions/trainer`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSessions(res.data || []);
+    } catch (err) {
+      console.error('Load sessions error:', err);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
 
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadSessions();
+  };
+
+  const filteredSessions = sessions.filter((s) => {
+    if (activeFilter === 'upcoming') return ['confirmed', 'pending', 'in_progress'].includes(s.status);
+    if (activeFilter === 'completed') return s.status === 'completed';
+    return ['cancelled', 'no_show'].includes(s.status);
+  });
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return COLORS.success;
+      case 'confirmed': return COLORS.teal;
+      case 'pending': return COLORS.warning;
+      case 'in_progress': return COLORS.orange;
+      default: return COLORS.error;
+    }
+  };
+
+  const getSessionIcon = (type: string) => {
+    switch (type) {
+      case 'virtual': return 'videocam';
+      case 'outdoor': return 'sunny';
+      case 'in_home': return 'home';
+      case 'trainee_home': return 'location';
+      default: return 'barbell';
+    }
+  };
+
   return (
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
-      <LinearGradient
-        colors={['rgba(247, 147, 30, 0.92)', 'rgba(255, 127, 0, 0.88)']}
-        style={StyleSheet.absoluteFill}
-      />
-      
+      <LinearGradient colors={['rgba(26, 42, 94, 0.96)', 'rgba(26, 42, 94, 0.92)']} style={StyleSheet.absoluteFill} />
+
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>My Sessions</Text>
+          <Text style={styles.headerSubtitle}>{sessions.length} total sessions</Text>
+        </View>
+
+        {/* Filter Tabs */}
+        <View style={styles.filterBar}>
+          {(['upcoming', 'completed', 'cancelled'] as TabFilter[]).map((f) => (
+            <TouchableOpacity
+              key={f}
+              style={[styles.filterTab, activeFilter === f && styles.filterTabActive]}
+              onPress={() => setActiveFilter(f)}
+              data-testid={`filter-${f}`}
+            >
+              <Text style={[styles.filterTabText, activeFilter === f && styles.filterTabTextActive]}>
+                {f.charAt(0).toUpperCase() + f.slice(1)}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
         <ScrollView
           style={styles.content}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={loadSessions} />
-          }
+          showsVerticalScrollIndicator={false}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.teal} />}
         >
-          {sessions.length === 0 ? (
+          {loading ? (
+            <View style={styles.loadingBox}>
+              <ActivityIndicator size="large" color={COLORS.teal} />
+            </View>
+          ) : filteredSessions.length === 0 ? (
             <View style={styles.emptyState}>
-              <Ionicons name="calendar-outline" size={64} color="rgba(255,255,255,0.5)" />
-              <Text style={styles.emptyTitle}>No Sessions Yet</Text>
-              <Text style={styles.emptyText}>Your upcoming and past sessions will appear here.</Text>
+              <Ionicons name="calendar-outline" size={48} color="rgba(255,255,255,0.3)" />
+              <Text style={styles.emptyTitle}>No {activeFilter} sessions</Text>
+              <Text style={styles.emptySubtitle}>
+                {activeFilter === 'upcoming' ? 'New sessions will appear here when clients book you.' : `Your ${activeFilter} sessions will show here.`}
+              </Text>
             </View>
           ) : (
-            sessions.map((session: any, index: number) => (
-              <View key={index} style={styles.sessionCard}>
-                <Text style={styles.sessionType}>{session.sessionType}</Text>
-                <Text style={styles.sessionDate}>{session.scheduledDate}</Text>
+            filteredSessions.map((session, idx) => (
+              <View key={session.id || idx} style={styles.sessionCard} data-testid={`session-card-${idx}`}>
+                <View style={styles.sessionHeader}>
+                  <View style={[styles.sessionIconBg, { backgroundColor: `${getStatusColor(session.status)}20` }]}>
+                    <Ionicons name={getSessionIcon(session.sessionType) as any} size={20} color={getStatusColor(session.status)} />
+                  </View>
+                  <View style={styles.sessionInfo}>
+                    <Text style={styles.sessionType}>
+                      {(session.sessionType || 'Training').replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                    </Text>
+                    <Text style={styles.sessionDate}>
+                      {session.scheduledDate ? new Date(session.scheduledDate).toLocaleDateString() : 'TBD'}
+                      {session.scheduledTime ? ` at ${session.scheduledTime}` : ''}
+                    </Text>
+                  </View>
+                  <View style={[styles.statusBadge, { backgroundColor: `${getStatusColor(session.status)}20` }]}>
+                    <Text style={[styles.statusText, { color: getStatusColor(session.status) }]}>
+                      {session.status?.replace('_', ' ').toUpperCase()}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.sessionDetails}>
+                  {session.durationMinutes && (
+                    <View style={styles.detailChip}>
+                      <Ionicons name="time-outline" size={14} color={COLORS.gray} />
+                      <Text style={styles.detailChipText}>{session.durationMinutes}min</Text>
+                    </View>
+                  )}
+                  {session.trainerEarningsCents > 0 && (
+                    <View style={styles.detailChip}>
+                      <Ionicons name="cash-outline" size={14} color={COLORS.success} />
+                      <Text style={[styles.detailChipText, { color: COLORS.success }]}>
+                        +${(session.trainerEarningsCents / 100).toFixed(2)}
+                      </Text>
+                    </View>
+                  )}
+                </View>
               </View>
             ))
           )}
+
           <View style={{ height: 100 }} />
         </ScrollView>
       </SafeAreaView>
@@ -94,46 +185,32 @@ export default function TrainerSessionsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   safeArea: { flex: 1 },
-  header: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '900',
-    color: COLORS.white,
-  },
+  header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 4 },
+  headerTitle: { fontSize: 28, fontWeight: '900', color: COLORS.white },
+  headerSubtitle: { fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
+
+  filterBar: { flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 12, gap: 8 },
+  filterTab: { flex: 1, paddingVertical: 10, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center' },
+  filterTabActive: { backgroundColor: COLORS.teal },
+  filterTabText: { fontSize: 13, fontWeight: '700', color: 'rgba(255,255,255,0.5)' },
+  filterTabTextActive: { color: COLORS.white },
+
   content: { flex: 1, paddingHorizontal: 16 },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: 60,
-  },
-  emptyTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: COLORS.white,
-    marginTop: 16,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: 'rgba(255,255,255,0.7)',
-    textAlign: 'center',
-    marginTop: 8,
-  },
-  sessionCard: {
-    backgroundColor: 'rgba(255,255,255,0.95)',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-  },
-  sessionType: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: COLORS.navy,
-  },
-  sessionDate: {
-    fontSize: 14,
-    color: COLORS.gray,
-    marginTop: 4,
-  },
+  loadingBox: { paddingTop: 60, alignItems: 'center' },
+  emptyState: { alignItems: 'center', paddingTop: 60, gap: 8 },
+  emptyTitle: { fontSize: 18, fontWeight: '700', color: COLORS.white },
+  emptySubtitle: { fontSize: 13, color: 'rgba(255,255,255,0.4)', textAlign: 'center', lineHeight: 20 },
+
+  sessionCard: { backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 16, padding: 16, marginBottom: 10 },
+  sessionHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  sessionIconBg: { width: 42, height: 42, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+  sessionInfo: { flex: 1 },
+  sessionType: { fontSize: 15, fontWeight: '700', color: COLORS.white },
+  sessionDate: { fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
+  statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  statusText: { fontSize: 10, fontWeight: '700' },
+
+  sessionDetails: { flexDirection: 'row', gap: 10, marginTop: 12 },
+  detailChip: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(255,255,255,0.06)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
+  detailChipText: { fontSize: 12, fontWeight: '600', color: COLORS.gray },
 });
