@@ -35,12 +35,14 @@ export default function WelcomeScreen() {
   const router = useRouter();
   const [isReady, setIsReady] = useState(false);
   const [showVideo, setShowVideo] = useState(true);
+  const [videoVisible, setVideoVisible] = useState(true);
   const videoRef = useRef<Video>(null);
   
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
   const logoScale = useRef(new Animated.Value(0.8)).current;
+  const videoFadeOut = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     const timer = setTimeout(() => setIsReady(true), 100);
