@@ -14,15 +14,15 @@ import {
   Dimensions,
   AppState,
 } from 'react-native';
-import { useAuth } from '../../src/contexts/AuthContext';
-import { trainerAPI } from '../../src/services/api';
-import { Session, SessionStatus } from '../../src/types';
+import { useAuth } from '../../../src/contexts/AuthContext';
+import { trainerAPI } from '../../../src/services/api';
+import { Session, SessionStatus } from '../../../src/types';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, Stack } from 'expo-router';
 import * as Location from 'expo-location';
-import { useAlert } from '../../src/contexts/AlertContext';
+import { useAlert } from '../../../src/contexts/AlertContext';
 
 const { width } = Dimensions.get('window');
 
