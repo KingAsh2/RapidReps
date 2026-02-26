@@ -690,6 +690,10 @@ def serialize_doc(doc: dict) -> dict:
     if doc and '_id' in doc:
         doc['id'] = str(doc['_id'])
         del doc['_id']
+    # Convert any datetime fields that might be stored inconsistently
+    for key, val in doc.items():
+        if isinstance(val, datetime) and key in ('scheduledDate',):
+            doc[key] = val.isoformat()
     return doc
 
 def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
