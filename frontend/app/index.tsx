@@ -91,11 +91,25 @@ export default function WelcomeScreen() {
   };
 
   const handleVideoEnd = () => {
-    setShowVideo(false);
+    Animated.timing(videoFadeOut, {
+      toValue: 0,
+      duration: 400,
+      useNativeDriver: true,
+    }).start(() => {
+      setShowVideo(false);
+      setVideoVisible(false);
+    });
   };
 
   const handleSkipVideo = () => {
-    setShowVideo(false);
+    Animated.timing(videoFadeOut, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      setShowVideo(false);
+      setVideoVisible(false);
+    });
   };
 
   if (!isReady) {
