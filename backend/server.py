@@ -435,6 +435,7 @@ class RatingResponse(BaseModel):
     trainerId: str
     rating: int
     reviewText: Optional[str] = None
+    traineeName: Optional[str] = None
     createdAt: datetime
 
 # Virtual Session Models
