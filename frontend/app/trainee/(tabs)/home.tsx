@@ -1237,6 +1237,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    marginHorizontal: -20,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 12,
   },
   sectionTitle: {
     fontSize: 18,
