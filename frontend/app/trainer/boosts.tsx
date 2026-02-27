@@ -67,15 +67,36 @@ export default function BoostsScreen() {
     setPurchasing(true);
     try {
       const token = await AsyncStorage.getItem('auth_token');
-      await axios.post(
+      const option = BOOST_OPTIONS.find(o => o.id === selectedBoost);
+      
+      // Step 1: Create payment intent + pending boost
+      const res = await axios.post(
         `${API_URL}/api/boosts/purchase?boost_type=${selectedBoost}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      const option = BOOST_OPTIONS.find(o => o.id === selectedBoost);
+      
+      const { boostId, isFreeBoost, paymentIntentId, clientSecret } = res.data;
+      
+      if (isFreeBoost) {
+        Alert.alert('Free Boost Activated!', `Your membership free boost is now active for ${option?.duration}.`);
+        loadBoosts();
+        return;
+      }
+      
+      // Step 2: In production, present Stripe PaymentSheet using clientSecret
+      // TODO: Integrate @stripe/stripe-react-native PaymentSheet
+      
+      // Step 3: Confirm payment after Stripe succeeds
+      await axios.post(
+        `${API_URL}/api/boosts/${boostId}/confirm-payment`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
       Alert.alert(
         'Boost Activated!',
-        `Your ${option?.label} is now active for ${option?.duration}. Your profile will appear at the top of search results.`
+        `Your ${option?.label} is now active for ${option?.duration}.\n\nPayment ID: ${paymentIntentId}`
       );
       loadBoosts();
     } catch (err: any) {
