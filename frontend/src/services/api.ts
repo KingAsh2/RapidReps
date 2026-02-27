@@ -476,5 +476,9 @@ export const streaksAPI = {
     const response = await api.get('/streaks/me');
     return response.data;
   },
+  getLeaderboard: async (): Promise<any> => {
+    const response = await api.get('/leaderboard/weekly');
+    return response.data;
+  },
 };
 
