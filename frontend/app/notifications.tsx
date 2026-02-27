@@ -126,7 +126,10 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.border,
   },
   headerTitle: { fontSize: 20, fontWeight: '700', color: Colors.navy },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  markReadBtn: {},
   markRead: { fontSize: 13, fontWeight: '600', color: Colors.primary },
+  settingsBtn: { padding: 4 },
   listContent: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 40 },
   notifCard: {
     flexDirection: 'row',
