@@ -340,16 +340,19 @@ class TestAdminRegression:
         assert response.status_code == 200, f"Admin sessions failed: {response.status_code}"
         
         data = response.json()
-        assert isinstance(data, list), "Admin sessions should return a list"
+        # API returns object with 'sessions' list
+        assert 'sessions' in data, "Expected 'sessions' key in response"
+        sessions = data['sessions']
+        assert isinstance(sessions, list), "sessions should be a list"
         
-        if len(data) > 0:
-            session = data[0]
+        if len(sessions) > 0:
+            session = sessions[0]
             # Verify enriched fields exist (may be null but key should exist)
             enriched_fields = ['trainerName', 'traineeName']
             for field in enriched_fields:
                 assert field in session, f"Missing enriched field '{field}'"
         
-        print(f"PASS: Admin sessions endpoint works. Count={len(data)}")
+        print(f"PASS: Admin sessions endpoint works. Count={len(sessions)}")
     
     def test_admin_message(self, api_client, admin_token, trainee_token):
         """Regression: POST /api/admin/message works"""
@@ -361,12 +364,12 @@ class TestAdminRegression:
         assert me_response.status_code == 200
         trainee_id = me_response.json()['id']
         
-        # Send admin message
+        # Send admin message - API uses receiverId not userId
         response = api_client.post(
             f"{BASE_URL}/api/admin/message",
             headers={"Authorization": f"Bearer {admin_token}"},
             json={
-                "userId": trainee_id,
+                "receiverId": trainee_id,
                 "content": "TEST_admin_regression_message"
             }
         )
