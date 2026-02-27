@@ -545,6 +545,18 @@ export default function TraineeProfileScreen() {
 
                 <TouchableOpacity 
                   style={styles.actionItem}
+                  onPress={() => router.push('/trainee/leaderboard')}
+                  data-testid="leaderboard-link"
+                >
+                  <View style={[styles.actionIconBg, { backgroundColor: 'rgba(255, 127, 0, 0.2)' }]}>
+                    <Ionicons name="podium" size={22} color="#FF7F00" />
+                  </View>
+                  <Text style={styles.actionText}>Leaderboard</Text>
+                  <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.5)" />
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={styles.actionItem}
                   onPress={() => router.push('/trainee/(tabs)/saved')}
                 >
                   <View style={[styles.actionIconBg, { backgroundColor: 'rgba(31, 184, 180, 0.2)' }]}>
