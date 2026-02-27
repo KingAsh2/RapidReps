@@ -2090,8 +2090,7 @@ async def create_session(session: SessionCreate, current_user: dict = Depends(ge
         'locationNameOrAddress': session.locationNameOrAddress,
         'traineeLatitude': session.traineeLatitude,
         'traineeLongitude': session.traineeLongitude,
-        'notes': session.notes,
-        'paymentIntentId': None,
+        'notes': sanitize_text(session.notes),
         'createdAt': datetime.utcnow(),
         'updatedAt': datetime.utcnow()
     }
