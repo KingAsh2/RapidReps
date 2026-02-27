@@ -5195,7 +5195,12 @@ async def mark_notifications_read(current_user: dict = Depends(get_current_user)
     return {"success": True}
 
 async def create_and_send_notification(user_id: str, title: str, body: str, notif_type: str, data: dict = None):
-    """Store notification in DB and send push"""
+    """Store notification in DB and send push — respects user notification preferences"""
+    # Check user's notification preferences
+    prefs = await db.notification_preferences.find_one({'userId': user_id})
+    if prefs and not prefs.get(notif_type, True):
+        return  # User has disabled this notification type
+
     notif = {
         'userId': user_id,
         'title': title,
@@ -5206,8 +5211,58 @@ async def create_and_send_notification(user_id: str, title: str, body: str, noti
         'createdAt': datetime.utcnow()
     }
     await db.notifications.insert_one(notif)
-    # Fire-and-forget push
-    asyncio.create_task(send_push_notification(user_id, title, body, data))
+
+    # Only send push if user hasn't disabled push entirely
+    if not prefs or prefs.get('pushEnabled', True):
+        asyncio.create_task(send_push_notification(user_id, title, body, data))
+
+# Default notification preference categories
+NOTIFICATION_TYPES = [
+    'session_requested', 'session_accepted', 'session_declined',
+    'session_ended', 'session_reminder', 'rate_reminder',
+    'payment_released', 'new_message', 'streak_warning', 'boost_expiring',
+]
+
+class NotificationPreferences(BaseModel):
+    pushEnabled: bool = True
+    session_requested: bool = True
+    session_accepted: bool = True
+    session_declined: bool = True
+    session_ended: bool = True
+    session_reminder: bool = True
+    rate_reminder: bool = True
+    payment_released: bool = True
+    new_message: bool = True
+    streak_warning: bool = True
+    boost_expiring: bool = True
+
+@api_router.get("/notification-preferences")
+async def get_notification_preferences(current_user: dict = Depends(get_current_user)):
+    """Get user's notification preferences"""
+    user_id = str(current_user['_id'])
+    prefs = await db.notification_preferences.find_one({'userId': user_id}, {'_id': 0})
+    if not prefs:
+        # Return defaults
+        return {k: True for k in ['pushEnabled'] + NOTIFICATION_TYPES}
+    prefs.pop('userId', None)
+    return prefs
+
+@api_router.put("/notification-preferences")
+async def update_notification_preferences(
+    prefs: NotificationPreferences,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update user's notification preferences"""
+    user_id = str(current_user['_id'])
+    prefs_dict = prefs.dict()
+    prefs_dict['userId'] = user_id
+    prefs_dict['updatedAt'] = datetime.utcnow()
+    await db.notification_preferences.update_one(
+        {'userId': user_id},
+        {'$set': prefs_dict},
+        upsert=True
+    )
+    return {"success": True, "message": "Notification preferences updated"}
 
 
 # ============================================================================
