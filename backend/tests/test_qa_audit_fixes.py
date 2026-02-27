@@ -255,13 +255,14 @@ class TestBoostStripePayment:
 
 
 # ============================================================================
-# M3: RATE LIMITING
+# M3: RATE LIMITING (run these LAST to avoid affecting other tests)
 # ============================================================================
 
-class TestRateLimiting:
-    """M3: Rate limiting on login (10/min), signup (5/min), payment (10/min)"""
+class TestZZRateLimiting:
+    """M3: Rate limiting on login (10/min), signup (5/min), payment (10/min)
+    NOTE: Class named ZZ to run last in pytest alphabetical order"""
     
-    def test_login_rate_limit_returns_429_after_10_requests(self, api_client):
+    def test_z1_login_rate_limit_returns_429_after_10_requests(self, api_client):
         """POST /api/auth/login - returns 429 after 10 rapid requests"""
         # Note: Rate limiting uses X-Forwarded-For, so all requests from same IP count
         # We need to send 11 requests rapidly
@@ -285,7 +286,7 @@ class TestRateLimiting:
         # At least one should be 429 if rate limiting is working
         assert rate_limited_count > 0, f"Expected at least one 429 response, got: {results}"
     
-    def test_signup_rate_limit_returns_429_after_5_requests(self, api_client):
+    def test_z2_signup_rate_limit_returns_429_after_5_requests(self, api_client):
         """POST /api/auth/signup - returns 429 after 5 rapid requests"""
         # Need to wait a minute for previous rate limits to reset, or use unique identifiers
         # Let's try with unique emails
