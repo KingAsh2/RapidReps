@@ -4171,6 +4171,306 @@ async def admin_process_payout(
     return {"success": True, "payout": serialize_doc(payout)}
 
 
+# --- Admin: Delete/Remove User ---
+@api_router.delete("/admin/users/{user_id}")
+async def admin_delete_user(user_id: str, admin_user: dict = Depends(require_admin)):
+    """Admin: Remove a user and all their associated data"""
+    user = await db.users.find_one({'_id': ObjectId(user_id)})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Prevent deleting yourself
+    if str(admin_user['_id']) == user_id:
+        raise HTTPException(status_code=400, detail="Cannot delete your own admin account")
+    
+    # Delete related data
+    await db.trainer_profiles.delete_many({'userId': user_id})
+    await db.trainee_profiles.delete_many({'userId': user_id})
+    await db.sessions.delete_many({'$or': [{'traineeId': user_id}, {'trainerId': user_id}]})
+    await db.ratings.delete_many({'$or': [{'traineeId': user_id}, {'trainerId': user_id}]})
+    await db.trainer_achievements.delete_many({'trainerId': user_id})
+    await db.trainee_achievements.delete_many({'traineeId': user_id})
+    await db.blocks.delete_many({'$or': [{'blockerUserId': user_id}, {'blockedUserId': user_id}]})
+    await db.reports.delete_many({'$or': [{'reporterUserId': user_id}, {'reportedUserId': user_id}]})
+    await db.transactions.delete_many({'userId': user_id})
+    await db.memberships.delete_many({'userId': user_id})
+    await db.boosts.delete_many({'trainerId': user_id})
+    await db.payout_requests.delete_many({'trainerId': user_id})
+    await db.trainer_payouts.delete_many({'trainerId': user_id})
+    
+    # Delete conversations & messages
+    convos = await db.conversations.find({'participants': user_id}).to_list(None)
+    for c in convos:
+        await db.messages.delete_many({'conversationId': str(c['_id'])})
+    await db.conversations.delete_many({'participants': user_id})
+    
+    # Delete the user
+    await db.users.delete_one({'_id': ObjectId(user_id)})
+    
+    return {"success": True, "message": f"User {user.get('fullName', '')} and all associated data removed"}
+
+
+# --- Admin: Refund a Session Payment ---
+class AdminRefundRequest(BaseModel):
+    sessionId: str
+    reason: Optional[str] = "Admin refund"
+
+@api_router.post("/admin/refund")
+async def admin_refund_payment(
+    refund_req: AdminRefundRequest,
+    admin_user: dict = Depends(require_admin)
+):
+    """Admin: Refund a session payment. Attempts Stripe refund if payment intent exists, otherwise records refund."""
+    try:
+        oid = ObjectId(refund_req.sessionId)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid session ID")
+    
+    session = await db.sessions.find_one({'_id': oid})
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    if session.get('refunded'):
+        raise HTTPException(status_code=400, detail="Session already refunded")
+    
+    amount_cents = session.get('finalSessionPriceCents', 0)
+    stripe_refund_id = None
+    refund_status = "completed"
+    
+    # Try Stripe refund if payment intent exists
+    payment_intent_id = session.get('paymentIntentId')
+    if payment_intent_id and not payment_intent_id.startswith('mock_'):
+        try:
+            refund = stripe.Refund.create(
+                payment_intent=payment_intent_id,
+                reason='requested_by_customer'
+            )
+            stripe_refund_id = refund.id
+        except Exception as e:
+            refund_status = "stripe_failed"
+            logger.error(f"Stripe refund failed: {e}")
+    
+    # Update session as refunded
+    await db.sessions.update_one(
+        {'_id': oid},
+        {'$set': {
+            'refunded': True,
+            'refundedAt': datetime.utcnow(),
+            'refundedBy': str(admin_user['_id']),
+            'refundReason': refund_req.reason,
+            'refundAmountCents': amount_cents,
+            'stripeRefundId': stripe_refund_id,
+            'updatedAt': datetime.utcnow()
+        }}
+    )
+    
+    # Record transaction
+    refund_transaction = {
+        'userId': session.get('traineeId', ''),
+        'sessionId': refund_req.sessionId,
+        'transactionType': TransactionType.REFUND,
+        'amountCents': amount_cents,
+        'status': refund_status,
+        'description': f"Refund: {refund_req.reason}",
+        'stripeRefundId': stripe_refund_id,
+        'processedBy': str(admin_user['_id']),
+        'createdAt': datetime.utcnow()
+    }
+    await db.transactions.insert_one(refund_transaction)
+    
+    return {
+        "success": True,
+        "refundAmountCents": amount_cents,
+        "stripeRefundId": stripe_refund_id,
+        "status": refund_status,
+        "message": f"Refund of ${amount_cents/100:.2f} processed"
+    }
+
+
+# --- Admin: Confirm a Payment ---
+class AdminConfirmPaymentRequest(BaseModel):
+    sessionId: str
+    notes: Optional[str] = None
+
+@api_router.post("/admin/confirm-payment")
+async def admin_confirm_payment(
+    req: AdminConfirmPaymentRequest,
+    admin_user: dict = Depends(require_admin)
+):
+    """Admin: Manually confirm/mark a session payment as completed"""
+    try:
+        oid = ObjectId(req.sessionId)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid session ID")
+    
+    session = await db.sessions.find_one({'_id': oid})
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    amount_cents = session.get('finalSessionPriceCents', 0)
+    
+    await db.sessions.update_one(
+        {'_id': oid},
+        {'$set': {
+            'paymentConfirmed': True,
+            'paymentConfirmedAt': datetime.utcnow(),
+            'paymentConfirmedBy': str(admin_user['_id']),
+            'updatedAt': datetime.utcnow()
+        }}
+    )
+    
+    # Record transaction
+    confirm_transaction = {
+        'userId': session.get('traineeId', ''),
+        'sessionId': req.sessionId,
+        'transactionType': TransactionType.SESSION_PAYMENT,
+        'amountCents': amount_cents,
+        'trainerPayoutCents': session.get('trainerEarningsCents', 0),
+        'platformFeeCents': session.get('platformFeeCents', 0),
+        'status': PaymentStatus.COMPLETED,
+        'description': f"Payment confirmed by admin. {req.notes or ''}".strip(),
+        'processedBy': str(admin_user['_id']),
+        'createdAt': datetime.utcnow()
+    }
+    await db.transactions.insert_one(confirm_transaction)
+    
+    return {
+        "success": True,
+        "amountCents": amount_cents,
+        "message": f"Payment of ${amount_cents/100:.2f} confirmed"
+    }
+
+
+# --- Admin: Update own profile ---
+class AdminProfileUpdate(BaseModel):
+    fullName: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[EmailStr] = None
+
+@api_router.put("/admin/profile")
+async def admin_update_profile(
+    profile_update: AdminProfileUpdate,
+    admin_user: dict = Depends(require_admin)
+):
+    """Admin: Update own profile information"""
+    update_data = {}
+    if profile_update.fullName:
+        update_data['fullName'] = profile_update.fullName
+    if profile_update.phone:
+        update_data['phone'] = profile_update.phone
+    if profile_update.email:
+        # Check email not taken by another user
+        existing = await db.users.find_one({'email': profile_update.email, '_id': {'$ne': admin_user['_id']}})
+        if existing:
+            raise HTTPException(status_code=400, detail="Email already in use by another account")
+        update_data['email'] = profile_update.email
+    
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    
+    update_data['updatedAt'] = datetime.utcnow()
+    
+    await db.users.update_one(
+        {'_id': admin_user['_id']},
+        {'$set': update_data}
+    )
+    
+    updated_user = await db.users.find_one({'_id': admin_user['_id']})
+    return {
+        "success": True,
+        "user": serialize_doc(updated_user),
+        "message": "Profile updated successfully"
+    }
+
+
+# --- Admin: Get enriched transactions with user names ---
+@api_router.get("/admin/transactions-enriched")
+async def admin_get_transactions_enriched(
+    skip: int = 0,
+    limit: int = 50,
+    admin_user: dict = Depends(require_admin)
+):
+    """Get all sessions as transactions with user names for admin panel"""
+    sessions = await db.sessions.find().sort('createdAt', -1).skip(skip).limit(limit).to_list(limit)
+    total = await db.sessions.count_documents({})
+    
+    # Batch fetch user names
+    user_ids = set()
+    for s in sessions:
+        if s.get('trainerId'):
+            user_ids.add(s['trainerId'])
+        if s.get('traineeId'):
+            user_ids.add(s['traineeId'])
+    
+    users_map = {}
+    if user_ids:
+        user_obj_ids = [ObjectId(uid) for uid in user_ids if uid]
+        if user_obj_ids:
+            users_list = await db.users.find({'_id': {'$in': user_obj_ids}}, {'fullName': 1}).to_list(len(user_obj_ids))
+            users_map = {str(u['_id']): u.get('fullName', 'Unknown') for u in users_list}
+    
+    enriched = []
+    for s in sessions:
+        doc = serialize_doc(s)
+        doc['trainerName'] = users_map.get(s.get('trainerId', ''), 'Unknown')
+        doc['traineeName'] = users_map.get(s.get('traineeId', ''), 'Unknown')
+        enriched.append(doc)
+    
+    return {"transactions": enriched, "total": total, "skip": skip, "limit": limit}
+
+
+# --- Admin: Send message to any user ---
+class AdminMessageSend(BaseModel):
+    receiverId: str
+    content: str
+
+@api_router.post("/admin/message")
+async def admin_send_message(
+    msg: AdminMessageSend,
+    admin_user: dict = Depends(require_admin)
+):
+    """Admin: Send a message to any user via the existing chat system"""
+    admin_id = str(admin_user['_id'])
+    
+    # Find or create conversation
+    conversation = await db.conversations.find_one({
+        'participants': {'$all': [admin_id, msg.receiverId]}
+    })
+    
+    if not conversation:
+        conversation_doc = {
+            '_id': str(uuid.uuid4()),
+            'participants': [admin_id, msg.receiverId],
+            'createdAt': datetime.utcnow(),
+            'updatedAt': datetime.utcnow()
+        }
+        await db.conversations.insert_one(conversation_doc)
+        conversation = conversation_doc
+    
+    message_doc = {
+        '_id': str(uuid.uuid4()),
+        'conversationId': str(conversation['_id']),
+        'senderId': admin_id,
+        'receiverId': msg.receiverId,
+        'content': msg.content,
+        'isRead': False,
+        'createdAt': datetime.utcnow()
+    }
+    
+    await db.messages.insert_one(message_doc)
+    await db.conversations.update_one(
+        {'_id': conversation['_id']},
+        {'$set': {'updatedAt': datetime.utcnow()}}
+    )
+    
+    return {
+        "success": True,
+        "messageId": str(message_doc['_id']),
+        "conversationId": str(conversation['_id']),
+        "message": "Message sent successfully"
+    }
+
+
 # ============================================================================
 # ROOT ROUTES
 # ============================================================================
