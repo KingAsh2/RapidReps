@@ -492,6 +492,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: COLORS.teal,
   },
+  distanceText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.orange,
+  },
   specialtiesRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
