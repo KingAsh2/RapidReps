@@ -959,6 +959,7 @@ async def signup(request: Request, user_data: UserSignUp):
         'passwordHash': hashed_password,
         'roles': user_data.roles,
         'isAdmin': False,
+        'emailVerified': True,  # Default true until email verification flow is implemented
         'createdAt': datetime.utcnow(),
         'updatedAt': datetime.utcnow()
     }
