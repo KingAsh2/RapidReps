@@ -2584,6 +2584,10 @@ async def create_rating(rating: RatingCreate, current_user: dict = Depends(get_c
     if session['status'] != SessionStatus.COMPLETED:
         raise HTTPException(status_code=400, detail="Can only rate completed sessions")
     
+    # Verify the rater is the actual trainee of this session
+    if str(current_user['_id']) != session.get('traineeId'):
+        raise HTTPException(status_code=403, detail="Only the trainee of this session can submit a rating")
+    
     # Check if rating already exists
     existing_rating = await db.ratings.find_one({'sessionId': rating.sessionId})
     if existing_rating:
