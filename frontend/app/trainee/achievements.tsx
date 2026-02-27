@@ -330,9 +330,12 @@ export default function TrainerAchievementsScreen() {
   const [discountRemaining, setDiscountRemaining] = useState(0);
   const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
   const [showUnlockModal, setShowUnlockModal] = useState(false);
+  const [streakData, setStreakData] = useState<any>(null);
+  const streakFireAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     loadAchievements();
+    loadStreaks();
   }, []);
 
   const loadAchievements = async () => {
