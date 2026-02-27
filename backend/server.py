@@ -33,6 +33,15 @@ def get_real_ip(request: Request) -> str:
 
 limiter = Limiter(key_func=get_real_ip)
 
+# Input sanitization — strip HTML/script tags from user-generated text
+_TAG_RE = re.compile(r'<[^>]+>')
+def sanitize_text(text: Optional[str]) -> Optional[str]:
+    if text is None:
+        return None
+    text = _TAG_RE.sub('', text)          # strip HTML tags
+    text = html.escape(text, quote=True)   # escape remaining entities
+    return text.strip()
+
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
