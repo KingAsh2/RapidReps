@@ -2285,12 +2285,6 @@ async def end_session(
         }
     )
     
-    return {
-        'success': True,
-        'message': 'Session ended. Awaiting client confirmation.',
-        'sessionEndedAt': datetime.utcnow().isoformat()
-    }
-
     # Push: Notify trainee that session ended
     asyncio.create_task(create_and_send_notification(
         session['traineeId'],
@@ -2314,6 +2308,12 @@ async def end_session(
                 {"sessionId": session_id, "screen": "trainee/rate-session"}
             )
     asyncio.create_task(delayed_rate_reminder())
+
+    return {
+        'success': True,
+        'message': 'Session ended. Awaiting client confirmation.',
+        'sessionEndedAt': datetime.utcnow().isoformat()
+    }
 async def client_confirm_session_end(
     session_id: str,
     current_user: dict = Depends(get_current_user)
