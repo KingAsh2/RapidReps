@@ -4378,9 +4378,11 @@ async def admin_update_profile(
     )
     
     updated_user = await db.users.find_one({'_id': admin_user['_id']})
+    user_doc = serialize_doc(updated_user)
+    user_doc.pop('passwordHash', None)
     return {
         "success": True,
-        "user": serialize_doc(updated_user),
+        "user": user_doc,
         "message": "Profile updated successfully"
     }
 
