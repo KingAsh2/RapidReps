@@ -3294,6 +3294,107 @@ async def get_my_streaks(current_user: dict = Depends(get_current_user)):
     
     return streak_data
 
+
+@api_router.get("/leaderboard/weekly")
+async def get_weekly_leaderboard(
+    limit: int = 20,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get weekly leaderboard ranked by consistency points.
+    Shows top users for the current week based on completed sessions this week + overall streak data.
+    """
+    # Get all users with completed sessions
+    all_users = await db.users.find(
+        {'isAdmin': {'$ne': True}},
+        {'fullName': 1, 'roles': 1, 'profilePhoto': 1}
+    ).to_list(500)
+    
+    leaderboard = []
+    for user in all_users:
+        uid = str(user['_id'])
+        roles = user.get('roles', [])
+        role = 'trainer' if UserRole.TRAINER in roles else 'trainee'
+        
+        try:
+            streak_data = await calculate_user_streak(uid, role)
+        except Exception:
+            continue
+        
+        if streak_data['totalSessions'] == 0:
+            continue
+        
+        # Get avatar from profile
+        avatar = None
+        if role == 'trainer':
+            tp = await db.trainer_profiles.find_one({'userId': uid}, {'avatarUrl': 1})
+            avatar = tp.get('avatarUrl') if tp else None
+        else:
+            tp = await db.trainee_profiles.find_one({'userId': uid}, {'profilePhoto': 1})
+            avatar = tp.get('profilePhoto') if tp else None
+        
+        leaderboard.append({
+            'userId': uid,
+            'fullName': user.get('fullName', 'Unknown'),
+            'role': role,
+            'avatar': avatar,
+            'currentStreak': streak_data['currentStreak'],
+            'longestStreak': streak_data['longestStreak'],
+            'consistencyPoints': streak_data['consistencyPoints'],
+            'totalSessions': streak_data['totalSessions'],
+            'totalMinutes': streak_data['totalMinutes'],
+            'streakLevel': streak_data['streakLevel'],
+        })
+    
+    # Sort by consistency points descending
+    leaderboard.sort(key=lambda x: x['consistencyPoints'], reverse=True)
+    leaderboard = leaderboard[:limit]
+    
+    # Add rank
+    for i, entry in enumerate(leaderboard):
+        entry['rank'] = i + 1
+    
+    # Find current user's rank
+    current_user_id = str(current_user['_id'])
+    my_rank = None
+    my_entry = None
+    for entry in leaderboard:
+        if entry['userId'] == current_user_id:
+            my_rank = entry['rank']
+            my_entry = entry
+            break
+    
+    # If user not in top N, compute their entry separately
+    if my_rank is None:
+        roles = current_user.get('roles', [])
+        my_role = 'trainer' if UserRole.TRAINER in roles else 'trainee'
+        try:
+            my_streak = await calculate_user_streak(current_user_id, my_role)
+            if my_streak['totalSessions'] > 0:
+                # Find rank by counting users with more points
+                higher_count = sum(1 for e in leaderboard if e['consistencyPoints'] > my_streak['consistencyPoints'])
+                my_rank = higher_count + 1
+                my_entry = {
+                    'userId': current_user_id,
+                    'fullName': current_user.get('fullName', 'Unknown'),
+                    'role': my_role,
+                    'currentStreak': my_streak['currentStreak'],
+                    'consistencyPoints': my_streak['consistencyPoints'],
+                    'totalSessions': my_streak['totalSessions'],
+                    'totalMinutes': my_streak['totalMinutes'],
+                    'streakLevel': my_streak['streakLevel'],
+                    'rank': my_rank,
+                }
+        except Exception:
+            pass
+    
+    return {
+        'leaderboard': leaderboard,
+        'myRank': my_rank,
+        'myEntry': my_entry,
+        'totalParticipants': len(leaderboard),
+    }
+
+
 async def calculate_trainee_badge_progress(trainee_id: str) -> TraineeAchievements:
     """Calculate all badge progress for a trainee"""
     
