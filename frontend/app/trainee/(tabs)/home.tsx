@@ -26,6 +26,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
+import { useNotifications } from '../../../src/contexts/NotificationContext';
 import TrainingModeDialog from '../../../src/components/TrainingModeDialog';
 import TrainerFilters from '../../../src/components/TrainerFilters';
 import NearbyTrainersMap from '../../../src/components/NearbyTrainersMap';
