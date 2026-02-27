@@ -320,6 +320,7 @@ export default function TrainerEarningsScreen() {
               <View style={styles.emptyBox}>
                 <Ionicons name="barbell-outline" size={36} color="rgba(255,255,255,0.3)" />
                 <Text style={styles.emptyText}>No completed sessions yet</Text>
+                <Text style={[styles.emptyText, { fontSize: 11, marginTop: 4 }]}>Complete sessions to start earning and request payouts.</Text>
               </View>
             )}
 
