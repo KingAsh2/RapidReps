@@ -35,6 +35,8 @@ const BADGE_ICONS: { [key: string]: any } = {
   explorer: '🗺️',
   feedback_hero: '📝',
   all_in: '⚡',
+  streak_star: '🔥',
+  duration_master: '⏱️',
 };
 
 interface Badge {
