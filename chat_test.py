@@ -11,7 +11,7 @@ from datetime import datetime
 from typing import Dict, List, Optional
 
 # Configuration
-BASE_URL = "https://trainer-connect-49.preview.emergentagent.com/api"
+BASE_URL = "https://dashboard-enhance-27.preview.emergentagent.com/api"
 HEADERS = {"Content-Type": "application/json"}
 
 class ChatTestRunner:

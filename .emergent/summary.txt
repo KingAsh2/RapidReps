@@ -1,221 +1,180 @@
-<analysis>
+<analysis>**original_problem_statement:**
+The user initially wanted to make the app production-ready. After fixing deployment-blocking bugs, the user has requested a significant new phase of development to enhance the Admin Panel and overhaul the UI/UX.
 
-<original_problem_statement>
-The user's initial problem was a critical authentication failure and a failing production deployment. After those were addressed, the user provided a large PRD for overhauling the app's business logic, which was implemented.
+**PRODUCT REQUIREMENTS (New & Unstarted):**
 
-The most recent user requests are a significant expansion of scope:
-- Make the app **production-ready** and function like Uber, connecting trainers to trainees.
-- Implement Uber/Lyft-inspired features: **sharing training status** for safety, **scheduling future trainings**, and an enhanced **background check** screen.
-- Ensure the **entire app is uniformed with a clean, professional UI/UX**, using a specific background image and attractive accents.
-- **Test every single clickable button and user flow** to ensure the app is seamless and logically sound before the final deployment.
-- The user is highly frustrated with recurring issues, especially login failures, and expects a fully functional, production-grade application.
-</original_problem_statement>
+**1. Admin Panel V2 (Complete Overhaul):**
+    *   **Session Management:**
+        *   Display Trainer and Trainee names for each session.
+        *   Show session location (including trainee's address for in-home sessions).
+        *   Track session duration by implementing start/stop times initiated by either the trainer or trainee. This data must be visible in the admin panel.
+    *   **User Management:**
+        *   Admins must be able to remove users from the app.
+    *   **Transaction Management:**
+        *   Admins must be able to refund and confirm payments.
+    *   **Communication:**
+        *   Admins must be able to message trainers and trainees directly through the existing chat system.
+    *   **Admin Profile:**
+        *   Admins must be able to update their own profile information.
+    *   **General Mandate:** Grant the admin complete oversight to manage users, transactions, and obtain all necessary data.
+
+**2. Feature & UI/UX Enhancements:**
+    *   **Achievements:** The logic for achievements should be updated to be based on the new, detailed session information (e.g., duration, frequency). Use a standard set of achievements.
+    *   **Visual Polish:**
+        *   Add subtle elevation shadows to major CTA buttons and clean shadow depth to trainer cards.
+        *   Implement micro-animations (e.g., heart icon pulse, map glow, header bounce).
+        *   Improve text readability with faint dark gradients behind headers.
+        *   Ensure spacing is consistent across all screens.
+    *   **Feature Additions:**
+        *   Add a Streaks / Consistency Points system.
+        *   Display short (3-5 second) looping video intros for trainers.
+        *   Add distance labels to trainers on the map (e.g., 2.3 miles away).
+        *   Redesign the Saved Trainers layout with better card hierarchy.
+    *   **Brand Continuity:**
+        *   Ensure all effects (like the orange glow) and icons are consistent and match the energetic fitness tone of the app.
+        *   Refine icons using a cohesive set.
 
 **User's preferred language**: English
 
 **what currently exists?**
-- **Backend**: The backend API in  is largely feature-complete according to the original PRD. It supports user creation, login, trainer search, session booking, and more. Recent fixes were made to session and chat API endpoints, and trainer profiles in the database were updated to be verified to unblock testing.
-- **Frontend**:
-    - The app has a **demo mode** that allows users to enter as a Trainee or Trainer directly from the welcome screen, bypassing authentication. A Log in link has been added back to the welcome screen for registered users.
-    - A **consistent UI theme** has been applied across most of the application. Screens like Welcome, Login, Signup, Home (Trainee/Trainer), Sessions, Profile, and Messages now use a shared fitness-themed background image with an orange overlay.
-    - **New placeholder screens** have been created for the Uber-like features: , , and .
-    - Buttons to access the new Share Status and Schedule Training features have been added to the trainer detail screen.
-- **Deployment**: A critical issue with production builds was fixed by adding the  to . This ensures TestFlight builds can connect to the correct backend.
+The application is a functional baseline with core features like authentication, Stripe payments, and trainer verification implemented. Recently, critical deployment-blocking bugs related to incorrect relative file paths in the frontend were resolved. The app is **not** production-ready as previously stated; it is now entering a new, major development phase to build the Admin Panel V2 and implement a significant UI/UX overhaul as requested by the user. The backend is stable, and the frontend is functional but requires the extensive changes listed above.
 
 **Last working item**:
-    - Last item agent was working: The agent was in the middle of a comprehensive test and fix everything request from the user. It had identified several backend issues and was starting to fix the first one: **adding a minimum password length validation** to the signup logic in .
-    - Status: IN PROGRESS
-    - Agent Testing Done: N
-    - Which testing method agent to use? backend testing agent (to verify the new validation logic by attempting to sign up with a short password).
-    - User Testing Done: N
+-   Last item agent was working: The agent was gathering context to address the user's new, large-scale feature requests for the Admin Panel and UI/UX. It was in the process of reviewing the existing codebase, and had just finished viewing the backend server logic and the current admin dashboard frontend.
+-   Status: IN PROGRESS
+-   Agent Testing Done: N
+-   Which testing method agent to use? NA (Planning phase; no code has been written yet).
+-   User Testing Done: N
 
 **All Pending/In progress Issue list**:
--   Issue 1: Backend password validation is missing. (P0)
--   Issue 2: The user profile update API is not working. (P0)
--   Issue 3: The web preview is non-functional, hindering development and testing. (P1)
--   Issue 4: Back button on the messages screen was reported to crash the app. (P2)
-
-  Issues Detail:
-  - Issue 1: **Backend password validation is missing.**
-     - Attempted fixes: The agent started investigating the  function in  but did not complete the fix.
-     - Next debug checklist:
-        1. Open .
-        2. Locate the  function (around line 728).
-        3. Inside the  Pydantic model or at the start of the  function, add validation to ensure  has a minimum length (e.g., 6 characters).
-        4. If validation fails, raise an  with a 422 status code and a clear error message.
-     - Why fix this issue and what will be achieved with the fix? This is a basic security and data integrity requirement for a production application.
-     - Status: IN PROGRESS
-     - Is recurring issue? N
-     - Should Test frontend/backend/both after fix? Backend
-     - Blocked on other issue: None
-
-  - Issue 2: **The user profile update API is not working.**
-     - Attempted fixes: API tests showed that  requests to profile endpoints were returning a 404 error. The agent identified this but did not fix it.
-     - Next debug checklist:
-        1. Review the API routes in  for updating user/trainer profiles.
-        2. The likely issue is that the routes are defined with  but the test (and possibly frontend) is using .
-        3. Create the correct  routes for  and  if they don't exist.
-        4. Ensure the frontend code in  calls the correct  endpoint with the correct payload.
-     - Why fix this issue and what will be achieved with the fix? Users cannot edit their profiles, which is a core feature.
-     - Status: NOT STARTED
-     - Is recurring issue? N
-     - Should Test frontend/backend/both after fix? Both
-     - Blocked on other issue: None
-
-  - Issue 3: **The web preview is non-functional.**
-     - Attempted fixes: The agent spent a significant amount of time trying to resolve this. It involved multiple rounds of package updates (, ), cache clearing, and config changes. The root cause was identified by  as package version mismatches, but subsequent fix attempts led to a cascade of other dependency issues.
-     - Next debug checklist:
-        1. **Recommendation: DO NOT ATTEMPT TO FIX.** This is a deep-seated dependency issue. Time is better spent testing on Expo Go and building features.
-        2. If a fix is absolutely necessary, the approach would be to reset  to a last known good state and carefully upgrade packages one by one, checking for compatibility.
-     - Why fix this issue and what will be achieved with the fix? Fixing this would enable web-based UI testing and allow the  to function, which would speed up UI verification.
-     - Status: BLOCKED
-     - Is recurring issue? Y (This issue started and persisted throughout this session).
-     - Should Test frontend/backend/both after fix? Frontend
-     - Blocked on other issue: None
-
-  - Issue 4: **Back button on the messages screen was reported to crash the app.**
-     - Attempted fixes: The agent fixed this by changing the Messages tab in  to be a direct component () instead of a redirect.
-     - Next debug checklist: The fix has been implemented but **not verified on a device**.
-        1. Use Expo Go to navigate to the Messages tab.
-        2. Verify the list of conversations appears.
-        3. Navigate into a chat and then back to the list.
-        4. The original crash was on the back button *on the conversation list screen* (). This button was removed in the fix, which is the correct approach for a tab screen. The verification step is to ensure the app doesn't crash upon entering the tab.
-     - Why fix this issue and what will be achieved with the fix? Prevents a critical app crash.
-     - Status: USER VERIFICATION PENDING
-     - Is recurring issue? N
-     - Should Test frontend/backend/both after fix? Frontend (manual via Expo Go)
-     - Blocked on other issue: None
+-   Issue 1: **Deployment Build Failures due to Incorrect Paths**
+    -   Attempted fixes: The agent successfully fixed two separate instances of this error in  by correcting relative import paths from  to . The first fix was for module imports (e.g., AuthContext, api), and the second was for an image asset required via .
+    -   Next debug checklist: N/A
+    -   Why fix this issue and what will be achieved with the fix?: Resolving these pathing issues was critical to allow the frontend to build successfully for deployment.
+    -   Status: RESOLVED
+    -   Is recurring issue? Y
+    -   Should Test frontend/backend/both after fix? Frontend
+    -   Blocked on other issue: None
 
 **In progress Task List**:
-  - Task 1: **Comprehensive End-to-End Testing**
-     - Where to resume: The agent has completed most backend API tests. The next step is to perform comprehensive **manual frontend testing** using Expo Go for all the flows listed by the user (Booking, Session Accept/Decline, Chat, Profile Editing, Logout, New Uber-like features, Navigation, Edge Cases).
-     - What will be achieved with this? Fulfill the user's primary request to test every button and ensure the app is production-ready.
-     - Status: IN PROGRESS
-     - Should Test frontend/backend/both after fix? Frontend
-     - Blocked on something: The broken web preview requires all testing to be done manually on Expo Go.
+-   Task 1: **Plan and Architect Admin Panel V2 & UI/UX Overhaul** (P0)
+    -   Where to resume: The agent has reviewed  and . The immediate next step is to synthesize the user's new requirements (from chat messages 48 & 51) and the codebase context into a detailed, step-by-step implementation plan. This plan must be presented to the user for approval via the  tool before any code is written.
+    -   What will be achieved with this?: A clear, user-approved roadmap for building all the requested features.
+    -   Status: IN PROGRESS
+    -   Should Test frontend/backend/both after fix? Both
+    -   Blocked on something: User approval of the forthcoming plan.
 
 **Upcoming and Future Tasks**
-- **Upcoming Tasks:**
-    - **(P0) Implement UI for Share Session Status:** Build out the UI in . This should allow a user to select contacts and use the native share functionality.
-    - **(P0) Implement UI for Schedule Training:** Build out the UI in . This will need a date/time picker component and integration with the booking flow.
-    - **(P1) Implement UI for Trainer Verification:** Enhance the  screen to be a full flow for document uploads (ID, CPR cert) and background check status, as inspired by the user's screenshots.
-- **Future Tasks:**
-    - **(P2) Build out original placeholder screens:** The screens at , , and  still need to be implemented.
-    - **(P3) Address minor video glitch:** The user reported a slight glitch in the intro video when the app first opens in the initial problem statement. This has never been investigated.
+The following tasks are derived from recent user requests and constitute the new scope of work.
+
+**Upcoming Tasks:**
+-   **P0: Admin Panel V2 Implementation:**
+    -   **Backend:**
+        -   Create new endpoints to support session start/stop actions.
+        -   Modify existing session endpoints () to populate trainer and trainee user details (name, photo).
+        -   Create an endpoint for admins to remove users (soft or hard delete).
+        -   Create endpoints to facilitate payment refunds via Stripe.
+        -   Expand messaging endpoints to allow admin participation.
+        -   Create an endpoint for updating admin profile information.
+    -   **Frontend:**
+        -   Redesign the Admin Dashboard () to include all new functionalities: session tracking view, user list with Remove buttons, transaction list with Refund buttons, and a user messaging interface.
+-   **P1: UI/UX & Feature Enhancements:**
+    -   Implement all visual improvements listed in the PRODUCT REQUIREMENTS (shadows, animations, gradients).
+    -   Backend/Frontend implementation for the Streaks system.
+    -   Update trainer profiles/cards to support video intros.
+
+**Future Tasks:**
+-   Refine achievement logic based on new session data.
+-   Implement distance labels for trainers (requires location services integration).
+-   Overhaul the Saved Trainers screen UI.
 
 **Completed work in this session**
-- **Production Deployment Fix:** Resolved a critical TestFlight crash by correctly configuring the production backend URL in .
-- **Authentication Flow Overhaul:**
-    - Implemented a demo mode to bypass login, per user request.
-    - Added a Log in link back to the welcome screen.
-    - Fixed a persistent login failure caused by a stale backend URL cached by Metro.
-    - Improved backend URL handling in  to be more robust.
-- **Comprehensive UI/UX Redesign:**
-    - Applied a consistent, professional theme with a shared background image to nearly all screens (Welcome, Login, Signup, Home, Sessions, Profile, Saved, Messages).
-    - Rewrote the Welcome screen and Trainee Tab Layout for a cleaner, Uber-like feel.
-- **New Feature Scaffolding:**
-    - Created placeholder screens and buttons for Share Session Status, Schedule Training, and Trainer Verification.
-- **Backend API Hardening:**
-    - Fixed numerous API endpoint bugs related to session creation/acceptance, chat, and trainer verification logic.
-    - Populated test database with verified trainers to enable end-to-end testing.
-- **Bug Fixes:**
-    - Fixed a crash related to the back button on the Messages tab.
+-   **Critical Bug Fix:** Resolved recurring frontend build failures by correcting incorrect relative import paths in .
+    -   Fixed module imports (e.g.,  to ).
+    -   Fixed asset imports (e.g.,  to ).
 
 **Earlier issues found/mentioned but not fixed**
-   - **Slight video glitch on app open:** Mentioned by the user at the start of the session but was deprioritized and never addressed.
+-   None.
 
 **Known issue recurrence from previous fork**
-  - **Deployment issues**: This is a recurring theme. The previous fork had build pipeline failures; this fork saw An Expo user account is required to proceed.
-
-Log in to EAS with email or username (exit and run eas login --help to see other login options)
-Input is required, but stdin is not readable. Failed to display prompt: Email or username failures due to config/certificates and a TestFlight runtime crash due to missing environment variables.
-  - **Web Preview Failure**: This is a new, major recurring issue *within this session*. The web preview is consistently broken and shows the default Welcome to Expo screen, which severely hampers development and testing.
+-   **Web Preview Broken**: The web preview remains non-functional. This is a known environment limitation and not a blocker for mobile development.
+-   **Recurrence Count**: The issue of incorrect relative paths in nested directories occurred twice consecutively during deployment attempts. This indicates a pattern that should be watched for when creating new nested-route components.
+-   **Status**: RESOLVED
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **EAS Build Configuration:** Managing production environment variables in  is critical for TestFlight/App Store builds.
-- **Expo Router on Web vs. Native:** The project highlights a significant divergence where  works on native (Expo Go) but fails to discover routes on the web preview, a likely symptom of package dependency conflicts.
-- **UI Theming:** A consistent UI was achieved by using  with a shared image asset and a  overlay across multiple components.
-- **Demo Mode Implementation:** Bypassing authentication was achieved by adding a state to  that conditionally renders the main app layout without requiring a user token.
-- **Backend API Debugging:** Extensive use of  and  scripts to test API endpoints directly, identify schema mismatches, and debug business logic.
+-   **Expo Router Pathing:** The deployment build failures were caused by a misunderstanding of relative paths in nested routes within Expo Router. Files inside a directory like  are one level deeper and require  to access the  or  directory, not .
+-   **FastAPI Backend:** The backend is built with FastAPI and will need significant additions to support the new admin features.
+-   **Stripe Integration:** The app uses Stripe for payments. New functionality for admin-initiated refunds will need to be added.
 
 **key DB schema**
-- **trainer_profiles**: { ..., **isVerified**, **verificationStatus**, **canGoLive**, **hasCompletedOnboarding**, **backgroundCheckPassed**, **introVideoUploaded**, **bio** }. The verification logic in  depends on these specific boolean and string fields.
+-   No changes made in this session. Future tasks will likely require adding fields to the  collection (e.g., , , ).
 
 **changes in tech stack**
-- None.
+-   None in this session.
 
 **All files of reference**
-- : Contains all business logic; needs fixes for password validation and profile updates.
-- : The main entry point, now in demo mode.
-- : Contains the critical fix for production deployments.
-- : Placeholder for next feature.
-- : Placeholder for next feature.
-- : Placeholder for next feature.
+-   : The file where the critical deployment bugs were fixed.
+-   : The main backend file that will need extensive modifications for the new admin features.
+-   : The starting point for the Admin Panel V2 UI development.
 
 **Areas that need refactoring**:
-- The placeholder screens (, , , , etc.) need to be fully implemented.
+-   None identified yet, but the Admin Panel will be a complete replacement, not a refactor.
 
 **key api endpoints**
-- : Needs password length validation.
-- , : Need to be created/fixed to allow profile updates.
-- : Was debugged and is now working.
-- , : Were debugged and are now working.
+-    (GET): Will need to be updated to populate user details.
+-   **(New endpoints to be created):**
+    -    (POST)
+    -    (POST)
+    -    (DELETE)
+    -    (POST)
+    -    (POST)
+    -    (PUT)
 
 **Critical Info for New Agent**
-1.  **THE WEB PREVIEW IS BROKEN.** It will show a Welcome to Expo screen. **Do not waste time trying to fix it.** All frontend testing **must** be performed using the **Expo Go** app on a physical device.
-2.  Your immediate priority is to **fix the remaining backend issues**:
-    *   Add minimum password length validation in .
-    *   Implement the  API endpoints for updating user profiles in .
-3.  After fixing the backend, you must perform the **comprehensive frontend testing** the user demanded. Use Expo Go to manually test every button and user flow, focusing on the 15-point list the previous agent was working on (Booking, Chat, Profile Editing, etc.).
-4.  Once testing is complete and the app is stable, the next phase is to **build the UI for the new Uber-like features** in the placeholder files that have already been created (, , ).
+1.  **Scope Change:** The project's goal has shifted dramatically from deploying a finished app to a new phase of major feature development. Do not assume the app is complete. The user's latest requests (Admin Panel V2, UI/UX overhaul) are the new priority.
+2.  **Deployment Bugs Fixed:** The immediate build-blocking errors have been resolved. They were all related to incorrect relative paths in .
+3.  **Next Step is Planning:** Your immediate task is to create a detailed, step-by-step plan to implement the new admin and UI/UX features. You must get user approval for this plan via  before writing any code.
+4.  **Admin Credentials:** The login is  / .
 
-**documents created in this job**
-- 
-- 
-- 
--  (overwritten)
-- 
+**documents and test reports created in this job**
+-    was updated.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1. **User asks agent to test and fix EVERYTHING not yet tested or fixed.** (Status: IN PROGRESS)
-2. **User asks what hasn't been tested/fixed yet.** (Status: COMPLETED, agent provided a list).
-3. **User asks agent to test the 15 identified items.** (Status: IN PROGRESS, agent started backend tests).
-4. **User asks agent to verify all UI/UX is uniform and attractive.** (Status: COMPLETED, agent restyled more screens).
-5. **User provides Uber/Lyft screenshots and asks for features like 'share status', 'schedule training', and 'background check'.** (Status: COMPLETED, agent created placeholder screens).
-6. **User asks agent to test every button and provides a detailed request for a full E2E test and report.** (Status: COMPLETED, agent did a high-level test and added a login link).
-7. **User asks if they need to redeploy to see background updates.** (Status: COMPLETED, agent explained Expo Go vs TestFlight).
-8. **User reports background on some screens was not updated and the 'messages' back button crashes.** (Status: COMPLETED, agent fixed both).
-9. **User asks agent to provide screenshots of every screen.** (Status: BLOCKED, agent explained web preview is broken and gave text descriptions instead).
-10. **User asks agent to redeploy.** (Status: COMPLETED, agent clarified a rebuild is needed).
+-   **User (Msg 37):** Provides new deployment logs showing an asset path error in . (Status: COMPLETED, bug is fixed).
+-   **Agent (Msg 38):** Acknowledges the new error.
+-   **Agent (Msg 40):** Identifies the pattern of incorrect  paths.
+-   **Agent (Msg 42):** Applies the fix for the asset path.
+-   **Agent (Msg 44):** Confirms all paths are now correct and the deployment should work.
+-   **User (Msg 46):** Asks for admin login info. (Status: COMPLETED).
+-   **Agent (Msg 47):** Provides the admin credentials.
+-   **User (Msg 48):** Submits a large list of new feature requirements for the Admin Panel and achievements. (Status: NOT STARTED).
+-   **User (Msg 51):** Provides clarifications on admin features and submits a second large list of UI/UX and branding enhancements. (Status: NOT STARTED).
+-   **Agent (Msg 52 - 65):** Starts exploring the codebase to prepare for planning the new features. User repeatedly prompts to continue. (Status: IN PROGRESS).
 
 **Project Health Check:**
--   **Broken**: The frontend web preview is completely non-functional due to  dependency/versioning issues. This blocks all web-based testing and screenshot generation.
+-   **Broken**:
+    -   None. The deployment blockers are fixed.
+-   **Mocked**:
+    -   None.
 
 **3rd Party Integrations**
--   **Google Maps**: Uses a user-provided API Key ().
+-   **Google Maps**: Uses a user-provided API Key.
 -   **Expo Application Services (EAS)**: Used for building the application.
+-   **Stripe**: Fully integrated for payments, will require additions for admin refunds.
 
 **Testing status**
-  - Testing agent used after significant changes: YES (backend agent and a failed frontend agent run).
-  - Troubleshoot agent used after agent stuck in loop: YES (for the web preview issue).
-  - Test files created: None.
-  - Known regressions: The web preview functionality was lost during this session.
+-   Testing agent used after significant changes: NO. The recent fixes were small and verified by  and manual inspection of the code and build logs.
+-   Troubleshoot agent used after agent stuck in loop: NO
+-   Test files created: None.
+-   Known regressions: None.
 
 **Credentials to test flow:**
-The app is in **demo mode** (no login required). However, if login is re-enabled, these credentials can be used:
-**Trainers (Password: )**
--   
--   
--   
-**Trainees (Password: )**
--   
--   
--   
+-   **Admin**:  / 
+-   **Trainers (Password: )**: , 
+-   **Trainees (Password: )**: , 
 
 **What agent forgot to execute**
-- The slight video glitch mentioned by the user in the initial problem description was never addressed or investigated.
-
-</analysis>
+-   The agent did not use  at the very start of the session to confirm its initial plan, as instructed by the system prompt. It immediately began debugging the deployment logs provided by the user in their first message of the session.</analysis>
