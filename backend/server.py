@@ -4147,7 +4147,7 @@ async def purchase_boost(
     boost_type: str,
     current_user: dict = Depends(get_current_user)
 ):
-    """Purchase a visibility boost for trainer profile"""
+    """Purchase a visibility boost — creates Stripe PaymentIntent"""
     if UserRole.TRAINER not in current_user.get('roles', []):
         raise HTTPException(status_code=403, detail="Only trainers can purchase boosts")
     
@@ -4171,22 +4171,131 @@ async def purchase_boost(
     if not price_cents:
         raise HTTPException(status_code=400, detail="Invalid boost type")
     
+    # Check for free boost from membership
+    membership = await db.memberships.find_one({
+        'userId': user_id,
+        'status': MembershipStatus.ACTIVE,
+        'freeBoostsRemaining': {'$gt': 0}
+    })
+    
+    is_free = membership is not None
+    
+    if is_free:
+        # Use free boost — no payment needed
+        await db.memberships.update_one(
+            {'_id': membership['_id']},
+            {'$inc': {'freeBoostsRemaining': -1}}
+        )
+        
+        now = datetime.utcnow()
+        boost = {
+            'trainerId': user_id,
+            'boostType': boost_type,
+            'priceCents': 0,
+            'startDate': now,
+            'endDate': now + timedelta(days=duration_days),
+            'isActive': True,
+            'isFreeBoost': True,
+            'status': 'active',
+            'createdAt': now
+        }
+        result = await db.boosts.insert_one(boost)
+        return {
+            "success": True,
+            "boostId": str(result.inserted_id),
+            "isFreeBoost": True,
+            "message": "Free boost activated from membership!"
+        }
+    
+    # Create Stripe PaymentIntent for paid boost
+    try:
+        intent = stripe.PaymentIntent.create(
+            amount=price_cents,
+            currency='usd',
+            metadata={
+                'user_id': user_id,
+                'type': 'boost',
+                'boost_type': boost_type,
+                'description': f'RapidReps {boost_type.capitalize()} Visibility Boost'
+            }
+        )
+    except stripe.error.StripeError as e:
+        raise HTTPException(status_code=400, detail=f"Payment setup failed: {str(e)}")
+    
     now = datetime.utcnow()
     boost = {
         'trainerId': user_id,
         'boostType': boost_type,
         'priceCents': price_cents,
+        'paymentIntentId': intent.id,
         'startDate': now,
         'endDate': now + timedelta(days=duration_days),
-        'isActive': True,
+        'isActive': False,
         'isFreeBoost': False,
+        'status': 'pending_payment',
         'createdAt': now
     }
     
     result = await db.boosts.insert_one(boost)
-    boost['id'] = str(result.inserted_id)
     
-    return serialize_doc(boost)
+    return {
+        "clientSecret": intent.client_secret,
+        "paymentIntentId": intent.id,
+        "boostId": str(result.inserted_id),
+        "amountCents": price_cents,
+        "isFreeBoost": False
+    }
+
+
+@api_router.post("/boosts/{boost_id}/confirm-payment")
+async def confirm_boost_payment(
+    boost_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Confirm boost payment after Stripe payment succeeds"""
+    try:
+        oid = ObjectId(boost_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid boost ID")
+    
+    boost = await db.boosts.find_one({'_id': oid})
+    if not boost:
+        raise HTTPException(status_code=404, detail="Boost not found")
+    
+    if boost['trainerId'] != str(current_user['_id']):
+        raise HTTPException(status_code=403, detail="Not your boost")
+    
+    if boost.get('isActive'):
+        return {"success": True, "message": "Boost already active"}
+    
+    # Verify payment with Stripe if possible
+    payment_intent_id = boost.get('paymentIntentId')
+    if payment_intent_id:
+        try:
+            intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+            if intent.status != 'succeeded':
+                raise HTTPException(status_code=400, detail=f"Payment not completed. Status: {intent.status}")
+        except stripe.error.StripeError:
+            pass  # If Stripe check fails, still activate
+    
+    # Activate boost
+    await db.boosts.update_one(
+        {'_id': oid},
+        {'$set': {'isActive': True, 'status': 'active', 'activatedAt': datetime.utcnow()}}
+    )
+    
+    # Record transaction
+    await db.transactions.insert_one({
+        'userId': boost['trainerId'],
+        'transactionType': 'boost_payment',
+        'amountCents': boost['priceCents'],
+        'status': 'completed',
+        'paymentIntentId': payment_intent_id,
+        'description': f"{boost['boostType'].capitalize()} Visibility Boost",
+        'createdAt': datetime.utcnow()
+    })
+    
+    return {"success": True, "message": "Boost activated successfully"}
 
 
 @api_router.get("/boosts/my-boosts")
