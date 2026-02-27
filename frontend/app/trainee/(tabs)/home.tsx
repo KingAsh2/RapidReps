@@ -50,6 +50,7 @@ export default function TraineeHomeScreen() {
   const router = useRouter();
   const { user, logout } = useAuth();
   const { showAlert } = useAlert();
+  const { unreadCount } = useNotifications();
   const [loading, setLoading] = useState(false); // Start with false to show UI immediately
   const [initialLoad, setInitialLoad] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
