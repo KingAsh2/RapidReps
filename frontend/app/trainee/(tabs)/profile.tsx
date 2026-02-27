@@ -534,6 +534,18 @@ export default function TraineeProfileScreen() {
               <View style={styles.actionsGradient}>
                 <TouchableOpacity 
                   style={styles.actionItem}
+                  onPress={() => router.push('/trainee/share-streak')}
+                  data-testid="share-streak-link"
+                >
+                  <View style={[styles.actionIconBg, { backgroundColor: 'rgba(255, 106, 0, 0.2)' }]}>
+                    <Ionicons name="share-social" size={22} color="#FF6A00" />
+                  </View>
+                  <Text style={styles.actionText}>Share My Streak</Text>
+                  <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.5)" />
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={styles.actionItem}
                   onPress={() => router.push('/trainee/achievements')}
                 >
                   <View style={[styles.actionIconBg, { backgroundColor: 'rgba(253, 187, 45, 0.2)' }]}>
