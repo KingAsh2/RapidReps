@@ -71,6 +71,17 @@ export default function SavedTrainersScreen() {
           delay: 200,
         }),
       ]).start();
+
+      // Heart pulse animation loop
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(heartPulseAnim, { toValue: 1.2, duration: 500, useNativeDriver: true }),
+          Animated.timing(heartPulseAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
+          Animated.timing(heartPulseAnim, { toValue: 1.15, duration: 400, useNativeDriver: true }),
+          Animated.timing(heartPulseAnim, { toValue: 1, duration: 400, useNativeDriver: true }),
+          Animated.delay(2000),
+        ])
+      ).start();
     }
   }, [loading]);
 
