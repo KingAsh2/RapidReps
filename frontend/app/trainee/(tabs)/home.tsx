@@ -86,10 +86,11 @@ export default function TraineeHomeScreen() {
   // Start entrance animations immediately
   useEffect(() => {
     const startAnimations = () => {
-      // Hero slide down + fade in
-      Animated.timing(heroAnim, {
+      // Hero bounce in
+      Animated.spring(heroAnim, {
         toValue: 1,
-        duration: 400,
+        friction: 5,
+        tension: 60,
         useNativeDriver: true,
       }).start();
 
