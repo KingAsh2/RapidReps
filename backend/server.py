@@ -5271,6 +5271,171 @@ async def update_notification_preferences(
 
 
 # ============================================================================
+# PASSWORD RESET ENDPOINTS
+# ============================================================================
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    newPassword: str
+
+@api_router.post("/auth/forgot-password")
+async def forgot_password(request: Request, data: ForgotPasswordRequest):
+    """Request a password reset. Sends email if SendGrid is configured, otherwise returns contact support."""
+    user = await db.users.find_one({'email': data.email})
+
+    if user:
+        # Generate reset token
+        reset_token = uuid.uuid4().hex
+        await db.password_resets.update_one(
+            {'userId': str(user['_id'])},
+            {'$set': {
+                'userId': str(user['_id']),
+                'token': reset_token,
+                'createdAt': datetime.utcnow(),
+                'used': False,
+            }},
+            upsert=True,
+        )
+        # Attempt to send email (no-op if SENDGRID_API_KEY is not set)
+        email_sent = send_password_reset_email(
+            data.email, reset_token, user.get('fullName', 'there')
+        )
+        if email_sent:
+            return {"success": True, "message": "Password reset instructions have been sent to your email."}
+
+    # Always return the same response to prevent email enumeration
+    return {
+        "success": True,
+        "message": "If that email is registered, you'll receive reset instructions. Otherwise, contact support at support@rapidreps.com."
+    }
+
+@api_router.post("/auth/reset-password")
+async def reset_password(data: ResetPasswordRequest):
+    """Reset password using a valid token."""
+    reset_doc = await db.password_resets.find_one({
+        'token': data.token,
+        'used': False,
+    })
+    if not reset_doc:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+
+    # Check if token is older than 1 hour
+    age = (datetime.utcnow() - reset_doc['createdAt']).total_seconds()
+    if age > 3600:
+        raise HTTPException(status_code=400, detail="Reset token has expired. Please request a new one.")
+
+    if len(data.newPassword) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+
+    hashed = bcrypt.hashpw(data.newPassword.encode(), bcrypt.gensalt()).decode()
+    await db.users.update_one(
+        {'_id': ObjectId(reset_doc['userId'])},
+        {'$set': {'passwordHash': hashed, 'updatedAt': datetime.utcnow()}}
+    )
+    await db.password_resets.update_one(
+        {'_id': reset_doc['_id']},
+        {'$set': {'used': True}}
+    )
+    return {"success": True, "message": "Password reset successfully. You can now log in."}
+
+
+# ============================================================================
+# WEEKLY DIGEST ENDPOINT
+# ============================================================================
+
+@api_router.get("/weekly-digest")
+async def get_weekly_digest(current_user: dict = Depends(get_current_user)):
+    """Get the current user's weekly training summary. Also sends email if SendGrid configured."""
+    user_id = str(current_user['_id'])
+    now = datetime.utcnow()
+    week_ago = now - timedelta(days=7)
+
+    # Sessions this week
+    sessions_this_week = await db.sessions.count_documents({
+        'traineeId': user_id,
+        'status': SessionStatus.COMPLETED,
+        'sessionDateTimeEnd': {'$gte': week_ago}
+    })
+
+    # Total minutes this week
+    pipeline = [
+        {'$match': {
+            'traineeId': user_id,
+            'status': SessionStatus.COMPLETED,
+            'sessionDateTimeEnd': {'$gte': week_ago}
+        }},
+        {'$group': {'_id': None, 'total': {'$sum': '$durationMinutes'}}}
+    ]
+    agg = await db.sessions.aggregate(pipeline).to_list(1)
+    total_minutes = agg[0]['total'] if agg else 0
+
+    # Streak info
+    streak_data = {}
+    try:
+        # Inline streak computation for digest
+        all_sessions = await db.sessions.find({
+            'traineeId': user_id,
+            'status': SessionStatus.COMPLETED
+        }).sort('sessionDateTimeEnd', -1).to_list(100)
+        streak_data = {'currentStreak': 0, 'streakLevel': 'none', 'consistencyPoints': 0}
+        if all_sessions:
+            # Simple streak: count consecutive weeks
+            weeks_set = set()
+            for s in all_sessions:
+                end = s.get('sessionDateTimeEnd') or s.get('sessionDateTimeStart')
+                if end:
+                    weeks_set.add(end.isocalendar()[1])
+            current_week = now.isocalendar()[1]
+            streak = 0
+            for w in range(current_week, current_week - 52, -1):
+                if w in weeks_set:
+                    streak += 1
+                else:
+                    break
+            streak_data['currentStreak'] = streak
+    except:
+        pass
+
+    # Leaderboard rank
+    lb = await db.sessions.aggregate([
+        {'$match': {'status': SessionStatus.COMPLETED, 'sessionDateTimeEnd': {'$gte': week_ago}}},
+        {'$group': {'_id': '$traineeId', 'minutes': {'$sum': '$durationMinutes'}}},
+        {'$sort': {'minutes': -1}}
+    ]).to_list(100)
+    rank = None
+    for i, entry in enumerate(lb):
+        if entry['_id'] == user_id:
+            rank = i + 1
+            break
+
+    digest = {
+        'sessionsThisWeek': sessions_this_week,
+        'totalMinutes': total_minutes,
+        'currentStreak': streak_data.get('currentStreak', 0),
+        'streakLevel': streak_data.get('streakLevel', 'none'),
+        'leaderboardRank': rank,
+        'weekStart': week_ago.isoformat(),
+        'weekEnd': now.isoformat(),
+    }
+
+    # Attempt to send email digest
+    send_weekly_digest_email(
+        current_user['email'],
+        current_user.get('fullName', 'Athlete'),
+        sessions_this_week,
+        total_minutes,
+        streak_data.get('currentStreak', 0),
+        streak_data.get('streakLevel', 'none'),
+        rank,
+    )
+
+    return digest
+
+
+# ============================================================================
 # ROOT ROUTES
 # ============================================================================
 
