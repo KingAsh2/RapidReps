@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '../../src/utils/colors';
@@ -14,6 +15,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAlert } from '../../src/contexts/AlertContext';
+import axios from 'axios';
+
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
@@ -29,28 +33,27 @@ export default function ForgotPasswordScreen() {
 
   const handleResetPassword = async () => {
     if (!email) {
-      showAlert({
-        title: 'Email Required',
-        message: 'Please enter your email address',
-        type: 'error',
-      });
+      showAlert({ title: 'Email Required', message: 'Please enter your email address', type: 'error' });
       return;
     }
-
     if (!validateEmail(email)) {
-      showAlert({
-        title: 'Invalid Email',
-        message: 'Please enter a valid email address',
-        type: 'error',
-      });
+      showAlert({ title: 'Invalid Email', message: 'Please enter a valid email address', type: 'error' });
       return;
     }
 
-    showAlert({
-      title: 'Feature Coming Soon',
-      message: 'Password reset via email is not yet available. Please contact support at support@rapidreps.com for assistance resetting your password.',
-      type: 'info',
-    });
+    setLoading(true);
+    try {
+      const res = await axios.post(`${API_URL}/api/auth/forgot-password`, { email });
+      setEmailSent(true);
+    } catch (err: any) {
+      showAlert({
+        title: 'Error',
+        message: err?.response?.data?.detail || 'Something went wrong. Please try again.',
+        type: 'error',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (emailSent) {
