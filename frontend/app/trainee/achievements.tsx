@@ -673,6 +673,11 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: Colors.navy,
     marginBottom: 16,
+    backgroundColor: 'rgba(15,27,61,0.06)',
+    marginHorizontal: -16,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 10,
   },
   badgesGrid: {
     flexDirection: 'row',
