@@ -885,4 +885,75 @@ const styles = StyleSheet.create({
     color: COLORS.error,
     textDecorationLine: 'underline',
   },
+  // Streak Card
+  streakCard: {
+    marginBottom: 16,
+    borderRadius: 18,
+    overflow: 'hidden',
+    shadowColor: '#FF6A00',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  streakGradient: {
+    padding: 18,
+  },
+  streakRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  streakFireBg: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  streakTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: COLORS.white,
+    marginBottom: 2,
+  },
+  streakSub: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.85)',
+  },
+  streakBadge: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
+  },
+  streakBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: COLORS.white,
+    letterSpacing: 0.5,
+  },
+  streakProgress: {
+    marginTop: 12,
+  },
+  streakProgressBg: {
+    height: 6,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  streakProgressFill: {
+    height: '100%',
+    backgroundColor: COLORS.white,
+    borderRadius: 3,
+  },
+  streakProgressText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 4,
+    textAlign: 'center',
+  },
 });
