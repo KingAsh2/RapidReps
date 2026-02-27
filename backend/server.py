@@ -2861,6 +2861,7 @@ async def request_payout(
         'paymentMethod': request.paymentMethod,
         'paymentHandle': request.paymentHandle,
         'notes': sanitize_text(request.notes),
+        'status': 'pending',
         'createdAt': datetime.utcnow(),
         'updatedAt': datetime.utcnow(),
     }
