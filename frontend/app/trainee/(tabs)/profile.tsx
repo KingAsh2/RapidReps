@@ -76,8 +76,13 @@ export default function TraineeProfileScreen() {
     budgetMaxPerMinuteCents: 200,
   });
 
+  // Streak data
+  const [streakData, setStreakData] = useState<any>(null);
+  const streakPulseAnim = useRef(new Animated.Value(1)).current;
+
   useEffect(() => {
     loadProfile();
+    loadStreaks();
   }, []);
 
   useEffect(() => {
