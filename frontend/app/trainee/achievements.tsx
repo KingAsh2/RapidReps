@@ -477,6 +477,72 @@ export default function TrainerAchievementsScreen() {
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
+        {/* Streak Banner */}
+        {streakData && (
+          <View style={styles.streakBanner} data-testid="streak-banner">
+            <LinearGradient
+              colors={
+                streakData.currentStreak >= 4
+                  ? ['#FF6A00', '#FF9F1C']
+                  : streakData.currentStreak >= 2
+                    ? ['#FFB300', '#FFC107']
+                    : [Colors.navy || '#1a2a5e', '#2a3a6e']
+              }
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.streakBannerGradient}
+            >
+              <View style={styles.streakBannerRow}>
+                <Animated.View style={{ transform: [{ scale: streakFireAnim }] }}>
+                  <View style={styles.streakBannerFireBg}>
+                    <Ionicons name="flame" size={32} color={streakData.currentStreak >= 2 ? '#FF6A00' : '#999'} />
+                  </View>
+                </Animated.View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.streakBannerTitle}>
+                    {streakData.currentStreak > 0 ? `${streakData.currentStreak} Week Streak!` : 'Start Your Streak!'}
+                  </Text>
+                  <Text style={styles.streakBannerSub}>
+                    {streakData.consistencyPoints} consistency pts | Best: {streakData.longestStreak}wk
+                  </Text>
+                </View>
+                <View style={styles.streakBannerLevel}>
+                  <Text style={styles.streakBannerLevelText}>
+                    {streakData.streakLevel === 'legend' ? 'LEGEND' :
+                     streakData.streakLevel === 'blazing' ? 'BLAZING' :
+                     streakData.streakLevel === 'fire' ? 'ON FIRE' :
+                     streakData.streakLevel === 'warming' ? 'WARMING UP' : 'START'}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.streakBannerStats}>
+                <View style={styles.streakBannerStat}>
+                  <Text style={styles.streakBannerStatVal}>{streakData.totalSessions}</Text>
+                  <Text style={styles.streakBannerStatLabel}>Sessions</Text>
+                </View>
+                <View style={styles.streakBannerStat}>
+                  <Text style={styles.streakBannerStatVal}>{streakData.totalMinutes}</Text>
+                  <Text style={styles.streakBannerStatLabel}>Minutes</Text>
+                </View>
+                <View style={styles.streakBannerStat}>
+                  <Text style={styles.streakBannerStatVal}>{streakData.totalWeeksActive}</Text>
+                  <Text style={styles.streakBannerStatLabel}>Wks Active</Text>
+                </View>
+              </View>
+              {streakData.currentStreak > 0 && streakData.nextMilestone > streakData.currentStreak && (
+                <View style={styles.streakBannerProgress}>
+                  <View style={styles.streakBannerProgressBg}>
+                    <View style={[styles.streakBannerProgressFill, { width: `${Math.min(100, (streakData.currentStreak / streakData.nextMilestone) * 100)}%` }]} />
+                  </View>
+                  <Text style={styles.streakBannerProgressText}>
+                    {streakData.nextMilestone - streakData.currentStreak} weeks to {streakData.nextMilestone}-week milestone
+                  </Text>
+                </View>
+              )}
+            </LinearGradient>
+          </View>
+        )}
+
         <Text style={styles.sectionTitle}>Your Badges</Text>
         <View style={styles.badgesGrid}>
           {badges.map((badge, index) => (
