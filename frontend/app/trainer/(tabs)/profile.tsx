@@ -41,9 +41,12 @@ export default function TrainerProfileScreen() {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [streakData, setStreakData] = useState<any>(null);
+  const streakPulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     loadProfile();
+    loadStreaks();
   }, []);
 
   const loadProfile = async () => {
