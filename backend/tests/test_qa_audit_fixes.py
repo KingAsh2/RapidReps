@@ -32,10 +32,20 @@ def api_client():
 @pytest.fixture(scope="module")
 def admin_token(api_client):
     """Get admin auth token"""
-    response = api_client.post(f"{BASE_URL}/api/auth/login", json={
-        "email": "admin@rapidreps.com",
-        "password": "admin123"
-    })
+    # Retry logic for rate limiting
+    for attempt in range(3):
+        response = api_client.post(f"{BASE_URL}/api/auth/login", json={
+            "email": "admin@rapidreps.com",
+            "password": "admin123"
+        })
+        if response.status_code == 200:
+            return response.json()["access_token"]
+        elif response.status_code == 429:
+            import time
+            print(f"Rate limited on admin login, waiting 60s... (attempt {attempt + 1})")
+            time.sleep(60)
+        else:
+            break
     assert response.status_code == 200, f"Admin login failed: {response.text}"
     return response.json()["access_token"]
 
