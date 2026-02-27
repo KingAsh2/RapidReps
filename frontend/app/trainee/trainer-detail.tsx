@@ -1413,4 +1413,43 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: COLORS.gray,
   },
+  // Video Intro Styles
+  videoSection: {
+    marginTop: 16,
+  },
+  videoContainer: {
+    height: 180,
+    borderRadius: 14,
+    overflow: 'hidden',
+    backgroundColor: COLORS.navy,
+  },
+  videoPlayer: {
+    width: '100%',
+    height: '100%',
+  },
+  videoOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 50,
+    justifyContent: 'flex-end',
+    paddingHorizontal: 12,
+    paddingBottom: 10,
+  },
+  videoPlayBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  videoPlayText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.white,
+  },
 });
