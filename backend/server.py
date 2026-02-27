@@ -332,6 +332,7 @@ class TraineeProfileCreate(BaseModel):
     preferredTrainingStyles: List[str] = []
     injuriesOrLimitations: Optional[str] = None
     homeGymOrZipCode: Optional[str] = None
+    homeAddress: Optional[str] = None  # Full home address for in-home training sessions
     prefersInPerson: bool = True
     prefersVirtual: bool = False
     isVirtualEnabled: bool = False
@@ -352,6 +353,7 @@ class TraineeProfileResponse(BaseModel):
     preferredTrainingStyles: List[str] = []
     injuriesOrLimitations: Optional[str] = None
     homeGymOrZipCode: Optional[str] = None
+    homeAddress: Optional[str] = None
     prefersInPerson: bool = True
     prefersVirtual: bool = False
     isVirtualEnabled: bool = False
