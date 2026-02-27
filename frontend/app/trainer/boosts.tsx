@@ -54,6 +54,9 @@ export default function BoostsScreen() {
   const [activeBoosts, setActiveBoosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Native Stripe hooks
+  const stripe = useStripeHook ? useStripeHook() : null;
+
   useEffect(() => {
     loadBoosts();
   }, []);
