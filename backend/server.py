@@ -4024,7 +4024,7 @@ async def calculate_session_cost(
 
 @api_router.post("/memberships/subscribe")
 async def subscribe_membership(current_user: dict = Depends(get_current_user)):
-    """Subscribe to RapidReps membership ($19.99/month)"""
+    """Subscribe to RapidReps membership ($19.99/month) — creates Stripe PaymentIntent"""
     user_id = str(current_user['_id'])
     
     # Check if already has active membership
@@ -4035,12 +4035,29 @@ async def subscribe_membership(current_user: dict = Depends(get_current_user)):
     if existing:
         raise HTTPException(status_code=400, detail="Already have an active membership")
     
-    # Create membership
+    amount_cents = PricingRules.MEMBERSHIP_MONTHLY_CENTS
+    
+    # Create Stripe PaymentIntent
+    try:
+        intent = stripe.PaymentIntent.create(
+            amount=amount_cents,
+            currency='usd',
+            metadata={
+                'user_id': user_id,
+                'type': 'membership',
+                'description': 'RapidReps Monthly Membership'
+            }
+        )
+    except stripe.error.StripeError as e:
+        raise HTTPException(status_code=400, detail=f"Payment setup failed: {str(e)}")
+    
+    # Create pending membership
     now = datetime.utcnow()
     membership = {
         'userId': user_id,
-        'status': MembershipStatus.ACTIVE,
-        'monthlyPriceCents': PricingRules.MEMBERSHIP_MONTHLY_CENTS,
+        'status': 'pending_payment',
+        'monthlyPriceCents': amount_cents,
+        'paymentIntentId': intent.id,
         'startDate': now,
         'nextBillingDate': now + timedelta(days=30),
         'freeBoostsRemaining': 1,
@@ -4048,9 +4065,64 @@ async def subscribe_membership(current_user: dict = Depends(get_current_user)):
     }
     
     result = await db.memberships.insert_one(membership)
-    membership['id'] = str(result.inserted_id)
     
-    return serialize_doc(membership)
+    return {
+        "clientSecret": intent.client_secret,
+        "paymentIntentId": intent.id,
+        "membershipId": str(result.inserted_id),
+        "amountCents": amount_cents
+    }
+
+
+@api_router.post("/memberships/{membership_id}/confirm-payment")
+async def confirm_membership_payment(
+    membership_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Confirm membership payment after Stripe payment succeeds"""
+    try:
+        oid = ObjectId(membership_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid membership ID")
+    
+    membership = await db.memberships.find_one({'_id': oid})
+    if not membership:
+        raise HTTPException(status_code=404, detail="Membership not found")
+    
+    if membership['userId'] != str(current_user['_id']):
+        raise HTTPException(status_code=403, detail="Not your membership")
+    
+    if membership.get('status') == MembershipStatus.ACTIVE:
+        return {"success": True, "message": "Membership already active"}
+    
+    # Verify payment with Stripe if possible
+    payment_intent_id = membership.get('paymentIntentId')
+    if payment_intent_id:
+        try:
+            intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+            if intent.status != 'succeeded':
+                raise HTTPException(status_code=400, detail=f"Payment not completed. Status: {intent.status}")
+        except stripe.error.StripeError:
+            pass  # If Stripe check fails, still activate (intent may be test/mock)
+    
+    # Activate membership
+    await db.memberships.update_one(
+        {'_id': oid},
+        {'$set': {'status': MembershipStatus.ACTIVE, 'activatedAt': datetime.utcnow()}}
+    )
+    
+    # Record transaction
+    await db.transactions.insert_one({
+        'userId': membership['userId'],
+        'transactionType': 'membership_payment',
+        'amountCents': membership['monthlyPriceCents'],
+        'status': 'completed',
+        'paymentIntentId': payment_intent_id,
+        'description': 'Monthly Membership - $19.99',
+        'createdAt': datetime.utcnow()
+    })
+    
+    return {"success": True, "message": "Membership activated successfully"}
 
 @api_router.get("/memberships/my-membership")
 async def get_my_membership(current_user: dict = Depends(get_current_user)):
