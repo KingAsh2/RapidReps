@@ -91,12 +91,13 @@ export default function AdminDashboard() {
     }
   };
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (page = 0) => {
     try {
       const headers = await getAuthHeader();
-      const res = await api.get('/admin/users?limit=100', { headers });
+      const res = await api.get(`/admin/users?limit=${PAGE_SIZE}&skip=${page * PAGE_SIZE}`, { headers });
       setUsers(res.data.users || []);
       setUsersTotal(res.data.total || 0);
+      setUsersPage(page);
     } catch (err: any) {
       console.error('Users error:', err?.response?.data || err.message);
     }
