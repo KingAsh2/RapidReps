@@ -45,6 +45,10 @@ security = HTTPBearer()
 # Create the main app
 app = FastAPI(title="RapidReps API")
 
+# Rate limiter setup
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 # Root-level health check endpoints (for Kubernetes health checks)
 @app.get("/")
 async def app_root():
