@@ -23,6 +23,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, Stack } from 'expo-router';
 import * as Location from 'expo-location';
 import { useAlert } from '../../../src/contexts/AlertContext';
+import { useNotifications } from '../../../src/contexts/NotificationContext';
 
 const { width } = Dimensions.get('window');
 
