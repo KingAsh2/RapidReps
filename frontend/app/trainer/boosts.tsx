@@ -81,7 +81,7 @@ export default function BoostsScreen() {
       const token = await AsyncStorage.getItem('auth_token');
       const option = BOOST_OPTIONS.find(o => o.id === selectedBoost);
       
-      // Step 1: Create payment intent + pending boost
+      // Step 1: Create payment intent + pending boost on backend
       const res = await axios.post(
         `${API_URL}/api/boosts/purchase?boost_type=${selectedBoost}`,
         {},
@@ -95,11 +95,28 @@ export default function BoostsScreen() {
         loadBoosts();
         return;
       }
+
+      // Step 2: Present Stripe PaymentSheet on native, auto-confirm on web
+      if (stripe && clientSecret && Platform.OS !== 'web') {
+        const { error: initError } = await stripe.initPaymentSheet({
+          paymentIntentClientSecret: clientSecret,
+          merchantDisplayName: 'RapidReps',
+          style: 'alwaysDark',
+        });
+        if (initError) {
+          Alert.alert('Payment Error', initError.message);
+          return;
+        }
+        const { error: presentError } = await stripe.presentPaymentSheet();
+        if (presentError) {
+          if (presentError.code !== 'Canceled') {
+            Alert.alert('Payment Failed', presentError.message);
+          }
+          return;
+        }
+      }
       
-      // Step 2: In production, present Stripe PaymentSheet using clientSecret
-      // TODO: Integrate @stripe/stripe-react-native PaymentSheet
-      
-      // Step 3: Confirm payment after Stripe succeeds
+      // Step 3: Confirm payment on our backend
       await axios.post(
         `${API_URL}/api/boosts/${boostId}/confirm-payment`,
         {},
@@ -108,7 +125,7 @@ export default function BoostsScreen() {
       
       Alert.alert(
         'Boost Activated!',
-        `Your ${option?.label} is now active for ${option?.duration}.\n\nPayment ID: ${paymentIntentId}`
+        `Your ${option?.label} is now active for ${option?.duration}. Get ready for more visibility!`
       );
       loadBoosts();
     } catch (err: any) {
