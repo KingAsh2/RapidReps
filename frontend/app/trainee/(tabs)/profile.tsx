@@ -134,6 +134,24 @@ export default function TraineeProfileScreen() {
     }
   };
 
+  const loadStreaks = async () => {
+    try {
+      const data = await streaksAPI.getMyStreaks();
+      setStreakData(data);
+      // Start fire pulse animation if streak is active
+      if (data.currentStreak >= 2) {
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(streakPulseAnim, { toValue: 1.15, duration: 800, useNativeDriver: true }),
+            Animated.timing(streakPulseAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+          ])
+        ).start();
+      }
+    } catch (e) {
+      console.error('Error loading streaks:', e);
+    }
+  };
+
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     
