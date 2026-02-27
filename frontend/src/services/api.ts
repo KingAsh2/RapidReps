@@ -482,3 +482,23 @@ export const streaksAPI = {
   },
 };
 
+// Push Notifications API
+export const notificationsAPI = {
+  registerToken: async (token: string, deviceId?: string): Promise<any> => {
+    const response = await api.post('/push-tokens/register', { token, deviceId });
+    return response.data;
+  },
+  unregisterToken: async (token: string): Promise<any> => {
+    const response = await api.delete('/push-tokens/unregister', { data: { token } });
+    return response.data;
+  },
+  getNotifications: async (): Promise<any> => {
+    const response = await api.get('/notifications');
+    return response.data;
+  },
+  markAllRead: async (): Promise<any> => {
+    const response = await api.post('/notifications/mark-read');
+    return response.data;
+  },
+};
+
