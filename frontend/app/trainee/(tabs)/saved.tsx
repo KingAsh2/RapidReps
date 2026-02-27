@@ -49,6 +49,7 @@ export default function SavedTrainersScreen() {
   // Animations
   const headerAnim = useRef(new Animated.Value(0)).current;
   const listAnim = useRef(new Animated.Value(0)).current;
+  const heartPulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     loadSavedTrainers();
