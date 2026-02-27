@@ -2253,8 +2253,8 @@ async def client_confirm_session_end(
     }
 
 @api_router.get("/sessions/{session_id}", response_model=SessionResponse)
-async def get_session(session_id: str):
-    """Get session by ID"""
+async def get_session(session_id: str, current_user: dict = Depends(get_current_user)):
+    """Get session by ID — only participants or admin can view"""
     try:
         oid = ObjectId(session_id)
     except Exception:
@@ -2263,6 +2263,12 @@ async def get_session(session_id: str):
     session = await db.sessions.find_one({'_id': oid})
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Auth: only the trainer, trainee, or admin can view
+    user_id = str(current_user['_id'])
+    is_admin = current_user.get('isAdmin', False)
+    if user_id != session.get('trainerId') and user_id != session.get('traineeId') and not is_admin:
+        raise HTTPException(status_code=403, detail="Not authorized to view this session")
     
     return SessionResponse(**serialize_doc(session))
 
