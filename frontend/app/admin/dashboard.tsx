@@ -359,6 +359,33 @@ export default function AdminDashboard() {
     );
   };
 
+  // --- Pagination Bar ---
+  const PaginationBar = ({ current, total, pageSize, onPageChange }: { current: number; total: number; pageSize: number; onPageChange: (page: number) => void }) => {
+    const totalPages = Math.ceil(total / pageSize);
+    if (totalPages <= 1) return null;
+    return (
+      <View style={s.paginationBar} data-testid="pagination-bar">
+        <TouchableOpacity
+          style={[s.pageBtn, current === 0 && s.pageBtnDisabled]}
+          onPress={() => current > 0 && onPageChange(current - 1)}
+          disabled={current === 0}
+          data-testid="pagination-prev"
+        >
+          <Ionicons name="chevron-back" size={18} color={current === 0 ? C.gray : C.teal} />
+        </TouchableOpacity>
+        <Text style={s.pageInfo}>Page {current + 1} of {totalPages}</Text>
+        <TouchableOpacity
+          style={[s.pageBtn, current >= totalPages - 1 && s.pageBtnDisabled]}
+          onPress={() => current < totalPages - 1 && onPageChange(current + 1)}
+          disabled={current >= totalPages - 1}
+          data-testid="pagination-next"
+        >
+          <Ionicons name="chevron-forward" size={18} color={current >= totalPages - 1 ? C.gray : C.teal} />
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
   // --- RENDER: Users ---
   const renderUsers = () => (
     <View>
