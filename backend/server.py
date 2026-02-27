@@ -52,6 +52,45 @@ db = client[os.environ['DB_NAME']]
 # Stripe configuration
 stripe.api_key = os.environ.get('STRIPE_SECRET_KEY', '')
 
+# ============================================================================
+# PUSH NOTIFICATION SERVICE (Expo Push API)
+# ============================================================================
+EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send"
+
+async def send_push_notification(user_id: str, title: str, body: str, data: dict = None):
+    """Send push notification to a user via Expo Push API. Fire-and-forget."""
+    try:
+        tokens_cursor = db.push_tokens.find({'userId': user_id})
+        tokens = await tokens_cursor.to_list(10)
+        if not tokens:
+            return
+
+        messages = []
+        for t in tokens:
+            msg = {
+                "to": t['token'],
+                "sound": "default",
+                "title": title,
+                "body": body,
+            }
+            if data:
+                msg["data"] = data
+            messages.append(msg)
+
+        async with aiohttp.ClientSession() as session:
+            await session.post(
+                EXPO_PUSH_URL,
+                json=messages,
+                headers={"Content-Type": "application/json"}
+            )
+    except Exception as e:
+        logging.getLogger(__name__).warning(f"Push notification failed for user {user_id}: {e}")
+
+async def send_push_to_many(user_ids: List[str], title: str, body: str, data: dict = None):
+    """Send push notification to multiple users."""
+    for uid in user_ids:
+        await send_push_notification(uid, title, body, data)
+
 # JWT Configuration
 JWT_SECRET = os.environ.get('JWT_SECRET')
 if not JWT_SECRET:
