@@ -4,15 +4,13 @@
 ### Original Problem Statement
 Build a production-ready mobile app that functions like "Uber" for personal training. The app connects trainees with personal trainers, handles session booking, payments, verification, and admin management.
 
-### Deployment Fix Log (Feb 26, 2026)
-- **Fixed**: Import path error in `app/trainer/(tabs)/home.tsx` — changed `../../src/` to `../../../src/` for 4 imports (AuthContext, api, types, AlertContext). This was causing EAS update Metro bundling to fail during production deployment.
-
 ### Architecture
 - **Frontend**: React Native (Expo) with Expo Router
 - **Backend**: FastAPI (Python) with MongoDB
-- **Payments**: Stripe (LIVE key configured and working)
+- **Payments**: Stripe (LIVE key configured)
 - **Maps**: Google Maps API
 - **Build**: EAS (Expo Application Services)
+- **Deployment**: TestFlight (iOS)
 
 ### Implemented Features
 
@@ -27,14 +25,19 @@ Build a production-ready mobile app that functions like "Uber" for personal trai
 - [x] Frontend: Full UI with progress, uploads, "Hold to Submit" button
 - [x] Post-signup verification modal prompting trainers to verify
 
-#### Admin Dashboard
-- [x] Backend: Full admin API suite (dashboard, users, sessions, transactions, verifications)
-- [x] Frontend: Tab-based dashboard with approve/reject actions
+#### Admin Dashboard V2 (Feb 27, 2026)
+- [x] **Session Management**: Enriched sessions showing trainer/trainee names, session location, trainee home address for in-home sessions, scheduled vs actual duration, start/stop timestamps
+- [x] **User Management**: View all users, view user detail, remove users (cascade deletes all related data), admin self-delete protection
+- [x] **Transaction Management**: Enriched transactions with user names, refund payments (with Stripe integration), confirm payments, duplicate refund protection
+- [x] **Communication**: Admin can message any trainer/trainee through existing chat system
+- [x] **Admin Profile**: View and edit own profile (name, email, phone)
+- [x] **Verification Tab**: Approve/reject trainer verifications with checklist
+- [x] **Overview Dashboard**: Total users, trainers, trainees, sessions, revenue breakdown, memberships, boosts, pending verifications
+- [x] **Security**: passwordHash excluded from all user responses, all endpoints require admin auth
 
 #### Payment System
 - [x] Backend: Revenue split 75/25, min pricing, fees, Stripe integration
 - [x] Frontend: Confirm booking with price breakdown (demo mode fallback)
-- [x] Note: Stripe key invalid — payments in DEMO MODE
 
 #### Membership ($19.99/month)
 - [x] Backend: Subscribe, check status, duplicate prevention
@@ -56,29 +59,32 @@ Build a production-ready mobile app that functions like "Uber" for personal trai
 
 #### Messaging System
 - [x] Backend: Conversations, messages CRUD with participant validation
-- [x] Frontend: Conversation list and chat screens (already existed, verified working)
+- [x] Frontend: Conversation list and chat screens
 
 #### Rating & Review System
 - [x] Backend: Create ratings with duplicate prevention, get ratings with reviewer names
-- [x] Frontend: Post-session review screen with star rating (session-complete.tsx)
-- [x] Frontend: Trainer detail page shows reviews with reviewer names
+- [x] Frontend: Post-session review screen with star rating, trainer detail shows reviews
 
-#### UI/UX Fixes
-- [x] Logo overlap on welcome page (solid backing)
-- [x] Logout flow (→ welcome screen)
-- [x] Profile photo saving (`_id` → `id` mismatch)
-- [x] Admin dashboard auth token key
-- [x] Post-signup verification modal for trainers
-- [x] Intro video glitch (crossfade transition on video end/skip)
+#### Trainee Profile
+- [x] Home address field for in-home training sessions (NEW)
 
 ### Known Issues
-- Stripe Secret Key invalid (both `sk_` and `mk_` variants provided are rejected by Stripe)- Web preview non-functional (Expo environment limitation)
-- Intro video glitch on app open (P3, never investigated)
+- Stripe Secret Key may be invalid for production (test refunds work without live payment intents)
+- Web preview non-functional (Expo environment limitation)
 
-### Backend Test Results: 59/59 PASSED
-- Iteration 1: 28/28 — Core features, admin, verification
-- Iteration 2: 15/15 — Trainer earnings dashboard
-- Iteration 3: 16/16 — Payments, memberships, boosts, sessions
+### Backend Test Results
+- Iteration 1-3: 59/59 PASSED (Core features)
+- Iteration 4-6: Additional test suites
+- **Iteration 7: 26/26 PASSED** (Admin Panel V2 - all new endpoints verified)
+
+### New Admin API Endpoints (Feb 27, 2026)
+- `GET /api/admin/sessions` - Enriched with trainerName, traineeName, traineeHomeAddress, actualDurationMinutes
+- `GET /api/admin/transactions-enriched` - Transactions with user names
+- `DELETE /api/admin/users/{user_id}` - Remove user with cascade delete
+- `POST /api/admin/refund` - Refund session payment (Stripe + record)
+- `POST /api/admin/confirm-payment` - Confirm session payment
+- `PUT /api/admin/profile` - Update admin profile
+- `POST /api/admin/message` - Send message to any user
 
 ### Test Credentials
 - **Admin**: admin@rapidreps.com / admin123
