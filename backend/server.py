@@ -2594,31 +2594,62 @@ async def request_virtual_session(
 # ============================================================================
 
 @api_router.post("/ratings", response_model=RatingResponse)
-async def create_rating(rating: RatingCreate, current_user: dict = Depends(get_current_user)):
-    """Create a rating for a completed session"""
-    # Check if session exists and is completed
+async def create_rating(request: Request, rating: RatingCreate, current_user: dict = Depends(get_current_user)):
+    """Create a rating for a completed session — enforces 6 server-side rules + 48h window"""
+    user_id = str(current_user['_id'])
+
+    # Rule 5: Require verified email
+    if not current_user.get('emailVerified', False):
+        raise HTTPException(status_code=403, detail="Please verify your email before submitting a rating")
+
+    # Rule 4: Trainers cannot rate their own sessions
+    if user_id == rating.trainerId:
+        raise HTTPException(status_code=403, detail="Trainers cannot rate their own sessions")
+
+    # Check if session exists
     session = await db.sessions.find_one({'_id': ObjectId(rating.sessionId)})
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-    
+
+    # Rule 3: Session must be completed before rating
     if session['status'] != SessionStatus.COMPLETED:
         raise HTTPException(status_code=400, detail="Can only rate completed sessions")
-    
-    # Verify the rater is the actual trainee of this session
-    if str(current_user['_id']) != session.get('traineeId'):
+
+    # Rule 1: Only the session trainee can rate
+    if user_id != session.get('traineeId'):
         raise HTTPException(status_code=403, detail="Only the trainee of this session can submit a rating")
-    
-    # Check if rating already exists
-    existing_rating = await db.ratings.find_one({'sessionId': rating.sessionId})
+
+    # 48-hour rating window after session completion
+    session_ended_at = session.get('sessionEndedAt') or session.get('sessionDateTimeEnd')
+    if session_ended_at:
+        window_deadline = session_ended_at + timedelta(hours=48)
+        if datetime.utcnow() > window_deadline:
+            raise HTTPException(
+                status_code=400,
+                detail="The 48-hour rating window for this session has closed. Ratings must be submitted within 48 hours of session completion."
+            )
+
+    # Rule 2: Only 1 rating per session per user
+    existing_rating = await db.ratings.find_one({
+        'sessionId': rating.sessionId,
+        'traineeId': user_id
+    })
     if existing_rating:
-        raise HTTPException(status_code=400, detail="Session already rated")
-    
+        raise HTTPException(status_code=400, detail="You have already rated this session")
+
+    # Rule 6: Add timestamp/IP metadata for anti-fraud
+    client_ip = get_real_ip(request)
+    now = datetime.utcnow()
+
     rating_doc = rating.dict()
-    rating_doc['createdAt'] = datetime.utcnow()
-    
+    rating_doc['createdAt'] = now
+    rating_doc['submittedAt'] = now
+    rating_doc['clientIp'] = client_ip
+    rating_doc['userAgent'] = request.headers.get('user-agent', '')
+
     result = await db.ratings.insert_one(rating_doc)
     rating_doc['_id'] = result.inserted_id
-    
+
     # Update trainer average rating using aggregation
     avg_result = await db.ratings.aggregate([
         {'$match': {'trainerId': rating.trainerId}},
@@ -2632,7 +2663,7 @@ async def create_rating(rating: RatingCreate, current_user: dict = Depends(get_c
                 'totalReviews': avg_result[0]['count']
             }}
         )
-    
+
     return RatingResponse(**serialize_doc(rating_doc))
 
 @api_router.get("/trainers/{trainer_id}/ratings")
