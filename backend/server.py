@@ -22,8 +22,14 @@ from slowapi.errors import RateLimitExceeded
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# Rate limiter
-limiter = Limiter(key_func=get_remote_address)
+# Rate limiter — use X-Forwarded-For behind proxy/ingress
+def get_real_ip(request: Request) -> str:
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "127.0.0.1"
+
+limiter = Limiter(key_func=get_real_ip)
 
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
