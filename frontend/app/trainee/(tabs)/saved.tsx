@@ -59,9 +59,10 @@ export default function SavedTrainersScreen() {
   useEffect(() => {
     if (!loading) {
       Animated.parallel([
-        Animated.timing(headerAnim, {
+        Animated.spring(headerAnim, {
           toValue: 1,
-          duration: 400,
+          friction: 4,
+          tension: 50,
           useNativeDriver: true,
         }),
         Animated.spring(listAnim, {
