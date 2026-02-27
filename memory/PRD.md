@@ -2,102 +2,87 @@
 ## "Uber for Personal Training"
 
 ### Original Problem Statement
-Build a production-ready mobile app that functions like "Uber" for personal training. The app connects trainees with personal trainers, handles session booking, payments, verification, and admin management.
+Build a production-ready mobile app connecting trainees with personal trainers. Handles session booking, payments, verification, and admin management.
 
 ### Architecture
 - **Frontend**: React Native (Expo) with Expo Router
 - **Backend**: FastAPI (Python) with MongoDB
-- **Payments**: Stripe (LIVE key configured)
-- **Maps**: Google Maps API
-- **Build**: EAS (Expo Application Services)
-- **Deployment**: TestFlight (iOS)
+- **Payments**: Stripe | **Maps**: Google Maps API
+- **Build**: EAS | **Deployment**: TestFlight (iOS)
+
+---
 
 ### Implemented Features
 
-#### Authentication & Roles
-- [x] User signup/login with JWT tokens
-- [x] Role-based access: Trainee, Trainer, Admin
-- [x] Admin login flow with dashboard redirect
-- [x] Logout navigates to welcome screen
+#### Core
+- [x] Auth (JWT, role-based: Trainee/Trainer/Admin)
+- [x] Trainer 7-step verification
+- [x] Session booking with Stripe payments (75/25 revenue split)
+- [x] Membership ($19.99/mo), Trainer Boosts, Earnings Dashboard
+- [x] Messaging system, Rating/Review system
 
-#### Trainer Verification (7-Step)
-- [x] Backend: GET/POST verification endpoints
-- [x] Frontend: Full UI with progress, uploads, "Hold to Submit" button
-- [x] Post-signup verification modal prompting trainers to verify
+#### Admin Dashboard V2 (Feb 27)
+- [x] Enriched sessions (trainer/trainee names, location, home address, duration tracking)
+- [x] User management (view, detail, remove with cascade delete)
+- [x] Transaction management (refund via Stripe, confirm payments)
+- [x] Admin messaging to any user
+- [x] Admin profile editing
+- [x] Verification tab (approve/reject)
+- [x] Overview stats dashboard
+- [x] Security (passwordHash excluded, auth required)
 
-#### Admin Dashboard V2 (Feb 27, 2026)
-- [x] Session Management: Enriched sessions with trainer/trainee names, location, home address, duration tracking
-- [x] User Management: View all users, remove users (cascade delete), admin self-delete protection
-- [x] Transaction Management: Refund payments (Stripe), confirm payments, duplicate refund protection
-- [x] Communication: Admin can message any user via chat
-- [x] Admin Profile: View and edit own profile
-- [x] Verification Tab: Approve/reject trainer verifications
-- [x] Overview Dashboard: Stats, revenue, memberships, boosts, pending verifications
-- [x] Security: passwordHash excluded from responses, all endpoints require admin auth
-
-#### Streaks / Consistency Points System (Feb 27, 2026)
-- [x] Backend: `GET /api/streaks/me` - calculates consecutive-week streaks from completed sessions
+#### Streaks / Consistency Points (Feb 27)
+- [x] `GET /api/streaks/me` - consecutive-week streaks + consistency points
 - [x] Streak levels: none -> warming (2wk) -> fire (4wk) -> blazing (8wk) -> legend (12wk)
-- [x] Consistency points formula: sessions*10 + streak_weeks*25 + total_minutes//10
-- [x] Frontend: Streak card on trainee profile with gradient, fire icon pulse animation, progress bar
-- [x] Frontend: Streak card on trainer profile with same display
-- [x] Frontend: Streak banner on achievements page with detailed stats
+- [x] Points: sessions*10 + streak_weeks*25 + total_minutes//10
+- [x] Animated streak cards on trainee + trainer profiles
+- [x] Streak banner on achievements page
 
-#### Achievement System (Updated Feb 27, 2026)
-- [x] 12 badges total (10 original + 2 new streak-based)
-- [x] New: Streak Star (maintain 4-week streak)
-- [x] New: Duration Master (accumulate 500 training minutes)
-- [x] Safe access for session fields (prevents KeyError on missing data)
+#### Achievement System (Updated Feb 27)
+- [x] 12 badges: 10 original + Streak Star (4-week streak) + Duration Master (500 min)
+- [x] Safe access for missing session fields
 
-#### UI/UX Visual Polish (Feb 27, 2026)
-- [x] Heart pulse animation on saved trainers page
-- [x] Enhanced trainer card shadows (deeper shadow depth)
-- [x] Animated streak cards with gradient backgrounds
+#### Weekly Leaderboard (Feb 27)
+- [x] `GET /api/leaderboard/weekly` - ranked by consistency points
+- [x] Animated podium for top 3, personal rank banner
+- [x] Accessible from trainee + trainer profile pages
+- [x] Admin users excluded from rankings
 
-#### Payment System
-- [x] Revenue split 75/25, min pricing, fees, Stripe integration
-- [x] Frontend: Confirm booking with price breakdown
+#### Trainer Video Intros (Feb 27)
+- [x] Video playback on trainer detail page using expo-av
+- [x] Auto-playing, looping, muted video section with overlay
 
-#### Membership ($19.99/month)
-- [x] Subscribe, check status, duplicate prevention
+#### Distance Labels (Feb 27)
+- [x] Distance displayed on map pins below trainer markers
+- [x] Distance already on trainer cards (home screen + saved)
+- [x] Enhanced saved trainer cards with distance display
 
-#### Trainer Boosts
-- [x] Purchase boosts (daily/weekly/monthly)
-
-#### Trainer Earnings Dashboard
-- [x] Enhanced earnings with daily/weekly breakdown, payout requests
-
-#### Messaging System
-- [x] Conversations, messages CRUD with participant validation
-
-#### Rating & Review System
-- [x] Create ratings with duplicate prevention, get ratings with reviewer names
+#### UI/UX Visual Polish (Feb 27)
+- [x] Heart pulse animation on saved trainers
+- [x] Enhanced card shadows (deeper depth on trainer + saved cards)
+- [x] CTA button elevation shadows (book buttons with orange glow)
+- [x] Brand continuity: emoji removed from headers, consistent Ionicons
 
 #### Trainee Profile
 - [x] Home address field for in-home training sessions
 
+---
+
 ### Backend Test Results
 - Iteration 7: 26/26 PASSED (Admin Panel V2)
-- **Iteration 8: 14/14 PASSED** (Streaks + Achievements + Regression)
+- Iteration 8: 14/14 PASSED (Streaks + Achievements)
+- **Iteration 9: 15/15 PASSED** (Leaderboard + Full Regression)
+- **Total: 55/55 tests passed across all iterations**
 
-### API Endpoints Summary
-**Admin:**
-- `GET /api/admin/dashboard` | `GET /api/admin/sessions` | `GET /api/admin/users`
-- `GET /api/admin/transactions-enriched` | `GET /api/admin/verifications/pending`
-- `DELETE /api/admin/users/{id}` | `POST /api/admin/refund` | `POST /api/admin/confirm-payment`
-- `PUT /api/admin/profile` | `POST /api/admin/message`
-
-**Streaks:**
-- `GET /api/streaks/me` - Get current user streak data
+### API Endpoints
+**Admin:** dashboard, sessions, users, transactions-enriched, verifications, delete user, refund, confirm-payment, profile update, message
+**Streaks:** `GET /api/streaks/me`
+**Leaderboard:** `GET /api/leaderboard/weekly`
 
 ### Test Credentials
 - **Admin**: admin@rapidreps.com / admin123
 - **Trainer**: trainer1@test.com / test123
 - **Trainee**: trainee1@test.com / test123
 
-### Remaining P2 Tasks
-- [ ] Trainer video intros (looping)
-- [ ] Distance labels on map
-- [ ] Redesign "Saved Trainers" layout with better card hierarchy
-- [ ] Brand continuity pass (cohesive icons, consistent orange glow)
+### Remaining Backlog
 - [ ] Push notifications (tabled by user)
