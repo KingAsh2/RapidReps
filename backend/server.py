@@ -2325,6 +2325,8 @@ async def end_session(
         'message': 'Session ended. Awaiting client confirmation.',
         'sessionEndedAt': datetime.utcnow().isoformat()
     }
+
+@api_router.post("/sessions/{session_id}/client-confirm-end")
 async def client_confirm_session_end(
     session_id: str,
     current_user: dict = Depends(get_current_user)
