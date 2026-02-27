@@ -2402,6 +2402,17 @@ async def accept_session(session_id: str, current_user: dict = Depends(get_curre
     )
     
     updated_session = await db.sessions.find_one({'_id': ObjectId(session_id)})
+
+    # Push: Notify trainee that session was accepted
+    trainer_name = current_user.get('fullName', 'Your trainer')
+    asyncio.create_task(create_and_send_notification(
+        session['traineeId'],
+        "Session Accepted!",
+        f"{trainer_name} accepted your session request. Get ready!",
+        "session_accepted",
+        {"sessionId": session_id, "screen": "trainee/sessions"}
+    ))
+
     return SessionResponse(**serialize_doc(updated_session))
 
 @api_router.patch("/sessions/{session_id}/decline", response_model=SessionResponse)
@@ -2420,6 +2431,17 @@ async def decline_session(session_id: str, current_user: dict = Depends(get_curr
     )
     
     updated_session = await db.sessions.find_one({'_id': ObjectId(session_id)})
+
+    # Push: Notify trainee that session was declined
+    trainer_name = current_user.get('fullName', 'The trainer')
+    asyncio.create_task(create_and_send_notification(
+        session['traineeId'],
+        "Session Declined",
+        f"{trainer_name} is unable to take your session. Try another trainer!",
+        "session_declined",
+        {"sessionId": session_id, "screen": "trainee/home"}
+    ))
+
     return SessionResponse(**serialize_doc(updated_session))
 
 @api_router.patch("/sessions/{session_id}/cancel")
