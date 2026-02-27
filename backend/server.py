@@ -2654,6 +2654,7 @@ async def create_rating(request: Request, rating: RatingCreate, current_user: di
     now = datetime.utcnow()
 
     rating_doc = rating.dict()
+    rating_doc['reviewText'] = sanitize_text(rating_doc.get('reviewText'))
     rating_doc['createdAt'] = now
     rating_doc['submittedAt'] = now
     rating_doc['clientIp'] = client_ip
