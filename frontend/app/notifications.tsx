@@ -77,13 +77,20 @@ export default function NotificationsScreen() {
           <Ionicons name="arrow-back" size={26} color={Colors.navy} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Notifications</Text>
-        {unreadCount > 0 ? (
-          <TouchableOpacity onPress={markAllRead} data-testid="mark-all-read-btn">
-            <Text style={styles.markRead}>Mark all read</Text>
+        <View style={styles.headerRight}>
+          {unreadCount > 0 && (
+            <TouchableOpacity onPress={markAllRead} style={styles.markReadBtn} data-testid="mark-all-read-btn">
+              <Text style={styles.markRead}>Mark all read</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity
+            onPress={() => router.push('/notification-preferences')}
+            style={styles.settingsBtn}
+            data-testid="notification-settings-btn"
+          >
+            <Ionicons name="settings-outline" size={22} color={Colors.navy} />
           </TouchableOpacity>
-        ) : (
-          <View style={{ width: 80 }} />
-        )}
+        </View>
       </View>
 
       <FlatList
