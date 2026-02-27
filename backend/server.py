@@ -21,6 +21,11 @@ import aiohttp
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from email_service import (
+    send_password_reset_email, send_welcome_email, send_session_booked_email,
+    send_payment_receipt_email, send_weekly_digest_email, send_streak_warning_email,
+    send_payout_notification_email,
+)
 
 
 ROOT_DIR = Path(__file__).parent
