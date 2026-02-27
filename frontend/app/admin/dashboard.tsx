@@ -52,11 +52,16 @@ export default function AdminDashboard() {
   const [dashboard, setDashboard] = useState<any>(null);
   const [users, setUsers] = useState<any[]>([]);
   const [usersTotal, setUsersTotal] = useState(0);
+  const [usersPage, setUsersPage] = useState(0);
   const [verifications, setVerifications] = useState<any[]>([]);
   const [sessions, setSessions] = useState<any[]>([]);
   const [sessionsTotal, setSessionsTotal] = useState(0);
+  const [sessionsPage, setSessionsPage] = useState(0);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [transTotal, setTransTotal] = useState(0);
+  const [transPage, setTransPage] = useState(0);
+
+  const PAGE_SIZE = 20;
 
   // Modals
   const [selectedUser, setSelectedUser] = useState<any>(null);
