@@ -1,175 +1,195 @@
 <analysis>**original_problem_statement:**
-The user initially wanted to make the app production-ready. After fixing deployment-blocking bugs, the user has requested a significant new phase of development to enhance the Admin Panel and overhaul the UI/UX.
+The user's initial goal was to make the application production-ready. This evolved into a multi-phase project involving:
+1.  **Admin Panel V2 Overhaul:** A complete rebuild of the admin dashboard with comprehensive management features for users, sessions, and transactions.
+2.  **Feature & UI/UX Enhancements:** Addition of new features like Streaks, Leaderboards, and Trainer Video Intros, along with significant visual polish (animations, shadows, improved layouts).
+3.  **QA & Hardening:** A full audit of the application to identify and fix critical bugs, security vulnerabilities, and payment flow issues before deployment to TestFlight.
 
-**PRODUCT REQUIREMENTS (New & Unstarted):**
-
-**1. Admin Panel V2 (Complete Overhaul):**
-    *   **Session Management:**
-        *   Display Trainer and Trainee names for each session.
-        *   Show session location (including trainee's address for in-home sessions).
-        *   Track session duration by implementing start/stop times initiated by either the trainer or trainee. This data must be visible in the admin panel.
-    *   **User Management:**
-        *   Admins must be able to remove users from the app.
-    *   **Transaction Management:**
-        *   Admins must be able to refund and confirm payments.
-    *   **Communication:**
-        *   Admins must be able to message trainers and trainees directly through the existing chat system.
-    *   **Admin Profile:**
-        *   Admins must be able to update their own profile information.
-    *   **General Mandate:** Grant the admin complete oversight to manage users, transactions, and obtain all necessary data.
-
-**2. Feature & UI/UX Enhancements:**
-    *   **Achievements:** The logic for achievements should be updated to be based on the new, detailed session information (e.g., duration, frequency). Use a standard set of achievements.
-    *   **Visual Polish:**
-        *   Add subtle elevation shadows to major CTA buttons and clean shadow depth to trainer cards.
-        *   Implement micro-animations (e.g., heart icon pulse, map glow, header bounce).
-        *   Improve text readability with faint dark gradients behind headers.
-        *   Ensure spacing is consistent across all screens.
-    *   **Feature Additions:**
-        *   Add a Streaks / Consistency Points system.
-        *   Display short (3-5 second) looping video intros for trainers.
-        *   Add distance labels to trainers on the map (e.g., 2.3 miles away).
-        *   Redesign the Saved Trainers layout with better card hierarchy.
-    *   **Brand Continuity:**
-        *   Ensure all effects (like the orange glow) and icons are consistent and match the energetic fitness tone of the app.
-        *   Refine icons using a cohesive set.
+**PRODUCT REQUIREMENTS (Now Completed or In Progress):**
+-   **Admin Panel:** Full oversight to manage users, transactions, sessions, and communication. (Completed)
+-   **Features:** Streaks, updated achievements, trainer video intros, distance labels, weekly leaderboard. (Completed)
+-   **UI/UX:** Enhanced button/card shadows, micro-animations (heart pulse, header bounce, map glow), consistent icons, and improved text readability. (Completed)
+-   **Security & Payments:** Implement real Stripe charges for in-app purchases and add rate limiting to critical endpoints. (In Progress)
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application is a functional baseline with core features like authentication, Stripe payments, and trainer verification implemented. Recently, critical deployment-blocking bugs related to incorrect relative file paths in the frontend were resolved. The app is **not** production-ready as previously stated; it is now entering a new, major development phase to build the Admin Panel V2 and implement a significant UI/UX overhaul as requested by the user. The backend is stable, and the frontend is functional but requires the extensive changes listed above.
+The application is a feature-rich full-stack app (FastAPI, React Native/Expo, MongoDB). Major development work from the previous sessions is complete, including a full Admin Panel V2, new user-facing features like Streaks and Leaderboards, and significant UI/UX polish. Following a comprehensive QA audit, 4 critical bugs were fixed, and the agent then implemented real Stripe charges for in-app purchases and API rate limiting to harden the application for production. The frontend code for handling Stripe payments has been written, but a key dependency seems to be missing.
 
 **Last working item**:
--   Last item agent was working: The agent was gathering context to address the user's new, large-scale feature requests for the Admin Panel and UI/UX. It was in the process of reviewing the existing codebase, and had just finished viewing the backend server logic and the current admin dashboard frontend.
+-   Last item agent was working: The agent was implementing and testing major security and payment-related fixes identified in its QA report. This involved:
+    1.  Switching mock membership and boost purchases to use real Stripe PaymentIntents.
+    2.  Installing and configuring  to add rate limiting to the login, signup, and payment endpoints.
+    3.  Fixing an issue where the rate limiter incorrectly identified all users by the same proxy IP, by correctly using the  header.
 -   Status: IN PROGRESS
--   Agent Testing Done: N
--   Which testing method agent to use? NA (Planning phase; no code has been written yet).
+-   Agent Testing Done: Y (The agent successfully tested the backend changes via , confirming that Stripe PaymentIntents are created and that rate limiting returns a  error after the threshold is met.)
+-   Which testing method agent to use? . A full regression test is needed to ensure the new payment flows and rate limiting haven't introduced any side effects. Special attention should be paid to the frontend payment flow.
 -   User Testing Done: N
 
 **All Pending/In progress Issue list**:
--   Issue 1: **Deployment Build Failures due to Incorrect Paths**
-    -   Attempted fixes: The agent successfully fixed two separate instances of this error in  by correcting relative import paths from  to . The first fix was for module imports (e.g., AuthContext, api), and the second was for an image asset required via .
-    -   Next debug checklist: N/A
-    -   Why fix this issue and what will be achieved with the fix?: Resolving these pathing issues was critical to allow the frontend to build successfully for deployment.
-    -   Status: RESOLVED
-    -   Is recurring issue? Y
-    -   Should Test frontend/backend/both after fix? Frontend
-    -   Blocked on other issue: None
+-   Issue 1: **Frontend payment flow is likely broken due to a missing dependency.** (P0 - CRITICAL)
+-   Issue 2: **Full validation of Stripe payment and rate-limiting features.** (P0)
+
+Issues Detail:
+-   **Issue 1: Frontend payment flow is likely broken due to a missing dependency.**
+    -   Attempted fixes: The agent updated the frontend code in  and  to handle the 2-step Stripe payment flow, preparing to use the  from . However, there is no record of the agent installing this package.
+    -   Next debug checklist:
+        1.  Verify if  is listed in .
+        2.  If not present, run yarn add v1.22.22
+[1/4] Resolving packages...
+[2/4] Fetching packages...
+[3/4] Linking dependencies...
+info Visit https://yarnpkg.com/en/docs/cli/add for documentation about this command. in the  directory.
+        3.  Restart the frontend service: frontend: ERROR (no such process)
+frontend: ERROR (no such process).
+        4.  Proceed with testing the payment flow.
+    -   Why fix this issue and what will be achieved with the fix?: The app will crash when a user tries to access the membership or boost purchase screens. Fixing this is critical to making payments functional.
+    -   Status: NOT STARTED
+    -   Is recurring issue? N
+    -   Should Test frontend/backend/both after fix? Both
+    -   Blocked on other issue: None.
+
+-   **Issue 2: Full validation of Stripe payment and rate-limiting features.**
+    -   Attempted fixes: Backend  tests were successful.
+    -   Next debug checklist: After resolving Issue 1, call the  with a plan focused on:
+        -   Triggering the rate limit on login and signup.
+        -   Executing a successful membership purchase.
+        -   Executing a successful boost purchase.
+        -   Verifying that other core functionalities (booking, messaging, etc.) are not broken.
+    -   Why fix this issue and what will be achieved with the fix?: To confirm that the critical payment and security features are working end-to-end without regressions before deployment.
+    -   Status: IN PROGRESS
+    -   Is recurring issue? N
+    -   Should Test frontend/backend/both after fix? Both
+    -   Blocked on other issue: Issue 1
 
 **In progress Task List**:
--   Task 1: **Plan and Architect Admin Panel V2 & UI/UX Overhaul** (P0)
-    -   Where to resume: The agent has reviewed  and . The immediate next step is to synthesize the user's new requirements (from chat messages 48 & 51) and the codebase context into a detailed, step-by-step implementation plan. This plan must be presented to the user for approval via the  tool before any code is written.
-    -   What will be achieved with this?: A clear, user-approved roadmap for building all the requested features.
-    -   Status: IN PROGRESS
-    -   Should Test frontend/backend/both after fix? Both
-    -   Blocked on something: User approval of the forthcoming plan.
+-   None. The current focus is on fixing the pending issues.
 
 **Upcoming and Future Tasks**
-The following tasks are derived from recent user requests and constitute the new scope of work.
+The following tasks are derived from the QA report () generated in the last session. The user has approved proceeding with these after the critical fixes are done.
 
 **Upcoming Tasks:**
--   **P0: Admin Panel V2 Implementation:**
-    -   **Backend:**
-        -   Create new endpoints to support session start/stop actions.
-        -   Modify existing session endpoints () to populate trainer and trainee user details (name, photo).
-        -   Create an endpoint for admins to remove users (soft or hard delete).
-        -   Create endpoints to facilitate payment refunds via Stripe.
-        -   Expand messaging endpoints to allow admin participation.
-        -   Create an endpoint for updating admin profile information.
-    -   **Frontend:**
-        -   Redesign the Admin Dashboard () to include all new functionalities: session tracking view, user list with Remove buttons, transaction list with Refund buttons, and a user messaging interface.
--   **P1: UI/UX & Feature Enhancements:**
-    -   Implement all visual improvements listed in the PRODUCT REQUIREMENTS (shadows, animations, gradients).
-    -   Backend/Frontend implementation for the Streaks system.
-    -   Update trainer profiles/cards to support video intros.
+-   **P1: Implement Real Forgot Password Flow.**
+    -   The user is not ready for SendGrid integration yet, so this remains deferred. The current implementation correctly shows a Contact support message.
+-   **P2: Address Major Issues from QA Report.**
+    -   **M2: Inconsistent Button States:** Add loading/disabled states to buttons across the app (e.g., during payment processing, profile updates) to prevent double-clicks and provide user feedback.
+    -   **M3: Lack of Input Sanitization:** Implement backend sanitization on user-generated text fields to protect against XSS attacks.
 
 **Future Tasks:**
--   Refine achievement logic based on new session data.
--   Implement distance labels for trainers (requires location services integration).
--   Overhaul the Saved Trainers screen UI.
+-   **Address Minor Issues / UX Improvements from QA Report.**
+    -   Add confirmation modals for critical actions (e.g., Are you sure you want to remove this user?).
+    -   Improve empty state screens (e.g., You have no saved trainers yet).
+    -   Add toast notifications for success/error actions.
+    -   Implement pagination on long lists in the Admin Panel (users, sessions, transactions).
+-   **Technical Debt:**
+    -   Resolve the 86+ non-blocking TypeScript strict-mode warnings for better code quality and long-term maintainability.
 
 **Completed work in this session**
--   **Critical Bug Fix:** Resolved recurring frontend build failures by correcting incorrect relative import paths in .
-    -   Fixed module imports (e.g.,  to ).
-    -   Fixed asset imports (e.g.,  to ).
+-   **QA Audit & Critical Fixes:**
+    -   Generated a comprehensive QA report ().
+    -   Fixed 4 critical bugs related to auth bypass, payment validation, and a crashing API call.
+-   **Admin Panel V2:**
+    -   Completed a full rewrite of  with tabs for Users, Verifications, Sessions, Transactions, and Profile Management.
+    -   Added all necessary backend endpoints in  to support admin actions (delete user, refund payment, etc.).
+-   **Feature Implementation:**
+    -   **Streaks System:** Backend endpoint and frontend UI on profile screens.
+    -   **Achievements:** Logic updated to be based on session duration and streaks.
+    -   **Weekly Leaderboard:** Backend endpoint () and a new frontend screen ().
+    -   **Trainer Video Intros:** Implemented using  on the trainer detail screen.
+-   **UI/UX Polish:**
+    -   Added animations (map glow, header bounce, heart pulse) and improved shadows and text gradients across multiple screens.
 
 **Earlier issues found/mentioned but not fixed**
--   None.
-
-**Known issue recurrence from previous fork**
--   **Web Preview Broken**: The web preview remains non-functional. This is a known environment limitation and not a blocker for mobile development.
--   **Recurrence Count**: The issue of incorrect relative paths in nested directories occurred twice consecutively during deployment attempts. This indicates a pattern that should be watched for when creating new nested-route components.
--   **Status**: RESOLVED
+-   **TypeScript Strict-Mode Warnings:** The agent identified over 86 non-blocking TypeScript warnings during its audit. These relate to strict type checking and do not prevent deployment but constitute technical debt.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Expo Router Pathing:** The deployment build failures were caused by a misunderstanding of relative paths in nested routes within Expo Router. Files inside a directory like  are one level deeper and require  to access the  or  directory, not .
--   **FastAPI Backend:** The backend is built with FastAPI and will need significant additions to support the new admin features.
--   **Stripe Integration:** The app uses Stripe for payments. New functionality for admin-initiated refunds will need to be added.
+-   **Stripe PaymentIntents:** Using a two-step payment flow (create intent on backend, confirm on frontend with ).
+-   **API Rate Limiting:** Implemented using the  library in FastAPI.
+-   **Proxy IP Forwarding:** Correctly using the  header is crucial for IP-based features (like rate limiting) in the Kubernetes environment.
+-   **React Native Animations:** Using the  library for spring-based and keyframe animations.
+-   **Comprehensive QA:** The session involved a deep audit of the codebase, creating a formal QA report to identify and prioritize bugs and risks.
 
 **key DB schema**
--   No changes made in this session. Future tasks will likely require adding fields to the  collection (e.g., , , ).
+-   **users:**  field added for trainees. Logic for  and  is now tied to real payments.
+-   **sessions:** Backend logic now relies on  and  for duration calculations.
 
 **changes in tech stack**
--   None in this session.
+-   **slowapi:** Added to the backend for rate limiting.
+-   **@stripe/stripe-react-native:** Required for the frontend payment flow, but its installation is pending.
 
 **All files of reference**
--   : The file where the critical deployment bugs were fixed.
--   : The main backend file that will need extensive modifications for the new admin features.
--   : The starting point for the Admin Panel V2 UI development.
+-   : The detailed QA audit report. All future work should reference this.
+-   : Contains all backend logic, including recent payment and rate-limiting changes.
+-   : Frontend for membership purchase, updated for Stripe .
+-   : Frontend for boost purchase, updated for Stripe .
+-   : Needs to be checked and potentially updated.
 
 **Areas that need refactoring**:
--   None identified yet, but the Admin Panel will be a complete replacement, not a refactor.
+-   **TypeScript Errors:** The codebase has 86+ non-blocking TypeScript warnings that should be addressed to improve code quality.
+-   **Button States:** The QA report noted a lack of consistent loading/disabled states on interactive elements.
 
 **key api endpoints**
--    (GET): Will need to be updated to populate user details.
--   **(New endpoints to be created):**
+-   : (POST) Now creates a Stripe PaymentIntent.
+-   : (POST) Now creates a Stripe PaymentIntent.
+-   Rate limited endpoints (10 requests/minute):
     -    (POST)
     -    (POST)
-    -    (DELETE)
     -    (POST)
-    -    (POST)
-    -    (PUT)
 
 **Critical Info for New Agent**
-1.  **Scope Change:** The project's goal has shifted dramatically from deploying a finished app to a new phase of major feature development. Do not assume the app is complete. The user's latest requests (Admin Panel V2, UI/UX overhaul) are the new priority.
-2.  **Deployment Bugs Fixed:** The immediate build-blocking errors have been resolved. They were all related to incorrect relative paths in .
-3.  **Next Step is Planning:** Your immediate task is to create a detailed, step-by-step plan to implement the new admin and UI/UX features. You must get user approval for this plan via  before writing any code.
-4.  **Admin Credentials:** The login is  / .
+1.  **Missing Stripe Dependency:** Your first task is to fix the likely missing  package in the frontend. The app will crash without it. Verify  and run yarn add v1.22.22
+[1/4] Resolving packages...
+[2/4] Fetching packages...
+[3/4] Linking dependencies...
+[4/4] Building fresh packages...
+success Saved lockfile.
+success Saved 1 new dependency.
+info Direct dependencies
+└─ @stripe/stripe-react-native@0.59.1
+info All dependencies
+└─ @stripe/stripe-react-native@0.59.1
+Done in 5.88s. if needed.
+2.  **QA Report is the Guide:** All subsequent work should be guided by the QA report found at . The Major Issues are the next priority after fixing the payment flow.
+3.  **Password Reset is Deferred:** The user has explicitly stated they are not ready for a SendGrid integration. Do not attempt to implement a full password reset flow. The current Contact support message is the intended behavior.
+4.  **Rate Limiting Context:** The backend uses  and relies on the  header to get the real client IP. Remember this if you modify any IP-based logic.
 
 **documents and test reports created in this job**
--    was updated.
+-   
+-   
+-   
+-   
+-   
+-   
 
 **Last 10 User Messages and any pending HUMAN messages**
--   **User (Msg 37):** Provides new deployment logs showing an asset path error in . (Status: COMPLETED, bug is fixed).
--   **Agent (Msg 38):** Acknowledges the new error.
--   **Agent (Msg 40):** Identifies the pattern of incorrect  paths.
--   **Agent (Msg 42):** Applies the fix for the asset path.
--   **Agent (Msg 44):** Confirms all paths are now correct and the deployment should work.
--   **User (Msg 46):** Asks for admin login info. (Status: COMPLETED).
--   **Agent (Msg 47):** Provides the admin credentials.
--   **User (Msg 48):** Submits a large list of new feature requirements for the Admin Panel and achievements. (Status: NOT STARTED).
--   **User (Msg 51):** Provides clarifications on admin features and submits a second large list of UI/UX and branding enhancements. (Status: NOT STARTED).
--   **Agent (Msg 52 - 65):** Starts exploring the codebase to prepare for planning the new features. User repeatedly prompts to continue. (Status: IN PROGRESS).
+-   **User (Msg 389):** Proceed yes, however im not ready for send grid - Approved implementing real payments and rate limiting, but deferred the password reset feature. (Status: IN PROGRESS)
+-   **User (Msg 386):** Proceed with the next items - Gave approval to work on the issues identified in the QA report. (Status: NOT STARTED)
+-   **User (Msg 374):** Acknowledged the agent's work after fixing the 4 critical bugs.
+-   **User (Msg 373):** Acknowledged the QA report.
+-   **User (Msg 355):** A detailed prompt asking the agent to perform a comprehensive QA audit of the entire application. (Status: COMPLETED)
+-   **User (Msg 354):** Asked the agent to perform a final check for any issues before deploying to iOS TestFlight. (Status: COMPLETED)
+-   **User (Msg 324):** Asked if there were any remaining issues to be resolved before deployment. (Status: COMPLETED)
+-   **User (Msg 265):** Yes - Approved the implementation of the final three UI polish items. (Status: COMPLETED)
+-   **User (Msg 261):** Asked if all requested features and enhancements were complete. (Status: COMPLETED)
+-   **User (Msg 252):** test end to end, every button etc - Requested a full end-to-end test of the application. (Status: COMPLETED)
 
 **Project Health Check:**
--   **Broken**:
-    -   None. The deployment blockers are fixed.
--   **Mocked**:
-    -   None.
+-   **Broken**: The frontend payment flow is very likely broken. Accessing the membership or boost screens will probably crash the app due to the missing  dependency.
+-   **Mocked**: The Forgot Password flow is intentionally mocked to display a Contact support message, as per the user's request.
 
 **3rd Party Integrations**
--   **Google Maps**: Uses a user-provided API Key.
--   **Expo Application Services (EAS)**: Used for building the application.
--   **Stripe**: Fully integrated for payments, will require additions for admin refunds.
+-   **Stripe:** Used for all payments. Backend creates real PaymentIntents. Frontend needs  to function. Test key is in the environment.
+-   **Google Maps:** Used for displaying maps and trainer locations.
+-   **Expo AV:** Used for playing trainer intro videos.
+-   **slowapi:** A new backend dependency for API rate limiting.
 
 **Testing status**
--   Testing agent used after significant changes: NO. The recent fixes were small and verified by  and manual inspection of the code and build logs.
+-   Testing agent used after significant changes: YES
 -   Troubleshoot agent used after agent stuck in loop: NO
 -   Test files created: None.
--   Known regressions: None.
+-   Known regressions: None identified in the last test runs, but the new payment flow changes have not been fully tested end-to-end.
 
 **Credentials to test flow:**
 -   **Admin**:  / 
@@ -177,4 +197,14 @@ The following tasks are derived from recent user requests and constitute the new
 -   **Trainees (Password: )**: , 
 
 **What agent forgot to execute**
--   The agent did not use  at the very start of the session to confirm its initial plan, as instructed by the system prompt. It immediately began debugging the deployment logs provided by the user in their first message of the session.</analysis>
+-   The agent did not run yarn add v1.22.22
+[1/4] Resolving packages...
+[2/4] Fetching packages...
+[3/4] Linking dependencies...
+[4/4] Building fresh packages...
+success Saved 1 new dependency.
+info Direct dependencies
+└─ @stripe/stripe-react-native@0.59.1
+info All dependencies
+└─ @stripe/stripe-react-native@0.59.1
+Done in 3.01s. after updating the frontend code to use the Stripe PaymentSheet. This is a critical omission that will prevent the payment flows from working.</analysis>
