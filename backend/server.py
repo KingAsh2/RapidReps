@@ -2573,7 +2573,7 @@ async def request_virtual_session(
         'trainerEarningsCents': trainer_earnings,
         'locationType': 'virtual',
         'locationNameOrAddress': 'Zoom Video Call',
-        'notes': request.notes,
+        'notes': sanitize_text(request.notes),
         'paymentIntentId': f'mock_payment_{uuid.uuid4().hex[:16]}',
         'paymentStatus': payment_status,
         'isVirtualSession': True,
