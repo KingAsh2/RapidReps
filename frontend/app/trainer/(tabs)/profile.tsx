@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { Alert } from 'react-native';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { streaksAPI } from '../../../src/services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
