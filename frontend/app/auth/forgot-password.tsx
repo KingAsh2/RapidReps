@@ -46,13 +46,11 @@ export default function ForgotPasswordScreen() {
       return;
     }
 
-    setLoading(true);
-
-    // Mock API call - simulate 2 second delay
-    setTimeout(() => {
-      setLoading(false);
-      setEmailSent(true);
-    }, 2000);
+    showAlert({
+      title: 'Feature Coming Soon',
+      message: 'Password reset via email is not yet available. Please contact support at support@rapidreps.com for assistance resetting your password.',
+      type: 'info',
+    });
   };
 
   if (emailSent) {
