@@ -964,7 +964,7 @@ async def signup(request: Request, user_data: UserSignUp):
     
     # Create user document
     user_doc = {
-        'fullName': user_data.fullName,
+        'fullName': sanitize_text(user_data.fullName),
         'email': user_data.email,
         'phone': user_data.phone,
         'passwordHash': hashed_password,
