@@ -500,5 +500,13 @@ export const notificationsAPI = {
     const response = await api.post('/notifications/mark-read');
     return response.data;
   },
+  getPreferences: async (): Promise<any> => {
+    const response = await api.get('/notification-preferences');
+    return response.data;
+  },
+  updatePreferences: async (prefs: any): Promise<any> => {
+    const response = await api.put('/notification-preferences', prefs);
+    return response.data;
+  },
 };
 
