@@ -3968,7 +3968,7 @@ async def admin_get_sessions(
     status: Optional[str] = None,
     admin_user: dict = Depends(require_admin)
 ):
-    """Get all sessions for admin"""
+    """Get all sessions for admin with trainer/trainee names, location, and duration"""
     query = {}
     if status:
         query['status'] = status
@@ -3976,8 +3976,69 @@ async def admin_get_sessions(
     sessions = await db.sessions.find(query).sort('createdAt', -1).skip(skip).limit(limit).to_list(limit)
     total = await db.sessions.count_documents(query)
     
+    # Collect all unique user IDs for batch lookup
+    user_ids = set()
+    for s in sessions:
+        if s.get('trainerId'):
+            user_ids.add(s['trainerId'])
+        if s.get('traineeId'):
+            user_ids.add(s['traineeId'])
+    
+    # Batch fetch user names
+    users_map = {}
+    if user_ids:
+        user_obj_ids = []
+        for uid in user_ids:
+            try:
+                user_obj_ids.append(ObjectId(uid))
+            except Exception:
+                pass
+        if user_obj_ids:
+            users_cursor = db.users.find({'_id': {'$in': user_obj_ids}}, {'fullName': 1, 'email': 1})
+            users_list = await users_cursor.to_list(len(user_obj_ids))
+            users_map = {str(u['_id']): u for u in users_list}
+    
+    # Batch fetch trainee profiles for home address
+    trainee_profiles_map = {}
+    trainee_ids = [s.get('traineeId') for s in sessions if s.get('traineeId')]
+    if trainee_ids:
+        trainee_profiles = await db.trainee_profiles.find(
+            {'userId': {'$in': list(set(trainee_ids))}},
+            {'userId': 1, 'homeAddress': 1, 'locationAddress': 1}
+        ).to_list(len(set(trainee_ids)))
+        trainee_profiles_map = {tp['userId']: tp for tp in trainee_profiles}
+    
+    # Enrich sessions with names and computed duration
+    enriched_sessions = []
+    for s in sessions:
+        doc = serialize_doc(s)
+        trainer_user = users_map.get(s.get('trainerId', ''), {})
+        trainee_user = users_map.get(s.get('traineeId', ''), {})
+        doc['trainerName'] = trainer_user.get('fullName', 'Unknown')
+        doc['trainerEmail'] = trainer_user.get('email', '')
+        doc['traineeName'] = trainee_user.get('fullName', 'Unknown')
+        doc['traineeEmail'] = trainee_user.get('email', '')
+        
+        # Add trainee home address for in-home sessions
+        trainee_profile = trainee_profiles_map.get(s.get('traineeId', ''))
+        if trainee_profile:
+            doc['traineeHomeAddress'] = trainee_profile.get('homeAddress') or trainee_profile.get('locationAddress', '')
+        else:
+            doc['traineeHomeAddress'] = ''
+        
+        # Compute actual duration if start/end times exist
+        started = s.get('sessionStartedAt')
+        ended = s.get('sessionEndedAt')
+        if started and ended:
+            actual_minutes = int((ended - started).total_seconds() / 60)
+            doc['actualDurationMinutes'] = actual_minutes
+        else:
+            doc['actualDurationMinutes'] = None
+        
+        enriched_sessions.append(doc)
+    
     return {
-        "sessions": [serialize_doc(s) for s in sessions],
+        "sessions": enriched_sessions,
         "total": total,
         "skip": skip,
         "limit": limit
