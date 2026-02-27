@@ -2092,11 +2092,8 @@ async def create_session(session: SessionCreate, current_user: dict = Depends(ge
         'traineeLatitude': session.traineeLatitude,
         'traineeLongitude': session.traineeLongitude,
         'notes': sanitize_text(session.notes),
+        'paymentIntentId': None,
         'createdAt': datetime.utcnow(),
-        'updatedAt': datetime.utcnow()
-    }
-    
-    result = await db.sessions.insert_one(session_doc)
     session_doc['_id'] = result.inserted_id
     
     return SessionResponse(**serialize_doc(session_doc))
