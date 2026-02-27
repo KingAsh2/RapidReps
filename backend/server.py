@@ -14,6 +14,8 @@ import bcrypt
 import jwt
 from bson import ObjectId
 import stripe
+import re
+import html
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
