@@ -196,6 +196,12 @@ export default function TrainerProfileScreen() {
                 <Ionicons name="chevron-forward" size={18} color={COLORS.gray} />
               </TouchableOpacity>
 
+              <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/trainee/leaderboard')} data-testid="go-leaderboard">
+                <Ionicons name="podium" size={20} color="#FFD700" />
+                <Text style={styles.menuItemText}>Leaderboard</Text>
+                <Ionicons name="chevron-forward" size={18} color={COLORS.gray} />
+              </TouchableOpacity>
+
               {/* Bio */}
               {profile?.bio && (
                 <View style={styles.bioCard}>
