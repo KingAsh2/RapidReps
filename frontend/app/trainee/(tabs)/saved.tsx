@@ -199,6 +199,15 @@ export default function SavedTrainersScreen() {
                 <View style={styles.metaItem}>
                   <Text style={styles.priceText}>${trainer.hourlyRate}/hr</Text>
                 </View>
+                {trainer.distance && (
+                  <>
+                    <View style={styles.metaDivider} />
+                    <View style={styles.metaItem}>
+                      <Ionicons name="location" size={12} color={COLORS.orange} />
+                      <Text style={styles.distanceText}>{trainer.distance.toFixed(1)} mi</Text>
+                    </View>
+                  </>
+                )}
               </View>
 
               <View style={styles.specialtiesRow}>
