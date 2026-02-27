@@ -129,7 +129,11 @@ export default function TrainerSessionsScreen() {
               <Ionicons name="calendar-outline" size={48} color="rgba(255,255,255,0.3)" />
               <Text style={styles.emptyTitle}>No {activeFilter} sessions</Text>
               <Text style={styles.emptySubtitle}>
-                {activeFilter === 'upcoming' ? 'New sessions will appear here when clients book you.' : `Your ${activeFilter} sessions will show here.`}
+                {activeFilter === 'upcoming'
+                  ? 'Complete your profile and get verified so clients can start booking you!'
+                  : activeFilter === 'pending'
+                  ? 'Session requests from trainees will show up here.'
+                  : `Your ${activeFilter} sessions will appear here once you start training.`}
               </Text>
             </View>
           ) : (
