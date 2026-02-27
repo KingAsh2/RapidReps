@@ -825,7 +825,7 @@ class TestRatings:
     """Rating endpoints tests"""
     
     def test_get_trainer_ratings(self, api_client, trainee_headers, trainer_token):
-        """GET /api/ratings/trainer/{trainerId} returns ratings array"""
+        """GET /api/trainers/{trainerId}/ratings returns ratings array"""
         # Get trainer user ID
         trainer_response = api_client.get(
             f"{BASE_URL}/api/auth/me",
@@ -834,14 +834,14 @@ class TestRatings:
         trainer_id = trainer_response.json()["id"]
         
         response = api_client.get(
-            f"{BASE_URL}/api/ratings/trainer/{trainer_id}",
+            f"{BASE_URL}/api/trainers/{trainer_id}/ratings",
             headers=trainee_headers
         )
         assert response.status_code == 200, f"Get ratings failed: {response.text}"
         data = response.json()
         
-        # Response should have ratings or be a list
-        assert isinstance(data, (list, dict))
+        # Response should have ratings field
+        assert "ratings" in data or isinstance(data, list)
         print(f"Trainer ratings retrieved successfully")
 
 
