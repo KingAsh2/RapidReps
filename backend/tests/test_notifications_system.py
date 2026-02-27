@@ -16,7 +16,7 @@ from bson import ObjectId
 from pymongo import MongoClient
 
 # API Base URL from environment
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://admin-security-build.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://frontend-repair-24.preview.emergentagent.com').rstrip('/')
 
 # Test credentials from the provided context
 TRAINEE_EMAIL = "trainee1@test.com"

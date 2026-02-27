@@ -18,7 +18,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
 # Configuration
-BASE_URL = "https://admin-security-build.preview.emergentagent.com/api"
+BASE_URL = "https://frontend-repair-24.preview.emergentagent.com/api"
 HEADERS = {"Content-Type": "application/json"}
 
 class RapidRepsComprehensiveTester:
