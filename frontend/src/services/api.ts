@@ -470,3 +470,11 @@ export const chatAPI = {
   },
 };
 
+// Streaks / Consistency Points API
+export const streaksAPI = {
+  getMyStreaks: async (): Promise<any> => {
+    const response = await api.get('/streaks/me');
+    return response.data;
+  },
+};
+
