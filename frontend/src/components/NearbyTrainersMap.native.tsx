@@ -181,6 +181,9 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
                   </View>
                 )}
                 <View style={styles.trainerArrow} />
+                <View style={styles.distanceLabel}>
+                  <Text style={styles.distanceLabelText}>{trainer.distanceMiles?.toFixed(1)} mi</Text>
+                </View>
               </View>
             </Marker>
           ))}
