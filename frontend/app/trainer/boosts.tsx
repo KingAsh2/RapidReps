@@ -15,6 +15,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { Platform } from 'react-native';
+
+let useStripeHook: any = null;
+if (Platform.OS !== 'web') {
+  try {
+    const stripeMod = require('@stripe/stripe-react-native');
+    useStripeHook = stripeMod.useStripe;
+  } catch {}
+}
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
