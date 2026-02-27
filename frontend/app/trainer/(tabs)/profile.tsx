@@ -68,6 +68,21 @@ export default function TrainerProfileScreen() {
     }
   };
 
+  const loadStreaks = async () => {
+    try {
+      const data = await streaksAPI.getMyStreaks();
+      setStreakData(data);
+      if (data.currentStreak >= 2) {
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(streakPulseAnim, { toValue: 1.15, duration: 800, useNativeDriver: true }),
+            Animated.timing(streakPulseAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+          ])
+        ).start();
+      }
+    } catch (e) { console.error('Streaks error:', e); }
+  };
+
   const handleLogout = async () => {
     await logout();
     router.replace('/');
