@@ -68,12 +68,30 @@ export default function MembershipScreen() {
     setSubscribing(true);
     try {
       const token = await AsyncStorage.getItem('auth_token');
-      await axios.post(
+      
+      // Step 1: Create payment intent + pending membership
+      const res = await axios.post(
         `${API_URL}/api/memberships/subscribe`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      Alert.alert('Welcome to RapidReps Pro!', 'Your membership is now active. Enjoy all the premium benefits!');
+      
+      const { membershipId, paymentIntentId, clientSecret } = res.data;
+      
+      // Step 2: In production, present Stripe PaymentSheet here using clientSecret
+      // For now, confirm the payment (simulates successful Stripe payment)
+      // TODO: Integrate @stripe/stripe-react-native PaymentSheet
+      
+      await axios.post(
+        `${API_URL}/api/memberships/${membershipId}/confirm-payment`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      Alert.alert(
+        'Welcome to RapidReps Pro!',
+        `Your membership is now active.\n\nPayment ID: ${paymentIntentId}\nYou will be charged $19.99/month.`
+      );
       checkMembership();
     } catch (err: any) {
       Alert.alert('Error', err?.response?.data?.detail || 'Failed to subscribe');
