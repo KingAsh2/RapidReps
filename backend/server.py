@@ -1188,16 +1188,6 @@ async def send_message(message_data: MessageCreate, current_user: dict = Depends
         {'$set': {'updatedAt': datetime.utcnow()}}
     )
     
-    return MessageResponse(
-        id=str(message_doc['_id']),
-        conversationId=str(message_doc['conversationId']),
-        senderId=message_doc['senderId'],
-        receiverId=message_doc['receiverId'],
-        content=message_doc['content'],
-        isRead=message_doc['isRead'],
-        createdAt=message_doc['createdAt']
-    )
-
     # Push: Notify receiver of new message
     sender_name = current_user.get('fullName', 'Someone')
     preview = (message_doc['content'] or '')[:50]
@@ -1208,6 +1198,16 @@ async def send_message(message_data: MessageCreate, current_user: dict = Depends
         "new_message",
         {"conversationId": str(conversation['_id']), "senderId": sender_id, "screen": "messages/chat"}
     ))
+
+    return MessageResponse(
+        id=str(message_doc['_id']),
+        conversationId=str(message_doc['conversationId']),
+        senderId=message_doc['senderId'],
+        receiverId=message_doc['receiverId'],
+        content=message_doc['content'],
+        isRead=message_doc['isRead'],
+        createdAt=message_doc['createdAt']
+    )
 
 @api_router.get("/conversations", response_model=List[ConversationResponse])
 async def get_conversations(current_user: dict = Depends(get_current_user)):
