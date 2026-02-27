@@ -26,67 +26,78 @@ Build a production-ready mobile app that functions like "Uber" for personal trai
 - [x] Post-signup verification modal prompting trainers to verify
 
 #### Admin Dashboard V2 (Feb 27, 2026)
-- [x] **Session Management**: Enriched sessions showing trainer/trainee names, session location, trainee home address for in-home sessions, scheduled vs actual duration, start/stop timestamps
-- [x] **User Management**: View all users, view user detail, remove users (cascade deletes all related data), admin self-delete protection
-- [x] **Transaction Management**: Enriched transactions with user names, refund payments (with Stripe integration), confirm payments, duplicate refund protection
-- [x] **Communication**: Admin can message any trainer/trainee through existing chat system
-- [x] **Admin Profile**: View and edit own profile (name, email, phone)
-- [x] **Verification Tab**: Approve/reject trainer verifications with checklist
-- [x] **Overview Dashboard**: Total users, trainers, trainees, sessions, revenue breakdown, memberships, boosts, pending verifications
-- [x] **Security**: passwordHash excluded from all user responses, all endpoints require admin auth
+- [x] Session Management: Enriched sessions with trainer/trainee names, location, home address, duration tracking
+- [x] User Management: View all users, remove users (cascade delete), admin self-delete protection
+- [x] Transaction Management: Refund payments (Stripe), confirm payments, duplicate refund protection
+- [x] Communication: Admin can message any user via chat
+- [x] Admin Profile: View and edit own profile
+- [x] Verification Tab: Approve/reject trainer verifications
+- [x] Overview Dashboard: Stats, revenue, memberships, boosts, pending verifications
+- [x] Security: passwordHash excluded from responses, all endpoints require admin auth
+
+#### Streaks / Consistency Points System (Feb 27, 2026)
+- [x] Backend: `GET /api/streaks/me` - calculates consecutive-week streaks from completed sessions
+- [x] Streak levels: none -> warming (2wk) -> fire (4wk) -> blazing (8wk) -> legend (12wk)
+- [x] Consistency points formula: sessions*10 + streak_weeks*25 + total_minutes//10
+- [x] Frontend: Streak card on trainee profile with gradient, fire icon pulse animation, progress bar
+- [x] Frontend: Streak card on trainer profile with same display
+- [x] Frontend: Streak banner on achievements page with detailed stats
+
+#### Achievement System (Updated Feb 27, 2026)
+- [x] 12 badges total (10 original + 2 new streak-based)
+- [x] New: Streak Star (maintain 4-week streak)
+- [x] New: Duration Master (accumulate 500 training minutes)
+- [x] Safe access for session fields (prevents KeyError on missing data)
+
+#### UI/UX Visual Polish (Feb 27, 2026)
+- [x] Heart pulse animation on saved trainers page
+- [x] Enhanced trainer card shadows (deeper shadow depth)
+- [x] Animated streak cards with gradient backgrounds
 
 #### Payment System
-- [x] Backend: Revenue split 75/25, min pricing, fees, Stripe integration
-- [x] Frontend: Confirm booking with price breakdown (demo mode fallback)
+- [x] Revenue split 75/25, min pricing, fees, Stripe integration
+- [x] Frontend: Confirm booking with price breakdown
 
 #### Membership ($19.99/month)
-- [x] Backend: Subscribe, check status, duplicate prevention
-- [x] Frontend: Full membership screen with benefits, comparison, subscribe CTA
+- [x] Subscribe, check status, duplicate prevention
 
 #### Trainer Boosts
-- [x] Backend: Purchase boosts (daily/weekly/monthly), list boosts
-- [x] Frontend: Boost selection, purchase flow, active boost indicator
+- [x] Purchase boosts (daily/weekly/monthly)
 
 #### Trainer Earnings Dashboard
-- [x] Backend: Enhanced earnings with daily/weekly breakdown, payout requests
-- [x] Frontend: Animated chart, period toggle, payout modal (CashApp/Zelle/Stripe)
-
-#### Trainer Tab Screens
-- [x] Sessions (filter: upcoming/completed/cancelled)
-- [x] Profile (stats, verification link, boosts link, logout)
-- [x] Earnings (full dashboard)
-- [x] Messages (redirect to shared messages)
+- [x] Enhanced earnings with daily/weekly breakdown, payout requests
 
 #### Messaging System
-- [x] Backend: Conversations, messages CRUD with participant validation
-- [x] Frontend: Conversation list and chat screens
+- [x] Conversations, messages CRUD with participant validation
 
 #### Rating & Review System
-- [x] Backend: Create ratings with duplicate prevention, get ratings with reviewer names
-- [x] Frontend: Post-session review screen with star rating, trainer detail shows reviews
+- [x] Create ratings with duplicate prevention, get ratings with reviewer names
 
 #### Trainee Profile
-- [x] Home address field for in-home training sessions (NEW)
-
-### Known Issues
-- Stripe Secret Key may be invalid for production (test refunds work without live payment intents)
-- Web preview non-functional (Expo environment limitation)
+- [x] Home address field for in-home training sessions
 
 ### Backend Test Results
-- Iteration 1-3: 59/59 PASSED (Core features)
-- Iteration 4-6: Additional test suites
-- **Iteration 7: 26/26 PASSED** (Admin Panel V2 - all new endpoints verified)
+- Iteration 7: 26/26 PASSED (Admin Panel V2)
+- **Iteration 8: 14/14 PASSED** (Streaks + Achievements + Regression)
 
-### New Admin API Endpoints (Feb 27, 2026)
-- `GET /api/admin/sessions` - Enriched with trainerName, traineeName, traineeHomeAddress, actualDurationMinutes
-- `GET /api/admin/transactions-enriched` - Transactions with user names
-- `DELETE /api/admin/users/{user_id}` - Remove user with cascade delete
-- `POST /api/admin/refund` - Refund session payment (Stripe + record)
-- `POST /api/admin/confirm-payment` - Confirm session payment
-- `PUT /api/admin/profile` - Update admin profile
-- `POST /api/admin/message` - Send message to any user
+### API Endpoints Summary
+**Admin:**
+- `GET /api/admin/dashboard` | `GET /api/admin/sessions` | `GET /api/admin/users`
+- `GET /api/admin/transactions-enriched` | `GET /api/admin/verifications/pending`
+- `DELETE /api/admin/users/{id}` | `POST /api/admin/refund` | `POST /api/admin/confirm-payment`
+- `PUT /api/admin/profile` | `POST /api/admin/message`
+
+**Streaks:**
+- `GET /api/streaks/me` - Get current user streak data
 
 ### Test Credentials
 - **Admin**: admin@rapidreps.com / admin123
 - **Trainer**: trainer1@test.com / test123
 - **Trainee**: trainee1@test.com / test123
+
+### Remaining P2 Tasks
+- [ ] Trainer video intros (looping)
+- [ ] Distance labels on map
+- [ ] Redesign "Saved Trainers" layout with better card hierarchy
+- [ ] Brand continuity pass (cohesive icons, consistent orange glow)
+- [ ] Push notifications (tabled by user)
