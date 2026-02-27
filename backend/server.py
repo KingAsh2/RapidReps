@@ -3143,10 +3143,156 @@ async def check_badges(current_user: dict = Depends(get_current_user)):
     }
 
 
+# ============================================================================
+# STREAKS / CONSISTENCY POINTS SYSTEM
+# ============================================================================
 
-# ============================================================================
-# TRAINEE ACHIEVEMENTS & BADGES SYSTEM
-# ============================================================================
+async def calculate_user_streak(user_id: str, role: str) -> dict:
+    """Calculate streak data for a user (trainer or trainee).
+    A streak is consecutive weeks with at least 1 completed session.
+    Also computes consistency points based on total sessions and streak length.
+    """
+    if role == 'trainer':
+        field = 'trainerId'
+    else:
+        field = 'traineeId'
+    
+    completed_sessions = await db.sessions.find(
+        {field: user_id, 'status': SessionStatus.COMPLETED},
+        {'sessionDateTimeStart': 1, 'durationMinutes': 1, 'sessionStartedAt': 1, 'sessionEndedAt': 1}
+    ).sort('sessionDateTimeStart', 1).to_list(1000)
+    
+    if not completed_sessions:
+        return {
+            'currentStreak': 0,
+            'longestStreak': 0,
+            'totalWeeksActive': 0,
+            'consistencyPoints': 0,
+            'totalSessions': 0,
+            'totalMinutes': 0,
+            'streakLevel': 'none',
+            'nextMilestone': 2,
+        }
+    
+    # Group sessions by ISO week
+    from collections import defaultdict
+    weeks = defaultdict(int)
+    total_minutes = 0
+    
+    for s in completed_sessions:
+        dt = s.get('sessionDateTimeStart')
+        if isinstance(dt, str):
+            dt = datetime.fromisoformat(dt)
+        if dt:
+            week_key = dt.isocalendar()[:2]  # (year, week_number)
+            weeks[week_key] += 1
+        
+        # Sum actual duration if available, else scheduled
+        started = s.get('sessionStartedAt')
+        ended = s.get('sessionEndedAt')
+        if started and ended:
+            if isinstance(started, str):
+                started = datetime.fromisoformat(started)
+            if isinstance(ended, str):
+                ended = datetime.fromisoformat(ended)
+            total_minutes += int((ended - started).total_seconds() / 60)
+        else:
+            total_minutes += s.get('durationMinutes', 0)
+    
+    # Sort weeks chronologically
+    sorted_weeks = sorted(weeks.keys())
+    
+    # Calculate current streak (consecutive weeks ending at the most recent week)
+    from datetime import timedelta
+    now = datetime.utcnow()
+    current_iso = now.isocalendar()[:2]
+    last_week_iso = (now - timedelta(days=7)).isocalendar()[:2]
+    
+    # Check if user was active this week or last week
+    if current_iso not in weeks and last_week_iso not in weeks:
+        current_streak = 0
+    else:
+        # Walk backwards from the most recent active week
+        current_streak = 0
+        check_week = sorted_weeks[-1]
+        
+        for i in range(len(sorted_weeks) - 1, -1, -1):
+            if sorted_weeks[i] == check_week:
+                current_streak += 1
+                # Move to previous week
+                year, wk = check_week
+                prev_date = datetime.strptime(f'{year}-W{wk:02d}-1', '%Y-W%W-%w') - timedelta(days=7)
+                check_week = prev_date.isocalendar()[:2]
+            else:
+                break
+    
+    # Calculate longest streak
+    longest_streak = 0
+    temp_streak = 1
+    for i in range(1, len(sorted_weeks)):
+        prev_year, prev_wk = sorted_weeks[i - 1]
+        curr_year, curr_wk = sorted_weeks[i]
+        
+        # Check if consecutive week
+        prev_date = datetime.strptime(f'{prev_year}-W{prev_wk:02d}-1', '%Y-W%W-%w')
+        next_expected = (prev_date + timedelta(days=7)).isocalendar()[:2]
+        
+        if (curr_year, curr_wk) == next_expected:
+            temp_streak += 1
+        else:
+            longest_streak = max(longest_streak, temp_streak)
+            temp_streak = 1
+    longest_streak = max(longest_streak, temp_streak)
+    
+    total_sessions = len(completed_sessions)
+    
+    # Consistency points: sessions * 10 + streak_weeks * 25 + total_minutes // 10
+    consistency_points = total_sessions * 10 + current_streak * 25 + total_minutes // 10
+    
+    # Streak level
+    if current_streak >= 12:
+        streak_level = 'legend'
+    elif current_streak >= 8:
+        streak_level = 'blazing'
+    elif current_streak >= 4:
+        streak_level = 'fire'
+    elif current_streak >= 2:
+        streak_level = 'warming'
+    else:
+        streak_level = 'none'
+    
+    # Next milestone
+    milestones = [2, 4, 8, 12, 26, 52]
+    next_milestone = 2
+    for m in milestones:
+        if current_streak < m:
+            next_milestone = m
+            break
+    
+    return {
+        'currentStreak': current_streak,
+        'longestStreak': longest_streak,
+        'totalWeeksActive': len(sorted_weeks),
+        'consistencyPoints': consistency_points,
+        'totalSessions': total_sessions,
+        'totalMinutes': total_minutes,
+        'streakLevel': streak_level,
+        'nextMilestone': next_milestone,
+    }
+
+
+@api_router.get("/streaks/me")
+async def get_my_streaks(current_user: dict = Depends(get_current_user)):
+    """Get streak and consistency points for the current user"""
+    user_id = str(current_user['_id'])
+    roles = current_user.get('roles', [])
+    
+    role = 'trainer' if UserRole.TRAINER in roles else 'trainee'
+    streak_data = await calculate_user_streak(user_id, role)
+    streak_data['userId'] = user_id
+    streak_data['role'] = role
+    
+    return streak_data
 
 async def calculate_trainee_badge_progress(trainee_id: str) -> TraineeAchievements:
     """Calculate all badge progress for a trainee"""
