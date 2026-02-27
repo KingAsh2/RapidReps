@@ -289,7 +289,7 @@ export default function SavedTrainersScreen() {
           <View style={styles.headerIcon}>
             <Ionicons name="heart" size={28} color={COLORS.white} />
           </View>
-          <Text style={styles.headerTitle}>SAVED TRAINERS ❤️</Text>
+          <Text style={styles.headerTitle}>SAVED TRAINERS</Text>
           <Text style={styles.headerSubtitle}>
             {savedTrainers.length} trainer{savedTrainers.length !== 1 ? 's' : ''} in your list
           </Text>
