@@ -2351,7 +2351,17 @@ async def client_confirm_session_end(
         {'userId': session['trainerId']},
         {'$inc': {'totalSessionsCompleted': 1}}
     )
-    
+
+    # Push: Notify trainer of payment release
+    earnings = session.get('trainerEarningsCents', 0)
+    asyncio.create_task(create_and_send_notification(
+        session['trainerId'],
+        "Payment Released!",
+        f"Your session payment of ${earnings/100:.2f} has been released.",
+        "payment_released",
+        {"sessionId": session_id, "screen": "trainer/earnings"}
+    ))
+
     return {
         'success': True,
         'message': 'Session confirmed! Payment has been released.',
