@@ -3348,7 +3348,7 @@ async def calculate_trainee_badge_progress(trainee_id: str) -> TraineeAchievemen
     
     # 3. Weekend Grinder - 5 weekend sessions
     weekend_sessions = [s for s in completed_sessions 
-                       if datetime.fromisoformat(str(s['sessionDateTimeStart'])).weekday() >= 5]
+                       if s.get('sessionDateTimeStart') and datetime.fromisoformat(str(s['sessionDateTimeStart'])).weekday() >= 5]
     weekend_progress = min(len(weekend_sessions), 5)
     badges.append(BadgeProgress(
         badgeType=TraineeBadgeType.WEEKEND_GRINDER,
