@@ -5066,6 +5066,74 @@ async def admin_send_message(
 
 
 # ============================================================================
+# PUSH NOTIFICATION ENDPOINTS
+# ============================================================================
+
+class PushTokenRegister(BaseModel):
+    token: str
+    deviceId: Optional[str] = None
+
+@api_router.post("/push-tokens/register")
+async def register_push_token(data: PushTokenRegister, current_user: dict = Depends(get_current_user)):
+    """Register a push notification token for the current user"""
+    user_id = str(current_user['_id'])
+    # Upsert: one token per device per user
+    await db.push_tokens.update_one(
+        {'userId': user_id, 'token': data.token},
+        {'$set': {
+            'userId': user_id,
+            'token': data.token,
+            'deviceId': data.deviceId,
+            'updatedAt': datetime.utcnow()
+        }},
+        upsert=True
+    )
+    return {"success": True, "message": "Push token registered"}
+
+@api_router.delete("/push-tokens/unregister")
+async def unregister_push_token(data: PushTokenRegister, current_user: dict = Depends(get_current_user)):
+    """Unregister a push notification token (e.g., on logout)"""
+    user_id = str(current_user['_id'])
+    await db.push_tokens.delete_one({'userId': user_id, 'token': data.token})
+    return {"success": True, "message": "Push token unregistered"}
+
+@api_router.get("/notifications")
+async def get_notifications(current_user: dict = Depends(get_current_user)):
+    """Get notification history for the current user"""
+    user_id = str(current_user['_id'])
+    notifications = await db.notifications.find(
+        {'userId': user_id},
+        {'_id': 0}
+    ).sort('createdAt', -1).to_list(50)
+    return {"notifications": notifications}
+
+@api_router.post("/notifications/mark-read")
+async def mark_notifications_read(current_user: dict = Depends(get_current_user)):
+    """Mark all notifications as read"""
+    user_id = str(current_user['_id'])
+    await db.notifications.update_many(
+        {'userId': user_id, 'read': False},
+        {'$set': {'read': True}}
+    )
+    return {"success": True}
+
+async def create_and_send_notification(user_id: str, title: str, body: str, notif_type: str, data: dict = None):
+    """Store notification in DB and send push"""
+    notif = {
+        'userId': user_id,
+        'title': title,
+        'body': body,
+        'type': notif_type,
+        'data': data or {},
+        'read': False,
+        'createdAt': datetime.utcnow()
+    }
+    await db.notifications.insert_one(notif)
+    # Fire-and-forget push
+    asyncio.create_task(send_push_notification(user_id, title, body, data))
+
+
+# ============================================================================
 # ROOT ROUTES
 # ============================================================================
 
