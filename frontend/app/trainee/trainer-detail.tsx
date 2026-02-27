@@ -229,8 +229,8 @@ export default function TrainerDetailScreen() {
   const handleMessage = async () => {
     if (!trainer) return;
     try {
-      const conv = await chatAPI.createConversation(trainer.userId);
-      router.push(`/messages/chat?conversationId=${conv.id}&userId=${trainer.userId}&userName=${trainer.fullName}`);
+      const conv = await chatAPI.getOrCreateConversation(trainer.userId);
+      router.push(`/messages/chat?conversationId=${conv.conversationId}&userId=${trainer.userId}&userName=${trainer.fullName}`);
     } catch (error) {
       console.error('Error starting chat:', error);
     }
