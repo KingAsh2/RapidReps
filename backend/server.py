@@ -1330,6 +1330,7 @@ async def create_trainer_profile(profile: TrainerProfileCreate, current_user: di
     existing_profile = await db.trainer_profiles.find_one({'userId': profile.userId})
     
     profile_doc = profile.dict()
+    profile_doc['bio'] = sanitize_text(profile_doc.get('bio'))
     profile_doc['averageRating'] = 0.0
     profile_doc['totalSessionsCompleted'] = 0
     profile_doc['isVerified'] = False
