@@ -595,7 +595,7 @@ export default function TraineeHomeScreen() {
             {/* Available Trainers Section */}
             <View style={styles.trainersSection}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>🏋️ AVAILABLE TRAINERS</Text>
+                <Text style={styles.sectionTitle}>AVAILABLE TRAINERS</Text>
                 <Text style={styles.trainerCount}>{displayedTrainers.length} ready</Text>
               </View>
               
