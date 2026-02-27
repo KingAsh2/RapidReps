@@ -428,6 +428,7 @@ export default function AdminDashboard() {
           </View>
         </View>
       ))}
+      <PaginationBar current={usersPage} total={usersTotal} pageSize={PAGE_SIZE} onPageChange={(p) => fetchUsers(p)} />
     </View>
   );
 
