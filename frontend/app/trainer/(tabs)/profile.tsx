@@ -147,6 +147,40 @@ export default function TrainerProfileScreen() {
                 </View>
               </View>
 
+              {/* Streak Card */}
+              {streakData && (
+                <View style={styles.streakCard}>
+                  <LinearGradient
+                    colors={
+                      streakData.currentStreak >= 4
+                        ? ['#FF6A00', '#FF9F1C']
+                        : streakData.currentStreak >= 2
+                          ? ['#FFB300', '#FFC107']
+                          : ['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)']
+                    }
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.streakGradient}
+                  >
+                    <View style={styles.streakRow}>
+                      <Animated.View style={{ transform: [{ scale: streakPulseAnim }] }}>
+                        <View style={styles.streakFireBg}>
+                          <Ionicons name="flame" size={26} color={streakData.currentStreak >= 2 ? '#FF6A00' : COLORS.gray} />
+                        </View>
+                      </Animated.View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.streakTitle}>
+                          {streakData.currentStreak > 0 ? `${streakData.currentStreak} Week Streak` : 'Build Your Streak'}
+                        </Text>
+                        <Text style={styles.streakSub}>
+                          {streakData.consistencyPoints} pts | {streakData.totalSessions} sessions | {streakData.totalMinutes}min
+                        </Text>
+                      </View>
+                    </View>
+                  </LinearGradient>
+                </View>
+              )}
+
               {/* Quick Links */}
               <Text style={styles.sectionTitle}>Quick Actions</Text>
 
