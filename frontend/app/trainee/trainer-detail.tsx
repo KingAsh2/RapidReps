@@ -433,6 +433,32 @@ export default function TrainerDetailScreen() {
                   <Text style={styles.virtualText}>Virtual Sessions Available</Text>
                 </View>
               )}
+
+              {/* Video Intro */}
+              {(trainer as any).introVideoUrl && (
+                <View style={styles.videoSection} data-testid="trainer-video-intro">
+                  <Text style={styles.sectionLabel}>INTRO VIDEO</Text>
+                  <View style={styles.videoContainer}>
+                    <Video
+                      source={{ uri: (trainer as any).introVideoUrl }}
+                      style={styles.videoPlayer}
+                      resizeMode={ResizeMode.COVER}
+                      shouldPlay
+                      isLooping
+                      isMuted
+                    />
+                    <LinearGradient
+                      colors={['transparent', 'rgba(0,0,0,0.4)']}
+                      style={styles.videoOverlay}
+                    >
+                      <View style={styles.videoPlayBadge}>
+                        <Ionicons name="play" size={14} color={COLORS.white} />
+                        <Text style={styles.videoPlayText}>Intro</Text>
+                      </View>
+                    </LinearGradient>
+                  </View>
+                </View>
+              )}
             </LinearGradient>
           </Animated.View>
 
