@@ -952,4 +952,8 @@ const s = StyleSheet.create({
   messageInput: { borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 10, padding: 14, minHeight: 100, fontSize: 14, color: C.navy, textAlignVertical: 'top' },
   textInput: { borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 10, padding: 12, fontSize: 14, color: C.navy, marginBottom: 12 },
   inputLabel: { fontSize: 13, fontWeight: '600', color: C.grayDark, marginBottom: 6 },
+  paginationBar: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', paddingVertical: 16, gap: 16 },
+  pageBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: C.white, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#e2e8f0' },
+  pageBtnDisabled: { opacity: 0.4 },
+  pageInfo: { fontSize: 13, fontWeight: '600', color: C.grayDark },
 });
