@@ -928,7 +928,8 @@ class ConversationResponse(BaseModel):
 # ============================================================================
 
 @api_router.post("/auth/signup", response_model=TokenResponse)
-async def signup(user_data: UserSignUp):
+@limiter.limit("5/minute")
+async def signup(request: Request, user_data: UserSignUp):
     """Register a new user"""
     # Validate password length
     if len(user_data.password) < 6:
@@ -974,7 +975,8 @@ async def signup(user_data: UserSignUp):
     return TokenResponse(access_token=access_token, user=user_response)
 
 @api_router.post("/auth/login", response_model=TokenResponse)
-async def login(credentials: UserLogin):
+@limiter.limit("10/minute")
+async def login(request: Request, credentials: UserLogin):
     """Login user"""
     # Find user
     user = await db.users.find_one({'email': credentials.email})
@@ -3934,7 +3936,9 @@ async def get_nearby_trainers(
 # ============================================================================
 
 @api_router.post("/payments/create-payment-intent")
+@limiter.limit("10/minute")
 async def create_payment_intent(
+    request: Request,
     amount_cents: int,
     session_id: Optional[str] = None,
     description: str = "RapidReps Session",
