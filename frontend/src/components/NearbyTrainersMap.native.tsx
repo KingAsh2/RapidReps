@@ -62,6 +62,7 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
   const [selectedTrainer, setSelectedTrainer] = useState<NearbyTrainer | null>(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const cardAnim = useRef(new Animated.Value(0)).current;
+  const mapGlowAnim = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
     const pulse = Animated.loop(
@@ -71,7 +72,17 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
       ])
     );
     pulse.start();
-    return () => pulse.stop();
+
+    // Map glow animation
+    const glow = Animated.loop(
+      Animated.sequence([
+        Animated.timing(mapGlowAnim, { toValue: 0.7, duration: 2000, useNativeDriver: true }),
+        Animated.timing(mapGlowAnim, { toValue: 0.3, duration: 2000, useNativeDriver: true }),
+      ])
+    );
+    glow.start();
+
+    return () => { pulse.stop(); glow.stop(); };
   }, []);
 
   useEffect(() => {
