@@ -113,23 +113,25 @@ export default function AdminDashboard() {
     }
   };
 
-  const fetchSessions = async () => {
+  const fetchSessions = async (page = 0) => {
     try {
       const headers = await getAuthHeader();
-      const res = await api.get('/admin/sessions?limit=50', { headers });
+      const res = await api.get(`/admin/sessions?limit=${PAGE_SIZE}&skip=${page * PAGE_SIZE}`, { headers });
       setSessions(res.data.sessions || []);
       setSessionsTotal(res.data.total || 0);
+      setSessionsPage(page);
     } catch (err: any) {
       console.error('Sessions error:', err?.response?.data || err.message);
     }
   };
 
-  const fetchTransactions = async () => {
+  const fetchTransactions = async (page = 0) => {
     try {
       const headers = await getAuthHeader();
-      const res = await api.get('/admin/transactions-enriched?limit=50', { headers });
+      const res = await api.get(`/admin/transactions-enriched?limit=${PAGE_SIZE}&skip=${page * PAGE_SIZE}`, { headers });
       setTransactions(res.data.transactions || []);
       setTransTotal(res.data.total || 0);
+      setTransPage(page);
     } catch (err: any) {
       console.error('Transactions error:', err?.response?.data || err.message);
     }
