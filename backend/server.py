@@ -5241,3 +5241,97 @@ logger = logging.getLogger(__name__)
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
+
+# ============================================================================
+# BACKGROUND NOTIFICATION SCHEDULER
+# ============================================================================
+
+async def notification_scheduler():
+    """Background task: checks every 5 minutes for timed notifications."""
+    while True:
+        try:
+            now = datetime.utcnow()
+
+            # 1. Session Reminders — sessions starting in next 25-35 min
+            reminder_start = now + timedelta(minutes=25)
+            reminder_end = now + timedelta(minutes=35)
+            upcoming = await db.sessions.find({
+                'status': SessionStatus.CONFIRMED,
+                'sessionDateTimeStart': {'$gte': reminder_start, '$lte': reminder_end},
+                '_reminderSent': {'$ne': True}
+            }).to_list(50)
+
+            for s in upcoming:
+                sid = str(s['_id'])
+                # Notify both trainee and trainer
+                asyncio.create_task(create_and_send_notification(
+                    s['traineeId'],
+                    "Session Starting Soon",
+                    "Your training session starts in about 30 minutes. Get ready!",
+                    "session_reminder",
+                    {"sessionId": sid, "screen": "trainee/sessions"}
+                ))
+                asyncio.create_task(create_and_send_notification(
+                    s['trainerId'],
+                    "Session Starting Soon",
+                    "You have a training session in about 30 minutes!",
+                    "session_reminder",
+                    {"sessionId": sid, "screen": "trainer/sessions"}
+                ))
+                await db.sessions.update_one({'_id': s['_id']}, {'$set': {'_reminderSent': True}})
+
+            # 2. Streak Reminders — users with last session 6 days ago and no reminder sent today
+            six_days_ago = now - timedelta(days=6)
+            seven_days_ago = now - timedelta(days=7)
+            # Find trainees who had their last session 6-7 days ago
+            at_risk = await db.sessions.aggregate([
+                {'$match': {'status': SessionStatus.COMPLETED}},
+                {'$group': {'_id': '$traineeId', 'lastSession': {'$max': '$sessionDateTimeEnd'}}},
+                {'$match': {'lastSession': {'$gte': seven_days_ago, '$lte': six_days_ago}}}
+            ]).to_list(50)
+
+            for entry in at_risk:
+                uid = entry['_id']
+                # Check if we already sent a streak reminder today
+                today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+                existing = await db.notifications.find_one({
+                    'userId': uid,
+                    'type': 'streak_warning',
+                    'createdAt': {'$gte': today_start}
+                })
+                if not existing:
+                    asyncio.create_task(create_and_send_notification(
+                        uid,
+                        "Don't Lose Your Streak!",
+                        "You haven't trained in 6 days. Book a session to keep your streak alive!",
+                        "streak_warning",
+                        {"screen": "trainee/home"}
+                    ))
+
+            # 3. Boost Expiring — boosts expiring in next 24 hours
+            expiry_window = now + timedelta(hours=24)
+            expiring = await db.boosts.find({
+                'isActive': True,
+                'endDate': {'$lte': expiry_window, '$gte': now},
+                '_expirySent': {'$ne': True}
+            }).to_list(50)
+
+            for b in expiring:
+                asyncio.create_task(create_and_send_notification(
+                    b['trainerId'],
+                    "Boost Expiring Soon",
+                    f"Your {b.get('boostType', 'visibility')} boost expires in less than 24 hours. Renew to stay visible!",
+                    "boost_expiring",
+                    {"screen": "trainer/boosts"}
+                ))
+                await db.boosts.update_one({'_id': b['_id']}, {'$set': {'_expirySent': True}})
+
+        except Exception as e:
+            logging.getLogger(__name__).error(f"Notification scheduler error: {e}")
+
+        await asyncio.sleep(300)  # Run every 5 minutes
+
+
+@app.on_event("startup")
+async def start_notification_scheduler():
+    asyncio.create_task(notification_scheduler())
