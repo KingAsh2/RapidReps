@@ -1134,7 +1134,7 @@ async def send_message(message_data: MessageCreate, current_user: dict = Depends
         'conversationId': str(conversation['_id']),
         'senderId': sender_id,
         'receiverId': receiver_id,
-        'content': message_data.content,
+        'content': sanitize_text(message_data.content),
         'isRead': False,
         'createdAt': datetime.utcnow()
     }
