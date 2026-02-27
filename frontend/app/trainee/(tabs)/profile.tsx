@@ -21,7 +21,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { useAlert } from '../../../src/contexts/AlertContext';
-import { traineeAPI } from '../../../src/services/api';
+import { traineeAPI, streaksAPI } from '../../../src/services/api';
 import * as ImagePicker from 'expo-image-picker';
 
 const { width } = Dimensions.get('window');
