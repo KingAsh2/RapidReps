@@ -81,7 +81,7 @@ export default function MembershipScreen() {
     try {
       const token = await AsyncStorage.getItem('auth_token');
       
-      // Step 1: Create payment intent + pending membership
+      // Step 1: Create payment intent + pending membership on backend
       const res = await axios.post(
         `${API_URL}/api/memberships/subscribe`,
         {},
@@ -89,11 +89,28 @@ export default function MembershipScreen() {
       );
       
       const { membershipId, paymentIntentId, clientSecret } = res.data;
-      
-      // Step 2: In production, present Stripe PaymentSheet here using clientSecret
-      // For now, confirm the payment (simulates successful Stripe payment)
-      // TODO: Integrate @stripe/stripe-react-native PaymentSheet
-      
+
+      // Step 2: Present Stripe PaymentSheet on native, auto-confirm on web
+      if (stripe && clientSecret && Platform.OS !== 'web') {
+        const { error: initError } = await stripe.initPaymentSheet({
+          paymentIntentClientSecret: clientSecret,
+          merchantDisplayName: 'RapidReps',
+          style: 'alwaysDark',
+        });
+        if (initError) {
+          Alert.alert('Payment Error', initError.message);
+          return;
+        }
+        const { error: presentError } = await stripe.presentPaymentSheet();
+        if (presentError) {
+          if (presentError.code !== 'Canceled') {
+            Alert.alert('Payment Failed', presentError.message);
+          }
+          return; // User cancelled or payment failed — don't confirm
+        }
+      }
+
+      // Step 3: Confirm the payment on our backend
       await axios.post(
         `${API_URL}/api/memberships/${membershipId}/confirm-payment`,
         {},
@@ -102,7 +119,7 @@ export default function MembershipScreen() {
       
       Alert.alert(
         'Welcome to RapidReps Pro!',
-        `Your membership is now active.\n\nPayment ID: ${paymentIntentId}\nYou will be charged $19.99/month.`
+        'Your membership is now active. Enjoy discounted rates and exclusive perks!'
       );
       checkMembership();
     } catch (err: any) {
