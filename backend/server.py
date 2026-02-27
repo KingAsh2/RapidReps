@@ -1024,6 +1024,9 @@ async def signup(request: Request, user_data: UserSignUp):
     result = await db.users.insert_one(user_doc)
     user_id = str(result.inserted_id)
     
+    # Send welcome email (no-op without SendGrid key)
+    send_welcome_email(user_data.email, user_data.fullName)
+
     # Create access token
     access_token = create_access_token(user_id, user_data.email)
     
