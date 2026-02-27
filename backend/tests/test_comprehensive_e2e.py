@@ -762,23 +762,23 @@ class TestSessions:
     """Session endpoints tests"""
     
     def test_trainee_sessions(self, api_client, trainee_headers):
-        """GET /api/sessions/trainee returns trainee's sessions"""
-        response = api_client.get(f"{BASE_URL}/api/sessions/trainee", headers=trainee_headers)
+        """GET /api/trainee/sessions returns trainee's sessions"""
+        response = api_client.get(f"{BASE_URL}/api/trainee/sessions", headers=trainee_headers)
         assert response.status_code == 200, f"Get trainee sessions failed: {response.text}"
         data = response.json()
         
-        # Response should be a list or have sessions field
-        assert isinstance(data, (list, dict))
-        print(f"Trainee sessions retrieved successfully")
+        # Response should be a list
+        assert isinstance(data, list)
+        print(f"Trainee sessions retrieved: {len(data)} sessions")
     
     def test_trainer_sessions(self, api_client, trainer_headers):
-        """GET /api/sessions/trainer returns trainer's sessions"""
-        response = api_client.get(f"{BASE_URL}/api/sessions/trainer", headers=trainer_headers)
+        """GET /api/trainer/sessions returns trainer's sessions"""
+        response = api_client.get(f"{BASE_URL}/api/trainer/sessions", headers=trainer_headers)
         assert response.status_code == 200, f"Get trainer sessions failed: {response.text}"
         data = response.json()
         
-        assert isinstance(data, (list, dict))
-        print(f"Trainer sessions retrieved successfully")
+        assert isinstance(data, list)
+        print(f"Trainer sessions retrieved: {len(data)} sessions")
 
 
 # ============================================================================
