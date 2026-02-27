@@ -369,6 +369,21 @@ export default function TrainerAchievementsScreen() {
     }
   };
 
+  const loadStreaks = async () => {
+    try {
+      const data = await streaksAPI.getMyStreaks();
+      setStreakData(data);
+      if (data.currentStreak >= 2) {
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(streakFireAnim, { toValue: 1.18, duration: 700, useNativeDriver: true }),
+            Animated.timing(streakFireAnim, { toValue: 1, duration: 700, useNativeDriver: true }),
+          ])
+        ).start();
+      }
+    } catch (e) { console.error('Streaks error:', e); }
+  };
+
   // Empty state component
   const EmptyAchievements = () => (
     <View style={styles.emptyContainer}>
