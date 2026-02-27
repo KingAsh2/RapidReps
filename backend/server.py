@@ -2140,7 +2140,17 @@ async def create_session(session: SessionCreate, current_user: dict = Depends(ge
     
     result = await db.sessions.insert_one(session_doc)
     session_doc['_id'] = result.inserted_id
-    
+
+    # Push: Notify trainer of new session request
+    trainee_name = current_user.get('fullName', 'A trainee')
+    asyncio.create_task(create_and_send_notification(
+        session.trainerId,
+        "New Session Request",
+        f"{trainee_name} wants to book a {session.durationMinutes}-min session with you!",
+        "session_requested",
+        {"sessionId": str(result.inserted_id), "screen": "trainer/sessions"}
+    ))
+
     return SessionResponse(**serialize_doc(session_doc))
 
 @api_router.post("/sessions/{session_id}/verify-pin")
