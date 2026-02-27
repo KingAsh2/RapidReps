@@ -10,8 +10,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useNotifications } from '../../src/contexts/NotificationContext';
-import { Colors } from '../../src/utils/colors';
+import { useNotifications } from '../src/contexts/NotificationContext';
+import { Colors } from '../src/utils/colors';
 
 const ICON_MAP: Record<string, { name: string; color: string }> = {
   session_requested: { name: 'calendar', color: Colors.primary },
