@@ -2860,8 +2860,7 @@ async def request_payout(
         'amountCents': pending,
         'paymentMethod': request.paymentMethod,
         'paymentHandle': request.paymentHandle,
-        'notes': request.notes,
-        'status': 'pending',
+        'notes': sanitize_text(request.notes),
         'createdAt': datetime.utcnow(),
         'updatedAt': datetime.utcnow(),
     }
