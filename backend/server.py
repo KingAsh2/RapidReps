@@ -2291,7 +2291,29 @@ async def end_session(
         'sessionEndedAt': datetime.utcnow().isoformat()
     }
 
-@api_router.post("/sessions/{session_id}/client-confirm-end")
+    # Push: Notify trainee that session ended
+    asyncio.create_task(create_and_send_notification(
+        session['traineeId'],
+        "Session Complete",
+        "Your session has ended! Please confirm to release payment.",
+        "session_ended",
+        {"sessionId": session_id, "screen": "trainee/sessions"}
+    ))
+
+    # Schedule "Rate Your Session" reminder — 30 min delay
+    async def delayed_rate_reminder():
+        await asyncio.sleep(1800)  # 30 minutes
+        # Check if they already rated
+        existing = await db.ratings.find_one({'sessionId': session_id})
+        if not existing:
+            await create_and_send_notification(
+                session['traineeId'],
+                "Rate Your Session",
+                "How was your workout? Leave a rating for your trainer!",
+                "rate_reminder",
+                {"sessionId": session_id, "screen": "trainee/rate-session"}
+            )
+    asyncio.create_task(delayed_rate_reminder())
 async def client_confirm_session_end(
     session_id: str,
     current_user: dict = Depends(get_current_user)
