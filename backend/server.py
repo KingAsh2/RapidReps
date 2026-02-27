@@ -3900,8 +3900,14 @@ async def admin_get_users(
     users = await db.users.find(query).skip(skip).limit(limit).to_list(limit)
     total = await db.users.count_documents(query)
     
+    serialized_users = []
+    for u in users:
+        doc = serialize_doc(u)
+        doc.pop('passwordHash', None)
+        serialized_users.append(doc)
+    
     return {
-        "users": [serialize_doc(u) for u in users],
+        "users": serialized_users,
         "total": total,
         "skip": skip,
         "limit": limit
