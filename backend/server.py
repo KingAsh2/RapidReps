@@ -3362,7 +3362,7 @@ async def calculate_trainee_badge_progress(trainee_id: str) -> TraineeAchievemen
     
     # 4. Early Riser - 5 sessions before noon
     early_sessions = [s for s in completed_sessions 
-                     if datetime.fromisoformat(str(s['sessionDateTimeStart'])).hour < 12]
+                     if s.get('sessionDateTimeStart') and datetime.fromisoformat(str(s['sessionDateTimeStart'])).hour < 12]
     early_progress = min(len(early_sessions), 5)
     badges.append(BadgeProgress(
         badgeType=TraineeBadgeType.EARLY_RISER,
@@ -3376,7 +3376,7 @@ async def calculate_trainee_badge_progress(trainee_id: str) -> TraineeAchievemen
     
     # 5. Night Hustler - 5 sessions after 6 PM
     night_sessions = [s for s in completed_sessions 
-                     if datetime.fromisoformat(str(s['sessionDateTimeStart'])).hour >= 18]
+                     if s.get('sessionDateTimeStart') and datetime.fromisoformat(str(s['sessionDateTimeStart'])).hour >= 18]
     night_progress = min(len(night_sessions), 5)
     badges.append(BadgeProgress(
         badgeType=TraineeBadgeType.NIGHT_HUSTLER,
@@ -3446,6 +3446,8 @@ async def calculate_trainee_badge_progress(trainee_id: str) -> TraineeAchievemen
     from collections import defaultdict
     weeks = defaultdict(int)
     for session in completed_sessions:
+        if not session.get('sessionDateTimeStart'):
+            continue
         start_date = datetime.fromisoformat(str(session['sessionDateTimeStart']))
         week_key = f"{start_date.year}-W{start_date.isocalendar()[1]}"
         weeks[week_key] += 1
