@@ -1198,6 +1198,17 @@ async def send_message(message_data: MessageCreate, current_user: dict = Depends
         createdAt=message_doc['createdAt']
     )
 
+    # Push: Notify receiver of new message
+    sender_name = current_user.get('fullName', 'Someone')
+    preview = (message_doc['content'] or '')[:50]
+    asyncio.create_task(create_and_send_notification(
+        receiver_id,
+        f"New message from {sender_name}",
+        preview,
+        "new_message",
+        {"conversationId": str(conversation['_id']), "senderId": sender_id, "screen": "messages/chat"}
+    ))
+
 @api_router.get("/conversations", response_model=List[ConversationResponse])
 async def get_conversations(current_user: dict = Depends(get_current_user)):
     """Get all conversations for the current user - optimized with batch queries"""
