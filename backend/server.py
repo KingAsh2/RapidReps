@@ -3463,6 +3463,36 @@ async def calculate_trainee_badge_progress(trainee_id: str) -> TraineeAchievemen
         unlockedAt=achievement_doc.get('all_in_unlocked_at')
     ))
     
+    # 11. Streak Star - Maintain a 4-week streak
+    streak_data = await calculate_user_streak(trainee_id, 'trainee')
+    current_streak = streak_data.get('currentStreak', 0)
+    longest_streak = streak_data.get('longestStreak', 0)
+    streak_star_progress = min(longest_streak, 4)
+    badges.append(BadgeProgress(
+        badgeType=BadgeType.STREAK_STAR,
+        badgeName="Streak Star",
+        description="Maintain a 4-week consecutive training streak",
+        isUnlocked=longest_streak >= 4,
+        progress=streak_star_progress,
+        target=4,
+        reward="Streak badge on your profile",
+        unlockedAt=achievement_doc.get('streak_star_unlocked_at')
+    ))
+    
+    # 12. Duration Master - Accumulate 500 total training minutes
+    total_minutes = streak_data.get('totalMinutes', 0)
+    duration_progress = min(total_minutes, 500)
+    badges.append(BadgeProgress(
+        badgeType="duration_master",
+        badgeName="Duration Master",
+        description="Accumulate 500 total training minutes",
+        isUnlocked=total_minutes >= 500,
+        progress=duration_progress,
+        target=500,
+        reward="Endurance recognition badge",
+        unlockedAt=achievement_doc.get('duration_master_unlocked_at')
+    ))
+    
     return TraineeAchievements(
         traineeId=trainee_id,
         badges=badges,
