@@ -264,4 +264,11 @@ const styles = StyleSheet.create({
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   tag: { backgroundColor: `${COLORS.teal}20`, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
   tagText: { fontSize: 12, fontWeight: '600', color: COLORS.teal },
+  // Streak styles
+  streakCard: { borderRadius: 16, overflow: 'hidden', marginBottom: 20, shadowColor: '#FF6A00', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 6 },
+  streakGradient: { padding: 16 },
+  streakRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  streakFireBg: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.25)', justifyContent: 'center', alignItems: 'center' },
+  streakTitle: { fontSize: 17, fontWeight: '900', color: COLORS.white },
+  streakSub: { fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.8)', marginTop: 2 },
 });
