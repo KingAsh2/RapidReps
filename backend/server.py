@@ -457,6 +457,8 @@ class RatingResponse(BaseModel):
     reviewText: Optional[str] = None
     traineeName: Optional[str] = None
     createdAt: datetime
+    clientIp: Optional[str] = None
+    submittedAt: Optional[datetime] = None
 
 # Virtual Session Models
 class VirtualSessionRequest(BaseModel):
