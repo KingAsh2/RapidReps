@@ -428,6 +428,18 @@ export default function TrainerHomeScreen() {
         <SafeAreaView style={styles.safeArea} edges={['top']}>
           {/* Header Actions */}
           <View style={styles.headerActions}>
+            <TouchableOpacity
+              onPress={() => router.push('/notifications')}
+              style={styles.headerButton}
+              data-testid="trainer-notification-bell-btn"
+            >
+              <Ionicons name="notifications" size={24} color={COLORS.white} />
+              {unreadCount > 0 && (
+                <View style={styles.notifBadge}>
+                  <Text style={styles.notifBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
             <TouchableOpacity 
               onPress={() => router.push('/messages')} 
               style={styles.headerButton}
