@@ -55,6 +55,9 @@ export default function MembershipScreen() {
   const [loading, setLoading] = useState(true);
   const [subscribing, setSubscribing] = useState(false);
 
+  // Native Stripe hooks
+  const stripe = useStripeHook ? useStripeHook() : null;
+
   useEffect(() => {
     checkMembership();
   }, []);
