@@ -510,3 +510,11 @@ export const notificationsAPI = {
   },
 };
 
+// Weekly Digest API
+export const digestAPI = {
+  getWeeklyDigest: async (): Promise<any> => {
+    const response = await api.get('/weekly-digest');
+    return response.data;
+  },
+};
+
