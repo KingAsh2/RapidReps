@@ -386,10 +386,11 @@ class TestAdminEndpointsRegression:
         
         data = response.json()
         
-        # Verify it's a list
-        assert isinstance(data, list), "Should return list of sessions"
+        # Verify it's paginated response with sessions list
+        assert 'sessions' in data, "Should return paginated object with 'sessions'"
+        assert isinstance(data['sessions'], list), "sessions should be a list"
         
-        print(f"PASS: Admin sessions endpoint working ({len(data)} sessions)")
+        print(f"PASS: Admin sessions endpoint working ({len(data['sessions'])} sessions, total: {data.get('total')})")
     
     def test_admin_users(self):
         """Test GET /api/admin/users still works"""
@@ -405,14 +406,15 @@ class TestAdminEndpointsRegression:
         
         data = response.json()
         
-        # Verify it's a list
-        assert isinstance(data, list), "Should return list of users"
+        # Verify it's paginated response with users list
+        assert 'users' in data, "Should return paginated object with 'users'"
+        assert isinstance(data['users'], list), "users should be a list"
         
         # Verify passwordHash is excluded
-        if len(data) > 0:
-            assert 'passwordHash' not in data[0], "passwordHash should be excluded from response"
+        if len(data['users']) > 0:
+            assert 'passwordHash' not in data['users'][0], "passwordHash should be excluded from response"
         
-        print(f"PASS: Admin users endpoint working ({len(data)} users)")
+        print(f"PASS: Admin users endpoint working ({len(data['users'])} users, total: {data.get('total')})")
     
     def test_admin_dashboard_requires_auth(self):
         """Test that admin endpoints require authentication"""
