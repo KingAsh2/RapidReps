@@ -218,7 +218,9 @@ export default function SavedTrainersScreen() {
                 handleRemoveFavorite(trainer.id);
               }}
             >
-              <Ionicons name="heart" size={24} color={COLORS.error} />
+              <Animated.View style={{ transform: [{ scale: heartPulseAnim }] }}>
+                <Ionicons name="heart" size={24} color={COLORS.error} />
+              </Animated.View>
             </TouchableOpacity>
           </View>
 
