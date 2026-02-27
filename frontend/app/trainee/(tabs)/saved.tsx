@@ -83,6 +83,14 @@ export default function SavedTrainersScreen() {
           Animated.delay(2000),
         ])
       ).start();
+
+      // Header bounce
+      Animated.spring(headerBounceAnim, {
+        toValue: 1,
+        friction: 4,
+        tension: 50,
+        useNativeDriver: true,
+      }).start();
     }
   }, [loading]);
 
