@@ -3927,6 +3927,12 @@ async def create_payment_intent(
     current_user: dict = Depends(get_current_user)
 ):
     """Create a Stripe payment intent for a session"""
+    # Validate amount
+    if amount_cents < 100:
+        raise HTTPException(status_code=400, detail="Minimum payment amount is $1.00")
+    if amount_cents > 500000:  # $5,000 max
+        raise HTTPException(status_code=400, detail="Amount exceeds maximum allowed ($5,000)")
+    
     try:
         intent = stripe.PaymentIntent.create(
             amount=amount_cents,
