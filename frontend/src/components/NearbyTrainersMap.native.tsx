@@ -152,6 +152,7 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
       </View>
 
       <View style={styles.mapWrapper}>
+        <Animated.View style={[styles.mapGlow, { opacity: mapGlowAnim }]} />
         <MapView
           ref={mapRef}
           style={styles.map}
