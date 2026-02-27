@@ -625,6 +625,7 @@ export default function AdminDashboard() {
           </View>
         ))
       )}
+      <PaginationBar current={transPage} total={transTotal} pageSize={PAGE_SIZE} onPageChange={(p) => fetchTransactions(p)} />
     </View>
   );
 
