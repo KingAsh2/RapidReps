@@ -133,18 +133,16 @@ export default function ForgotPasswordScreen() {
               />
             </View>
 
-            <TouchableOpacity
+            <AnimatedPillButton
+              title={loading ? 'Sending...' : 'Send Reset Link'}
               onPress={handleResetPassword}
+              loading={loading}
               disabled={loading}
-              style={styles.resetButton}
-            >
-              <View style={styles.resetButtonContent}>
-                <Text style={styles.resetButtonText}>
-                  {loading ? 'Sending...' : 'Send Reset Link'}
-                </Text>
-                {!loading && <Ionicons name="arrow-forward" size={20} color={Colors.navy} />}
-              </View>
-            </TouchableOpacity>
+              icon="mail"
+              showArrow={true}
+              gradientColors={[Colors.teal, Colors.tealDark] as const}
+              testID="reset-password-btn"
+            />
           </View>
 
           <TouchableOpacity onPress={() => router.back()} style={styles.backLink}>
