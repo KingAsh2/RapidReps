@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Video, ResizeMode } from 'expo-av';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AnimatedPillButton } from '../src/components/AnimatedPillButton';
 
 const { width, height } = Dimensions.get('window');
 
@@ -249,35 +250,22 @@ export default function WelcomeScreen() {
                 ]}
               >
                 {/* Find a Trainer Button */}
-                <TouchableOpacity
+                <AnimatedPillButton
+                  title="Find a Trainer"
                   onPress={handleFindTrainer}
-                  style={styles.primaryButton}
-                  activeOpacity={0.9}
-                >
-                  <LinearGradient
-                    colors={[BRAND.teal, '#18A09D']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.buttonGradient}
-                  >
-                    <Ionicons name="search" size={24} color={BRAND.white} />
-                    <Text style={styles.buttonText}>Find a Trainer</Text>
-                    <Ionicons name="arrow-forward" size={20} color={BRAND.white} />
-                  </LinearGradient>
-                </TouchableOpacity>
+                  variant="teal"
+                  icon="search"
+                  testID="find-trainer-btn"
+                />
 
                 {/* Become a Trainer Button */}
-                <TouchableOpacity
+                <AnimatedPillButton
+                  title="Become a Trainer"
                   onPress={handleBecomeTrainer}
-                  style={styles.secondaryButton}
-                  activeOpacity={0.9}
-                >
-                  <View style={styles.outlineButtonInner}>
-                    <Ionicons name="barbell" size={24} color={BRAND.white} />
-                    <Text style={styles.outlineButtonText}>Become a Trainer</Text>
-                    <Ionicons name="arrow-forward" size={20} color={BRAND.white} />
-                  </View>
-                </TouchableOpacity>
+                  variant="outline"
+                  icon="barbell"
+                  testID="become-trainer-btn"
+                />
 
                 {/* Terms */}
                 <Text style={styles.termsText}>
