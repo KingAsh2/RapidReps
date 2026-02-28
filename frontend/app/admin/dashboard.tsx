@@ -47,6 +47,7 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedTimeframe, setSelectedTimeframe] = useState<'today' | 'week' | 'month'>('month');
 
   // Data
   const [dashboard, setDashboard] = useState<any>(null);
