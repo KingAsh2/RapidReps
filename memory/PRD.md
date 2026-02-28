@@ -82,6 +82,13 @@
 ### Deployment Fix Log
 - [x] Fixed build failure: corrected import paths in `app/notifications.tsx` (`../../src/` → `../src/`)
 
+### UI/UX Updates
+- [x] Created reusable `AnimatedPillButton` component (`src/components/AnimatedPillButton.tsx`)
+  - Pill-shaped (borderRadius: 30), spring press animation (scale 0.95 → 1)
+  - Variants: `primary` (teal→orange gradient), `teal`, `outline`, `danger`
+  - Supports icon, arrow indicator, loading state, disabled state
+- [x] Updated buttons: Welcome screen, Login, Signup, Forgot Password
+
 ### Deployment Readiness: PRODUCTION READY
 
 ### Test Credentials
