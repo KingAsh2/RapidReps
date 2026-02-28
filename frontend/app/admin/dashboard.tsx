@@ -309,16 +309,48 @@ export default function AdminDashboard() {
     { id: 'profile', icon: 'person-circle', label: 'Profile' },
   ];
 
-  // --- Stat Card ---
-  const StatCard = ({ icon, label, value, color }: { icon: string; label: string; value: string | number; color: string }) => (
+  // --- Stat Card (Enhanced) ---
+  const StatCard = ({ icon, label, value, color, subtitle, growth }: { icon: string; label: string; value: string | number; color: string; subtitle?: string; growth?: string }) => (
     <View style={s.statCard} data-testid={`stat-${label.toLowerCase().replace(/\s/g, '-')}`}>
-      <View style={[s.statIconBg, { backgroundColor: `${color}15` }]}>
-        <Ionicons name={icon as any} size={22} color={color} />
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <View style={[s.statIconBg, { backgroundColor: `${color}15` }]}>
+          <Ionicons name={icon as any} size={22} color={color} />
+        </View>
+        {growth ? (
+          <View style={[s.growthTag, { backgroundColor: growth.startsWith('+') ? '#E8F5E9' : '#FFEBEE' }]}>
+            <Ionicons name={growth.startsWith('+') ? 'trending-up' : 'trending-down'} size={10} color={growth.startsWith('+') ? C.success : C.error} />
+            <Text style={[s.growthText, { color: growth.startsWith('+') ? C.success : C.error }]}>{growth}</Text>
+          </View>
+        ) : null}
       </View>
       <Text style={s.statValue}>{value}</Text>
       <Text style={s.statLabel}>{label}</Text>
+      {subtitle ? <Text style={s.statSub}>{subtitle}</Text> : null}
     </View>
   );
+
+  // --- Timeframe Pills ---
+  const TimeframePills = () => {
+    const options: { key: 'today' | 'week' | 'month'; label: string }[] = [
+      { key: 'today', label: 'Today' },
+      { key: 'week', label: 'This Week' },
+      { key: 'month', label: 'This Month' },
+    ];
+    return (
+      <View style={s.timeframePills} data-testid="timeframe-pills">
+        {options.map((opt) => (
+          <TouchableOpacity
+            key={opt.key}
+            style={[s.timeframePill, selectedTimeframe === opt.key && s.timeframePillActive]}
+            onPress={() => setSelectedTimeframe(opt.key)}
+            data-testid={`timeframe-${opt.key}`}
+          >
+            <Text style={[s.timeframePillText, selectedTimeframe === opt.key && s.timeframePillTextActive]}>{opt.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    );
+  };
 
   // --- RENDER: Overview ---
   const renderOverview = () => {
