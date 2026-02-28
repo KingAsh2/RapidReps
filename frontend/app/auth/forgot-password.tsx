@@ -79,12 +79,14 @@ export default function ForgotPasswordScreen() {
             Please check your inbox and spam folder.
           </Text>
           
-          <TouchableOpacity
+          <AnimatedPillButton
+            title="Back to Login"
             onPress={() => router.back()}
-            style={styles.backToLoginButton}
-          >
-            <Text style={styles.backToLoginText}>Back to Login</Text>
-          </TouchableOpacity>
+            variant="outline"
+            icon="arrow-back"
+            showArrow={false}
+            testID="back-to-login-btn"
+          />
         </View>
       </SafeAreaView>
     );
