@@ -493,31 +493,6 @@ const styles = StyleSheet.create({
   loginButtonContainer: {
     marginBottom: 24,
   },
-  loginButton: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    shadowColor: Colors.secondary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.5,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  loginButtonGradient: {
-    paddingVertical: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  loginButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  loginButtonText: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: Colors.white,
-    letterSpacing: 1,
-  },
   signupContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
