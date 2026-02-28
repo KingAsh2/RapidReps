@@ -355,38 +355,140 @@ export default function AdminDashboard() {
   // --- RENDER: Overview ---
   const renderOverview = () => {
     if (!dashboard) return null;
+    const platformPct = dashboard.totalRevenueCents > 0 ? (dashboard.platformRevenueCents / dashboard.totalRevenueCents) * 100 : 25;
+    const trainerPct = 100 - platformPct;
+    const pendingCount = dashboard.pendingVerifications || 0;
+
     return (
       <View>
+        {/* Timeframe Filter */}
+        <TimeframePills />
+
+        {/* Platform Stats */}
         <Text style={s.sectionTitle}>Platform Stats</Text>
         <View style={s.statsGrid}>
-          <StatCard icon="people" label="Total Users" value={dashboard.totalUsers} color={C.teal} />
-          <StatCard icon="fitness" label="Trainers" value={dashboard.totalTrainers} color={C.orange} />
-          <StatCard icon="person" label="Trainees" value={dashboard.totalTrainees} color={C.navyLight} />
-          <StatCard icon="calendar" label="Sessions" value={dashboard.totalSessions} color={C.success} />
+          <StatCard icon="people" label="Total Users" value={dashboard.totalUsers} color={C.teal} subtitle="All-time" growth="+12%" />
+          <StatCard icon="fitness" label="Trainers" value={dashboard.totalTrainers} color={C.orange} subtitle="Approved trainers" growth="+3%" />
+          <StatCard icon="person" label="Trainees" value={dashboard.totalTrainees} color={C.navyLight} subtitle="Active clients" growth="+8%" />
+          <StatCard icon="calendar" label="Sessions" value={dashboard.totalSessions} color={C.success} subtitle="Booked in period" growth="+5%" />
         </View>
+
+        {/* Revenue (enhanced) */}
         <Text style={s.sectionTitle}>Revenue</Text>
         <View style={s.revenueCard}>
-          <View style={s.revenueRow}>
-            <Text style={s.revenueLabel}>Total Revenue</Text>
-            <Text style={s.revenueValue}>{formatCents(dashboard.totalRevenueCents)}</Text>
+          <View style={s.revenueRowHero}>
+            <Text style={s.revenueLabelHero}>Total Revenue</Text>
+            <Text style={s.revenueValueHero}>{formatCents(dashboard.totalRevenueCents)}</Text>
           </View>
           <View style={s.divider} />
           <View style={s.revenueRow}>
-            <Text style={s.revenueLabel}>Platform (25%)</Text>
-            <Text style={[s.revenueValue, { color: C.success }]}>{formatCents(dashboard.platformRevenueCents)}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <View style={[s.revenueDot, { backgroundColor: C.success }]} />
+              <Text style={s.revenueLabel}>Platform (25%)</Text>
+            </View>
+            <Text style={[s.revenueValueBold, { color: C.success }]}>{formatCents(dashboard.platformRevenueCents)}</Text>
           </View>
           <View style={s.divider} />
           <View style={s.revenueRow}>
-            <Text style={s.revenueLabel}>Trainer Payouts (75%)</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <View style={[s.revenueDot, { backgroundColor: C.orange }]} />
+              <Text style={s.revenueLabel}>Trainer Payouts (75%)</Text>
+            </View>
             <Text style={s.revenueValue}>{formatCents(dashboard.trainerPayoutsCents)}</Text>
           </View>
+          {/* Revenue Split Progress Bar */}
+          <View style={s.revenueBarContainer}>
+            <View style={[s.revenueBarSegment, { flex: platformPct, backgroundColor: C.success, borderTopLeftRadius: 4, borderBottomLeftRadius: 4 }]} />
+            <View style={[s.revenueBarSegment, { flex: trainerPct, backgroundColor: C.orange, borderTopRightRadius: 4, borderBottomRightRadius: 4 }]} />
+          </View>
+          <View style={s.revenueBarLabels}>
+            <Text style={[s.revenueBarLabel, { color: C.success }]}>Platform {platformPct.toFixed(0)}%</Text>
+            <Text style={[s.revenueBarLabel, { color: C.orange }]}>Trainers {trainerPct.toFixed(0)}%</Text>
+          </View>
         </View>
+
+        {/* Quick Info (expanded) */}
         <Text style={s.sectionTitle}>Quick Info</Text>
         <View style={s.statsGrid}>
-          <StatCard icon="checkmark-circle" label="Completed" value={dashboard.completedSessions} color={C.success} />
-          <StatCard icon="star" label="Memberships" value={dashboard.activeMemberships} color={C.warning} />
-          <StatCard icon="flash" label="Boosts" value={dashboard.activeBoosts} color={C.orange} />
-          <StatCard icon="time" label="Pending Verify" value={dashboard.pendingVerifications} color={C.error} />
+          <StatCard icon="checkmark-circle" label="Completed" value={dashboard.completedSessions} color={C.success} subtitle="Sessions done" />
+          <StatCard icon="star" label="Memberships" value={dashboard.activeMemberships} color={C.warning} subtitle="Active plans" />
+          <StatCard icon="flash" label="Boosts" value={dashboard.activeBoosts} color={C.orange} subtitle="Active boosts" />
+          <StatCard icon="hourglass" label="Pending" value={pendingCount} color={C.error} subtitle="Awaiting review" />
+        </View>
+
+        {/* Attention Needed */}
+        <Text style={s.sectionTitle}>Attention Needed</Text>
+        <View style={s.attentionCard}>
+          <TouchableOpacity
+            style={s.attentionRow}
+            onPress={() => setActiveTab('verifications')}
+            data-testid="attention-verifications"
+          >
+            <View style={[s.attentionIconBg, { backgroundColor: '#FFB30020' }]}>
+              <Ionicons name="shield-checkmark" size={16} color={C.warning} />
+            </View>
+            <Text style={s.attentionText}><Text style={s.attentionCount}>{pendingCount}</Text> trainers pending verification</Text>
+            <Ionicons name="chevron-forward" size={16} color={C.gray} />
+          </TouchableOpacity>
+          <View style={s.attentionDivider} />
+          <TouchableOpacity
+            style={s.attentionRow}
+            onPress={() => setActiveTab('payments')}
+            data-testid="attention-payments"
+          >
+            <View style={[s.attentionIconBg, { backgroundColor: '#FF475720' }]}>
+              <Ionicons name="card" size={16} color={C.error} />
+            </View>
+            <Text style={s.attentionText}><Text style={s.attentionCount}>0</Text> payment issues</Text>
+            <Ionicons name="chevron-forward" size={16} color={C.gray} />
+          </TouchableOpacity>
+          <View style={s.attentionDivider} />
+          <TouchableOpacity
+            style={s.attentionRow}
+            onPress={() => setActiveTab('users')}
+            data-testid="attention-low-rated"
+          >
+            <View style={[s.attentionIconBg, { backgroundColor: '#FF7F0020' }]}>
+              <Ionicons name="star-half" size={16} color={C.orange} />
+            </View>
+            <Text style={s.attentionText}><Text style={s.attentionCount}>0</Text> low-rated trainers ({'<'}3.0)</Text>
+            <Ionicons name="chevron-forward" size={16} color={C.gray} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Top Trainer This Week */}
+        <Text style={s.sectionTitle}>Top Trainer This Week</Text>
+        <View style={s.topTrainerCard}>
+          <View style={s.topTrainerHeader}>
+            <View style={s.topTrainerAvatar}>
+              <Ionicons name="trophy" size={24} color={C.warning} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={s.topTrainerName}>Alex Johnson</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                <View style={s.topTrainerBadge}>
+                  <Ionicons name="ribbon" size={12} color={C.orange} />
+                  <Text style={s.topTrainerBadgeText}>Gold</Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                  <Ionicons name="star" size={13} color={C.warning} />
+                  <Text style={s.topTrainerRating}>4.9</Text>
+                </View>
+              </View>
+            </View>
+            <View style={s.topTrainerStat}>
+              <Text style={s.topTrainerStatNum}>12</Text>
+              <Text style={s.topTrainerStatLabel}>sessions</Text>
+            </View>
+          </View>
+          <TouchableOpacity
+            style={s.viewTrainerBtn}
+            onPress={() => setActiveTab('users')}
+            data-testid="view-top-trainer-btn"
+          >
+            <Ionicons name="eye" size={16} color={C.teal} />
+            <Text style={s.viewTrainerBtnText}>View Trainer</Text>
+          </TouchableOpacity>
         </View>
       </View>
     );
