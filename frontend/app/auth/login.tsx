@@ -20,6 +20,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../src/utils/colors';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useAlert } from '../../src/contexts/AlertContext';
+import { AnimatedPillButton } from '../../src/components/AnimatedPillButton';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
