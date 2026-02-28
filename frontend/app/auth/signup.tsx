@@ -20,6 +20,7 @@ import { UserRole } from '../../src/types';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AnimatedPillButton } from '../../src/components/AnimatedPillButton';
 
 const { width } = Dimensions.get('window');
 
@@ -541,27 +542,16 @@ export default function SignupScreen() {
                 },
               ]}
             >
-              <TouchableOpacity
+              <AnimatedPillButton
+                title={loading ? 'Creating Your Account...' : 'Start My Journey'}
                 onPress={handleSignup}
+                loading={loading}
                 disabled={loading}
-                activeOpacity={0.9}
-              >
-                <LinearGradient
-                  colors={loading ? ['#CCCCCC', '#999999'] : [COLORS.orangeHot, COLORS.orangeGlow]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.ctaButton}
-                >
-                  {loading ? (
-                    <Text style={styles.ctaText}>Creating Your Account...</Text>
-                  ) : (
-                    <>
-                      <Ionicons name="rocket" size={22} color={COLORS.white} />
-                      <Text style={styles.ctaText}>Start My Journey</Text>
-                    </>
-                  )}
-                </LinearGradient>
-              </TouchableOpacity>
+                icon="rocket"
+                showArrow={false}
+                gradientColors={loading ? ['#CCCCCC', '#999999'] as const : [COLORS.orangeHot, COLORS.orangeGlow] as const}
+                testID="signup-submit-btn"
+              />
             </Animated.View>
 
             {/* Reassurance Text */}
