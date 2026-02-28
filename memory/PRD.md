@@ -88,6 +88,13 @@
   - Variants: `primary` (teal→orange gradient), `teal`, `outline`, `danger`
   - Supports icon, arrow indicator, loading state, disabled state
 - [x] Updated buttons: Welcome screen, Login, Signup, Forgot Password
+- [x] Enhanced Admin Panel Overview:
+  - Timeframe filter pills (Today/This Week/This Month) — visual only
+  - Stat cards with subtitles and growth tags (placeholder %s)
+  - Revenue card: hero total, color-coded dots, progress bar for Platform vs Trainer split
+  - Expanded Quick Info with Pending card
+  - "Attention Needed" section with navigable list items
+  - "Top Trainer This Week" card with mock data and View button
 
 ### Deployment Readiness: PRODUCTION READY
 
