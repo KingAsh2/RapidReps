@@ -357,40 +357,17 @@ export default function LoginScreen() {
               </TouchableOpacity>
 
               {/* Login Button */}
-              <Animated.View
-                style={[
-                  styles.loginButtonContainer,
-                  {
-                    transform: [
-                      { scale: loading ? 1 : buttonPressAnim },
-                      { scale: loading ? 1 : pulseAnim },
-                    ],
-                  },
-                ]}
-              >
-                <TouchableOpacity
+              <View style={styles.loginButtonContainer}>
+                <AnimatedPillButton
+                  title="Log In"
                   onPress={handleLogin}
+                  loading={loading}
                   disabled={loading}
-                  style={styles.loginButton}
-                  activeOpacity={0.8}
-                >
-                  <LinearGradient
-                    colors={['#00CFC1', '#FF6B35']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.loginButtonGradient}
-                  >
-                    {loading ? (
-                      <ActivityIndicator size="small" color={Colors.white} />
-                    ) : (
-                      <View style={styles.loginButtonContent}>
-                        <Text style={styles.loginButtonText}>Log In</Text>
-                        <Ionicons name="flash" size={20} color={Colors.white} />
-                      </View>
-                    )}
-                  </LinearGradient>
-                </TouchableOpacity>
-              </Animated.View>
+                  icon="flash"
+                  showArrow={false}
+                  testID="login-submit-btn"
+                />
+              </View>
 
               {/* Sign Up Link */}
               <View style={styles.signupContainer}>
