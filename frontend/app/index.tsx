@@ -420,13 +420,7 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   primaryButton: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
+    // Replaced by AnimatedPillButton
   },
   buttonGradient: {
     flexDirection: 'row',
@@ -443,10 +437,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   secondaryButton: {
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: BRAND.white,
-    overflow: 'hidden',
+    // Replaced by AnimatedPillButton
   },
   outlineButtonInner: {
     flexDirection: 'row',
