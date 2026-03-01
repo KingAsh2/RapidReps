@@ -77,6 +77,7 @@ export default function AdminDashboard() {
   const [profilePhone, setProfilePhone] = useState('');
   const [profileEmail, setProfileEmail] = useState('');
   const [adminUser, setAdminUser] = useState<any>(null);
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
 
   const getAuthHeader = async () => {
     const token = await AsyncStorage.getItem('auth_token');
