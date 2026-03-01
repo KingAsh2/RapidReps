@@ -650,40 +650,49 @@ export default function AdminDashboard() {
           </TouchableOpacity>
         </View>
 
-        {/* Top Trainer This Week */}
-        <Text style={s.sectionTitle}>Top Trainer This Week</Text>
-        <View style={s.topTrainerCard}>
-          <View style={s.topTrainerHeader}>
-            <LinearGradient colors={['#FFB300', '#FF7F00']} style={s.topTrainerAvatar}>
-              <Ionicons name="trophy" size={24} color={C.white} />
-            </LinearGradient>
-            <View style={{ flex: 1 }}>
-              <Text style={s.topTrainerName}>Alex Johnson</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 }}>
-                <View style={s.topTrainerBadge}>
-                  <Ionicons name="ribbon" size={12} color={C.orange} />
-                  <Text style={s.topTrainerBadgeText}>Gold</Text>
+        {/* Top Trainers Leaderboard */}
+        <Text style={s.sectionTitle}>Top Trainers This Week</Text>
+        {leaderboard.length > 0 ? (
+          leaderboard.map((trainer: any, index: number) => {
+            const rankColors = ['#FFB300', '#A0A0A0', '#CD7F32', C.teal, C.navyLight];
+            const rankColor = rankColors[index] || C.gray;
+            const tierLabel = trainer.tier === 'elite' ? 'Elite' : trainer.tier === 'pro' ? 'Pro' : 'Rising';
+            const tierColor = trainer.tier === 'elite' ? C.orange : trainer.tier === 'pro' ? C.teal : C.gray;
+            return (
+              <View key={trainer.trainerId} style={[s.leaderRow, index === 0 && s.leaderRowFirst]}>
+                <View style={[s.leaderRank, { backgroundColor: `${rankColor}20`, borderColor: rankColor }]}>
+                  <Text style={[s.leaderRankText, { color: rankColor }]}>#{index + 1}</Text>
                 </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-                  <Ionicons name="star" size={13} color={C.warning} />
-                  <Text style={s.topTrainerRating}>4.9</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={s.leaderName}>{trainer.fullName}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 3 }}>
+                    <View style={[s.leaderTierBadge, { backgroundColor: `${tierColor}15` }]}>
+                      <Ionicons name="ribbon" size={10} color={tierColor} />
+                      <Text style={[s.leaderTierText, { color: tierColor }]}>{tierLabel}</Text>
+                    </View>
+                    {trainer.averageRating > 0 && (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+                        <Ionicons name="star" size={11} color={C.warning} />
+                        <Text style={s.leaderRating}>{trainer.averageRating}</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+                <View style={s.leaderStats}>
+                  <Text style={s.leaderStatNum}>{trainer.sessionCount}</Text>
+                  <Text style={s.leaderStatLabel}>sessions</Text>
                 </View>
               </View>
-            </View>
-            <View style={s.topTrainerStat}>
-              <Text style={s.topTrainerStatNum}>12</Text>
-              <Text style={s.topTrainerStatLabel}>sessions</Text>
+            );
+          })
+        ) : (
+          <View style={s.chartCard}>
+            <View style={{ alignItems: 'center', paddingVertical: 16 }}>
+              <Ionicons name="trophy-outline" size={32} color={C.gray} />
+              <Text style={{ color: C.gray, fontSize: 13, marginTop: 8 }}>No sessions completed this week yet</Text>
             </View>
           </View>
-          <TouchableOpacity
-            style={s.viewTrainerBtn}
-            onPress={() => setActiveTab('users')}
-            data-testid="view-top-trainer-btn"
-          >
-            <Ionicons name="eye" size={16} color={C.teal} />
-            <Text style={s.viewTrainerBtnText}>View Trainer</Text>
-          </TouchableOpacity>
-        </View>
+        )}
       </View>
     );
   };
