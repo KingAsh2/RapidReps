@@ -214,6 +214,27 @@ class PricingRules:
     ELITE_TIER_MIN_BONUS = 3000
     ELITE_TIER_MAX_BONUS = 5000
 
+    # Virtual session duration rules
+    VIRTUAL_DEFAULT_DURATION_MIN = 30
+    VIRTUAL_MAX_DURATION_MIN = 90
+    VIRTUAL_GRACE_PERIOD_MIN = 2  # Grace period for wrap-up after time expires
+
+    # Matching engine hard limits
+    MAX_ETA_MINUTES = 15  # Hard cap for in-person matching
+    FIND_ANOTHER_COOLDOWN_MIN = 10  # Excluded trainer cooldown
+
+    # Arrival time rules
+    ARRIVAL_WINDOW_BEFORE_START_MIN = 5  # Window begins 5 min before start time
+    NO_SHOW_THRESHOLD_MIN = 10  # No-show after 10 min past start
+
+    # Selfie verification
+    MAX_SELFIE_ATTEMPTS = 3  # After 3 fails → manual verification fallback
+
+    # Fraud detection thresholds
+    MAX_FAKE_REQUESTS_PER_HOUR = 3  # Trolling threshold
+    HIGH_CANCEL_RATE_THRESHOLD = 0.5  # 50%+ cancellation rate triggers review
+    GPS_SPOOF_JUMP_MILES = 2.0  # Sudden GPS jump > 2 miles = spoofing alert
+
 # Helper functions for payment calculations
 def calculate_session_payout(session_price_cents: int, session_type: str) -> dict:
     """Calculate trainer payout and platform fee for a session"""
