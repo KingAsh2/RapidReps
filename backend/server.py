@@ -6095,7 +6095,10 @@ async def get_pending_virtual_requests(current_user: dict = Depends(get_current_
 
 @api_router.post("/virtual/accept/{request_id}")
 async def accept_virtual_request(request_id: str, current_user: dict = Depends(get_current_user)):
-    """Trainer accepts a virtual session — first-come-first-served"""
+    """
+    Trainer accepts a session — first-come-first-served, atomic.
+    Uses find_one_and_update to prevent double-acceptance race conditions.
+    """
     if "trainer" not in current_user.get("roles", []):
         raise HTTPException(400, "Only trainers can accept requests")
 
@@ -6104,38 +6107,51 @@ async def accept_virtual_request(request_id: str, current_user: dict = Depends(g
     except Exception:
         raise HTTPException(404, "Invalid request ID")
 
-    # Atomic update — only succeeds if still 'searching'
+    trainer_id = str(current_user["_id"])
+    trainer_name = current_user.get("fullName", "A Trainer")
+
+    # Atomic update — ONLY succeeds if status is still 'searching'
+    # This prevents double-acceptance race conditions
     result = await db.virtual_requests.find_one_and_update(
         {"_id": oid, "status": "searching"},
         {"$set": {
             "status": "matched",
-            "matchedTrainerId": str(current_user["_id"]),
-            "matchedTrainerName": current_user.get("fullName", "A Trainer"),
+            "matchedTrainerId": trainer_id,
+            "matchedTrainerName": trainer_name,
             "matchedAt": datetime.utcnow(),
         }},
         return_document=True,
     )
 
     if not result:
-        # Another trainer already accepted
+        # Another trainer already accepted — race condition blocked
         return {"success": False, "message": "Another trainer has already accepted this session request."}
 
-    # Notify the trainee
+    session_type = result.get("sessionType", "virtual")
+    session_label = "virtual" if session_type == "virtual" else "in-person"
+
+    # Notify the trainee — include sound trigger for boxing-bell
     await create_and_send_notification(
         result["traineeId"],
         "Trainer Found!",
-        f"{current_user.get('fullName', 'A trainer')} has accepted your virtual session request!",
+        f"{trainer_name} has accepted your {session_label} session request!",
         "virtual_matched",
-        {"screen": "trainee/virtual-confirm", "requestId": request_id}
+        {
+            "screen": "trainee/virtual-confirm",
+            "requestId": request_id,
+            "trainerId": trainer_id,
+            "trainerName": trainer_name,
+            "playSound": "boxing_bell",
+        }
     )
 
-    # Notify other trainers that this request is taken
+    # Notify all OTHER notified trainers that this request is taken
     for tid in result.get("notifiedTrainers", []):
-        if tid != str(current_user["_id"]):
+        if tid != trainer_id:
             await create_and_send_notification(
                 tid,
                 "Session Taken",
-                "Another trainer has accepted this virtual session request.",
+                f"Another trainer accepted this {session_label} session.",
                 "virtual_taken",
                 {"requestId": request_id}
             )
