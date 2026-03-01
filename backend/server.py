@@ -2476,6 +2476,214 @@ async def confirm_trainer_gps(
         'message': 'Location confirmed! You are at the session location.',
     }
 
+
+# ─────────────────────────────────────────────────────────────
+# POST-SESSION SUMMARY — Auto-generated after session completion
+# ─────────────────────────────────────────────────────────────
+
+# Calories per hour by training style (average adult)
+CALORIES_PER_HOUR = {
+    'hiit': 650, 'crossfit': 600, 'boxing': 580, 'kickboxing': 570,
+    'strength': 420, 'weightlifting': 400, 'bodybuilding': 400,
+    'functional': 380, 'circuit': 500, 'cardio': 500,
+    'running': 550, 'cycling': 480, 'swimming': 450,
+    'yoga': 250, 'pilates': 280, 'stretching': 180,
+    'dance': 400, 'zumba': 450, 'martial_arts': 550,
+    'sports': 450, 'rehabilitation': 200, 'prenatal': 220,
+    'senior': 200, 'kids': 350,
+}
+DEFAULT_CALORIES_PER_HOUR = 400
+
+
+def estimate_calories(training_styles: list, duration_minutes: int) -> int:
+    """Estimate calories burned based on training style(s) and duration."""
+    if not training_styles:
+        return int(DEFAULT_CALORIES_PER_HOUR * duration_minutes / 60)
+    total_cal_per_hour = 0
+    matched = 0
+    for style in training_styles:
+        key = style.lower().replace(' ', '_').replace('-', '_')
+        if key in CALORIES_PER_HOUR:
+            total_cal_per_hour += CALORIES_PER_HOUR[key]
+            matched += 1
+    if matched == 0:
+        return int(DEFAULT_CALORIES_PER_HOUR * duration_minutes / 60)
+    avg_cal_per_hour = total_cal_per_hour / matched
+    return int(avg_cal_per_hour * duration_minutes / 60)
+
+
+async def generate_session_summary(session_id: str, session: dict) -> dict:
+    """
+    Auto-generate a post-session summary with stats, calories, streak.
+    Stored in session_summaries collection.
+    """
+    trainee_id = session['traineeId']
+    trainer_id = session['trainerId']
+
+    # Calculate actual duration
+    started_at = session.get('sessionActualStart') or session.get('sessionDateTimeStart')
+    ended_at = session.get('sessionEndedAt') or datetime.utcnow()
+    if isinstance(started_at, str):
+        started_at = datetime.fromisoformat(started_at)
+    if isinstance(ended_at, str):
+        ended_at = datetime.fromisoformat(ended_at)
+    duration_minutes = max(1, int((ended_at - started_at).total_seconds() / 60))
+
+    # Get trainer info
+    trainer_profile = await db.trainer_profiles.find_one({'userId': trainer_id})
+    trainer_user = await db.users.find_one({'_id': ObjectId(trainer_id)}, {'fullName': 1, 'profilePhoto': 1})
+    trainer_name = trainer_user.get('fullName', 'Your Trainer') if trainer_user else 'Your Trainer'
+    training_styles = trainer_profile.get('trainingStyles', []) if trainer_profile else []
+
+    # Estimate calories
+    calories = estimate_calories(training_styles, duration_minutes)
+
+    # Calculate trainee streak (consecutive weeks with at least 1 completed session)
+    now = datetime.utcnow()
+    streak = 0
+    for week_offset in range(52):
+        week_start = now - timedelta(weeks=week_offset + 1)
+        week_end = now - timedelta(weeks=week_offset)
+        has_session = await db.sessions.find_one({
+            'traineeId': trainee_id,
+            'status': SessionStatus.COMPLETED,
+            'sessionEndedAt': {'$gte': week_start, '$lte': week_end},
+        })
+        if has_session:
+            streak += 1
+        else:
+            break
+
+    # Total sessions with this trainer
+    sessions_with_trainer = await db.sessions.count_documents({
+        'traineeId': trainee_id,
+        'trainerId': trainer_id,
+        'status': SessionStatus.COMPLETED,
+    })
+
+    # Build summary
+    session_type_label = {
+        'virtual': 'Virtual', 'outdoor': 'Outdoor', 'in_home': 'At Home', 'trainee_home': 'Home Visit',
+    }.get(session.get('sessionType', ''), 'Training')
+
+    workout_label = ', '.join(training_styles[:3]) if training_styles else session_type_label
+
+    summary = {
+        'sessionId': session_id,
+        'traineeId': trainee_id,
+        'trainerId': trainer_id,
+        'trainerName': trainer_name,
+        'trainerPhoto': trainer_user.get('profilePhoto') if trainer_user else None,
+        'sessionType': session.get('sessionType', 'outdoor'),
+        'sessionTypeLabel': session_type_label,
+        'workoutLabel': workout_label,
+        'trainingStyles': training_styles,
+        'startedAt': started_at.isoformat() if started_at else None,
+        'endedAt': ended_at.isoformat() if ended_at else None,
+        'durationMinutes': duration_minutes,
+        'caloriesEstimate': calories,
+        'weeklyStreak': streak,
+        'sessionsWithTrainer': sessions_with_trainer,
+        'shareText': f"Just crushed a {duration_minutes}-min {workout_label} session with {trainer_name}! {calories} cal burned. {streak}-week streak!",
+        'deepLink': f"rapidreps://session-summary/{session_id}",
+        'createdAt': now,
+    }
+
+    # Store in DB
+    await db.session_summaries.update_one(
+        {'sessionId': session_id},
+        {'$set': summary},
+        upsert=True,
+    )
+
+    return summary
+
+
+@api_router.get("/sessions/{session_id}/summary")
+async def get_session_summary(session_id: str, current_user: dict = Depends(get_current_user)):
+    """Get the post-session summary for a completed session."""
+    # Check if summary already exists
+    summary = await db.session_summaries.find_one(
+        {'sessionId': session_id},
+        {'_id': 0},
+    )
+    if summary:
+        if 'createdAt' in summary and hasattr(summary['createdAt'], 'isoformat'):
+            summary['createdAt'] = summary['createdAt'].isoformat()
+        return summary
+
+    # Generate on-demand if session is completed but summary doesn't exist
+    session = await db.sessions.find_one({'_id': ObjectId(session_id)})
+    if not session:
+        raise HTTPException(404, "Session not found")
+
+    user_id = str(current_user['_id'])
+    if session.get('trainerId') != user_id and session.get('traineeId') != user_id:
+        raise HTTPException(403, "Not a participant")
+
+    if session.get('status') != SessionStatus.COMPLETED:
+        raise HTTPException(400, "Session is not yet completed")
+
+    summary = await generate_session_summary(session_id, session)
+    if 'createdAt' in summary and hasattr(summary['createdAt'], 'isoformat'):
+        summary['createdAt'] = summary['createdAt'].isoformat()
+    return summary
+
+
+@api_router.get("/sessions/summaries/my")
+async def get_my_summaries(current_user: dict = Depends(get_current_user)):
+    """Get all session summaries for the current user (trainee or trainer)."""
+    user_id = str(current_user['_id'])
+    summaries = await db.session_summaries.find(
+        {'$or': [{'traineeId': user_id}, {'trainerId': user_id}]},
+        {'_id': 0},
+    ).sort('createdAt', -1).to_list(50)
+
+    for s in summaries:
+        if 'createdAt' in s and hasattr(s['createdAt'], 'isoformat'):
+            s['createdAt'] = s['createdAt'].isoformat()
+
+    total_calories = sum(s.get('caloriesEstimate', 0) for s in summaries)
+    total_minutes = sum(s.get('durationMinutes', 0) for s in summaries)
+
+    return {
+        'summaries': summaries,
+        'totalSessions': len(summaries),
+        'totalCalories': total_calories,
+        'totalMinutes': total_minutes,
+    }
+
+
+@api_router.get("/sessions/{session_id}/share-card")
+async def get_share_card_data(session_id: str):
+    """
+    Public endpoint — returns styled card data for sharing.
+    Used by deep links and social sharing.
+    """
+    summary = await db.session_summaries.find_one(
+        {'sessionId': session_id},
+        {'_id': 0, 'traineeId': 0, 'trainerId': 0},
+    )
+    if not summary:
+        raise HTTPException(404, "Summary not found")
+
+    if 'createdAt' in summary and hasattr(summary['createdAt'], 'isoformat'):
+        summary['createdAt'] = summary['createdAt'].isoformat()
+
+    return {
+        'card': {
+            'trainerName': summary.get('trainerName'),
+            'workoutLabel': summary.get('workoutLabel'),
+            'durationMinutes': summary.get('durationMinutes'),
+            'caloriesEstimate': summary.get('caloriesEstimate'),
+            'weeklyStreak': summary.get('weeklyStreak'),
+            'sessionTypeLabel': summary.get('sessionTypeLabel'),
+            'shareText': summary.get('shareText'),
+            'deepLink': summary.get('deepLink'),
+        },
+    }
+
+
 @api_router.post("/sessions/{session_id}/end")
 async def end_session(
     session_id: str,
