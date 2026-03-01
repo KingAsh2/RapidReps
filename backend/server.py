@@ -6185,6 +6185,42 @@ async def notification_scheduler():
                 ))
                 await db.sessions.update_one({'_id': s['_id']}, {'$set': {'_lateWarningSent': True}})
 
+            # 7. AUTO NO-SHOW DETECTION
+            # Sessions past start time + 10 min where neither party has started
+            noshow_cutoff = now - timedelta(minutes=10)
+            noshow_candidates = await db.sessions.find({
+                'status': {'$in': [SessionStatus.CONFIRMED, SessionStatus.EN_ROUTE]},
+                'sessionType': {'$ne': 'virtual'},
+                'sessionDateTimeStart': {'$lte': noshow_cutoff},
+                '_noShowAutoChecked': {'$ne': True},
+            }).to_list(20)
+
+            for s in noshow_candidates:
+                sid = str(s['_id'])
+                trainer_gps_confirmed = s.get('trainerGpsConfirmed', False)
+
+                if not trainer_gps_confirmed:
+                    # Trainer never confirmed arrival — flag as potential trainer no-show
+                    asyncio.create_task(create_and_send_notification(
+                        s['traineeId'],
+                        "Session Delayed",
+                        "Your trainer has not arrived. You can mark this as a no-show if they don't appear soon.",
+                        "late_warning",
+                        {"sessionId": sid, "screen": "trainee/sessions", "action": "mark_no_show"}
+                    ))
+                    asyncio.create_task(create_and_send_notification(
+                        s['trainerId'],
+                        "Session Start Overdue",
+                        "You haven't confirmed arrival for your session. Please update your trainee or you may receive a no-show strike.",
+                        "late_warning",
+                        {"sessionId": sid, "screen": "trainer/sessions"}
+                    ))
+
+                await db.sessions.update_one(
+                    {'_id': s['_id']},
+                    {'$set': {'_noShowAutoChecked': True}}
+                )
+
         except Exception as e:
             logging.getLogger(__name__).error(f"Notification scheduler error: {e}")
 
