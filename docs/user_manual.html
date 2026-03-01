@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>RapidReps User Manual v3.0</title>
+<style>
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #1a1a2e;
+  line-height: 1.7;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 32px;
+  background: #fff;
+}
+h1 {
+  color: #0f3460;
+  border-bottom: 3px solid #16c79a;
+  padding-bottom: 10px;
+  font-size: 2em;
+}
+h2 {
+  color: #0f3460;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 6px;
+  margin-top: 36px;
+  font-size: 1.5em;
+}
+h3 { color: #16213e; margin-top: 24px; font-size: 1.2em; }
+h4 { color: #333; }
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 16px 0;
+  font-size: 0.92em;
+}
+th, td {
+  border: 1px solid #ccc;
+  padding: 8px 12px;
+  text-align: left;
+}
+th { background: #0f3460; color: #fff; }
+tr:nth-child(even) { background: #f4f8fc; }
+blockquote {
+  border-left: 4px solid #16c79a;
+  margin: 16px 0;
+  padding: 10px 20px;
+  background: #f0faf6;
+  font-style: italic;
+}
+code {
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+hr { border: none; border-top: 1px solid #ddd; margin: 32px 0; }
+strong { color: #0f3460; }
+em { color: #555; }
+ul, ol { padding-left: 24px; }
+li { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<h1>RapidReps — Complete User Manual v3.0</h1>
+<hr />
+<h2>Table of Contents</h2>
+<ol>
+<li>Getting Started</li>
+<li>Account &amp; Authentication</li>
+<li>Trainee Guide</li>
+<li>Trainer Guide</li>
+<li>Session Workflows</li>
+<li>Matching Engine — "Need a Trainer Now"</li>
+<li>GPS Tracking &amp; En-Route</li>
+<li>Selfie Verification</li>
+<li>Post-Session Summary &amp; Sharing</li>
+<li>Messaging</li>
+<li>Payments &amp; Pricing</li>
+<li>Membership Program</li>
+<li>Visibility Boosts (Trainers)</li>
+<li>Cancellation &amp; No-Show Policies</li>
+<li>Ratings &amp; Reviews</li>
+<li>Achievements &amp; Streaks</li>
+<li>Notifications</li>
+<li>Safety, Fraud Detection &amp; Reporting</li>
+<li>Admin Dashboard</li>
+<li>Account Settings &amp; Sound/Vibration</li>
+<li>Legal</li>
+<li>FAQ</li>
+</ol>
+<hr />
+<h2>1. Getting Started</h2>
+<p>RapidReps connects fitness trainees with certified personal trainers for virtual, outdoor, and in-home sessions. Think of it as an Uber-style experience for personal training — open the app, request a trainer, get matched in real time, and start your workout.</p>
+<p><strong>Supported Platforms:</strong> iOS, Android, Web (via Expo)</p>
+<p><strong>Key Roles:</strong>
+- <strong>Trainee</strong> — Books and attends training sessions
+- <strong>Trainer</strong> — Provides training services, earns income
+- <strong>Admin</strong> — Manages the platform, users, and payouts</p>
+<h3>Example Trainer Profile</h3>
+<blockquote>
+<p><strong>Alex T.</strong> — HIIT / Strength / Boxing — 4.9 (284 reviews)
+$40 Outdoor | $60 In-Home | $30 Virtual
+Certified NASM Personal Trainer | 5 years experience
+"I specialize in high-intensity functional training that builds real-world strength."</p>
+</blockquote>
+<hr />
+<h2>2. Account &amp; Authentication</h2>
+<h3>2.1 Sign Up</h3>
+<p><strong>Screen:</strong> Sign Up</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Required</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Full Name</td>
+<td>Yes</td>
+<td>Your display name</td>
+</tr>
+<tr>
+<td>Email</td>
+<td>Yes</td>
+<td>Must be unique</td>
+</tr>
+<tr>
+<td>Password</td>
+<td>Yes</td>
+<td>Minimum 6 characters</td>
+</tr>
+<tr>
+<td>Role</td>
+<td>Yes</td>
+<td>Choose "Trainee" or "Trainer"</td>
+</tr>
+<tr>
+<td>Profile Photo</td>
+<td>No</td>
+<td>Upload during or after sign-up</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Buttons:</strong>
+- <strong>Create Account</strong> — Submits registration form
+- <strong>Already have an account? Log In</strong> — Navigates to login screen
+- <strong>View Terms of Service</strong> — Opens Terms screen
+- <strong>View Privacy Policy</strong> — Opens Privacy screen</p>
+<h3>2.2 Log In</h3>
+<p><strong>Screen:</strong> Log In</p>
+<p>Tagline: <em>"Time to lock in"</em></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Required</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Email</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Password</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Buttons:</strong>
+- <strong>Log In</strong> — Authenticates and routes to trainee or trainer home
+- <strong>Forgot Password?</strong> — Opens password reset flow
+- <strong>Don't have an account? Sign Up</strong> — Navigates to sign up</p>
+<h3>2.3 Forgot Password / Reset Password</h3>
+<p>Enter your email to receive a reset code. Then enter the code and your new password.</p>
+<p><strong>Buttons:</strong>
+- <strong>Send Reset Code</strong> — Sends reset email
+- <strong>Reset Password</strong> — Sets new password
+- <strong>Back to Login</strong> — Returns to login screen</p>
+<hr />
+<h2>3. Trainee Guide</h2>
+<h3>3.1 Home Screen</h3>
+<p><strong>Tab:</strong> Home (house icon)</p>
+<p><strong>Header:</strong>
+- Greeting with your name
+- Notification bell icon (shows unread count)</p>
+<p><strong>"Need a Trainer Now" Section:</strong>
+- <strong>Virtual Session</strong> button — Instantly request a virtual trainer (video call)
+- <strong>In-Person Now</strong> button — Find a nearby trainer for an in-person session right now</p>
+<p><strong>Sort &amp; Filter Bar:</strong>
+- <strong>Sort Options:</strong> Rating, Price (Low to High), Price (High to Low), Distance
+- Active sort is highlighted in teal</p>
+<p><strong>Trainer Cards — each shows:</strong>
+- Profile photo and full name
+- Average rating (stars) and review count
+- Training styles (tags)
+- Price per session
+- Distance (if location enabled)
+- <strong>Boosted badge</strong> — Glowing indicator if trainer has an active visibility boost
+- <strong>Member badge</strong> — Shown if trainer has a membership</p>
+<p><strong>Buttons on each card:</strong>
+- <strong>View Profile</strong> — Opens trainer detail screen
+- <strong>Book Session</strong> — Goes to booking flow</p>
+<p><strong>Nearby Trainers Section:</strong>
+- Shows trainers within range with distance and ETA
+- Scrollable horizontal list</p>
+<h3>3.2 Trainer Detail Screen</h3>
+<p><strong>Screen:</strong> Trainer Detail</p>
+<p>Shows complete trainer profile:
+- Profile photo, name, verification status badge
+- Average rating and total reviews
+- Bio/description
+- Training styles
+- Session types offered (Virtual, Outdoor, In-Home)
+- Pricing for each session type
+- Intro video (if uploaded)
+- Reviews from other trainees</p>
+<p><strong>Buttons:</strong>
+- <strong>Book Virtual Session</strong> / <strong>Book Outdoor Session</strong> / <strong>Book In-Home Session</strong>
+- <strong>Save Trainer</strong> — Saves to your Saved list
+- <strong>Message</strong> — Opens direct message conversation
+- <strong>Report</strong> — Report this trainer for safety concerns
+- <strong>Back</strong> — Returns to home</p>
+<h3>3.3 Saved Trainers</h3>
+<p><strong>Tab:</strong> Saved (heart icon)</p>
+<p>View your saved/favorited trainers.</p>
+<p><strong>Buttons:</strong> Unsave, Book, View Profile</p>
+<h3>3.4 Sessions Tab</h3>
+<p><strong>Tab:</strong> Sessions (calendar icon)</p>
+<p>Sessions organized by status: Upcoming, In Progress, Completed, Cancelled.</p>
+<p>Each session card shows trainer name/photo, date/time, session type, status badge, price.</p>
+<p><strong>Buttons per session:</strong>
+- <strong>View Details</strong> — Full session info
+- <strong>Cancel</strong> — Cancel the session (penalties may apply — see Section 14)
+- <strong>Rate</strong> — Leave a rating (completed sessions only)
+- <strong>View Summary</strong> — See post-session stats (completed only)
+- <strong>Mark No-Show</strong> — Report trainer no-show (if applicable)</p>
+<h3>3.5 Profile Tab</h3>
+<p><strong>Tab:</strong> Profile (person icon)</p>
+<p><strong>Buttons &amp; Options:</strong>
+- <strong>Edit Profile</strong> — Update name, photo, bio
+- <strong>Membership</strong> — View/manage membership (see Section 12)
+- <strong>Achievements</strong> — View earned badges
+- <strong>Notification Preferences</strong> — Customize notifications
+- <strong>Sound &amp; Vibration Settings</strong> — Toggle sounds, vibration, ringtone, mute-during-session (see Section 20.4)
+- <strong>Privacy Policy</strong> / <strong>Terms of Service</strong>
+- <strong>Log Out</strong> — Signs out
+- <strong>Delete Account</strong> — Permanently deletes your account (confirmation required)</p>
+<h3>3.6 Membership Screen</h3>
+<p>See Section 12 for full details.</p>
+<hr />
+<h2>4. Trainer Guide</h2>
+<h3>4.1 Home Screen</h3>
+<p><strong>Tab:</strong> Home (house icon)</p>
+<ul>
+<li><strong>Availability Toggle</strong> — Switch between Available/Unavailable</li>
+<li><strong>Today's Sessions</strong> — List of upcoming sessions for today</li>
+<li><strong>Pending Requests</strong> — Session requests awaiting your response</li>
+<li><strong>Quick Stats</strong> — Today's earnings, sessions completed, rating</li>
+</ul>
+<p><strong>Buttons:</strong>
+- <strong>Toggle Availability</strong> — Turn on/off your availability for matching
+- <strong>Accept</strong> / <strong>Decline</strong> — Respond to pending session requests</p>
+<h3>4.2 Sessions Tab</h3>
+<p>Same layout as trainee but with trainer actions:
+- <strong>Start En Route</strong> — Mark yourself heading to session (enables GPS tracking)
+- <strong>Confirm GPS Arrival</strong> — Verify you're at the session location
+- <strong>Start Session</strong> — Begin the session (In Progress)
+- <strong>End Session</strong> — Complete the session (triggers summary)
+- <strong>Cancel</strong> / <strong>Mark No-Show</strong> — Cancel or report trainee no-show</p>
+<h3>4.3 Earnings Tab</h3>
+<p><strong>Tab:</strong> Earnings (dollar icon)</p>
+<ul>
+<li><strong>Total Earnings</strong> — Lifetime earnings</li>
+<li><strong>This Month</strong> — Current month total</li>
+<li><strong>Pending Payout</strong> — Amount ready to withdraw</li>
+<li><strong>Recent Transactions</strong> — List of recent session payments</li>
+</ul>
+<p><strong>Buttons:</strong> Request Payout, View All Transactions</p>
+<h3>4.4 Profile Tab</h3>
+<p><strong>Buttons &amp; Options:</strong>
+- <strong>Edit Profile</strong> — Update bio, training styles, pricing, photos
+- <strong>Upload Intro Video</strong> — Record/upload a 30-60 second intro video
+- <strong>Verification</strong> — Complete or check verification status
+- <strong>Visibility Boosts</strong> — Purchase boosts (see Section 13)
+- <strong>Achievements</strong> / <strong>Notification Preferences</strong> / <strong>Sound &amp; Vibration Settings</strong>
+- <strong>Log Out</strong> / <strong>Delete Account</strong></p>
+<h3>4.5 Edit Profile Screen</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Full Name</td>
+<td>Display name</td>
+</tr>
+<tr>
+<td>Bio</td>
+<td>Short description (max 500 chars)</td>
+</tr>
+<tr>
+<td>Training Styles</td>
+<td>Multi-select: HIIT, Strength, Cardio, Yoga, Pilates, Boxing, etc.</td>
+</tr>
+<tr>
+<td>Virtual Rate</td>
+<td>Price per virtual session (min $30)</td>
+</tr>
+<tr>
+<td>Outdoor Rate</td>
+<td>Price per outdoor session (min $40)</td>
+</tr>
+<tr>
+<td>In-Home Rate</td>
+<td>Price per in-home session (min $60)</td>
+</tr>
+<tr>
+<td>Offers Virtual / Offers In-Person</td>
+<td>Toggle on/off</td>
+</tr>
+<tr>
+<td>Profile Photo</td>
+<td>Upload/change photo</td>
+</tr>
+</tbody>
+</table>
+<h3>4.6 Verification Screen</h3>
+<p>Complete your trainer verification:
+1. <strong>Personal Information</strong> — Full name, date of birth, address
+2. <strong>Certification Upload</strong> — Upload personal training certification
+3. <strong>ID Verification</strong> — Upload government-issued ID
+4. <strong>Background Check Consent</strong> — Agree to background check</p>
+<h3>4.7 Trainer — Virtual Request Screen</h3>
+<p>When you receive an instant request:
+- Trainee name, session type, and details shown
+- Countdown timer for response
+- <strong>Accept</strong> — Accept the session (first-accept-wins, no double-booking)
+- <strong>Decline</strong> — Decline and system finds another trainer
+- Timer expires — Auto-decline</p>
+<hr />
+<h2>5. Session Workflows</h2>
+<h3>5.1 Scheduled Session Booking</h3>
+<ol>
+<li><strong>Find Trainer</strong> — Browse trainers on Home tab</li>
+<li><strong>View Profile</strong> — Tap a trainer card</li>
+<li><strong>Select Session Type</strong> — Virtual, Outdoor, or In-Home</li>
+<li><strong>Schedule</strong> — Pick date and time</li>
+<li><strong>Confirm Booking</strong> — Review price breakdown</li>
+<li><strong>Payment</strong> — Complete Stripe payment</li>
+<li><strong>Trainer Responds</strong> — Accepts or declines</li>
+<li><strong>Session Confirmed</strong> — Both receive notification</li>
+</ol>
+<p><strong>Price Breakdown on Confirm Screen:</strong>
+- Base session rate
+- Travel fee (in-home only, based on distance)
+- Multi-session discount (5% on 3rd+ session with same trainer)
+- Membership discount (10% if subscribed)
+- Platform fee (25%)
+- Trainer earnings (75%)</p>
+<h3>5.2 Session Flow (In-Person)</h3>
+<ol>
+<li><strong>Confirmed</strong> — Both parties agreed</li>
+<li><strong>Selfie Verification</strong> — Both submit attendance selfie (see Section 8)</li>
+<li><strong>Trainer En Route</strong> — Trainer taps "Start En Route" (GPS tracking begins, 5-second updates)</li>
+<li><strong>GPS Arrival</strong> — Trainer confirms GPS proximity (within 0.25 miles outdoor, 0.1 miles at-home)</li>
+<li><strong>In Progress</strong> — Session starts (GPS switches to 15-second updates)</li>
+<li><strong>End Session</strong> — Trainer ends session (GPS stops immediately)</li>
+<li><strong>Summary Generated</strong> — Post-session stats available (see Section 9)</li>
+<li><strong>Rate &amp; Review</strong> — Trainee rates the trainer</li>
+</ol>
+<h3>5.3 Session Flow (Virtual)</h3>
+<ol>
+<li><strong>Confirmed</strong> — Both parties agreed</li>
+<li><strong>Join Video</strong> — Both join the virtual session room</li>
+<li><strong>In Progress</strong> — Session active</li>
+</ol>
+<p><strong>Virtual Session Duration Rules:</strong>
+- <strong>Default duration:</strong> 30 minutes (selectable: 30 or 60 minutes at booking)
+- <strong>Maximum duration:</strong> 90 minutes
+- <strong>Grace period:</strong> 2 minutes after scheduled end for wrap-up
+- <strong>Auto-end:</strong> If the session exceeds maximum duration + grace period, the system automatically ends it and generates a summary
+- Trainer can manually end the session at any time via the <strong>End Session</strong> button</p>
+<ol>
+<li><strong>End Session</strong> — Trainer ends session (or auto-end after max duration)</li>
+<li><strong>Summary Generated</strong> — Stats available</li>
+<li><strong>Rate &amp; Review</strong> — Trainee rates</li>
+</ol>
+<hr />
+<h2>6. Matching Engine — "Need a Trainer Now"</h2>
+<h3>6.1 Location Permission Flow (Required)</h3>
+<p>Before using "Need a Trainer Now," the app requires GPS permission:</p>
+<p><strong>Step 1 — Pre-Permission Screen:</strong></p>
+<blockquote>
+<p>"RapidReps needs your location to match you with nearby trainers."</p>
+</blockquote>
+<p><strong>Step 2 — OS System Permission Prompt:</strong>
+- iOS: "Allow While Using App" / "Allow Once" / "Don't Allow"
+- Android: "Allow" / "Deny"</p>
+<p><strong>Step 3 — If Permission Denied (Soft Decline):</strong></p>
+<blockquote>
+<p>"Location access is needed for in-person and instant sessions. You can enable it in Settings."
+- In-person features remain disabled until permission is granted
+- Virtual sessions remain available without GPS</p>
+</blockquote>
+<p><strong>Step 4 — If Permission Denied Again (Hard Decline):</strong>
+- All in-person matching features disabled
+- "In-Person Now" button shows: "Enable Location in Settings to use this feature"
+- Virtual sessions still available</p>
+<p><strong>Note:</strong> Without location permission, Apple/Google will reject in-person matching features. This flow is required for App Store compliance.</p>
+<h3>6.2 Virtual Instant Session</h3>
+<p><strong>Button:</strong> "Virtual Session" on Home screen</p>
+<ol>
+<li>Tap <strong>Virtual Session</strong> button</li>
+<li><strong>Searching screen</strong> appears with:</li>
+<li>Radar animation</li>
+<li>Elapsed time counter</li>
+<li>"Finding your perfect trainer..." text</li>
+<li><strong>Cancel</strong> button</li>
+<li>The matching engine scores available trainers using:</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>Factor</th>
+<th>Weight</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>ETA</strong></td>
+<td><strong>40%</strong></td>
+<td><strong>Primary factor.</strong> Estimated time to arrive (even for virtual, measures responsiveness)</td>
+</tr>
+<tr>
+<td>Rating</td>
+<td>25%</td>
+<td>Average star rating from reviews</td>
+</tr>
+<tr>
+<td>Price</td>
+<td>15%</td>
+<td>Price competitiveness relative to session type</td>
+</tr>
+<tr>
+<td>Boost</td>
+<td>10%</td>
+<td>Active visibility boost bonus</td>
+</tr>
+<tr>
+<td>Responsiveness</td>
+<td>5%</td>
+<td>Historical acceptance speed</td>
+</tr>
+<tr>
+<td>Profile Completeness</td>
+<td>5%</td>
+<td>Bio, photo, certifications filled out</td>
+</tr>
+</tbody>
+</table>
+<ol>
+<li>Top 5 trainers notified simultaneously</li>
+<li><strong>First trainer to accept wins</strong> (atomic — no double-booking possible)</li>
+<li>On match:</li>
+<li><strong>Boxing-bell sound</strong> plays</li>
+<li>Trainer details appear (name, rating, price, photo)</li>
+<li><strong>"Trainer Found!"</strong> notification sent</li>
+<li>If no match within 3 minutes:</li>
+<li>Progressive wave expansion (additional trainers notified)</li>
+<li>After all waves exhausted: <strong>"No trainers found"</strong> fallback with retry option</li>
+</ol>
+<p><strong>Buttons on searching screen:</strong>
+- <strong>Cancel Search</strong> — Cancels the request and returns home</p>
+<p><strong>Buttons on matched screen:</strong>
+- <strong>Start Session</strong> — Begin the virtual session
+- <strong>Find Another</strong> — Reject this match and search again (see Section 6.4)</p>
+<h3>6.3 In-Person Instant Session</h3>
+<p><strong>Button:</strong> "In-Person Now" on Home screen</p>
+<p>Same flow as virtual but with location-based ETA matching:</p>
+<p><strong>Wave Logic:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Wave</th>
+<th>ETA Limit</th>
+<th>Trainers Notified</th>
+<th>Trigger</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Wave 1</td>
+<td>5 min or less</td>
+<td>Top 3 by score</td>
+<td>Immediate</td>
+</tr>
+<tr>
+<td>Wave 2</td>
+<td>10 min or less</td>
+<td>Top 3 by score</td>
+<td>If Wave 1 has &lt; 2 matches</td>
+</tr>
+<tr>
+<td>Wave 3</td>
+<td>15 min or less</td>
+<td>Top 5 by score</td>
+<td>If Wave 2 has &lt; 1 match</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Hard Maximum ETA Cap: 15 minutes.</strong> No trainer outside 15 min ETA can ever be matched. Matching stops after Wave 3. This prevents far-away trainers being selected in low-supply areas.</p>
+<h3>6.4 "Find Another" Trainer Logic</h3>
+<p>When you tap <strong>"Find Another"</strong> after being matched:</p>
+<ol>
+<li>The previously matched trainer is <strong>excluded for 10 minutes</strong> (cooldown)</li>
+<li>A new wave of scoring runs using the same ETA/rating/price rules</li>
+<li>All previously rejected trainers are excluded from the new search</li>
+<li>If all waves are exhausted and no trainers remain:</li>
+<li>Status changes to "exhausted"</li>
+<li>Fallback screen: "All available trainers have been contacted. Please try again later or adjust your preferences."</li>
+<li>This prevents infinite loops and rematching the same trainer</li>
+</ol>
+<h3>6.5 Membership Priority</h3>
+<p>Members receive a <strong>+0.15 score bonus</strong> in the matching engine. This means members are matched with higher-rated, closer trainers faster than non-members.</p>
+<hr />
+<h2>7. GPS Tracking &amp; En-Route</h2>
+<h3>7.1 Starting En Route</h3>
+<p>For in-person sessions, the trainer taps <strong>"Start En Route"</strong> to activate GPS tracking.</p>
+<p><strong>Update frequency:</strong>
+- En route: GPS refreshes every <strong>5 seconds</strong>
+- In progress: GPS refreshes every <strong>15 seconds</strong>
+- GPS stops <strong>immediately</strong> on session end or cancellation</p>
+<h3>7.2 Live Tracking View</h3>
+<p>Both parties can see:
+- Trainer's live location on map
+- Trainee's location
+- Distance between parties (in miles)
+- Estimated time of arrival</p>
+<h3>7.3 GPS Alerts</h3>
+<table>
+<thead>
+<tr>
+<th>Alert</th>
+<th>Trigger</th>
+<th>Message</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Weak Signal</td>
+<td>GPS accuracy &gt; 50 meters</td>
+<td>"Weak GPS signal — confirm location manually"</td>
+</tr>
+<tr>
+<td>Stale Movement</td>
+<td>Trainer stationary 2+ min while en route</td>
+<td>"You appear to be stationary. Are you on the way?"</td>
+</tr>
+<tr>
+<td>Distance Warning</td>
+<td>Parties &gt; 0.5 miles apart during active session</td>
+<td>"You are X miles from the other party"</td>
+</tr>
+<tr>
+<td>Address Mismatch</td>
+<td>Parties &gt; 0.25 miles apart at session start</td>
+<td>"You and the other party appear to be at different locations"</td>
+</tr>
+<tr>
+<td>GPS Spoofing</td>
+<td>Location jump &gt; 2 miles in &lt; 30 seconds</td>
+<td>"Unusual location change detected. GPS may be inaccurate." (account flagged)</td>
+</tr>
+</tbody>
+</table>
+<h3>7.4 Arrival Confirmation</h3>
+<p>Trainer must tap <strong>"Confirm Arrival"</strong> to verify GPS proximity:
+- <strong>Outdoor/Gym sessions:</strong> Must be within <strong>0.25 miles (400m)</strong>
+- <strong>At-home sessions:</strong> Must be within <strong>0.1 miles (160m)</strong></p>
+<p>If too far: <em>"You are X miles away. Must be within Y miles to start."</em></p>
+<h3>7.5 Arrival Time Measurement</h3>
+<p><strong>Official arrival time begins when:</strong>
+- The trainer taps "Start En Route," <strong>OR</strong>
+- <strong>5 minutes before the scheduled session start time</strong> — whichever happens first.</p>
+<p>This prevents users from skipping "Confirm Arrival" to avoid no-show penalties. If neither party has started the session within 10 minutes of the scheduled start time, the system triggers automated no-show alerts (see Section 14).</p>
+<h3>7.6 Privacy</h3>
+<p>GPS is <strong>ONLY active during:</strong>
+- En route to session
+- Active session
+- Arrival verification</p>
+<p>GPS is <strong>NOT active</strong> when the app is idle or outside a session.</p>
+<hr />
+<h2>8. Selfie Verification</h2>
+<p>Before an in-person session begins, both parties must submit a selfie to verify attendance.</p>
+<h3>8.1 Flow</h3>
+<ol>
+<li>Session status changes to Confirmed or En Route</li>
+<li>Both trainer and trainee take and submit a selfie</li>
+<li>Each person sees the other's verification status</li>
+<li>Once both selfies are submitted: "Both verified — session can start!"</li>
+</ol>
+<h3>8.2 Buttons</h3>
+<ul>
+<li><strong>Take Selfie</strong> — Opens camera</li>
+<li><strong>Submit Selfie</strong> — Uploads selfie for verification</li>
+<li><strong>Retake</strong> — Take a new selfie</li>
+<li><strong>Switch Camera</strong> — Toggle front/rear camera</li>
+</ul>
+<h3>8.3 Failure Handling</h3>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>System Response</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Camera fails to open</td>
+<td>"Try again or switch cameras" with retry button</td>
+</tr>
+<tr>
+<td>Upload fails (network error)</td>
+<td>"Upload failed. Tap to try again." with retry button</td>
+</tr>
+<tr>
+<td>Poor lighting detected</td>
+<td>"Move to a brighter area for a clearer photo"</td>
+</tr>
+<tr>
+<td>One user refuses selfie</td>
+<td>Session <strong>cannot begin</strong> until both selfies are submitted</td>
+</tr>
+<tr>
+<td>Selfie fails 3 times</td>
+<td><strong>Manual verification fallback</strong> initiated — a support agent reviews the session. Message: "Selfie verification failed multiple times. Manual verification initiated."</td>
+</tr>
+</tbody>
+</table>
+<h3>8.4 Requirements</h3>
+<ul>
+<li>Selfie must be a valid image (minimum 100 bytes)</li>
+<li>Maximum file size: 5MB</li>
+<li>Only session participants can submit selfies</li>
+</ul>
+<hr />
+<h2>9. Post-Session Summary &amp; Sharing</h2>
+<p>After every completed session, a summary is automatically generated.</p>
+<h3>9.1 Summary Contents</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Trainer Name</td>
+<td>Who trained you</td>
+</tr>
+<tr>
+<td>Workout Type</td>
+<td>Based on trainer's specializations (e.g., "strength, hiit, cardio")</td>
+</tr>
+<tr>
+<td>Duration</td>
+<td>Actual session time in minutes</td>
+</tr>
+<tr>
+<td>Calories Burned</td>
+<td>Estimated by workout type and duration (see chart below)</td>
+</tr>
+<tr>
+<td>Weekly Streak</td>
+<td>Consecutive weeks with at least 1 session</td>
+</tr>
+<tr>
+<td>Sessions with Trainer</td>
+<td>Total completed sessions with this trainer</td>
+</tr>
+</tbody>
+</table>
+<h3>9.2 Calorie Estimation</h3>
+<table>
+<thead>
+<tr>
+<th>Workout Type</th>
+<th>Calories/Hour</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HIIT</td>
+<td>650</td>
+</tr>
+<tr>
+<td>CrossFit</td>
+<td>600</td>
+</tr>
+<tr>
+<td>Boxing</td>
+<td>580</td>
+</tr>
+<tr>
+<td>Kickboxing</td>
+<td>570</td>
+</tr>
+<tr>
+<td>Running</td>
+<td>550</td>
+</tr>
+<tr>
+<td>Martial Arts</td>
+<td>550</td>
+</tr>
+<tr>
+<td>Circuit Training</td>
+<td>500</td>
+</tr>
+<tr>
+<td>Cardio</td>
+<td>500</td>
+</tr>
+<tr>
+<td>Cycling</td>
+<td>480</td>
+</tr>
+<tr>
+<td>Swimming</td>
+<td>450</td>
+</tr>
+<tr>
+<td>Zumba</td>
+<td>450</td>
+</tr>
+<tr>
+<td>Dance</td>
+<td>400</td>
+</tr>
+<tr>
+<td>Strength Training</td>
+<td>420</td>
+</tr>
+<tr>
+<td>Weightlifting</td>
+<td>400</td>
+</tr>
+<tr>
+<td>Bodybuilding</td>
+<td>400</td>
+</tr>
+<tr>
+<td>Functional Training</td>
+<td>380</td>
+</tr>
+<tr>
+<td>Pilates</td>
+<td>280</td>
+</tr>
+<tr>
+<td>Yoga</td>
+<td>250</td>
+</tr>
+<tr>
+<td>Prenatal</td>
+<td>220</td>
+</tr>
+<tr>
+<td>Senior Fitness</td>
+<td>200</td>
+</tr>
+<tr>
+<td>Rehabilitation</td>
+<td>200</td>
+</tr>
+<tr>
+<td>Stretching</td>
+<td>180</td>
+</tr>
+</tbody>
+</table>
+<p><em>For trainers with multiple styles, the average calories/hour is used.</em></p>
+<h3>9.3 Sharing</h3>
+<p><strong>Share Text Example:</strong></p>
+<blockquote>
+<p>"Just crushed a 45-min strength, hiit, cardio session with Alex Trainer! 392 cal burned. 3-week streak!"</p>
+</blockquote>
+<p><strong>Options:</strong>
+- <strong>Share as Card</strong> — Generates a styled share card with your stats (screenshot-friendly)
+- <strong>Copy Deep Link</strong> — rapidreps://session-summary/{sessionId} opens the summary in the app
+- <strong>View All Summaries</strong> — See complete history with totals (total sessions, total calories, total minutes)</p>
+<hr />
+<h2>10. Messaging</h2>
+<h3>10.1 Conversations List</h3>
+<p><strong>Tab:</strong> Messages (chat bubble icon)</p>
+<p>Shows all conversations sorted by most recent message. Each shows name, photo, last message preview, timestamp, unread count.</p>
+<h3>10.2 Chat Screen</h3>
+<p>Real-time messaging between trainee and trainer.</p>
+<p><strong>Buttons:</strong> Send, Back</p>
+<hr />
+<h2>11. Payments &amp; Pricing</h2>
+<h3>11.1 Session Pricing</h3>
+<p>All payments are processed through <strong>Stripe</strong>.</p>
+<p><strong>Minimum Session Rates:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Session Type</th>
+<th>Minimum Price</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Virtual</td>
+<td>$30.00</td>
+</tr>
+<tr>
+<td>Outdoor</td>
+<td>$40.00</td>
+</tr>
+<tr>
+<td>In-Home (at trainer's location)</td>
+<td>$60.00</td>
+</tr>
+<tr>
+<td>Home Visit (at trainee's location)</td>
+<td>$60.00</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Revenue Split:</strong>
+- <strong>Trainer:</strong> 75% of session price
+- <strong>Platform (RapidReps):</strong> 25% of session price</p>
+<h3>11.2 Travel Fees (In-Home Sessions)</h3>
+<ul>
+<li>$0.50 per mile (over 2 miles)</li>
+<li>Minimum: $0 | Maximum: $15</li>
+<li>Trainer receives 70% of travel fee | Platform receives 30%</li>
+</ul>
+<h3>11.3 Discounts</h3>
+<table>
+<thead>
+<tr>
+<th>Discount</th>
+<th>Amount</th>
+<th>Condition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Multi-Session</td>
+<td>5% off base rate</td>
+<td>3rd+ session with same trainer</td>
+</tr>
+<tr>
+<td>Membership</td>
+<td>10% off base rate</td>
+<td>Active membership ($19.99/month)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Discounts stack. A member on their 3rd session gets 15% off.</em></p>
+<h3>11.4 Payment Flow</h3>
+<ol>
+<li>Confirm booking and review price breakdown</li>
+<li>Pay with Stripe (card or saved payment method)</li>
+<li>Payment held in escrow until session completes</li>
+<li>After session ends: Trainer receives 75%, Platform retains 25%</li>
+</ol>
+<hr />
+<h2>12. Membership Program</h2>
+<p><strong>Price:</strong> $19.99/month</p>
+<h3>12.1 Benefits</h3>
+<table>
+<thead>
+<tr>
+<th>Benefit</th>
+<th>Details</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Session Discount</td>
+<td>10% off every session (auto-applied at checkout)</td>
+</tr>
+<tr>
+<td>Free Monthly Boost</td>
+<td>1 free profile visibility boost per month</td>
+</tr>
+<tr>
+<td>Priority Matching</td>
+<td>+0.15 score bonus in matching engine</td>
+</tr>
+<tr>
+<td>Early Access</td>
+<td>First access to newly verified elite trainers</td>
+</tr>
+<tr>
+<td>Member Badge</td>
+<td>Exclusive badge on your profile</td>
+</tr>
+</tbody>
+</table>
+<h3>12.2 Subscribe</h3>
+<ol>
+<li>Navigate to Profile &gt; Membership</li>
+<li>Review benefits and pricing</li>
+<li>Tap <strong>Subscribe Now</strong></li>
+<li>Complete Stripe payment ($19.99)</li>
+<li>Membership activates immediately</li>
+</ol>
+<h3>12.3 Cancel</h3>
+<ol>
+<li>Navigate to Profile &gt; Membership</li>
+<li>Tap <strong>Cancel Membership</strong></li>
+<li>Membership remains active until end of current billing period</li>
+<li>No pro-rated refunds</li>
+</ol>
+<h3>12.4 Membership Perk Rules</h3>
+<table>
+<thead>
+<tr>
+<th>Question</th>
+<th>Answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Does 10% discount apply to sessions already booked before joining?</td>
+<td><strong>No.</strong> The discount applies only to sessions booked <strong>after</strong> membership activation.</td>
+</tr>
+<tr>
+<td>If membership expires mid-booking, does the discount stay?</td>
+<td><strong>Yes.</strong> Sessions booked while membership was active preserve the discounted rate, even if the membership expires before the session date.</td>
+</tr>
+<tr>
+<td>Do active boosts continue when membership expires?</td>
+<td><strong>Yes.</strong> Any boost already activated (including free monthly boost) runs until its own expiry date, regardless of membership status.</td>
+</tr>
+<tr>
+<td>When does the free monthly boost reset?</td>
+<td>On each monthly billing renewal date. Unused free boosts do not carry over.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>13. Visibility Boosts (Trainers)</h2>
+<p>Boosts increase your visibility in search results and the matching engine.</p>
+<h3>13.1 Boost Pricing</h3>
+<table>
+<thead>
+<tr>
+<th>Duration</th>
+<th>Price</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 Day</td>
+<td>$9.99</td>
+</tr>
+<tr>
+<td>1 Week</td>
+<td>$49.99</td>
+</tr>
+<tr>
+<td>1 Month</td>
+<td>$149.99</td>
+</tr>
+</tbody>
+</table>
+<h3>13.2 Boost Effects</h3>
+<ul>
+<li><strong>Profile Glow</strong> — Your profile card shows a visual glow indicator</li>
+<li><strong>isBoosted Badge</strong> — Visible to trainees searching for trainers</li>
+<li><strong>Higher Matching Score</strong> — 10% weight in the matching engine scoring</li>
+<li><strong>Priority Placement</strong> — Appear higher in search results</li>
+</ul>
+<h3>13.3 Boost Analytics</h3>
+<p>Navigate to Profile &gt; Boosts &gt; Analytics to see:</p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Impressions</td>
+<td>Times your profile appeared in search results</td>
+</tr>
+<tr>
+<td>Profile Views</td>
+<td>Times trainees viewed your full profile</td>
+</tr>
+<tr>
+<td>Clicks</td>
+<td>Times trainees interacted with your profile</td>
+</tr>
+<tr>
+<td>Click-Through Rate</td>
+<td>Clicks / Impressions (percentage)</td>
+</tr>
+<tr>
+<td>Daily Breakdown</td>
+<td>Day-by-day performance for last 30 days</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Time Zone:</strong> All analytics timestamps use the trainer's <strong>local device time zone</strong>. Daily breakdowns are calculated in your local time.</p>
+<h3>13.4 Free Boost (Members)</h3>
+<p>Members receive <strong>1 free boost per month</strong> (equivalent to a 1-day boost). Resets on billing renewal. Unused free boosts do not carry over.</p>
+<hr />
+<h2>14. Cancellation &amp; No-Show Policies</h2>
+<h3>14.1 Trainee Cancellation</h3>
+<table>
+<thead>
+<tr>
+<th>Time Before Session</th>
+<th>Penalty</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>More than 12 hours</td>
+<td>$0 (free cancellation)</td>
+</tr>
+<tr>
+<td>12 to 2 hours</td>
+<td>25% of session price</td>
+</tr>
+<tr>
+<td>Less than 2 hours</td>
+<td>50% of session price</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Penalty amount split: Trainer receives 75%, Platform receives 25%</li>
+<li>Remaining amount is refunded via Stripe automatically</li>
+</ul>
+<h3>14.2 Trainer Cancellation</h3>
+<table>
+<thead>
+<tr>
+<th>Time Before Session</th>
+<th>Consequence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>More than 12 hours</td>
+<td>No penalty, full refund to trainee</td>
+</tr>
+<tr>
+<td>12 hours or less</td>
+<td>Full refund + free virtual session credit to trainee. Trainer receives <strong>performance strike</strong></td>
+</tr>
+</tbody>
+</table>
+<h3>14.3 Trainee No-Show</h3>
+<ul>
+<li><strong>Definition:</strong> Trainee does not appear within <strong>10 minutes</strong> of session start time</li>
+<li><strong>Arrival window begins when:</strong> the trainer taps "Start En Route" <strong>OR</strong> 5 minutes before scheduled start — whichever happens first</li>
+<li><strong>Trainer receives:</strong> 50% of session price (platform keeps 25% of that 50%)</li>
+<li><strong>Trainee charged:</strong> 50% of session price (remaining 50% refunded)</li>
+</ul>
+<h3>14.4 Trainer No-Show</h3>
+<ul>
+<li><strong>Definition:</strong> Trainer does not appear or start session within <strong>10 minutes</strong></li>
+<li><strong>Trainee receives:</strong> 100% full refund</li>
+<li><strong>Trainer receives:</strong> $0</li>
+<li><strong>Trainer penalty:</strong> Performance strike</li>
+</ul>
+<h3>14.5 Performance Strikes (Trainers)</h3>
+<table>
+<thead>
+<tr>
+<th>Strikes</th>
+<th>Consequence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1-2</td>
+<td>Warning notification</td>
+</tr>
+<tr>
+<td>3+</td>
+<td>Account flagged for review (may be suspended)</td>
+</tr>
+</tbody>
+</table>
+<p>Strikes are issued for: late cancellation (within 12 hours) and no-shows.</p>
+<h3>14.6 Automated No-Show Detection</h3>
+<p>The system automatically detects potential no-shows:
+- 10 minutes after scheduled start, if the trainer has not confirmed GPS arrival, both parties are notified
+- Trainee receives: "Your trainer has not arrived. You can mark this as a no-show."
+- Trainer receives: "You haven't confirmed arrival. Please update your trainee."</p>
+<hr />
+<h2>15. Ratings &amp; Reviews</h2>
+<h3>15.1 Rating a Trainer</h3>
+<p>After a completed session:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Required</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Star Rating</td>
+<td>Yes</td>
+<td>1-5 stars</td>
+</tr>
+<tr>
+<td>Written Review</td>
+<td>No</td>
+<td>Optional text feedback</td>
+</tr>
+</tbody>
+</table>
+<h3>15.2 Rating Prompt</h3>
+<p>A "Rate Your Session" notification is sent <strong>30 minutes</strong> after session ends if no rating submitted.</p>
+<hr />
+<h2>16. Achievements &amp; Streaks</h2>
+<h3>16.1 Trainee Achievements</h3>
+<ul>
+<li><strong>First Session</strong> / <strong>5 Sessions</strong> / <strong>10 Sessions</strong> / <strong>25 Sessions</strong> / <strong>50 Sessions</strong> / <strong>100 Sessions</strong></li>
+</ul>
+<h3>16.2 Streak Tracking</h3>
+<ul>
+<li>Streaks count consecutive <strong>weeks</strong> with at least 1 completed session</li>
+<li>Appears in your profile and session summaries</li>
+<li><strong>Reminder:</strong> "Don't Lose Your Streak!" sent after 6 days without a session</li>
+</ul>
+<hr />
+<h2>17. Notifications</h2>
+<h3>17.1 Notification Types</h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Session Requested</td>
+<td>New booking request received</td>
+</tr>
+<tr>
+<td>Session Accepted</td>
+<td>Trainer accepted your booking</td>
+</tr>
+<tr>
+<td>Session Declined</td>
+<td>Trainer declined your booking</td>
+</tr>
+<tr>
+<td>Session Reminder</td>
+<td>30 minutes before session starts</td>
+</tr>
+<tr>
+<td>Session Started</td>
+<td>Session is now in progress</td>
+</tr>
+<tr>
+<td>Session Ended</td>
+<td>Session completed</td>
+</tr>
+<tr>
+<td>Session Auto-Ended</td>
+<td>Virtual session auto-ended at max duration</td>
+</tr>
+<tr>
+<td>Virtual Request</td>
+<td>Instant matching — trainer needed now</td>
+</tr>
+<tr>
+<td>Virtual Matched</td>
+<td>You've been matched with a trainer</td>
+</tr>
+<tr>
+<td>Virtual Taken</td>
+<td>Another trainer already accepted</td>
+</tr>
+<tr>
+<td>Missed Acceptance</td>
+<td>Session still available — accept now</td>
+</tr>
+<tr>
+<td>Late Warning</td>
+<td>Trainer/trainee running late</td>
+</tr>
+<tr>
+<td>Rate Reminder</td>
+<td>Rate your recent session</td>
+</tr>
+<tr>
+<td>Streak Warning</td>
+<td>Don't lose your training streak</td>
+</tr>
+<tr>
+<td>Boost Expiring</td>
+<td>Your visibility boost expires in 24 hours</td>
+</tr>
+<tr>
+<td>Payment Released</td>
+<td>Earnings deposited</td>
+</tr>
+<tr>
+<td>New Message</td>
+<td>New chat message received</td>
+</tr>
+<tr>
+<td>Trainer On The Way</td>
+<td>GPS tracking — trainer heading to you</td>
+</tr>
+<tr>
+<td>Selfie Verified</td>
+<td>Other party submitted attendance selfie</td>
+</tr>
+<tr>
+<td>Summary Ready</td>
+<td>Post-session stats available</td>
+</tr>
+</tbody>
+</table>
+<h3>17.2 Notification Preferences</h3>
+<p>Navigate to Profile &gt; Notification Preferences to toggle individual types on/off.</p>
+<p><strong>Master Toggle:</strong> Push Enabled (on/off for all notifications)</p>
+<hr />
+<h2>18. Safety, Fraud Detection &amp; Reporting</h2>
+<h3>18.1 Automated Safety Protections</h3>
+<p>RapidReps includes automated systems to protect all users:</p>
+<table>
+<thead>
+<tr>
+<th>Protection</th>
+<th>How It Works</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>GPS Spoofing Detection</strong></td>
+<td>If a user's GPS location jumps &gt; 2 miles in &lt; 30 seconds, the system flags the account for review and shows a warning</td>
+</tr>
+<tr>
+<td><strong>Trolling Detection</strong></td>
+<td>If a trainee creates 3+ cancelled/fake virtual requests within 1 hour, the account is flagged for fraud review</td>
+</tr>
+<tr>
+<td><strong>High Cancellation Rate</strong></td>
+<td>Trainers with a cancellation + no-show rate above 50% (on 5+ sessions) are automatically flagged for account review</td>
+</tr>
+<tr>
+<td><strong>Suspicious Behavior Patterns</strong></td>
+<td>Repeated rapid requests, mass cancellations, and unusual booking patterns trigger automated alerts</td>
+</tr>
+</tbody>
+</table>
+<h3>18.2 Report a User</h3>
+<p><strong>Button:</strong> Report (available on any user profile)</p>
+<p>Report reasons: Inappropriate behavior, Harassment, Fraud/scam, Safety concern, Other.</p>
+<h3>18.3 Block a User</h3>
+<p><strong>Button:</strong> Block User (on profile or in chat)</p>
+<p>Blocked users cannot message you, see your profile, or book sessions with you.</p>
+<p><strong>Unblock:</strong> Navigate to Profile &gt; Blocked Users.</p>
+<hr />
+<h2>19. Admin Dashboard</h2>
+<p><strong>Access:</strong> Login as admin</p>
+<h3>19.1 Dashboard Overview</h3>
+<ul>
+<li>Total Users, Total Sessions, Total Revenue, Active Trainers</li>
+<li>Session distribution (donut chart), Revenue over time (bar chart)</li>
+</ul>
+<h3>19.2 User Management</h3>
+<ul>
+<li>View All Users (search + filter), User Detail, Delete User, Send Message</li>
+</ul>
+<h3>19.3 Trainer Management</h3>
+<ul>
+<li>Pending Verifications, Verify/Reject Trainer</li>
+</ul>
+<h3>19.4 Financial Management</h3>
+<ul>
+<li>Revenue Dashboard, Payout Requests, Process Payout, Issue Refund, Transaction History</li>
+</ul>
+<h3>19.5 Top Trainer Leaderboard</h3>
+<p>Real-time leaderboard: sessions completed this week, average rating, total earnings.</p>
+<h3>19.6 Fraud &amp; Safety Review</h3>
+<ul>
+<li>View flagged accounts (GPS spoofing, trolling, high cancel rate)</li>
+<li>Review and take action (warn, suspend, ban)</li>
+</ul>
+<hr />
+<h2>20. Account Settings &amp; Sound/Vibration</h2>
+<h3>20.1 Edit Profile</h3>
+<p>Update your name, photo, bio, and preferences.</p>
+<h3>20.2 Change Password</h3>
+<p>Via Forgot Password flow from the login screen.</p>
+<h3>20.3 Notification Preferences</h3>
+<p>Toggle individual notification types on/off.</p>
+<h3>20.4 Sound &amp; Vibration Settings</h3>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Options</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Button Tap Sounds</td>
+<td>On / Off</td>
+<td>On</td>
+</tr>
+<tr>
+<td>Vibration Feedback</td>
+<td>On / Off</td>
+<td>On</td>
+</tr>
+<tr>
+<td>Notification Ringtone</td>
+<td>Default / Soft / Silent</td>
+<td>Default</td>
+</tr>
+<tr>
+<td>Mute All During Session</td>
+<td>On / Off</td>
+<td>Off (when enabled, all sounds and vibrations are silenced during an active session)</td>
+</tr>
+</tbody>
+</table>
+<h3>20.5 Delete Account</h3>
+<p><strong>Button:</strong> Delete Account (bottom of Profile screen)
+- Confirmation dialog appears
+- All data permanently deleted
+- Cannot be undone</p>
+<hr />
+<h2>21. Legal</h2>
+<ul>
+<li><strong>Terms of Service</strong> — Available at Profile &gt; Terms of Service</li>
+<li><strong>Privacy Policy</strong> — Available at Profile &gt; Privacy Policy</li>
+</ul>
+<hr />
+<h2>22. FAQ</h2>
+<p><strong>Q: How quickly will I be matched with a trainer?</strong>
+A: The instant matching engine typically finds a trainer within 1-3 minutes. Members get priority matching for faster results.</p>
+<p><strong>Q: What happens if no trainer is available?</strong>
+A: The system progressively expands the search in 3 waves (5 min, 10 min, 15 min ETA). After all waves are exhausted, you'll see "All available trainers have been contacted" with a retry option.</p>
+<p><strong>Q: Is there a maximum distance for in-person matching?</strong>
+A: Yes. The hard maximum ETA is 15 minutes. No trainer outside 15 min ETA will be matched, even in low-supply areas.</p>
+<p><strong>Q: Can two trainers accept the same request?</strong>
+A: No. The system uses atomic first-accept-wins logic — only the first trainer to accept gets the session.</p>
+<p><strong>Q: What happens when I tap "Find Another"?</strong>
+A: The matched trainer is excluded for 10 minutes. A new wave of scoring runs. If all trainers have been contacted, a fallback screen appears.</p>
+<p><strong>Q: How is my location used?</strong>
+A: GPS is only active during en-route and active sessions. It is never tracked when the app is idle.</p>
+<p><strong>Q: What if my trainer doesn't show up?</strong>
+A: You'll receive a full 100% refund. The trainer receives a performance strike. After 3 strikes, their account is reviewed.</p>
+<p><strong>Q: Can I cancel for free?</strong>
+A: Yes, if you cancel more than 12 hours before the session.</p>
+<p><strong>Q: How long are virtual sessions?</strong>
+A: Default is 30 minutes (selectable: 30 or 60 minutes). Maximum is 90 minutes with a 2-minute grace period for wrap-up. Sessions auto-end after the maximum.</p>
+<p><strong>Q: What if my selfie keeps failing?</strong>
+A: After 3 failed attempts, the system initiates manual verification. A support agent will review your session.</p>
+<p><strong>Q: How are calories calculated?</strong>
+A: Based on your trainer's specializations and session duration using established exercise science averages.</p>
+<p><strong>Q: What does a membership include?</strong>
+A: 10% off all new sessions, priority matching, 1 free boost/month, member badge. $19.99/month.</p>
+<p><strong>Q: Does the 10% membership discount apply to sessions I already booked?</strong>
+A: No. The discount only applies to sessions booked after membership activation. Sessions booked while active keep the rate even if membership later expires.</p>
+<p><strong>Q: How do boosts work?</strong>
+A: Boosts increase your visibility in search results and matching. Track impressions, views, and clicks in your analytics dashboard.</p>
+<p><strong>Q: How do I get paid as a trainer?</strong>
+A: You earn 75% of each session. Request a payout from your Earnings tab — processed via Stripe.</p>
+<p><strong>Q: What prevents GPS spoofing?</strong>
+A: The system detects impossible location jumps (&gt;2 miles in &lt;30 seconds) and flags the account for review.</p>
+<hr />
+<p><em>RapidReps — Train smarter. Match faster. Get results.</em></p>
+<p><em>Manual Version: 3.0 | Last Updated: March 2026</em></p>
+</body>
+</html>
