@@ -19,43 +19,69 @@ Build a fitness trainer-trainee matching platform with Uber-style real-time matc
 
 ### Uber-Style Matching Engine (P0 - COMPLETE)
 - Weighted scoring: ETA 40%, Rating 25%, Price 15%, Boost 10%, Responsiveness 5%, Completeness 5%
-- Wave-based trainer notifications:
-  - Wave 1: ETA ≤ 5 min, top 3 trainers
-  - Wave 2: ETA ≤ 10 min, top 3 trainers
-  - Wave 3: ETA ≤ 15 min, top 5 trainers
-- Virtual sessions: All eligible, top 5 by score
+- Wave-based trainer notifications (Wave 1: ≤5min, Wave 2: ≤10min, Wave 3: ≤15min)
 - First-accept-wins with atomic MongoDB update (race condition prevention)
-- Progressive wave expansion for stale requests (background scheduler)
+- Progressive wave expansion for stale requests
 
 ### Smart Push Notification Engine (P0 - COMPLETE)
-- New notification types: virtual_request, virtual_matched, virtual_taken, missed_acceptance, late_warning, session_started
-- Intelligent routing: Only qualified trainers notified based on ETA/score
-- Background scheduler with:
-  - Progressive wave expansion for stale requests (2+ minutes)
-  - Missed acceptance tracking (3+ minutes, re-notifies non-responders)
-  - Late warning for in-person sessions (10+ minutes past start)
-  - Session reminders (30 minutes before)
-  - Streak warnings (6 days since last session)
-  - Boost expiry alerts (24 hours before)
+- 6 new notification types: virtual_request, virtual_matched, virtual_taken, missed_acceptance, late_warning, session_started
+- Background scheduler: progressive waves, missed acceptance tracking, late warnings, no-show auto-detection
 
 ### Virtual Live Video Screen (P0 - COMPLETE)
-- Scrollable layout with SafeAreaView
-- Radar animation during trainer search
-- Visible countdown timer
-- Cancel button functionality
-- "No trainers found" fallback UI
-- Boxing-bell sound (expo-av) on trainer acceptance
+- Scrollable layout, radar animation, countdown, cancel button, "No trainers found" fallback
+- Boxing-bell sound (expo-av) on trainer match
 
 ### 508 Compliance (P0 - COMPLETE)
-- All orange text (#FF7F00, #F7931E) removed from text elements
-- Replaced with navy (#1a2a5e) or teal (#1FB8B4) for better contrast
-- "Time to Lock In" subtitle: White with text shadow (was orange/warning)
-- "Delete Account" button: Dark red (#CC0000) with text shadow, fontWeight 800
-- Text shadows on all image background headers across app:
-  - trainee: home, profile, confirm-booking, membership, schedule-training, virtual-confirm
-  - trainer: boosts, earnings, profile
-  - auth: login
-- Higher font-weight (800-900) on all CTA buttons
+- All orange text removed, replaced with teal/navy
+- Text shadows on all image background headers
+- Higher font-weight (800-900) on CTAs
+- "Time to Lock In" and "Delete Account" verified
+
+### No-Show & Cancellation Automation (P1 - COMPLETE)
+**Trainee Cancellation:**
+- >12 hours before = $0 penalty
+- 12-2 hours before = 25% penalty
+- <2 hours before = 50% penalty
+
+**Trainer Cancellation:**
+- >12 hours = no penalty, full refund
+- ≤12 hours = full refund + virtual session credit, trainer gets performance strike
+
+**Trainee No-Show:**
+- Trainer receives 50% payout (platform keeps 25% of that 50%)
+- Trainee charged 50% of session price
+
+**Trainer No-Show:**
+- Trainee receives 100% refund
+- Trainer gets $0 + performance strike
+- 3 strikes = account flagged for review
+
+**Stripe Integration:**
+- Refunds/partial refunds calculated before payout
+- Platform fee adjustments automated
+
+### Advanced GPS Tracking System (P1 - COMPLETE)
+**Session Flow:** confirmed → en_route → in_progress → completed
+
+**GPS Update Frequency:**
+- En route: every 5 seconds
+- In progress: every 15 seconds
+- Stops on session end/cancel
+
+**Distance Thresholds:**
+- In-person (outdoor/gym): ≤ 0.25 miles (400m) to start
+- At-home sessions: ≤ 0.1 miles (160m) to start
+- Distance increase >0.5 miles during session triggers warning
+
+**GPS Alerts:**
+- Low accuracy (>50m): "Weak signal — confirm location manually"
+- Trainer stale movement (2 min): "Are you on the way?"
+- Distance warning (>0.5 miles apart during session)
+- Address mismatch (>0.25 miles apart at start)
+
+**Privacy:**
+- GPS only active during en_route, in_progress, confirmed
+- NOT active outside sessions or when idle
 
 ### Booking & Payments
 - Session scheduling with date/time picker
@@ -64,18 +90,7 @@ Build a fitness trainer-trainee matching platform with Uber-style real-time matc
 - Payment release after session completion
 
 ### Admin Dashboard
-- User management (view/edit/block users)
-- SVG-based charts (DonutChart, BarChart)
-- Real-time "Top Trainer This Week" leaderboard
-- Session and revenue analytics
-
-### Additional Features
-- Trainer boost system (visibility enhancement)
-- Membership plans with Stripe
-- In-app messaging
-- Review and rating system
-- Sound effects with settings toggle (SoundContext)
-- Animated UI components (AnimatedPillButton)
+- SVG-based charts, real-time leaderboard, session analytics
 
 ## Test Credentials
 - Admin: admin@rapidreps.com / admin123
@@ -87,36 +102,38 @@ Build a fitness trainer-trainee matching platform with Uber-style real-time matc
 - sessions, virtual_requests
 - notifications, notification_preferences
 - boosts, reviews, messages
+- session_gps_tracks (NEW - GPS tracking data)
+- session_credits (NEW - virtual session credits)
 
-## API Endpoints (Key)
-- POST /api/auth/login, /api/auth/signup
-- POST /api/virtual/request (create virtual session request)
-- POST /api/instant/request (create in-person instant request)
-- POST /api/virtual/accept/{request_id} (trainer accepts)
-- GET /api/virtual/request/{request_id} (check status)
-- GET /api/notifications, /api/notification-preferences
-- GET /api/admin/dashboard, /api/admin/top-trainers
+## API Endpoints (New in this session)
+- PATCH /api/sessions/{id}/cancel (time-based penalties, both trainee & trainer)
+- PATCH /api/sessions/{id}/no-show?who=trainee|trainer (no-show with proper payouts)
+- POST /api/sessions/{id}/start-en-route (en_route status + GPS tracking)
+- POST /api/sessions/{id}/gps-update (real-time GPS with alerts)
+- GET /api/sessions/{id}/gps-track (live positions + distance)
+- POST /api/sessions/{id}/confirm-gps (distance validation)
+- POST /api/sessions/{id}/start-session (in_progress status)
 
 ## Remaining Tasks
 
-### P1 - Medium Priority (UPCOMING)
-1. Advanced GPS System - Live en-route tracking
-2. No-Show & Cancellation Automation - Stripe penalties
-3. Membership System - True benefit enforcement
-4. Boost System - Enhanced features (profile glow, insights)
+### P1 - Medium Priority (REMAINING)
+1. Membership System - True Benefit Stack (priority matching, discounts, free boost)
+2. Boost System - Real Power (profile glow, enhanced insights)
 
 ### P2 - Secondary
-5. Session Verification - Selfie check before session
+3. Session Verification - Selfie check before session
 
 ### P3+ - Backlog
-6. SendGrid email integration (awaiting API key)
-7. Toast notifications (sonner)
-8. TypeScript strict-mode warnings (86+)
+4. SendGrid email integration (awaiting API key)
+5. Toast notifications (sonner)
+6. TypeScript strict-mode warnings (86+)
 
 ## Mocked/Inactive Services
-- SendGrid email: No-op mode (awaiting API key)
-- Push notifications: Sends to Expo servers but no real devices registered
+- SendGrid email: No-op mode
+- Stripe: Uses mock payment intents for testing (real Stripe for production)
+- Push notifications: Sends to Expo servers (no real devices)
 
 ## Testing Status
-- Backend: 16/16 tests passed (iteration_16.json)
-- Test file: /app/backend/tests/test_p0_smart_matching_engine.py
+- P0: 16/16 tests passed (iteration_16.json)
+- P1: 24/24 tests passed (iteration_17.json)
+- Test files: /app/backend/tests/test_p0_smart_matching_engine.py, /app/backend/tests/test_p1_cancellation_noshow_gps.py
