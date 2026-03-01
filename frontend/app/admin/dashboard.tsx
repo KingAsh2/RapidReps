@@ -1311,7 +1311,7 @@ const s = StyleSheet.create({
   // Top Trainer
   topTrainerCard: { backgroundColor: C.card, borderRadius: 14, padding: 16, marginBottom: 20, borderLeftWidth: 4, borderLeftColor: C.warning, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
   topTrainerHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  topTrainerAvatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#FFF8E1', justifyContent: 'center', alignItems: 'center' },
+  topTrainerAvatar: { width: 50, height: 50, borderRadius: 25, justifyContent: 'center', alignItems: 'center' },
   topTrainerName: { fontSize: 16, fontWeight: '800', color: C.navy },
   topTrainerBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#FFF3E0', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
   topTrainerBadgeText: { fontSize: 11, fontWeight: '700', color: C.orange },
