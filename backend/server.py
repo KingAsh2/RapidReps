@@ -5507,6 +5507,13 @@ async def root():
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.utcnow()}
 
+
+@api_router.get("/downloads/user-manual")
+async def download_user_manual():
+    import os
+    path = os.path.join(os.path.dirname(__file__), "RapidReps_User_Manual.pdf")
+    return FileResponse(path, media_type="application/pdf", filename="RapidReps_User_Manual.pdf")
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
