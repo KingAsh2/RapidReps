@@ -138,6 +138,7 @@ export default function VirtualConfirmScreen() {
           if (timerRef.current) clearInterval(timerRef.current);
           setTrainerDetails(res.data.trainerDetails);
           setPhase('matched');
+          playBoxingBell();
           Animated.timing(fadeIn, { toValue: 1, duration: 500, useNativeDriver: true }).start();
         } else if (res.data.status === 'cancelled') {
           if (pollRef.current) clearInterval(pollRef.current);
@@ -160,6 +161,7 @@ export default function VirtualConfirmScreen() {
       if (res.data.status === 'matched' && res.data.trainerDetails) {
         setTrainerDetails(res.data.trainerDetails);
         setPhase('matched');
+        playBoxingBell();
         Animated.timing(fadeIn, { toValue: 1, duration: 500, useNativeDriver: true }).start();
       }
     } catch { /* ignore */ }
