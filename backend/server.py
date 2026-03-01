@@ -5711,20 +5711,35 @@ async def run_matching_engine(
     session_type: str = "virtual",
     rejected_trainers: list = None,
     request_id: str = None,
+    wave_number: int = 1,
 ):
-    """Core matching engine: score, wave, notify top trainers."""
+    """
+    Smart Matching Engine — scores, filters by wave/ETA, and sends
+    intelligent push notifications ONLY to qualified trainers.
+
+    Wave logic (in-person):
+      Wave 1: ETA ≤ 5 min, top 3 by score
+      Wave 2: ETA ≤ 10 min, top 3 by score
+      Wave 3: ETA ≤ 15 min, top 5 by score
+    Virtual: all eligible, top 5 by score.
+
+    Scoring weights: ETA 40%, Rating 25%, Price 15%, Boost 10%,
+    Responsiveness 5%, Completeness 5%.
+
+    Returns (notified_ids, wave_data).
+    """
     rejected = rejected_trainers or []
-    
-    # Build query for eligible trainers
+
+    # Build query — only available, qualified trainers
     query = {"isAvailable": True, "userId": {"$nin": rejected}}
     if session_type == "virtual":
         query["offersVirtual"] = True
     else:
         query["offersInPerson"] = True
-    
+
     eligible = await db.trainer_profiles.find(query).to_list(100)
-    
-    # Also fetch user data for verified check
+
+    # Fetch user data for profile photos
     if eligible:
         user_ids = [ObjectId(p["userId"]) for p in eligible if p.get("userId")]
         users_map = {}
@@ -5734,11 +5749,15 @@ async def run_matching_engine(
             uid = p.get("userId")
             if uid in users_map:
                 p["profilePhoto"] = users_map[uid].get("profilePhoto")
-    
+
     # Score all eligible trainers
     scored = [score_trainer(p, trainee_lat, trainee_lon, session_type) for p in eligible]
-    
-    # Wave-based notification
+
+    # Filter out trainers with score below minimum threshold (quality gate)
+    MIN_SCORE = 0.15
+    scored = [t for t in scored if t["score"] >= MIN_SCORE]
+
+    # Wave-based notification — ETA tiers for in-person
     if session_type == "virtual":
         top = get_wave_trainers(scored, 999, "virtual", limit=5)
     else:
@@ -5750,27 +5769,37 @@ async def run_matching_engine(
         if len(top) < 1:
             # Wave 3: ETA ≤ 15 min
             top = get_wave_trainers(scored, 15, session_type, limit=5)
-    
-    # Notify top trainers
+
+    # Notify only the qualified top trainers
     notified = []
     wave_data = []
     for t in top:
         tid = t["userId"]
         try:
             session_label = "Virtual Live" if session_type == "virtual" else "In-Person"
-            eta_text = f" (ETA: {int(t['eta_minutes'])} min)" if session_type != "virtual" and t["eta_minutes"] > 0 else ""
+            eta_text = ""
+            if session_type != "virtual" and t["eta_minutes"] > 0:
+                eta_text = f" (ETA: {int(t['eta_minutes'])} min)"
+
             await create_and_send_notification(
                 tid,
                 f"{session_label} Session Request",
-                f"{trainee_name} needs a {session_label} trainer now!{eta_text} Accept or Reject.",
+                f"{trainee_name} needs a {session_label} trainer now!{eta_text} Accept quickly — first-accept wins.",
                 "virtual_request",
-                {"screen": "trainer/virtual-request", "requestId": request_id}
+                {
+                    "screen": "trainer/virtual-request",
+                    "requestId": request_id,
+                    "sessionType": session_type,
+                    "traineeId": trainee_id,
+                    "waveNumber": wave_number,
+                }
             )
             notified.append(tid)
+            t["notifiedAt"] = datetime.utcnow().isoformat()
             wave_data.append(t)
         except Exception:
             pass
-    
+
     return notified, wave_data
 
 
