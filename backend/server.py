@@ -4554,6 +4554,62 @@ async def get_admin_dashboard(admin_user: dict = Depends(require_admin)):
         "pendingVerifications": pending_verifications
     }
 
+@api_router.get("/admin/top-trainers")
+async def admin_top_trainers(days: int = 7, limit: int = 5, admin_user: dict = Depends(require_admin)):
+    """Get top trainers by completed sessions in the given period"""
+    cutoff = datetime.utcnow() - timedelta(days=days)
+
+    pipeline = [
+        {"$match": {"status": SessionStatus.COMPLETED, "createdAt": {"$gte": cutoff}}},
+        {"$group": {"_id": "$trainerId", "sessionCount": {"$sum": 1}, "totalRevenue": {"$sum": "$finalSessionPriceCents"}}},
+        {"$sort": {"sessionCount": -1}},
+        {"$limit": limit},
+    ]
+    results = await db.sessions.aggregate(pipeline).to_list(limit)
+
+    trainer_ids = [r["_id"] for r in results if r["_id"]]
+    users = {str(u["_id"]): u for u in await db.users.find({"_id": {"$in": [ObjectId(tid) for tid in trainer_ids]}}).to_list(len(trainer_ids))} if trainer_ids else {}
+    profiles = {p["userId"]: p for p in await db.trainer_profiles.find({"userId": {"$in": trainer_ids}}).to_list(len(trainer_ids))} if trainer_ids else {}
+
+    leaderboard = []
+    for r in results:
+        tid = r["_id"]
+        user = users.get(tid, {})
+        profile = profiles.get(tid, {})
+        total_reviews = profile.get("totalReviews", 0)
+        avg_rating = profile.get("averageRating", 0.0)
+        tier = calculate_trainer_tier(total_reviews, avg_rating, False)
+        leaderboard.append({
+            "trainerId": tid,
+            "fullName": user.get("fullName", "Unknown Trainer"),
+            "sessionCount": r["sessionCount"],
+            "totalRevenueCents": r["totalRevenue"],
+            "averageRating": round(avg_rating, 1),
+            "tier": tier,
+        })
+
+    # If no data in period, return top trainers by all-time rating
+    if not leaderboard:
+        fallback = await db.trainer_profiles.find(
+            {}, {"_id": 0, "userId": 1, "averageRating": 1, "totalReviews": 1}
+        ).sort("averageRating", -1).limit(limit).to_list(limit)
+        fb_ids = [f["userId"] for f in fallback]
+        fb_users = {str(u["_id"]): u for u in await db.users.find({"_id": {"$in": [ObjectId(fid) for fid in fb_ids]}}).to_list(len(fb_ids))} if fb_ids else {}
+        for f in fallback:
+            uid = f["userId"]
+            u = fb_users.get(uid, {})
+            leaderboard.append({
+                "trainerId": uid,
+                "fullName": u.get("fullName", "Unknown Trainer"),
+                "sessionCount": 0,
+                "totalRevenueCents": 0,
+                "averageRating": round(f.get("averageRating", 0), 1),
+                "tier": calculate_trainer_tier(f.get("totalReviews", 0), f.get("averageRating", 0), False),
+            })
+
+    return {"leaderboard": leaderboard, "periodDays": days}
+
+
 @api_router.get("/admin/users")
 async def admin_get_users(
     skip: int = 0,
