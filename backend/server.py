@@ -5615,10 +5615,158 @@ async def notification_scheduler():
         await asyncio.sleep(300)  # Run every 5 minutes
 
 
-# ─── VIRTUAL MATCHING SYSTEM ───────────────────────────────────────
+# ─── UBER-STYLE MATCHING ENGINE ───────────────────────────────────────
+
+# Speed assumptions for ETA (miles per minute)
+AVG_DRIVING_MPM = 0.5  # ~30 mph
+
+def score_trainer(trainer_profile: dict, trainee_lat: float = None, trainee_lon: float = None, session_type: str = "virtual") -> dict:
+    """Score a trainer for matching. Returns dict with score breakdown and ETA."""
+    t_lat = trainer_profile.get("latitude")
+    t_lon = trainer_profile.get("longitude")
+    
+    # --- ETA ---
+    distance_miles = 0.0
+    eta_minutes = 0.0
+    if session_type != "virtual" and trainee_lat and trainee_lon and t_lat and t_lon:
+        distance_miles = calculate_distance(trainee_lat, trainee_lon, t_lat, t_lon)
+        eta_minutes = distance_miles / AVG_DRIVING_MPM if AVG_DRIVING_MPM > 0 else 999
+    
+    # ETA score: 1.0 at 0 min, 0.0 at 20+ min (for in-person)
+    if session_type == "virtual":
+        eta_score = 1.0  # distance irrelevant for virtual
+    else:
+        eta_score = max(0, 1.0 - (eta_minutes / 20.0))
+    
+    # --- Rating score: 0-1 ---
+    avg_rating = trainer_profile.get("averageRating", 0)
+    total_reviews = trainer_profile.get("totalReviews", 0)
+    rating_score = (avg_rating / 5.0) if avg_rating > 0 else 0.3  # default for new trainers
+    
+    # --- Price score: lower = better (normalize against a $100 max) ---
+    if session_type == "virtual":
+        rate = trainer_profile.get("virtualRateCents", 3000)
+    else:
+        rate = trainer_profile.get("sessionRateCents", 5000)
+    price_score = max(0, 1.0 - (rate / 15000))  # $150 = 0 score
+    
+    # --- Boost bonus ---
+    boost_score = 1.0 if trainer_profile.get("boostActive") else 0.0
+    
+    # --- Responsiveness (acceptance history) ---
+    acceptance_rate = trainer_profile.get("acceptanceRate", 0.7)
+    responsiveness_score = min(acceptance_rate, 1.0)
+    
+    # --- Profile completeness ---
+    has_bio = 1 if trainer_profile.get("bio") else 0
+    has_photo = 1 if trainer_profile.get("profilePhoto") else 0
+    has_certs = 1 if trainer_profile.get("isVerified") else 0
+    completeness_score = (has_bio + has_photo + has_certs) / 3.0
+    
+    # --- Weighted total ---
+    total = (
+        eta_score * 0.40 +
+        rating_score * 0.25 +
+        price_score * 0.15 +
+        boost_score * 0.10 +
+        responsiveness_score * 0.05 +
+        completeness_score * 0.05
+    )
+    
+    return {
+        "userId": trainer_profile.get("userId"),
+        "score": round(total, 4),
+        "eta_minutes": round(eta_minutes, 1),
+        "distance_miles": round(distance_miles, 1),
+        "rating": avg_rating,
+        "rateCents": rate,
+        "boosted": bool(trainer_profile.get("boostActive")),
+    }
+
+
+def get_wave_trainers(scored: list, wave_max_eta: float, session_type: str, limit: int = 3) -> list:
+    """Filter scored trainers by ETA wave and return top N by score."""
+    if session_type == "virtual":
+        # Virtual: all trainers qualify, just sort by score
+        return sorted(scored, key=lambda x: -x["score"])[:limit]
+    wave = [t for t in scored if t["eta_minutes"] <= wave_max_eta]
+    return sorted(wave, key=lambda x: -x["score"])[:limit]
+
+
+async def run_matching_engine(
+    trainee_id: str,
+    trainee_name: str,
+    trainee_lat: float = None,
+    trainee_lon: float = None,
+    session_type: str = "virtual",
+    rejected_trainers: list = None,
+    request_id: str = None,
+):
+    """Core matching engine: score, wave, notify top trainers."""
+    rejected = rejected_trainers or []
+    
+    # Build query for eligible trainers
+    query = {"isAvailable": True, "userId": {"$nin": rejected}}
+    if session_type == "virtual":
+        query["offersVirtual"] = True
+    else:
+        query["offersInPerson"] = True
+    
+    eligible = await db.trainer_profiles.find(query).to_list(100)
+    
+    # Also fetch user data for verified check
+    if eligible:
+        user_ids = [ObjectId(p["userId"]) for p in eligible if p.get("userId")]
+        users_map = {}
+        async for u in db.users.find({"_id": {"$in": user_ids}}, {"_id": 1, "profilePhoto": 1}):
+            users_map[str(u["_id"])] = u
+        for p in eligible:
+            uid = p.get("userId")
+            if uid in users_map:
+                p["profilePhoto"] = users_map[uid].get("profilePhoto")
+    
+    # Score all eligible trainers
+    scored = [score_trainer(p, trainee_lat, trainee_lon, session_type) for p in eligible]
+    
+    # Wave-based notification
+    if session_type == "virtual":
+        top = get_wave_trainers(scored, 999, "virtual", limit=5)
+    else:
+        # Wave 1: ETA ≤ 5 min
+        top = get_wave_trainers(scored, 5, session_type, limit=3)
+        if len(top) < 2:
+            # Wave 2: ETA ≤ 10 min
+            top = get_wave_trainers(scored, 10, session_type, limit=3)
+        if len(top) < 1:
+            # Wave 3: ETA ≤ 15 min
+            top = get_wave_trainers(scored, 15, session_type, limit=5)
+    
+    # Notify top trainers
+    notified = []
+    wave_data = []
+    for t in top:
+        tid = t["userId"]
+        try:
+            session_label = "Virtual Live" if session_type == "virtual" else "In-Person"
+            eta_text = f" (ETA: {int(t['eta_minutes'])} min)" if session_type != "virtual" and t["eta_minutes"] > 0 else ""
+            await create_and_send_notification(
+                tid,
+                f"{session_label} Session Request",
+                f"{trainee_name} needs a {session_label} trainer now!{eta_text} Accept or Reject.",
+                "virtual_request",
+                {"screen": "trainer/virtual-request", "requestId": request_id}
+            )
+            notified.append(tid)
+            wave_data.append(t)
+        except Exception:
+            pass
+    
+    return notified, wave_data
+
+
 @api_router.post("/virtual/request")
 async def create_virtual_request(current_user: dict = Depends(get_current_user)):
-    """Trainee requests a virtual session — notifies all eligible trainers"""
+    """Trainee requests a virtual session — Uber-style wave matching"""
     if "trainee" not in current_user.get("roles", []):
         raise HTTPException(400, "Only trainees can request virtual sessions")
 
@@ -5634,20 +5782,7 @@ async def create_virtual_request(current_user: dict = Depends(get_current_user))
             "matchedTrainerId": existing.get("matchedTrainerId"),
         }
 
-    request_doc = {
-        "traineeId": str(current_user["_id"]),
-        "traineeName": current_user.get("fullName", "A Trainee"),
-        "status": "searching",
-        "matchedTrainerId": None,
-        "matchedTrainerName": None,
-        "notifiedTrainers": [],
-        "rejectedTrainers": [],
-        "createdAt": datetime.utcnow(),
-    }
-    result = await db.virtual_requests.insert_one(request_doc)
-    request_id = str(result.inserted_id)
-
-    # Get trainee location for proximity filtering
+    # Get trainee location
     trainee_profile = await db.trainee_profiles.find_one(
         {"userId": str(current_user["_id"])},
         {"latitude": 1, "longitude": 1}
@@ -5655,50 +5790,111 @@ async def create_virtual_request(current_user: dict = Depends(get_current_user))
     trainee_lat = trainee_profile.get("latitude") if trainee_profile else None
     trainee_lon = trainee_profile.get("longitude") if trainee_profile else None
 
-    # Find eligible trainers: offersVirtual=True AND isAvailable=True
-    eligible = await db.trainer_profiles.find(
-        {"offersVirtual": True, "isAvailable": True},
-        {"_id": 0, "userId": 1, "latitude": 1, "longitude": 1, "travelRadiusMiles": 1}
-    ).to_list(50)
+    request_doc = {
+        "traineeId": str(current_user["_id"]),
+        "traineeName": current_user.get("fullName", "A Trainee"),
+        "sessionType": "virtual",
+        "status": "searching",
+        "currentWave": 1,
+        "matchedTrainerId": None,
+        "matchedTrainerName": None,
+        "notifiedTrainers": [],
+        "rejectedTrainers": [],
+        "waveScores": [],
+        "traineeLat": trainee_lat,
+        "traineeLon": trainee_lon,
+        "createdAt": datetime.utcnow(),
+    }
+    result = await db.virtual_requests.insert_one(request_doc)
+    request_id = str(result.inserted_id)
 
-    # Apply proximity filter (default 25 miles for virtual, or trainer's travelRadius)
-    VIRTUAL_MAX_MILES = 25
-    filtered_ids = []
-    for p in eligible:
-        trainer_lat = p.get("latitude")
-        trainer_lon = p.get("longitude")
-        max_radius = p.get("travelRadiusMiles") or VIRTUAL_MAX_MILES
-
-        if trainee_lat and trainee_lon and trainer_lat and trainer_lon:
-            dist = calculate_distance(trainee_lat, trainee_lon, trainer_lat, trainer_lon)
-            if dist <= max(max_radius, VIRTUAL_MAX_MILES):
-                filtered_ids.append(p["userId"])
-        else:
-            # If either party has no location, include them (don't exclude unfairly)
-            filtered_ids.append(p["userId"])
-    trainer_ids = filtered_ids
-
-    # Notify all eligible trainers
-    notified = []
-    for tid in trainer_ids:
-        try:
-            await create_and_send_notification(
-                tid,
-                "Virtual Session Request",
-                f"{current_user.get('fullName', 'A trainee')} is requesting a Virtual Live Training Session. Accept or Reject.",
-                "virtual_request",
-                {"screen": "trainer/virtual-request", "requestId": request_id}
-            )
-            notified.append(tid)
-        except Exception:
-            pass
+    notified, wave_data = await run_matching_engine(
+        trainee_id=str(current_user["_id"]),
+        trainee_name=current_user.get("fullName", "A Trainee"),
+        trainee_lat=trainee_lat,
+        trainee_lon=trainee_lon,
+        session_type="virtual",
+        request_id=request_id,
+    )
 
     await db.virtual_requests.update_one(
         {"_id": result.inserted_id},
-        {"$set": {"notifiedTrainers": notified}}
+        {"$set": {"notifiedTrainers": notified, "waveScores": wave_data}}
     )
 
     return {"requestId": request_id, "status": "searching", "trainersNotified": len(notified)}
+
+
+@api_router.post("/instant/request")
+async def create_instant_inperson_request(current_user: dict = Depends(get_current_user)):
+    """Trainee requests an instant in-person session — wave-based matching"""
+    if "trainee" not in current_user.get("roles", []):
+        raise HTTPException(400, "Only trainees can request sessions")
+
+    existing = await db.virtual_requests.find_one({
+        "traineeId": str(current_user["_id"]),
+        "sessionType": "in_person",
+        "status": {"$in": ["searching", "matched"]}
+    })
+    if existing:
+        return {
+            "requestId": str(existing["_id"]),
+            "status": existing["status"],
+            "matchedTrainerId": existing.get("matchedTrainerId"),
+        }
+
+    trainee_profile = await db.trainee_profiles.find_one(
+        {"userId": str(current_user["_id"])},
+        {"latitude": 1, "longitude": 1}
+    )
+    trainee_lat = trainee_profile.get("latitude") if trainee_profile else None
+    trainee_lon = trainee_profile.get("longitude") if trainee_profile else None
+
+    if not trainee_lat or not trainee_lon:
+        raise HTTPException(400, "Location required for in-person instant booking. Please update your profile.")
+
+    request_doc = {
+        "traineeId": str(current_user["_id"]),
+        "traineeName": current_user.get("fullName", "A Trainee"),
+        "sessionType": "in_person",
+        "status": "searching",
+        "currentWave": 1,
+        "matchedTrainerId": None,
+        "matchedTrainerName": None,
+        "notifiedTrainers": [],
+        "rejectedTrainers": [],
+        "waveScores": [],
+        "traineeLat": trainee_lat,
+        "traineeLon": trainee_lon,
+        "createdAt": datetime.utcnow(),
+    }
+    result = await db.virtual_requests.insert_one(request_doc)
+    request_id = str(result.inserted_id)
+
+    notified, wave_data = await run_matching_engine(
+        trainee_id=str(current_user["_id"]),
+        trainee_name=current_user.get("fullName", "A Trainee"),
+        trainee_lat=trainee_lat,
+        trainee_lon=trainee_lon,
+        session_type="in_person",
+        request_id=request_id,
+    )
+
+    await db.virtual_requests.update_one(
+        {"_id": result.inserted_id},
+        {"$set": {"notifiedTrainers": notified, "waveScores": wave_data}}
+    )
+
+    fallback = None
+    if len(notified) == 0:
+        fallback = "no_trainers_nearby"
+
+    return {
+        "requestId": request_id,
+        "status": "searching",
+        "trainersNotified": len(notified),
+        "fallback": fallback,
+    }
 
 
 @api_router.get("/virtual/request/{request_id}")
