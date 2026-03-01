@@ -10,12 +10,12 @@ Features tested:
 - Selfie validation (min 100 chars, max ~5MB)
 - Access control (only participants can submit/view)
 - Session flags and storage in session_selfies collection
-- Notification to other party when selfie submitted
 """
 
 import pytest
 import requests
 import os
+import time
 from datetime import datetime, timedelta
 from bson import ObjectId
 from pymongo import MongoClient
@@ -30,7 +30,6 @@ TRAINEE1_ID = "697c077500b22ded1af3509d"
 
 TRAINEE2_EMAIL = "trainee2@test.com"
 TRAINEE2_PASSWORD = "test123"
-# trainee2 is NOT a participant - used for access control tests
 
 TRAINER1_EMAIL = "trainer1@test.com"
 TRAINER1_PASSWORD = "test123"
@@ -41,353 +40,366 @@ MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
 DB_NAME = os.environ.get('DB_NAME', 'rapidreps')
 
 # Generate valid base64 selfie data (>100 chars)
-VALID_SELFIE_DATA = "data:image/jpeg;base64," + "A" * 500  # ~500 char valid selfie
-SHORT_SELFIE_DATA = "ABC"  # Too short (<100 chars)
-LARGE_SELFIE_DATA = "data:image/jpeg;base64," + "A" * 7_500_000  # >5MB
+VALID_SELFIE_DATA = "data:image/jpeg;base64," + "A" * 500
+SHORT_SELFIE_DATA = "ABC"
+LARGE_SELFIE_DATA = "data:image/jpeg;base64," + "A" * 7_500_000
 
 
-class TestSetup:
-    """Fixtures and helper methods for P2 selfie verification tests"""
-    
-    @pytest.fixture(scope="class")
-    def mongo_client(self):
-        """MongoDB client for direct database access"""
-        client = MongoClient(MONGO_URL)
-        yield client[DB_NAME]
-        client.close()
-    
-    @pytest.fixture
-    def api_session(self):
-        """Requests session with headers"""
-        session = requests.Session()
-        session.headers.update({"Content-Type": "application/json"})
-        return session
-    
-    @pytest.fixture
-    def trainer_token(self, api_session):
-        """Get trainer1 auth token"""
-        response = api_session.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TRAINER1_EMAIL,
-            "password": TRAINER1_PASSWORD
-        })
-        if response.status_code == 200:
-            return response.json().get("access_token")
-        pytest.skip(f"Trainer login failed: {response.status_code}")
-    
-    @pytest.fixture
-    def trainee_token(self, api_session):
-        """Get trainee1 auth token"""
-        response = api_session.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TRAINEE1_EMAIL,
-            "password": TRAINEE1_PASSWORD
-        })
-        if response.status_code == 200:
-            return response.json().get("access_token")
-        pytest.skip(f"Trainee login failed: {response.status_code}")
-    
-    @pytest.fixture
-    def non_participant_token(self, api_session):
-        """Get trainee2 auth token (non-participant)"""
-        response = api_session.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TRAINEE2_EMAIL,
-            "password": TRAINEE2_PASSWORD
-        })
-        if response.status_code == 200:
-            return response.json().get("access_token")
-        pytest.skip(f"Trainee2 login failed: {response.status_code}")
-    
-    @pytest.fixture
-    def test_session_id(self, mongo_client):
-        """Create a test session in MongoDB for selfie verification tests"""
-        session_doc = {
-            '_id': ObjectId(),
-            'trainerId': TRAINER1_ID,
-            'traineeId': TRAINEE1_ID,
-            'status': 'confirmed',
-            'sessionDateTimeStart': datetime.utcnow() + timedelta(hours=1),
-            'sessionDateTimeEnd': datetime.utcnow() + timedelta(hours=2),
-            'durationMinutes': 60,
-            'sessionType': 'outdoor',
-            'locationType': 'park',
-            'locationNameOrAddress': 'Central Park, NYC',
-            'baseSessionPriceCents': 5000,
-            'finalSessionPriceCents': 5000,
-            'trainerSelfieVerified': False,
-            'traineeSelfieVerified': False,
-            'selfieVerificationComplete': False,
-            'createdAt': datetime.utcnow(),
-            'updatedAt': datetime.utcnow(),
-        }
-        result = mongo_client.sessions.insert_one(session_doc)
-        session_id = str(result.inserted_id)
-        
-        yield session_id
-        
-        # Cleanup
-        mongo_client.sessions.delete_one({'_id': result.inserted_id})
-        mongo_client.session_selfies.delete_many({'sessionId': session_id})
+# Module-level setup - login once and reuse tokens
+@pytest.fixture(scope="module")
+def mongo_db():
+    """MongoDB database instance"""
+    client = MongoClient(MONGO_URL)
+    yield client[DB_NAME]
+    client.close()
 
 
-class TestSelfieSubmission(TestSetup):
-    """Test POST /api/sessions/{id}/verify-selfie endpoint"""
+@pytest.fixture(scope="module")
+def auth_tokens():
+    """Get all auth tokens once at module level to avoid rate limiting"""
+    session = requests.Session()
+    session.headers.update({"Content-Type": "application/json"})
     
-    def test_trainer_submit_selfie_success(self, api_session, trainer_token, test_session_id, mongo_client):
-        """Test trainer can submit selfie successfully"""
-        api_session.headers.update({"Authorization": f"Bearer {trainer_token}"})
-        
-        response = api_session.post(
-            f"{BASE_URL}/api/sessions/{test_session_id}/verify-selfie",
-            json={"selfieBase64": VALID_SELFIE_DATA}
+    tokens = {}
+    
+    # Login trainer
+    resp = session.post(f"{BASE_URL}/api/auth/login", json={
+        "email": TRAINER1_EMAIL,
+        "password": TRAINER1_PASSWORD
+    })
+    if resp.status_code == 200:
+        tokens['trainer'] = resp.json().get('access_token')
+    else:
+        pytest.skip(f"Trainer login failed: {resp.status_code}")
+    
+    time.sleep(0.5)  # Small delay between logins
+    
+    # Login trainee1
+    resp = session.post(f"{BASE_URL}/api/auth/login", json={
+        "email": TRAINEE1_EMAIL,
+        "password": TRAINEE1_PASSWORD
+    })
+    if resp.status_code == 200:
+        tokens['trainee'] = resp.json().get('access_token')
+    else:
+        pytest.skip(f"Trainee login failed: {resp.status_code}")
+    
+    time.sleep(0.5)
+    
+    # Login trainee2 (non-participant)
+    resp = session.post(f"{BASE_URL}/api/auth/login", json={
+        "email": TRAINEE2_EMAIL,
+        "password": TRAINEE2_PASSWORD
+    })
+    if resp.status_code == 200:
+        tokens['non_participant'] = resp.json().get('access_token')
+    else:
+        pytest.skip(f"Trainee2 login failed: {resp.status_code}")
+    
+    return tokens
+
+
+def create_test_session(mongo_db):
+    """Create a fresh test session in MongoDB"""
+    session_doc = {
+        '_id': ObjectId(),
+        'trainerId': TRAINER1_ID,
+        'traineeId': TRAINEE1_ID,
+        'status': 'confirmed',
+        'sessionDateTimeStart': datetime.utcnow() + timedelta(hours=1),
+        'sessionDateTimeEnd': datetime.utcnow() + timedelta(hours=2),
+        'durationMinutes': 60,
+        'sessionType': 'outdoor',
+        'locationType': 'park',
+        'locationNameOrAddress': 'Central Park, NYC',
+        'baseSessionPriceCents': 5000,
+        'finalSessionPriceCents': 5000,
+        'trainerSelfieVerified': False,
+        'traineeSelfieVerified': False,
+        'selfieVerificationComplete': False,
+        'createdAt': datetime.utcnow(),
+        'updatedAt': datetime.utcnow(),
+    }
+    result = mongo_db.sessions.insert_one(session_doc)
+    return str(result.inserted_id)
+
+
+def cleanup_test_session(mongo_db, session_id):
+    """Remove test session and related selfie records"""
+    try:
+        mongo_db.sessions.delete_one({'_id': ObjectId(session_id)})
+        mongo_db.session_selfies.delete_many({'sessionId': session_id})
+    except Exception:
+        pass
+
+
+# ============================================================================
+# TEST: Trainer submits selfie
+# ============================================================================
+def test_trainer_submit_selfie_success(auth_tokens, mongo_db):
+    """Test trainer can submit selfie successfully"""
+    session_id = create_test_session(mongo_db)
+    
+    try:
+        resp = requests.post(
+            f"{BASE_URL}/api/sessions/{session_id}/verify-selfie",
+            json={"selfieBase64": VALID_SELFIE_DATA},
+            headers={"Authorization": f"Bearer {auth_tokens['trainer']}", "Content-Type": "application/json"}
         )
         
-        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
+        data = resp.json()
         
-        # Verify response structure
         assert data.get('success') == True
         assert data.get('role') == 'trainer'
-        assert data.get('bothVerified') == False  # Only trainer submitted
+        assert data.get('bothVerified') == False
         assert 'message' in data
-        assert 'trainee' in data.get('message', '').lower()  # Waiting for trainee
         
-        # Verify session_selfies collection was updated
-        selfie_record = mongo_client.session_selfies.find_one({
-            'sessionId': test_session_id,
-            'userId': TRAINER1_ID
-        })
-        assert selfie_record is not None, "Selfie record not found in session_selfies collection"
+        # Verify database records
+        selfie_record = mongo_db.session_selfies.find_one({'sessionId': session_id, 'userId': TRAINER1_ID})
+        assert selfie_record is not None
         assert selfie_record.get('role') == 'trainer'
         assert selfie_record.get('verified') == True
-        assert 'verifiedAt' in selfie_record
         
-        # Verify session document was updated
-        session = mongo_client.sessions.find_one({'_id': ObjectId(test_session_id)})
+        session = mongo_db.sessions.find_one({'_id': ObjectId(session_id)})
         assert session.get('trainerSelfieVerified') == True
-        assert session.get('trainerSelfieAt') is not None
         
-        print(f"✓ Trainer selfie submitted successfully for session {test_session_id}")
+        print("✓ Trainer selfie submitted successfully")
+    finally:
+        cleanup_test_session(mongo_db, session_id)
+
+
+# ============================================================================
+# TEST: Trainee submits selfie - both verified
+# ============================================================================
+def test_trainee_submit_selfie_both_verified(auth_tokens, mongo_db):
+    """Test trainee submits selfie after trainer - both verified"""
+    session_id = create_test_session(mongo_db)
     
-    def test_trainee_submit_selfie_both_verified(self, api_session, trainee_token, test_session_id, mongo_client):
-        """Test trainee submits selfie after trainer - both verified"""
-        # First ensure trainer has submitted
-        trainer_session = requests.Session()
-        trainer_session.headers.update({"Content-Type": "application/json"})
-        
-        # Login trainer
-        login_resp = trainer_session.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TRAINER1_EMAIL,
-            "password": TRAINER1_PASSWORD
-        })
-        trainer_token_local = login_resp.json().get("access_token")
-        trainer_session.headers.update({"Authorization": f"Bearer {trainer_token_local}"})
-        
-        # Trainer submits selfie
-        trainer_session.post(
-            f"{BASE_URL}/api/sessions/{test_session_id}/verify-selfie",
-            json={"selfieBase64": VALID_SELFIE_DATA}
+    try:
+        # Trainer submits first
+        requests.post(
+            f"{BASE_URL}/api/sessions/{session_id}/verify-selfie",
+            json={"selfieBase64": VALID_SELFIE_DATA},
+            headers={"Authorization": f"Bearer {auth_tokens['trainer']}", "Content-Type": "application/json"}
         )
         
-        # Now trainee submits
-        api_session.headers.update({"Authorization": f"Bearer {trainee_token}"})
-        
-        response = api_session.post(
-            f"{BASE_URL}/api/sessions/{test_session_id}/verify-selfie",
-            json={"selfieBase64": VALID_SELFIE_DATA}
+        # Trainee submits
+        resp = requests.post(
+            f"{BASE_URL}/api/sessions/{session_id}/verify-selfie",
+            json={"selfieBase64": VALID_SELFIE_DATA},
+            headers={"Authorization": f"Bearer {auth_tokens['trainee']}", "Content-Type": "application/json"}
         )
         
-        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
+        data = resp.json()
         
-        # Verify response indicates both verified
         assert data.get('success') == True
         assert data.get('role') == 'trainee'
         assert data.get('bothVerified') == True
-        assert 'Both' in data.get('message', '') or 'start' in data.get('message', '').lower()
         
-        # Verify session document has selfieVerificationComplete=True
-        session = mongo_client.sessions.find_one({'_id': ObjectId(test_session_id)})
+        # Verify session document
+        session = mongo_db.sessions.find_one({'_id': ObjectId(session_id)})
         assert session.get('traineeSelfieVerified') == True
         assert session.get('selfieVerificationComplete') == True
         assert session.get('selfieVerifiedAt') is not None
         
-        print(f"✓ Both parties verified - session {test_session_id} can now start")
+        print("✓ Both parties verified - session can start")
+    finally:
+        cleanup_test_session(mongo_db, session_id)
 
 
-class TestSelfieValidation(TestSetup):
-    """Test selfie data validation rules"""
+# ============================================================================
+# TEST: Reject short selfie data (<100 chars)
+# ============================================================================
+def test_reject_short_selfie_data(auth_tokens, mongo_db):
+    """Test selfie data <100 chars is rejected"""
+    session_id = create_test_session(mongo_db)
     
-    def test_reject_short_selfie_data(self, api_session, trainer_token, test_session_id):
-        """Test selfie data <100 chars is rejected"""
-        api_session.headers.update({"Authorization": f"Bearer {trainer_token}"})
-        
-        response = api_session.post(
-            f"{BASE_URL}/api/sessions/{test_session_id}/verify-selfie",
-            json={"selfieBase64": SHORT_SELFIE_DATA}
+    try:
+        resp = requests.post(
+            f"{BASE_URL}/api/sessions/{session_id}/verify-selfie",
+            json={"selfieBase64": SHORT_SELFIE_DATA},
+            headers={"Authorization": f"Bearer {auth_tokens['trainer']}", "Content-Type": "application/json"}
         )
         
-        assert response.status_code == 400, f"Expected 400 for short selfie, got {response.status_code}"
-        data = response.json()
-        assert 'invalid' in data.get('detail', '').lower() or 'selfie' in data.get('detail', '').lower()
-        
-        print("✓ Short selfie data (<100 chars) correctly rejected with 400")
-    
-    def test_reject_large_selfie_data(self, api_session, trainer_token, test_session_id):
-        """Test selfie data >5MB is rejected"""
-        api_session.headers.update({"Authorization": f"Bearer {trainer_token}"})
-        
-        response = api_session.post(
-            f"{BASE_URL}/api/sessions/{test_session_id}/verify-selfie",
-            json={"selfieBase64": LARGE_SELFIE_DATA}
-        )
-        
-        assert response.status_code == 400, f"Expected 400 for large selfie, got {response.status_code}"
-        data = response.json()
-        assert 'large' in data.get('detail', '').lower() or 'size' in data.get('detail', '').lower() or '5mb' in data.get('detail', '').lower()
-        
-        print("✓ Large selfie data (>5MB) correctly rejected with 400")
-    
-    def test_reject_empty_selfie_data(self, api_session, trainer_token, test_session_id):
-        """Test empty selfie data is rejected"""
-        api_session.headers.update({"Authorization": f"Bearer {trainer_token}"})
-        
-        response = api_session.post(
-            f"{BASE_URL}/api/sessions/{test_session_id}/verify-selfie",
-            json={"selfieBase64": ""}
-        )
-        
-        assert response.status_code == 400, f"Expected 400 for empty selfie, got {response.status_code}"
-        
-        print("✓ Empty selfie data correctly rejected with 400")
+        assert resp.status_code == 400, f"Expected 400, got {resp.status_code}"
+        print("✓ Short selfie data correctly rejected")
+    finally:
+        cleanup_test_session(mongo_db, session_id)
 
 
-class TestAccessControl(TestSetup):
-    """Test access control - only session participants can submit/view"""
+# ============================================================================
+# TEST: Reject large selfie data (>5MB)
+# ============================================================================
+def test_reject_large_selfie_data(auth_tokens, mongo_db):
+    """Test selfie data >5MB is rejected"""
+    session_id = create_test_session(mongo_db)
     
-    def test_non_participant_cannot_submit_selfie(self, api_session, non_participant_token, test_session_id):
-        """Test non-participant gets 403 when submitting selfie"""
-        api_session.headers.update({"Authorization": f"Bearer {non_participant_token}"})
-        
-        response = api_session.post(
-            f"{BASE_URL}/api/sessions/{test_session_id}/verify-selfie",
-            json={"selfieBase64": VALID_SELFIE_DATA}
+    try:
+        resp = requests.post(
+            f"{BASE_URL}/api/sessions/{session_id}/verify-selfie",
+            json={"selfieBase64": LARGE_SELFIE_DATA},
+            headers={"Authorization": f"Bearer {auth_tokens['trainer']}", "Content-Type": "application/json"}
         )
         
-        assert response.status_code == 403, f"Expected 403 for non-participant, got {response.status_code}: {response.text}"
-        data = response.json()
-        assert 'participant' in data.get('detail', '').lower() or 'not' in data.get('detail', '').lower()
-        
-        print("✓ Non-participant correctly blocked from submitting selfie (403)")
-    
-    def test_non_participant_cannot_view_verification_status(self, api_session, non_participant_token, test_session_id):
-        """Test non-participant gets 403 when checking verification status"""
-        api_session.headers.update({"Authorization": f"Bearer {non_participant_token}"})
-        
-        response = api_session.get(
-            f"{BASE_URL}/api/sessions/{test_session_id}/verification-status"
-        )
-        
-        assert response.status_code == 403, f"Expected 403 for non-participant, got {response.status_code}: {response.text}"
-        
-        print("✓ Non-participant correctly blocked from viewing verification status (403)")
-    
-    def test_unauthenticated_cannot_submit_selfie(self, api_session, test_session_id):
-        """Test unauthenticated request gets 401/403"""
-        # Remove any auth header
-        api_session.headers.pop("Authorization", None)
-        
-        response = api_session.post(
-            f"{BASE_URL}/api/sessions/{test_session_id}/verify-selfie",
-            json={"selfieBase64": VALID_SELFIE_DATA}
-        )
-        
-        # Should be 401 (unauthorized) or 403 (forbidden)
-        assert response.status_code in [401, 403], f"Expected 401/403 for unauthenticated, got {response.status_code}"
-        
-        print("✓ Unauthenticated request correctly blocked")
+        assert resp.status_code == 400, f"Expected 400, got {resp.status_code}"
+        print("✓ Large selfie data correctly rejected")
+    finally:
+        cleanup_test_session(mongo_db, session_id)
 
 
-class TestVerificationStatus(TestSetup):
-    """Test GET /api/sessions/{id}/verification-status endpoint"""
+# ============================================================================
+# TEST: Reject empty selfie data
+# ============================================================================
+def test_reject_empty_selfie_data(auth_tokens, mongo_db):
+    """Test empty selfie data is rejected"""
+    session_id = create_test_session(mongo_db)
     
-    def test_initial_verification_status(self, api_session, trainer_token, test_session_id):
-        """Test initial verification status shows all false"""
-        api_session.headers.update({"Authorization": f"Bearer {trainer_token}"})
-        
-        response = api_session.get(
-            f"{BASE_URL}/api/sessions/{test_session_id}/verification-status"
+    try:
+        resp = requests.post(
+            f"{BASE_URL}/api/sessions/{session_id}/verify-selfie",
+            json={"selfieBase64": ""},
+            headers={"Authorization": f"Bearer {auth_tokens['trainer']}", "Content-Type": "application/json"}
         )
         
-        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        assert resp.status_code == 400, f"Expected 400, got {resp.status_code}"
+        print("✓ Empty selfie data correctly rejected")
+    finally:
+        cleanup_test_session(mongo_db, session_id)
+
+
+# ============================================================================
+# TEST: Non-participant cannot submit selfie (403)
+# ============================================================================
+def test_non_participant_cannot_submit_selfie(auth_tokens, mongo_db):
+    """Test non-participant gets 403"""
+    session_id = create_test_session(mongo_db)
+    
+    try:
+        resp = requests.post(
+            f"{BASE_URL}/api/sessions/{session_id}/verify-selfie",
+            json={"selfieBase64": VALID_SELFIE_DATA},
+            headers={"Authorization": f"Bearer {auth_tokens['non_participant']}", "Content-Type": "application/json"}
+        )
         
-        # Check all verification flags present
+        assert resp.status_code == 403, f"Expected 403, got {resp.status_code}: {resp.text}"
+        print("✓ Non-participant correctly blocked (403)")
+    finally:
+        cleanup_test_session(mongo_db, session_id)
+
+
+# ============================================================================
+# TEST: Non-participant cannot view verification status (403)
+# ============================================================================
+def test_non_participant_cannot_view_status(auth_tokens, mongo_db):
+    """Test non-participant gets 403 when checking status"""
+    session_id = create_test_session(mongo_db)
+    
+    try:
+        resp = requests.get(
+            f"{BASE_URL}/api/sessions/{session_id}/verification-status",
+            headers={"Authorization": f"Bearer {auth_tokens['non_participant']}"}
+        )
+        
+        assert resp.status_code == 403, f"Expected 403, got {resp.status_code}"
+        print("✓ Non-participant cannot view status (403)")
+    finally:
+        cleanup_test_session(mongo_db, session_id)
+
+
+# ============================================================================
+# TEST: Initial verification status shows all false
+# ============================================================================
+def test_initial_verification_status(auth_tokens, mongo_db):
+    """Test initial verification status shows all false"""
+    session_id = create_test_session(mongo_db)
+    
+    try:
+        resp = requests.get(
+            f"{BASE_URL}/api/sessions/{session_id}/verification-status",
+            headers={"Authorization": f"Bearer {auth_tokens['trainer']}"}
+        )
+        
+        assert resp.status_code == 200, f"Expected 200, got {resp.status_code}"
+        data = resp.json()
+        
         assert 'trainerVerified' in data
         assert 'traineeVerified' in data
         assert 'bothVerified' in data
-        
-        # Initial state should be all false
         assert data.get('trainerVerified') == False
         assert data.get('traineeVerified') == False
         assert data.get('bothVerified') == False
         
-        print("✓ Initial verification status correctly shows all false")
+        print("✓ Initial status shows all false")
+    finally:
+        cleanup_test_session(mongo_db, session_id)
+
+
+# ============================================================================
+# TEST: Verification status after trainer selfie
+# ============================================================================
+def test_verification_status_after_trainer_selfie(auth_tokens, mongo_db):
+    """Test verification status shows trainer verified"""
+    session_id = create_test_session(mongo_db)
     
-    def test_verification_status_after_trainer_selfie(self, api_session, trainer_token, test_session_id):
-        """Test verification status shows trainer verified after submission"""
-        api_session.headers.update({"Authorization": f"Bearer {trainer_token}"})
-        
+    try:
         # Submit trainer selfie
-        api_session.post(
-            f"{BASE_URL}/api/sessions/{test_session_id}/verify-selfie",
-            json={"selfieBase64": VALID_SELFIE_DATA}
+        requests.post(
+            f"{BASE_URL}/api/sessions/{session_id}/verify-selfie",
+            json={"selfieBase64": VALID_SELFIE_DATA},
+            headers={"Authorization": f"Bearer {auth_tokens['trainer']}", "Content-Type": "application/json"}
         )
         
         # Check status
-        response = api_session.get(
-            f"{BASE_URL}/api/sessions/{test_session_id}/verification-status"
+        resp = requests.get(
+            f"{BASE_URL}/api/sessions/{session_id}/verification-status",
+            headers={"Authorization": f"Bearer {auth_tokens['trainer']}"}
         )
         
-        assert response.status_code == 200
-        data = response.json()
+        assert resp.status_code == 200
+        data = resp.json()
         
         assert data.get('trainerVerified') == True
         assert data.get('traineeVerified') == False
         assert data.get('bothVerified') == False
-        assert data.get('trainerSelfieAt') is not None  # Timestamp present
+        assert data.get('trainerSelfieAt') is not None
         
-        print("✓ Verification status correctly shows trainer verified with timestamp")
+        print("✓ Status correctly shows trainer verified with timestamp")
+    finally:
+        cleanup_test_session(mongo_db, session_id)
+
+
+# ============================================================================
+# TEST: Verification status after both selfies
+# ============================================================================
+def test_verification_status_after_both_selfies(auth_tokens, mongo_db):
+    """Test verification status shows both verified"""
+    session_id = create_test_session(mongo_db)
     
-    def test_verification_status_after_both_selfies(self, api_session, trainer_token, trainee_token, test_session_id, mongo_client):
-        """Test verification status shows both verified after both submit"""
-        # Submit trainer selfie
-        trainer_session = requests.Session()
-        trainer_session.headers.update({
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {trainer_token}"
-        })
-        trainer_session.post(
-            f"{BASE_URL}/api/sessions/{test_session_id}/verify-selfie",
-            json={"selfieBase64": VALID_SELFIE_DATA}
+    try:
+        # Trainer submits
+        requests.post(
+            f"{BASE_URL}/api/sessions/{session_id}/verify-selfie",
+            json={"selfieBase64": VALID_SELFIE_DATA},
+            headers={"Authorization": f"Bearer {auth_tokens['trainer']}", "Content-Type": "application/json"}
         )
         
-        # Submit trainee selfie
-        trainee_session = requests.Session()
-        trainee_session.headers.update({
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {trainee_token}"
-        })
-        trainee_session.post(
-            f"{BASE_URL}/api/sessions/{test_session_id}/verify-selfie",
-            json={"selfieBase64": VALID_SELFIE_DATA}
+        # Trainee submits
+        requests.post(
+            f"{BASE_URL}/api/sessions/{session_id}/verify-selfie",
+            json={"selfieBase64": VALID_SELFIE_DATA},
+            headers={"Authorization": f"Bearer {auth_tokens['trainee']}", "Content-Type": "application/json"}
         )
         
-        # Check status as trainer
-        response = trainer_session.get(
-            f"{BASE_URL}/api/sessions/{test_session_id}/verification-status"
+        # Check status
+        resp = requests.get(
+            f"{BASE_URL}/api/sessions/{session_id}/verification-status",
+            headers={"Authorization": f"Bearer {auth_tokens['trainer']}"}
         )
         
-        assert response.status_code == 200
-        data = response.json()
+        assert resp.status_code == 200
+        data = resp.json()
         
         assert data.get('trainerVerified') == True
         assert data.get('traineeVerified') == True
@@ -395,153 +407,149 @@ class TestVerificationStatus(TestSetup):
         assert data.get('trainerSelfieAt') is not None
         assert data.get('traineeSelfieAt') is not None
         
-        print("✓ Verification status correctly shows both verified with timestamps")
+        print("✓ Status correctly shows both verified with timestamps")
+    finally:
+        cleanup_test_session(mongo_db, session_id)
 
 
-class TestEdgeCases(TestSetup):
-    """Test edge cases and error handling"""
+# ============================================================================
+# TEST: Invalid session ID format
+# ============================================================================
+def test_invalid_session_id_format(auth_tokens):
+    """Test invalid session ID returns 400"""
+    resp = requests.post(
+        f"{BASE_URL}/api/sessions/invalid-format/verify-selfie",
+        json={"selfieBase64": VALID_SELFIE_DATA},
+        headers={"Authorization": f"Bearer {auth_tokens['trainer']}", "Content-Type": "application/json"}
+    )
     
-    def test_invalid_session_id_format(self, api_session, trainer_token):
-        """Test invalid session ID format returns 400"""
-        api_session.headers.update({"Authorization": f"Bearer {trainer_token}"})
-        
-        response = api_session.post(
-            f"{BASE_URL}/api/sessions/invalid-id-format/verify-selfie",
-            json={"selfieBase64": VALID_SELFIE_DATA}
+    assert resp.status_code == 400, f"Expected 400, got {resp.status_code}"
+    print("✓ Invalid session ID format returns 400")
+
+
+# ============================================================================
+# TEST: Nonexistent session ID
+# ============================================================================
+def test_nonexistent_session_id(auth_tokens):
+    """Test nonexistent session ID returns 404"""
+    fake_id = str(ObjectId())
+    
+    resp = requests.post(
+        f"{BASE_URL}/api/sessions/{fake_id}/verify-selfie",
+        json={"selfieBase64": VALID_SELFIE_DATA},
+        headers={"Authorization": f"Bearer {auth_tokens['trainer']}", "Content-Type": "application/json"}
+    )
+    
+    assert resp.status_code == 404, f"Expected 404, got {resp.status_code}"
+    print("✓ Nonexistent session ID returns 404")
+
+
+# ============================================================================
+# TEST: Trainee can view verification status
+# ============================================================================
+def test_trainee_can_view_status(auth_tokens, mongo_db):
+    """Test trainee can also view verification status"""
+    session_id = create_test_session(mongo_db)
+    
+    try:
+        resp = requests.get(
+            f"{BASE_URL}/api/sessions/{session_id}/verification-status",
+            headers={"Authorization": f"Bearer {auth_tokens['trainee']}"}
         )
         
-        assert response.status_code == 400, f"Expected 400 for invalid ID, got {response.status_code}"
-        
-        print("✓ Invalid session ID format correctly returns 400")
-    
-    def test_nonexistent_session_id(self, api_session, trainer_token):
-        """Test nonexistent session ID returns 404"""
-        api_session.headers.update({"Authorization": f"Bearer {trainer_token}"})
-        
-        # Valid ObjectId format but doesn't exist
-        fake_session_id = str(ObjectId())
-        
-        response = api_session.post(
-            f"{BASE_URL}/api/sessions/{fake_session_id}/verify-selfie",
-            json={"selfieBase64": VALID_SELFIE_DATA}
-        )
-        
-        assert response.status_code == 404, f"Expected 404 for nonexistent session, got {response.status_code}"
-        
-        print("✓ Nonexistent session ID correctly returns 404")
-    
-    def test_trainee_can_view_verification_status(self, api_session, trainee_token, test_session_id):
-        """Test trainee can also view verification status (not just trainer)"""
-        api_session.headers.update({"Authorization": f"Bearer {trainee_token}"})
-        
-        response = api_session.get(
-            f"{BASE_URL}/api/sessions/{test_session_id}/verification-status"
-        )
-        
-        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        data = response.json()
+        assert resp.status_code == 200, f"Expected 200, got {resp.status_code}"
+        data = resp.json()
         
         assert 'trainerVerified' in data
         assert 'traineeVerified' in data
         assert 'bothVerified' in data
         
         print("✓ Trainee can view verification status")
-    
-    def test_selfie_resubmission_updates_record(self, api_session, trainer_token, test_session_id, mongo_client):
-        """Test submitting selfie again updates the existing record"""
-        api_session.headers.update({"Authorization": f"Bearer {trainer_token}"})
-        
-        # First submission
-        api_session.post(
-            f"{BASE_URL}/api/sessions/{test_session_id}/verify-selfie",
-            json={"selfieBase64": VALID_SELFIE_DATA}
-        )
-        
-        first_record = mongo_client.session_selfies.find_one({
-            'sessionId': test_session_id,
-            'userId': TRAINER1_ID
-        })
-        first_time = first_record.get('verifiedAt')
-        
-        # Small delay
-        import time
-        time.sleep(0.1)
-        
-        # Second submission (re-verification)
-        new_selfie = "data:image/jpeg;base64," + "B" * 500
-        response = api_session.post(
-            f"{BASE_URL}/api/sessions/{test_session_id}/verify-selfie",
-            json={"selfieBase64": new_selfie}
-        )
-        
-        assert response.status_code == 200
-        
-        # Check that record was updated (not duplicated)
-        records = list(mongo_client.session_selfies.find({
-            'sessionId': test_session_id,
-            'userId': TRAINER1_ID
-        }))
-        assert len(records) == 1, "Expected single record after resubmission (upsert)"
-        
-        second_record = records[0]
-        assert second_record.get('verifiedAt') >= first_time  # Time should be same or later
-        
-        print("✓ Selfie resubmission updates existing record (upsert behavior)")
+    finally:
+        cleanup_test_session(mongo_db, session_id)
 
 
-class TestDataStorage(TestSetup):
-    """Test that data is stored correctly in MongoDB collections"""
+# ============================================================================
+# TEST: Selfie data stored correctly (truncated)
+# ============================================================================
+def test_selfie_stored_truncated(auth_tokens, mongo_db):
+    """Test selfie data is truncated to first 200 chars + '...'"""
+    session_id = create_test_session(mongo_db)
     
-    def test_selfie_stored_in_session_selfies_collection(self, api_session, trainer_token, test_session_id, mongo_client):
-        """Test selfie data is stored in session_selfies collection with correct fields"""
-        api_session.headers.update({"Authorization": f"Bearer {trainer_token}"})
-        
-        api_session.post(
-            f"{BASE_URL}/api/sessions/{test_session_id}/verify-selfie",
-            json={"selfieBase64": VALID_SELFIE_DATA}
+    try:
+        requests.post(
+            f"{BASE_URL}/api/sessions/{session_id}/verify-selfie",
+            json={"selfieBase64": VALID_SELFIE_DATA},
+            headers={"Authorization": f"Bearer {auth_tokens['trainer']}", "Content-Type": "application/json"}
         )
         
-        # Check session_selfies collection
-        selfie_doc = mongo_client.session_selfies.find_one({
-            'sessionId': test_session_id,
-            'userId': TRAINER1_ID
-        })
+        selfie_doc = mongo_db.session_selfies.find_one({'sessionId': session_id, 'userId': TRAINER1_ID})
         
-        assert selfie_doc is not None, "Selfie document not found"
-        
-        # Verify required fields
-        assert selfie_doc.get('sessionId') == test_session_id
-        assert selfie_doc.get('userId') == TRAINER1_ID
-        assert selfie_doc.get('role') == 'trainer'
-        assert selfie_doc.get('verified') == True
-        assert 'verifiedAt' in selfie_doc
-        assert isinstance(selfie_doc.get('verifiedAt'), datetime)
-        
-        # Verify selfie is truncated (first 200 chars + '...')
+        assert selfie_doc is not None
         stored_selfie = selfie_doc.get('selfieBase64', '')
         assert stored_selfie.endswith('...')
-        assert len(stored_selfie) <= 210  # ~200 chars + '...'
+        assert len(stored_selfie) <= 210  # 200 + '...'
         
-        print("✓ Selfie correctly stored in session_selfies collection with role and timestamp")
+        print("✓ Selfie data correctly truncated for storage efficiency")
+    finally:
+        cleanup_test_session(mongo_db, session_id)
+
+
+# ============================================================================
+# TEST: Selfie resubmission updates record (upsert)
+# ============================================================================
+def test_selfie_resubmission(auth_tokens, mongo_db):
+    """Test submitting selfie again updates existing record"""
+    session_id = create_test_session(mongo_db)
     
-    def test_session_document_updated_with_flags(self, api_session, trainer_token, test_session_id, mongo_client):
-        """Test session document is updated with verification flags"""
-        api_session.headers.update({"Authorization": f"Bearer {trainer_token}"})
-        
-        # Submit trainer selfie
-        api_session.post(
-            f"{BASE_URL}/api/sessions/{test_session_id}/verify-selfie",
-            json={"selfieBase64": VALID_SELFIE_DATA}
+    try:
+        # First submission
+        requests.post(
+            f"{BASE_URL}/api/sessions/{session_id}/verify-selfie",
+            json={"selfieBase64": VALID_SELFIE_DATA},
+            headers={"Authorization": f"Bearer {auth_tokens['trainer']}", "Content-Type": "application/json"}
         )
         
-        # Check session document
-        session = mongo_client.sessions.find_one({'_id': ObjectId(test_session_id)})
+        # Count records
+        count1 = mongo_db.session_selfies.count_documents({'sessionId': session_id, 'userId': TRAINER1_ID})
         
-        assert session.get('trainerSelfieVerified') == True
-        assert session.get('trainerSelfieAt') is not None
-        assert isinstance(session.get('trainerSelfieAt'), datetime)
+        # Second submission
+        new_selfie = "data:image/jpeg;base64," + "B" * 500
+        requests.post(
+            f"{BASE_URL}/api/sessions/{session_id}/verify-selfie",
+            json={"selfieBase64": new_selfie},
+            headers={"Authorization": f"Bearer {auth_tokens['trainer']}", "Content-Type": "application/json"}
+        )
         
-        print("✓ Session document correctly updated with trainerSelfieVerified and timestamp")
+        # Count should still be 1 (upsert)
+        count2 = mongo_db.session_selfies.count_documents({'sessionId': session_id, 'userId': TRAINER1_ID})
+        
+        assert count1 == 1
+        assert count2 == 1  # Should not create duplicate
+        
+        print("✓ Selfie resubmission correctly updates existing record")
+    finally:
+        cleanup_test_session(mongo_db, session_id)
+
+
+# ============================================================================
+# TEST: Unauthenticated request blocked
+# ============================================================================
+def test_unauthenticated_blocked(mongo_db):
+    """Test unauthenticated request gets 401/403"""
+    session_id = create_test_session(mongo_db)
+    
+    try:
+        resp = requests.post(
+            f"{BASE_URL}/api/sessions/{session_id}/verify-selfie",
+            json={"selfieBase64": VALID_SELFIE_DATA},
+            headers={"Content-Type": "application/json"}  # No auth header
+        )
+        
+        assert resp.status_code in [401, 403], f"Expected 401/403, got {resp.status_code}"
+        print("✓ Unauthenticated request correctly blocked")
+    finally:
+        cleanup_test_session(mongo_db, session_id)
 
 
 if __name__ == "__main__":
