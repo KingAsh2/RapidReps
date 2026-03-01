@@ -4,6 +4,7 @@ import { Slot } from 'expo-router';
 import { AuthProvider } from '../src/contexts/AuthContext';
 import { AlertProvider } from '../src/contexts/AlertContext';
 import { NotificationProvider } from '../src/contexts/NotificationContext';
+import { SoundProvider } from '../src/contexts/SoundContext';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 let StripeProviderComponent: React.FC<{ children: React.ReactNode }> = ({ children }) => <>{children}</>;
@@ -28,9 +29,11 @@ export default function RootLayout() {
       <AuthProvider>
         <StripeProviderComponent>
           <NotificationProvider>
-            <AlertProvider>
-              <Slot />
-            </AlertProvider>
+            <SoundProvider>
+              <AlertProvider>
+                <Slot />
+              </AlertProvider>
+            </SoundProvider>
           </NotificationProvider>
         </StripeProviderComponent>
       </AuthProvider>
