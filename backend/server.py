@@ -6475,8 +6475,11 @@ async def health_check():
 @api_router.get("/downloads/user-manual")
 async def download_user_manual():
     import os
-    path = os.path.join(os.path.dirname(__file__), "RapidReps_User_Manual.pdf")
-    return FileResponse(path, media_type="application/pdf", filename="RapidReps_User_Manual.pdf")
+    path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "docs", "RapidReps_User_Manual_v2.pdf")
+    if not os.path.exists(path):
+        # Fallback to old location
+        path = os.path.join(os.path.dirname(__file__), "RapidReps_User_Manual.pdf")
+    return FileResponse(path, media_type="application/pdf", filename="RapidReps_User_Manual_v2.pdf")
 
 # Configure logging
 logging.basicConfig(
