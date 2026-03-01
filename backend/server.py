@@ -5611,7 +5611,7 @@ async def notification_scheduler():
 @api_router.post("/virtual/request")
 async def create_virtual_request(current_user: dict = Depends(get_current_user)):
     """Trainee requests a virtual session — notifies all eligible trainers"""
-    if current_user.get("role") != "trainee":
+    if "trainee" not in current_user.get("roles", []):
         raise HTTPException(400, "Only trainees can request virtual sessions")
 
     # Check for existing active request
@@ -5717,7 +5717,7 @@ async def get_virtual_request(request_id: str, current_user: dict = Depends(get_
 @api_router.get("/virtual/pending")
 async def get_pending_virtual_requests(current_user: dict = Depends(get_current_user)):
     """Get pending virtual requests for a trainer"""
-    if current_user.get("role") != "trainer":
+    if "trainer" not in current_user.get("roles", []):
         raise HTTPException(400, "Only trainers can view pending requests")
 
     uid = str(current_user["_id"])
@@ -5737,7 +5737,7 @@ async def get_pending_virtual_requests(current_user: dict = Depends(get_current_
 @api_router.post("/virtual/accept/{request_id}")
 async def accept_virtual_request(request_id: str, current_user: dict = Depends(get_current_user)):
     """Trainer accepts a virtual session — first-come-first-served"""
-    if current_user.get("role") != "trainer":
+    if "trainer" not in current_user.get("roles", []):
         raise HTTPException(400, "Only trainers can accept requests")
 
     try:
