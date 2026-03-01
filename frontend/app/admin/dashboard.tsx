@@ -167,7 +167,7 @@ export default function AdminDashboard() {
   const loadTab = useCallback(async (tab: Tab) => {
     setLoading(true);
     try {
-      if (tab === 'overview') await fetchDashboard();
+      if (tab === 'overview') { await fetchDashboard(); await fetchLeaderboard(); }
       else if (tab === 'users') await fetchUsers();
       else if (tab === 'verifications') await fetchVerifications();
       else if (tab === 'sessions') await fetchSessions();
