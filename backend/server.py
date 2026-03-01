@@ -2654,10 +2654,11 @@ async def cancel_session(session_id: str, current_user: dict = Depends(get_curre
 
     # Notify the other party
     if cancelled_by == "trainee":
+        penalty_msg = "No penalty applied." if penalty['penalty_cents'] == 0 else f"Penalty: ${penalty['penalty_cents']/100:.2f}"
         await create_and_send_notification(
             session.get('trainerId', ''),
             "Session Cancelled",
-            f"The trainee has cancelled the session. {'No penalty applied.' if penalty['penalty_cents'] == 0 else f'Penalty: ${penalty[\"penalty_cents\"]/100:.2f}'}",
+            f"The trainee has cancelled the session. {penalty_msg}",
             "session_declined",
             {"sessionId": session_id}
         )
@@ -2673,6 +2674,7 @@ async def cancel_session(session_id: str, current_user: dict = Depends(get_curre
             {"sessionId": session_id}
         )
 
+    penalty_str = "No penalty." if penalty['penalty_cents'] == 0 else f"Penalty: ${penalty['penalty_cents']/100:.2f}."
     return {
         'success': True,
         'cancelledBy': cancelled_by,
@@ -2683,11 +2685,7 @@ async def cancel_session(session_id: str, current_user: dict = Depends(get_curre
         'trainerStrike': penalty.get('gives_strike', False),
         'virtualCredit': penalty.get('gives_credit', False),
         'hoursUntilSession': penalty['hours_until_session'],
-        'message': (
-            f"Session cancelled by {cancelled_by}. "
-            f"{'No penalty.' if penalty['penalty_cents'] == 0 else f'Penalty: ${penalty[\"penalty_cents\"]/100:.2f}.'} "
-            f"Refund: ${penalty['refund_cents']/100:.2f}"
-        ),
+        'message': f"Session cancelled by {cancelled_by}. {penalty_str} Refund: ${penalty['refund_cents']/100:.2f}",
     }
 
 @api_router.patch("/sessions/{session_id}/no-show")
