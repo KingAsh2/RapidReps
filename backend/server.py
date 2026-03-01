@@ -6330,9 +6330,18 @@ async def run_matching_engine(
     Scoring weights: ETA 40%, Rating 25%, Price 15%, Boost 10%,
     Responsiveness 5%, Completeness 5%.
 
+    Members get priority matching bonus (+0.15 score).
+
     Returns (notified_ids, wave_data).
     """
     rejected = rejected_trainers or []
+
+    # Check if trainee has active membership for priority matching
+    trainee_membership = await db.memberships.find_one({
+        'userId': trainee_id,
+        'status': MembershipStatus.ACTIVE,
+    })
+    is_member = trainee_membership is not None
 
     # Build query — only available, qualified trainers
     query = {"isAvailable": True, "userId": {"$nin": rejected}}
@@ -6354,8 +6363,27 @@ async def run_matching_engine(
             if uid in users_map:
                 p["profilePhoto"] = users_map[uid].get("profilePhoto")
 
+    # Check active boosts for each trainer
+    now = datetime.utcnow()
+    boosted_trainer_ids = set()
+    active_boosts = await db.boosts.find({
+        'isActive': True,
+        'endDate': {'$gte': now},
+    }).to_list(200)
+    for b in active_boosts:
+        boosted_trainer_ids.add(b.get('trainerId'))
+
+    for p in eligible:
+        p['boostActive'] = p.get('userId') in boosted_trainer_ids
+
     # Score all eligible trainers
     scored = [score_trainer(p, trainee_lat, trainee_lon, session_type) for p in eligible]
+
+    # Member priority: boost top scores for members
+    if is_member:
+        for t in scored:
+            t['score'] = min(1.0, t['score'] + PricingRules.MEMBERSHIP_MATCHING_PRIORITY_BONUS)
+            t['memberPriority'] = True
 
     # Filter out trainers with score below minimum threshold (quality gate)
     MIN_SCORE = 0.15
