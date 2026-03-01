@@ -189,7 +189,7 @@ export default function BoostsScreen() {
                   <Text style={styles.boostDuration}>{option.duration} of visibility</Text>
                 </View>
                 <View style={styles.boostPriceBox}>
-                  <Text style={[styles.boostPrice, selectedBoost === option.id && { color: COLORS.orange }]}>${option.price}</Text>
+                  <Text style={[styles.boostPrice, selectedBoost === option.id && { color: COLORS.teal }]}>${option.price}</Text>
                 </View>
               </View>
               {selectedBoost === option.id && (
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
   heroSubtitle: { fontSize: 14, color: COLORS.gray, textAlign: 'center', marginTop: 8, lineHeight: 20 },
 
   activeBanner: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: `${COLORS.orange}15`, borderRadius: 12, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: `${COLORS.orange}30` },
-  activeBannerText: { fontSize: 14, fontWeight: '700', color: COLORS.orange },
+  activeBannerText: { fontSize: 14, fontWeight: '700', color: COLORS.navy },
 
   sectionTitle: { fontSize: 17, fontWeight: '700', color: COLORS.white, marginBottom: 12, marginTop: 8 },
 

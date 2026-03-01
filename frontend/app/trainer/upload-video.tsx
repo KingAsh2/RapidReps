@@ -507,7 +507,7 @@ const styles = StyleSheet.create({
   uploadButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: COLORS.orange,
+    color: COLORS.teal,
   },
   // Preview Section
   previewSection: {

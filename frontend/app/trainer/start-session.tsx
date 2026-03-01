@@ -445,7 +445,7 @@ const styles = StyleSheet.create({
     color: COLORS.gray,
   },
   stepNumberActive: {
-    color: COLORS.orange,
+    color: COLORS.teal,
   },
   stepLine: {
     width: 80,
@@ -562,7 +562,7 @@ const styles = StyleSheet.create({
   refreshText: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.orange,
+    color: COLORS.teal,
   },
   // Success Card
   successCard: {
