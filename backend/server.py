@@ -3878,7 +3878,9 @@ async def calculate_badge_progress(trainer_id: str) -> TrainerAchievements:
     
     # 10. Double Duty Badge - 2 back-to-back sessions (within 15 min)
     double_duty_found = False
-    sorted_sessions = sorted(completed_sessions, key=lambda s: s['sessionDateTimeStart'])
+    # Filter sessions with valid timestamps before sorting
+    valid_sessions = [s for s in completed_sessions if s.get('sessionDateTimeStart') and s.get('sessionDateTimeEnd')]
+    sorted_sessions = sorted(valid_sessions, key=lambda s: s['sessionDateTimeStart'])
     for i in range(len(sorted_sessions) - 1):
         end_time = sorted_sessions[i]['sessionDateTimeEnd']
         next_start = sorted_sessions[i + 1]['sessionDateTimeStart']
