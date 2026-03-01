@@ -449,9 +449,12 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
-    fontWeight: '600',
-    color: Colors.warning,
+    fontWeight: '800',
+    color: Colors.white,
     textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   inputGroup: {
     marginBottom: 20,
