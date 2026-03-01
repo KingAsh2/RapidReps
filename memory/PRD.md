@@ -28,26 +28,34 @@ Build a fitness trainer-trainee matching platform with Uber-style real-time matc
 9. Session Verification — Selfie Check
 
 ### Enhancement (COMPLETE)
-10. **Post-Session Summary** — Auto-generated after each completed session:
-    - Duration (actual start → end)
-    - Trainer name + training styles
-    - Calorie estimation by workout type (HIIT=650, Strength=420, Yoga=250 cal/hr)
-    - Weekly streak counter
-    - Shareable deep link (rapidreps://session-summary/{id})
-    - Public share card endpoint (styled data, no personal IDs)
-    - Summary history with aggregate totals (totalSessions, totalCalories, totalMinutes)
-    - Auto-generated when trainer ends session, also available on-demand
+10. **Post-Session Summary** — Auto-generated after each completed session
+
+### Documentation (COMPLETE - Feb 2026)
+11. **Comprehensive User Manual v3.0** — PDF covering all features, workflows, and policies
+    - All 12 critical feedback points verified and incorporated
+    - PDF generated and served via `/api/downloads/user-manual`
+
+## 12-Point Feedback Verification (All PASS)
+| # | Requirement | Status | Manual Section |
+|---|-------------|--------|----------------|
+| 1 | ETA as 40% scoring weight | PASS | Section 6.2 |
+| 2 | iOS/Android location permission flow | PASS | Section 6.1 |
+| 3 | "Find Another Trainer" behavior | PASS | Section 6.4 |
+| 4 | Hard 15-min ETA cap | PASS | Section 6.3 |
+| 5 | Arrival time measurement rules | PASS | Section 7.5 |
+| 6 | Selfie verification fail cases | PASS | Section 8.3 |
+| 7 | Virtual session duration rules | PASS | Section 5.3 |
+| 8 | Safety/Fraud detection automation | PASS | Section 18.1 |
+| 9 | Membership perk clarifications | PASS | Section 12.4 |
+| 10 | Time zone logic for Boost analytics | PASS | Section 13.3 |
+| 11 | Sample trainer profile example | PASS | Section 1 |
+| 12 | Sound & vibration settings | PASS | Section 20.4 |
 
 ## Key Collections (MongoDB)
 - users, trainer_profiles, trainee_profiles, sessions, virtual_requests
 - notifications, notification_preferences, memberships, boosts
 - session_gps_tracks, session_credits, boost_analytics
 - session_selfies, session_summaries
-
-## API Endpoints (Summary Endpoints)
-- GET /api/sessions/{id}/summary (auth required)
-- GET /api/sessions/summaries/my (auth required)
-- GET /api/sessions/{id}/share-card (public)
 
 ## Test Credentials
 - Admin: admin@rapidreps.com / admin123
@@ -65,6 +73,7 @@ Build a fitness trainer-trainee matching platform with Uber-style real-time matc
 ## Remaining Backlog
 1. SendGrid email integration (awaiting API key)
 2. TypeScript strict-mode warnings cleanup (86+)
+3. Toast notifications using sonner component
 
 ## Mocked/Inactive
 - SendGrid: No-op (awaiting API key)
