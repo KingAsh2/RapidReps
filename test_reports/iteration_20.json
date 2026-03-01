@@ -1,0 +1,83 @@
+{
+  "summary": "Post-Session Summary feature fully tested. All 18 tests passed covering: summary generation with all required fields (trainerName, durationMinutes, caloriesEstimate, weeklyStreak, shareText, deepLink), on-demand auto-generation for completed sessions, 400 for non-completed sessions, 403 for non-participants, GET /api/sessions/summaries/my with totalSessions/totalCalories/totalMinutes aggregation, public share-card endpoint excluding personal IDs, POST /api/sessions/{id}/end auto-generates summary, calorie estimation accuracy, weekly streak calculation, and share text format validation.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "note": "Frontend testing skipped - React Native/Expo app not testable via Playwright"
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_post_session_summary.py",
+    "/app/test_reports/pytest/post_session_summary_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "CALORIES_PER_HOUR dict (lines 2485-2494): Correctly maps training styles - HIIT=650, Strength=420, Yoga=250, Cardio=500 as specified",
+    "estimate_calories() (lines 2498-2512): Correctly averages cal/hr for multiple styles and calculates based on duration",
+    "generate_session_summary() (lines 2515-2599): Creates full summary with all required fields, persists to session_summaries collection with upsert",
+    "get_session_summary() (lines 2602-2630): Returns existing summary or auto-generates if completed but missing, validates participant access (403), validates session status (400)",
+    "get_my_summaries() (lines 2633-2654): Returns summaries list with aggregate totalSessions, totalCalories, totalMinutes",
+    "get_share_card_data() (lines 2657-2684): Public endpoint, excludes traineeId/trainerId in projection, returns styled card object",
+    "end_session() (lines 2687-2760): Auto-calls generate_session_summary() at line 2746, sends notification with summary stats"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_post_session_summary.py"
+  ],
+  "success_rate": {
+    "backend": "100% (18/18 tests passed)"
+  },
+  "test_credentials": {
+    "trainee1": "trainee1@test.com / test123 (id: 697c077500b22ded1af3509d)",
+    "trainer1": "trainer1@test.com / test123 (id: 697c077500b22ded1af35097, trainingStyles: [strength, hiit, cardio])",
+    "trainee2": "trainee2@test.com / test123 (for non-participant test)"
+  },
+  "seed_data_creation": "Test sessions created directly in MongoDB with status='completed' for each test, cleaned up after each test. Trainer1 profile has trainingStyles: [strength, hiit, cardio]",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Post-Session Summary feature fully tested (P3). Key verified flows: (1) GET /api/sessions/{id}/summary returns trainerName, durationMinutes, caloriesEstimate, weeklyStreak, shareText, deepLink - auto-generates on-demand if session completed, (2) GET /api/sessions/{id}/summary returns 400 for non-completed, 403 for non-participants, (3) GET /api/sessions/summaries/my returns summaries array with totalSessions/totalCalories/totalMinutes aggregation, (4) GET /api/sessions/{id}/share-card is PUBLIC (no auth), excludes traineeId/trainerId, returns card object, (5) POST /api/sessions/{id}/end auto-generates summary (verified summary exists in DB after call), (6) Calorie formula verified: trainer1 styles [strength,hiit,cardio] avg = (420+650+500)/3 = 523 cal/hr, 45-min = 392 cal, 30-min = 261 cal - CORRECT, (7) Deep link format: rapidreps://session-summary/{sessionId}, (8) Share text format: 'Just crushed a {duration}-min {workout} session with {trainer}! {cal} cal burned. {streak}-week streak!'",
+  "verified_endpoints": {
+    "get_session_summary": [
+      {"endpoint": "GET /api/sessions/{id}/summary (existing)", "status": "PASS", "note": "Returns stored summary"},
+      {"endpoint": "GET /api/sessions/{id}/summary (auto-generate)", "status": "PASS", "note": "Generates on-demand for completed session"},
+      {"endpoint": "GET /api/sessions/{id}/summary (non-completed)", "status": "PASS", "note": "Returns 400"},
+      {"endpoint": "GET /api/sessions/{id}/summary (non-participant)", "status": "PASS", "note": "Returns 403"},
+      {"endpoint": "GET /api/sessions/{id}/summary (trainer access)", "status": "PASS", "note": "Trainer can access"}
+    ],
+    "get_my_summaries": [
+      {"endpoint": "GET /api/sessions/summaries/my", "status": "PASS", "note": "Returns summaries, totalSessions, totalCalories, totalMinutes"}
+    ],
+    "share_card": [
+      {"endpoint": "GET /api/sessions/{id}/share-card (public)", "status": "PASS", "note": "No auth required"},
+      {"endpoint": "GET /api/sessions/{id}/share-card (excludes IDs)", "status": "PASS", "note": "No traineeId/trainerId in response"},
+      {"endpoint": "GET /api/sessions/{id}/share-card (missing)", "status": "PASS", "note": "Returns 404 when no summary"}
+    ],
+    "end_session": [
+      {"endpoint": "POST /api/sessions/{id}/end (auto-summary)", "status": "PASS", "note": "Summary auto-generated in DB"},
+      {"endpoint": "POST /api/sessions/{id}/end (trainer only)", "status": "PASS", "note": "Returns 403 for trainee"}
+    ],
+    "validation": [
+      {"endpoint": "Invalid session ID", "status": "PASS", "note": "Returns 400/500"},
+      {"endpoint": "Non-existent session", "status": "PASS", "note": "Returns 404"},
+      {"endpoint": "Unauthenticated access", "status": "PASS", "note": "Returns 401/403"}
+    ]
+  },
+  "mocked_apis": {
+    "has_mocked_apis": true,
+    "mocked_apis_list": ["Stripe (mock)", "SendGrid (NOOP)", "Expo Push (mock)"],
+    "note": "Notifications are fire-and-forget, don't block summary generation"
+  },
+  "business_rules_verified": {
+    "calorie_formula": "HIIT=650, Strength=420, Yoga=250, Cardio=500 cal/hr - averaged for trainer styles, multiplied by duration/60",
+    "calorie_example": "Trainer with [strength, hiit, cardio]: (420+650+500)/3 = 523 cal/hr. 45-min = 392 cal, 30-min = 261 cal - VERIFIED",
+    "weekly_streak": "Counts consecutive past weeks with at least 1 completed session",
+    "share_text_format": "'Just crushed a {duration}-min {workout} session with {trainer}! {cal} cal burned. {streak}-week streak!'",
+    "deep_link_format": "rapidreps://session-summary/{sessionId}",
+    "share_card_privacy": "traineeId and trainerId excluded from public share-card response",
+    "summary_persistence": "Stored in session_summaries collection keyed by sessionId",
+    "auto_generation": "Summary auto-generated when trainer ends session via POST /api/sessions/{id}/end"
+  }
+}
