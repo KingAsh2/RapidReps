@@ -5030,6 +5030,87 @@ async def get_my_boosts(current_user: dict = Depends(get_current_user)):
     return {'boosts': [serialize_doc(b) for b in boosts]}
 
 
+@api_router.get("/boosts/analytics")
+async def get_boost_analytics(current_user: dict = Depends(get_current_user)):
+    """
+    Get boost performance analytics for the trainer.
+    Returns impressions, profile views, and click-through data.
+    """
+    user_id = str(current_user['_id'])
+    now = datetime.utcnow()
+
+    # Get active boost info
+    active_boost = await db.boosts.find_one({
+        'trainerId': user_id,
+        'isActive': True,
+        'endDate': {'$gte': now},
+    })
+
+    # Get analytics for last 30 days
+    thirty_days_ago = (now - timedelta(days=30)).strftime('%Y-%m-%d')
+    analytics = await db.boost_analytics.find({
+        'trainerId': user_id,
+        'date': {'$gte': thirty_days_ago},
+    }).sort('date', -1).to_list(30)
+
+    total_impressions = sum(a.get('impressions', 0) for a in analytics)
+    total_views = sum(a.get('profileViews', 0) for a in analytics)
+    total_clicks = sum(a.get('clicks', 0) for a in analytics)
+
+    daily_data = []
+    for a in analytics:
+        daily_data.append({
+            'date': a.get('date'),
+            'impressions': a.get('impressions', 0),
+            'profileViews': a.get('profileViews', 0),
+            'clicks': a.get('clicks', 0),
+        })
+
+    return {
+        'hasActiveBoost': active_boost is not None,
+        'boostType': active_boost.get('boostType') if active_boost else None,
+        'boostEndsAt': active_boost.get('endDate').isoformat() if active_boost and active_boost.get('endDate') else None,
+        'totalImpressions': total_impressions,
+        'totalProfileViews': total_views,
+        'totalClicks': total_clicks,
+        'clickThroughRate': round(total_clicks / max(total_impressions, 1) * 100, 1),
+        'dailyData': daily_data,
+    }
+
+
+@api_router.post("/boosts/{trainer_id}/track-view")
+async def track_boost_view(trainer_id: str):
+    """Track a profile view for a boosted trainer (called from frontend)."""
+    now = datetime.utcnow()
+    await db.boost_analytics.update_one(
+        {'trainerId': trainer_id, 'date': now.strftime('%Y-%m-%d')},
+        {'$inc': {'profileViews': 1, 'clicks': 1}},
+        upsert=True,
+    )
+    return {'success': True}
+
+
+@api_router.get("/memberships/member-badge/{user_id}")
+async def get_member_badge(user_id: str):
+    """Check if a user has an active membership (public endpoint for badges)."""
+    membership = await db.memberships.find_one({
+        'userId': user_id,
+        'status': MembershipStatus.ACTIVE,
+    })
+    if membership:
+        return {
+            'isMember': True,
+            'memberSince': membership.get('activatedAt', membership.get('startDate')).isoformat() if membership.get('activatedAt') or membership.get('startDate') else None,
+            'benefits': [
+                '10% off all sessions',
+                '1 free profile Boost per month',
+                'Priority matching',
+                'Early access to elite trainers',
+            ],
+        }
+    return {'isMember': False}
+
+
 # ============================================================================
 # ADMIN ENDPOINTS
 # ============================================================================
