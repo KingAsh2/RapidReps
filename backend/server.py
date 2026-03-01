@@ -5885,9 +5885,6 @@ async def cancel_virtual_request(request_id: str, current_user: dict = Depends(g
         {"_id": ObjectId(request_id)},
         {"$set": {"status": "cancelled"}}
     )
-    return {"success": True}
 
-
-@app.on_event("startup")
-async def start_notification_scheduler():
-    asyncio.create_task(notification_scheduler())
+# Include the router in the main app - MUST be after all route definitions
+app.include_router(api_router)
