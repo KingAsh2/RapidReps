@@ -103,6 +103,20 @@
 - [x] Removed hardcoded mock trainers "Sarah Johnson" and "Mike Chen" from saved.tsx
   - Saved Trainers tab now shows empty state until real saved trainers API is built
   - Also cleaned up share-status.tsx fallback name
+- [x] 508 Accessibility / Contrast Fixes:
+  - Delete Account button: bold (#CC0000), larger (16px), underlined
+  - Orange text on specialty tags, distance labels, price totals, rating labels → replaced with navy (#0f1b3d) for WCAG compliance
+  - All key screens updated (trainer-detail, saved, rate-session, profile)
+- [x] Sound Effects System:
+  - Created SoundContext with expo-av (short 0.15s tap sound)
+  - Toggle switch in Trainee Profile under "Sound Effects"
+  - Persists setting via AsyncStorage
+- [x] Virtual Trainer Matching System (P2):
+  - Backend: 8 new endpoints (/api/virtual/request, /pending, /accept, /reject, /trainee-confirm, /find-another, /cancel, /request/:id)
+  - Atomic first-come-first-served trainer acceptance
+  - Push notifications to all eligible trainers (offersVirtual + isAvailable)
+  - Frontend: New trainee matching screen (searching animation → trainer profile card → accept/find another)
+  - Frontend: New trainer virtual-request screen (accept/reject cards with auto-refresh)
   - Backend: `GET /api/admin/top-trainers?days=7&limit=5` — aggregates completed sessions by trainer
   - Frontend: Dynamic ranked list with tier badges, ratings, session counts
   - Falls back to all-time top-rated trainers if no sessions in the period
