@@ -54,6 +54,7 @@ export default function TraineeProfileScreen() {
   const router = useRouter();
   const { user, logout } = useAuth();
   const { showAlert } = useAlert();
+  const { soundEnabled, setSoundEnabled, playTap } = useSoundEffects();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<any>(null);
