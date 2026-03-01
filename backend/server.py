@@ -6750,6 +6750,84 @@ async def notification_scheduler():
                     {'$set': {'_noShowAutoChecked': True}}
                 )
 
+            # 8. VIRTUAL SESSION AUTO-END (grace period)
+            # Auto-end virtual sessions that have been running beyond max duration + grace
+            max_virtual_duration = PricingRules.VIRTUAL_MAX_DURATION_MIN + PricingRules.VIRTUAL_GRACE_PERIOD_MIN
+            virtual_cutoff = now - timedelta(minutes=max_virtual_duration)
+            stale_virtual = await db.sessions.find({
+                'status': SessionStatus.IN_PROGRESS,
+                'sessionType': 'virtual',
+                'sessionActualStart': {'$lte': virtual_cutoff},
+                '_autoEnded': {'$ne': True},
+            }).to_list(20)
+
+            for s in stale_virtual:
+                sid = str(s['_id'])
+                await db.sessions.update_one(
+                    {'_id': s['_id']},
+                    {'$set': {
+                        'status': SessionStatus.COMPLETED,
+                        'sessionEndedAt': now,
+                        '_autoEnded': True,
+                        'updatedAt': now,
+                    }}
+                )
+                asyncio.create_task(create_and_send_notification(
+                    s['traineeId'],
+                    "Session Auto-Ended",
+                    "Your virtual session has ended after reaching the maximum duration.",
+                    "session_ended",
+                    {"sessionId": sid}
+                ))
+
+            # 9. FRAUD DETECTION — Trolling (3+ fake virtual requests per hour)
+            one_hour_ago = now - timedelta(hours=1)
+            troll_pipeline = [
+                {'$match': {'createdAt': {'$gte': one_hour_ago}, 'status': {'$in': ['cancelled', 'exhausted']}}},
+                {'$group': {'_id': '$traineeId', 'count': {'$sum': 1}}},
+                {'$match': {'count': {'$gte': PricingRules.MAX_FAKE_REQUESTS_PER_HOUR}}},
+            ]
+            trolls = await db.virtual_requests.aggregate(troll_pipeline).to_list(20)
+            for t in trolls:
+                uid = t['_id']
+                already_flagged = await db.users.find_one({'_id': ObjectId(uid), 'fraudFlagged': True})
+                if not already_flagged:
+                    await db.users.update_one(
+                        {'_id': ObjectId(uid)},
+                        {'$set': {
+                            'fraudFlagged': True,
+                            'fraudReason': f'{t["count"]}+ cancelled requests in 1 hour',
+                            'fraudFlaggedAt': now,
+                        }}
+                    )
+
+            # 10. FRAUD DETECTION — High cancellation rate trainers
+            cancel_pipeline = [
+                {'$match': {'status': {'$in': [SessionStatus.COMPLETED, SessionStatus.CANCELLED, SessionStatus.NO_SHOW]}}},
+                {'$group': {
+                    '_id': '$trainerId',
+                    'total': {'$sum': 1},
+                    'cancelled': {'$sum': {'$cond': [{'$eq': ['$cancelledBy', 'trainer']}, 1, 0]}},
+                    'noShows': {'$sum': {'$cond': [{'$eq': ['$noShowParty', 'trainer']}, 1, 0]}},
+                }},
+                {'$match': {'total': {'$gte': 5}}},  # Only trainers with 5+ sessions
+            ]
+            cancel_stats = await db.sessions.aggregate(cancel_pipeline).to_list(100)
+            for stat in cancel_stats:
+                bad_rate = (stat['cancelled'] + stat['noShows']) / max(stat['total'], 1)
+                if bad_rate >= PricingRules.HIGH_CANCEL_RATE_THRESHOLD:
+                    tid = stat['_id']
+                    if tid:
+                        await db.users.update_one(
+                            {'_id': ObjectId(tid)},
+                            {'$set': {
+                                'highCancelRate': True,
+                                'cancelRate': round(bad_rate, 2),
+                                'accountUnderReview': True,
+                                'reviewReason': f'High cancellation/no-show rate: {round(bad_rate*100)}%',
+                            }}
+                        )
+
         except Exception as e:
             logging.getLogger(__name__).error(f"Notification scheduler error: {e}")
 
