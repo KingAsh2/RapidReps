@@ -4255,6 +4255,246 @@ async def get_trainer_location_status(current_user: dict = Depends(get_current_u
         "lastAvailabilityChange": profile.get('lastAvailabilityChange')
     }
 
+# ─────────────────────────────────────────────────────────────
+# GPS SESSION TRACKING — Real-time en-route & active tracking
+# ─────────────────────────────────────────────────────────────
+
+class GPSUpdate(BaseModel):
+    latitude: float
+    longitude: float
+    accuracy: Optional[float] = None  # meters
+    sessionId: str
+
+@api_router.post("/sessions/{session_id}/gps-update")
+async def session_gps_update(session_id: str, latitude: float, longitude: float, accuracy: float = 0, current_user: dict = Depends(get_current_user)):
+    """
+    Real-time GPS update during a session.
+    Called every 5s (en_route) or 15s (in_progress).
+    Triggers alerts for distance violations and stale movement.
+    """
+    try:
+        oid = ObjectId(session_id)
+    except Exception:
+        raise HTTPException(400, "Invalid session ID")
+
+    session = await db.sessions.find_one({'_id': oid})
+    if not session:
+        raise HTTPException(404, "Session not found")
+
+    user_id = str(current_user['_id'])
+    is_trainer = session.get('trainerId') == user_id
+    is_trainee = session.get('traineeId') == user_id
+    if not is_trainer and not is_trainee:
+        raise HTTPException(403, "Not a participant of this session")
+
+    role = "trainer" if is_trainer else "trainee"
+    now = datetime.utcnow()
+    alerts = []
+
+    # Low GPS accuracy warning
+    if accuracy and accuracy > 50:
+        alerts.append({
+            "type": "low_accuracy",
+            "message": "Weak GPS signal — confirm location manually",
+            "accuracy": accuracy,
+        })
+
+    # Store the GPS point
+    gps_doc = {
+        "sessionId": session_id,
+        "userId": user_id,
+        "role": role,
+        "latitude": latitude,
+        "longitude": longitude,
+        "accuracy": accuracy,
+        "timestamp": now,
+    }
+    await db.session_gps_tracks.insert_one(gps_doc)
+
+    # Check distance between parties if both have recent GPS
+    other_role = "trainee" if is_trainer else "trainer"
+    other_id = session.get('traineeId') if is_trainer else session.get('trainerId')
+    other_gps = await db.session_gps_tracks.find_one(
+        {"sessionId": session_id, "role": other_role},
+        sort=[("timestamp", -1)]
+    )
+
+    if other_gps:
+        dist = calculate_distance(latitude, longitude, other_gps['latitude'], other_gps['longitude'])
+
+        # In active session: warn if distance increases > 0.5 miles
+        if session.get('status') in (SessionStatus.IN_PROGRESS, SessionStatus.CONFIRMED) and dist > 0.5:
+            alerts.append({
+                "type": "distance_warning",
+                "message": f"You are {dist:.2f} miles from the other party. Session may be at risk.",
+                "distanceMiles": round(dist, 3),
+            })
+
+        # Both at different addresses at session start
+        if session.get('status') == SessionStatus.EN_ROUTE and dist > 0.25:
+            alerts.append({
+                "type": "address_mismatch",
+                "message": "You and the other party appear to be at different locations.",
+                "distanceMiles": round(dist, 3),
+            })
+
+    # Trainer not moving for 2 minutes while en route
+    if role == "trainer" and session.get('status') == SessionStatus.EN_ROUTE:
+        two_min_ago = now - timedelta(minutes=2)
+        prev_gps = await db.session_gps_tracks.find_one(
+            {"sessionId": session_id, "role": "trainer", "timestamp": {"$lte": two_min_ago}},
+            sort=[("timestamp", -1)]
+        )
+        if prev_gps:
+            moved = calculate_distance(latitude, longitude, prev_gps['latitude'], prev_gps['longitude'])
+            if moved < 0.01:  # ~50 feet
+                alerts.append({
+                    "type": "stale_movement",
+                    "message": "You appear to be stationary. Are you on the way?",
+                })
+
+    return {
+        "success": True,
+        "alerts": alerts,
+        "role": role,
+        "sessionStatus": session.get('status'),
+    }
+
+
+@api_router.get("/sessions/{session_id}/gps-track")
+async def get_session_gps_track(session_id: str, current_user: dict = Depends(get_current_user)):
+    """
+    Get live GPS positions for both parties in a session.
+    Only active during en_route, in_progress, or confirmed status.
+    """
+    try:
+        oid = ObjectId(session_id)
+    except Exception:
+        raise HTTPException(400, "Invalid session ID")
+
+    session = await db.sessions.find_one({'_id': oid})
+    if not session:
+        raise HTTPException(404, "Session not found")
+
+    user_id = str(current_user['_id'])
+    if session.get('trainerId') != user_id and session.get('traineeId') != user_id:
+        raise HTTPException(403, "Not a participant")
+
+    # Privacy: only return tracking data during active sessions
+    active_statuses = [SessionStatus.EN_ROUTE, SessionStatus.IN_PROGRESS, SessionStatus.CONFIRMED]
+    if session.get('status') not in active_statuses:
+        return {"tracking": False, "message": "GPS tracking is not active for this session."}
+
+    # Get latest position for each party
+    trainer_gps = await db.session_gps_tracks.find_one(
+        {"sessionId": session_id, "role": "trainer"},
+        sort=[("timestamp", -1)],
+        projection={"_id": 0, "latitude": 1, "longitude": 1, "timestamp": 1, "accuracy": 1},
+    )
+    trainee_gps = await db.session_gps_tracks.find_one(
+        {"sessionId": session_id, "role": "trainee"},
+        sort=[("timestamp", -1)],
+        projection={"_id": 0, "latitude": 1, "longitude": 1, "timestamp": 1, "accuracy": 1},
+    )
+
+    distance = None
+    if trainer_gps and trainee_gps:
+        distance = round(calculate_distance(
+            trainer_gps['latitude'], trainer_gps['longitude'],
+            trainee_gps['latitude'], trainee_gps['longitude']
+        ), 3)
+
+    # Convert timestamps to ISO strings
+    if trainer_gps and 'timestamp' in trainer_gps:
+        trainer_gps['timestamp'] = trainer_gps['timestamp'].isoformat()
+    if trainee_gps and 'timestamp' in trainee_gps:
+        trainee_gps['timestamp'] = trainee_gps['timestamp'].isoformat()
+
+    return {
+        "tracking": True,
+        "sessionStatus": session.get('status'),
+        "trainer": trainer_gps,
+        "trainee": trainee_gps,
+        "distanceMiles": distance,
+    }
+
+
+@api_router.post("/sessions/{session_id}/start-en-route")
+async def start_en_route(session_id: str, current_user: dict = Depends(get_current_user)):
+    """Trainer marks session as en_route — enables GPS tracking."""
+    try:
+        oid = ObjectId(session_id)
+    except Exception:
+        raise HTTPException(400, "Invalid session ID")
+
+    session = await db.sessions.find_one({'_id': oid})
+    if not session:
+        raise HTTPException(404, "Session not found")
+
+    if session.get('trainerId') != str(current_user['_id']):
+        raise HTTPException(403, "Only the trainer can start en-route")
+
+    if session.get('status') not in (SessionStatus.CONFIRMED, 'accepted'):
+        raise HTTPException(400, f"Session must be confirmed to start en-route. Current: {session.get('status')}")
+
+    await db.sessions.update_one(
+        {'_id': oid},
+        {'$set': {'status': SessionStatus.EN_ROUTE, 'enRouteStartedAt': datetime.utcnow(), 'updatedAt': datetime.utcnow()}}
+    )
+
+    await create_and_send_notification(
+        session['traineeId'],
+        "Trainer On The Way!",
+        "Your trainer is heading to you now. Track their arrival in the app.",
+        "session_reminder",
+        {"sessionId": session_id, "screen": "trainee/sessions"}
+    )
+
+    return {"success": True, "status": SessionStatus.EN_ROUTE, "message": "You are now en route. GPS tracking activated."}
+
+
+@api_router.post("/sessions/{session_id}/start-session")
+async def start_session_in_progress(session_id: str, current_user: dict = Depends(get_current_user)):
+    """Mark session as in_progress — switches GPS to 15s interval."""
+    try:
+        oid = ObjectId(session_id)
+    except Exception:
+        raise HTTPException(400, "Invalid session ID")
+
+    session = await db.sessions.find_one({'_id': oid})
+    if not session:
+        raise HTTPException(404, "Session not found")
+
+    trainer_id = str(current_user['_id'])
+    trainee_id = session.get('traineeId')
+    if session.get('trainerId') != trainer_id and trainee_id != trainer_id:
+        raise HTTPException(403, "Not authorized")
+
+    valid_statuses = [SessionStatus.CONFIRMED, SessionStatus.EN_ROUTE, 'accepted']
+    if session.get('status') not in valid_statuses:
+        raise HTTPException(400, f"Cannot start session with status: {session.get('status')}")
+
+    await db.sessions.update_one(
+        {'_id': oid},
+        {'$set': {
+            'status': SessionStatus.IN_PROGRESS,
+            'sessionActualStart': datetime.utcnow(),
+            'updatedAt': datetime.utcnow(),
+        }}
+    )
+
+    await create_and_send_notification(
+        session['traineeId'],
+        "Session Started!",
+        "Your training session is now in progress.",
+        "session_started",
+        {"sessionId": session_id}
+    )
+
+    return {"success": True, "status": SessionStatus.IN_PROGRESS, "message": "Session is now in progress."}
+
+
+
 @api_router.get("/trainers/nearby")
 async def get_nearby_trainers(
     latitude: float,
