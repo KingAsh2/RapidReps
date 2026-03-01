@@ -5639,12 +5639,36 @@ async def create_virtual_request(current_user: dict = Depends(get_current_user))
     result = await db.virtual_requests.insert_one(request_doc)
     request_id = str(result.inserted_id)
 
-    # Find all eligible trainers: offersVirtual=True AND isAvailable=True
+    # Get trainee location for proximity filtering
+    trainee_profile = await db.trainee_profiles.find_one(
+        {"userId": str(current_user["_id"])},
+        {"latitude": 1, "longitude": 1}
+    )
+    trainee_lat = trainee_profile.get("latitude") if trainee_profile else None
+    trainee_lon = trainee_profile.get("longitude") if trainee_profile else None
+
+    # Find eligible trainers: offersVirtual=True AND isAvailable=True
     eligible = await db.trainer_profiles.find(
         {"offersVirtual": True, "isAvailable": True},
-        {"_id": 0, "userId": 1}
+        {"_id": 0, "userId": 1, "latitude": 1, "longitude": 1, "travelRadiusMiles": 1}
     ).to_list(50)
-    trainer_ids = [p["userId"] for p in eligible]
+
+    # Apply proximity filter (default 25 miles for virtual, or trainer's travelRadius)
+    VIRTUAL_MAX_MILES = 25
+    filtered_ids = []
+    for p in eligible:
+        trainer_lat = p.get("latitude")
+        trainer_lon = p.get("longitude")
+        max_radius = p.get("travelRadiusMiles") or VIRTUAL_MAX_MILES
+
+        if trainee_lat and trainee_lon and trainer_lat and trainer_lon:
+            dist = calculate_distance(trainee_lat, trainee_lon, trainer_lat, trainer_lon)
+            if dist <= max(max_radius, VIRTUAL_MAX_MILES):
+                filtered_ids.append(p["userId"])
+        else:
+            # If either party has no location, include them (don't exclude unfairly)
+            filtered_ids.append(p["userId"])
+    trainer_ids = filtered_ids
 
     # Notify all eligible trainers
     notified = []
