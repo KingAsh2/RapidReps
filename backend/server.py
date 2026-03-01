@@ -2299,6 +2299,126 @@ async def verify_session_pin(
         'sessionStartedAt': datetime.utcnow().isoformat()
     }
 
+
+# ─────────────────────────────────────────────────────────────
+# SESSION SELFIE VERIFICATION
+# ─────────────────────────────────────────────────────────────
+
+class SelfieVerifyRequest(BaseModel):
+    selfieBase64: str  # base64-encoded JPEG/PNG
+
+@api_router.post("/sessions/{session_id}/verify-selfie")
+async def verify_selfie(session_id: str, body: SelfieVerifyRequest, current_user: dict = Depends(get_current_user)):
+    """
+    Submit a selfie to verify attendance before a session starts.
+    Both trainer and trainee must submit. Session can only start
+    once both selfies are received.
+    """
+    try:
+        oid = ObjectId(session_id)
+    except Exception:
+        raise HTTPException(400, "Invalid session ID")
+
+    session = await db.sessions.find_one({'_id': oid})
+    if not session:
+        raise HTTPException(404, "Session not found")
+
+    user_id = str(current_user['_id'])
+    is_trainer = session.get('trainerId') == user_id
+    is_trainee = session.get('traineeId') == user_id
+    if not is_trainer and not is_trainee:
+        raise HTTPException(403, "Not a participant of this session")
+
+    role = "trainer" if is_trainer else "trainee"
+
+    # Validate selfie data (basic check — non-empty, reasonable size)
+    selfie_data = body.selfieBase64
+    if not selfie_data or len(selfie_data) < 100:
+        raise HTTPException(400, "Invalid selfie data")
+
+    # Max ~5MB base64
+    if len(selfie_data) > 7_000_000:
+        raise HTTPException(400, "Selfie image too large (max 5MB)")
+
+    now = datetime.utcnow()
+
+    # Store the selfie verification
+    await db.session_selfies.update_one(
+        {'sessionId': session_id, 'userId': user_id},
+        {'$set': {
+            'sessionId': session_id,
+            'userId': user_id,
+            'role': role,
+            'selfieBase64': selfie_data[:200] + '...',  # Store thumbnail reference only
+            'verifiedAt': now,
+            'verified': True,
+        }},
+        upsert=True,
+    )
+
+    # Update session verification flags
+    field = 'trainerSelfieVerified' if is_trainer else 'traineeSelfieVerified'
+    time_field = 'trainerSelfieAt' if is_trainer else 'traineeSelfieAt'
+    await db.sessions.update_one(
+        {'_id': oid},
+        {'$set': {field: True, time_field: now, 'updatedAt': now}}
+    )
+
+    # Check if BOTH parties have verified
+    updated = await db.sessions.find_one({'_id': oid})
+    both_verified = updated.get('trainerSelfieVerified', False) and updated.get('traineeSelfieVerified', False)
+
+    if both_verified:
+        await db.sessions.update_one(
+            {'_id': oid},
+            {'$set': {'selfieVerificationComplete': True, 'selfieVerifiedAt': now}}
+        )
+
+    # Notify the other party
+    other_id = session['traineeId'] if is_trainer else session['trainerId']
+    other_role = "trainee" if is_trainer else "trainer"
+    await create_and_send_notification(
+        other_id,
+        "Selfie Verified",
+        f"Your {role} has submitted their attendance selfie." + (" Both verified — session can start!" if both_verified else f" Waiting for {other_role} selfie."),
+        "session_started",
+        {"sessionId": session_id}
+    )
+
+    return {
+        'success': True,
+        'role': role,
+        'bothVerified': both_verified,
+        'message': 'Both parties verified! Session can now start.' if both_verified else f'Your selfie is submitted. Waiting for {other_role} to verify.',
+    }
+
+
+@api_router.get("/sessions/{session_id}/verification-status")
+async def get_verification_status(session_id: str, current_user: dict = Depends(get_current_user)):
+    """Check selfie verification status for a session."""
+    try:
+        oid = ObjectId(session_id)
+    except Exception:
+        raise HTTPException(400, "Invalid session ID")
+
+    session = await db.sessions.find_one({'_id': oid})
+    if not session:
+        raise HTTPException(404, "Session not found")
+
+    user_id = str(current_user['_id'])
+    if session.get('trainerId') != user_id and session.get('traineeId') != user_id:
+        raise HTTPException(403, "Not a participant")
+
+    return {
+        'trainerVerified': session.get('trainerSelfieVerified', False),
+        'traineeVerified': session.get('traineeSelfieVerified', False),
+        'bothVerified': session.get('selfieVerificationComplete', False),
+        'trainerSelfieAt': session.get('trainerSelfieAt', '').isoformat() if session.get('trainerSelfieAt') else None,
+        'traineeSelfieAt': session.get('traineeSelfieAt', '').isoformat() if session.get('traineeSelfieAt') else None,
+    }
+
+
+
 @api_router.post("/sessions/{session_id}/confirm-gps")
 async def confirm_trainer_gps(
     session_id: str,
