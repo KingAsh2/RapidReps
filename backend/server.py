@@ -146,6 +146,8 @@ class SessionStatus:
     CANCELLED = "cancelled"
     COMPLETED = "completed"
     NO_SHOW = "no_show"
+    EN_ROUTE = "en_route"
+    IN_PROGRESS = "in_progress"
 
 # ============================================================================
 # RAPIDREPS BUSINESS RULES - PAYMENT MODEL
