@@ -7216,7 +7216,12 @@ async def trainee_confirm_match(request_id: str, current_user: dict = Depends(ge
 
 @api_router.post("/virtual/find-another/{request_id}")
 async def trainee_find_another(request_id: str, current_user: dict = Depends(get_current_user)):
-    """Trainee rejects the matched trainer and re-enters the queue"""
+    """
+    Trainee rejects matched trainer and re-enters the queue.
+    - Previously matched trainer is excluded for 10 minutes (cooldown)
+    - New wave of scoring runs with same rules
+    - If all waves exhausted → returns exhausted=true with fallback message
+    """
     try:
         req = await db.virtual_requests.find_one({"_id": ObjectId(request_id)})
     except Exception:
@@ -7226,8 +7231,13 @@ async def trainee_find_another(request_id: str, current_user: dict = Depends(get
 
     old_trainer = req.get("matchedTrainerId")
     rejected_list = req.get("rejectedTrainers", [])
-    if old_trainer:
+    if old_trainer and old_trainer not in rejected_list:
         rejected_list.append(old_trainer)
+
+    # Store cooldown timestamp for rejected trainer (10-minute exclusion)
+    cooldown_map = req.get("rejectedCooldowns", {})
+    if old_trainer:
+        cooldown_map[old_trainer] = datetime.utcnow().isoformat()
 
     await db.virtual_requests.update_one(
         {"_id": ObjectId(request_id)},
@@ -7236,6 +7246,7 @@ async def trainee_find_another(request_id: str, current_user: dict = Depends(get
             "matchedTrainerId": None,
             "matchedTrainerName": None,
             "rejectedTrainers": rejected_list,
+            "rejectedCooldowns": cooldown_map,
         }}
     )
 
@@ -7243,6 +7254,7 @@ async def trainee_find_another(request_id: str, current_user: dict = Depends(get
     session_type = req.get("sessionType", "virtual")
     t_lat = req.get("traineeLat")
     t_lon = req.get("traineeLon")
+    current_wave = req.get("currentWave", 1)
 
     notified, wave_data = await run_matching_engine(
         trainee_id=str(current_user["_id"]),
@@ -7252,15 +7264,33 @@ async def trainee_find_another(request_id: str, current_user: dict = Depends(get
         session_type=session_type,
         rejected_trainers=rejected_list,
         request_id=request_id,
+        wave_number=current_wave,
     )
+
+    # Check if all waves are exhausted (no trainers found after Wave 3)
+    exhausted = len(notified) == 0 and current_wave >= 3
 
     await db.virtual_requests.update_one(
         {"_id": ObjectId(request_id)},
-        {"$addToSet": {"notifiedTrainers": {"$each": notified}},
-         "$set": {"waveScores": wave_data}}
+        {
+            "$addToSet": {"notifiedTrainers": {"$each": notified}},
+            "$set": {"waveScores": wave_data},
+        }
     )
 
-    return {"success": True, "status": "searching"}
+    if exhausted:
+        await db.virtual_requests.update_one(
+            {"_id": ObjectId(request_id)},
+            {"$set": {"status": "exhausted"}}
+        )
+        return {
+            "success": True,
+            "status": "exhausted",
+            "exhausted": True,
+            "message": "All available trainers have been contacted. Please try again later or adjust your preferences.",
+        }
+
+    return {"success": True, "status": "searching", "exhausted": False, "trainersNotified": len(notified)}
 
 
 @api_router.post("/virtual/cancel/{request_id}")
