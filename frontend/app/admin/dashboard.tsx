@@ -315,7 +315,7 @@ export default function AdminDashboard() {
   const StatCard = ({ icon, label, value, color, subtitle, growth }: { icon: string; label: string; value: string | number; color: string; subtitle?: string; growth?: string }) => (
     <View style={s.statCard} data-testid={`stat-${label.toLowerCase().replace(/\s/g, '-')}`}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <View style={[s.statIconBg, { backgroundColor: `${color}15` }]}>
+        <View style={[s.statIconBg, { backgroundColor: `${color}18` }]}>
           <Ionicons name={icon as any} size={22} color={color} />
         </View>
         {growth ? (
@@ -330,6 +330,89 @@ export default function AdminDashboard() {
       {subtitle ? <Text style={s.statSub}>{subtitle}</Text> : null}
     </View>
   );
+
+  // --- Donut Chart ---
+  const DonutChart = ({ segments, size, strokeWidth, centerLabel, centerValue }: {
+    segments: { value: number; color: string; label: string }[];
+    size: number;
+    strokeWidth: number;
+    centerLabel: string;
+    centerValue: string;
+  }) => {
+    const radius = (size - strokeWidth) / 2;
+    const circumference = 2 * Math.PI * radius;
+    const total = segments.reduce((sum, seg) => sum + seg.value, 0);
+    let cumulativeOffset = 0;
+
+    return (
+      <View style={{ alignItems: 'center' }}>
+        <Svg width={size} height={size}>
+          <Circle cx={size / 2} cy={size / 2} r={radius} stroke="#f0f2f5" strokeWidth={strokeWidth} fill="none" />
+          {segments.map((seg, i) => {
+            const pct = total > 0 ? seg.value / total : 0;
+            const dashLength = circumference * pct;
+            const dashOffset = circumference * (1 - cumulativeOffset / total) + circumference * 0.25;
+            cumulativeOffset += seg.value;
+            return (
+              <Circle
+                key={i}
+                cx={size / 2}
+                cy={size / 2}
+                r={radius}
+                stroke={seg.color}
+                strokeWidth={strokeWidth}
+                fill="none"
+                strokeDasharray={`${dashLength} ${circumference - dashLength}`}
+                strokeDashoffset={dashOffset}
+                strokeLinecap="round"
+              />
+            );
+          })}
+          <SvgText x={size / 2} y={size / 2 - 6} textAnchor="middle" fontSize={10} fill={C.gray} fontWeight="600">{centerLabel}</SvgText>
+          <SvgText x={size / 2} y={size / 2 + 14} textAnchor="middle" fontSize={18} fill={C.navy} fontWeight="900">{centerValue}</SvgText>
+        </Svg>
+      </View>
+    );
+  };
+
+  // --- Mini Bar Chart ---
+  const MiniBarChart = ({ data, barColors, height, labels }: {
+    data: number[];
+    barColors: string[];
+    height: number;
+    labels: string[];
+  }) => {
+    const maxVal = Math.max(...data, 1);
+    const barWidth = 24;
+    const gap = 8;
+    const chartWidth = data.length * (barWidth + gap);
+    return (
+      <Svg width={chartWidth} height={height + 20}>
+        <Defs>
+          <SvgLinearGradient id="barGrad1" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0%" stopColor={C.teal} />
+            <Stop offset="100%" stopColor="#0D8B88" />
+          </SvgLinearGradient>
+          <SvgLinearGradient id="barGrad2" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0%" stopColor={C.orange} />
+            <Stop offset="100%" stopColor="#E65C00" />
+          </SvgLinearGradient>
+        </Defs>
+        {data.map((val, i) => {
+          const barH = (val / maxVal) * height;
+          const x = i * (barWidth + gap);
+          const y = height - barH;
+          const colorIdx = i % barColors.length;
+          return (
+            <G key={i}>
+              <Rect x={x} y={y} width={barWidth} height={barH} rx={4} fill={barColors[colorIdx]} opacity={0.9} />
+              <SvgText x={x + barWidth / 2} y={height + 14} textAnchor="middle" fontSize={9} fill={C.gray} fontWeight="600">{labels[i] || ''}</SvgText>
+            </G>
+          );
+        })}
+      </Svg>
+    );
+  };
 
   // --- Timeframe Pills ---
   const TimeframePills = () => {
@@ -361,6 +444,10 @@ export default function AdminDashboard() {
     const trainerPct = 100 - platformPct;
     const pendingCount = dashboard.pendingVerifications || 0;
 
+    // Placeholder weekly session data
+    const weeklyData = [3, 5, 2, 7, 4, 6, 3];
+    const weekLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
     return (
       <View>
         {/* Timeframe Filter */}
@@ -375,33 +462,72 @@ export default function AdminDashboard() {
           <StatCard icon="calendar" label="Sessions" value={dashboard.totalSessions} color={C.success} subtitle="Booked in period" growth="+5%" />
         </View>
 
-        {/* Revenue (enhanced) */}
+        {/* User Composition Donut */}
+        <Text style={s.sectionTitle}>User Breakdown</Text>
+        <View style={s.chartCard}>
+          <View style={s.chartRow}>
+            <DonutChart
+              segments={[
+                { value: dashboard.totalTrainers, color: C.orange, label: 'Trainers' },
+                { value: dashboard.totalTrainees, color: C.teal, label: 'Trainees' },
+              ]}
+              size={130}
+              strokeWidth={18}
+              centerLabel="Users"
+              centerValue={String(dashboard.totalUsers)}
+            />
+            <View style={s.chartLegend}>
+              <View style={s.legendItem}>
+                <View style={[s.legendDot, { backgroundColor: C.orange }]} />
+                <Text style={s.legendLabel}>Trainers</Text>
+                <Text style={s.legendValue}>{dashboard.totalTrainers}</Text>
+              </View>
+              <View style={s.legendItem}>
+                <View style={[s.legendDot, { backgroundColor: C.teal }]} />
+                <Text style={s.legendLabel}>Trainees</Text>
+                <Text style={s.legendValue}>{dashboard.totalTrainees}</Text>
+              </View>
+              <View style={[s.legendDivider]} />
+              <View style={s.legendItem}>
+                <View style={[s.legendDot, { backgroundColor: C.navy }]} />
+                <Text style={s.legendLabel}>Total</Text>
+                <Text style={[s.legendValue, { fontWeight: '900' }]}>{dashboard.totalUsers}</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* Revenue Donut + Breakdown */}
         <Text style={s.sectionTitle}>Revenue</Text>
-        <View style={s.revenueCard}>
-          <View style={s.revenueRowHero}>
-            <Text style={s.revenueLabelHero}>Total Revenue</Text>
-            <Text style={s.revenueValueHero}>{formatCents(dashboard.totalRevenueCents)}</Text>
-          </View>
-          <View style={s.divider} />
-          <View style={s.revenueRow}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <View style={[s.revenueDot, { backgroundColor: C.success }]} />
-              <Text style={s.revenueLabel}>Platform (25%)</Text>
+        <View style={s.chartCard}>
+          <View style={s.chartRow}>
+            <DonutChart
+              segments={[
+                { value: dashboard.platformRevenueCents, color: C.success, label: 'Platform' },
+                { value: dashboard.trainerPayoutsCents, color: C.orange, label: 'Trainers' },
+              ]}
+              size={130}
+              strokeWidth={18}
+              centerLabel="Total"
+              centerValue={formatCents(dashboard.totalRevenueCents)}
+            />
+            <View style={s.chartLegend}>
+              <View style={s.legendItem}>
+                <View style={[s.legendDot, { backgroundColor: C.success }]} />
+                <Text style={s.legendLabel}>Platform (25%)</Text>
+                <Text style={[s.legendValue, { color: C.success }]}>{formatCents(dashboard.platformRevenueCents)}</Text>
+              </View>
+              <View style={s.legendItem}>
+                <View style={[s.legendDot, { backgroundColor: C.orange }]} />
+                <Text style={s.legendLabel}>Trainers (75%)</Text>
+                <Text style={s.legendValue}>{formatCents(dashboard.trainerPayoutsCents)}</Text>
+              </View>
             </View>
-            <Text style={[s.revenueValueBold, { color: C.success }]}>{formatCents(dashboard.platformRevenueCents)}</Text>
-          </View>
-          <View style={s.divider} />
-          <View style={s.revenueRow}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <View style={[s.revenueDot, { backgroundColor: C.orange }]} />
-              <Text style={s.revenueLabel}>Trainer Payouts (75%)</Text>
-            </View>
-            <Text style={s.revenueValue}>{formatCents(dashboard.trainerPayoutsCents)}</Text>
           </View>
           {/* Revenue Split Progress Bar */}
           <View style={s.revenueBarContainer}>
-            <View style={[s.revenueBarSegment, { flex: platformPct, backgroundColor: C.success, borderTopLeftRadius: 4, borderBottomLeftRadius: 4 }]} />
-            <View style={[s.revenueBarSegment, { flex: trainerPct, backgroundColor: C.orange, borderTopRightRadius: 4, borderBottomRightRadius: 4 }]} />
+            <View style={[s.revenueBarSegment, { flex: platformPct, backgroundColor: C.success, borderTopLeftRadius: 6, borderBottomLeftRadius: 6 }]} />
+            <View style={[s.revenueBarSegment, { flex: trainerPct, backgroundColor: C.orange, borderTopRightRadius: 6, borderBottomRightRadius: 6 }]} />
           </View>
           <View style={s.revenueBarLabels}>
             <Text style={[s.revenueBarLabel, { color: C.success }]}>Platform {platformPct.toFixed(0)}%</Text>
@@ -409,13 +535,68 @@ export default function AdminDashboard() {
           </View>
         </View>
 
-        {/* Quick Info (expanded) */}
+        {/* Weekly Activity Bar Chart */}
+        <Text style={s.sectionTitle}>Weekly Activity</Text>
+        <View style={s.chartCard}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 14 }}>
+            <Text style={s.chartCardTitle}>Sessions This Week</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Ionicons name="trending-up" size={14} color={C.success} />
+              <Text style={{ fontSize: 12, fontWeight: '700', color: C.success }}>+15%</Text>
+            </View>
+          </View>
+          <View style={{ alignItems: 'center' }}>
+            <MiniBarChart
+              data={weeklyData}
+              barColors={[C.teal, C.orange]}
+              height={80}
+              labels={weekLabels}
+            />
+          </View>
+        </View>
+
+        {/* Quick Info */}
         <Text style={s.sectionTitle}>Quick Info</Text>
         <View style={s.statsGrid}>
           <StatCard icon="checkmark-circle" label="Completed" value={dashboard.completedSessions} color={C.success} subtitle="Sessions done" />
           <StatCard icon="star" label="Memberships" value={dashboard.activeMemberships} color={C.warning} subtitle="Active plans" />
           <StatCard icon="flash" label="Boosts" value={dashboard.activeBoosts} color={C.orange} subtitle="Active boosts" />
           <StatCard icon="hourglass" label="Pending" value={pendingCount} color={C.error} subtitle="Awaiting review" />
+        </View>
+
+        {/* Session Status Pie */}
+        <Text style={s.sectionTitle}>Session Status</Text>
+        <View style={s.chartCard}>
+          <View style={s.chartRow}>
+            <DonutChart
+              segments={[
+                { value: dashboard.completedSessions, color: C.success, label: 'Completed' },
+                { value: Math.max(dashboard.totalSessions - dashboard.completedSessions, 0), color: C.warning, label: 'Active' },
+                { value: pendingCount, color: C.error, label: 'Pending' },
+              ]}
+              size={120}
+              strokeWidth={16}
+              centerLabel="Sessions"
+              centerValue={String(dashboard.totalSessions)}
+            />
+            <View style={s.chartLegend}>
+              <View style={s.legendItem}>
+                <View style={[s.legendDot, { backgroundColor: C.success }]} />
+                <Text style={s.legendLabel}>Completed</Text>
+                <Text style={s.legendValue}>{dashboard.completedSessions}</Text>
+              </View>
+              <View style={s.legendItem}>
+                <View style={[s.legendDot, { backgroundColor: C.warning }]} />
+                <Text style={s.legendLabel}>Active / Upcoming</Text>
+                <Text style={s.legendValue}>{Math.max(dashboard.totalSessions - dashboard.completedSessions, 0)}</Text>
+              </View>
+              <View style={s.legendItem}>
+                <View style={[s.legendDot, { backgroundColor: C.error }]} />
+                <Text style={s.legendLabel}>Pending Review</Text>
+                <Text style={s.legendValue}>{pendingCount}</Text>
+              </View>
+            </View>
+          </View>
         </View>
 
         {/* Attention Needed */}
@@ -462,9 +643,9 @@ export default function AdminDashboard() {
         <Text style={s.sectionTitle}>Top Trainer This Week</Text>
         <View style={s.topTrainerCard}>
           <View style={s.topTrainerHeader}>
-            <View style={s.topTrainerAvatar}>
-              <Ionicons name="trophy" size={24} color={C.warning} />
-            </View>
+            <LinearGradient colors={['#FFB300', '#FF7F00']} style={s.topTrainerAvatar}>
+              <Ionicons name="trophy" size={24} color={C.white} />
+            </LinearGradient>
             <View style={{ flex: 1 }}>
               <Text style={s.topTrainerName}>Alex Johnson</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 }}>
