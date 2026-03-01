@@ -1,377 +1,570 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   Pressable,
   Animated,
-  Alert,
+  ActivityIndicator,
+  Image,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Colors } from '../../src/utils/colors';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/contexts/AuthContext';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+
+type ScreenPhase = 'searching' | 'matched' | 'error';
 
 export default function VirtualConfirmScreen() {
   const router = useRouter();
   const { user } = useAuth();
-  const [isHolding, setIsHolding] = useState(false);
-  const [booking, setBooking] = useState(false);
-  
-  const pressProgress = useRef(new Animated.Value(0)).current;
-  const pressTimer = useRef<NodeJS.Timeout | null>(null);
+  const [phase, setPhase] = useState<ScreenPhase>('searching');
+  const [requestId, setRequestId] = useState<string | null>(null);
+  const [trainerDetails, setTrainerDetails] = useState<any>(null);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handlePressIn = () => {
-    if (booking) return;
-    
-    setIsHolding(true);
-    
-    // Animate progress circle
-    Animated.timing(pressProgress, {
-      toValue: 1,
-      duration: 1500,
-      useNativeDriver: false,
-    }).start();
-    
-    // Complete action after 1.5 seconds
-    pressTimer.current = setTimeout(() => {
-      handleLockIn();
-    }, 1500);
+  // Animations
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const fadeIn = useRef(new Animated.Value(0)).current;
+  const dotAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // Pulse animation for searching phase
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.15, duration: 800, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+      ])
+    ).start();
+
+    // Dot animation
+    Animated.loop(
+      Animated.timing(dotAnim, { toValue: 3, duration: 1500, useNativeDriver: false }),
+    ).start();
+
+    createRequest();
+  }, []);
+
+  const getAuthHeader = async () => {
+    const token = await AsyncStorage.getItem('accessToken');
+    return { Authorization: `Bearer ${token}` };
   };
 
-  const handlePressOut = () => {
-    setIsHolding(false);
-    
-    if (pressTimer.current) {
-      clearTimeout(pressTimer.current);
-      pressTimer.current = null;
+  const createRequest = async () => {
+    try {
+      const headers = await getAuthHeader();
+      const res = await axios.post(`${API_URL}/api/virtual/request`, {}, { headers });
+      const data = res.data;
+      setRequestId(data.requestId);
+
+      if (data.status === 'matched') {
+        // Already matched from a previous request
+        await fetchRequestStatus(data.requestId);
+      } else {
+        // Start polling for match
+        pollForMatch(data.requestId);
+      }
+    } catch (err: any) {
+      setPhase('error');
+      setErrorMsg(err?.response?.data?.detail || 'Failed to create request');
     }
-    
-    Animated.timing(pressProgress, {
-      toValue: 0,
-      duration: 200,
-      useNativeDriver: false,
-    }).start();
   };
 
-  const handleLockIn = async () => {
-    setBooking(true);
-    setIsHolding(false);
-    pressProgress.setValue(0);
-    
-    // Navigate to payment screen
-    router.push('/trainee/payment');
+  const pollForMatch = (reqId: string) => {
+    const interval = setInterval(async () => {
+      try {
+        const headers = await getAuthHeader();
+        const res = await axios.get(`${API_URL}/api/virtual/request/${reqId}`, { headers });
+        if (res.data.status === 'matched') {
+          clearInterval(interval);
+          setTrainerDetails(res.data.trainerDetails);
+          setPhase('matched');
+          Animated.timing(fadeIn, { toValue: 1, duration: 500, useNativeDriver: true }).start();
+        } else if (res.data.status === 'cancelled') {
+          clearInterval(interval);
+          router.back();
+        }
+      } catch {
+        // Continue polling
+      }
+    }, 3000);
+
+    // Timeout after 3 minutes
+    setTimeout(() => {
+      clearInterval(interval);
+    }, 180000);
   };
 
-  const circleProgress = pressProgress.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
+  const fetchRequestStatus = async (reqId: string) => {
+    try {
+      const headers = await getAuthHeader();
+      const res = await axios.get(`${API_URL}/api/virtual/request/${reqId}`, { headers });
+      if (res.data.status === 'matched' && res.data.trainerDetails) {
+        setTrainerDetails(res.data.trainerDetails);
+        setPhase('matched');
+        Animated.timing(fadeIn, { toValue: 1, duration: 500, useNativeDriver: true }).start();
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleAcceptTrainer = async () => {
+    if (!requestId) return;
+    setLoading(true);
+    try {
+      const headers = await getAuthHeader();
+      await axios.post(`${API_URL}/api/virtual/trainee-confirm/${requestId}`, {}, { headers });
+      // Navigate to payment screen with trainer info
+      router.push({
+        pathname: '/trainee/payment',
+        params: {
+          trainerId: trainerDetails?.trainerId || '',
+          sessionType: 'virtual',
+          priceCents: String(trainerDetails?.virtualRateCents || 3000),
+        },
+      });
+    } catch (err: any) {
+      setErrorMsg(err?.response?.data?.detail || 'Failed to confirm');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFindAnother = async () => {
+    if (!requestId) return;
+    setLoading(true);
+    try {
+      const headers = await getAuthHeader();
+      await axios.post(`${API_URL}/api/virtual/find-another/${requestId}`, {}, { headers });
+      setPhase('searching');
+      setTrainerDetails(null);
+      fadeIn.setValue(0);
+      pollForMatch(requestId);
+    } catch (err: any) {
+      setErrorMsg(err?.response?.data?.detail || 'Failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancel = async () => {
+    if (requestId) {
+      try {
+        const headers = await getAuthHeader();
+        await axios.post(`${API_URL}/api/virtual/cancel/${requestId}`, {}, { headers });
+      } catch {
+        // ignore
+      }
+    }
+    router.back();
+  };
+
+  const formatPrice = (cents: number) => `$${(cents / 100).toFixed(0)}`;
+
+  const tierLabel = (tier: string) =>
+    tier === 'elite' ? 'Elite' : tier === 'pro' ? 'Pro' : 'Rising Star';
+  const tierColor = (tier: string) =>
+    tier === 'elite' ? Colors.orange : tier === 'pro' ? Colors.teal : Colors.gray;
+
+  // Searching dots text
+  const dots = dotAnim.interpolate({
+    inputRange: [0, 1, 2, 3],
+    outputRange: ['.', '..', '...', '...'],
   });
 
-  return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <LinearGradient
-        colors={Colors.gradientOrangeStart}
-        style={StyleSheet.absoluteFillObject}
-      />
+  // --- SEARCHING PHASE ---
+  if (phase === 'searching') {
+    return (
+      <SafeAreaView style={s.container} edges={['top']}>
+        <LinearGradient colors={[Colors.navy, '#1a2a5e']} style={StyleSheet.absoluteFillObject} />
 
-      {/* Back Button */}
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={28} color={Colors.navy} />
-        </Pressable>
-      </View>
-
-      {/* Content */}
-      <View style={styles.content}>
-        {/* Icon */}
-        <View style={styles.iconContainer}>
-          <Ionicons name="videocam" size={80} color={Colors.secondary} />
-        </View>
-
-        {/* Title */}
-        <Text style={styles.title}>Virtual Live Video</Text>
-        <Text style={styles.subtitle}>TRAINING SESSION</Text>
-
-        {/* Price Card */}
-        <View style={styles.priceCard}>
-          <Text style={styles.priceLabel}>Session Price</Text>
-          <Text style={styles.priceAmount}>$18</Text>
-          <Text style={styles.priceDuration}>for 30 minutes</Text>
-        </View>
-
-        {/* Time Estimate & Reassurance */}
-        <View style={styles.infoCard}>
-          <Ionicons name="time-outline" size={20} color={Colors.secondary} />
-          <Text style={styles.infoText}>
-            You'll be connected with a trainer in about <Text style={styles.infoTextBold}>2-3 minutes</Text>
-          </Text>
-        </View>
-
-        <View style={styles.reassuranceCard}>
-          <Ionicons name="shield-checkmark" size={20} color={Colors.success} />
-          <Text style={styles.reassuranceText}>
-            If no trainer is available, you won't be charged
-          </Text>
-        </View>
-
-        {/* Features */}
-        <View style={styles.featuresContainer}>
-          <View style={styles.feature}>
-            <Ionicons name="checkmark-circle" size={24} color={Colors.secondary} />
-            <Text style={styles.featureText}>Instant trainer matching</Text>
-          </View>
-          <View style={styles.feature}>
-            <Ionicons name="checkmark-circle" size={24} color={Colors.secondary} />
-            <Text style={styles.featureText}>High-quality Zoom video</Text>
-          </View>
-          <View style={styles.feature}>
-            <Ionicons name="checkmark-circle" size={24} color={Colors.secondary} />
-            <Text style={styles.featureText}>Train from anywhere</Text>
-          </View>
-        </View>
-
-        {/* Lock In Button */}
-        <View style={styles.lockInContainer}>
-          <Text style={styles.instructionText}>
-            {isHolding ? 'Keep holding...' : 'Press & hold to begin'}
-          </Text>
-          
-          <Pressable
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
-            disabled={booking}
-            style={styles.lockInButton}
-          >
-            <LinearGradient
-              colors={booking ? ['#CCCCCC', '#999999'] : [Colors.secondary, Colors.primary]}
-              style={styles.buttonGradient}
-            >
-              {/* Progress Circle */}
-              <View style={styles.progressCircle}>
-                <Animated.View
-                  style={[
-                    styles.progressArc,
-                    {
-                      transform: [{
-                        rotate: circleProgress,
-                      }],
-                    },
-                  ]}
-                />
-              </View>
-
-              {/* Button Content */}
-              <View style={styles.buttonContent}>
-                {booking ? (
-                  <Text style={styles.buttonText}>Processing...</Text>
-                ) : (
-                  <>
-                    <Text style={styles.buttonText}>LOCK IN 💪🏾</Text>
-                    <Text style={styles.buttonSubtext}>Hold for 1.5s</Text>
-                  </>
-                )}
-              </View>
-            </LinearGradient>
+        <View style={s.header}>
+          <Pressable onPress={handleCancel} style={s.backBtn} data-testid="virtual-cancel-btn">
+            <Ionicons name="close" size={24} color={Colors.white} />
           </Pressable>
         </View>
+
+        <View style={s.centerContent}>
+          <Animated.View style={[s.pulseCircle, { transform: [{ scale: pulseAnim }] }]}>
+            <LinearGradient colors={[Colors.teal, '#0D8B88']} style={s.pulseInner}>
+              <Ionicons name="videocam" size={48} color={Colors.white} />
+            </LinearGradient>
+          </Animated.View>
+
+          <Text style={s.searchTitle}>Finding Your Trainer</Text>
+          <Text style={s.searchSub}>Notifying available virtual trainers...</Text>
+
+          <View style={s.searchDots}>
+            <ActivityIndicator size="small" color={Colors.teal} />
+            <Text style={s.searchDotsText}>This usually takes 1-3 minutes</Text>
+          </View>
+
+          <View style={s.featureList}>
+            <View style={s.featureRow}>
+              <Ionicons name="shield-checkmark" size={18} color={Colors.success} />
+              <Text style={s.featureText}>No charge if no trainer available</Text>
+            </View>
+            <View style={s.featureRow}>
+              <Ionicons name="people" size={18} color={Colors.teal} />
+              <Text style={s.featureText}>Matching with certified trainers</Text>
+            </View>
+            <View style={s.featureRow}>
+              <Ionicons name="flash" size={18} color={Colors.orange} />
+              <Text style={s.featureText}>First available trainer wins</Text>
+            </View>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // --- ERROR PHASE ---
+  if (phase === 'error') {
+    return (
+      <SafeAreaView style={s.container} edges={['top']}>
+        <LinearGradient colors={[Colors.navy, '#1a2a5e']} style={StyleSheet.absoluteFillObject} />
+        <View style={s.centerContent}>
+          <Ionicons name="warning" size={60} color={Colors.error} />
+          <Text style={s.searchTitle}>Something Went Wrong</Text>
+          <Text style={s.searchSub}>{errorMsg}</Text>
+          <Pressable onPress={() => router.back()} style={s.retryBtn} data-testid="virtual-error-back-btn">
+            <Text style={s.retryBtnText}>Go Back</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // --- MATCHED PHASE ---
+  return (
+    <SafeAreaView style={s.container} edges={['top']}>
+      <LinearGradient colors={[Colors.navy, '#1a2a5e']} style={StyleSheet.absoluteFillObject} />
+
+      <View style={s.header}>
+        <Pressable onPress={handleCancel} style={s.backBtn} data-testid="virtual-matched-back-btn">
+          <Ionicons name="close" size={24} color={Colors.white} />
+        </Pressable>
+        <Text style={s.headerTitle}>Trainer Found!</Text>
+        <View style={{ width: 40 }} />
       </View>
+
+      <Animated.ScrollView style={{ flex: 1, opacity: fadeIn }} contentContainerStyle={s.matchContent}>
+        {/* Trainer Photo */}
+        <View style={s.trainerPhotoWrap}>
+          {trainerDetails?.profilePhoto ? (
+            <Image source={{ uri: trainerDetails.profilePhoto }} style={s.trainerPhoto} />
+          ) : (
+            <LinearGradient colors={[Colors.teal, Colors.orange]} style={s.trainerPhoto}>
+              <Ionicons name="person" size={50} color={Colors.white} />
+            </LinearGradient>
+          )}
+          <View style={s.matchBadge}>
+            <Ionicons name="checkmark-circle" size={28} color={Colors.success} />
+          </View>
+        </View>
+
+        {/* Trainer Name + Badge */}
+        <Text style={s.trainerName}>{trainerDetails?.fullName || 'Your Trainer'}</Text>
+        <View style={s.badgeRow}>
+          <View style={[s.tierBadge, { backgroundColor: `${tierColor(trainerDetails?.tier || 'basic')}20` }]}>
+            <Ionicons name="ribbon" size={14} color={tierColor(trainerDetails?.tier || 'basic')} />
+            <Text style={[s.tierText, { color: tierColor(trainerDetails?.tier || 'basic') }]}>
+              {tierLabel(trainerDetails?.tier || 'basic')}
+            </Text>
+          </View>
+          {trainerDetails?.averageRating > 0 && (
+            <View style={s.ratingBadge}>
+              <Ionicons name="star" size={14} color="#FFB300" />
+              <Text style={s.ratingText}>{trainerDetails.averageRating}</Text>
+              <Text style={s.reviewCount}>({trainerDetails.totalReviews})</Text>
+            </View>
+          )}
+        </View>
+
+        {/* Bio */}
+        {trainerDetails?.bio ? (
+          <View style={s.bioCard}>
+            <Text style={s.bioText}>{trainerDetails.bio}</Text>
+          </View>
+        ) : null}
+
+        {/* Session Price Card */}
+        <View style={s.priceCard}>
+          <View style={s.priceRow}>
+            <Text style={s.priceLabel}>Virtual Session</Text>
+            <Text style={s.priceValue}>{formatPrice(trainerDetails?.virtualRateCents || 3000)}</Text>
+          </View>
+          <Text style={s.priceSub}>30-minute live video training</Text>
+        </View>
+
+        {/* Action Buttons */}
+        <Pressable
+          onPress={handleAcceptTrainer}
+          disabled={loading}
+          style={s.acceptBtn}
+          data-testid="virtual-accept-trainer-btn"
+        >
+          <LinearGradient colors={[Colors.teal, '#0D8B88']} style={s.acceptBtnGrad}>
+            {loading ? (
+              <ActivityIndicator size="small" color={Colors.white} />
+            ) : (
+              <>
+                <Ionicons name="checkmark-circle" size={22} color={Colors.white} />
+                <Text style={s.acceptBtnText}>Accept Trainer</Text>
+              </>
+            )}
+          </LinearGradient>
+        </Pressable>
+
+        <Pressable
+          onPress={handleFindAnother}
+          disabled={loading}
+          style={s.findAnotherBtn}
+          data-testid="virtual-find-another-btn"
+        >
+          <Ionicons name="refresh" size={18} color={Colors.white} />
+          <Text style={s.findAnotherText}>Find Another Trainer</Text>
+        </Pressable>
+      </Animated.ScrollView>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+const s = StyleSheet.create({
+  container: { flex: 1 },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 12,
   },
-  backButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: Colors.white,
-    borderWidth: 3,
-    borderColor: Colors.navy,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  iconContainer: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: Colors.white,
-    borderWidth: 4,
-    borderColor: Colors.navy,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '900',
-    color: Colors.navy,
-    textAlign: 'center',
-    letterSpacing: 1,
-  },
-  subtitle: {
-    fontSize: 20,
+  headerTitle: {
+    fontSize: 18,
     fontWeight: '800',
     color: Colors.white,
-    textAlign: 'center',
+    letterSpacing: 0.5,
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  centerContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  // Searching
+  pulseCircle: {
     marginBottom: 32,
   },
-  priceCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 20,
-    borderWidth: 4,
-    borderColor: Colors.navy,
-    padding: 24,
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  infoCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: Colors.secondary,
-    padding: 16,
-    marginBottom: 12,
-    gap: 12,
-  },
-  infoText: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.navy,
-    lineHeight: 20,
-  },
-  infoTextBold: {
-    fontWeight: '900',
-    color: Colors.secondary,
-  },
-  reassuranceCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: Colors.success,
-    padding: 16,
-    marginBottom: 24,
-    gap: 12,
-  },
-  reassuranceText: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.navy,
-    lineHeight: 20,
-  },
-  priceLabel: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: Colors.text,
-    marginBottom: 8,
-  },
-  priceAmount: {
-    fontSize: 64,
-    fontWeight: '900',
-    color: Colors.secondary,
-    lineHeight: 64,
-  },
-  priceDuration: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.text,
-    marginTop: 4,
-  },
-  featuresContainer: {
-    width: '100%',
-    gap: 12,
-    marginBottom: 40,
-  },
-  feature: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  featureText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: Colors.white,
-  },
-  lockInContainer: {
-    width: '100%',
-    alignItems: 'center',
-  },
-  instructionText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: Colors.white,
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  lockInButton: {
-    width: '100%',
-    borderRadius: 20,
-    overflow: 'hidden',
-  },
-  buttonGradient: {
-    paddingVertical: 24,
-    borderWidth: 4,
-    borderColor: Colors.navy,
-    borderRadius: 20,
-    alignItems: 'center',
+  pulseInner: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     justifyContent: 'center',
-    position: 'relative',
-  },
-  progressCircle: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  progressArc: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: 20,
-    borderWidth: 6,
-    borderColor: 'transparent',
-    borderTopColor: 'rgba(255, 255, 255, 0.5)',
-    borderRightColor: 'rgba(255, 255, 255, 0.5)',
-  },
-  buttonContent: {
     alignItems: 'center',
-    zIndex: 1,
+    shadowColor: Colors.teal,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 30,
+    elevation: 10,
   },
-  buttonText: {
+  searchTitle: {
     fontSize: 24,
     fontWeight: '900',
     color: Colors.white,
-    letterSpacing: 1,
+    textAlign: 'center',
+    marginBottom: 8,
   },
-  buttonSubtext: {
-    fontSize: 12,
+  searchSub: {
+    fontSize: 14,
     fontWeight: '600',
+    color: 'rgba(255,255,255,0.7)',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  searchDots: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 40,
+  },
+  searchDotsText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.6)',
+  },
+  featureList: { gap: 14, width: '100%' },
+  featureRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+  },
+  featureText: {
+    fontSize: 14,
+    fontWeight: '700',
     color: Colors.white,
-    marginTop: 4,
-    opacity: 0.9,
+  },
+  // Matched
+  matchContent: {
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+  },
+  trainerPhotoWrap: {
+    marginBottom: 16,
+    marginTop: 12,
+  },
+  trainerPhoto: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 4,
+    borderColor: Colors.teal,
+  },
+  matchBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: Colors.navy,
+    borderRadius: 16,
+    padding: 2,
+  },
+  trainerName: {
+    fontSize: 24,
+    fontWeight: '900',
+    color: Colors.white,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 20,
+  },
+  tierBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  tierText: { fontSize: 12, fontWeight: '800' },
+  ratingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255,179,0,0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  ratingText: { fontSize: 13, fontWeight: '800', color: '#FFB300' },
+  reviewCount: { fontSize: 11, fontWeight: '600', color: 'rgba(255,255,255,0.5)' },
+  bioCard: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 16,
+    padding: 18,
+    width: '100%',
+    marginBottom: 20,
+  },
+  bioText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.8)',
+    lineHeight: 22,
+  },
+  priceCard: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 16,
+    padding: 20,
+    width: '100%',
+    marginBottom: 28,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  priceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  priceLabel: { fontSize: 15, fontWeight: '700', color: Colors.white },
+  priceValue: { fontSize: 28, fontWeight: '900', color: Colors.teal },
+  priceSub: { fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.5)' },
+  // Buttons
+  acceptBtn: {
+    width: '100%',
+    borderRadius: 28,
+    overflow: 'hidden',
+    marginBottom: 14,
+    shadowColor: Colors.teal,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  acceptBtnGrad: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 18,
+    gap: 10,
+  },
+  acceptBtnText: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: Colors.white,
+    letterSpacing: 0.5,
+  },
+  findAnotherBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    width: '100%',
+    borderRadius: 28,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  findAnotherText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: Colors.white,
+  },
+  retryBtn: {
+    marginTop: 24,
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    borderRadius: 28,
+    backgroundColor: Colors.teal,
+  },
+  retryBtnText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: Colors.white,
   },
 });
