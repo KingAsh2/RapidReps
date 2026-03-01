@@ -4720,6 +4720,30 @@ async def session_gps_update(session_id: str, latitude: float, longitude: float,
     }
     await db.session_gps_tracks.insert_one(gps_doc)
 
+    # GPS SPOOF DETECTION: Check for impossible location jumps
+    prev_gps = await db.session_gps_tracks.find_one(
+        {"sessionId": session_id, "userId": user_id, "timestamp": {"$lt": now}},
+        sort=[("timestamp", -1)]
+    )
+    if prev_gps:
+        jump_dist = calculate_distance(latitude, longitude, prev_gps['latitude'], prev_gps['longitude'])
+        time_diff = (now - prev_gps['timestamp']).total_seconds()
+        if time_diff < 30 and jump_dist > PricingRules.GPS_SPOOF_JUMP_MILES:
+            alerts.append({
+                "type": "spoof_warning",
+                "message": "Unusual location change detected. GPS may be inaccurate.",
+                "jumpMiles": round(jump_dist, 2),
+            })
+            # Flag the user for review
+            await db.users.update_one(
+                {'_id': current_user['_id']},
+                {'$set': {
+                    'gpsSpoofWarning': True,
+                    'gpsSpoofAt': now,
+                    'gpsSpoofSessionId': session_id,
+                }}
+            )
+
     # Check distance between parties if both have recent GPS
     other_role = "trainee" if is_trainer else "trainer"
     other_id = session.get('traineeId') if is_trainer else session.get('trainerId')
