@@ -1,160 +1,135 @@
 <analysis>**original_problem_statement:**
-The user's final goal is to deploy the production-ready application. Initially, this involved hardening the rating system with strict server-side rules. Subsequently, the user requested the implementation of several new features, including a Share My Streak function, admin panel pagination, and preparing the backend for a SendGrid email integration.
+The user's initial goal was to fix a deployment build failure. After resolving that, the user requested a series of significant UI/UX enhancements, including new button styles, a new intro video, a complete redesign of the admin panel with charts and a live leaderboard, and the removal of hardcoded data.
 
-After all features were implemented and passed extensive testing, the user attempted to deploy the application, which resulted in a build failure. The current primary objective is to debug and resolve these deployment errors.
+The project's direction then shifted dramatically after the user provided a large document titled . This document outlines a complete overhaul of the core application logic, focusing on implementing an Uber-style real-time matching engine for trainers, extensive UI and accessibility improvements, and adding several new features like a smart push notification system, GPS tracking, and automated cancellation penalties. The current primary objective is to implement this directive.
 
-The user has also requested that once the deployment issue is resolved, the agent should prepare the backend to integrate SendGrid for sending various transactional emails (password reset, welcome emails, weekly digests), with the user planning to provide the API key at a later time.
+PRODUCT REQUIREMENTS:
+- A full summary of the requirements is detailed in the  (provided by the user as  in the previous session). The highest priority items are the new matching engine, an In-Person Now booking flow, fixes to the virtual session screen UI, 508 compliance, and a smart push notification engine.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application is a feature-complete full-stack app (FastAPI, React Native/Expo, MongoDB). All major features from previous sessions are implemented, including a hardened rating system, a full push notification system with user preferences, Stripe PaymentSheet integration, admin panel pagination, and a Share My Streak feature. The backend email service for SendGrid has been built in a no-op mode, which logs email actions to the console without an API key, making it ready for future integration.
+The application is a full-stack app using FastAPI, React Native/Expo, and MongoDB. The initial deployment blocker has been fixed. A significant number of UI/UX improvements have been completed, including a redesigned admin dashboard with charts and a live leaderboard, new animated button components, a new intro video, and the removal of mock data.
 
-The application has passed 98 out of 98 automated tests across multiple comprehensive test runs, verifying its functionality in the development environment. However, the application is currently failing to build for deployment.
+The agent has begun implementing the . A new Uber-style matching engine has been built on the backend, featuring weighted scoring and tiered wave logic for notifying trainers. New backend endpoints support both Virtual Instant and In-Person Instant session requests. The frontend has been updated to include UI enhancements for the virtual matching screen (radar animation, countdown) and a new In-Person Now option on the home screen. A comprehensive user manual was also created and delivered as a PDF.
 
 **Last working item**:
--   Last item agent was working: Debugging a frontend build failure that occurred during the deployment process. The agent was analyzing the build logs provided by the user.
--   The specific error is a module resolution failure: . This indicates an incorrect relative import path.
+-   Last item agent was working: Implementing the Top Priority Upgrades from the user's . The agent just completed the backend rewrite for the new Uber-style matching engine and made initial updates to the frontend to support the new virtual and in-person instant booking flows.
 -   Status: IN PROGRESS
--   Agent Testing Done: N
--   Which testing method agent to use? After fixing the path, the agent should perform a  check to catch any other potential pathing issues and then take a screenshot of the notifications screen to ensure the fix didn't introduce any visual regressions. The final validation will be the user re-running the deployment.
+-   Agent Testing Done: Y (Backend endpoints were tested via ; frontend changes were confirmed to compile successfully via Metro bundler logs.)
+-   Which testing method agent to use? Frontend testing agent. The core user flow for finding a trainer has been significantly altered. A full end-to-end test is crucial to validate that the new matching engine (for both virtual and in-person requests) integrates correctly with the updated frontend UI and logic.
 -   User Testing Done: N
 
 **All Pending/In progress Issue list**:
--   Issue 1: **Deployment build failure due to incorrect module import path.** (P0 - CRITICAL BLOCKER)
-
-Issues Detail:
--   **Issue 1: Deployment build failure due to incorrect module import path.**
-    -   Attempted fixes: The agent has analyzed the build logs and identified the specific error and the file causing it ().
-    -   Next debug checklist:
-        1.  Confirm the file structure.  needs to import from .
-        2.  The current incorrect path is .
-        3.  The correct relative path should be .
-        4.  Use  to update the import statement in .
-        5.  Run a lint check on the frontend to proactively identify any similar pathing issues.
-    -   Why fix this issue and what will be achieved with the fix?: This is a hard blocker for deployment. Fixing it will allow the application's frontend to be bundled successfully, enabling deployment.
-    -   Status: IN PROGRESS
-    -   Is recurring issue? N
-    -   Should Test frontend/backend/both after fix? Frontend
-    -   Blocked on other issue: None.
+- None. The current focus is on new feature development, not bug fixes.
 
 **In progress Task List**:
--   None.
+-   **Task 1: Complete Top Priority Upgrades from the SYSTEM UPGRADE DIRECTIVE (P0)**
+    -   **Where to resume:** The backend matching engine is built. The next steps are to continue implementing the remaining high-priority items from the user's directive.
+        1.  **Smart Push Notification Engine:** The current notification logic is basic. It needs to be replaced with the specified smart engine that includes new notification types (session alerts, missed acceptances, late warnings) and intelligent routing rules (only notify qualified trainers based on ETA/score).
+        2.  **Virtual Live Video Screen Fixes:** The agent implemented several UI fixes (radar, countdown, scroll). The implementation of the  sound on trainer acceptance needs to be verified and completed.
+        3.  **Font, Contrast & Visibility Fixes (508 Compliance):** A large pass was done, but the agent must re-verify against the directive's strict rules, specifically replacing *all* remaining orange text and adding text shadows on image backgrounds.
+    -   **What will be achieved with this?** This will complete the highest-priority phase of the user's requested system overhaul, delivering a functional, real-time matching system.
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** Both
+    -   **Blocked on something:** None
 
 **Upcoming and Future Tasks**
 
-**Upcoming Tasks:**
--   **P1: Enable SendGrid Integration.**
-    -   **Where to resume:** The backend infrastructure is complete in  and wired into the application in a no-op mode.
-    -   **Action:** Once the user provides the , add it to the  file and restart the backend service.
-    -   **Status:** BLOCKED (waiting on user for API key).
+**Upcoming Tasks (from ):**
+-   **P1: Medium Priority Enhancements:**
+    -   **Advanced GPS System:** Implement live en-route tracking for trainers and trainees.
+    -   **No-Show & Cancellation Automation:** Implement automated penalty logic and Stripe integration for no-shows/cancellations.
+    -   **Membership System - True Benefit Stack:** Implement the specified membership perks (priority matching, discounts, etc.).
+    -   **Boost System - Real Power:** Implement enhanced boost features (profile glow, better insights).
+-   **P2: Secondary Improvement:**
+    -   **Session Verification - Selfie Check:** Add a selfie verification step before a session starts.
 
-**Future Tasks:**
--   **P2: Implement Toast Notifications.**
-    -   **Action:** Use the  component (already available in ) to add toast notifications for success/error actions across the app (e.g., after booking a session, updating a profile, or on payment failure).
-    -   **Status:** NOT STARTED.
--   **P3: Resolve TypeScript Strict-Mode Warnings.**
-    -   **Action:** Address the 86+ non-blocking TypeScript warnings identified in the initial QA audit to improve code quality and long-term maintainability.
-    -   **Status:** NOT STARTED.
+**Future Tasks (From previous sessions, lower priority):**
+-   **P3: Enable SendGrid Integration:** Blocked, awaiting API key from the user.
+-   **P4: Implement Toast Notifications:** Use the  component for app-wide notifications.
+-   **P5: Resolve TypeScript Strict-Mode Warnings:** Address the 86+ warnings to improve code quality.
 
 **Completed work in this session**
--   **Rating System Hardening:**
-    -   Implemented 6 server-side validation rules (role checks, 1 rating/session, completion status) and a 48-hour rating window in .
-    -   Added  flag to the  model and signup flow.
--   **Security Enhancement:**
-    -   Implemented input sanitization using  for all user-generated text fields (ratings, messages, profiles) to prevent XSS attacks.
--   **Push Notification System:**
-    -   Implemented a full end-to-end push notification system with .
-    -   Created backend triggers for all key events (session changes, new messages).
-    -   Added a background scheduler () for timed reminders (streaks, session ratings).
-    -   Built a frontend , notification history screen, and a bell icon in the header.
--   **Notification Preferences:**
-    -   Created backend endpoints and a frontend screen () to allow users to enable/disable specific notification types.
--   **Stripe Payment Integration:**
-    -   Correctly integrated Stripe  on the frontend for membership and boost purchases in  and .
--   **Admin Panel Improvements:**
-    -   Added pagination controls to the Users, Sessions, and Transactions tabs in .
--   **New Features:**
-    -   Created a Share My Streak feature with a dedicated screen () and sharing functionality using .
--   **Backend Infrastructure:**
-    -   Created a modular  prepared for SendGrid integration, currently running in a safe no-op mode.
--   **UI/UX Polish:**
-    -   Added confirmation modals for destructive actions (e.g., trainer logout).
-    -   Improved calls-to-action on several empty-state screens.
--   **Testing:**
-    -   Successfully passed multiple comprehensive QA test cycles using , with a total of **98/98 tests passing**.
+-   **Deployment Blocker Fixed:** Corrected an incorrect import path in .
+-   **Admin Panel Overhaul:** Redesigned the admin dashboard twice, adding new data sections, SVG-based charts, and a real-time Top Trainer This Week leaderboard powered by a new  endpoint.
+-   **Global UI/UX Enhancements:**
+    -   Implemented a new reusable  for auth screens.
+    -   Replaced the application's intro video.
+    -   Performed a major 508 compliance pass, fixing text contrast and font weight issues across the app.
+    -   Added button sound effects with a settings toggle, powered by a new .
+-   **Core Logic Overhaul (In Progress):**
+    -   **Uber-Style Matching Engine:** Replaced the old matching logic with a new, sophisticated engine in  that scores and notifies trainers in tiered waves.
+    -   **Instant Booking Flow:** Created backend endpoints and initial frontend UI for both Virtual Instant and In-Person Instant session requests.
+    -   **Virtual Matching UI:** Enhanced the  screen with a scrollable layout, radar animation, and countdown timer.
+-   **Data Cleanup:** Removed hardcoded Saved Trainers mock data from .
+-   **Documentation:** Created a comprehensive user manual and provided it to the user as a downloadable PDF.
 
 **Earlier issues found/mentioned but not fixed**
--   **TypeScript Strict-Mode Warnings:** Over 86 non-blocking TypeScript warnings remain in the codebase. These were identified during an earlier audit and are considered technical debt.
+-   **TypeScript Strict-Mode Warnings:** Over 86 non-blocking TypeScript warnings remain in the codebase, which are considered technical debt.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Build Process Error Resolution:** Debugging deployment build logs, specifically Metro bundler module resolution failures.
--   **No-Op Service Design:** Creating a service () that functions in a logging-only mode when a required API key is missing, preventing crashes and preparing for future integration.
--   **Input Sanitization:** Using  on the backend to strip malicious HTML from user input and prevent XSS.
--   **Background Scheduling:** Using  within a FastAPI startup event to run recurring tasks (e.g., sending notification reminders).
--   **Stripe PaymentSheet:** Frontend implementation using  for a native 2-step payment UI.
--   **Expo Sharing:** Using the native share dialog to share content from the app.
+-   **Real-time Matching Engine:** Backend logic using weighted scoring and tiered wave notifications to find the best available trainer, similar to ride-sharing apps.
+-   **MongoDB Aggregation:** Used for the admin leaderboard and for complex queries within the matching engine.
+-   **UI/508 Accessibility:** Systematically improving text contrast, font weights, and color usage to meet compliance standards.
+-   **Programmatic Asset Generation:** Creating a valid silent MP3 file via code to serve as a placeholder for button sounds.
+-   **Stateful UI Components:** Building animated components () and context-driven features ().
+-   **SVG-based Charting:** Using  to create custom, inline data visualizations (, ) on the admin dashboard.
+-   **Static File Serving:** Creating a FastAPI endpoint to allow users to download a generated PDF file.
 
 **key DB schema**
--   **users:** Added , and .
--   **ratings:** Added  and  for anti-fraud metadata.
--   **notifications:** New collection to store user notification history.
+-   **virtual_requests:** New collection created to manage the state of real-time session requests, including , , ,  (virtual/in-person), and .
 
 **All files of reference**
--    (Contains the build error)
--    (The file that cannot be resolved)
--   
--   
--   
--   
--    (Latest test report)
--   
+-    (Location of the new matching engine logic)
+-    (New frontend UI for the matching flow)
+-    (Example of recently completed UI work)
+-    (The user-provided PDF that contains the current )
+-    (Home screen where new flows are initiated)
 
 **Critical Info for New Agent**
-1.  **Deployment is Blocked:** Your absolute first priority is to fix the build error. The error is in  due to an incorrect import path for . The correct path is likely .
-2.  **Do Not Implement New Features:** Focus solely on fixing the build error so the user can attempt to deploy again.
-3.  **SendGrid is Ready, Not Active:** The backend email system is fully coded but will not send real emails until the user provides a  for the  file. Do not attempt to implement any further email logic.
-4.  **The App is Functionally Stable:** The codebase has passed 98/98 automated tests. The current issue is a build-time configuration problem, not a runtime bug. Be careful not to introduce regressions while fixing the path.
+1.  **Follow the Directive:** Your primary focus is implementing the . Refer to the user-provided PDF for all requirements. The highest priority items are listed in the In progress Task List.
+2.  **Matching Engine is New:** A complex, Uber-style matching engine has just been implemented on the backend. You will be building upon this. Understand its scoring and wave logic in  before adding the new push notification system.
+3.  **Test Incrementally:** The changes are substantial. After implementing the smart push notifications, a full end-to-end test of the matching flow (request -> notify -> accept -> payment) is critical. Use the .
 
 **documents and test reports created in this job**
 -   
 -   
--   
--   
--    (Continuously updated)
+-    (Continuously updated with progress)
 
 **Last 10 User Messages and any pending HUMAN messages**
--   **User (Msg 463):** **PENDING** - Reported a build failure during deployment and provided the error logs. The user needs the agent to analyze the logs and fix the underlying code issue. (Status: PENDING)
--   **User (Msg 344):** Approved implementing Share Streak, admin pagination, and preparing the backend for SendGrid, stating they will provide the API key later. (Status: COMPLETED)
--   **User (Msg 337):** Approved moving on to the next set of tasks after the QA audit passed. (Status: COMPLETED)
--   **User (Msg 270):** Gave a detailed prompt for the agent to perform a comprehensive QA audit of the entire application. (Status: COMPLETED)
--   **User (Msg 268):** Acknowledged the successful implementation and testing of the push notification system. (Status: COMPLETED)
--   **User (Msg 145):** Approved the agent's plan to implement the push notification system. (Status: COMPLETED)
--   **User (Msg 126):** Approved moving forward with push notifications after the rating system was hardened. (Status: COMPLETED)
--   **User (Msg 5):** Added a new high-priority requirement to harden the server-side rating system with 6 specific rules and a 48-hour window. (Status: COMPLETED)
+1.  **User (Msg 461):** Approved the plan to start implementing the . (Status: IN PROGRESS)
+2.  **User (Msg 458):** **PENDING** - Provided the  via a PDF, which contains all the current high, medium, and secondary priority tasks. (Status: IN PROGRESS)
+3.  **User (Msg 446):** Requested a PDF version of the user manual because the web link was not working for them. (Status: COMPLETED)
+4.  **User (Msg 414):** Requested that the Need a Trainer Now button be wired up to the new matching flow. (Status: COMPLETED)
+5.  **User (Msg 405):** Requested the creation of a user manual for trainers and trainees. (Status: COMPLETED)
+6.  **User (Msg 388):** Pointed out that the virtual matching system lacked proximity limits, prompting a fix. (Status: COMPLETED)
+7.  **User (Msg 250):** Approved the plan to work on global UI/accessibility and the new virtual matching system. (Status: COMPLETED)
+8.  **User (Msg 234):** Provided clarification on priorities and asked questions about the implementation plan. (Status: COMPLETED)
+9.  **User (Msg 232):** Reported a bug where mock Saved Trainers were appearing for every user. (Status: COMPLETED)
+10. **User (Msg 189):** Requested the addition of a Top Trainer leaderboard to the admin panel. (Status: COMPLETED)
 
 **Project Health Check:**
--   **Broken**: **Build Failing**. The application runs correctly in the development environment but fails to build for deployment due to a module resolution error in the frontend.
--   **Mocked**: The SendGrid email service is in a no-op (mocked) state, logging actions to the console until an API key is provided.
+-   **Broken:** The core user-facing matching feature is in the middle of a major overhaul. While the backend has been updated, the full end-to-end flow, especially for the new In-Person Now feature and smart notifications, is incomplete.
+-   **Mocked**: The SendGrid email service remains in a no-op (mocked) state.
 
 **3rd Party Integrations**
--   **Stripe:** Fully integrated for payments using PaymentIntents and the frontend PaymentSheet.
--   **slowapi:** Used for API rate limiting on the backend.
+-   **Stripe:** Fully integrated for payments.
 -   **Expo / Expo Router:** Core of the frontend application.
--   **expo-server-sdk-python:** Used on the backend to send push notifications.
--   **bleach:** Used on the backend for HTML sanitization.
--   **APScheduler:** Used on the backend for scheduled background tasks.
--   **SendGrid:** Backend is prepared for integration, but it is inactive and awaiting an API key.
+-   **expo-server-sdk-python:** Used for sending push notifications.
+-   **bleach:** Used for HTML sanitization.
+-   **APScheduler:** Used for scheduled background tasks.
+-   **react-native-svg:** Recently added for rendering charts in the admin dashboard.
+-   **SendGrid:** Backend is prepared, but inactive and awaiting an API key.
 
 **Testing status**
--   Testing agent used after significant changes: YES
+-   Testing agent used after significant changes: NO (Not since the major matching system overhaul began)
 -   Troubleshoot agent used after agent stuck in loop: NO
 -   Test files created: None.
--   Known regressions: None.
--   **Test Suite Health**: 98/98 automated tests passed in the last session, indicating high functional stability in the dev environment.
+-   Known regressions: None known, but high risk due to the scale of recent changes.
 
 **Credentials to test flow:**
 -   **Admin**:  / 
@@ -162,4 +137,4 @@ Issues Detail:
 -   **Trainees (Password: )**: , 
 
 **What agent forgot to execute**
--   The agent used an incorrect relative path when importing a context in a new frontend screen, which is a common developer error but is now blocking deployment.</analysis>
+- The agent has correctly prioritized and started the , but there are several high-priority items from that directive yet to be implemented, most notably the Smart Push Notification Engine.</analysis>

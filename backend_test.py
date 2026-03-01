@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
 # Test Configuration
-BASE_URL = "https://frontend-repair-24.preview.emergentagent.com/api"
+BASE_URL = "https://uber-fitness.preview.emergentagent.com/api"
 TEST_TIMEOUT = 30
 
 # Test Credentials from review request
