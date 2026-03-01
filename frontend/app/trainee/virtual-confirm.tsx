@@ -45,6 +45,25 @@ export default function VirtualConfirmScreen() {
   const ring3 = useRef(new Animated.Value(0)).current;
   const pollRef = useRef<NodeJS.Timeout | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const soundRef = useRef<Audio.Sound | null>(null);
+
+  // Play boxing-bell sound on trainer match
+  const playBoxingBell = async () => {
+    try {
+      const { sound } = await Audio.Sound.createAsync(
+        require('../../assets/sounds/boxing-bell.wav'),
+        { shouldPlay: true, volume: 1.0 }
+      );
+      soundRef.current = sound;
+      sound.setOnPlaybackStatusUpdate((status) => {
+        if (status.isLoaded && status.didJustFinish) {
+          sound.unloadAsync();
+        }
+      });
+    } catch (e) {
+      // Sound playback is non-critical
+    }
+  };
 
   useEffect(() => {
     // Radar spin
