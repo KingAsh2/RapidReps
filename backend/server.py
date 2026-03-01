@@ -953,10 +953,12 @@ def calculate_session_pricing(
     session_type: str,
     trainer_profile: dict,
     distance_miles: float = 0,
-    trainee_session_count: int = 0
+    trainee_session_count: int = 0,
+    has_membership: bool = False,
 ) -> dict:
     """
     Calculate full session pricing including travel fees and discounts.
+    Members get an additional 10% discount on all sessions.
     Returns a dict with all pricing components.
     """
     # Get base rate based on session type
@@ -991,6 +993,13 @@ def calculate_session_pricing(
     if trainee_session_count >= 2:  # This is their 3rd+ session
         discount_type = "multi_session_5pct"
         discount_amount = int(base_rate * 0.05)
+
+    # Membership discount (10% off for members, stacks with multi-session)
+    membership_discount = 0
+    if has_membership:
+        membership_discount = int(base_rate * PricingRules.MEMBERSHIP_SESSION_DISCOUNT_PERCENT / 100)
+        discount_type = "membership_10pct" if not discount_type else f"{discount_type}+membership_10pct"
+        discount_amount += membership_discount
     
     # Calculate final amounts
     subtotal = base_rate + travel_fee - discount_amount
@@ -1005,6 +1014,7 @@ def calculate_session_pricing(
         'platformTravelFeeCents': platform_travel_fee,
         'discountType': discount_type,
         'discountAmountCents': discount_amount,
+        'membershipDiscountCents': membership_discount,
         'finalSessionPriceCents': subtotal,
         'platformFeePercent': PricingRules.PLATFORM_FEE_PERCENT,
         'platformFeeCents': platform_fee,
