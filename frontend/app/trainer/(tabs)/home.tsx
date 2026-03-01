@@ -1206,7 +1206,7 @@ const styles = StyleSheet.create({
   tapHintText: {
     fontSize: 12,
     fontWeight: '600',
-    color: COLORS.orange,
+    color: COLORS.navy,
   },
   actionButtons: {
     flexDirection: 'row',
