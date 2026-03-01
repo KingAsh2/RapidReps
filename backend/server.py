@@ -246,6 +246,59 @@ def calculate_cancellation_fee(session_type: str) -> dict:
     fee_cents = fee_map.get(session_type, PricingRules.CANCELLATION_FEE_VIRTUAL)
     return calculate_session_payout(fee_cents, session_type)
 
+
+def calculate_time_based_cancellation_penalty(session_start: datetime, session_price_cents: int, cancelled_by: str) -> dict:
+    """
+    Calculate cancellation penalty based on time before session.
+    
+    Trainee cancellation rules:
+      > 12 hours before → $0 penalty
+      12-2 hours before → 25% penalty
+      < 2 hours before → 50% penalty
+    
+    Trainer cancellation rules:
+      > 12 hours before → no penalty, full refund to trainee
+      ≤ 12 hours before → full refund + virtual session credit, trainer gets strike
+    """
+    now = datetime.utcnow()
+    hours_until_session = (session_start - now).total_seconds() / 3600
+
+    if cancelled_by == "trainee":
+        if hours_until_session > 12:
+            penalty_percent = 0
+        elif hours_until_session > 2:
+            penalty_percent = 25
+        else:
+            penalty_percent = 50
+        
+        penalty_cents = int(session_price_cents * penalty_percent / 100)
+        refund_cents = session_price_cents - penalty_cents
+        trainer_payout_cents = int(penalty_cents * PricingRules.TRAINER_REVENUE_PERCENT / 100)
+        platform_fee_cents = penalty_cents - trainer_payout_cents
+
+        return {
+            "penalty_percent": penalty_percent,
+            "penalty_cents": penalty_cents,
+            "refund_cents": refund_cents,
+            "trainer_payout_cents": trainer_payout_cents,
+            "platform_fee_cents": platform_fee_cents,
+            "hours_until_session": round(hours_until_session, 1),
+            "gives_strike": False,
+            "gives_credit": False,
+        }
+    else:  # trainer cancellation
+        gives_strike = hours_until_session <= 12
+        return {
+            "penalty_percent": 0,
+            "penalty_cents": 0,
+            "refund_cents": session_price_cents,
+            "trainer_payout_cents": 0,
+            "platform_fee_cents": 0,
+            "hours_until_session": round(hours_until_session, 1),
+            "gives_strike": gives_strike,
+            "gives_credit": gives_strike,  # free virtual session credit
+        }
+
 def get_minimum_price(session_type: str) -> int:
     """Get minimum price for session type in cents"""
     min_prices = {
