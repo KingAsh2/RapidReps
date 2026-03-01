@@ -98,32 +98,8 @@ export default function SavedTrainersScreen() {
   const loadSavedTrainers = async () => {
     try {
       setLoading(true);
-      // Mock data for demonstration
-      const mockSavedTrainers = [
-        {
-          id: '1',
-          name: 'Sarah Johnson',
-          profilePhoto: null,
-          rating: 4.9,
-          reviewCount: 127,
-          specialties: ['HIIT', 'Strength Training'],
-          hourlyRate: 75,
-          isVerified: true,
-          bio: 'Certified personal trainer with 8+ years of experience in high-intensity training.',
-        },
-        {
-          id: '2',
-          name: 'Mike Chen',
-          profilePhoto: null,
-          rating: 4.8,
-          reviewCount: 89,
-          specialties: ['Yoga', 'Flexibility'],
-          hourlyRate: 65,
-          isVerified: true,
-          bio: 'RYT-500 certified yoga instructor specializing in vinyasa and power yoga.',
-        },
-      ];
-      setSavedTrainers(mockSavedTrainers);
+      // TODO: Fetch from backend when saved trainers API is implemented
+      setSavedTrainers([]);
     } catch (error) {
       console.error('Error loading saved trainers:', error);
     } finally {
