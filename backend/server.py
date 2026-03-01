@@ -2170,13 +2170,23 @@ async def create_session(session: SessionCreate, current_user: dict = Depends(ge
         'trainerId': session.trainerId,
         'status': SessionStatus.COMPLETED
     })
+
+    # Check for active membership (10% discount)
+    has_membership = False
+    trainee_membership = await db.memberships.find_one({
+        'userId': session.traineeId,
+        'status': MembershipStatus.ACTIVE,
+    })
+    if trainee_membership:
+        has_membership = True
     
     # Calculate full pricing
     pricing = calculate_session_pricing(
         session_type=session_type,
         trainer_profile=trainer_profile,
         distance_miles=distance_miles,
-        trainee_session_count=previous_sessions
+        trainee_session_count=previous_sessions,
+        has_membership=has_membership,
     )
     
     # Generate safety PIN for in-home sessions (PRD Rule #7)
