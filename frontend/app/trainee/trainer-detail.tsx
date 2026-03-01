@@ -1111,7 +1111,7 @@ const styles = StyleSheet.create({
   sessionTypeText: {
     fontSize: 12,
     fontWeight: '700',
-    color: COLORS.orange,
+    color: COLORS.navy,
   },
   sessionTypeTextSelected: {
     color: COLORS.white,
@@ -1201,7 +1201,7 @@ const styles = StyleSheet.create({
   priceTotalValue: {
     fontSize: 24,
     fontWeight: '900',
-    color: COLORS.orange,
+    color: COLORS.navy,
   },
   platformFeeNote: {
     fontSize: 11,
