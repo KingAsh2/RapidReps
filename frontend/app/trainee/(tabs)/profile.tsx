@@ -932,6 +932,41 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
     letterSpacing: 0.3,
   },
+  soundToggleCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  soundToggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  soundToggleIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(31, 184, 180, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  soundToggleLabel: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: COLORS.navy,
+  },
+  soundToggleSub: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: COLORS.gray,
+    marginTop: 2,
+  },
   // Streak Card
   streakCard: {
     marginBottom: 16,
