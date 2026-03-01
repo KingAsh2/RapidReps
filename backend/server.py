@@ -5618,6 +5618,276 @@ async def notification_scheduler():
         await asyncio.sleep(300)  # Run every 5 minutes
 
 
+# ─── VIRTUAL MATCHING SYSTEM ───────────────────────────────────────
+@api_router.post("/virtual/request")
+async def create_virtual_request(current_user: dict = Depends(get_current_user)):
+    """Trainee requests a virtual session — notifies all eligible trainers"""
+    if current_user.get("role") != "trainee":
+        raise HTTPException(400, "Only trainees can request virtual sessions")
+
+    # Check for existing active request
+    existing = await db.virtual_requests.find_one({
+        "traineeId": str(current_user["_id"]),
+        "status": {"$in": ["searching", "matched"]}
+    })
+    if existing:
+        return {
+            "requestId": str(existing["_id"]),
+            "status": existing["status"],
+            "matchedTrainerId": existing.get("matchedTrainerId"),
+        }
+
+    request_doc = {
+        "traineeId": str(current_user["_id"]),
+        "traineeName": current_user.get("fullName", "A Trainee"),
+        "status": "searching",
+        "matchedTrainerId": None,
+        "matchedTrainerName": None,
+        "notifiedTrainers": [],
+        "rejectedTrainers": [],
+        "createdAt": datetime.utcnow(),
+    }
+    result = await db.virtual_requests.insert_one(request_doc)
+    request_id = str(result.inserted_id)
+
+    # Find all eligible trainers: offersVirtual=True AND isAvailable=True
+    eligible = await db.trainer_profiles.find(
+        {"offersVirtual": True, "isAvailable": True},
+        {"_id": 0, "userId": 1}
+    ).to_list(50)
+    trainer_ids = [p["userId"] for p in eligible]
+
+    # Notify all eligible trainers
+    notified = []
+    for tid in trainer_ids:
+        try:
+            await create_and_send_notification(
+                tid,
+                "Virtual Session Request",
+                f"{current_user.get('fullName', 'A trainee')} is requesting a Virtual Live Training Session. Accept or Reject.",
+                "virtual_request",
+                {"screen": "trainer/virtual-request", "requestId": request_id}
+            )
+            notified.append(tid)
+        except Exception:
+            pass
+
+    await db.virtual_requests.update_one(
+        {"_id": result.inserted_id},
+        {"$set": {"notifiedTrainers": notified}}
+    )
+
+    return {"requestId": request_id, "status": "searching", "trainersNotified": len(notified)}
+
+
+@api_router.get("/virtual/request/{request_id}")
+async def get_virtual_request(request_id: str, current_user: dict = Depends(get_current_user)):
+    """Check the status of a virtual request"""
+    try:
+        req = await db.virtual_requests.find_one({"_id": ObjectId(request_id)})
+    except Exception:
+        raise HTTPException(404, "Request not found")
+    if not req:
+        raise HTTPException(404, "Request not found")
+
+    uid = str(current_user["_id"])
+    if uid != req["traineeId"] and uid not in req.get("notifiedTrainers", []):
+        raise HTTPException(403, "Not authorized")
+
+    result = {
+        "requestId": str(req["_id"]),
+        "status": req["status"],
+        "traineeId": req["traineeId"],
+        "traineeName": req.get("traineeName"),
+        "matchedTrainerId": req.get("matchedTrainerId"),
+        "matchedTrainerName": req.get("matchedTrainerName"),
+        "createdAt": req["createdAt"].isoformat(),
+    }
+
+    # If matched, include trainer profile data
+    if req.get("matchedTrainerId"):
+        trainer_user = await db.users.find_one({"_id": ObjectId(req["matchedTrainerId"])}, {"_id": 0, "password": 0})
+        trainer_profile = await db.trainer_profiles.find_one({"userId": req["matchedTrainerId"]}, {"_id": 0})
+        if trainer_user:
+            result["trainerDetails"] = {
+                "fullName": trainer_user.get("fullName", ""),
+                "profilePhoto": trainer_user.get("profilePhoto"),
+                "bio": trainer_profile.get("bio", "") if trainer_profile else "",
+                "averageRating": trainer_profile.get("averageRating", 0) if trainer_profile else 0,
+                "totalReviews": trainer_profile.get("totalReviews", 0) if trainer_profile else 0,
+                "virtualRateCents": trainer_profile.get("virtualRateCents", 3000) if trainer_profile else 3000,
+                "tier": calculate_trainer_tier(
+                    trainer_profile.get("totalReviews", 0) if trainer_profile else 0,
+                    trainer_profile.get("averageRating", 0) if trainer_profile else 0,
+                    False
+                ),
+            }
+    return result
+
+
+@api_router.get("/virtual/pending")
+async def get_pending_virtual_requests(current_user: dict = Depends(get_current_user)):
+    """Get pending virtual requests for a trainer"""
+    if current_user.get("role") != "trainer":
+        raise HTTPException(400, "Only trainers can view pending requests")
+
+    uid = str(current_user["_id"])
+    requests = await db.virtual_requests.find({
+        "status": "searching",
+        "notifiedTrainers": uid,
+        "rejectedTrainers": {"$ne": uid},
+    }).sort("createdAt", -1).to_list(10)
+
+    return [{
+        "requestId": str(r["_id"]),
+        "traineeName": r.get("traineeName", "A Trainee"),
+        "createdAt": r["createdAt"].isoformat(),
+    } for r in requests]
+
+
+@api_router.post("/virtual/accept/{request_id}")
+async def accept_virtual_request(request_id: str, current_user: dict = Depends(get_current_user)):
+    """Trainer accepts a virtual session — first-come-first-served"""
+    if current_user.get("role") != "trainer":
+        raise HTTPException(400, "Only trainers can accept requests")
+
+    try:
+        oid = ObjectId(request_id)
+    except Exception:
+        raise HTTPException(404, "Invalid request ID")
+
+    # Atomic update — only succeeds if still 'searching'
+    result = await db.virtual_requests.find_one_and_update(
+        {"_id": oid, "status": "searching"},
+        {"$set": {
+            "status": "matched",
+            "matchedTrainerId": str(current_user["_id"]),
+            "matchedTrainerName": current_user.get("fullName", "A Trainer"),
+            "matchedAt": datetime.utcnow(),
+        }},
+        return_document=True,
+    )
+
+    if not result:
+        # Another trainer already accepted
+        return {"success": False, "message": "Another trainer has already accepted this session request."}
+
+    # Notify the trainee
+    await create_and_send_notification(
+        result["traineeId"],
+        "Trainer Found!",
+        f"{current_user.get('fullName', 'A trainer')} has accepted your virtual session request!",
+        "virtual_matched",
+        {"screen": "trainee/virtual-confirm", "requestId": request_id}
+    )
+
+    # Notify other trainers that this request is taken
+    for tid in result.get("notifiedTrainers", []):
+        if tid != str(current_user["_id"]):
+            await create_and_send_notification(
+                tid,
+                "Session Taken",
+                "Another trainer has accepted this virtual session request.",
+                "virtual_taken",
+                {"requestId": request_id}
+            )
+
+    return {"success": True, "message": "You have been matched with the trainee!"}
+
+
+@api_router.post("/virtual/reject/{request_id}")
+async def reject_virtual_request(request_id: str, current_user: dict = Depends(get_current_user)):
+    """Trainer rejects a virtual session request"""
+    try:
+        oid = ObjectId(request_id)
+    except Exception:
+        raise HTTPException(404, "Invalid request ID")
+
+    await db.virtual_requests.update_one(
+        {"_id": oid},
+        {"$addToSet": {"rejectedTrainers": str(current_user["_id"])}}
+    )
+    return {"success": True}
+
+
+@api_router.post("/virtual/trainee-confirm/{request_id}")
+async def trainee_confirm_match(request_id: str, current_user: dict = Depends(get_current_user)):
+    """Trainee confirms the matched trainer — proceed to payment"""
+    try:
+        req = await db.virtual_requests.find_one({"_id": ObjectId(request_id)})
+    except Exception:
+        raise HTTPException(404, "Request not found")
+    if not req or req["traineeId"] != str(current_user["_id"]):
+        raise HTTPException(403, "Not authorized")
+    if req["status"] != "matched":
+        raise HTTPException(400, "Request is not in matched state")
+
+    await db.virtual_requests.update_one(
+        {"_id": ObjectId(request_id)},
+        {"$set": {"status": "confirmed", "confirmedAt": datetime.utcnow()}}
+    )
+    return {"success": True, "trainerId": req["matchedTrainerId"]}
+
+
+@api_router.post("/virtual/find-another/{request_id}")
+async def trainee_find_another(request_id: str, current_user: dict = Depends(get_current_user)):
+    """Trainee rejects the matched trainer and re-enters the queue"""
+    try:
+        req = await db.virtual_requests.find_one({"_id": ObjectId(request_id)})
+    except Exception:
+        raise HTTPException(404, "Request not found")
+    if not req or req["traineeId"] != str(current_user["_id"]):
+        raise HTTPException(403, "Not authorized")
+
+    old_trainer = req.get("matchedTrainerId")
+    rejected_list = req.get("rejectedTrainers", [])
+    if old_trainer:
+        rejected_list.append(old_trainer)
+
+    await db.virtual_requests.update_one(
+        {"_id": ObjectId(request_id)},
+        {"$set": {
+            "status": "searching",
+            "matchedTrainerId": None,
+            "matchedTrainerName": None,
+            "rejectedTrainers": rejected_list,
+        }}
+    )
+
+    # Re-notify remaining eligible trainers
+    eligible = await db.trainer_profiles.find(
+        {"offersVirtual": True, "isAvailable": True, "userId": {"$nin": rejected_list}},
+        {"_id": 0, "userId": 1}
+    ).to_list(50)
+    for p in eligible:
+        await create_and_send_notification(
+            p["userId"],
+            "Virtual Session Request",
+            f"{current_user.get('fullName', 'A trainee')} is looking for a Virtual Live Trainer. Accept or Reject.",
+            "virtual_request",
+            {"screen": "trainer/virtual-request", "requestId": request_id}
+        )
+
+    return {"success": True, "status": "searching"}
+
+
+@api_router.post("/virtual/cancel/{request_id}")
+async def cancel_virtual_request(request_id: str, current_user: dict = Depends(get_current_user)):
+    """Cancel a virtual session request"""
+    try:
+        req = await db.virtual_requests.find_one({"_id": ObjectId(request_id)})
+    except Exception:
+        raise HTTPException(404, "Request not found")
+    if not req or req["traineeId"] != str(current_user["_id"]):
+        raise HTTPException(403, "Not authorized")
+
+    await db.virtual_requests.update_one(
+        {"_id": ObjectId(request_id)},
+        {"$set": {"status": "cancelled"}}
+    )
+    return {"success": True}
+
+
 @app.on_event("startup")
 async def start_notification_scheduler():
     asyncio.create_task(notification_scheduler())
