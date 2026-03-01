@@ -3754,7 +3754,7 @@ async def calculate_badge_progress(trainer_id: str) -> TrainerAchievements:
     
     # 2. Weekend Warrior Badge - 10 weekend sessions
     weekend_sessions = [s for s in completed_sessions 
-                       if datetime.fromisoformat(str(s['sessionDateTimeStart'])).weekday() >= 5]
+                       if s.get('sessionDateTimeStart') and datetime.fromisoformat(str(s['sessionDateTimeStart'])).weekday() >= 5]
     weekend_progress = min(len(weekend_sessions), 10)
     badges.append(BadgeProgress(
         badgeType=BadgeType.WEEKEND_WARRIOR,
@@ -3780,7 +3780,7 @@ async def calculate_badge_progress(trainer_id: str) -> TrainerAchievements:
     
     # 4. Early Bird Badge - 10 sessions before noon
     early_sessions = [s for s in completed_sessions 
-                     if datetime.fromisoformat(str(s['sessionDateTimeStart'])).hour < 12]
+                     if s.get('sessionDateTimeStart') and datetime.fromisoformat(str(s['sessionDateTimeStart'])).hour < 12]
     early_progress = min(len(early_sessions), 10)
     badges.append(BadgeProgress(
         badgeType=BadgeType.EARLY_BIRD,
@@ -3794,7 +3794,7 @@ async def calculate_badge_progress(trainer_id: str) -> TrainerAchievements:
     
     # 5. Night Owl Badge - 10 sessions after 6 PM
     night_sessions = [s for s in completed_sessions 
-                     if datetime.fromisoformat(str(s['sessionDateTimeStart'])).hour >= 18]
+                     if s.get('sessionDateTimeStart') and datetime.fromisoformat(str(s['sessionDateTimeStart'])).hour >= 18]
     night_progress = min(len(night_sessions), 10)
     badges.append(BadgeProgress(
         badgeType=BadgeType.NIGHT_OWL,
@@ -3842,6 +3842,8 @@ async def calculate_badge_progress(trainer_id: str) -> TrainerAchievements:
     # 8. Flexibility Guru Badge - 10 sessions across 3 time blocks
     time_blocks = set()
     for session in completed_sessions:
+        if not session.get('sessionDateTimeStart'):
+            continue
         hour = datetime.fromisoformat(str(session['sessionDateTimeStart'])).hour
         if hour < 12:
             time_blocks.add('morning')
