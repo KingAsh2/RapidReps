@@ -1,141 +1,122 @@
 # RapidReps - Product Requirements Document
-## "Uber for Personal Training"
 
-### Architecture
-- **Frontend**: React Native (Expo) with Expo Router
-- **Backend**: FastAPI (Python) with MongoDB
-- **Payments**: Stripe PaymentSheet (native) + PaymentIntents (backend)
-- **Maps**: Google Maps API
-- **Notifications**: Expo Push API (via `expo-notifications`)
-- **Email**: SendGrid (8 templates, NOOP until API key provided)
-- **Rate Limiting**: slowapi (login: 10/min, signup: 5/min, booking: 10/min)
-- **Build**: EAS | **Deployment**: TestFlight (iOS)
+## Original Problem Statement
+Build a fitness trainer-trainee matching platform with Uber-style real-time matching, virtual and in-person sessions, payments via Stripe, and comprehensive admin tools.
 
----
+## Architecture
+- **Frontend**: React Native / Expo with Expo Router
+- **Backend**: FastAPI (Python) on port 8001
+- **Database**: MongoDB
+- **Payments**: Stripe integration
+- **Notifications**: Expo Push SDK + Smart Notification Engine
 
-### ALL Features — Complete
+## Core Features Implemented
 
-#### Core Features
-- Admin Panel V2 (full user/session/transaction management + **pagination**)
-- Streaks / Consistency Points
-- Achievement System (12 badges)
-- Weekly Leaderboard
-- Trainer Video Intros
-- Distance Labels on Map
-- Messaging System
-- **"Share My Streak" Social Card** — shareable card with streak stats, animated fire icon
+### Authentication & User Management
+- JWT-based login/signup with role-based access (trainee, trainer, admin)
+- Profile management for both trainers and trainees
+- Trainer onboarding with specialization selection
 
-#### Security & Hardening
-- [x] Real Stripe PaymentIntents for memberships ($19.99/mo) and boosts
-- [x] Stripe PaymentSheet on iOS (native) with web fallback
-- [x] API rate limiting via slowapi
-- [x] Rating system: 6 server-side rules + 48-hour window
-- [x] XSS input sanitization on all user-generated text
-- [x] emailVerified field on user model
+### Uber-Style Matching Engine (P0 - COMPLETE)
+- Weighted scoring: ETA 40%, Rating 25%, Price 15%, Boost 10%, Responsiveness 5%, Completeness 5%
+- Wave-based trainer notifications:
+  - Wave 1: ETA ≤ 5 min, top 3 trainers
+  - Wave 2: ETA ≤ 10 min, top 3 trainers
+  - Wave 3: ETA ≤ 15 min, top 5 trainers
+- Virtual sessions: All eligible, top 5 by score
+- First-accept-wins with atomic MongoDB update (race condition prevention)
+- Progressive wave expansion for stale requests (background scheduler)
 
-#### Push Notifications System (Full — 10 types)
-- session_requested, session_accepted, session_declined, session_ended, session_reminder
-- rate_reminder, payment_released, new_message, streak_warning, boost_expiring
-- Background scheduler (every 5 min), notification bell on home screens
-- **Notification Preferences** screen with per-type toggles
+### Smart Push Notification Engine (P0 - COMPLETE)
+- New notification types: virtual_request, virtual_matched, virtual_taken, missed_acceptance, late_warning, session_started
+- Intelligent routing: Only qualified trainers notified based on ETA/score
+- Background scheduler with:
+  - Progressive wave expansion for stale requests (2+ minutes)
+  - Missed acceptance tracking (3+ minutes, re-notifies non-responders)
+  - Late warning for in-person sessions (10+ minutes past start)
+  - Session reminders (30 minutes before)
+  - Streak warnings (6 days since last session)
+  - Boost expiry alerts (24 hours before)
 
-#### Password Reset (Full Flow)
-- [x] POST /api/auth/forgot-password — generates token, sends email (or NOOP)
-- [x] POST /api/auth/reset-password — validates token, expires after 1h, marks used
-- [x] Frontend forgot-password screen now calls real API
-- [x] No email enumeration (same response for existing/non-existing emails)
+### Virtual Live Video Screen (P0 - COMPLETE)
+- Scrollable layout with SafeAreaView
+- Radar animation during trainer search
+- Visible countdown timer
+- Cancel button functionality
+- "No trainers found" fallback UI
+- Boxing-bell sound (expo-av) on trainer acceptance
 
-#### Weekly Digest
-- [x] GET /api/weekly-digest — returns training summary (sessions, minutes, streak, rank)
-- [x] Triggers email send via SendGrid (NOOP until API key provided)
+### 508 Compliance (P0 - COMPLETE)
+- All orange text (#FF7F00, #F7931E) removed from text elements
+- Replaced with navy (#1a2a5e) or teal (#1FB8B4) for better contrast
+- "Time to Lock In" subtitle: White with text shadow (was orange/warning)
+- "Delete Account" button: Dark red (#CC0000) with text shadow, fontWeight 800
+- Text shadows on all image background headers across app:
+  - trainee: home, profile, confirm-booking, membership, schedule-training, virtual-confirm
+  - trainer: boosts, earnings, profile
+  - auth: login
+- Higher font-weight (800-900) on all CTA buttons
 
-#### Email Infrastructure (SendGrid — 8 Templates Ready)
-1. Password Reset
-2. Welcome / Email Verification
-3. Session Booked Confirmation
-4. Payment Receipt
-5. Weekly Digest
-6. Streak Warning
-7. Trainer Payout Notification
-8. Admin Alert
-- All run in NOOP mode (logged) until SENDGRID_API_KEY is set in backend/.env
+### Booking & Payments
+- Session scheduling with date/time picker
+- Stripe payment integration
+- Session confirmation flow
+- Payment release after session completion
 
-#### Admin Panel Pagination
-- [x] Users, Sessions, Transactions — 20 per page with prev/next controls
-- [x] Backend supports arbitrary limit/skip params with total count
+### Admin Dashboard
+- User management (view/edit/block users)
+- SVG-based charts (DonutChart, BarChart)
+- Real-time "Top Trainer This Week" leaderboard
+- Session and revenue analytics
 
-#### Improved Empty States
-- [x] Trainer sessions: context-specific messages per filter tab
-- [x] Trainer earnings: helpful CTA text
-- [x] All existing screens already had good empty states
+### Additional Features
+- Trainer boost system (visibility enhancement)
+- Membership plans with Stripe
+- In-app messaging
+- Review and rating system
+- Sound effects with settings toggle (SoundContext)
+- Animated UI components (AnimatedPillButton)
 
-#### Confirmation Modals
-- [x] Trainer logout, Trainee logout, Trainee delete account, Admin remove user
+## Test Credentials
+- Admin: admin@rapidreps.com / admin123
+- Trainers: trainer1@test.com, trainer2@test.com / test123
+- Trainees: trainee1@test.com, trainee2@test.com / test123
 
-### Test Results
-- Iteration 12: 15/15 (rating + payment)
-- Iteration 13: 18/18 (notifications)
-- Iteration 14: 38/38 (comprehensive QA)
-- Iteration 15: 27/27 (password reset, digest, pagination, email infra)
-- **TOTAL: 98/98 tests passing (100%)**
+## Key Collections (MongoDB)
+- users, trainer_profiles, trainee_profiles
+- sessions, virtual_requests
+- notifications, notification_preferences
+- boosts, reviews, messages
 
-### Deployment Fix Log
-- [x] Fixed build failure: corrected import paths in `app/notifications.tsx` (`../../src/` → `../src/`)
+## API Endpoints (Key)
+- POST /api/auth/login, /api/auth/signup
+- POST /api/virtual/request (create virtual session request)
+- POST /api/instant/request (create in-person instant request)
+- POST /api/virtual/accept/{request_id} (trainer accepts)
+- GET /api/virtual/request/{request_id} (check status)
+- GET /api/notifications, /api/notification-preferences
+- GET /api/admin/dashboard, /api/admin/top-trainers
 
-### UI/UX Updates
-- [x] Created reusable `AnimatedPillButton` component (`src/components/AnimatedPillButton.tsx`)
-  - Pill-shaped (borderRadius: 30), spring press animation (scale 0.95 → 1)
-  - Variants: `primary` (teal→orange gradient), `teal`, `outline`, `danger`
-  - Supports icon, arrow indicator, loading state, disabled state
-- [x] Updated buttons: Welcome screen, Login, Signup, Forgot Password
-- [x] Enhanced Admin Panel Overview:
-  - Timeframe filter pills (Today/This Week/This Month) — visual only
-  - Stat cards with subtitles and growth tags (placeholder %s)
-  - SVG Donut Chart for User Breakdown (Trainers vs Trainees)
-  - SVG Donut Chart for Revenue Split (Platform vs Trainer payouts)
-  - SVG Mini Bar Chart for Weekly Activity (placeholder session data)
-  - SVG Donut Chart for Session Status (Completed/Active/Pending)
-  - Revenue progress bar with Platform vs Trainer split
-  - Expanded Quick Info with Pending card
-  - "Attention Needed" section with navigable list items
-  - "Top Trainer This Week" card with gradient trophy avatar
-  - Brand colors: Orange #FF7F00, Teal #1FB8B4, Navy #0f1b3d, Success #00C853
-- [x] Removed hardcoded mock trainers "Sarah Johnson" and "Mike Chen" from saved.tsx
-  - Saved Trainers tab now shows empty state until real saved trainers API is built
-  - Also cleaned up share-status.tsx fallback name
-- [x] 508 Accessibility / Contrast Fixes:
-  - Delete Account button: bold (#CC0000), larger (16px), underlined
-  - Orange text on specialty tags, distance labels, price totals, rating labels → replaced with navy (#0f1b3d) for WCAG compliance
-  - All key screens updated (trainer-detail, saved, rate-session, profile)
-- [x] Sound Effects System:
-  - Created SoundContext with expo-av (short 0.15s tap sound)
-  - Toggle switch in Trainee Profile under "Sound Effects"
-  - Persists setting via AsyncStorage
-- [x] Virtual Trainer Matching System (P2):
-  - Backend: 8 new endpoints (/api/virtual/request, /pending, /accept, /reject, /trainee-confirm, /find-another, /cancel, /request/:id)
-  - Atomic first-come-first-served trainer acceptance
-  - Push notifications to all eligible trainers (offersVirtual + isAvailable)
-  - Frontend: New trainee matching screen (searching animation → trainer profile card → accept/find another)
-  - Frontend: New trainer virtual-request screen (accept/reject cards with auto-refresh)
-  - Backend: `GET /api/admin/top-trainers?days=7&limit=5` — aggregates completed sessions by trainer
-  - Frontend: Dynamic ranked list with tier badges, ratings, session counts
-  - Falls back to all-time top-rated trainers if no sessions in the period
+## Remaining Tasks
 
-### Deployment Readiness: PRODUCTION READY
+### P1 - Medium Priority (UPCOMING)
+1. Advanced GPS System - Live en-route tracking
+2. No-Show & Cancellation Automation - Stripe penalties
+3. Membership System - True benefit enforcement
+4. Boost System - Enhanced features (profile glow, insights)
 
-### Test Credentials
-- **Admin**: admin@rapidreps.com / admin123
-- **Trainer**: trainer1@test.com / test123
-- **Trainee**: trainee1@test.com / test123
+### P2 - Secondary
+5. Session Verification - Selfie check before session
 
-### To Activate Email Sending
-Add to `/app/backend/.env`:
-```
-SENDGRID_API_KEY=your_key_here
-FROM_EMAIL=noreply@rapidreps.com
-```
+### P3+ - Backlog
+6. SendGrid email integration (awaiting API key)
+7. Toast notifications (sonner)
+8. TypeScript strict-mode warnings (86+)
 
-### Remaining Backlog
-- [ ] Resolve 86+ TypeScript strict-mode warnings
-- [ ] Migrate Base64 images to cloud storage (at scale)
-- [ ] In-app Weekly Report screen (currently API-only + email)
+## Mocked/Inactive Services
+- SendGrid email: No-op mode (awaiting API key)
+- Push notifications: Sends to Expo servers but no real devices registered
+
+## Testing Status
+- Backend: 16/16 tests passed (iteration_16.json)
+- Test file: /app/backend/tests/test_p0_smart_matching_engine.py
