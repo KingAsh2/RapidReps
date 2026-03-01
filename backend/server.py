@@ -198,6 +198,8 @@ class PricingRules:
     
     # Membership Program - 100% to RapidReps
     MEMBERSHIP_MONTHLY_CENTS = 1999  # $19.99/month
+    MEMBERSHIP_SESSION_DISCOUNT_PERCENT = 10  # 10% off sessions for members
+    MEMBERSHIP_MATCHING_PRIORITY_BONUS = 0.15  # Score bonus in matching engine
     
     # Legacy fields for backward compatibility
     PLATFORM_FEE_PERCENT = 25  # Kept for compatibility
