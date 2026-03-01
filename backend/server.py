@@ -2556,73 +2556,138 @@ async def decline_session(session_id: str, current_user: dict = Depends(get_curr
 @api_router.patch("/sessions/{session_id}/cancel")
 async def cancel_session(session_id: str, current_user: dict = Depends(get_current_user)):
     """
-    Trainee cancels/withdraws a session request.
-    PRD Rule #5: Cancellation Fees by session type.
-    - Virtual: $15
-    - Outdoor: $25
-    - In-Home: $35
+    Cancel a session with time-based penalty rules.
+    
+    TRAINEE cancellation:
+      > 12h before → $0 penalty
+      12h-2h before → 25% penalty
+      < 2h before → 50% penalty
+    
+    TRAINER cancellation:
+      > 12h before → no penalty, full refund
+      ≤ 12h before → full refund + virtual credit, trainer gets strike
     """
     session = await db.sessions.find_one({'_id': ObjectId(session_id)})
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-    
-    # Verify it's the trainee's session
-    if session['traineeId'] != str(current_user['_id']):
+
+    user_id = str(current_user['_id'])
+    is_trainee = session['traineeId'] == user_id
+    is_trainer = session.get('trainerId') == user_id
+
+    if not is_trainee and not is_trainer:
         raise HTTPException(status_code=403, detail="Not authorized to cancel this session")
-    
-    # Check session status
+
     current_status = session.get('status')
-    
-    if current_status in [SessionStatus.COMPLETED]:
-        raise HTTPException(
-            status_code=400, 
-            detail="Cannot cancel completed session"
-        )
-    
+    if current_status in [SessionStatus.COMPLETED, SessionStatus.NO_SHOW]:
+        raise HTTPException(status_code=400, detail="Cannot cancel a completed or no-show session")
     if current_status == SessionStatus.CANCELLED:
         raise HTTPException(status_code=400, detail="Session already cancelled")
-    
     if current_status == SessionStatus.DECLINED:
-        raise HTTPException(status_code=400, detail="Session was already declined by trainer")
-    
-    # Calculate cancellation fee based on PRD rules
-    session_type = session.get('sessionType', SessionType.OUTDOOR)
-    cancellation_fee_cents = 0
-    refund_amount_cents = 0
+        raise HTTPException(status_code=400, detail="Session was already declined")
+
     final_price = session.get('finalSessionPriceCents', 0)
-    
-    if current_status in [SessionStatus.CONFIRMED, 'accepted']:
-        # PRD cancellation fees by session type
-        cancellation_fee_cents = get_cancellation_fee(session_type)
-        refund_amount_cents = max(0, final_price - cancellation_fee_cents)
-    elif current_status == SessionStatus.REQUESTED:
-        # No fee if still pending/requested
-        refund_amount_cents = final_price
-        cancellation_fee_cents = 0
-    
-    # Update session status
-    await db.sessions.update_one(
-        {'_id': ObjectId(session_id)},
-        {
-            '$set': {
-                'status': SessionStatus.CANCELLED,
-                'updatedAt': datetime.utcnow(),
-                'cancelledAt': datetime.utcnow(),
-                'cancelledBy': 'trainee',
-                'cancellationFeeCents': cancellation_fee_cents,
-                'refundAmountCents': refund_amount_cents
+    session_start = session.get('sessionDateTimeStart', datetime.utcnow() + timedelta(hours=24))
+    cancelled_by = "trainee" if is_trainee else "trainer"
+
+    # Calculate time-based penalty
+    penalty = calculate_time_based_cancellation_penalty(session_start, final_price, cancelled_by)
+
+    update_doc = {
+        'status': SessionStatus.CANCELLED,
+        'updatedAt': datetime.utcnow(),
+        'cancelledAt': datetime.utcnow(),
+        'cancelledBy': cancelled_by,
+        'cancellationPenaltyPercent': penalty['penalty_percent'],
+        'cancellationPenaltyCents': penalty['penalty_cents'],
+        'refundAmountCents': penalty['refund_cents'],
+        'trainerPayoutCents': penalty['trainer_payout_cents'],
+        'platformFeeCents': penalty['platform_fee_cents'],
+    }
+
+    # Handle Stripe refund if payment exists
+    payment_intent_id = session.get('paymentIntentId')
+    if payment_intent_id and not payment_intent_id.startswith('mock_') and penalty['refund_cents'] > 0:
+        try:
+            refund = stripe.Refund.create(
+                payment_intent=payment_intent_id,
+                amount=penalty['refund_cents'],
+                reason='requested_by_customer'
+            )
+            update_doc['stripeRefundId'] = refund.id
+        except stripe.error.StripeError as e:
+            update_doc['stripeRefundError'] = str(e)
+
+    # Handle trainer strike for late cancellation
+    if cancelled_by == "trainer" and penalty['gives_strike']:
+        update_doc['trainerStrikeApplied'] = True
+        await db.users.update_one(
+            {'_id': ObjectId(session['trainerId'])},
+            {
+                '$inc': {'performanceStrikes': 1},
+                '$push': {'strikeHistory': {
+                    'sessionId': session_id,
+                    'reason': 'late_cancellation',
+                    'createdAt': datetime.utcnow()
+                }}
             }
-        }
-    )
-    
-    updated_session = await db.sessions.find_one({'_id': ObjectId(session_id)})
-    
+        )
+        # Check if trainer has 3+ strikes → flag for account review
+        trainer = await db.users.find_one({'_id': ObjectId(session['trainerId'])})
+        if trainer and trainer.get('performanceStrikes', 0) >= 3:
+            await db.users.update_one(
+                {'_id': ObjectId(session['trainerId'])},
+                {'$set': {'accountUnderReview': True, 'reviewReason': '3+ performance strikes'}}
+            )
+
+        # Grant virtual session credit to trainee
+        if penalty['gives_credit']:
+            await db.session_credits.insert_one({
+                'userId': session['traineeId'],
+                'type': 'virtual_session',
+                'reason': f'Trainer late cancellation (session {session_id})',
+                'isUsed': False,
+                'createdAt': datetime.utcnow(),
+            })
+
+    await db.sessions.update_one({'_id': ObjectId(session_id)}, {'$set': update_doc})
+
+    # Notify the other party
+    if cancelled_by == "trainee":
+        await create_and_send_notification(
+            session.get('trainerId', ''),
+            "Session Cancelled",
+            f"The trainee has cancelled the session. {'No penalty applied.' if penalty['penalty_cents'] == 0 else f'Penalty: ${penalty[\"penalty_cents\"]/100:.2f}'}",
+            "session_declined",
+            {"sessionId": session_id}
+        )
+    else:
+        msg = "Your trainer cancelled the session. Full refund processed."
+        if penalty['gives_credit']:
+            msg += " You also received a free virtual session credit."
+        await create_and_send_notification(
+            session['traineeId'],
+            "Session Cancelled by Trainer",
+            msg,
+            "session_declined",
+            {"sessionId": session_id}
+        )
+
     return {
         'success': True,
-        'session': SessionResponse(**serialize_doc(updated_session)),
-        'cancellationFeeCents': cancellation_fee_cents,
-        'refundAmountCents': refund_amount_cents,
-        'message': f'Session cancelled. {"No cancellation fee." if cancellation_fee_cents == 0 else f"Cancellation fee: ${cancellation_fee_cents/100:.2f}. Refund: ${refund_amount_cents/100:.2f}"}'
+        'cancelledBy': cancelled_by,
+        'penaltyPercent': penalty['penalty_percent'],
+        'penaltyCents': penalty['penalty_cents'],
+        'refundCents': penalty['refund_cents'],
+        'trainerPayoutCents': penalty['trainer_payout_cents'],
+        'trainerStrike': penalty.get('gives_strike', False),
+        'virtualCredit': penalty.get('gives_credit', False),
+        'hoursUntilSession': penalty['hours_until_session'],
+        'message': (
+            f"Session cancelled by {cancelled_by}. "
+            f"{'No penalty.' if penalty['penalty_cents'] == 0 else f'Penalty: ${penalty[\"penalty_cents\"]/100:.2f}.'} "
+            f"Refund: ${penalty['refund_cents']/100:.2f}"
+        ),
     }
 
 @api_router.patch("/sessions/{session_id}/no-show")
