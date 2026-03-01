@@ -1187,7 +1187,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sortOptionTextActive: {
-    color: '#F7931E',
+    color: '#1FB8B4',
   },
   // Pending Card - Polished with border and more padding
   pendingCard: {
@@ -1434,7 +1434,7 @@ const styles = StyleSheet.create({
   styleTagText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#F7931E',
+    color: '#1a2a5e',
   },
   moreTag: {
     fontSize: 12,
@@ -1707,7 +1707,7 @@ const styles = StyleSheet.create({
   nearbyRating: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#F7931E',
+    color: '#FFB347',
     marginLeft: 3,
   },
   nearbyDistance: {
@@ -1725,7 +1725,7 @@ const styles = StyleSheet.create({
   nearbyPrice: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#F7931E',
+    color: '#FFFFFF',
   },
   noTrainersNearby: {
     alignItems: 'center',
