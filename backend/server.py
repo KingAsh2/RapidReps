@@ -2285,46 +2285,53 @@ async def confirm_trainer_gps(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Confirm trainer GPS arrival for in-home/outdoor sessions.
-    PRD Rule #7: Real-time GPS tracking for trainer arrival.
+    Confirm trainer GPS arrival for in-person sessions.
+    Distance thresholds:
+      In-person (outdoor/gym): ≤ 0.25 miles (400m)
+      At-home (trainee_home/in_home): ≤ 0.1 miles (160m)
     """
     try:
         oid = ObjectId(session_id)
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid session ID format")
-    
+
     session = await db.sessions.find_one({'_id': oid})
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-    
-    # Calculate distance from session location
+
+    session_type = session.get('sessionType', 'outdoor')
+    if session_type in (SessionType.IN_HOME, SessionType.TRAINEE_HOME):
+        max_distance = 0.1  # 160m for at-home
+    else:
+        max_distance = 0.25  # 400m for in-person
+
     if session.get('traineeLatitude') and session.get('traineeLongitude'):
         distance = calculate_distance(
             latitude, longitude,
             session['traineeLatitude'], session['traineeLongitude']
         )
-        
-        # Trainer should be within 0.1 miles (about 500 feet)
-        if distance > 0.1:
+        if distance > max_distance:
             return {
                 'success': False,
-                'message': f'You are {distance:.2f} miles from the session location. Please get closer.',
-                'distanceMiles': distance
+                'message': f'You are {distance:.2f} miles away. Must be within {max_distance} miles to start.',
+                'distanceMiles': round(distance, 3),
+                'requiredMiles': max_distance,
             }
-    
+
     await db.sessions.update_one(
         {'_id': oid},
-        {
-            '$set': {
-                'trainerGpsConfirmed': True,
-                'updatedAt': datetime.utcnow()
-            }
-        }
+        {'$set': {
+            'trainerGpsConfirmed': True,
+            'trainerArrivalLat': latitude,
+            'trainerArrivalLon': longitude,
+            'trainerArrivedAt': datetime.utcnow(),
+            'updatedAt': datetime.utcnow(),
+        }}
     )
-    
+
     return {
         'success': True,
-        'message': 'Location confirmed! You are at the session location.'
+        'message': 'Location confirmed! You are at the session location.',
     }
 
 @api_router.post("/sessions/{session_id}/end")
