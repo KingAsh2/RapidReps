@@ -4710,10 +4710,12 @@ async def get_pricing_rules():
         },
         "membership": {
             "monthlyPrice": PricingRules.MEMBERSHIP_MONTHLY_CENTS / 100,
+            "sessionDiscountPercent": PricingRules.MEMBERSHIP_SESSION_DISCOUNT_PERCENT,
+            "matchingPriorityBonus": PricingRules.MEMBERSHIP_MATCHING_PRIORITY_BONUS,
             "benefits": [
-                "Discounted sessions",
+                f"{PricingRules.MEMBERSHIP_SESSION_DISCOUNT_PERCENT}% off all sessions",
                 "1 free profile Boost per month",
-                "Priority customer support",
+                "Priority matching (faster trainer response)",
                 "Early access to elite trainers"
             ]
         }
