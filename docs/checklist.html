@@ -1,0 +1,3706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>RapidReps Testing Checklist</title>
+<style>
+@page { size: A4; margin: 15mm; }
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #111;
+  line-height: 1.5;
+  font-size: 11px;
+  max-width: 100%;
+  padding: 0;
+  margin: 0;
+}
+h1 { color: #0f3460; font-size: 20px; border-bottom: 3px solid #16c79a; padding-bottom: 6px; margin-top: 24px; }
+h2 { color: #0f3460; font-size: 15px; border-bottom: 2px solid #ddd; padding-bottom: 4px; margin-top: 20px; page-break-after: avoid; }
+h3 { color: #16213e; font-size: 13px; margin-top: 14px; page-break-after: avoid; }
+table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 10px; page-break-inside: avoid; }
+th, td { border: 1px solid #999; padding: 4px 6px; text-align: left; }
+th { background: #0f3460; color: #fff; font-weight: 600; }
+tr:nth-child(even) { background: #f4f8fc; }
+td:last-child { width: 50px; text-align: center; }
+hr { border: none; border-top: 1px solid #ccc; margin: 16px 0; }
+strong { color: #0f3460; }
+code { background: #f0f0f0; padding: 1px 4px; border-radius: 2px; font-size: 10px; }
+ul, ol { padding-left: 20px; }
+li { margin-bottom: 2px; }
+</style>
+</head>
+<body>
+<h1>RapidReps v3.0 — Manual Testing Checklist</h1>
+<h3>Print this document and check off each item as you test</h3>
+<p><strong>Test Date:</strong> <strong><em>_</em></strong><strong><em>_</em></strong><em><br />
+<strong>Tester Name:</strong> <strong><em>_</em></strong><strong><em>_</em></strong></em><br />
+<strong>App Version:</strong> 3.0<br />
+<strong>Device/Platform:</strong> <strong><em>_</em></strong><strong><em>_</em></strong>_</p>
+<hr />
+<h2>Legend</h2>
+<ul>
+<li>[ ] = Not tested</li>
+<li>P = Pass</li>
+<li>F = Fail (note issue on the line)</li>
+<li>S = Skipped (note reason)</li>
+<li>N/A = Not applicable</li>
+</ul>
+<hr />
+<h2>SECTION 1: HEALTH &amp; INFRASTRUCTURE</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1.1</td>
+<td>Open the app URL in browser</td>
+<td>App loads without errors</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>1.2</td>
+<td>Hit GET /api/health</td>
+<td>Returns {"status": "healthy"}</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>1.3</td>
+<td>Hit GET /api/downloads/user-manual</td>
+<td>Downloads PDF file (101KB+)</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>SECTION 2: ACCOUNT &amp; AUTHENTICATION</h2>
+<h3>2.1 Sign Up</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2.1.1</td>
+<td>Tap "Create Account" with valid name, email, password, role=Trainee</td>
+<td>Account created, token returned, redirected to home</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>2.1.2</td>
+<td>Tap "Create Account" with valid name, email, password, role=Trainer</td>
+<td>Account created, token returned, redirected to trainer home</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>2.1.3</td>
+<td>Try signup with duplicate email</td>
+<td>Error: "Email already registered"</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>2.1.4</td>
+<td>Try signup with password &lt; 6 characters</td>
+<td>Validation error</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>2.1.5</td>
+<td>Try signup with missing required fields</td>
+<td>Validation error</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>2.1.6</td>
+<td>Tap "Already have an account? Log In"</td>
+<td>Navigates to login screen</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>2.1.7</td>
+<td>Tap "View Terms of Service"</td>
+<td>Opens Terms screen</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>2.1.8</td>
+<td>Tap "View Privacy Policy"</td>
+<td>Opens Privacy screen</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>2.2 Log In</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2.2.1</td>
+<td>Login with valid trainee credentials (trainee1@test.com / test123)</td>
+<td>Success, redirected to trainee home</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>2.2.2</td>
+<td>Login with valid trainer credentials (trainer1@test.com / test123)</td>
+<td>Success, redirected to trainer home</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>2.2.3</td>
+<td>Login with admin credentials (admin@rapidreps.com / admin123)</td>
+<td>Success, redirected to admin dashboard</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>2.2.4</td>
+<td>Login with wrong password</td>
+<td>Error: "Invalid credentials"</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>2.2.5</td>
+<td>Login with non-existent email</td>
+<td>Error: "Invalid credentials"</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>2.2.6</td>
+<td>Verify tagline "Time to lock in" is displayed</td>
+<td>Tagline visible on login screen</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>2.2.7</td>
+<td>Tap "Forgot Password?"</td>
+<td>Opens password reset flow</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>2.2.8</td>
+<td>Tap "Don't have an account? Sign Up"</td>
+<td>Navigates to signup</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>2.3 Forgot Password / Reset Password</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2.3.1</td>
+<td>Enter valid email, tap "Send Reset Code"</td>
+<td>Returns success message (email mocked via SendGrid)</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>2.3.2</td>
+<td>Enter non-existent email</td>
+<td>Error or appropriate message</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>2.3.3</td>
+<td>Enter code + new password, tap "Reset Password"</td>
+<td>Password updated successfully</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>2.3.4</td>
+<td>Tap "Back to Login"</td>
+<td>Returns to login screen</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>2.4 Get Current User</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2.4.1</td>
+<td>GET /api/auth/me with valid token</td>
+<td>Returns user profile (name, email, role)</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>2.4.2</td>
+<td>GET /api/auth/me without token</td>
+<td>Returns 401 Unauthorized</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>2.5 Delete Account</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2.5.1</td>
+<td>Tap "Delete Account" on Profile tab</td>
+<td>Confirmation dialog appears</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>2.5.2</td>
+<td>Confirm deletion</td>
+<td>Account permanently deleted, redirected to login</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>2.5.3</td>
+<td>Try logging in with deleted account</td>
+<td>Error: "Invalid credentials"</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>SECTION 3: TRAINEE GUIDE</h2>
+<h3>3.1 Home Screen</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3.1.1</td>
+<td>Open home screen as trainee</td>
+<td>Greeting with your name displayed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.1.2</td>
+<td>Check notification bell icon</td>
+<td>Shows unread notification count</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.1.3</td>
+<td>"Virtual Session" button visible in "Need a Trainer Now" section</td>
+<td>Button present and tappable</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.1.4</td>
+<td>"In-Person Now" button visible</td>
+<td>Button present and tappable</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.1.5</td>
+<td>Sort trainers by Rating</td>
+<td>Trainers sorted by highest rating first</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.1.6</td>
+<td>Sort trainers by Price (Low to High)</td>
+<td>Trainers sorted by cheapest first</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.1.7</td>
+<td>Sort trainers by Price (High to Low)</td>
+<td>Trainers sorted by most expensive first</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.1.8</td>
+<td>Sort trainers by Distance</td>
+<td>Trainers sorted by nearest first</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.1.9</td>
+<td>Active sort option is highlighted in teal</td>
+<td>Visual indicator works</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>3.2 Trainer Cards</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3.2.1</td>
+<td>Each trainer card shows: photo, name, rating, review count</td>
+<td>All fields displayed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.2.2</td>
+<td>Training styles shown as tags</td>
+<td>Tags visible on card</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.2.3</td>
+<td>Price per session shown</td>
+<td>Price displayed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.2.4</td>
+<td>Distance shown (if location enabled)</td>
+<td>Distance displayed when GPS on</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.2.5</td>
+<td>Boosted badge (glow) shown for boosted trainer</td>
+<td>Glow indicator visible</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.2.6</td>
+<td>Member badge shown for member trainer</td>
+<td>Badge visible</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.2.7</td>
+<td>Tap "View Profile"</td>
+<td>Opens trainer detail screen</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.2.8</td>
+<td>Tap "Book Session"</td>
+<td>Goes to booking flow</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>3.3 Trainer Detail Screen</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3.3.1</td>
+<td>Profile photo, name, verification badge visible</td>
+<td>All displayed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.3.2</td>
+<td>Average rating and total reviews shown</td>
+<td>Data displayed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.3.3</td>
+<td>Bio/description shown</td>
+<td>Text displayed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.3.4</td>
+<td>Training styles listed</td>
+<td>Styles visible</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.3.5</td>
+<td>Session types offered (Virtual/Outdoor/In-Home)</td>
+<td>Types shown</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.3.6</td>
+<td>Pricing for each session type displayed</td>
+<td>Prices shown</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.3.7</td>
+<td>Reviews from other trainees visible</td>
+<td>Review list shown</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.3.8</td>
+<td>Tap "Book Virtual Session"</td>
+<td>Opens virtual booking flow</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.3.9</td>
+<td>Tap "Book Outdoor Session"</td>
+<td>Opens outdoor booking flow</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.3.10</td>
+<td>Tap "Book In-Home Session"</td>
+<td>Opens in-home booking flow</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.3.11</td>
+<td>Tap "Save Trainer"</td>
+<td>Trainer added to saved list</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.3.12</td>
+<td>Tap "Message"</td>
+<td>Opens direct message conversation</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.3.13</td>
+<td>Tap "Report"</td>
+<td>Opens report dialog</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.3.14</td>
+<td>Tap "Back"</td>
+<td>Returns to home</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>3.4 Saved Trainers</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3.4.1</td>
+<td>Open Saved tab (heart icon)</td>
+<td>Saved trainers list displayed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.4.2</td>
+<td>Tap "Unsave"</td>
+<td>Trainer removed from saved list</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.4.3</td>
+<td>Tap "Book" from saved list</td>
+<td>Opens booking flow</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.4.4</td>
+<td>Tap "View Profile" from saved list</td>
+<td>Opens trainer detail</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>3.5 Sessions Tab (Trainee)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3.5.1</td>
+<td>Open Sessions tab (calendar icon)</td>
+<td>Sessions list displayed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.5.2</td>
+<td>Sessions organized by status: Upcoming, In Progress, Completed, Cancelled</td>
+<td>Correct grouping</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.5.3</td>
+<td>Each card shows: trainer name/photo, date/time, type, status badge, price</td>
+<td>All fields present</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.5.4</td>
+<td>Tap "View Details" on a session</td>
+<td>Full session info shown</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.5.5</td>
+<td>Tap "Cancel" on upcoming session</td>
+<td>Cancellation flow starts</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.5.6</td>
+<td>Tap "Rate" on completed session</td>
+<td>Rating form opens</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.5.7</td>
+<td>Tap "View Summary" on completed session</td>
+<td>Post-session stats shown</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.5.8</td>
+<td>Tap "Mark No-Show" on applicable session</td>
+<td>No-show flow starts</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>3.6 Profile Tab (Trainee)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3.6.1</td>
+<td>Tap "Edit Profile"</td>
+<td>Profile edit form opens</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.6.2</td>
+<td>Tap "Membership"</td>
+<td>Membership screen opens</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.6.3</td>
+<td>Tap "Achievements"</td>
+<td>Achievement badges displayed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.6.4</td>
+<td>Tap "Notification Preferences"</td>
+<td>Notification settings open</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.6.5</td>
+<td>Tap "Sound &amp; Vibration Settings"</td>
+<td>Sound settings screen opens</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.6.6</td>
+<td>Tap "Privacy Policy"</td>
+<td>Opens privacy policy</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.6.7</td>
+<td>Tap "Terms of Service"</td>
+<td>Opens terms</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>3.6.8</td>
+<td>Tap "Log Out"</td>
+<td>User signed out, back to login</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>SECTION 4: TRAINER GUIDE</h2>
+<h3>4.1 Trainer Home Screen</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4.1.1</td>
+<td>Availability Toggle visible</td>
+<td>Toggle switch displayed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.1.2</td>
+<td>Toggle to "Available"</td>
+<td>Status changes, trainer appears in search</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.1.3</td>
+<td>Toggle to "Unavailable"</td>
+<td>Status changes, trainer hidden from search</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.1.4</td>
+<td>Today's Sessions section shows upcoming sessions</td>
+<td>List displayed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.1.5</td>
+<td>Pending Requests section shows awaiting requests</td>
+<td>Requests listed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.1.6</td>
+<td>Quick Stats show: today's earnings, sessions completed, rating</td>
+<td>Stats displayed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.1.7</td>
+<td>Tap "Accept" on pending request</td>
+<td>Session accepted</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.1.8</td>
+<td>Tap "Decline" on pending request</td>
+<td>Session declined</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>4.2 Trainer Sessions Tab</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4.2.1</td>
+<td>Tap "Start En Route" on confirmed session</td>
+<td>GPS tracking begins</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.2.2</td>
+<td>Tap "Confirm GPS Arrival"</td>
+<td>GPS proximity verified</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.2.3</td>
+<td>Tap "Start Session"</td>
+<td>Session status changes to In Progress</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.2.4</td>
+<td>Tap "End Session"</td>
+<td>Session completed, summary generated</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.2.5</td>
+<td>Tap "Cancel"</td>
+<td>Cancellation flow with penalty check</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.2.6</td>
+<td>Tap "Mark No-Show"</td>
+<td>No-show marked for trainee</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>4.3 Earnings Tab</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4.3.1</td>
+<td>Total Earnings displayed</td>
+<td>Lifetime earnings shown</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.3.2</td>
+<td>This Month earnings displayed</td>
+<td>Current month total shown</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.3.3</td>
+<td>Pending Payout amount displayed</td>
+<td>Withdrawal amount shown</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.3.4</td>
+<td>Recent Transactions listed</td>
+<td>Transaction history visible</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.3.5</td>
+<td>Tap "Request Payout"</td>
+<td>Payout request submitted</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.3.6</td>
+<td>Tap "View All Transactions"</td>
+<td>Full transaction list opens</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>4.4 Trainer Profile Tab</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4.4.1</td>
+<td>Tap "Edit Profile"</td>
+<td>Opens profile edit form</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.4.2</td>
+<td>Tap "Upload Intro Video"</td>
+<td>Video upload flow opens</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.4.3</td>
+<td>Tap "Verification"</td>
+<td>Verification status/form opens</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.4.4</td>
+<td>Tap "Visibility Boosts"</td>
+<td>Boost purchase screen opens</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>4.5 Edit Profile (Trainer)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4.5.1</td>
+<td>Update Full Name</td>
+<td>Name saved successfully</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.5.2</td>
+<td>Update Bio (max 500 chars)</td>
+<td>Bio saved</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.5.3</td>
+<td>Select Training Styles (multi-select)</td>
+<td>Styles saved</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.5.4</td>
+<td>Set Virtual Rate (verify min $30)</td>
+<td>Rate saved, enforces $30 minimum</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.5.5</td>
+<td>Set Outdoor Rate (verify min $40)</td>
+<td>Rate saved, enforces $40 minimum</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.5.6</td>
+<td>Set In-Home Rate (verify min $60)</td>
+<td>Rate saved, enforces $60 minimum</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.5.7</td>
+<td>Toggle Offers Virtual on/off</td>
+<td>Setting saved</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.5.8</td>
+<td>Toggle Offers In-Person on/off</td>
+<td>Setting saved</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.5.9</td>
+<td>Upload Profile Photo</td>
+<td>Photo uploaded and displayed</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>4.6 Trainer Verification</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4.6.1</td>
+<td>Submit Personal Information (name, DOB, address)</td>
+<td>Step completed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.6.2</td>
+<td>Upload Certification</td>
+<td>Document uploaded</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.6.3</td>
+<td>Upload Government ID</td>
+<td>Document uploaded</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.6.4</td>
+<td>Agree to Background Check</td>
+<td>Consent recorded</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.6.5</td>
+<td>Check verification status</td>
+<td>Shows current verification state</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>4.7 Virtual Request (Trainer Side)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4.7.1</td>
+<td>Receive virtual request notification</td>
+<td>Trainee name, session type, details shown</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.7.2</td>
+<td>Countdown timer visible</td>
+<td>Timer counting down</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.7.3</td>
+<td>Tap "Accept"</td>
+<td>Session accepted (first-accept-wins)</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.7.4</td>
+<td>Tap "Decline"</td>
+<td>Declined, system finds another</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>4.7.5</td>
+<td>Timer expires</td>
+<td>Auto-decline triggered</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>SECTION 5: SESSION WORKFLOWS</h2>
+<h3>5.1 Scheduled Session Booking</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>5.1.1</td>
+<td>Browse trainers on Home tab</td>
+<td>Trainer list loads</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>5.1.2</td>
+<td>Tap trainer card to view profile</td>
+<td>Profile opens</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>5.1.3</td>
+<td>Select session type (Virtual/Outdoor/In-Home)</td>
+<td>Type selected</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>5.1.4</td>
+<td>Pick date and time</td>
+<td>Schedule selected</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>5.1.5</td>
+<td>Review price breakdown on confirm screen</td>
+<td>Shows: base rate, travel fee, discounts, platform fee, trainer earnings</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>5.1.6</td>
+<td>Verify Multi-session discount (5% on 3rd+ with same trainer)</td>
+<td>Discount applied correctly</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>5.1.7</td>
+<td>Verify Membership discount (10% if subscribed)</td>
+<td>Discount applied for members</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>5.1.8</td>
+<td>Verify discounts stack (15% for member on 3rd session)</td>
+<td>Both discounts applied</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>5.1.9</td>
+<td>Complete Stripe payment</td>
+<td>Payment processed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>5.1.10</td>
+<td>Trainer accepts booking</td>
+<td>Both receive confirmation notification</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>5.1.11</td>
+<td>Verify Platform fee = 25%</td>
+<td>Correct split shown</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>5.1.12</td>
+<td>Verify Trainer earnings = 75%</td>
+<td>Correct split shown</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>5.2 In-Person Session Flow</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>5.2.1</td>
+<td>Session status = Confirmed after both agree</td>
+<td>Status correct</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>5.2.2</td>
+<td>Selfie verification prompt appears</td>
+<td>Both parties prompted</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>5.2.3</td>
+<td>Trainer taps "Start En Route"</td>
+<td>GPS tracking begins (5-sec updates)</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>5.2.4</td>
+<td>GPS Arrival confirmation</td>
+<td>Trainer within proximity</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>5.2.5</td>
+<td>Session moves to "In Progress"</td>
+<td>GPS switches to 15-sec updates</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>5.2.6</td>
+<td>Trainer taps "End Session"</td>
+<td>GPS stops immediately</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>5.2.7</td>
+<td>Summary auto-generated</td>
+<td>Post-session stats available</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>5.2.8</td>
+<td>Rate &amp; Review prompt</td>
+<td>Trainee can rate trainer</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>5.3 Virtual Session Flow</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>5.3.1</td>
+<td>Both join virtual session room</td>
+<td>Video call starts</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>5.3.2</td>
+<td>Session active (In Progress)</td>
+<td>Status updated</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>5.3.3</td>
+<td>Verify default duration = 30 minutes</td>
+<td>Timer shows 30 min</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>5.3.4</td>
+<td>Verify duration selectable (30 or 60 min)</td>
+<td>Option available at booking</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>5.3.5</td>
+<td>Verify maximum duration = 90 minutes</td>
+<td>Cannot exceed 90 min</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>5.3.6</td>
+<td>Grace period = 2 minutes after scheduled end</td>
+<td>2-min buffer works</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>5.3.7</td>
+<td>Auto-end after max duration + grace</td>
+<td>Session auto-ends, summary generated</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>5.3.8</td>
+<td>Trainer manually ends via "End Session"</td>
+<td>Session ends, summary generated</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>SECTION 6: MATCHING ENGINE</h2>
+<h3>6.1 Location Permission Flow</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>6.1.1</td>
+<td>Pre-Permission screen shows explanation</td>
+<td>"RapidReps needs your location..." message</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>6.1.2</td>
+<td>OS permission prompt appears (iOS: Allow While Using/Once/Don't Allow)</td>
+<td>System dialog shown</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>6.1.3</td>
+<td>Permission denied (Soft Decline)</td>
+<td>Warning: "Location access needed..." shown</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>6.1.4</td>
+<td>In-person features disabled after soft decline</td>
+<td>"In-Person Now" button disabled</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>6.1.5</td>
+<td>Virtual sessions still available without GPS</td>
+<td>Virtual button works</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>6.1.6</td>
+<td>Hard Decline (denied again)</td>
+<td>"Enable Location in Settings" message on In-Person button</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>6.1.7</td>
+<td>All in-person matching disabled after hard decline</td>
+<td>Cannot use in-person features</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>6.2 Virtual Instant Session</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>6.2.1</td>
+<td>Tap "Virtual Session" on Home</td>
+<td>Searching screen appears</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>6.2.2</td>
+<td>Radar animation visible</td>
+<td>Animation playing</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>6.2.3</td>
+<td>Elapsed time counter visible</td>
+<td>Timer counting up</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>6.2.4</td>
+<td>"Finding your perfect trainer..." text shown</td>
+<td>Text visible</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>6.2.5</td>
+<td>"Cancel" button visible</td>
+<td>Button present</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>6.2.6</td>
+<td>Top 5 trainers notified simultaneously</td>
+<td>Trainers receive notifications</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>6.2.7</td>
+<td>First trainer to accept wins (no double-booking)</td>
+<td>Only one trainer matched</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>6.2.8</td>
+<td>Boxing-bell sound plays on match</td>
+<td>Sound audible</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>6.2.9</td>
+<td>Matched trainer details shown (name, rating, price, photo)</td>
+<td>All details visible</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>6.2.10</td>
+<td>"Trainer Found!" notification sent</td>
+<td>Notification received</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>6.2.11</td>
+<td>No match within 3 min → progressive wave expansion</td>
+<td>Additional trainers notified</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>6.2.12</td>
+<td>All waves exhausted → "No trainers found" with retry</td>
+<td>Fallback message shown</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>6.2.13</td>
+<td>Tap "Cancel Search"</td>
+<td>Returns to home</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>6.2.14</td>
+<td>Tap "Start Session" on matched screen</td>
+<td>Virtual session begins</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>6.2.15</td>
+<td>Tap "Find Another" on matched screen</td>
+<td>New search starts (see 6.4)</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>6.3 Matching Engine Scoring Weights</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>6.3.1</td>
+<td>Verify ETA weight = 40% (primary factor)</td>
+<td>ETA is highest weight</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>6.3.2</td>
+<td>Verify Rating weight = 25%</td>
+<td>Rating is second</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>6.3.3</td>
+<td>Verify Price weight = 15%</td>
+<td>Price is third</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>6.3.4</td>
+<td>Verify Boost weight = 10%</td>
+<td>Boost bonus applied</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>6.3.5</td>
+<td>Verify Responsiveness weight = 5%</td>
+<td>Historical speed factored</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>6.3.6</td>
+<td>Verify Profile Completeness weight = 5%</td>
+<td>Completeness bonus applied</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>6.4 In-Person Instant Session (Wave Logic)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>6.4.1</td>
+<td>Wave 1: ETA ≤ 5 min, Top 3 trainers, Immediate trigger</td>
+<td>First wave fires immediately</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>6.4.2</td>
+<td>Wave 2: ETA ≤ 10 min, Top 3 trainers, if Wave 1 &lt; 2 matches</td>
+<td>Second wave triggers</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>6.4.3</td>
+<td>Wave 3: ETA ≤ 15 min, Top 5 trainers, if Wave 2 &lt; 1 match</td>
+<td>Third wave triggers</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>6.4.4</td>
+<td><strong>Hard Maximum ETA Cap = 15 minutes</strong></td>
+<td>No trainer &gt;15 min matched</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>6.4.5</td>
+<td>Matching stops after Wave 3</td>
+<td>No further waves</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>6.5 "Find Another" Trainer Logic</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>6.5.1</td>
+<td>Tap "Find Another" after match</td>
+<td>Previous trainer excluded for 10 minutes</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>6.5.2</td>
+<td>New scoring wave runs</td>
+<td>Fresh wave of matching</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>6.5.3</td>
+<td>All rejected trainers excluded</td>
+<td>No rematching same trainer</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>6.5.4</td>
+<td>All waves exhausted → status "exhausted"</td>
+<td>Fallback screen: "All available trainers contacted..."</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>6.5.5</td>
+<td>No infinite loops possible</td>
+<td>System stops after exhausting pool</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>6.6 Membership Priority</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>6.6.1</td>
+<td>Member receives +0.15 score bonus</td>
+<td>Members matched faster/better</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>SECTION 7: GPS TRACKING &amp; EN-ROUTE</h2>
+<h3>7.1 Starting En Route</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>7.1.1</td>
+<td>Trainer taps "Start En Route"</td>
+<td>GPS tracking activates</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>7.1.2</td>
+<td>GPS updates every 5 seconds (en route)</td>
+<td>5-second refresh rate</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>7.1.3</td>
+<td>GPS updates every 15 seconds (in progress)</td>
+<td>15-second refresh rate</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>7.1.4</td>
+<td>GPS stops immediately on session end</td>
+<td>No more updates after end</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>7.1.5</td>
+<td>GPS stops immediately on cancellation</td>
+<td>No more updates after cancel</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>7.2 Live Tracking View</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>7.2.1</td>
+<td>Trainer's live location on map</td>
+<td>Location pin visible</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>7.2.2</td>
+<td>Trainee's location on map</td>
+<td>Location pin visible</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>7.2.3</td>
+<td>Distance between parties (miles)</td>
+<td>Distance displayed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>7.2.4</td>
+<td>Estimated time of arrival</td>
+<td>ETA displayed</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>7.3 GPS Alerts</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>7.3.1</td>
+<td>Weak Signal alert (accuracy &gt; 50m)</td>
+<td>"Weak GPS signal" message</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>7.3.2</td>
+<td>Stale Movement alert (stationary 2+ min en route)</td>
+<td>"You appear to be stationary" message</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>7.3.3</td>
+<td>Distance Warning (&gt; 0.5 miles apart during session)</td>
+<td>Distance warning shown</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>7.3.4</td>
+<td>Address Mismatch (&gt; 0.25 miles at session start)</td>
+<td>Mismatch alert shown</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>7.3.5</td>
+<td>GPS Spoofing (&gt; 2 miles jump in &lt; 30 sec)</td>
+<td>"Unusual location change" + account flagged</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>7.4 Arrival Confirmation</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>7.4.1</td>
+<td>Outdoor/Gym: Confirm within 0.25 miles (400m)</td>
+<td>Arrival confirmed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>7.4.2</td>
+<td>At-home: Confirm within 0.1 miles (160m)</td>
+<td>Arrival confirmed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>7.4.3</td>
+<td>Too far away → error</td>
+<td>"You are X miles away. Must be within Y miles"</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>7.5 Arrival Time Measurement</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>7.5.1</td>
+<td>Arrival window starts when trainer taps "Start En Route"</td>
+<td>Window begins</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>7.5.2</td>
+<td>OR 5 minutes before session start (whichever first)</td>
+<td>Automatic start of window</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>7.6 GPS Privacy</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>7.6.1</td>
+<td>GPS only active during: en route, active session, arrival verification</td>
+<td>No tracking outside sessions</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>7.6.2</td>
+<td>GPS NOT active when app is idle</td>
+<td>Confirm no background tracking</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>SECTION 8: SELFIE VERIFICATION</h2>
+<h3>8.1 Selfie Flow</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>8.1.1</td>
+<td>Selfie prompt appears when session Confirmed/En Route</td>
+<td>Prompt shown to both parties</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>8.1.2</td>
+<td>Both trainer and trainee take/submit selfie</td>
+<td>Upload successful</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>8.1.3</td>
+<td>Each person sees other's verification status</td>
+<td>Status visible</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>8.1.4</td>
+<td>Both submitted → "Both verified — session can start!"</td>
+<td>Success message shown</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>8.2 Selfie Buttons</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>8.2.1</td>
+<td>Tap "Take Selfie"</td>
+<td>Camera opens</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>8.2.2</td>
+<td>Tap "Submit Selfie"</td>
+<td>Selfie uploaded</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>8.2.3</td>
+<td>Tap "Retake"</td>
+<td>Camera reopens</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>8.2.4</td>
+<td>Tap "Switch Camera"</td>
+<td>Toggles front/rear</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>8.3 Selfie Failure Handling</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>8.3.1</td>
+<td>Camera fails to open</td>
+<td>"Try again or switch cameras" with retry button</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>8.3.2</td>
+<td>Upload fails (network error)</td>
+<td>"Upload failed. Tap to try again." with retry</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>8.3.3</td>
+<td>Poor lighting detected</td>
+<td>"Move to a brighter area" message</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>8.3.4</td>
+<td>One user refuses selfie</td>
+<td>Session CANNOT begin until both submit</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>8.3.5</td>
+<td>Selfie fails 3 times → manual verification</td>
+<td>"Selfie verification failed multiple times. Manual verification initiated."</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>8.4 Selfie Requirements</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>8.4.1</td>
+<td>Valid image (minimum 100 bytes)</td>
+<td>Accepted</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>8.4.2</td>
+<td>Maximum file size 5MB</td>
+<td>Files &gt;5MB rejected</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>8.4.3</td>
+<td>Only session participants can submit</td>
+<td>Non-participants blocked</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>SECTION 9: POST-SESSION SUMMARY &amp; SHARING</h2>
+<h3>9.1 Summary Generation</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>9.1.1</td>
+<td>Summary auto-generated after session ends</td>
+<td>Summary available immediately</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>9.1.2</td>
+<td>Trainer Name shown</td>
+<td>Correct trainer name</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>9.1.3</td>
+<td>Workout Type shown (based on trainer specializations)</td>
+<td>Types listed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>9.1.4</td>
+<td>Duration shown (actual minutes)</td>
+<td>Correct duration</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>9.1.5</td>
+<td>Calories Burned estimated</td>
+<td>Calculation present</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>9.1.6</td>
+<td>Weekly Streak shown</td>
+<td>Streak count displayed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>9.1.7</td>
+<td>Sessions with this Trainer count</td>
+<td>Count displayed</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>9.2 Calorie Estimation (Spot Check)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>9.2.1</td>
+<td>HIIT session = 650 cal/hour</td>
+<td>Correct estimation</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>9.2.2</td>
+<td>Strength Training = 420 cal/hour</td>
+<td>Correct estimation</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>9.2.3</td>
+<td>Yoga = 250 cal/hour</td>
+<td>Correct estimation</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>9.2.4</td>
+<td>Multiple styles → average calories used</td>
+<td>Average calculated correctly</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>9.3 Sharing</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>9.3.1</td>
+<td>"Share as Card" generates styled card</td>
+<td>Visual card with stats</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>9.3.2</td>
+<td>"Copy Deep Link" copies rapidreps://session-summary/{id}</td>
+<td>Link copied to clipboard</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>9.3.3</td>
+<td>"View All Summaries" shows history</td>
+<td>Total sessions, calories, minutes</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>9.3.4</td>
+<td>Share card accessible via GET /api/sessions/{id}/share-card</td>
+<td>Public endpoint returns data</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>SECTION 10: MESSAGING</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>10.1</td>
+<td>Open Messages tab (chat bubble icon)</td>
+<td>Conversations list displayed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>10.2</td>
+<td>Conversations sorted by most recent</td>
+<td>Most recent first</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>10.3</td>
+<td>Each conversation shows: name, photo, last message, timestamp, unread count</td>
+<td>All fields shown</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>10.4</td>
+<td>Open a conversation</td>
+<td>Chat screen opens</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>10.5</td>
+<td>Send a message</td>
+<td>Message sent and appears in chat</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>10.6</td>
+<td>Tap "Back"</td>
+<td>Returns to conversations list</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>10.7</td>
+<td>Create new conversation with trainer</td>
+<td>New conversation created</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>SECTION 11: PAYMENTS &amp; PRICING</h2>
+<h3>11.1 Session Pricing</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>11.1.1</td>
+<td>Virtual session minimum = $30</td>
+<td>Enforced in pricing rules</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>11.1.2</td>
+<td>Outdoor session minimum = $40</td>
+<td>Enforced</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>11.1.3</td>
+<td>In-Home session minimum = $60</td>
+<td>Enforced</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>11.1.4</td>
+<td>Home Visit minimum = $60</td>
+<td>Enforced</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>11.1.5</td>
+<td>Revenue split: Trainer = 75%</td>
+<td>Correct split</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>11.1.6</td>
+<td>Revenue split: Platform = 25%</td>
+<td>Correct split</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>11.2 Travel Fees (In-Home)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>11.2.1</td>
+<td>$0.50 per mile over 2 miles</td>
+<td>Fee calculated correctly</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>11.2.2</td>
+<td>Minimum travel fee = $0</td>
+<td>No negative fees</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>11.2.3</td>
+<td>Maximum travel fee = $15</td>
+<td>Capped at $15</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>11.2.4</td>
+<td>Trainer receives 70% of travel fee</td>
+<td>Split correct</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>11.2.5</td>
+<td>Platform receives 30% of travel fee</td>
+<td>Split correct</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>11.3 Discounts</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>11.3.1</td>
+<td>Multi-Session: 5% off on 3rd+ session with same trainer</td>
+<td>Discount applied</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>11.3.2</td>
+<td>Membership: 10% off with active subscription</td>
+<td>Discount applied</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>11.3.3</td>
+<td>Stacking: 15% off for member on 3rd+ session</td>
+<td>Both discounts stack</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>11.4 Payment Flow</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>11.4.1</td>
+<td>Confirm booking shows price breakdown</td>
+<td>All line items visible</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>11.4.2</td>
+<td>Stripe payment completes</td>
+<td>Payment successful</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>11.4.3</td>
+<td>Payment held in escrow until session completes</td>
+<td>Held status</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>11.4.4</td>
+<td>After session: Trainer gets 75%, Platform keeps 25%</td>
+<td>Correct distribution</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>SECTION 12: MEMBERSHIP PROGRAM</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>12.1</td>
+<td>Membership price = $19.99/month</td>
+<td>Correct price displayed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>12.2</td>
+<td>Navigate to Profile &gt; Membership</td>
+<td>Screen opens</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>12.3</td>
+<td>Benefits listed: 10% discount, free boost, priority matching, early access, badge</td>
+<td>All benefits shown</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>12.4</td>
+<td>Tap "Subscribe Now" → Stripe payment $19.99</td>
+<td>Payment processed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>12.5</td>
+<td>Membership activates immediately after payment</td>
+<td>Active status shown</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>12.6</td>
+<td>Tap "Cancel Membership"</td>
+<td>Membership cancelled</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>12.7</td>
+<td>Membership active until end of billing period after cancel</td>
+<td>Not immediately deactivated</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>12.8</td>
+<td>No pro-rated refunds</td>
+<td>No partial refund given</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>12.1 Membership Perk Rules</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>12.1.1</td>
+<td>10% discount does NOT apply to sessions booked before joining</td>
+<td>Only new bookings discounted</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>12.1.2</td>
+<td>Sessions booked while active keep discount even if membership expires</td>
+<td>Discount preserved</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>12.1.3</td>
+<td>Active boosts continue when membership expires</td>
+<td>Boost runs to its own expiry</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>12.1.4</td>
+<td>Free monthly boost resets on billing renewal</td>
+<td>Reset confirmed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>12.1.5</td>
+<td>Unused free boosts do NOT carry over</td>
+<td>No accumulation</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>SECTION 13: VISIBILITY BOOSTS (Trainers)</h2>
+<h3>13.1 Boost Pricing</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>13.1.1</td>
+<td>1 Day boost = $9.99</td>
+<td>Correct price</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>13.1.2</td>
+<td>1 Week boost = $49.99</td>
+<td>Correct price</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>13.1.3</td>
+<td>1 Month boost = $149.99</td>
+<td>Correct price</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>13.2 Boost Effects</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>13.2.1</td>
+<td>Profile Glow indicator visible on boosted trainer</td>
+<td>Glow effect shown</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>13.2.2</td>
+<td>isBoosted Badge visible to trainees</td>
+<td>Badge displayed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>13.2.3</td>
+<td>10% matching engine weight bonus</td>
+<td>Higher ranking in matches</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>13.2.4</td>
+<td>Priority placement in search results</td>
+<td>Boosted trainer ranked higher</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>13.3 Boost Analytics</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>13.3.1</td>
+<td>Navigate to Profile &gt; Boosts &gt; Analytics</td>
+<td>Analytics screen opens</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>13.3.2</td>
+<td>Impressions metric shown</td>
+<td>Count displayed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>13.3.3</td>
+<td>Profile Views metric shown</td>
+<td>Count displayed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>13.3.4</td>
+<td>Clicks metric shown</td>
+<td>Count displayed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>13.3.5</td>
+<td>Click-Through Rate shown</td>
+<td>Percentage displayed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>13.3.6</td>
+<td>Daily Breakdown (last 30 days)</td>
+<td>Day-by-day data shown</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>13.3.7</td>
+<td><strong>Timestamps in trainer's local device time zone</strong></td>
+<td>Correct timezone</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>13.4 Free Boost (Members)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>13.4.1</td>
+<td>Member gets 1 free boost/month (1-day equivalent)</td>
+<td>Free boost available</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>13.4.2</td>
+<td>Resets on billing renewal</td>
+<td>New free boost appears</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>13.4.3</td>
+<td>Unused boosts do NOT carry over</td>
+<td>No accumulation</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>SECTION 14: CANCELLATION &amp; NO-SHOW POLICIES</h2>
+<h3>14.1 Trainee Cancellation</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>14.1.1</td>
+<td>Cancel &gt; 12 hours before session</td>
+<td>$0 penalty (free)</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>14.1.2</td>
+<td>Cancel 12-2 hours before session</td>
+<td>25% penalty charged</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>14.1.3</td>
+<td>Cancel &lt; 2 hours before session</td>
+<td>50% penalty charged</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>14.1.4</td>
+<td>Penalty split: Trainer 75%, Platform 25%</td>
+<td>Correct split</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>14.1.5</td>
+<td>Remaining amount refunded via Stripe</td>
+<td>Auto-refund processed</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>14.2 Trainer Cancellation</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>14.2.1</td>
+<td>Cancel &gt; 12 hours before</td>
+<td>No penalty, full refund to trainee</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>14.2.2</td>
+<td>Cancel ≤ 12 hours before</td>
+<td>Full refund + free session credit to trainee</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>14.2.3</td>
+<td>Trainer receives performance strike (≤12hr cancel)</td>
+<td>Strike recorded</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>14.3 Trainee No-Show</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>14.3.1</td>
+<td>Trainee doesn't appear within 10 min of session start</td>
+<td>No-show detected</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>14.3.2</td>
+<td>Trainee charged 50% of session price</td>
+<td>Correct charge</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>14.3.3</td>
+<td>Remaining 50% refunded</td>
+<td>Refund processed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>14.3.4</td>
+<td>Trainer receives 50% (platform keeps 25% of that)</td>
+<td>Correct payout</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>14.4 Trainer No-Show</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>14.4.1</td>
+<td>Trainer doesn't appear within 10 min</td>
+<td>No-show detected</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>14.4.2</td>
+<td>Trainee receives 100% full refund</td>
+<td>Full refund</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>14.4.3</td>
+<td>Trainer receives $0</td>
+<td>No payment</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>14.4.4</td>
+<td>Trainer receives performance strike</td>
+<td>Strike recorded</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>14.5 Performance Strikes</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>14.5.1</td>
+<td>1-2 strikes → warning notification</td>
+<td>Warning sent</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>14.5.2</td>
+<td>3+ strikes → account flagged for review</td>
+<td>Account flagged</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>14.6 Automated No-Show Detection</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>14.6.1</td>
+<td>10 min after start, no GPS arrival → both notified</td>
+<td>Notifications sent</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>14.6.2</td>
+<td>Trainee gets "Your trainer has not arrived" message</td>
+<td>Message received</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>14.6.3</td>
+<td>Trainer gets "You haven't confirmed arrival" message</td>
+<td>Message received</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>SECTION 15: RATINGS &amp; REVIEWS</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>15.1</td>
+<td>Rate a trainer (1-5 stars)</td>
+<td>Rating submitted</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>15.2</td>
+<td>Star Rating is required</td>
+<td>Cannot submit without stars</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>15.3</td>
+<td>Written review is optional</td>
+<td>Can submit without text</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>15.4</td>
+<td>Submit with text review</td>
+<td>Review saved and displayed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>15.5</td>
+<td>"Rate Your Session" notification sent 30 min after end</td>
+<td>Notification received</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>15.6</td>
+<td>View trainer ratings/reviews</td>
+<td>All reviews displayed</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>SECTION 16: ACHIEVEMENTS &amp; STREAKS</h2>
+<h3>16.1 Trainee Achievements</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>16.1.1</td>
+<td>First Session badge</td>
+<td>Unlocked after 1 session</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>16.1.2</td>
+<td>5 Sessions badge</td>
+<td>Unlocked after 5 sessions</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>16.1.3</td>
+<td>10 Sessions badge</td>
+<td>Unlocked after 10 sessions</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>16.1.4</td>
+<td>25 Sessions badge</td>
+<td>Progress tracked</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>16.1.5</td>
+<td>50 Sessions badge</td>
+<td>Progress tracked</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>16.1.6</td>
+<td>100 Sessions badge</td>
+<td>Progress tracked</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>16.2 Streaks</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>16.2.1</td>
+<td>Streak counts consecutive weeks with ≥1 session</td>
+<td>Count accurate</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>16.2.2</td>
+<td>Streak appears in profile</td>
+<td>Streak shown</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>16.2.3</td>
+<td>Streak appears in session summaries</td>
+<td>Streak shown</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>16.2.4</td>
+<td>"Don't Lose Your Streak!" sent after 6 days w/o session</td>
+<td>Reminder sent</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>SECTION 17: NOTIFICATIONS</h2>
+<h3>17.1 Notification Types (Verify Each Exists)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Notification Type</th>
+<th>Trigger</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>17.1.1</td>
+<td>Session Requested</td>
+<td>New booking received</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>17.1.2</td>
+<td>Session Accepted</td>
+<td>Trainer accepted</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>17.1.3</td>
+<td>Session Declined</td>
+<td>Trainer declined</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>17.1.4</td>
+<td>Session Reminder</td>
+<td>30 min before start</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>17.1.5</td>
+<td>Session Started</td>
+<td>Session in progress</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>17.1.6</td>
+<td>Session Ended</td>
+<td>Session completed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>17.1.7</td>
+<td>Session Auto-Ended</td>
+<td>Virtual max duration</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>17.1.8</td>
+<td>Virtual Request</td>
+<td>Instant match needed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>17.1.9</td>
+<td>Virtual Matched</td>
+<td>Matched with trainer</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>17.1.10</td>
+<td>Virtual Taken</td>
+<td>Another trainer accepted</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>17.1.11</td>
+<td>Missed Acceptance</td>
+<td>Session still available</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>17.1.12</td>
+<td>Late Warning</td>
+<td>Running late</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>17.1.13</td>
+<td>Rate Reminder</td>
+<td>Rate after session</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>17.1.14</td>
+<td>Streak Warning</td>
+<td>Don't lose streak</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>17.1.15</td>
+<td>Boost Expiring</td>
+<td>Boost expires in 24hr</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>17.1.16</td>
+<td>Payment Released</td>
+<td>Earnings deposited</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>17.1.17</td>
+<td>New Message</td>
+<td>Chat message received</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>17.1.18</td>
+<td>Trainer On The Way</td>
+<td>GPS en route</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>17.1.19</td>
+<td>Selfie Verified</td>
+<td>Attendance selfie submitted</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>17.1.20</td>
+<td>Summary Ready</td>
+<td>Post-session stats ready</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>17.2 Notification Preferences</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>17.2.1</td>
+<td>Navigate to Profile &gt; Notification Preferences</td>
+<td>Settings screen opens</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>17.2.2</td>
+<td>Toggle individual notification types on/off</td>
+<td>Toggles work</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>17.2.3</td>
+<td>Master Toggle: Push Enabled on/off</td>
+<td>All notifications toggled</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>SECTION 18: SAFETY, FRAUD DETECTION &amp; REPORTING</h2>
+<h3>18.1 Automated Safety Protections</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>18.1.1</td>
+<td>GPS Spoofing: location jump &gt; 2mi in &lt; 30sec</td>
+<td>Account flagged + warning shown</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>18.1.2</td>
+<td>Trolling: 3+ cancelled/fake requests in 1 hour</td>
+<td>Account flagged for fraud</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>18.1.3</td>
+<td>High Cancel Rate: &gt;50% on 5+ sessions</td>
+<td>Trainer auto-flagged</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>18.1.4</td>
+<td>Suspicious patterns: rapid requests, mass cancellations</td>
+<td>Automated alerts triggered</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>18.2 Report a User</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>18.2.1</td>
+<td>"Report" button on user profile</td>
+<td>Button visible</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>18.2.2</td>
+<td>Report reasons: Inappropriate, Harassment, Fraud, Safety, Other</td>
+<td>All options present</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>18.2.3</td>
+<td>Submit report</td>
+<td>Report saved and acknowledged</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>18.3 Block a User</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>18.3.1</td>
+<td>Tap "Block User" on profile or in chat</td>
+<td>User blocked</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>18.3.2</td>
+<td>Blocked user cannot message you</td>
+<td>Messaging blocked</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>18.3.3</td>
+<td>Blocked user cannot see your profile</td>
+<td>Profile hidden</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>18.3.4</td>
+<td>Blocked user cannot book sessions with you</td>
+<td>Booking blocked</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>18.3.5</td>
+<td>Navigate to Profile &gt; Blocked Users</td>
+<td>Blocked list shown</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>18.3.6</td>
+<td>Unblock user</td>
+<td>User unblocked</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>SECTION 19: ADMIN DASHBOARD</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>19.1</td>
+<td>Login as admin (admin@rapidreps.com / admin123)</td>
+<td>Admin dashboard loads</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>19.2</td>
+<td>Dashboard: Total Users displayed</td>
+<td>Count shown</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>19.3</td>
+<td>Dashboard: Total Sessions displayed</td>
+<td>Count shown</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>19.4</td>
+<td>Dashboard: Total Revenue displayed</td>
+<td>Revenue shown</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>19.5</td>
+<td>Dashboard: Active Trainers count</td>
+<td>Count shown</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>19.6</td>
+<td>Session distribution chart (donut)</td>
+<td>Chart renders</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>19.7</td>
+<td>Revenue over time chart (bar)</td>
+<td>Chart renders</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>19.8</td>
+<td>View All Users (search + filter)</td>
+<td>Users list with search</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>19.9</td>
+<td>View User Detail</td>
+<td>Full user info</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>19.10</td>
+<td>Delete User</td>
+<td>User deleted</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>19.11</td>
+<td>Send Message to user</td>
+<td>Message sent</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>19.12</td>
+<td>Pending Verifications list</td>
+<td>Pending trainers shown</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>19.13</td>
+<td>Verify/Approve Trainer</td>
+<td>Trainer verified</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>19.14</td>
+<td>Reject Trainer</td>
+<td>Trainer rejected</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>19.15</td>
+<td>Revenue Dashboard</td>
+<td>Revenue data shown</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>19.16</td>
+<td>Payout Requests</td>
+<td>Pending payouts listed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>19.17</td>
+<td>Process Payout</td>
+<td>Payout processed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>19.18</td>
+<td>Issue Refund</td>
+<td>Refund issued</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>19.19</td>
+<td>Transaction History</td>
+<td>All transactions listed</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>19.20</td>
+<td>Top Trainer Leaderboard</td>
+<td>Weekly sessions, rating, earnings</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>19.21</td>
+<td>Fraud &amp; Safety: View flagged accounts</td>
+<td>Flagged accounts shown</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>19.22</td>
+<td>Fraud &amp; Safety: Take action (warn/suspend/ban)</td>
+<td>Action applied</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>SECTION 20: ACCOUNT SETTINGS</h2>
+<h3>20.1-20.3 General Settings</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>20.1</td>
+<td>Edit Profile: Update name, photo, bio</td>
+<td>Changes saved</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>20.2</td>
+<td>Change Password (via Forgot Password flow)</td>
+<td>Password updated</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>20.3</td>
+<td>Notification Preferences: Toggle types on/off</td>
+<td>Changes saved</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>20.4 Sound &amp; Vibration Settings</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>20.4.1</td>
+<td>Button Tap Sounds: On/Off (default: On)</td>
+<td>Toggle works</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>20.4.2</td>
+<td>Vibration Feedback: On/Off (default: On)</td>
+<td>Toggle works</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>20.4.3</td>
+<td>Notification Ringtone: Default/Soft/Silent (default: Default)</td>
+<td>Selection works</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>20.4.4</td>
+<td>Mute All During Session: On/Off (default: Off)</td>
+<td>Toggle works</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>20.4.5</td>
+<td>Mute mode silences all sounds during active session</td>
+<td>Sounds muted</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>20.5 Delete Account</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>20.5.1</td>
+<td>"Delete Account" button at bottom of Profile</td>
+<td>Button visible</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>20.5.2</td>
+<td>Confirmation dialog appears</td>
+<td>Dialog shown</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>20.5.3</td>
+<td>Confirm: All data permanently deleted</td>
+<td>Account gone</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>SECTION 22: SAMPLE TRAINER PROFILE (Manual Point #11)</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>22.1</td>
+<td>Sample profile visible in manual/onboarding</td>
+<td>"Alex T. — HIIT/Strength/Boxing — 4.9 (284 reviews)"</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>22.2</td>
+<td>Pricing shown: $40 Outdoor, $60 In-Home, $30 Virtual</td>
+<td>Prices match</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>CROSS-CUTTING CONCERNS</h2>
+<h3>Authentication</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CC.1</td>
+<td>All protected endpoints return 401 without token</td>
+<td>Unauthorized error</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>CC.2</td>
+<td>Expired token returns 401</td>
+<td>Token expired error</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>CC.3</td>
+<td>Invalid token returns 401</td>
+<td>Invalid token error</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>Data Validation</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CC.4</td>
+<td>Missing required fields → 422 error</td>
+<td>Validation error returned</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>CC.5</td>
+<td>Invalid data types → 422 error</td>
+<td>Validation error returned</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<h3>Role-Based Access</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test Case</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CC.6</td>
+<td>Trainee cannot access trainer-only endpoints</td>
+<td>403 Forbidden</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>CC.7</td>
+<td>Trainer cannot access admin endpoints</td>
+<td>403 Forbidden</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>CC.8</td>
+<td>Admin can access all endpoints</td>
+<td>Full access</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>TEST SUMMARY</h2>
+<table>
+<thead>
+<tr>
+<th>Section</th>
+<th>Total Tests</th>
+<th>Pass</th>
+<th>Fail</th>
+<th>Skip</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1. Infrastructure</td>
+<td>3</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>2. Authentication</td>
+<td>17</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>3. Trainee Guide</td>
+<td>35</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>4. Trainer Guide</td>
+<td>28</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>5. Session Workflows</td>
+<td>20</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>6. Matching Engine</td>
+<td>28</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>7. GPS Tracking</td>
+<td>17</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>8. Selfie Verification</td>
+<td>12</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>9. Post-Session Summary</td>
+<td>11</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>10. Messaging</td>
+<td>7</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>11. Payments &amp; Pricing</td>
+<td>15</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>12. Membership</td>
+<td>13</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>13. Boosts</td>
+<td>14</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>14. Cancellation &amp; No-Show</td>
+<td>16</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>15. Ratings &amp; Reviews</td>
+<td>6</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>16. Achievements &amp; Streaks</td>
+<td>10</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>17. Notifications</td>
+<td>23</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>18. Safety &amp; Fraud</td>
+<td>10</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>19. Admin Dashboard</td>
+<td>22</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>20. Settings</td>
+<td>8</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>22. Sample Profile</td>
+<td>2</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Cross-Cutting</td>
+<td>8</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>TOTAL</strong></td>
+<td><strong>~295</strong></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><strong>Notes / Issues Found:</strong></p>
+<hr />
+<hr />
+<hr />
+<hr />
+<hr />
+<hr />
+<p><em>RapidReps v3.0 Manual Testing Checklist — Generated February 2026</em></p>
+</body>
+</html>
