@@ -348,7 +348,7 @@ const styles = StyleSheet.create({
   ratingLabel: {
     fontSize: 22,
     fontWeight: '800',
-    color: COLORS.orange,
+    color: COLORS.navy,
   },
   reviewSection: {
     marginBottom: 24,
