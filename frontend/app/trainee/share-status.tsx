@@ -54,7 +54,7 @@ export default function ShareSessionStatusScreen() {
 
   // Mock session data (would come from params in real app)
   const sessionData = {
-    trainerName: params.trainerName || 'Sarah Johnson',
+    trainerName: params.trainerName || 'Your Trainer',
     sessionType: params.sessionType || 'In-Person Training',
     location: params.location || '123 Fitness Center, NYC',
     time: params.time || '2:00 PM - 3:00 PM',
