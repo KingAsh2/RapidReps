@@ -398,7 +398,8 @@ class TestNotificationCreation:
         
         # Get trainer's current notification count
         before_response = requests.get(f"{BASE_URL}/api/notifications", headers=trainer_headers)
-        before_count = len(before_response.json()) if before_response.status_code == 200 else 0
+        before_notifications = before_response.json().get("notifications", []) if before_response.status_code == 200 else []
+        before_count = len(before_notifications)
         
         # Create new virtual request
         request_response = requests.post(f"{BASE_URL}/api/virtual/request", headers=trainee_headers)
@@ -411,7 +412,7 @@ class TestNotificationCreation:
         # Check trainer's notifications
         after_response = requests.get(f"{BASE_URL}/api/notifications", headers=trainer_headers)
         assert after_response.status_code == 200
-        after_notifications = after_response.json()
+        after_notifications = after_response.json().get("notifications", [])
         
         # Look for virtual_request notification
         virtual_request_notifications = [n for n in after_notifications if n.get("type") == "virtual_request"]
@@ -457,7 +458,7 @@ class TestNotificationCreation:
         # Check trainee's notifications for virtual_matched
         notif_response = requests.get(f"{BASE_URL}/api/notifications", headers=trainee_headers)
         assert notif_response.status_code == 200
-        notifications = notif_response.json()
+        notifications = notif_response.json().get("notifications", [])
         
         # Look for virtual_matched notification
         matched_notifications = [n for n in notifications if n.get("type") == "virtual_matched"]
