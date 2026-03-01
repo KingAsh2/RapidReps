@@ -91,10 +91,15 @@
 - [x] Enhanced Admin Panel Overview:
   - Timeframe filter pills (Today/This Week/This Month) — visual only
   - Stat cards with subtitles and growth tags (placeholder %s)
-  - Revenue card: hero total, color-coded dots, progress bar for Platform vs Trainer split
+  - SVG Donut Chart for User Breakdown (Trainers vs Trainees)
+  - SVG Donut Chart for Revenue Split (Platform vs Trainer payouts)
+  - SVG Mini Bar Chart for Weekly Activity (placeholder session data)
+  - SVG Donut Chart for Session Status (Completed/Active/Pending)
+  - Revenue progress bar with Platform vs Trainer split
   - Expanded Quick Info with Pending card
   - "Attention Needed" section with navigable list items
-  - "Top Trainer This Week" card with mock data and View button
+  - "Top Trainer This Week" card with gradient trophy avatar
+  - Brand colors: Orange #FF7F00, Teal #1FB8B4, Navy #0f1b3d, Success #00C853
 
 ### Deployment Readiness: PRODUCTION READY
 
