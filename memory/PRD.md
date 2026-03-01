@@ -100,6 +100,10 @@
   - "Attention Needed" section with navigable list items
   - "Top Trainer This Week" card with gradient trophy avatar
   - Brand colors: Orange #FF7F00, Teal #1FB8B4, Navy #0f1b3d, Success #00C853
+- [x] Top Trainers Leaderboard (real data):
+  - Backend: `GET /api/admin/top-trainers?days=7&limit=5` — aggregates completed sessions by trainer
+  - Frontend: Dynamic ranked list with tier badges, ratings, session counts
+  - Falls back to all-time top-rated trainers if no sessions in the period
 
 ### Deployment Readiness: PRODUCTION READY
 
