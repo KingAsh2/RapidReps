@@ -94,6 +94,7 @@ export default function VirtualConfirmScreen() {
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
       if (timerRef.current) clearInterval(timerRef.current);
+      if (soundRef.current) soundRef.current.unloadAsync();
     };
   }, []);
 
