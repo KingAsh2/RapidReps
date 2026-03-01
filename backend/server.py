@@ -5556,7 +5556,6 @@ async def notification_scheduler():
 
             for s in upcoming:
                 sid = str(s['_id'])
-                # Notify both trainee and trainer
                 asyncio.create_task(create_and_send_notification(
                     s['traineeId'],
                     "Session Starting Soon",
@@ -5573,10 +5572,9 @@ async def notification_scheduler():
                 ))
                 await db.sessions.update_one({'_id': s['_id']}, {'$set': {'_reminderSent': True}})
 
-            # 2. Streak Reminders — users with last session 6 days ago and no reminder sent today
+            # 2. Streak Reminders — users with last session 6 days ago
             six_days_ago = now - timedelta(days=6)
             seven_days_ago = now - timedelta(days=7)
-            # Find trainees who had their last session 6-7 days ago
             at_risk = await db.sessions.aggregate([
                 {'$match': {'status': SessionStatus.COMPLETED}},
                 {'$group': {'_id': '$traineeId', 'lastSession': {'$max': '$sessionDateTimeEnd'}}},
@@ -5585,7 +5583,6 @@ async def notification_scheduler():
 
             for entry in at_risk:
                 uid = entry['_id']
-                # Check if we already sent a streak reminder today
                 today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
                 existing = await db.notifications.find_one({
                     'userId': uid,
@@ -5618,6 +5615,101 @@ async def notification_scheduler():
                     {"screen": "trainer/boosts"}
                 ))
                 await db.boosts.update_one({'_id': b['_id']}, {'$set': {'_expirySent': True}})
+
+            # 4. SMART: Progressive wave expansion for stale requests
+            # If a request has been searching for 2+ minutes with no match,
+            # expand to next wave of trainers
+            stale_cutoff = now - timedelta(minutes=2)
+            stale_requests = await db.virtual_requests.find({
+                'status': 'searching',
+                'createdAt': {'$lte': stale_cutoff},
+                '_waveExpanded': {'$ne': True},
+            }).to_list(20)
+
+            for req in stale_requests:
+                current_wave = req.get('currentWave', 1)
+                if current_wave < 3:
+                    new_wave = current_wave + 1
+                    notified, wave_data = await run_matching_engine(
+                        trainee_id=req['traineeId'],
+                        trainee_name=req.get('traineeName', 'A Trainee'),
+                        trainee_lat=req.get('traineeLat'),
+                        trainee_lon=req.get('traineeLon'),
+                        session_type=req.get('sessionType', 'virtual'),
+                        rejected_trainers=req.get('rejectedTrainers', []) + req.get('notifiedTrainers', []),
+                        request_id=str(req['_id']),
+                        wave_number=new_wave,
+                    )
+                    if notified:
+                        await db.virtual_requests.update_one(
+                            {'_id': req['_id']},
+                            {
+                                '$set': {'currentWave': new_wave},
+                                '$addToSet': {'notifiedTrainers': {'$each': notified}},
+                            }
+                        )
+                else:
+                    await db.virtual_requests.update_one(
+                        {'_id': req['_id']},
+                        {'$set': {'_waveExpanded': True}}
+                    )
+
+            # 5. SMART: Missed acceptance tracking
+            # Requests older than 3 min where notified trainers haven't responded
+            missed_cutoff = now - timedelta(minutes=3)
+            missed_requests = await db.virtual_requests.find({
+                'status': 'searching',
+                'createdAt': {'$lte': missed_cutoff},
+                '_missedNotifSent': {'$ne': True},
+            }).to_list(20)
+
+            for req in missed_requests:
+                notified_trainers = req.get('notifiedTrainers', [])
+                rejected_trainers = req.get('rejectedTrainers', [])
+                # Trainers who were notified but didn't accept or reject
+                non_responders = [t for t in notified_trainers if t not in rejected_trainers]
+                for tid in non_responders:
+                    asyncio.create_task(create_and_send_notification(
+                        tid,
+                        "Session Still Available",
+                        f"{req.get('traineeName', 'A trainee')} is still waiting for a trainer. Accept now!",
+                        "missed_acceptance",
+                        {"screen": "trainer/virtual-request", "requestId": str(req['_id'])}
+                    ))
+                await db.virtual_requests.update_one(
+                    {'_id': req['_id']},
+                    {'$set': {'_missedNotifSent': True}}
+                )
+
+            # 6. SMART: Late warning for in-person sessions
+            # Sessions confirmed but trainer hasn't checked in within 10 min of start
+            late_window_start = now - timedelta(minutes=10)
+            late_window_end = now
+            late_sessions = await db.sessions.find({
+                'status': SessionStatus.CONFIRMED,
+                'sessionType': {'$ne': 'virtual'},
+                'sessionDateTimeStart': {'$gte': late_window_start, '$lte': late_window_end},
+                'trainerGpsConfirmed': {'$ne': True},
+                '_lateWarningSent': {'$ne': True},
+            }).to_list(20)
+
+            for s in late_sessions:
+                sid = str(s['_id'])
+                asyncio.create_task(create_and_send_notification(
+                    s['trainerId'],
+                    "Running Late?",
+                    "Your session has started. Please confirm your arrival or update the trainee.",
+                    "late_warning",
+                    {"sessionId": sid, "screen": "trainer/sessions"}
+                ))
+                asyncio.create_task(create_and_send_notification(
+                    s['traineeId'],
+                    "Trainer Update",
+                    "Your trainer may be running slightly late. We've sent them a reminder.",
+                    "late_warning",
+                    {"sessionId": sid, "screen": "trainee/sessions"}
+                ))
+                await db.sessions.update_one({'_id': s['_id']}, {'$set': {'_lateWarningSent': True}})
 
         except Exception as e:
             logging.getLogger(__name__).error(f"Notification scheduler error: {e}")
