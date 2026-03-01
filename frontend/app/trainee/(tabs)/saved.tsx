@@ -481,7 +481,7 @@ const styles = StyleSheet.create({
   distanceText: {
     fontSize: 12,
     fontWeight: '700',
-    color: COLORS.orange,
+    color: COLORS.navy,
   },
   specialtiesRow: {
     flexDirection: 'row',
@@ -496,8 +496,8 @@ const styles = StyleSheet.create({
   },
   specialtyText: {
     fontSize: 11,
-    fontWeight: '600',
-    color: COLORS.orange,
+    fontWeight: '700',
+    color: COLORS.navy,
   },
   heartButton: {
     width: 44,

@@ -901,13 +901,15 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 16,
+    marginTop: 8,
   },
   deleteButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.error,
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#CC0000',
     textDecorationLine: 'underline',
+    letterSpacing: 0.3,
   },
   // Streak Card
   streakCard: {
