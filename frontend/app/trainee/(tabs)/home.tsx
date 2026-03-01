@@ -524,7 +524,7 @@ export default function TraineeHomeScreen() {
               ]}
             >
               <TouchableOpacity 
-                onPress={() => setShowTrainingModeDialog(true)}
+                onPress={() => router.push('/trainee/virtual-confirm')}
                 activeOpacity={0.9}
               >
                 <LinearGradient
