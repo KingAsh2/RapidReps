@@ -2691,46 +2691,155 @@ async def cancel_session(session_id: str, current_user: dict = Depends(get_curre
     }
 
 @api_router.patch("/sessions/{session_id}/no-show")
-async def mark_no_show(session_id: str, current_user: dict = Depends(get_current_user)):
+async def mark_no_show(session_id: str, who: str = "trainee", current_user: dict = Depends(get_current_user)):
     """
-    Mark session as no-show (trainee didn't show up).
-    PRD Rule #5: No-Show charges full session amount.
-    RapidReps takes normal 20% commission.
+    Mark session as no-show. Either trainee or trainer can be the no-show.
+    
+    TRAINEE NO-SHOW (who=trainee):
+      - Trainer receives 50% payout
+      - Platform keeps 25% fee from that 50%
+      - Definition: Trainee doesn't appear within 10 minutes of start
+    
+    TRAINER NO-SHOW (who=trainer):
+      - Trainee receives 100% refund
+      - Trainer gets $0 + performance strike (3 strikes = account review)
+      - Definition: Trainer doesn't appear/start within 10 minutes
     """
     session = await db.sessions.find_one({'_id': ObjectId(session_id)})
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-    
-    # Verify it's the trainer's session
-    if session['trainerId'] != str(current_user['_id']):
-        raise HTTPException(status_code=403, detail="Only the trainer can mark a session as no-show")
-    
-    # Full amount charged for no-show
+
+    user_id = str(current_user['_id'])
+    is_trainer = session.get('trainerId') == user_id
+    is_trainee = session.get('traineeId') == user_id
+    is_admin = current_user.get('isAdmin', False)
+
+    if not is_trainer and not is_trainee and not is_admin:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    if who not in ("trainee", "trainer"):
+        raise HTTPException(status_code=400, detail="'who' must be 'trainee' or 'trainer'")
+
     final_price = session.get('finalSessionPriceCents', 0)
-    platform_fee = int(final_price * PricingRules.PLATFORM_FEE_PERCENT / 100)  # 20%
-    trainer_earnings = final_price - platform_fee
-    
-    await db.sessions.update_one(
-        {'_id': ObjectId(session_id)},
-        {
-            '$set': {
-                'status': SessionStatus.NO_SHOW,
-                'noShowFeeCents': final_price,
-                'platformFeeCents': platform_fee,
-                'trainerEarningsCents': trainer_earnings,
-                'updatedAt': datetime.utcnow()
+    update_doc = {
+        'status': SessionStatus.NO_SHOW,
+        'noShowParty': who,
+        'updatedAt': datetime.utcnow(),
+    }
+
+    if who == "trainee":
+        # Trainee no-show: trainer gets 50% payout, platform gets 25% of that 50%
+        half_price = int(final_price * 50 / 100)
+        platform_fee = int(half_price * PricingRules.PLATFORM_REVENUE_PERCENT / 100)
+        trainer_payout = half_price - platform_fee
+
+        update_doc.update({
+            'noShowFeeCents': half_price,
+            'platformFeeCents': platform_fee,
+            'trainerEarningsCents': trainer_payout,
+            'traineeRefundCents': 0,
+        })
+
+        # Stripe: partial refund of the other 50% to trainee
+        payment_intent_id = session.get('paymentIntentId')
+        refund_amount = final_price - half_price
+        if payment_intent_id and not payment_intent_id.startswith('mock_') and refund_amount > 0:
+            try:
+                refund = stripe.Refund.create(
+                    payment_intent=payment_intent_id,
+                    amount=refund_amount,
+                )
+                update_doc['stripeRefundId'] = refund.id
+                update_doc['traineeRefundCents'] = refund_amount
+            except stripe.error.StripeError as e:
+                update_doc['stripeRefundError'] = str(e)
+
+        await create_and_send_notification(
+            session['traineeId'],
+            "No-Show Recorded",
+            f"You were marked as a no-show. You've been charged ${half_price/100:.2f}.",
+            "session_ended",
+            {"sessionId": session_id}
+        )
+        await create_and_send_notification(
+            session['trainerId'],
+            "Trainee No-Show",
+            f"Your trainee didn't show up. You'll receive ${trainer_payout/100:.2f}.",
+            "session_ended",
+            {"sessionId": session_id}
+        )
+
+        msg = f"Trainee no-show. Trainer payout: ${trainer_payout/100:.2f}. Platform fee: ${platform_fee/100:.2f}."
+
+    else:  # trainer no-show
+        # Full refund to trainee, trainer gets $0 + strike
+        update_doc.update({
+            'noShowFeeCents': 0,
+            'platformFeeCents': 0,
+            'trainerEarningsCents': 0,
+            'traineeRefundCents': final_price,
+            'trainerStrikeApplied': True,
+        })
+
+        # Stripe: full refund
+        payment_intent_id = session.get('paymentIntentId')
+        if payment_intent_id and not payment_intent_id.startswith('mock_'):
+            try:
+                refund = stripe.Refund.create(
+                    payment_intent=payment_intent_id,
+                    reason='requested_by_customer',
+                )
+                update_doc['stripeRefundId'] = refund.id
+            except stripe.error.StripeError as e:
+                update_doc['stripeRefundError'] = str(e)
+
+        # Apply trainer strike
+        await db.users.update_one(
+            {'_id': ObjectId(session['trainerId'])},
+            {
+                '$inc': {'performanceStrikes': 1},
+                '$push': {'strikeHistory': {
+                    'sessionId': session_id,
+                    'reason': 'no_show',
+                    'createdAt': datetime.utcnow()
+                }}
             }
-        }
-    )
-    
-    updated_session = await db.sessions.find_one({'_id': ObjectId(session_id)})
-    
+        )
+        # Check for 3-strike threshold
+        trainer = await db.users.find_one({'_id': ObjectId(session['trainerId'])})
+        if trainer and trainer.get('performanceStrikes', 0) >= 3:
+            await db.users.update_one(
+                {'_id': ObjectId(session['trainerId'])},
+                {'$set': {'accountUnderReview': True, 'reviewReason': '3+ performance strikes'}}
+            )
+
+        await create_and_send_notification(
+            session['traineeId'],
+            "Trainer No-Show",
+            "Your trainer didn't show up. A full refund has been processed.",
+            "session_ended",
+            {"sessionId": session_id}
+        )
+        await create_and_send_notification(
+            session['trainerId'],
+            "No-Show Strike",
+            "You were marked as a no-show. A performance strike has been applied.",
+            "session_ended",
+            {"sessionId": session_id}
+        )
+
+        msg = f"Trainer no-show. Full refund of ${final_price/100:.2f} to trainee. Strike applied to trainer."
+
+    await db.sessions.update_one({'_id': ObjectId(session_id)}, {'$set': update_doc})
+
     return {
         'success': True,
-        'session': SessionResponse(**serialize_doc(updated_session)),
-        'noShowFeeCents': final_price,
-        'trainerEarningsCents': trainer_earnings,
-        'message': f'No-show recorded. Client charged full session amount: ${final_price/100:.2f}. Trainer earns: ${trainer_earnings/100:.2f}'
+        'noShowParty': who,
+        'trainerEarningsCents': update_doc.get('trainerEarningsCents', 0),
+        'traineeRefundCents': update_doc.get('traineeRefundCents', 0),
+        'platformFeeCents': update_doc.get('platformFeeCents', 0),
+        'trainerStrike': who == "trainer",
+        'message': msg,
     }
 
 @api_router.patch("/sessions/{session_id}/complete", response_model=SessionResponse)
