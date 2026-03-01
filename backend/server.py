@@ -6555,6 +6555,15 @@ async def download_user_manual():
         path = os.path.join(os.path.dirname(__file__), "RapidReps_User_Manual.pdf")
     return FileResponse(path, media_type="application/pdf", filename="RapidReps_User_Manual_v2.pdf")
 
+@api_router.get("/downloads/testing-checklist")
+async def download_testing_checklist():
+    import os
+    path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "docs", "RapidReps_Testing_Checklist.pdf")
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="Checklist PDF not found")
+    return FileResponse(path, media_type="application/pdf", filename="RapidReps_Testing_Checklist.pdf")
+
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
