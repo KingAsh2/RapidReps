@@ -6860,6 +6860,11 @@ async def run_matching_engine(
     # Score all eligible trainers
     scored = [score_trainer(p, trainee_lat, trainee_lon, session_type) for p in eligible]
 
+    # HARD ETA CAP: No trainer outside 15 min ETA can be matched (in-person only)
+    MAX_ETA_MINUTES = 15
+    if session_type != "virtual":
+        scored = [t for t in scored if t["eta_minutes"] <= MAX_ETA_MINUTES]
+
     # Member priority: boost top scores for members
     if is_member:
         for t in scored:
