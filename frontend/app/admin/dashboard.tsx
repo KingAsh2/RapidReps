@@ -95,6 +95,16 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchLeaderboard = async () => {
+    try {
+      const headers = await getAuthHeader();
+      const res = await api.get('/admin/top-trainers?days=7&limit=5', { headers });
+      setLeaderboard(res.data.leaderboard || []);
+    } catch (err: any) {
+      console.error('Leaderboard error:', err?.response?.data || err.message);
+    }
+  };
+
   const fetchUsers = async (page = 0) => {
     try {
       const headers = await getAuthHeader();
