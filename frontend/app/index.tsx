@@ -347,24 +347,24 @@ const styles = StyleSheet.create({
   },
   logoSection: {
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 10,
   },
   logoBacking: {
-    backgroundColor: 'rgba(255, 127, 0, 1)',
-    borderRadius: 140,
-    padding: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: 80,
+    padding: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
   logo: {
-    width: width * 0.65,
-    height: width * 0.65,
-    maxWidth: 280,
-    maxHeight: 280,
+    width: width * 0.35,
+    height: width * 0.35,
+    maxWidth: 140,
+    maxHeight: 140,
   },
   taglineSection: {
     alignItems: 'center',
-    marginTop: -20,
+    marginTop: 12,
   },
   tagline: {
     fontSize: 20,
