@@ -931,6 +931,9 @@ const styles = StyleSheet.create({
     color: '#CC0000',
     textDecorationLine: 'underline',
     letterSpacing: 0.3,
+    textShadowColor: 'rgba(0, 0, 0, 0.15)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   soundToggleCard: {
     backgroundColor: COLORS.white,
