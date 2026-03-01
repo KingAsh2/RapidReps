@@ -629,6 +629,25 @@ export default function TraineeProfileScreen() {
               </TouchableOpacity>
             )}
 
+            {/* Sound Effects Toggle */}
+            <View style={styles.soundToggleCard}>
+              <View style={styles.soundToggleRow}>
+                <View style={styles.soundToggleIcon}>
+                  <Ionicons name={soundEnabled ? 'volume-high' : 'volume-mute'} size={20} color={COLORS.navy} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.soundToggleLabel}>Sound Effects</Text>
+                  <Text style={styles.soundToggleSub}>Play tap sounds on buttons</Text>
+                </View>
+                <Switch
+                  value={soundEnabled}
+                  onValueChange={setSoundEnabled}
+                  trackColor={{ false: '#ccc', true: COLORS.teal }}
+                  thumbColor={COLORS.white}
+                />
+              </View>
+            </View>
+
             {/* Logout Button */}
             <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
               <Ionicons name="log-out-outline" size={20} color={COLORS.white} />
