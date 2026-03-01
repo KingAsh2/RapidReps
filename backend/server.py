@@ -2355,11 +2355,36 @@ async def verify_selfie(session_id: str, body: SelfieVerifyRequest, current_user
     # Validate selfie data (basic check — non-empty, reasonable size)
     selfie_data = body.selfieBase64
     if not selfie_data or len(selfie_data) < 100:
-        raise HTTPException(400, "Invalid selfie data")
+        raise HTTPException(400, "Invalid selfie data. Try again or switch cameras.")
 
     # Max ~5MB base64
     if len(selfie_data) > 7_000_000:
-        raise HTTPException(400, "Selfie image too large (max 5MB)")
+        raise HTTPException(400, "Selfie image too large (max 5MB). Move to a brighter area and try again.")
+
+    # Track selfie attempts — max 3 failures before manual verification fallback
+    attempt_key = f"{session_id}_{user_id}"
+    existing_attempts = await db.selfie_attempts.find_one({'key': attempt_key})
+    attempt_count = (existing_attempts.get('count', 0) if existing_attempts else 0) + 1
+    await db.selfie_attempts.update_one(
+        {'key': attempt_key},
+        {'$set': {'key': attempt_key, 'count': attempt_count, 'lastAttempt': datetime.utcnow()}},
+        upsert=True,
+    )
+
+    if attempt_count > PricingRules.MAX_SELFIE_ATTEMPTS:
+        # Trigger manual verification fallback
+        await db.sessions.update_one(
+            {'_id': oid},
+            {'$set': {
+                f'{role}ManualVerificationRequired': True,
+                'updatedAt': datetime.utcnow(),
+            }}
+        )
+        return {
+            'success': False,
+            'manualVerification': True,
+            'message': 'Selfie verification failed multiple times. Manual verification initiated — a support agent will review your session.',
+        }
 
     now = datetime.utcnow()
 
