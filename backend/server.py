@@ -4563,6 +4563,26 @@ async def get_nearby_trainers(
         users_cursor = db.users.find({'_id': {'$in': trainer_user_ids}}, {'fullName': 1})
         users_list = await users_cursor.to_list(len(trainer_user_ids))
         users_map = {str(u['_id']): u.get('fullName', 'Trainer') for u in users_list}
+
+    # Batch fetch active boosts and memberships
+    now = datetime.utcnow()
+    boosted_ids = set()
+    active_boosts = await db.boosts.find({
+        'isActive': True,
+        'endDate': {'$gte': now},
+        'trainerId': {'$in': [t['trainer']['userId'] for t in nearby_trainers_data]},
+    }).to_list(200)
+    for b in active_boosts:
+        boosted_ids.add(b.get('trainerId'))
+
+    member_ids = set()
+    trainer_id_strings = [t['trainer']['userId'] for t in nearby_trainers_data]
+    active_memberships = await db.memberships.find({
+        'userId': {'$in': trainer_id_strings},
+        'status': MembershipStatus.ACTIVE,
+    }).to_list(200)
+    for m in active_memberships:
+        member_ids.add(m.get('userId'))
     
     # Build response with user names from map
     nearby_trainers = []
@@ -4576,6 +4596,18 @@ async def get_nearby_trainers(
         # Calculate ETA
         eta = estimate_eta_minutes(distance)
         
+        tid = trainer['userId']
+        is_boosted = tid in boosted_ids
+        is_member = tid in member_ids
+
+        # Track impression for boosted trainers
+        if is_boosted:
+            await db.boost_analytics.update_one(
+                {'trainerId': tid, 'date': now.strftime('%Y-%m-%d')},
+                {'$inc': {'impressions': 1}},
+                upsert=True,
+            )
+
         nearby_trainers.append({
             'id': str(trainer['_id']),
             'trainerId': trainer['userId'],
@@ -4584,6 +4616,8 @@ async def get_nearby_trainers(
             'latitude': trainer.get('latitude'),
             'longitude': trainer.get('longitude'),
             'isAvailable': True,
+            'isBoosted': is_boosted,
+            'isMember': is_member,
             'lastLocationUpdate': trainer.get('lastLocationUpdate'),
             'distanceMiles': round(distance, 1),
             'etaMinutes': eta,
