@@ -5867,12 +5867,28 @@ async def trainee_find_another(request_id: str, current_user: dict = Depends(get
         }}
     )
 
-    # Re-notify remaining eligible trainers
+    # Re-notify remaining eligible trainers (with proximity filter)
+    trainee_profile = await db.trainee_profiles.find_one(
+        {"userId": str(current_user["_id"])},
+        {"latitude": 1, "longitude": 1}
+    )
+    t_lat = trainee_profile.get("latitude") if trainee_profile else None
+    t_lon = trainee_profile.get("longitude") if trainee_profile else None
+
     eligible = await db.trainer_profiles.find(
         {"offersVirtual": True, "isAvailable": True, "userId": {"$nin": rejected_list}},
-        {"_id": 0, "userId": 1}
+        {"_id": 0, "userId": 1, "latitude": 1, "longitude": 1, "travelRadiusMiles": 1}
     ).to_list(50)
+
+    VIRTUAL_MAX_MILES = 25
     for p in eligible:
+        tr_lat = p.get("latitude")
+        tr_lon = p.get("longitude")
+        max_r = p.get("travelRadiusMiles") or VIRTUAL_MAX_MILES
+        if t_lat and t_lon and tr_lat and tr_lon:
+            dist = calculate_distance(t_lat, t_lon, tr_lat, tr_lon)
+            if dist > max(max_r, VIRTUAL_MAX_MILES):
+                continue
         await create_and_send_notification(
             p["userId"],
             "Virtual Session Request",
