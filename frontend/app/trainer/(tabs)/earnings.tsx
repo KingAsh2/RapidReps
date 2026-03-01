@@ -447,7 +447,7 @@ const styles = StyleSheet.create({
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },
   loadingText: { color: COLORS.gray, fontSize: 14 },
   header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12 },
-  headerTitle: { fontSize: 28, fontWeight: '900', color: COLORS.white },
+  headerTitle: { fontSize: 28, fontWeight: '900', color: COLORS.white, textShadowColor: 'rgba(0,0,0,0.3)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 },
   headerSubtitle: { fontSize: 14, color: 'rgba(255,255,255,0.6)', marginTop: 2 },
   content: { flex: 1, paddingHorizontal: 16 },
 
