@@ -2741,6 +2741,19 @@ async def end_session(
             )
     asyncio.create_task(delayed_rate_reminder())
 
+    # Auto-generate post-session summary
+    updated_session = await db.sessions.find_one({'_id': oid})
+    summary = await generate_session_summary(session_id, updated_session)
+
+    # Notify trainee about their summary
+    asyncio.create_task(create_and_send_notification(
+        session['traineeId'],
+        "Session Summary Ready!",
+        f"{summary.get('caloriesEstimate', 0)} cal burned in {summary.get('durationMinutes', 0)} min. View your summary!",
+        "session_ended",
+        {"sessionId": session_id, "screen": "trainee/session-summary"}
+    ))
+
     return {
         'success': True,
         'message': 'Session ended. Awaiting client confirmation.',
