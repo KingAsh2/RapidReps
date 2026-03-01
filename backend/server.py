@@ -5286,6 +5286,9 @@ NOTIFICATION_TYPES = [
     'session_requested', 'session_accepted', 'session_declined',
     'session_ended', 'session_reminder', 'rate_reminder',
     'payment_released', 'new_message', 'streak_warning', 'boost_expiring',
+    # Smart matching engine notification types
+    'virtual_request', 'virtual_matched', 'virtual_taken',
+    'missed_acceptance', 'late_warning', 'session_started',
 ]
 
 class NotificationPreferences(BaseModel):
@@ -5300,6 +5303,13 @@ class NotificationPreferences(BaseModel):
     new_message: bool = True
     streak_warning: bool = True
     boost_expiring: bool = True
+    # Smart matching engine notification types
+    virtual_request: bool = True
+    virtual_matched: bool = True
+    virtual_taken: bool = True
+    missed_acceptance: bool = True
+    late_warning: bool = True
+    session_started: bool = True
 
 @api_router.get("/notification-preferences")
 async def get_notification_preferences(current_user: dict = Depends(get_current_user)):
