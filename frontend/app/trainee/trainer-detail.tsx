@@ -1059,10 +1059,12 @@ const styles = StyleSheet.create({
   // Session Type Selection (NEW)
   sessionTypeRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 10,
     marginBottom: 16,
   },
   sessionTypeChip: {
+    minWidth: '30%',
     flex: 1,
     paddingVertical: 12,
     paddingHorizontal: 8,
