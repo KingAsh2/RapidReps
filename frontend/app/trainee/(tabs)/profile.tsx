@@ -473,6 +473,46 @@ export default function TraineeProfileScreen() {
               </View>
             </Animated.View>
 
+            {/* Home Address Card (for At Home sessions) */}
+            <Animated.View
+              style={[
+                styles.sectionCard,
+                {
+                  opacity: cardAnims[2],
+                  transform: [{
+                    translateY: cardAnims[2].interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [30, 0],
+                    }),
+                  }],
+                },
+              ]}
+            >
+              <View style={styles.sectionGradient}>
+                <View style={styles.sectionHeader}>
+                  <Ionicons name="home" size={22} color={COLORS.orange} />
+                  <Text style={styles.sectionTitle}>Home Address</Text>
+                </View>
+                <Text style={styles.addressHint}>Required for At Home training sessions</Text>
+                {isEditing ? (
+                  <TextInput
+                    style={styles.textArea}
+                    value={formData.homeAddress}
+                    onChangeText={(text) => setFormData({ ...formData, homeAddress: text })}
+                    placeholder="Enter your full home address"
+                    placeholderTextColor={COLORS.gray}
+                    multiline
+                    numberOfLines={2}
+                    data-testid="home-address-input"
+                  />
+                ) : (
+                  <Text style={styles.sectionContent}>
+                    {formData.homeAddress || 'No address set — required for At Home sessions'}
+                  </Text>
+                )}
+              </View>
+            </Animated.View>
+
             {/* Training Preferences Card */}
             <Animated.View
               style={[
