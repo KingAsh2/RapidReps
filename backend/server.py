@@ -263,7 +263,7 @@ def calculate_travel_fee_split(travel_fee_cents: int) -> dict:
     }
 
 def calculate_cancellation_fee(session_type: str) -> dict:
-    """Get cancellation fee for session type with 75/25 split"""
+    """Get cancellation fee for session type with 80/20 split"""
     fee_map = {
         SessionType.VIRTUAL: PricingRules.CANCELLATION_FEE_VIRTUAL,
         SessionType.OUTDOOR: PricingRules.CANCELLATION_FEE_OUTDOOR,
