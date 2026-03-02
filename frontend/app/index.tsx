@@ -35,8 +35,8 @@ const welcomeBackground = require('../assets/images/bg-battle-ropes.png');
 export default function WelcomeScreen() {
   const router = useRouter();
   const [isReady, setIsReady] = useState(false);
-  const [showVideo, setShowVideo] = useState(true);
-  const [videoVisible, setVideoVisible] = useState(true);
+  const [showVideo, setShowVideo] = useState(false);
+  const [videoVisible, setVideoVisible] = useState(false);
   const videoRef = useRef<Video>(null);
   
   // Animation values
@@ -46,8 +46,15 @@ export default function WelcomeScreen() {
   const videoFadeOut = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsReady(true), 100);
-    return () => clearTimeout(timer);
+    const checkFirstLaunch = async () => {
+      const hasSeenIntro = await AsyncStorage.getItem('has_seen_intro_video');
+      if (!hasSeenIntro) {
+        setShowVideo(true);
+        setVideoVisible(true);
+      }
+      setIsReady(true);
+    };
+    checkFirstLaunch();
   }, []);
 
   useEffect(() => {
