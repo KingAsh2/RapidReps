@@ -87,7 +87,10 @@ export default function WelcomeScreen() {
           tension: 40,
           useNativeDriver: true,
         }),
-      ]).start();
+      ]).start(() => {
+        // Start electric pulse loop after intro animation
+        startElectricPulse();
+      });
     }
   }, [showVideo, isReady]);
 
