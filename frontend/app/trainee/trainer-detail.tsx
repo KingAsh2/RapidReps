@@ -196,14 +196,40 @@ export default function TrainerDetailScreen() {
         locationType = 'outdoor';
       }
 
+      // For At Home sessions, use trainee's home address
+      let locationAddress = 'TBD';
+      if (selectedSessionType === 'virtual') {
+        locationAddress = 'Virtual';
+      } else if (selectedSessionType === 'in_home') {
+        // Fetch trainee profile to get home address
+        try {
+          const myProfile = await traineeAPI.getMyProfile();
+          if (myProfile.homeAddress) {
+            locationAddress = myProfile.homeAddress;
+          } else {
+            showAlert({
+              title: 'Home Address Required',
+              message: 'Please add your home address in your Profile before booking an At Home session.',
+              type: 'error',
+            });
+            setBooking(false);
+            return;
+          }
+        } catch {
+          locationAddress = 'Trainee Home (address pending)';
+        }
+      } else {
+        locationAddress = trainer.primaryGym || 'Outdoor Location';
+      }
+
       await traineeAPI.createSession({
         traineeId: user.id,
         trainerId: trainer.userId,
         sessionDateTimeStart: sessionStart.toISOString(),
         durationMinutes: selectedDuration,
-        sessionType: selectedSessionType, // NEW: PRD session type
+        sessionType: selectedSessionType,
         locationType: locationType,
-        locationNameOrAddress: selectedSessionType === 'virtual' ? 'Virtual' : (trainer.primaryGym || 'TBD'),
+        locationNameOrAddress: locationAddress,
       });
 
       showAlert({
