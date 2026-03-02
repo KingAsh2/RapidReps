@@ -42,92 +42,90 @@ export const AnimatedPillButton: React.FC<AnimatedPillButtonProps> = ({
   textStyle,
   testID,
 }) => {
-  const scaleAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
   const flashAnim = useRef(new Animated.Value(0)).current;
-  const shimmerAnim = useRef(new Animated.Value(0)).current;
-  const mounted = useRef(true);
+  const shineAnim = useRef(new Animated.Value(-1)).current;
+  const shimmerPos = useRef(new Animated.Value(-200)).current;
 
   useEffect(() => {
-    mounted.current = true;
-
-    // Bouncy entrance
-    Animated.spring(scaleAnim, {
-      toValue: 1,
-      friction: 5,
-      tension: 80,
-      useNativeDriver: true,
-    }).start();
-
-    // Continuous shimmer loop
+    let alive = true;
     const delay = variant === 'navy' ? 900 : 0;
-    const timer = setTimeout(() => {
-      if (!mounted.current) return;
-      const runShimmer = () => {
-        if (!mounted.current) return;
-        shimmerAnim.setValue(0);
-        Animated.timing(shimmerAnim, {
-          toValue: 1,
+    const tid = setTimeout(() => {
+      const loop = () => {
+        if (!alive) return;
+        shimmerPos.setValue(-200);
+        Animated.timing(shimmerPos, {
+          toValue: 400,
           duration: 1600,
           useNativeDriver: true,
         }).start(({ finished }) => {
-          if (finished && mounted.current) {
-            setTimeout(runShimmer, 2500);
-          }
+          if (finished && alive) setTimeout(loop, 2500);
         });
       };
-      runShimmer();
+      loop();
     }, delay);
-
-    return () => {
-      mounted.current = false;
-      clearTimeout(timer);
-    };
+    return () => { alive = false; clearTimeout(tid); };
   }, []);
 
   const handlePressIn = () => {
     Animated.spring(scaleAnim, {
-      toValue: 0.88,
+      toValue: 0.92,
       friction: 6,
-      tension: 500,
+      tension: 400,
       useNativeDriver: true,
     }).start();
   };
 
   const handlePressOut = () => {
-    Animated.sequence([
-      Animated.spring(scaleAnim, {
-        toValue: 1.1,
-        friction: 3,
-        tension: 600,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
+    // Energizing bounce-back + flash
+    Animated.parallel([
+      // Overshoot bounce
+      Animated.sequence([
+        Animated.spring(scaleAnim, {
+          toValue: 1.08,
+          friction: 4,
+          tension: 500,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          friction: 5,
+          tension: 300,
+          useNativeDriver: true,
+        }),
+      ]),
+      // Quick flash
+      Animated.sequence([
+        Animated.timing(flashAnim, {
+          toValue: 1,
+          duration: 80,
+          useNativeDriver: true,
+        }),
+        Animated.timing(flashAnim, {
+          toValue: 0,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+      ]),
+      // Shine sweep
+      Animated.timing(shineAnim, {
         toValue: 1,
-        friction: 4,
-        tension: 300,
+        duration: 400,
         useNativeDriver: true,
       }),
-    ]).start();
-
-    // White flash
-    flashAnim.setValue(1);
-    Animated.timing(flashAnim, {
-      toValue: 0,
-      duration: 250,
-      useNativeDriver: true,
-    }).start();
+    ]).start(() => {
+      shineAnim.setValue(-1);
+    });
   };
 
+  const isGradient = variant !== 'outline';
   const colors: readonly [string, string, ...string[]] = gradientColors
-    || (variant === 'teal' ? ['#0ED2CE', '#1FB8B4', '#17A09D'] as const
+    || (variant === 'teal' ? ['#1FB8B4', '#17A09D'] as const
       : variant === 'danger' ? [Colors.error, '#C0392B'] as const
-      : variant === 'navy' ? ['#2A3F7E', '#1A2A5E', '#0F1B3D'] as const
+      : variant === 'navy' ? ['#1A2A5E', '#0F1B3D'] as const
       : ['#00CFC1', '#FF6B35'] as const);
 
-  const shimmerTranslateX = shimmerAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-200, 400],
-  });
+  const iconColor = Colors.white;
 
   return (
     <TouchableWithoutFeedback
@@ -139,49 +137,84 @@ export const AnimatedPillButton: React.FC<AnimatedPillButtonProps> = ({
       <Animated.View
         style={[
           styles.buttonOuter,
+          isGradient && styles.gradientShadow,
+          variant === 'outline' && styles.outlineBorder,
+          variant === 'navy' && styles.navyShadow,
           {
             transform: [{ scale: scaleAnim }],
-            opacity: disabled ? 0.5 : scaleAnim,
+            opacity: disabled ? 0.5 : 1,
           },
           style,
         ]}
         {...(testID ? { 'data-testid': testID } : {})}
       >
-        <LinearGradient
-          colors={colors}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.buttonInner}
-        >
-          {loading ? (
-            <ActivityIndicator size="small" color={Colors.white} />
-          ) : (
-            <>
-              {icon && <Ionicons name={icon} size={22} color={Colors.white} style={styles.leftIcon} />}
-              <Text style={[styles.buttonText, textStyle]}>{title}</Text>
-              {showArrow && <Ionicons name="arrow-forward" size={20} color={Colors.white} style={styles.rightIcon} />}
-            </>
-          )}
-
-          {/* Shimmer sweep */}
-          <Animated.View
-            style={[
-              styles.shimmer,
-              { transform: [{ translateX: shimmerTranslateX }, { rotate: '20deg' }] },
-            ]}
-            pointerEvents="none"
-          />
-
-          {/* Flash overlay on press */}
-          <Animated.View
-            style={[
-              StyleSheet.absoluteFill,
-              styles.flash,
-              { opacity: flashAnim },
-            ]}
-            pointerEvents="none"
-          />
-        </LinearGradient>
+        {isGradient ? (
+          <LinearGradient
+            colors={colors}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.buttonInner}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color={Colors.white} />
+            ) : (
+              <>
+                {icon && <Ionicons name={icon} size={22} color={iconColor} style={styles.leftIcon} />}
+                <Text style={[styles.buttonText, textStyle]}>{title}</Text>
+                {showArrow && <Ionicons name="arrow-forward" size={20} color={iconColor} style={styles.rightIcon} />}
+              </>
+            )}
+            {/* Flash overlay */}
+            <Animated.View
+              style={[
+                StyleSheet.absoluteFill,
+                {
+                  backgroundColor: '#fff',
+                  opacity: Animated.multiply(flashAnim, 0.35),
+                  borderRadius: 30,
+                },
+              ]}
+              pointerEvents="none"
+            />
+            {/* Shimmer sweep */}
+            <Animated.View
+              style={{
+                position: 'absolute',
+                top: -30,
+                bottom: -30,
+                width: 50,
+                backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                borderRadius: 25,
+                transform: [{ translateX: shimmerPos }, { rotate: '20deg' }],
+              }}
+              pointerEvents="none"
+            />
+          </LinearGradient>
+        ) : (
+          <View style={styles.buttonInner}>
+            {loading ? (
+              <ActivityIndicator size="small" color={Colors.white} />
+            ) : (
+              <>
+                {icon && <Ionicons name={icon} size={22} color={iconColor} style={styles.leftIcon} />}
+                <Text style={[styles.outlineText, textStyle]}>{title}</Text>
+                {showArrow && <Ionicons name="arrow-forward" size={20} color={iconColor} style={styles.rightIcon} />}
+              </>
+            )}
+            {/* Flash overlay */}
+            <Animated.View
+              style={[
+                StyleSheet.absoluteFill,
+                {
+                  backgroundColor: '#fff',
+                  opacity: Animated.multiply(flashAnim, 0.3),
+                  borderRadius: 30,
+                },
+              ]}
+              pointerEvents="none"
+            />
+          </View>
+        )}
       </Animated.View>
     </TouchableWithoutFeedback>
   );
@@ -191,12 +224,24 @@ const styles = StyleSheet.create({
   buttonOuter: {
     borderRadius: 30,
     overflow: 'hidden',
-    marginVertical: 5,
-    shadowColor: '#FF6B35',
+  },
+  gradientShadow: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  navyShadow: {
+    shadowColor: '#1A2A5E',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.4,
-    shadowRadius: 14,
-    elevation: 12,
+    shadowRadius: 12,
+    elevation: 10,
+  },
+  outlineBorder: {
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.8)',
   },
   buttonInner: {
     flexDirection: 'row',
@@ -220,17 +265,12 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'center',
   },
-  shimmer: {
-    position: 'absolute',
-    top: -30,
-    bottom: -30,
-    width: 50,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    borderRadius: 25,
-  },
-  flash: {
-    backgroundColor: '#fff',
-    borderRadius: 30,
-    opacity: 0,
+  outlineText: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: Colors.white,
+    letterSpacing: 0.5,
+    flex: 1,
+    textAlign: 'center',
   },
 });

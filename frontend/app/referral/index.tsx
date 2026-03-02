@@ -8,7 +8,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { referralAPI } from '../../src/services/api';
-import * as Clipboard from 'expo-clipboard';
 
 const COLORS = {
   teal: '#1FB8B4',
@@ -45,7 +44,9 @@ export default function ReferralScreen() {
 
   const handleCopyCode = async () => {
     if (!stats?.referralCode) return;
-    await Clipboard.setStringAsync(stats.referralCode);
+    try {
+      await Share.share({ message: stats.referralCode });
+    } catch {}
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

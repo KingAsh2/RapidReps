@@ -1,45 +1,65 @@
 <analysis>**original_problem_statement:**
-The user's initial goal was a complete overhaul of their Rapid Reps fitness application based on a . This involved implementing an Uber-style real-time trainer matching engine, advanced GPS tracking, automated cancellation/no-show penalties, a membership and boost system, and selfie verification for sessions. After completing all functional requirements, the user requested the creation of a comprehensive user manual. Following the delivery of the first version of the manual, the user provided a detailed list of 12 critical gaps and clarifications that must be implemented in both the backend logic and the user manual itself before the project can be considered complete. Since then, the user has provided numerous additional feature requests, bug fixes, and UI/UX enhancements, which have all been implemented. The final task was to update the app's Terms of Service and Privacy Policy with new content.
+The user's initial goal was a complete overhaul of their Rapid Reps fitness application based on a . This involved implementing an Uber-style real-time trainer matching engine, advanced GPS tracking, automated cancellation/no-show penalties, a membership and boost system, and selfie verification for sessions. After completing all functional requirements, the user requested the creation of a comprehensive user manual. Following the delivery of the first version of the manual, the user provided a detailed list of 12 critical gaps and clarifications that must be implemented in both the backend logic and the user manual itself before the project can be considered complete. Since then, the user has provided numerous additional feature requests, bug fixes, and UI/UX enhancements, which have all been implemented. The final task was to update the app's Terms of Service and Privacy Policy with new content. Most recently, the user requested a referral system and several UI/UX changes, which led to a critical bug that crashes the app on launch.
 
 PRODUCT REQUIREMENTS:
 - A feature-complete fitness application with a React Native frontend and FastAPI backend.
 - A comprehensive, downloadable user manual and testing checklist.
 - An admin panel with robust filtering, user management, and a detailed verification workflow.
 - A dynamic pricing model with an 80/20 revenue split and a  service fee.
-- All user-requested features, animations, and bug fixes implemented as per the conversation history.
-- Up-to-date Terms of Service and Privacy Policy screens within the app.
+- A user referral system where users get credit after a new user's first booked session.
+- An app that is stable and production-ready for TestFlight deployment.
 
 **User's preferred language**: English
 
 **what currently exists?**
-A feature-rich, full-stack fitness app (React Native/Expo + FastAPI + MongoDB). All core features from the initial directive are complete, along with all subsequent user requests. The app includes a real-time matching engine, GPS tracking, automated penalties, a membership system, and selfie verification. A downloadable user manual and testing checklist are available via API endpoints.
-
-Recent additions include: a one-time intro video, a fully filterable admin panel with user locations and profile photos, a trainer proximity filter, a mandatory admin verification gate for trainers, an At Home session type, a corrected dynamic pricing model (80/20 split +  fee), various UI animations, and a comprehensive admin verification workflow.
+A full-stack fitness app (React Native/Expo + FastAPI + MongoDB) with a rich feature set, including real-time trainer matching, payments, an admin panel, and a newly implemented referral system. All backend APIs, including the new referral endpoints, are fully tested and functional. However, the frontend is in a critical state: the native iOS build (TestFlight) crashes immediately upon opening, rendering the application completely unusable for the user. This is a major regression. The web preview is also known to be broken due to a pre-existing Expo Router issue.
 
 **Last working item**:
--   Last item agent was working: Updating the Terms of Service and Privacy Policy links to display new, detailed content provided by the user. The agent created new files (, ), populated them with the user's text, and updated the main settings screen to link to these new components.
--   Status: IN PROGRESS
+-   Last item agent was working: Diagnosing and fixing a critical app crash that occurs immediately on launch in TestFlight builds. This issue appeared after implementing a referral system and new viral button animations. The user also reported that a blue Emergent icon was still visible during startup and the intro video was too zoomed in.
+-   Status: BLOCKED
 -   Agent Testing Done: N
--   Which testing method agent to use? Frontend testing agent or screenshot tool. The agent needs to verify that tapping the links on the settings page correctly navigates to the new screens and displays the user-provided content.
--   User Testing Done: N
+-   Which testing method agent to use? The agent cannot test native builds. The next agent must rely on user feedback from TestFlight. A systematic approach is required: create a minimal, stable change, ask the user to build and test, and repeat. Using the  for a second opinion on the crash source is also recommended.
+-   User Testing Done: Y (User confirmed the app crashes immediately on launch.)
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Verify and Finalize the Terms of Service and Privacy Policy Update (P0)**
-    -   **Description:** The agent has written the code for the new TOS and Privacy Policy screens but has not yet tested them or confirmed completion with the user.
-    -   **Status:** TESTING PENDING
+-   **Issue 1: App crashes immediately on launch in TestFlight (P0)**
+-   **Issue 2: Blue Emergent icon displays at the start of the intro video (P1)**
+-   **Issue 3: Intro video is slightly too zoomed in (P1)**
+
+Issues Detail:
+-   **Issue 1: App crashes immediately on launch in TestFlight (P0)**
+    -   **Attempted fixes:**
+        -   Replaced complex  animations in  with simpler ones, suspecting mixed native/non-native driver issues.
+        -   Completely removed the  dependency (uninstalled, removed from , and replaced usage with the built-in  API), suspecting a native module linking error was the cause.
+        -   Reverted changes to .
+        -   Restored the original  and reverted  splash screen configuration, suspecting a malformed asset.
+    -   **Next debug checklist:**
+        1.  **Isolate the Culprit:** The crash started after the referral system and new button animations. The prime suspect remains a UI change.
+        2.  **:** This component was heavily modified and is the most likely source of the crash. **Action:** Completely comment out the new animation logic or even the component's usage in  to see if the app launches. Start from the last known-working version and add back features one by one.
+        3.  **:** This file was changed for logo size and button animations. Review it for any subtle errors introduced during the multiple resize attempts.
+        4.  **Dependency Review:** Double-check  against the last working version to ensure no other problematic dependencies were added. The removal of  must be verified.
+    -   **Why fix this issue?** The application is completely unusable for the user. It is a critical P0 blocker preventing any further testing or use.
+    -   **Status:** IN PROGRESS
     -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** Frontend (requires user to build and test on TestFlight).
+    -   **Blocked on other issue:** None. This is the main blocker.
+
+-   **Issue 2: Blue Emergent icon displays at the start of the intro video (P1)**
+    -   **Attempted fixes:** The agent reverted the  splash configuration and restored the original . The user's last report indicates this was not successful.
+    -   **Next debug checklist:** Re-examine  and the assets in . The icon might be part of the intro video file itself, not the splash screen.
+    -   **Status:** IN PROGRESS
+
+-   **Issue 3: Intro video is slightly too zoomed in (P1)**
+    -   **Attempted fixes:** Changed  from  to  in .
+    -   **Next debug checklist:** This fix likely works but needs verification from the user once the app is launchable again.
+    -   **Status:** TESTING PENDING
 
 **In progress Task List**:
--   **Task 1: Complete the Terms of Service and Privacy Policy Update (P0)**
-    -   **Where to resume:** The files  and  have been created, and  has been updated. The next step is to test this flow to ensure the links navigate correctly and display the new content.
-    -   **What will be achieved with this?** The app's legal documents will be up-to-date as per the user's explicit request, accessible directly within the app.
-    -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** Frontend.
-    -   **Blocked on something:** None.
+-   None. All work is blocked by the P0 crash.
 
 **Upcoming and Future Tasks**
 **Upcoming Tasks:**
--   None. The agent should ask for user confirmation after verifying the current task to see if any other work is needed.
+-   **P1: Stabilize UI/UX Changes:** Once the crash is fixed, confirm with the user that the logo size and button animations are acceptable.
 
 **Future Tasks (Backlog):**
 -   **P3: Enable SendGrid Integration:** Blocked, awaiting API key from the user.
@@ -47,80 +67,76 @@ Recent additions include: a one-time intro video, a fully filterable admin panel
 -   **P5: Resolve TypeScript Strict-Mode Warnings:** Address the 86+ warnings to improve code quality.
 
 **Completed work in this session**
--   **User Manual & Testing:** Finalized the user manual with 12 critical fixes, regenerated the PDF, and created a downloadable testing checklist. Ran a full API test suite (90/95 passed) and fixed a critical bug found by the testing agent.
--   **UI/UX Enhancements:** Fixed logo overlap, implemented a one-time intro video, added a pulsing logo animation and button-tap animations, and adjusted button colors.
--   **Admin Panel Overhaul:** Added city/state display, search/filter functionality across all tabs, user profile photos, and a complete verification workflow for admins to review, approve, or reject trainer submissions with a reason.
--   **Core Feature Updates:** Updated all trainer locations, added a Travel to Trainer Proximity filter, fixed a navigation bug on the trainer's messages screen, and implemented a backend verification gate to block unverified trainers from accepting sessions.
--   **Booking & Pricing Rework:** Added an At Home session type, fixed a crash in the virtual training flow, corrected dynamic pricing to scale with duration, and updated the revenue model to an 80/20 split with a  trainee-paid service fee.
+-   **Referral System:** Fully implemented and tested on the backend. Includes API endpoints for code generation, validation, and stats, plus logic to apply credits during session booking. Frontend includes a new referral screen, a referral code input on signup, and links from user profiles.
+-   **Login Rate Limiting Fix:** Increased API rate limits for login and signup endpoints after they were triggered by the testing agent.
+-   **Session Flow Testing:** Fixed a bug in the trainer verification logic () and successfully tested the entire session lifecycle (create, accept, decline, cancel) including push notifications.
+-   **User Management:** Created a new trainee account () as requested.
+-   **UI/UX Updates (Attempted):** Adjusted the main screen logo size multiple times. Implemented and then reverted complex button animations in an attempt to fix the subsequent crash.
 
 **Earlier issues found/mentioned but not fixed**
--   **TypeScript Strict-Mode Warnings:** Over 86 non-blocking TypeScript warnings remain, representing technical debt.
+-   **TypeScript Strict-Mode Warnings:** Over 86 non-blocking TypeScript warnings remain.
 -   **SendGrid Integration:** The backend code is prepared but the feature is inactive (mocked) as it is awaiting an API key from the user.
 
 **Known issue recurrence from previous fork**
 -   None.
 
 **Code Architecture**
-
+expo-clipboard
 
 **Key Technical Concepts**
--   **Admin Panel Enhancements:** Dynamic filtering via URL query parameters, enriching API responses with related data (e.g., city/state, avatar URLs).
--   **State Management (Frontend):** Using  to persist state across app launches (e.g., ).
--   **React Native Animation:** Using  for complex, looping animations and  for simple tap feedback.
--   **Backend Logic:** Implementing business rules like verification gates and complex pricing models (revenue splits + fixed fees) directly in the API endpoints.
--   **Component-Based UI:** Creating reusable components like  and  for the admin panel.
+-   **Native Build Crashes:** The current primary challenge is debugging a crash specific to a native iOS build (TestFlight). Potential causes investigated include native module linking errors (), incompatible  animations, and malformed assets. Debugging is difficult due to the inability to run the native build directly.
+-   **React Native  API:** Used as a safe, built-in replacement for the  external dependency.
+-   **FastAPI Referral Logic:** Implemented a complete referral loop, including code generation, validation, pending state tracking, and credit application upon a condition (first booking).
 
 **key DB schema**
--   **users:**  updated to include 'rejected'.
--   **trainer_profiles:** Added .
--   **trainee_profiles:** Added .
--   **pricing_rules:** Updated  to ,  to .
+-   **users:** Added , , .
+-   **referrals:** New collection to track referral status: .
 
 **All files of reference**
--    (Links to the new legal screens)
--    (Newly created Terms of Service screen)
--    (Newly created Privacy Policy screen)
--    (Contains all recent backend logic)
--    (The completely overhauled admin dashboard)
+-    (Primary suspect for the crash)
+-    (Contains the animated buttons and logo)
+-    (New screen where  was used and removed)
+-    (To verify dependencies are clean)
+-    (Build configuration for native app, including splash screen)
+-    (Contains all backend referral and session logic)
 
 **Areas that need refactoring**:
--   The admin dashboard file  is over 1000 lines long and handles multiple complex features. It should be broken down into smaller, more manageable components for better maintainability.
+-    remains over 1000 lines long.
+-   The animation logic in  needs to be re-implemented carefully after the crash is resolved, ensuring all animations are compatible with .
 
 **key api endpoints**
--   : Now supports  and  query params and returns , , and .
--   : Updated to accept a JSON body with a  and triggers a notification.
--   : (New) Gets all verification submission details for a single trainer.
--   : Serves the user manual PDF.
--   : Serves the testing checklist PDF.
--   : Now gated by trainer's .
+-    (GET): Fetches a user's referral code and stats.
+-    (GET): Validates a referral code during signup.
+-    (POST): Modified to accept an optional .
+-    (POST): Modified to apply referral credits and activate pending referrals.
 
 **Critical Info for New Agent**
--   Your immediate task is to verify the newly created Terms of Service and Privacy Policy screens. Check that the links on the settings page navigate correctly and that the content displayed matches the user's provided text.
--   The user has been adding features and fixes in batches. After verifying the current task, proactively ask the user if there are any other outstanding items or if the project is ready for final deployment.
--   Do not refactor the large admin panel file unless explicitly asked by the user.
+-   **Your P0 task is to fix the app crash.** The native iOS (TestFlight) build crashes immediately on launch. This is a critical regression.
+-   **The crash is almost certainly in the frontend.** All backend APIs are tested and stable. Focus your investigation on the UI changes introduced recently. The prime suspect is .
+-   **You cannot visually test.** The web preview is broken (a known, pre-existing issue). You must make careful, isolated changes and then rely on the user to create a new TestFlight build to verify if the crash is gone. Communicate this dependency clearly.
+-   **Avoid new native dependencies.** The  package likely caused the initial instability; stick to built-in React Native APIs (, etc.) to ensure stability.
+-   Once the crash is fixed, you must circle back and get user verification for the other two reported issues: the lingering blue Emergent icon and the intro video zoom level.
 
 **documents and test reports created in this job**
--   
--   
--   
--   
+-    (Backend tests, 75/75 passed)
+-    (Referral system tests, 29/29 passed)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (Msg 477): PENDING** - Provided the full text for the Terms of Service and Privacy Policy and asked for the links to be updated. (Status: IN PROGRESS)
-2.  **User (Msg 433):** Requested a full admin verification workflow: view documents, approve/reject, and provide a reason for rejection. (Status: COMPLETED)
-3.  **User (Msg 407):** Requested to show user profile photos in the admin panel. (Status: COMPLETED)
-4.  **User (Msg 392):** Requested tap animations for the main buttons and a color change for the Become a Trainer button. (Status: COMPLETED)
-5.  **User (Msg 341):** Confirmed the new pricing model (80/20 split +  fee) and requested to proceed. (Status: COMPLETED)
-6.  **User (Msg 330):** Requested a pulse animation for the main screen logo. (Status: COMPLETED)
-7.  **User (Msg 305):** Reported that price isn't changing with duration and that prices should be a sliding scale. (Status: COMPLETED)
-8.  **User (Msg 232):** Requested an At Home session type, trainee address capture, and reported a crash with the virtual option. (Status: COMPLETED)
-9.  **User (Msg 201):** Reported the bottom menu missing on the trainer messages screen and that trainers should be verified before booking. (Status: COMPLETED)
-10. **User (Msg 168):** Requested a travel radius dropdown filter for trainers. (Status: COMPLETED)
+1.  **User (Msg 456):** Continue and Actually fix the issue so that i am able to access my app. You’’re wasting my credits by not fixing the issues (Status: UNRESOLVED)
+2.  **User (Msg 429):** Reported the app still crashes on TestFlight, the Emergent icon is still there, and the video is not zoomed out. Expressed frustration. (Status: UNRESOLVED)
+3.  **User (Msg 411):** Reported the app crashes after the intro video, a blue icon is present, and the video is too zoomed in. (Status: IN PROGRESS)
+4.  **User (Msg 359):** Nope. You test em first (referring to push notifications). (Status: COMPLETED - agent tested the flow)
+5.  **User (Msg 357):** Stated they will be testing push notifications and session flows. (Status: ADDRESSED)
+6.  **User (Msg 353):** Provided details to create the  account. (Status: COMPLETED)
+7.  **User (Msg 346):** Asked to ensure all accounts are accessible, specifically admin and a new  account. (Status: COMPLETED)
+8.  **User (Msg 330):** Reported the screen is cut off with the large logo and requested more energetic button animations. (Status: IN PROGRESS - attempted fixes led to crash)
+9.  **User (Msg 322):** Asked if the entire home page is visible after a logo resize. (Status: ADDRESSED - agent explained it couldn't verify visually)
+10. **User (Msg 316):** Requested to make the pulsing logo 25% smaller. (Status: COMPLETED, but further changes were requested)
 
 **Project Health Check:**
--   **Broken:** None.
+-   **Broken:** The frontend native build is critically broken and crashes on launch.
 -   **Mocked**:
-    -   SendGrid email service remains in a no-op (mocked) state pending an API key from the user.
+    -   SendGrid email service remains inactive pending a user-provided API key.
     -   Stripe is using test keys/mock payment intents.
 
 **3rd Party Integrations**
@@ -129,19 +145,25 @@ Recent additions include: a one-time intro video, a fully filterable admin panel
 -   **expo-server-sdk-python:** Used for sending push notifications.
 -   **APScheduler:** Used for background tasks.
 -   **wkhtmltopdf:** Used for generating PDF documents.
--   **react-native-reanimated:** Used for UI animations.
+-   **react-native-reanimated:** Used for UI animations (suspected source of current crash).
 -   **SendGrid:** Backend is prepared, but inactive and awaiting an API key.
 
 **Testing status**
--   Testing agent used after significant changes: YES
+-   Testing agent used after significant changes: YES (for backend referral system).
 -   Troubleshoot agent used after agent stuck in loop: NO
 -   Test files created: None.
--   Known regressions: None.
+-   Known regressions: **CRITICAL - App crashes on launch.**
 
 **Credentials to test flow:**
--   **Admin**:  / 
--   **Trainers (Password: )**: , ,  (All verified)
--   **Trainees (Password: )**: , 
+| Role | Email | Password |
+|---|---|---|
+| Admin |  |  |
+| Trainee |  |  |
+| Trainee |  |  |
+| Trainee |  |  |
+| Trainer |  |  |
+| Trainer |  |  |
+| Trainer |  |  |
 
 **What agent forgot to execute**
--   The agent has not performed any testing or verification on the last implemented feature: the new Terms of Service and Privacy Policy screens. This is the main pending action.</analysis>
+The agent failed to produce a stable build after implementing the latest UI changes. While several fixes were attempted for the crash, none were successful, and the agent changed multiple things at once (animations, dependencies, build configs), making it difficult to isolate the root cause. The agent could not resolve the user's primary blocker.</analysis>
