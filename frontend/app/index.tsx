@@ -99,6 +99,7 @@ export default function WelcomeScreen() {
   };
 
   const handleVideoEnd = () => {
+    AsyncStorage.setItem('has_seen_intro_video', 'true');
     Animated.timing(videoFadeOut, {
       toValue: 0,
       duration: 400,
@@ -110,6 +111,7 @@ export default function WelcomeScreen() {
   };
 
   const handleSkipVideo = () => {
+    AsyncStorage.setItem('has_seen_intro_video', 'true');
     Animated.timing(videoFadeOut, {
       toValue: 0,
       duration: 300,
