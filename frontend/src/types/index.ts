@@ -28,8 +28,13 @@ export interface TrainerProfile {
   primaryGym?: string;
   offersInPerson: boolean;
   offersVirtual: boolean;
+  offersOutdoor?: boolean;
+  offersInHome?: boolean;
   sessionDurationsOffered: number[];
   ratePerMinuteCents: number;
+  virtualRateCents?: number;
+  outdoorRateCents?: number;
+  inHomeRateCents?: number;
   travelRadiusMiles?: number;
   cancellationPolicy?: string;
   averageRating: number;
