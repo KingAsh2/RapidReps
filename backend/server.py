@@ -1775,7 +1775,19 @@ async def get_verification_status(current_user: dict = Depends(get_current_user)
             steps[step_id] = 'pending'
 
     can_go_live, missing = check_trainer_can_go_live(profile)
-    return {'steps': steps, 'canGoLive': can_go_live, 'missingRequirements': missing}
+    
+    verification_status = profile.get('verificationStatus', 'pending')
+    rejection_reason = profile.get('rejectionReason')
+    
+    return {
+        'steps': steps,
+        'canGoLive': can_go_live,
+        'missingRequirements': missing,
+        'verificationStatus': verification_status,
+        'rejectionReason': rejection_reason,
+        'rejectedAt': profile.get('rejectedAt'),
+        'verifiedAt': profile.get('verifiedAt'),
+    }
 
 
 class VerificationSubmission(BaseModel):
