@@ -58,6 +58,7 @@ export default function SignupScreen() {
     fullName: '',
     phone: '',
     roles: [] as UserRole[],
+    referralCode: '',
   });
 
   // Pre-select role from URL params (coming from welcome screen)
@@ -193,6 +194,7 @@ export default function SignupScreen() {
         phone: formData.phone,
         password: formData.password,
         roles: formData.roles,
+        referralCode: formData.referralCode || undefined,
       });
 
       if (formData.roles.includes(UserRole.TRAINER)) {
