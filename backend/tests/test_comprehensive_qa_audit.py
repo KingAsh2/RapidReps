@@ -50,7 +50,7 @@ from bson import ObjectId
 from pymongo import MongoClient
 
 # Base URL from environment
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://rapid-reps-manual.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://rapid-reps-legal.preview.emergentagent.com').rstrip('/')
 MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
 DB_NAME = os.environ.get('DB_NAME', 'rapidreps')
 JWT_SECRET = "nl8NLKDO0069P7WlqLr6Iw2f--erIuMIyKqrAl50JtU"  # From backend/.env

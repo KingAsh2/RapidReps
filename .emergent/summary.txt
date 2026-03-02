@@ -1,42 +1,45 @@
 <analysis>**original_problem_statement:**
-The user's initial goal was a complete overhaul of their Rapid Reps fitness application based on a . This involved implementing an Uber-style real-time trainer matching engine, advanced GPS tracking, automated cancellation/no-show penalties, a membership and boost system, and selfie verification for sessions. After completing all functional requirements, the user requested the creation of a comprehensive user manual. Following the delivery of the first version of the manual, the user provided a detailed list of 12 critical gaps and clarifications that must be implemented in both the backend logic and the user manual itself before the project can be considered complete.
+The user's initial goal was a complete overhaul of their Rapid Reps fitness application based on a . This involved implementing an Uber-style real-time trainer matching engine, advanced GPS tracking, automated cancellation/no-show penalties, a membership and boost system, and selfie verification for sessions. After completing all functional requirements, the user requested the creation of a comprehensive user manual. Following the delivery of the first version of the manual, the user provided a detailed list of 12 critical gaps and clarifications that must be implemented in both the backend logic and the user manual itself before the project can be considered complete. Since then, the user has provided numerous additional feature requests, bug fixes, and UI/UX enhancements, which have all been implemented. The final task was to update the app's Terms of Service and Privacy Policy with new content.
 
 PRODUCT REQUIREMENTS:
--   Implement 12 specific fixes and clarifications covering the matching engine's scoring logic, location permission flows, no-show/cancellation rules, selfie verification fail cases, virtual session rules, and fraud detection.
--   Update the user manual () to reflect all these changes accurately and comprehensively.
--   The final deliverable is an updated, downloadable PDF of the user manual that covers every feature, button, and workflow in the application.
+- A feature-complete fitness application with a React Native frontend and FastAPI backend.
+- A comprehensive, downloadable user manual and testing checklist.
+- An admin panel with robust filtering, user management, and a detailed verification workflow.
+- A dynamic pricing model with an 80/20 revenue split and a  service fee.
+- All user-requested features, animations, and bug fixes implemented as per the conversation history.
+- Up-to-date Terms of Service and Privacy Policy screens within the app.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application is a feature-complete, full-stack fitness app with a FastAPI backend and React Native/Expo frontend. All major features from the  have been implemented:
--   **Core Engine:** A real-time, Uber-style matching engine with ETA-based scoring and tiered notification waves.
--   **Booking & Payments:** Instant Virtual and In-Person booking flows, integrated with Stripe.
--   **Penalties & Safety:** Automated logic for no-show and late cancellation penalties, GPS tracking for en-route and active sessions, and selfie verification before a session can start.
--   **Engagement Features:** A tiered membership system with discounts and priority matching, a Boost system for trainer visibility, and auto-generated post-session summaries with stats and shareable links.
--   **Backend Logic for Manual Updates:** All backend logic changes required by the user's 12-point feedback list have been implemented. This includes adding a 15-minute ETA cap, a cooldown for the Find Another Trainer feature, selfie-failure retry logic, and automated fraud detection.
+A feature-rich, full-stack fitness app (React Native/Expo + FastAPI + MongoDB). All core features from the initial directive are complete, along with all subsequent user requests. The app includes a real-time matching engine, GPS tracking, automated penalties, a membership system, and selfie verification. A downloadable user manual and testing checklist are available via API endpoints.
+
+Recent additions include: a one-time intro video, a fully filterable admin panel with user locations and profile photos, a trainer proximity filter, a mandatory admin verification gate for trainers, an At Home session type, a corrected dynamic pricing model (80/20 split +  fee), various UI animations, and a comprehensive admin verification workflow.
 
 **Last working item**:
--   Last item agent was working: Implementing the user's 12-point feedback list to fix critical gaps in the application logic and the user manual. The agent has successfully implemented all the required backend changes. The next step is to update the user manual content to reflect these new rules and then regenerate the PDF.
+-   Last item agent was working: Updating the Terms of Service and Privacy Policy links to display new, detailed content provided by the user. The agent created new files (, ), populated them with the user's text, and updated the main settings screen to link to these new components.
 -   Status: IN PROGRESS
--   Agent Testing Done: Y (The agent tested all new and modified backend endpoints via .)
--   Which testing method agent to use? Manual testing. The agent needs to generate a new PDF and confirm the download endpoint works.
+-   Agent Testing Done: N
+-   Which testing method agent to use? Frontend testing agent or screenshot tool. The agent needs to verify that tapping the links on the settings page correctly navigates to the new screens and displays the user-provided content.
 -   User Testing Done: N
 
 **All Pending/In progress Issue list**:
-- None.
+-   **Issue 1: Verify and Finalize the Terms of Service and Privacy Policy Update (P0)**
+    -   **Description:** The agent has written the code for the new TOS and Privacy Policy screens but has not yet tested them or confirmed completion with the user.
+    -   **Status:** TESTING PENDING
+    -   **Is recurring issue?** N
 
 **In progress Task List**:
--   **Task 1: Finalize and Deliver Updated User Manual (P0)**
-    -   **Where to resume:** All backend logic changes are complete. The agent must now rewrite the markdown file at  to incorporate all 12 points from the user's latest feedback. After the markdown is updated, the agent must use  to generate a new  and ensure the  endpoint serves the new file correctly.
-    -   **What will be achieved with this?** A final, comprehensive, and accurate user manual that reflects all the latest features and logic, fulfilling the user's request.
+-   **Task 1: Complete the Terms of Service and Privacy Policy Update (P0)**
+    -   **Where to resume:** The files  and  have been created, and  has been updated. The next step is to test this flow to ensure the links navigate correctly and display the new content.
+    -   **What will be achieved with this?** The app's legal documents will be up-to-date as per the user's explicit request, accessible directly within the app.
     -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** Backend (the download endpoint).
+    -   **Should Test frontend/backend/both after fix?** Frontend.
     -   **Blocked on something:** None.
 
 **Upcoming and Future Tasks**
 **Upcoming Tasks:**
--   None. The current task is the final one requested by the user.
+-   None. The agent should ask for user confirmation after verifying the current task to see if any other work is needed.
 
 **Future Tasks (Backlog):**
 -   **P3: Enable SendGrid Integration:** Blocked, awaiting API key from the user.
@@ -44,22 +47,11 @@ The application is a feature-complete, full-stack fitness app with a FastAPI bac
 -   **P5: Resolve TypeScript Strict-Mode Warnings:** Address the 86+ warnings to improve code quality.
 
 **Completed work in this session**
--   **P0 - Top Priority Upgrades (Complete):**
-    -   Implemented a Smart Push Notification Engine tied to the matching logic.
-    -   Fixed and enhanced the virtual session screen with sounds and UI improvements.
-    -   Completed a comprehensive 508 Compliance pass, removing all invalid colors and improving text visibility.
--   **P1 - Medium Priority Enhancements (Complete):**
-    -   Built an Advanced GPS System with real-time tracking, ETA calculations, and automated alerts.
-    -   Implemented automated No-Show & Cancellation Penalty logic with Stripe integration.
-    -   Enhanced the Membership System with priority matching and session discounts.
-    -   Enhanced the Boost System with a profile glow indicator and analytics.
--   **P2 - Secondary Improvement (Complete):**
-    -   Added a mandatory Selfie Verification step for both trainer and trainee before a session starts.
--   **User-Requested Enhancement (Complete):**
-    -   Created a Post-Session Summary feature with calorie estimation, streak tracking, and shareable social cards.
--   **Documentation & Final Fixes (In Progress):**
-    -   Generated an initial comprehensive User Manual as a PDF.
-    -   Implemented all 12 backend logic fixes based on user feedback on the manual (e.g., ETA cap, selfie retries, fraud detection).
+-   **User Manual & Testing:** Finalized the user manual with 12 critical fixes, regenerated the PDF, and created a downloadable testing checklist. Ran a full API test suite (90/95 passed) and fixed a critical bug found by the testing agent.
+-   **UI/UX Enhancements:** Fixed logo overlap, implemented a one-time intro video, added a pulsing logo animation and button-tap animations, and adjusted button colors.
+-   **Admin Panel Overhaul:** Added city/state display, search/filter functionality across all tabs, user profile photos, and a complete verification workflow for admins to review, approve, or reject trainer submissions with a reason.
+-   **Core Feature Updates:** Updated all trainer locations, added a Travel to Trainer Proximity filter, fixed a navigation bug on the trainer's messages screen, and implemented a backend verification gate to block unverified trainers from accepting sessions.
+-   **Booking & Pricing Rework:** Added an At Home session type, fixed a crash in the virtual training flow, corrected dynamic pricing to scale with duration, and updated the revenue model to an 80/20 split with a  trainee-paid service fee.
 
 **Earlier issues found/mentioned but not fixed**
 -   **TypeScript Strict-Mode Warnings:** Over 86 non-blocking TypeScript warnings remain, representing technical debt.
@@ -72,68 +64,84 @@ The application is a feature-complete, full-stack fitness app with a FastAPI bac
 
 
 **Key Technical Concepts**
--   **Real-time Matching Engine:** Sophisticated backend logic using weighted scoring (with a 40% weight on ETA) and tiered wave notifications.
--   **Automated Penalty & Fraud Systems:** Logic runs in background tasks (APScheduler) to detect no-shows, apply cancellation fees, and flag suspicious user behavior like GPS spoofing or trolling.
--   **Stateful Session Management:** The  collection in MongoDB now tracks numerous states, including , , selfie verification status, and retry counts.
--   **Dynamic PDF Generation:** Using  to convert a detailed Markdown file into a downloadable PDF user manual.
--   **Deep Linking:** Generating URLs for shareable post-session summary cards.
+-   **Admin Panel Enhancements:** Dynamic filtering via URL query parameters, enriching API responses with related data (e.g., city/state, avatar URLs).
+-   **State Management (Frontend):** Using  to persist state across app launches (e.g., ).
+-   **React Native Animation:** Using  for complex, looping animations and  for simple tap feedback.
+-   **Backend Logic:** Implementing business rules like verification gates and complex pricing models (revenue splits + fixed fees) directly in the API endpoints.
+-   **Component-Based UI:** Creating reusable components like  and  for the admin panel.
 
 **key DB schema**
--   **sessions:** Added , , , , .
--   **users:** Added , , .
--   **virtual_requests:** Added  to manage the Find Another Trainer cooldown.
--   **post_session_summaries:** New collection to store generated session reports.
+-   **users:**  updated to include 'rejected'.
+-   **trainer_profiles:** Added .
+-   **trainee_profiles:** Added .
+-   **pricing_rules:** Updated  to ,  to .
 
 **All files of reference**
--    (Contains all the application's core logic and recent fixes)
--    (The source file for the final deliverable, which needs to be updated)
--    (The final deliverable file)
+-    (Links to the new legal screens)
+-    (Newly created Terms of Service screen)
+-    (Newly created Privacy Policy screen)
+-    (Contains all recent backend logic)
+-    (The completely overhauled admin dashboard)
+
+**Areas that need refactoring**:
+-   The admin dashboard file  is over 1000 lines long and handles multiple complex features. It should be broken down into smaller, more manageable components for better maintainability.
+
+**key api endpoints**
+-   : Now supports  and  query params and returns , , and .
+-   : Updated to accept a JSON body with a  and triggers a notification.
+-   : (New) Gets all verification submission details for a single trainer.
+-   : Serves the user manual PDF.
+-   : Serves the testing checklist PDF.
+-   : Now gated by trainer's .
 
 **Critical Info for New Agent**
--   Your sole focus is to complete the final user request: updating the user manual.
--   All required backend logic changes are already done and tested.
--   You must carefully read the user's 12-point feedback list (from message 378) and rewrite the content of  to incorporate every single point.
--   After updating the markdown file, you must regenerate the PDF and confirm it's accessible via the download endpoint. Do not implement any new features or change any other code.
+-   Your immediate task is to verify the newly created Terms of Service and Privacy Policy screens. Check that the links on the settings page navigate correctly and that the content displayed matches the user's provided text.
+-   The user has been adding features and fixes in batches. After verifying the current task, proactively ask the user if there are any other outstanding items or if the project is ready for final deployment.
+-   Do not refactor the large admin panel file unless explicitly asked by the user.
 
 **documents and test reports created in this job**
 -   
 -   
--    through 
+-   
+-   
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (Msg 378):** **PENDING** - Provided a detailed 12-point list of critical, major, and minor fixes required for the backend logic and the user manual. (Status: IN PROGRESS)
-2.  **User (Msg 377):** Confirmed links work and provided instructions for download. (Status: COMPLETED)
-3.  **User (Msg 375):** Provided alternative links and download instructions for the PDF. (Status: COMPLETED)
-4.  **User (Msg 370):** Stated that the PDF links were not working. (Status: COMPLETED)
-5.  **User (Msg 345):** Requested a complete, overhauled user manual in PDF format covering every button, option, and workflow in the app. (Status: IN PROGRESS)
-6.  **User (Msg 324):** Provided specifications for the Post-Session Summary feature. (Status: COMPLETED)
-7.  **User (Msg 321):** Approved the plan to build the Post-Session Summary enhancement. (Status: COMPLETED)
-8.  **User (Msg 307):** Approved moving to P2 (Selfie Verification) and confirmed they don't have a SendGrid key yet. (Status: COMPLETED)
-9.  **User (Msg 247):** Provided specifications for P1.3 (Membership) and P1.4 (Boosts). (Status: COMPLETED)
-10. **User (Msg 161):** Provided final rules for P1.1 (GPS Tracking) and P1.2 (No-Show/Cancellation Penalties). (Status: COMPLETED)
+1.  **User (Msg 477): PENDING** - Provided the full text for the Terms of Service and Privacy Policy and asked for the links to be updated. (Status: IN PROGRESS)
+2.  **User (Msg 433):** Requested a full admin verification workflow: view documents, approve/reject, and provide a reason for rejection. (Status: COMPLETED)
+3.  **User (Msg 407):** Requested to show user profile photos in the admin panel. (Status: COMPLETED)
+4.  **User (Msg 392):** Requested tap animations for the main buttons and a color change for the Become a Trainer button. (Status: COMPLETED)
+5.  **User (Msg 341):** Confirmed the new pricing model (80/20 split +  fee) and requested to proceed. (Status: COMPLETED)
+6.  **User (Msg 330):** Requested a pulse animation for the main screen logo. (Status: COMPLETED)
+7.  **User (Msg 305):** Reported that price isn't changing with duration and that prices should be a sliding scale. (Status: COMPLETED)
+8.  **User (Msg 232):** Requested an At Home session type, trainee address capture, and reported a crash with the virtual option. (Status: COMPLETED)
+9.  **User (Msg 201):** Reported the bottom menu missing on the trainer messages screen and that trainers should be verified before booking. (Status: COMPLETED)
+10. **User (Msg 168):** Requested a travel radius dropdown filter for trainers. (Status: COMPLETED)
 
 **Project Health Check:**
 -   **Broken:** None.
--   **Mocked**: The SendGrid email service remains in a no-op (mocked) state pending an API key from the user.
+-   **Mocked**:
+    -   SendGrid email service remains in a no-op (mocked) state pending an API key from the user.
+    -   Stripe is using test keys/mock payment intents.
 
 **3rd Party Integrations**
--   **Stripe:** Fully integrated for payments and penalties.
+-   **Stripe:** Fully integrated for payments (test mode).
 -   **Expo / Expo Router:** Core of the frontend application.
 -   **expo-server-sdk-python:** Used for sending push notifications.
--   **APScheduler:** Used for background tasks (no-show detection, fraud checks, etc.).
--   **wkhtmltopdf:** Used for generating the PDF user manual.
+-   **APScheduler:** Used for background tasks.
+-   **wkhtmltopdf:** Used for generating PDF documents.
+-   **react-native-reanimated:** Used for UI animations.
 -   **SendGrid:** Backend is prepared, but inactive and awaiting an API key.
 
 **Testing status**
--   Testing agent used after significant changes: YES (Used after every major feature phase: P0, P1, P2, and enhancements).
+-   Testing agent used after significant changes: YES
 -   Troubleshoot agent used after agent stuck in loop: NO
 -   Test files created: None.
 -   Known regressions: None.
 
 **Credentials to test flow:**
 -   **Admin**:  / 
--   **Trainers (Password: )**: , 
+-   **Trainers (Password: )**: , ,  (All verified)
 -   **Trainees (Password: )**: , 
 
 **What agent forgot to execute**
-- The agent has correctly implemented the backend logic for the 12 feedback points but has not yet updated the user manual content itself. This is the main pending task.</analysis>
+-   The agent has not performed any testing or verification on the last implemented feature: the new Terms of Service and Privacy Policy screens. This is the main pending action.</analysis>

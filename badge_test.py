@@ -12,7 +12,7 @@ import os
 from typing import Dict, List, Any
 
 # Get backend URL from environment
-BACKEND_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://rapid-reps-manual.preview.emergentagent.com')
+BACKEND_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://rapid-reps-legal.preview.emergentagent.com')
 API_BASE = f"{BACKEND_URL}/api"
 
 class BadgeTestRunner:
