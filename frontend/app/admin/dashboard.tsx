@@ -741,10 +741,66 @@ export default function AdminDashboard() {
     );
   };
 
+  // --- Filter Pill Row ---
+  const FilterPills = ({ options, selected, onSelect, testIdPrefix }: { options: { key: string; label: string }[]; selected: string; onSelect: (key: string) => void; testIdPrefix: string }) => (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }} contentContainerStyle={{ gap: 6 }}>
+      {options.map((opt) => (
+        <TouchableOpacity
+          key={opt.key}
+          style={[s.filterPill, selected === opt.key && s.filterPillActive]}
+          onPress={() => onSelect(selected === opt.key ? '' : opt.key)}
+          data-testid={`${testIdPrefix}-${opt.key || 'all'}`}
+        >
+          <Text style={[s.filterPillText, selected === opt.key && s.filterPillTextActive]}>{opt.label}</Text>
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
+  );
+
+  // --- Search Bar ---
+  const SearchBar = ({ value, onChangeText, onSubmit, placeholder }: { value: string; onChangeText: (t: string) => void; onSubmit: () => void; placeholder: string }) => (
+    <View style={s.searchBar} data-testid="admin-search-bar">
+      <Ionicons name="search" size={18} color={C.gray} />
+      <TextInput
+        style={s.searchInput}
+        value={value}
+        onChangeText={onChangeText}
+        onSubmitEditing={onSubmit}
+        placeholder={placeholder}
+        placeholderTextColor={C.gray}
+        returnKeyType="search"
+        data-testid="admin-search-input"
+      />
+      {value ? (
+        <TouchableOpacity onPress={() => { onChangeText(''); onSubmit(); }} data-testid="admin-search-clear">
+          <Ionicons name="close-circle" size={18} color={C.gray} />
+        </TouchableOpacity>
+      ) : null}
+    </View>
+  );
+
   // --- RENDER: Users ---
-  const renderUsers = () => (
+  const renderUsers = () => {
+    const roleOptions = [
+      { key: '', label: 'All' },
+      { key: 'trainer', label: 'Trainers' },
+      { key: 'trainee', label: 'Trainees' },
+    ];
+    return (
     <View>
       <Text style={s.sectionTitle}>All Users ({usersTotal})</Text>
+      <SearchBar
+        value={userSearch}
+        onChangeText={setUserSearch}
+        onSubmit={() => fetchUsers(0, userSearch, userRoleFilter)}
+        placeholder="Search by name, email, city, or state..."
+      />
+      <FilterPills
+        options={roleOptions}
+        selected={userRoleFilter}
+        onSelect={(role) => { setUserRoleFilter(role); fetchUsers(0, userSearch, role); }}
+        testIdPrefix="user-filter"
+      />
       {users.map((user) => (
         <View key={user.id} style={s.listCard}>
           <TouchableOpacity
@@ -761,6 +817,12 @@ export default function AdminDashboard() {
             <View style={{ flex: 1 }}>
               <Text style={s.listCardTitle}>{user.fullName}</Text>
               <Text style={s.listCardSub}>{user.email}</Text>
+              {(user.city || user.state) ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                  <Ionicons name="location-outline" size={12} color={C.teal} />
+                  <Text style={[s.listCardSub, { color: C.teal, fontWeight: '600' }]}>{[user.city, user.state].filter(Boolean).join(', ')}</Text>
+                </View>
+              ) : null}
             </View>
           </TouchableOpacity>
           <View style={{ flexDirection: 'row', gap: 6 }}>
@@ -785,7 +847,8 @@ export default function AdminDashboard() {
       ))}
       <PaginationBar current={usersPage} total={usersTotal} pageSize={PAGE_SIZE} onPageChange={(p) => fetchUsers(p)} />
     </View>
-  );
+    );
+  };
 
   // --- RENDER: Verifications ---
   const renderVerifications = () => (
