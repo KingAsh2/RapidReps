@@ -1100,7 +1100,8 @@ export default function AdminDashboard() {
       )}
       <PaginationBar current={transPage} total={transTotal} pageSize={PAGE_SIZE} onPageChange={(p) => fetchTransactions(p)} />
     </View>
-  );
+    );
+  };
 
   // --- RENDER: Admin Profile ---
   const renderProfile = () => (
