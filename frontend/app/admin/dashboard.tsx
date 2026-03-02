@@ -1404,6 +1404,7 @@ const s = StyleSheet.create({
   divider: { height: 1, backgroundColor: '#e2e8f0', marginVertical: 4 },
   listCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: C.card, borderRadius: 12, padding: 14, marginBottom: 8, gap: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 4, elevation: 1 },
   listCardIcon: { width: 38, height: 38, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
+  userAvatar: { width: 38, height: 38, borderRadius: 19 },
   listCardTitle: { fontSize: 14, fontWeight: '700', color: C.navy },
   listCardSub: { fontSize: 12, color: C.gray, marginTop: 2 },
   iconBtn: { width: 34, height: 34, borderRadius: 8, borderWidth: 1, borderColor: C.teal, justifyContent: 'center', alignItems: 'center' },
