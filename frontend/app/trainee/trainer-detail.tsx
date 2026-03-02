@@ -638,7 +638,7 @@ export default function TrainerDetailScreen() {
                         selectedDuration === duration && styles.durationPriceSelected,
                       ]}
                     >
-                      ${((prices.perHourRate || 0) * (duration / 60)).toFixed(2)}
+                      ${((prices.perHourRate || 0) * (duration / 60) + 2).toFixed(2)}
                     </Text>
                   </TouchableOpacity>
                 ))}
