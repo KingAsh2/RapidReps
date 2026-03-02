@@ -447,9 +447,9 @@ const styles = StyleSheet.create({
   },
   electricRing: {
     position: 'absolute',
-    width: 480,
-    height: 480,
-    borderRadius: 240,
+    width: 280,
+    height: 280,
+    borderRadius: 140,
     borderWidth: 2.5,
     borderColor: '#FFD700',
     shadowColor: '#FFD700',
@@ -464,8 +464,8 @@ const styles = StyleSheet.create({
   },
   logoBacking: {
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    borderRadius: 240,
-    padding: 36,
+    borderRadius: 140,
+    padding: 20,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#FFD700',
@@ -475,10 +475,10 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   logo: {
-    width: width * 1.05,
-    height: width * 1.05,
-    maxWidth: 420,
-    maxHeight: 420,
+    width: width * 0.6,
+    height: width * 0.6,
+    maxWidth: 240,
+    maxHeight: 240,
   },
   taglineSection: {
     alignItems: 'center',
