@@ -1048,6 +1048,7 @@ def calculate_session_pricing(
         'sessionSubtotalCents': subtotal,
         'serviceFeeCents': service_fee,
         'totalChargedCents': total_charged,
+        'finalSessionPriceCents': total_charged,
         'platformFeePercent': PricingRules.PLATFORM_REVENUE_PERCENT,
         'platformFeeCents': platform_fee + service_fee,
         'trainerEarningsCents': trainer_earnings,
