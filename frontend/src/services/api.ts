@@ -71,6 +71,7 @@ export const authAPI = {
     phone: string;
     password: string;
     roles: string[];
+    referralCode?: string;
   }): Promise<AuthResponse> => {
     const response = await api.post('/auth/signup', data);
     return response.data;
