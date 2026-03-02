@@ -2129,8 +2129,18 @@ async def search_trainers(
     if virtual is not None:
         query['offersVirtual'] = virtual
     
-    # Get all matching trainers
-    trainers = await db.trainer_profiles.find(query).to_list(100)
+    # Get matching trainers (exclude heavy unused fields for faster response)
+    trainer_projection = {
+        'userId': 1, 'avatarUrl': 1, 'bio': 1, 'experienceYears': 1, 'certifications': 1,
+        'trainingStyles': 1, 'gymsWorkedAt': 1, 'primaryGym': 1, 'offersInPerson': 1,
+        'offersVirtual': 1, 'offersOutdoor': 1, 'offersInHome': 1, 'sessionDurationsOffered': 1,
+        'virtualRateCents': 1, 'outdoorRateCents': 1, 'inHomeRateCents': 1, 'ratePerMinuteCents': 1,
+        'travelRadiusMiles': 1, 'cancellationPolicy': 1, 'averageRating': 1, 'totalReviews': 1,
+        'totalSessionsCompleted': 1, 'isVerified': 1, 'trainerTier': 1, 'verificationStatus': 1,
+        'canGoLive': 1, 'latitude': 1, 'longitude': 1, 'locationAddress': 1, 'isAvailable': 1,
+        'isVirtualTrainingAvailable': 1, 'videoCallPreference': 1, 'createdAt': 1, 'profilePhoto': 1,
+    }
+    trainers = await db.trainer_profiles.find(query, trainer_projection).to_list(100)
     
     # Filter based on location and virtual training preferences
     # Priority: In-person trainers within 15 miles, then virtual trainers within 20 miles
@@ -3508,12 +3518,11 @@ async def request_virtual_session(
     Request a virtual training session - finds and matches with an available trainer
     For MVP: Uses mock payment and simple matching logic
     """
-    # Find available virtual trainers
-    available_trainers = await db.trainer_profiles.find({
-        'isAvailable': True,
-        'isVirtualTrainingAvailable': True,
-        'offersVirtual': True
-    }).to_list(100)
+    # Find available virtual trainers (only fields needed for matching + response)
+    available_trainers = await db.trainer_profiles.find(
+        {'isAvailable': True, 'isVirtualTrainingAvailable': True, 'offersVirtual': True},
+        {'_id': 0, 'userId': 1, 'averageRating': 1, 'totalSessionsCompleted': 1, 'zoomMeetingLink': 1, 'bio': 1}
+    ).to_list(100)
     
     if not available_trainers:
         raise HTTPException(
@@ -4465,11 +4474,11 @@ async def get_weekly_leaderboard(
 async def calculate_trainee_badge_progress(trainee_id: str) -> TraineeAchievements:
     """Calculate all badge progress for a trainee"""
     
-    # Get all completed sessions for this trainee
-    completed_sessions = await db.sessions.find({
-        'traineeId': trainee_id,
-        'status': SessionStatus.COMPLETED
-    }).to_list(1000)
+    # Get all completed sessions for this trainee (only fields needed for badge calc)
+    completed_sessions = await db.sessions.find(
+        {'traineeId': trainee_id, 'status': SessionStatus.COMPLETED},
+        {'_id': 0, 'sessionDateTimeStart': 1, 'trainerId': 1}
+    ).to_list(1000)
     
     # Get trainee achievement doc
     achievement_doc = await db.trainee_achievements.find_one({'traineeId': trainee_id})
@@ -4484,8 +4493,8 @@ async def calculate_trainee_badge_progress(trainee_id: str) -> TraineeAchievemen
             'trainAgainCount': 0
         }
     
-    # Get all ratings by this trainee
-    ratings = await db.ratings.find({'traineeId': trainee_id}).to_list(1000)
+    # Get count of ratings by this trainee (only count needed for badge)
+    feedback_count_from_db = await db.ratings.count_documents({'traineeId': trainee_id})
     
     total_completed = len(completed_sessions)
     badges = []
@@ -4596,13 +4605,12 @@ async def calculate_trainee_badge_progress(trainee_id: str) -> TraineeAchievemen
     ))
     
     # 9. Feedback Hero - 10 completed session reviews
-    feedback_count = len(ratings)
-    feedback_progress = min(feedback_count, 10)
+    feedback_progress = min(feedback_count_from_db, 10)
     badges.append(BadgeProgress(
         badgeType=TraineeBadgeType.FEEDBACK_HERO,
         badgeName="Feedback Hero",
         description="Write 10 session reviews",
-        isUnlocked=feedback_count >= 10,
+        isUnlocked=feedback_count_from_db >= 10,
         progress=feedback_progress,
         target=10,
         unlockedAt=achievement_doc.get('feedback_hero_unlocked_at')

@@ -41,7 +41,7 @@ Build a fitness trainer-trainee matching platform with Uber-style real-time matc
 20. Terms of Service & Privacy Policy screens (legal/terms.tsx, legal/privacy.tsx)
 21. Clickable Terms & Privacy links on welcome screen and both profiles
 
-### Referral System (NEW - Mar 2, 2026)
+### Referral System (Mar 2, 2026)
 22. **Referral System** - Both trainers & trainees can refer
     - Unique referral codes (format: RR-XXXXXX)
     - $5 credit for referrer + $5 for new user
@@ -51,6 +51,19 @@ Build a fitness trainer-trainee matching platform with Uber-style real-time matc
     - Referral code input on signup form
     - Dedicated "Refer & Earn" screen accessible from both trainee and trainer profiles
     - API endpoints: /api/referral/my-code, /api/referral/stats, /api/referral/validate/{code}, /api/referral/credits
+
+### Bug Fixes (Mar 3, 2026)
+23. **TestFlight Crash Fix** - Fixed 3 crash-causing animation patterns:
+    - Inline `Animated.multiply()`/`Animated.add()` in JSX render → moved to `useRef`
+    - Leaked `setInterval` in ring wave animations → replaced with `Animated.loop`
+    - Recursive `logoPulse()` callback → replaced with `Animated.loop`
+24. **Blue Emergent Icon Fix** - Replaced default Emergent icon.png and adaptive-icon.png with RapidReps logo on brand orange
+25. **Splash Screen Fix** - Regenerated splash-image.png with RapidReps branding
+26. **DB Query Optimizations** - 4 queries optimized with field projections and count_documents:
+    - Badge progress sessions: projection for `sessionDateTimeStart` + `trainerId` only
+    - Ratings count: `count_documents()` instead of fetching all docs
+    - Virtual trainer matching: projection for 5 needed fields only
+    - Trainer search: explicit field projection excluding unused heavy fields
 
 ### Business Rules
 - Revenue Split: 80% trainer / 20% platform
@@ -65,11 +78,11 @@ Build a fitness trainer-trainee matching platform with Uber-style real-time matc
 - Admin: admin@rapidreps.com / admin123
 - Trainers: trainer1@test.com, trainer2@test.com, trainer3@test.com / test123
 - Trainees: trainee1@test.com, trainee2@test.com / test123
+- Trainee: ashton1@gmail.com / test1234
 
-## E2E Test Results (Mar 2, 2026)
+## E2E Test Results
 - Backend iteration 22: 75/75 tests passed (100%) - all core features
 - Backend iteration 23: 29/29 tests passed (100%) - referral system + regression
-- Test reports: /app/test_reports/iteration_22.json, /app/test_reports/iteration_23.json
 
 ## Remaining Backlog
 1. P3: SendGrid email integration (awaiting API key from user)
