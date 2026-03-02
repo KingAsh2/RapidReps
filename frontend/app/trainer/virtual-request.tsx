@@ -32,7 +32,7 @@ export default function TrainerVirtualRequestScreen() {
   const [accepting, setAccepting] = useState<string | null>(null);
 
   const getAuthHeader = async () => {
-    const token = await AsyncStorage.getItem('accessToken');
+    const token = await AsyncStorage.getItem('auth_token');
     return { Authorization: `Bearer ${token}` };
   };
 
