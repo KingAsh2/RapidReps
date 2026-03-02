@@ -1110,7 +1110,7 @@ class ReferralStats(BaseModel):
 # ============================================================================
 
 @api_router.post("/auth/signup", response_model=TokenResponse)
-@limiter.limit("5/minute")
+@limiter.limit("30/minute")
 async def signup(request: Request, user_data: UserSignUp):
     """Register a new user"""
     # Validate password length
@@ -1188,7 +1188,7 @@ async def signup(request: Request, user_data: UserSignUp):
     return TokenResponse(access_token=access_token, user=user_response)
 
 @api_router.post("/auth/login", response_model=TokenResponse)
-@limiter.limit("10/minute")
+@limiter.limit("60/minute")
 async def login(request: Request, credentials: UserLogin):
     """Login user"""
     # Find user
@@ -5274,7 +5274,7 @@ async def get_nearby_trainers(
 # ============================================================================
 
 @api_router.post("/payments/create-payment-intent")
-@limiter.limit("10/minute")
+@limiter.limit("60/minute")
 async def create_payment_intent(
     request: Request,
     amount_cents: int,
