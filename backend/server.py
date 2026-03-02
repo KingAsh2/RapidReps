@@ -5749,12 +5749,16 @@ async def admin_get_sessions(
     skip: int = 0,
     limit: int = 50,
     status: Optional[str] = None,
+    search: Optional[str] = None,
+    session_type: Optional[str] = None,
     admin_user: dict = Depends(require_admin)
 ):
     """Get all sessions for admin with trainer/trainee names, location, and duration"""
     query = {}
     if status:
         query['status'] = status
+    if session_type:
+        query['sessionType'] = session_type
     
     sessions = await db.sessions.find(query).sort('createdAt', -1).skip(skip).limit(limit).to_list(limit)
     total = await db.sessions.count_documents(query)
