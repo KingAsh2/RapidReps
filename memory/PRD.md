@@ -96,4 +96,6 @@ Build a fitness trainer-trainee matching platform with Uber-style real-time matc
 - Push notifications: Sends to Expo servers (no real devices in preview)
 
 ## Known Limitations
-- Expo Router web rendering doesn't work in CI mode (pre-existing issue with Metro require.context). App works correctly on iOS/Android via Expo Go or native builds.
+- Web preview: Requires patched `_ctx.web.js` in expo-router + Stripe web shim for web rendering. Run `scripts/patch-expo-router.sh` after `yarn install`. Native iOS/Android builds work natively without patches.
+- Stripe payments are not available on web (shimmed with no-op). Full Stripe functionality on native only.
+- Push notifications: Sends to Expo servers (no real devices in preview)
