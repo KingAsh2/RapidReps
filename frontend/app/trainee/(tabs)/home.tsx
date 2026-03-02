@@ -327,6 +327,14 @@ export default function TraineeHomeScreen() {
   const getFilteredAndSortedTrainers = () => {
     let filtered = [...trainers];
 
+    // Travel to Trainer Proximity filter
+    if (travelProximity > 0) {
+      filtered = filtered.filter((t) => {
+        if (t.distance === null || t.distance === undefined) return true; // show trainers without distance data
+        return t.distance <= travelProximity;
+      });
+    }
+
     if (filters.minRating > 0) {
       filtered = filtered.filter((t) => (t.averageRating || 0) >= filters.minRating);
     }
