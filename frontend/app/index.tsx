@@ -94,6 +94,66 @@ export default function WelcomeScreen() {
     }
   }, [showVideo, isReady]);
 
+  const startElectricPulse = () => {
+    // Logo heartbeat pulse — quick energizing snap
+    const logoPulse = () => {
+      Animated.sequence([
+        Animated.timing(pulseScale, { toValue: 1.08, duration: 150, useNativeDriver: true }),
+        Animated.timing(pulseScale, { toValue: 0.97, duration: 100, useNativeDriver: true }),
+        Animated.timing(pulseScale, { toValue: 1.04, duration: 100, useNativeDriver: true }),
+        Animated.timing(pulseScale, { toValue: 1, duration: 120, useNativeDriver: true }),
+        Animated.delay(1800),
+      ]).start(() => logoPulse());
+    };
+
+    // Electric glow pulse on the backing
+    const glowPulse = () => {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(glowIntensity, { toValue: 1, duration: 300, useNativeDriver: true }),
+          Animated.timing(glowIntensity, { toValue: 0.2, duration: 500, useNativeDriver: true }),
+          Animated.timing(glowIntensity, { toValue: 0.8, duration: 200, useNativeDriver: true }),
+          Animated.timing(glowIntensity, { toValue: 0, duration: 600, useNativeDriver: true }),
+          Animated.delay(1200),
+        ])
+      ).start();
+    };
+
+    // Expanding ring wave 1
+    const ringWave1 = () => {
+      Animated.loop(
+        Animated.parallel([
+          Animated.timing(ringScale1, { toValue: 1.8, duration: 1200, useNativeDriver: true }),
+          Animated.timing(ringOpacity1, { toValue: 0, duration: 1200, useNativeDriver: true }),
+        ])
+      ).start();
+      // Reset for next loop
+      const interval = setInterval(() => {
+        ringScale1.setValue(1);
+        ringOpacity1.setValue(0.45);
+      }, 1200);
+      return interval;
+    };
+
+    // Expanding ring wave 2 (staggered)
+    setTimeout(() => {
+      Animated.loop(
+        Animated.parallel([
+          Animated.timing(ringScale2, { toValue: 1.8, duration: 1200, useNativeDriver: true }),
+          Animated.timing(ringOpacity2, { toValue: 0, duration: 1200, useNativeDriver: true }),
+        ])
+      ).start();
+      setInterval(() => {
+        ringScale2.setValue(1);
+        ringOpacity2.setValue(0.35);
+      }, 1200);
+    }, 600);
+
+    logoPulse();
+    glowPulse();
+    ringWave1();
+  };
+
   const handleFindTrainer = () => {
     // Navigate to signup with trainee role pre-selected
     router.push({
