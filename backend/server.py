@@ -5117,6 +5117,8 @@ async def get_pricing_rules():
             "trainerPercent": PricingRules.TRAINER_REVENUE_PERCENT,
             "platformPercent": PricingRules.PLATFORM_REVENUE_PERCENT
         },
+        "serviceFeeCents": PricingRules.SERVICE_FEE_CENTS,
+        "serviceFee": PricingRules.SERVICE_FEE_CENTS / 100,
         "minimumPrices": {
             "virtual": PricingRules.VIRTUAL_MIN_CENTS / 100,
             "outdoor": PricingRules.OUTDOOR_MIN_CENTS / 100,
