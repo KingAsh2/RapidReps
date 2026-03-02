@@ -899,14 +899,26 @@ export default function AdminDashboard() {
           <Text style={s.emptySub}>No pending verifications.</Text>
         </View>
       ) : (
-        verifications.map((item, idx) => (
-          <View key={idx} style={s.verifyCard} data-testid={`verification-${idx}`}>
+        verifications.map((item: any, idx: number) => {
+          const isRejected = item.profile?.verificationStatus === 'rejected';
+          return (
+          <TouchableOpacity 
+            key={idx} 
+            style={s.verifyCard} 
+            data-testid={`verification-${idx}`}
+            onPress={() => handleOpenVerification(item)}
+            activeOpacity={0.7}
+          >
             <View style={s.verifyHeader}>
-              <View>
+              <View style={{ flex: 1 }}>
                 <Text style={s.verifyName}>{item.user?.fullName || 'Unknown'}</Text>
                 <Text style={s.verifySub}>{item.user?.email || ''}</Text>
               </View>
-              <View style={s.pendingBadge}><Text style={s.pendingBadgeText}>PENDING</Text></View>
+              <View style={[s.pendingBadge, isRejected && { backgroundColor: '#FDE8E8' }]}>
+                <Text style={[s.pendingBadgeText, isRejected && { color: C.error }]}>
+                  {isRejected ? 'REJECTED' : 'PENDING'}
+                </Text>
+              </View>
             </View>
             <View style={s.verifyChecks}>
               {['governmentIdUploaded', 'backgroundCheckPassed', 'fitnessCertUploaded', 'cprAedCertUploaded', 'introVideoUploaded'].map((field) => (
@@ -919,19 +931,156 @@ export default function AdminDashboard() {
                 </View>
               ))}
             </View>
-            <View style={s.verifyActions}>
-              <TouchableOpacity style={[s.actionBtn, { backgroundColor: C.success }]} onPress={() => handleApproveVerification(item.profile?.userId)} data-testid={`approve-btn-${idx}`}>
-                <Ionicons name="checkmark" size={18} color={C.white} />
-                <Text style={s.actionBtnText}>Approve</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[s.actionBtn, { backgroundColor: C.error }]} onPress={() => handleRejectVerification(item.profile?.userId)} data-testid={`reject-btn-${idx}`}>
-                <Ionicons name="close" size={18} color={C.white} />
-                <Text style={s.actionBtnText}>Reject</Text>
-              </TouchableOpacity>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
+              <Ionicons name="eye-outline" size={16} color={C.teal} />
+              <Text style={{ fontSize: 13, fontWeight: '600', color: C.teal }}>Tap to review & take action</Text>
             </View>
-          </View>
-        ))
+          </TouchableOpacity>
+          );
+        })
       )}
+
+      {/* Verification Detail Modal */}
+      <Modal visible={verificationDetailVisible} animationType="slide" transparent>
+        <View style={s.modalOverlay}>
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={s.modalContent}>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View style={s.modalTop}>
+                <Text style={s.modalTitle}>Verification Review</Text>
+                <TouchableOpacity onPress={() => { setVerificationDetailVisible(false); setShowRejectInput(false); setVerificationDetail(null); }} data-testid="close-verify-modal">
+                  <Ionicons name="close-circle" size={28} color={C.gray} />
+                </TouchableOpacity>
+              </View>
+
+              {verificationDetailLoading ? (
+                <ActivityIndicator size="large" color={C.teal} style={{ marginVertical: 40 }} />
+              ) : verificationDetail ? (
+                <>
+                  {/* Trainer Info */}
+                  <View style={s.modalSection}>
+                    <Text style={s.modalSectionTitle}>Trainer Information</Text>
+                    <Text style={s.modalField}>Name: {verificationDetail.user?.fullName}</Text>
+                    <Text style={s.modalField}>Email: {verificationDetail.user?.email}</Text>
+                    {verificationDetail.submittedAt && (
+                      <Text style={s.modalField}>Submitted: {new Date(verificationDetail.submittedAt).toLocaleDateString()}</Text>
+                    )}
+                    <View style={[s.pendingBadge, { alignSelf: 'flex-start', marginTop: 8,
+                      backgroundColor: verificationDetail.verificationStatus === 'rejected' ? '#FDE8E8'
+                        : verificationDetail.verificationStatus === 'verified' ? '#E8FDE8' : '#FFF5EB' }]}>
+                      <Text style={[s.pendingBadgeText, {
+                        color: verificationDetail.verificationStatus === 'rejected' ? C.error
+                          : verificationDetail.verificationStatus === 'verified' ? C.success : C.warning }]}>
+                        {verificationDetail.verificationStatus?.toUpperCase() || 'PENDING'}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Previous Rejection Reason */}
+                  {verificationDetail.rejectionReason && (
+                    <View style={[s.modalSection, { backgroundColor: '#FFF5F5', borderRadius: 12, padding: 14, borderLeftWidth: 4, borderLeftColor: C.error }]}>
+                      <Text style={[s.modalSectionTitle, { color: C.error }]}>Previous Rejection Reason</Text>
+                      <Text style={[s.modalField, { color: '#555' }]}>{verificationDetail.rejectionReason}</Text>
+                      {verificationDetail.rejectedAt && (
+                        <Text style={[s.modalField, { fontSize: 11, color: C.gray }]}>Rejected on {new Date(verificationDetail.rejectedAt).toLocaleDateString()}</Text>
+                      )}
+                    </View>
+                  )}
+
+                  {/* Verification Steps */}
+                  <View style={s.modalSection}>
+                    <Text style={s.modalSectionTitle}>Verification Documents</Text>
+                    {verificationDetail.steps?.map((step: any) => (
+                      <View key={step.id} style={{
+                        flexDirection: 'row', alignItems: 'center', paddingVertical: 12,
+                        borderBottomWidth: 1, borderBottomColor: '#f0f0f0', gap: 12,
+                      }}>
+                        <View style={{
+                          width: 36, height: 36, borderRadius: 18,
+                          backgroundColor: step.submitted ? '#E8FDE8' : '#FDE8E8',
+                          alignItems: 'center', justifyContent: 'center',
+                        }}>
+                          <Ionicons
+                            name={step.submitted ? 'checkmark-circle' : 'close-circle'}
+                            size={20}
+                            color={step.submitted ? C.success : C.error}
+                          />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={{ fontSize: 14, fontWeight: '700', color: C.navy }}>{step.label}</Text>
+                          <Text style={{ fontSize: 12, color: step.submitted ? C.success : C.error, fontWeight: '600' }}>
+                            {step.submitted ? 'Submitted' : 'Not submitted'}
+                          </Text>
+                        </View>
+                        {step.url && (
+                          <View style={{ backgroundColor: '#E8F0FE', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
+                            <Text style={{ fontSize: 11, fontWeight: '600', color: C.teal }}>File attached</Text>
+                          </View>
+                        )}
+                      </View>
+                    ))}
+                  </View>
+
+                  {/* Reject with Reason */}
+                  {showRejectInput ? (
+                    <View style={[s.modalSection, { backgroundColor: '#FFF5F5', borderRadius: 12, padding: 14 }]}>
+                      <Text style={[s.modalSectionTitle, { color: C.error }]}>Rejection Reason</Text>
+                      <Text style={{ fontSize: 12, color: C.gray, marginBottom: 8 }}>This reason will be sent to the trainer as a notification.</Text>
+                      <TextInput
+                        style={{
+                          borderWidth: 1, borderColor: C.error, borderRadius: 10, padding: 14,
+                          minHeight: 100, fontSize: 14, color: C.navy, textAlignVertical: 'top',
+                          backgroundColor: '#fff',
+                        }}
+                        value={rejectReason}
+                        onChangeText={setRejectReason}
+                        placeholder="Explain what needs to be fixed or resubmitted..."
+                        placeholderTextColor={C.gray}
+                        multiline
+                        data-testid="reject-reason-input"
+                      />
+                      <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
+                        <TouchableOpacity
+                          style={[s.actionBtn, { flex: 1, backgroundColor: C.gray }]}
+                          onPress={() => setShowRejectInput(false)}
+                        >
+                          <Text style={s.actionBtnText}>Cancel</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[s.actionBtn, { flex: 1, backgroundColor: C.error }]}
+                          onPress={handleSubmitRejection}
+                          data-testid="submit-rejection-btn"
+                        >
+                          <Ionicons name="close-circle" size={18} color={C.white} />
+                          <Text style={s.actionBtnText}>Submit Rejection</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ) : (
+                    <View style={s.verifyActions}>
+                      <TouchableOpacity
+                        style={[s.actionBtn, { flex: 1, backgroundColor: C.success }]}
+                        onPress={() => handleApproveVerification(verificationDetail.profile?.userId)}
+                        data-testid="approve-verification-btn"
+                      >
+                        <Ionicons name="checkmark-circle" size={20} color={C.white} />
+                        <Text style={s.actionBtnText}>Approve Trainer</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[s.actionBtn, { flex: 1, backgroundColor: C.error }]}
+                        onPress={() => handleStartReject(verificationDetail.profile?.userId)}
+                        data-testid="reject-verification-btn"
+                      >
+                        <Ionicons name="close-circle" size={20} color={C.white} />
+                        <Text style={s.actionBtnText}>Reject</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </>
+              ) : null}
+            </ScrollView>
+          </KeyboardAvoidingView>
+        </View>
+      </Modal>
     </View>
   );
 
