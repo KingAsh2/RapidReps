@@ -644,11 +644,11 @@ export default function TrainerDetailScreen() {
                 ))}
               </View>
 
-              {/* Price Summary */}
+              {/* Price Summary — Trainee View (clean, no fee breakdown) */}
               <View style={styles.priceSummary}>
                 <View style={styles.priceRow}>
-                  <Text style={styles.priceLabel}>Rate ({selectedDuration} min @ ${prices.perHourRate?.toFixed(2)}/hr)</Text>
-                  <Text style={styles.priceValue}>${prices.base.toFixed(2)}</Text>
+                  <Text style={styles.priceLabel}>{selectedDuration} min session</Text>
+                  <Text style={styles.priceValue}>${prices.sessionRate.toFixed(2)}</Text>
                 </View>
                 {prices.travelFee > 0 && (
                   <View style={styles.priceRow}>
@@ -656,14 +656,15 @@ export default function TrainerDetailScreen() {
                     <Text style={styles.priceValue}>${prices.travelFee.toFixed(2)}</Text>
                   </View>
                 )}
+                <View style={styles.priceRow}>
+                  <Text style={styles.priceLabel}>Service Fee</Text>
+                  <Text style={styles.priceValue}>$2.00</Text>
+                </View>
                 <View style={styles.priceDivider} />
                 <View style={styles.priceRow}>
                   <Text style={styles.priceTotalLabel}>Total</Text>
-                  <Text style={styles.priceTotalValue}>${prices.final.toFixed(2)}</Text>
+                  <Text style={styles.priceTotalValue}>${prices.totalCharged.toFixed(2)}</Text>
                 </View>
-                <Text style={styles.platformFeeNote}>
-                  25% service fee included • Trainer earns ${prices.trainerEarnings?.toFixed(2) || prices.final.toFixed(2)}
-                </Text>
               </View>
 
               {/* Cancellation Policy */}
