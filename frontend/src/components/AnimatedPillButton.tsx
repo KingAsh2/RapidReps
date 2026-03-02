@@ -13,7 +13,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../utils/colors';
 
-type ButtonVariant = 'primary' | 'outline' | 'teal' | 'danger';
+type ButtonVariant = 'primary' | 'outline' | 'teal' | 'danger' | 'navy';
 
 interface AnimatedPillButtonProps {
   title: string;
@@ -43,32 +43,68 @@ export const AnimatedPillButton: React.FC<AnimatedPillButtonProps> = ({
   testID,
 }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  const flashAnim = useRef(new Animated.Value(0)).current;
+  const shineAnim = useRef(new Animated.Value(-1)).current;
 
   const handlePressIn = () => {
     Animated.spring(scaleAnim, {
-      toValue: 0.95,
-      friction: 8,
-      tension: 300,
+      toValue: 0.92,
+      friction: 6,
+      tension: 400,
       useNativeDriver: true,
     }).start();
   };
 
   const handlePressOut = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 1,
-      friction: 4,
-      tension: 200,
-      useNativeDriver: true,
-    }).start();
+    // Energizing bounce-back + flash
+    Animated.parallel([
+      // Overshoot bounce
+      Animated.sequence([
+        Animated.spring(scaleAnim, {
+          toValue: 1.08,
+          friction: 4,
+          tension: 500,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          friction: 5,
+          tension: 300,
+          useNativeDriver: true,
+        }),
+      ]),
+      // Quick flash
+      Animated.sequence([
+        Animated.timing(flashAnim, {
+          toValue: 1,
+          duration: 80,
+          useNativeDriver: true,
+        }),
+        Animated.timing(flashAnim, {
+          toValue: 0,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+      ]),
+      // Shine sweep
+      Animated.timing(shineAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      shineAnim.setValue(-1);
+    });
   };
 
-  const isGradient = variant === 'primary' || variant === 'teal' || variant === 'danger';
+  const isGradient = variant !== 'outline';
   const colors: readonly [string, string, ...string[]] = gradientColors
-    || (variant === 'teal' ? [Colors.teal, Colors.tealDark] as const
+    || (variant === 'teal' ? ['#1FB8B4', '#17A09D'] as const
       : variant === 'danger' ? [Colors.error, '#C0392B'] as const
+      : variant === 'navy' ? ['#1A2A5E', '#0F1B3D'] as const
       : ['#00CFC1', '#FF6B35'] as const);
 
-  const iconColor = variant === 'outline' ? Colors.white : Colors.white;
+  const iconColor = Colors.white;
 
   return (
     <TouchableWithoutFeedback
@@ -82,7 +118,11 @@ export const AnimatedPillButton: React.FC<AnimatedPillButtonProps> = ({
           styles.buttonOuter,
           isGradient && styles.gradientShadow,
           variant === 'outline' && styles.outlineBorder,
-          { transform: [{ scale: scaleAnim }], opacity: disabled ? 0.5 : 1 },
+          variant === 'navy' && styles.navyShadow,
+          {
+            transform: [{ scale: scaleAnim }],
+            opacity: disabled ? 0.5 : 1,
+          },
           style,
         ]}
         {...(testID ? { 'data-testid': testID } : {})}
@@ -103,6 +143,18 @@ export const AnimatedPillButton: React.FC<AnimatedPillButtonProps> = ({
                 {showArrow && <Ionicons name="arrow-forward" size={20} color={iconColor} style={styles.rightIcon} />}
               </>
             )}
+            {/* Flash overlay */}
+            <Animated.View
+              style={[
+                StyleSheet.absoluteFill,
+                {
+                  backgroundColor: '#fff',
+                  opacity: Animated.multiply(flashAnim, 0.35),
+                  borderRadius: 30,
+                },
+              ]}
+              pointerEvents="none"
+            />
           </LinearGradient>
         ) : (
           <View style={styles.buttonInner}>
@@ -115,6 +167,18 @@ export const AnimatedPillButton: React.FC<AnimatedPillButtonProps> = ({
                 {showArrow && <Ionicons name="arrow-forward" size={20} color={iconColor} style={styles.rightIcon} />}
               </>
             )}
+            {/* Flash overlay */}
+            <Animated.View
+              style={[
+                StyleSheet.absoluteFill,
+                {
+                  backgroundColor: '#fff',
+                  opacity: Animated.multiply(flashAnim, 0.3),
+                  borderRadius: 30,
+                },
+              ]}
+              pointerEvents="none"
+            />
           </View>
         )}
       </Animated.View>
@@ -134,6 +198,13 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 8,
   },
+  navyShadow: {
+    shadowColor: '#1A2A5E',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 10,
+  },
   outlineBorder: {
     borderWidth: 2,
     borderColor: 'rgba(255, 255, 255, 0.8)',
@@ -144,6 +215,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 18,
     paddingHorizontal: 24,
+    overflow: 'hidden',
   },
   leftIcon: {
     marginRight: 10,
