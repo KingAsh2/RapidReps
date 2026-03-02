@@ -113,10 +113,13 @@ export default function AdminDashboard() {
     }
   };
 
-  const fetchUsers = async (page = 0) => {
+  const fetchUsers = async (page = 0, search = userSearch, role = userRoleFilter) => {
     try {
       const headers = await getAuthHeader();
-      const res = await api.get(`/admin/users?limit=${PAGE_SIZE}&skip=${page * PAGE_SIZE}`, { headers });
+      let url = `/admin/users?limit=${PAGE_SIZE}&skip=${page * PAGE_SIZE}`;
+      if (search) url += `&search=${encodeURIComponent(search)}`;
+      if (role) url += `&role=${role}`;
+      const res = await api.get(url, { headers });
       setUsers(res.data.users || []);
       setUsersTotal(res.data.total || 0);
       setUsersPage(page);
