@@ -366,6 +366,7 @@ class UserSignUp(BaseModel):
     phone: str
     password: str
     roles: List[str]  # ["trainer", "trainee"]
+    referralCode: Optional[str] = None
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -1087,6 +1088,21 @@ class ConversationResponse(BaseModel):
     lastMessage: Optional[dict] = None
     unreadCount: int = 0
     updatedAt: datetime
+
+# Referral Models
+REFERRAL_CREDIT_CENTS = 500  # $5.00
+MAX_REFERRALS_PER_USER = 5
+
+class ReferralStats(BaseModel):
+    referralCode: str
+    totalReferrals: int
+    activatedReferrals: int
+    pendingReferrals: int
+    totalCreditsEarned: int  # cents
+    availableCredits: int  # cents
+    maxReferrals: int
+    referralsRemaining: int
+    referralHistory: List[dict]
 
 # ============================================================================
 # AUTH ROUTES
