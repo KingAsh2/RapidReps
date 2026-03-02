@@ -2921,6 +2921,11 @@ async def accept_session(session_id: str, current_user: dict = Depends(get_curre
     if session['trainerId'] != str(current_user['_id']):
         raise HTTPException(status_code=403, detail="Not authorized")
     
+    # Verification gate: trainer must be admin-verified
+    trainer_profile = await db.trainer_profiles.find_one({'userId': str(current_user['_id'])})
+    if not trainer_profile or trainer_profile.get('verificationStatus') != 'verified':
+        raise HTTPException(status_code=403, detail="Your account must be verified by an admin before you can accept sessions. Please complete your verification process.")
+    
     await db.sessions.update_one(
         {'_id': ObjectId(session_id)},
         {'$set': {'status': SessionStatus.CONFIRMED, 'updatedAt': datetime.utcnow()}}
