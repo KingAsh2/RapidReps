@@ -624,6 +624,18 @@ export default function TraineeProfileScreen() {
 
                 <TouchableOpacity 
                   style={styles.actionItem}
+                  onPress={() => router.push('/referral')}
+                  data-testid="referral-link"
+                >
+                  <View style={[styles.actionIconBg, { backgroundColor: 'rgba(255, 106, 0, 0.2)' }]}>
+                    <Ionicons name="gift" size={22} color="#FF6A00" />
+                  </View>
+                  <Text style={styles.actionText}>Refer & Earn $5</Text>
+                  <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.5)" />
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={styles.actionItem}
                   onPress={() => router.push('/legal/terms')}
                 >
                   <View style={[styles.actionIconBg, { backgroundColor: 'rgba(136, 146, 176, 0.2)' }]}>
