@@ -1160,6 +1160,9 @@ export default function AdminDashboard() {
                 <Text style={s.modalField}>Email: {selectedUser.user?.email}</Text>
                 <Text style={s.modalField}>Phone: {selectedUser.user?.phone}</Text>
                 <Text style={s.modalField}>Roles: {selectedUser.user?.roles?.join(', ')}</Text>
+                {(selectedUser.user?.city || selectedUser.user?.state) && (
+                  <Text style={s.modalField}>Location: {[selectedUser.user?.city, selectedUser.user?.state].filter(Boolean).join(', ')}</Text>
+                )}
               </View>
               {selectedUser.trainerProfile && (
                 <View style={s.modalSection}>
