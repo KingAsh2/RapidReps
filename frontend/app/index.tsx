@@ -19,7 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AnimatedPillButton } from '../src/components/AnimatedPillButton';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 // Brand Colors
 const BRAND = {
@@ -46,14 +46,15 @@ export default function WelcomeScreen() {
   const logoScale = useRef(new Animated.Value(0.8)).current;
   const videoFadeOut = useRef(new Animated.Value(1)).current;
   
-  // Electric pulse animations
+  // Pulse animation (simple, safe approach)
   const pulseScale = useRef(new Animated.Value(1)).current;
-  const pulseOpacity = useRef(new Animated.Value(0.6)).current;
-  const ringScale1 = useRef(new Animated.Value(1)).current;
-  const ringOpacity1 = useRef(new Animated.Value(0.5)).current;
-  const ringScale2 = useRef(new Animated.Value(1)).current;
-  const ringOpacity2 = useRef(new Animated.Value(0.5)).current;
-  const glowIntensity = useRef(new Animated.Value(0)).current;
+  const glowOpacity = useRef(new Animated.Value(0.6)).current;
+
+  // Pre-compute combined animated values ONCE (not in render)
+  const combinedLogoScale = useRef(Animated.multiply(logoScale, pulseScale)).current;
+
+  // Track cleanup
+  const animationsAlive = useRef(true);
 
   useEffect(() => {
     const checkFirstLaunch = async () => {
@@ -65,11 +66,13 @@ export default function WelcomeScreen() {
       setIsReady(true);
     };
     checkFirstLaunch();
+    return () => {
+      animationsAlive.current = false;
+    };
   }, []);
 
   useEffect(() => {
     if (!showVideo && isReady) {
-      // Animate content in
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
@@ -89,70 +92,35 @@ export default function WelcomeScreen() {
           useNativeDriver: true,
         }),
       ]).start(() => {
-        // Start electric pulse loop after intro animation
-        startElectricPulse();
+        if (animationsAlive.current) {
+          startPulseAnimation();
+        }
       });
     }
   }, [showVideo, isReady]);
 
-  const startElectricPulse = () => {
-    // Logo heartbeat pulse — quick energizing snap
-    const logoPulse = () => {
+  const startPulseAnimation = () => {
+    // Simple heartbeat pulse using Animated.loop (safe, no setInterval)
+    Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseScale, { toValue: 1.08, duration: 150, useNativeDriver: true }),
-        Animated.timing(pulseScale, { toValue: 0.97, duration: 100, useNativeDriver: true }),
-        Animated.timing(pulseScale, { toValue: 1.04, duration: 100, useNativeDriver: true }),
+        Animated.timing(pulseScale, { toValue: 1.06, duration: 150, useNativeDriver: true }),
+        Animated.timing(pulseScale, { toValue: 0.98, duration: 100, useNativeDriver: true }),
+        Animated.timing(pulseScale, { toValue: 1.03, duration: 100, useNativeDriver: true }),
         Animated.timing(pulseScale, { toValue: 1, duration: 120, useNativeDriver: true }),
         Animated.delay(1800),
-      ]).start(() => logoPulse());
-    };
+      ])
+    ).start();
 
-    // Electric glow pulse on the backing
-    const glowPulse = () => {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(glowIntensity, { toValue: 1, duration: 300, useNativeDriver: true }),
-          Animated.timing(glowIntensity, { toValue: 0.2, duration: 500, useNativeDriver: true }),
-          Animated.timing(glowIntensity, { toValue: 0.8, duration: 200, useNativeDriver: true }),
-          Animated.timing(glowIntensity, { toValue: 0, duration: 600, useNativeDriver: true }),
-          Animated.delay(1200),
-        ])
-      ).start();
-    };
-
-    // Expanding ring wave 1
-    const ringWave1 = () => {
-      Animated.loop(
-        Animated.parallel([
-          Animated.timing(ringScale1, { toValue: 1.8, duration: 1200, useNativeDriver: true }),
-          Animated.timing(ringOpacity1, { toValue: 0, duration: 1200, useNativeDriver: true }),
-        ])
-      ).start();
-      // Reset for next loop
-      const interval = setInterval(() => {
-        ringScale1.setValue(1);
-        ringOpacity1.setValue(0.45);
-      }, 1200);
-      return interval;
-    };
-
-    // Expanding ring wave 2 (staggered)
-    setTimeout(() => {
-      Animated.loop(
-        Animated.parallel([
-          Animated.timing(ringScale2, { toValue: 1.8, duration: 1200, useNativeDriver: true }),
-          Animated.timing(ringOpacity2, { toValue: 0, duration: 1200, useNativeDriver: true }),
-        ])
-      ).start();
-      setInterval(() => {
-        ringScale2.setValue(1);
-        ringOpacity2.setValue(0.35);
-      }, 1200);
-    }, 600);
-
-    logoPulse();
-    glowPulse();
-    ringWave1();
+    // Simple glow pulse using Animated.loop (safe, no setInterval)
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+        Animated.timing(glowOpacity, { toValue: 0.5, duration: 500, useNativeDriver: true }),
+        Animated.timing(glowOpacity, { toValue: 0.9, duration: 200, useNativeDriver: true }),
+        Animated.timing(glowOpacity, { toValue: 0.6, duration: 600, useNativeDriver: true }),
+        Animated.delay(1200),
+      ])
+    ).start();
   };
 
   const handleFindTrainer = () => {
@@ -261,23 +229,13 @@ export default function WelcomeScreen() {
                   styles.logoSection,
                   {
                     opacity: fadeAnim,
-                    transform: [{ scale: Animated.multiply(logoScale, pulseScale) }],
+                    transform: [{ scale: combinedLogoScale }],
                   }
                 ]}
               >
-                {/* Electric ring wave 1 */}
-                <Animated.View style={[styles.electricRing, {
-                  transform: [{ scale: ringScale1 }],
-                  opacity: ringOpacity1,
-                }]} />
-                {/* Electric ring wave 2 (staggered) */}
-                <Animated.View style={[styles.electricRing, styles.electricRing2, {
-                  transform: [{ scale: ringScale2 }],
-                  opacity: ringOpacity2,
-                }]} />
                 {/* Glow backing */}
                 <Animated.View style={[styles.logoBacking, {
-                  opacity: Animated.add(0.6, Animated.multiply(glowIntensity, 0.4)),
+                  opacity: glowOpacity,
                 }]}>
                   <Image
                     source={require('../assets/rapidreps-logo.png')}
@@ -444,23 +402,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
     justifyContent: 'center',
-  },
-  electricRing: {
-    position: 'absolute',
-    width: 280,
-    height: 280,
-    borderRadius: 140,
-    borderWidth: 2.5,
-    borderColor: '#FFD700',
-    shadowColor: '#FFD700',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 15,
-  },
-  electricRing2: {
-    borderColor: '#FF7F00',
-    borderWidth: 1.5,
-    shadowColor: '#FF7F00',
   },
   logoBacking: {
     backgroundColor: 'rgba(255, 255, 255, 0.15)',

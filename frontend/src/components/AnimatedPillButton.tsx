@@ -44,27 +44,38 @@ export const AnimatedPillButton: React.FC<AnimatedPillButtonProps> = ({
 }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const flashAnim = useRef(new Animated.Value(0)).current;
-  const shineAnim = useRef(new Animated.Value(-1)).current;
   const shimmerPos = useRef(new Animated.Value(-200)).current;
+
+  // Pre-compute flash opacity nodes ONCE (not in render)
+  const flashOpacityGradient = useRef(Animated.multiply(flashAnim, 0.35)).current;
+  const flashOpacityOutline = useRef(Animated.multiply(flashAnim, 0.3)).current;
 
   useEffect(() => {
     let alive = true;
     const delay = variant === 'navy' ? 900 : 0;
     const tid = setTimeout(() => {
-      const loop = () => {
-        if (!alive) return;
-        shimmerPos.setValue(-200);
-        Animated.timing(shimmerPos, {
-          toValue: 400,
-          duration: 1600,
-          useNativeDriver: true,
-        }).start(({ finished }) => {
-          if (finished && alive) setTimeout(loop, 2500);
-        });
-      };
-      loop();
+      if (!alive) return;
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(shimmerPos, {
+            toValue: 400,
+            duration: 1600,
+            useNativeDriver: true,
+          }),
+          Animated.timing(shimmerPos, {
+            toValue: -200,
+            duration: 0,
+            useNativeDriver: true,
+          }),
+          Animated.delay(2500),
+        ])
+      ).start();
     }, delay);
-    return () => { alive = false; clearTimeout(tid); };
+    return () => {
+      alive = false;
+      clearTimeout(tid);
+      shimmerPos.stopAnimation();
+    };
   }, []);
 
   const handlePressIn = () => {
@@ -77,14 +88,12 @@ export const AnimatedPillButton: React.FC<AnimatedPillButtonProps> = ({
   };
 
   const handlePressOut = () => {
-    // Energizing bounce-back + flash
     Animated.parallel([
-      // Overshoot bounce
       Animated.sequence([
         Animated.spring(scaleAnim, {
-          toValue: 1.08,
-          friction: 4,
-          tension: 500,
+          toValue: 1.06,
+          friction: 5,
+          tension: 400,
           useNativeDriver: true,
         }),
         Animated.spring(scaleAnim, {
@@ -94,7 +103,6 @@ export const AnimatedPillButton: React.FC<AnimatedPillButtonProps> = ({
           useNativeDriver: true,
         }),
       ]),
-      // Quick flash
       Animated.sequence([
         Animated.timing(flashAnim, {
           toValue: 1,
@@ -107,15 +115,7 @@ export const AnimatedPillButton: React.FC<AnimatedPillButtonProps> = ({
           useNativeDriver: true,
         }),
       ]),
-      // Shine sweep
-      Animated.timing(shineAnim, {
-        toValue: 1,
-        duration: 400,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      shineAnim.setValue(-1);
-    });
+    ]).start();
   };
 
   const isGradient = variant !== 'outline';
@@ -170,7 +170,7 @@ export const AnimatedPillButton: React.FC<AnimatedPillButtonProps> = ({
                 StyleSheet.absoluteFill,
                 {
                   backgroundColor: '#fff',
-                  opacity: Animated.multiply(flashAnim, 0.35),
+                  opacity: flashOpacityGradient,
                   borderRadius: 30,
                 },
               ]}
@@ -207,7 +207,7 @@ export const AnimatedPillButton: React.FC<AnimatedPillButtonProps> = ({
                 StyleSheet.absoluteFill,
                 {
                   backgroundColor: '#fff',
-                  opacity: Animated.multiply(flashAnim, 0.3),
+                  opacity: flashOpacityOutline,
                   borderRadius: 30,
                 },
               ]}
