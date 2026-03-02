@@ -2368,6 +2368,56 @@ async def create_session(session: SessionCreate, current_user: dict = Depends(ge
         has_membership=has_membership,
     )
     
+    # Apply referral credits as discount (deducted from what trainee pays, NOT from trainer earnings)
+    referral_credit_applied = 0
+    trainee_credits = current_user.get('referralCredits', 0)
+    if trainee_credits > 0:
+        # Apply up to the service fee + platform fee portion (never reduce trainer earnings)
+        max_credit = pricing['serviceFeeCents'] + (pricing['platformFeeCents'] - pricing['serviceFeeCents'])
+        referral_credit_applied = min(trainee_credits, max_credit, pricing['totalChargedCents'])
+        pricing['referralCreditAppliedCents'] = referral_credit_applied
+        pricing['totalChargedCents'] -= referral_credit_applied
+        pricing['finalSessionPriceCents'] -= referral_credit_applied
+        pricing['platformFeeCents'] -= referral_credit_applied  # Platform absorbs the discount
+        # Deduct credits from user
+        await db.users.update_one(
+            {'_id': current_user['_id']},
+            {'$inc': {'referralCredits': -referral_credit_applied}}
+        )
+    else:
+        pricing['referralCreditAppliedCents'] = 0
+    
+    # Activate pending referral on first session booking
+    trainee_id = session.traineeId
+    pending_referral = await db.referrals.find_one({
+        'referredUserId': trainee_id,
+        'status': 'pending'
+    })
+    if pending_referral:
+        # Activate the referral - credit both parties
+        await db.referrals.update_one(
+            {'_id': pending_referral['_id']},
+            {'$set': {'status': 'activated', 'activatedAt': datetime.utcnow()}}
+        )
+        # Credit the referrer
+        await db.users.update_one(
+            {'_id': ObjectId(pending_referral['referrerId'])},
+            {'$inc': {'referralCredits': REFERRAL_CREDIT_CENTS}}
+        )
+        # Credit the referred user (this user)
+        await db.users.update_one(
+            {'_id': ObjectId(trainee_id)},
+            {'$inc': {'referralCredits': REFERRAL_CREDIT_CENTS}}
+        )
+        # Notify the referrer
+        asyncio.create_task(create_and_send_notification(
+            pending_referral['referrerId'],
+            "Referral Bonus Earned!",
+            f"Your referral just booked their first session! You both earned a ${REFERRAL_CREDIT_CENTS/100:.2f} credit.",
+            "referral_activated",
+            {"screen": "referral"}
+        ))
+    
     # Generate safety PIN for in-home sessions (PRD Rule #7)
     safety_pin = None
     if session_type == SessionType.IN_HOME:
