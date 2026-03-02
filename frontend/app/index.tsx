@@ -44,6 +44,15 @@ export default function WelcomeScreen() {
   const slideAnim = useRef(new Animated.Value(50)).current;
   const logoScale = useRef(new Animated.Value(0.8)).current;
   const videoFadeOut = useRef(new Animated.Value(1)).current;
+  
+  // Electric pulse animations
+  const pulseScale = useRef(new Animated.Value(1)).current;
+  const pulseOpacity = useRef(new Animated.Value(0.6)).current;
+  const ringScale1 = useRef(new Animated.Value(1)).current;
+  const ringOpacity1 = useRef(new Animated.Value(0.5)).current;
+  const ringScale2 = useRef(new Animated.Value(1)).current;
+  const ringOpacity2 = useRef(new Animated.Value(0.5)).current;
+  const glowIntensity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const checkFirstLaunch = async () => {
