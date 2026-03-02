@@ -109,35 +109,43 @@ export default function TrainerDetailScreen() {
   const [selectedSessionType, setSelectedSessionType] = useState<'virtual' | 'outdoor' | 'in_home'>('outdoor');
 
   const calculatePrice = () => {
-    if (!trainer) return { base: 0, final: 0, platformFee: 0, travelFee: 0, perHourRate: 0 };
+    if (!trainer) return { sessionRate: 0, serviceFee: 2, totalCharged: 2, trainerEarnings: 0, platformEarnings: 2, perHourRate: 0 };
     
     // Get per-hour rate based on session type
     let hourlyRateCents: number;
     switch (selectedSessionType) {
       case 'virtual':
-        hourlyRateCents = trainer.virtualRateCents || 3000; // $30/hr min
+        hourlyRateCents = trainer.virtualRateCents || 3000;
         break;
       case 'in_home':
-        hourlyRateCents = trainer.inHomeRateCents || 6000; // $60/hr min
+        hourlyRateCents = trainer.inHomeRateCents || 6000;
         break;
       default:
-        hourlyRateCents = trainer.outdoorRateCents || 4000; // $40/hr min
+        hourlyRateCents = trainer.outdoorRateCents || 4000;
     }
     
     // Scale price by duration (rates are per hour)
     const perHourRate = hourlyRateCents / 100;
-    const basePrice = (hourlyRateCents / 100) * (selectedDuration / 60);
-    const platformFee = basePrice * 0.25; // 25% platform fee (PRD: 75/25 split)
+    const sessionRate = (hourlyRateCents / 100) * (selectedDuration / 60);
     const travelFee = selectedSessionType === 'in_home' ? Math.min(15, Math.max(0, 5)) : 0;
-    const finalPrice = basePrice + travelFee;
+    
+    // Pricing model:
+    // Trainer gets 80% of session rate
+    // Platform gets 20% of session rate + $2 service fee
+    // Trainee is charged: session rate + travel fee + $2 service fee
+    const serviceFee = 2.00;
+    const trainerEarnings = (sessionRate + travelFee) * 0.80;
+    const platformEarnings = (sessionRate + travelFee) * 0.20 + serviceFee;
+    const totalCharged = sessionRate + travelFee + serviceFee;
     
     return { 
-      base: basePrice, 
-      final: finalPrice, 
-      platformFee,
+      sessionRate,
       travelFee,
+      serviceFee,
+      totalCharged,
       perHourRate,
-      trainerEarnings: finalPrice * 0.75 // Trainer gets 75%
+      trainerEarnings,
+      platformEarnings,
     };
   };
 
