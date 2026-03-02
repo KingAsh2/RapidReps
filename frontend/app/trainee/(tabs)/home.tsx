@@ -84,6 +84,8 @@ export default function TraineeHomeScreen() {
   });
   const [sortBy, setSortBy] = useState('distance');
   const [showSortMenu, setShowSortMenu] = useState(false);
+  const [travelProximity, setTravelProximity] = useState(10);
+  const [showProximityPicker, setShowProximityPicker] = useState(false);
 
   // Start entrance animations immediately
   useEffect(() => {
