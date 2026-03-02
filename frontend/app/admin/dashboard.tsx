@@ -138,10 +138,13 @@ export default function AdminDashboard() {
     }
   };
 
-  const fetchSessions = async (page = 0) => {
+  const fetchSessions = async (page = 0, status = sessionStatusFilter, type = sessionTypeFilter) => {
     try {
       const headers = await getAuthHeader();
-      const res = await api.get(`/admin/sessions?limit=${PAGE_SIZE}&skip=${page * PAGE_SIZE}`, { headers });
+      let url = `/admin/sessions?limit=${PAGE_SIZE}&skip=${page * PAGE_SIZE}`;
+      if (status) url += `&status=${status}`;
+      if (type) url += `&session_type=${type}`;
+      const res = await api.get(url, { headers });
       setSessions(res.data.sessions || []);
       setSessionsTotal(res.data.total || 0);
       setSessionsPage(page);
@@ -150,10 +153,13 @@ export default function AdminDashboard() {
     }
   };
 
-  const fetchTransactions = async (page = 0) => {
+  const fetchTransactions = async (page = 0, status = transStatusFilter, type = transTypeFilter) => {
     try {
       const headers = await getAuthHeader();
-      const res = await api.get(`/admin/transactions-enriched?limit=${PAGE_SIZE}&skip=${page * PAGE_SIZE}`, { headers });
+      let url = `/admin/transactions-enriched?limit=${PAGE_SIZE}&skip=${page * PAGE_SIZE}`;
+      if (status) url += `&status=${status}`;
+      if (type) url += `&session_type=${type}`;
+      const res = await api.get(url, { headers });
       setTransactions(res.data.transactions || []);
       setTransTotal(res.data.total || 0);
       setTransPage(page);
