@@ -808,12 +808,16 @@ export default function AdminDashboard() {
             onPress={() => handleViewUser(user.id)}
             data-testid={`admin-user-${user.id}`}
           >
-            <View style={[s.listCardIcon, { backgroundColor: user.isAdmin ? C.error : user.roles?.includes('trainer') ? C.orange : C.teal }]}>
-              <Ionicons
-                name={user.isAdmin ? 'shield' : user.roles?.includes('trainer') ? 'fitness' : 'person'}
-                size={18} color={C.white}
-              />
-            </View>
+            {user.avatarUrl ? (
+              <Image source={{ uri: user.avatarUrl }} style={s.userAvatar} />
+            ) : (
+              <View style={[s.listCardIcon, { backgroundColor: user.isAdmin ? C.error : user.roles?.includes('trainer') ? C.orange : C.teal }]}>
+                <Ionicons
+                  name={user.isAdmin ? 'shield' : user.roles?.includes('trainer') ? 'fitness' : 'person'}
+                  size={18} color={C.white}
+                />
+              </View>
+            )}
             <View style={{ flex: 1 }}>
               <Text style={s.listCardTitle}>{user.fullName}</Text>
               <Text style={s.listCardSub}>{user.email}</Text>
