@@ -5165,17 +5165,22 @@ async def calculate_session_cost(
     travel_split = calculate_travel_fee_split(travel_fee_cents) if travel_fee_cents > 0 else None
     
     total_cost = session_price_cents + travel_fee_cents
+    service_fee = PricingRules.SERVICE_FEE_CENTS
     trainer_total = session_split['trainer_payout_cents'] + (travel_split['trainer_payout_cents'] if travel_split else 0)
-    platform_total = session_split['platform_fee_cents'] + (travel_split['platform_fee_cents'] if travel_split else 0)
+    platform_total = session_split['platform_fee_cents'] + (travel_split['platform_fee_cents'] if travel_split else 0) + service_fee
+    total_charged = total_cost + service_fee
     
     return {
         "sessionPrice": session_split,
         "travelFee": travel_split,
+        "serviceFeeCents": service_fee,
         "totals": {
-            "totalCents": total_cost,
+            "sessionSubtotalCents": total_cost,
+            "serviceFeeCents": service_fee,
+            "totalChargedCents": total_charged,
             "trainerPayoutCents": trainer_total,
             "platformFeeCents": platform_total,
-            "totalDollars": total_cost / 100,
+            "totalChargedDollars": total_charged / 100,
             "trainerPayoutDollars": trainer_total / 100,
             "platformFeeDollars": platform_total / 100
         }
