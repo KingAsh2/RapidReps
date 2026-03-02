@@ -1124,6 +1124,11 @@ async def signup(request: Request, user_data: UserSignUp):
     # Hash password
     hashed_password = hash_password(user_data.password)
     
+    # Generate unique referral code for this user
+    referral_code = f"RR-{''.join(random.choices(string.ascii_uppercase + string.digits, k=6))}"
+    while await db.users.find_one({'referralCode': referral_code}):
+        referral_code = f"RR-{''.join(random.choices(string.ascii_uppercase + string.digits, k=6))}"
+    
     # Create user document
     user_doc = {
         'fullName': sanitize_text(user_data.fullName),
@@ -1133,12 +1138,34 @@ async def signup(request: Request, user_data: UserSignUp):
         'roles': user_data.roles,
         'isAdmin': False,
         'emailVerified': True,  # Default true until email verification flow is implemented
+        'referralCode': referral_code,
+        'referralCredits': 0,  # cents
         'createdAt': datetime.utcnow(),
         'updatedAt': datetime.utcnow()
     }
     
     result = await db.users.insert_one(user_doc)
     user_id = str(result.inserted_id)
+    
+    # Process referral code if provided
+    if user_data.referralCode:
+        referrer = await db.users.find_one({'referralCode': user_data.referralCode.strip().upper()})
+        if referrer:
+            # Check referrer hasn't exceeded max referrals
+            referrer_count = await db.referrals.count_documents({
+                'referrerId': str(referrer['_id']),
+                'status': {'$in': ['pending', 'activated']}
+            })
+            if referrer_count < MAX_REFERRALS_PER_USER:
+                await db.referrals.insert_one({
+                    'referrerId': str(referrer['_id']),
+                    'referredUserId': user_id,
+                    'referralCode': user_data.referralCode.strip().upper(),
+                    'status': 'pending',  # becomes 'activated' after first session booking
+                    'creditCents': REFERRAL_CREDIT_CENTS,
+                    'createdAt': datetime.utcnow(),
+                    'activatedAt': None,
+                })
     
     # Send welcome email (no-op without SendGrid key)
     send_welcome_email(user_data.email, user_data.fullName)
