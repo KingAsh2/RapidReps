@@ -202,15 +202,41 @@ export default function AdminDashboard() {
   const onRefresh = () => { setRefreshing(true); loadTab(activeTab); };
 
   // --- Action Handlers ---
+
+  // Verification detail state
+  const [verificationDetail, setVerificationDetail] = useState<any>(null);
+  const [verificationDetailVisible, setVerificationDetailVisible] = useState(false);
+  const [verificationDetailLoading, setVerificationDetailLoading] = useState(false);
+  const [showRejectInput, setShowRejectInput] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [rejectTrainerId, setRejectTrainerId] = useState('');
+
+  const handleOpenVerification = async (item: any) => {
+    setVerificationDetailLoading(true);
+    setVerificationDetailVisible(true);
+    try {
+      const headers = await getAuthHeader();
+      const res = await api.get(`/admin/verifications/${item.profile?.userId}/detail`, { headers });
+      setVerificationDetail(res.data);
+    } catch (err: any) {
+      Alert.alert('Error', 'Failed to load verification details');
+      setVerificationDetailVisible(false);
+    } finally {
+      setVerificationDetailLoading(false);
+    }
+  };
+
   const handleApproveVerification = (trainerId: string) => {
-    Alert.alert('Approve Trainer', 'Approve this trainer for the platform?', [
+    Alert.alert('Approve Trainer', 'This trainer will be verified and able to accept sessions. Continue?', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Approve', onPress: async () => {
           try {
             const headers = await getAuthHeader();
             await api.post(`/admin/verifications/${trainerId}/approve`, {}, { headers });
-            Alert.alert('Success', 'Trainer approved');
+            Alert.alert('Success', 'Trainer approved! They will receive a notification.');
+            setVerificationDetailVisible(false);
+            setVerificationDetail(null);
             fetchVerifications();
           } catch (err: any) { Alert.alert('Error', err?.response?.data?.detail || 'Failed'); }
         },
@@ -218,20 +244,27 @@ export default function AdminDashboard() {
     ]);
   };
 
-  const handleRejectVerification = (trainerId: string) => {
-    Alert.alert('Reject Trainer', 'Reject this trainer\'s verification?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Reject', style: 'destructive', onPress: async () => {
-          try {
-            const headers = await getAuthHeader();
-            await api.post(`/admin/verifications/${trainerId}/reject`, {}, { headers });
-            Alert.alert('Done', 'Verification rejected');
-            fetchVerifications();
-          } catch (err: any) { Alert.alert('Error', err?.response?.data?.detail || 'Failed'); }
-        },
-      },
-    ]);
+  const handleStartReject = (trainerId: string) => {
+    setRejectTrainerId(trainerId);
+    setRejectReason('');
+    setShowRejectInput(true);
+  };
+
+  const handleSubmitRejection = async () => {
+    if (!rejectReason.trim()) {
+      Alert.alert('Required', 'Please provide a reason for rejection');
+      return;
+    }
+    try {
+      const headers = await getAuthHeader();
+      await api.post(`/admin/verifications/${rejectTrainerId}/reject`, { reason: rejectReason.trim() }, { headers });
+      Alert.alert('Done', 'Verification rejected. Trainer will be notified with your reason.');
+      setShowRejectInput(false);
+      setVerificationDetailVisible(false);
+      setVerificationDetail(null);
+      setRejectReason('');
+      fetchVerifications();
+    } catch (err: any) { Alert.alert('Error', err?.response?.data?.detail || 'Failed'); }
   };
 
   const handleViewUser = async (userId: string) => {
