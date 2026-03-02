@@ -5,6 +5,12 @@ const { FileStore } = require('metro-cache');
 
 const config = getDefaultConfig(__dirname);
 
+// Enable require.context for Expo Router
+config.transformer = {
+  ...config.transformer,
+  unstable_allowRequireContext: true,
+};
+
 // Use a stable on-disk store (shared across web/android)
 const root = process.env.METRO_CACHE_ROOT || path.join(__dirname, '.metro-cache');
 config.cacheStores = [
