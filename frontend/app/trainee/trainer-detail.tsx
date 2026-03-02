@@ -654,7 +654,7 @@ export default function TrainerDetailScreen() {
                   <Text style={styles.priceTotalValue}>${prices.final.toFixed(2)}</Text>
                 </View>
                 <Text style={styles.platformFeeNote}>
-                  20% service fee included • Trainer earns ${prices.trainerEarnings?.toFixed(2) || prices.final.toFixed(2)}
+                  25% service fee included • Trainer earns ${prices.trainerEarnings?.toFixed(2) || prices.final.toFixed(2)}
                 </Text>
               </View>
 
