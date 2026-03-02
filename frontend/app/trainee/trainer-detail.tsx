@@ -614,6 +614,7 @@ export default function TrainerDetailScreen() {
                       styles.durationChip,
                       selectedDuration === duration && styles.durationChipSelected,
                     ]}
+                    data-testid={`duration-${duration}`}
                   >
                     <Text
                       style={[
@@ -623,14 +624,22 @@ export default function TrainerDetailScreen() {
                     >
                       {duration} min
                     </Text>
+                    <Text
+                      style={[
+                        styles.durationPrice,
+                        selectedDuration === duration && styles.durationPriceSelected,
+                      ]}
+                    >
+                      ${((prices.perHourRate || 0) * (duration / 60)).toFixed(2)}
+                    </Text>
                   </TouchableOpacity>
                 ))}
               </View>
 
-              {/* Price Summary - Updated for PRD */}
+              {/* Price Summary */}
               <View style={styles.priceSummary}>
                 <View style={styles.priceRow}>
-                  <Text style={styles.priceLabel}>Session Rate</Text>
+                  <Text style={styles.priceLabel}>Rate ({selectedDuration} min @ ${prices.perHourRate?.toFixed(2)}/hr)</Text>
                   <Text style={styles.priceValue}>${prices.base.toFixed(2)}</Text>
                 </View>
                 {prices.travelFee > 0 && (
