@@ -1295,6 +1295,97 @@ async def get_blocks(current_user: dict = Depends(get_current_user)):
     return BlockResponse(blockedUserIds=blocked)
 
 # ============================================================================
+# REFERRAL SYSTEM ROUTES
+# ============================================================================
+
+@api_router.get("/referral/my-code")
+async def get_my_referral_code(current_user: dict = Depends(get_current_user)):
+    """Get the current user's referral code, generating one if not present."""
+    user_id = str(current_user['_id'])
+    referral_code = current_user.get('referralCode')
+    
+    if not referral_code:
+        referral_code = f"RR-{''.join(random.choices(string.ascii_uppercase + string.digits, k=6))}"
+        while await db.users.find_one({'referralCode': referral_code}):
+            referral_code = f"RR-{''.join(random.choices(string.ascii_uppercase + string.digits, k=6))}"
+        await db.users.update_one(
+            {'_id': current_user['_id']},
+            {'$set': {'referralCode': referral_code, 'referralCredits': current_user.get('referralCredits', 0)}}
+        )
+    
+    return {"referralCode": referral_code}
+
+@api_router.get("/referral/stats")
+async def get_referral_stats(current_user: dict = Depends(get_current_user)):
+    """Get referral stats for the current user."""
+    user_id = str(current_user['_id'])
+    referral_code = current_user.get('referralCode', '')
+    available_credits = current_user.get('referralCredits', 0)
+    
+    # Ensure referral code exists
+    if not referral_code:
+        code_resp = await get_my_referral_code(current_user)
+        referral_code = code_resp['referralCode']
+    
+    # Get referrals where this user is the referrer
+    referrals_as_referrer = []
+    cursor = db.referrals.find({'referrerId': user_id})
+    async for ref in cursor:
+        referred_user = await db.users.find_one({'_id': ObjectId(ref['referredUserId'])}, {'_id': 0, 'fullName': 1, 'email': 1})
+        referrals_as_referrer.append({
+            'referredName': referred_user.get('fullName', 'Unknown') if referred_user else 'Unknown',
+            'status': ref['status'],
+            'creditCents': ref['creditCents'],
+            'createdAt': ref['createdAt'].isoformat() if ref.get('createdAt') else None,
+            'activatedAt': ref['activatedAt'].isoformat() if ref.get('activatedAt') else None,
+        })
+    
+    # Also check if this user was referred (for their own credit status)
+    my_referral = await db.referrals.find_one({'referredUserId': user_id})
+    was_referred = my_referral is not None
+    referral_activated = my_referral['status'] == 'activated' if my_referral else False
+    
+    total = len(referrals_as_referrer)
+    activated = sum(1 for r in referrals_as_referrer if r['status'] == 'activated')
+    pending = total - activated
+    total_earned = activated * REFERRAL_CREDIT_CENTS
+    
+    return ReferralStats(
+        referralCode=referral_code,
+        totalReferrals=total,
+        activatedReferrals=activated,
+        pendingReferrals=pending,
+        totalCreditsEarned=total_earned,
+        availableCredits=available_credits,
+        maxReferrals=MAX_REFERRALS_PER_USER,
+        referralsRemaining=max(0, MAX_REFERRALS_PER_USER - total),
+        referralHistory=referrals_as_referrer,
+    )
+
+@api_router.get("/referral/validate/{code}")
+async def validate_referral_code(code: str):
+    """Validate a referral code before signup (public endpoint)."""
+    clean_code = code.strip().upper()
+    referrer = await db.users.find_one({'referralCode': clean_code}, {'_id': 1, 'fullName': 1, 'referralCode': 1})
+    if not referrer:
+        return {"valid": False, "message": "Invalid referral code"}
+    
+    # Check if referrer has reached max
+    count = await db.referrals.count_documents({
+        'referrerId': str(referrer['_id']),
+        'status': {'$in': ['pending', 'activated']}
+    })
+    if count >= MAX_REFERRALS_PER_USER:
+        return {"valid": False, "message": "This referral code has reached its maximum uses"}
+    
+    return {"valid": True, "referrerName": referrer['fullName']}
+
+@api_router.get("/referral/credits")
+async def get_referral_credits(current_user: dict = Depends(get_current_user)):
+    """Get available referral credits for session discount."""
+    return {"availableCredits": current_user.get('referralCredits', 0)}
+
+# ============================================================================
 # CHAT / MESSAGING ROUTES
 # ============================================================================
 
