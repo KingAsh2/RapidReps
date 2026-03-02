@@ -930,7 +930,12 @@ def check_trainer_can_go_live(profile: dict) -> tuple:
     """
     Check if trainer has completed all requirements to go live.
     Returns (can_go_live: bool, missing_requirements: list)
+    If admin has verified the trainer, they are automatically approved.
     """
+    # Admin-verified trainers bypass individual checks
+    if profile.get('verificationStatus') == VerificationStatus.VERIFIED:
+        return (True, [])
+    
     missing = []
     
     # Check identity verification
