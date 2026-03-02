@@ -416,9 +416,11 @@ class TestTrainerSearch:
         print(f"✓ Trainer search by distance: {len(data)} trainers found")
     
     def test_nearby_trainers(self, api_client):
-        """Test GET nearby trainers"""
+        """Test GET nearby trainers - requires authentication"""
+        token = get_trainee1_auth(api_client)
         resp = api_client.get(
-            f"{BASE_URL}/api/trainers/nearby?latitude=34.0522&longitude=-118.2437&radius_miles=15"
+            f"{BASE_URL}/api/trainers/nearby?latitude=34.0522&longitude=-118.2437&radius_miles=15",
+            headers={"Authorization": f"Bearer {token}"}
         )
         assert resp.status_code == 200
         data = resp.json()
@@ -1152,7 +1154,11 @@ class TestVirtualMatching:
         )
         assert resp.status_code == 200
         data = resp.json()
-        print(f"✓ Pending virtual requests: {len(data.get('requests', []))}")
+        # Response is wrapped in 'requests' key OR is a direct list
+        if isinstance(data, list):
+            print(f"✓ Pending virtual requests: {len(data)}")
+        else:
+            print(f"✓ Pending virtual requests: {len(data.get('requests', []))}")
 
 
 # ============================================================================
