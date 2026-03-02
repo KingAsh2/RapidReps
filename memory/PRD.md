@@ -34,13 +34,23 @@ Build a fitness trainer-trainee matching platform with Uber-style real-time matc
 13. Intro video plays once only - AsyncStorage flag
 14. Trainer locations updated to Elkridge, MD area
 15. Admin panel: City/State displayed, all data filterable, user photos, verification workflow
-16. Logo overlap fix, pulsing animation, button tap animations
+16. Logo overlap fix, pulsing animation (4x enlarged), button tap animations
 17. Travel to Trainer Proximity dropdown (1-35 miles)
 18. At Home session type with trainee address capture
 19. Dynamic pricing: 80/20 trainer/platform split + $2 service fee
 20. Terms of Service & Privacy Policy screens (legal/terms.tsx, legal/privacy.tsx)
-21. Clickable Terms & Privacy links on welcome screen
-22. Terms & Privacy link added to trainer profile
+21. Clickable Terms & Privacy links on welcome screen and both profiles
+
+### Referral System (NEW - Mar 2, 2026)
+22. **Referral System** - Both trainers & trainees can refer
+    - Unique referral codes (format: RR-XXXXXX)
+    - $5 credit for referrer + $5 for new user
+    - Credits activate ONLY after new user books first session (protects revenue)
+    - Credits auto-apply as discount on next booking (deducted from platform fee, not trainer earnings)
+    - Max 5 referrals per user
+    - Referral code input on signup form
+    - Dedicated "Refer & Earn" screen accessible from both trainee and trainer profiles
+    - API endpoints: /api/referral/my-code, /api/referral/stats, /api/referral/validate/{code}, /api/referral/credits
 
 ### Business Rules
 - Revenue Split: 80% trainer / 20% platform
@@ -48,6 +58,8 @@ Build a fitness trainer-trainee matching platform with Uber-style real-time matc
 - Pricing Minimums: Virtual=$30, Outdoor=$40, InHome=$60
 - Membership: $19.99/month
 - Boosts: Daily $9.99, Weekly $49.99, Monthly $149.99
+- Referral Credit: $5.00 (500 cents) per activated referral
+- Max Referrals: 5 per user
 
 ## Test Credentials
 - Admin: admin@rapidreps.com / admin123
@@ -55,9 +67,9 @@ Build a fitness trainer-trainee matching platform with Uber-style real-time matc
 - Trainees: trainee1@test.com, trainee2@test.com / test123
 
 ## E2E Test Results (Mar 2, 2026)
-- Backend: 75/75 tests passed (100%) across 19 feature areas
-- Test report: /app/test_reports/iteration_22.json
-- All auth, profiles, verification, search, sessions, GPS, selfie, messaging, payments, membership, boosts, ratings, achievements, admin, notifications, downloads, pricing, and safety features verified
+- Backend iteration 22: 75/75 tests passed (100%) - all core features
+- Backend iteration 23: 29/29 tests passed (100%) - referral system + regression
+- Test reports: /app/test_reports/iteration_22.json, /app/test_reports/iteration_23.json
 
 ## Remaining Backlog
 1. P3: SendGrid email integration (awaiting API key from user)
@@ -71,4 +83,4 @@ Build a fitness trainer-trainee matching platform with Uber-style real-time matc
 - Push notifications: Sends to Expo servers (no real devices in preview)
 
 ## Known Limitations
-- Expo Router web rendering doesn't work in CI mode (pre-existing issue with Metro require.context in static output mode). App works correctly on iOS/Android via Expo Go or native builds.
+- Expo Router web rendering doesn't work in CI mode (pre-existing issue with Metro require.context). App works correctly on iOS/Android via Expo Go or native builds.
