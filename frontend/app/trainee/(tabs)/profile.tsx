@@ -852,6 +852,13 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.8)',
     lineHeight: 20,
   },
+  addressHint: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.5)',
+    marginBottom: 8,
+    fontStyle: 'italic',
+  },
   textArea: {
     backgroundColor: 'rgba(255,255,255,0.15)',
     borderRadius: 12,
