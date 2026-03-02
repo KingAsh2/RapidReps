@@ -356,7 +356,7 @@ export default function WelcomeScreen() {
                 <AnimatedPillButton
                   title="Become a Trainer"
                   onPress={handleBecomeTrainer}
-                  variant="outline"
+                  variant="navy"
                   icon="barbell"
                   testID="become-trainer-btn"
                 />
