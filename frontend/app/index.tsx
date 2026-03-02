@@ -365,8 +365,8 @@ export default function WelcomeScreen() {
                 {/* Terms */}
                 <Text style={styles.termsText}>
                   By continuing, you agree to our{' '}
-                  <Text style={styles.termsLink}>Terms</Text> &{' '}
-                  <Text style={styles.termsLink}>Privacy Policy</Text>
+                  <Text style={styles.termsLink} onPress={() => router.push('/legal/terms')}>Terms</Text> &{' '}
+                  <Text style={styles.termsLink} onPress={() => router.push('/legal/privacy')}>Privacy Policy</Text>
                 </Text>
 
                 {/* Login Link */}
