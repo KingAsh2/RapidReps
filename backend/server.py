@@ -5686,11 +5686,15 @@ async def admin_get_users(
     users = await db.users.find(query).skip(skip).limit(limit).to_list(limit)
     total = await db.users.count_documents(query)
     
-    # Enrich with city/state from trainer_profiles if not on user doc
+    # Enrich with city/state and avatarUrl from trainer/trainee profiles
     user_ids = [str(u['_id']) for u in users]
     trainer_profiles = {}
-    async for tp in db.trainer_profiles.find({'userId': {'$in': user_ids}}, {'userId': 1, 'city': 1, 'state': 1, 'latitude': 1, 'longitude': 1}):
+    async for tp in db.trainer_profiles.find({'userId': {'$in': user_ids}}, {'userId': 1, 'city': 1, 'state': 1, 'latitude': 1, 'longitude': 1, 'avatarUrl': 1}):
         trainer_profiles[tp['userId']] = tp
+    
+    trainee_profiles = {}
+    async for tp in db.trainee_profiles.find({'userId': {'$in': user_ids}}, {'userId': 1, 'profilePhoto': 1, 'avatarUrl': 1}):
+        trainee_profiles[tp['userId']] = tp
     
     serialized_users = []
     for u in users:
@@ -5698,10 +5702,14 @@ async def admin_get_users(
         doc.pop('passwordHash', None)
         uid = doc.get('id', '')
         tp = trainer_profiles.get(uid, {})
+        tnp = trainee_profiles.get(uid, {})
         if not doc.get('city') and tp.get('city'):
             doc['city'] = tp['city']
         if not doc.get('state') and tp.get('state'):
             doc['state'] = tp['state']
+        # Resolve avatar from profiles
+        if not doc.get('avatarUrl'):
+            doc['avatarUrl'] = tp.get('avatarUrl') or tnp.get('profilePhoto') or tnp.get('avatarUrl') or doc.get('profilePhoto')
         serialized_users.append(doc)
     
     return {
