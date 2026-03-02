@@ -906,9 +906,37 @@ export default function AdminDashboard() {
     return C.gray;
   };
 
-  const renderSessions = () => (
+  const renderSessions = () => {
+    const statusOptions = [
+      { key: '', label: 'All' },
+      { key: 'pending', label: 'Pending' },
+      { key: 'confirmed', label: 'Confirmed' },
+      { key: 'in_progress', label: 'In Progress' },
+      { key: 'completed', label: 'Completed' },
+      { key: 'cancelled', label: 'Cancelled' },
+      { key: 'no_show', label: 'No-Show' },
+    ];
+    const typeOptions = [
+      { key: '', label: 'All Types' },
+      { key: 'virtual', label: 'Virtual' },
+      { key: 'outdoor', label: 'Outdoor' },
+      { key: 'in_home', label: 'In-Home' },
+    ];
+    return (
     <View>
       <Text style={s.sectionTitle}>Sessions ({sessionsTotal})</Text>
+      <FilterPills
+        options={statusOptions}
+        selected={sessionStatusFilter}
+        onSelect={(st) => { setSessionStatusFilter(st); fetchSessions(0, st, sessionTypeFilter); }}
+        testIdPrefix="sess-status"
+      />
+      <FilterPills
+        options={typeOptions}
+        selected={sessionTypeFilter}
+        onSelect={(tp) => { setSessionTypeFilter(tp); fetchSessions(0, sessionStatusFilter, tp); }}
+        testIdPrefix="sess-type"
+      />
       {sessions.length === 0 ? (
         <View style={s.emptyState}>
           <Ionicons name="calendar-outline" size={48} color={C.gray} />
