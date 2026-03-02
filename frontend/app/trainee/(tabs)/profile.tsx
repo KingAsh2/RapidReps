@@ -72,6 +72,7 @@ export default function TraineeProfileScreen() {
     preferredTrainingStyles: [] as string[],
     injuriesOrLimitations: '',
     homeGymOrZipCode: '',
+    homeAddress: '',
     prefersInPerson: true,
     prefersVirtual: true,
     budgetMinPerMinuteCents: 50,
