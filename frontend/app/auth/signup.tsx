@@ -874,4 +874,33 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: COLORS.white,
   },
+  referralSection: {
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  referralInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(247,147,30,0.3)',
+  },
+  referralInput: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.white,
+    letterSpacing: 1,
+  },
+  referralHint: {
+    fontSize: 12,
+    color: COLORS.orangeLight,
+    marginTop: 6,
+    marginLeft: 4,
+    fontWeight: '500',
+  },
 });
