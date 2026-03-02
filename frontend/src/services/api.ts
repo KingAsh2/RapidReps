@@ -519,3 +519,23 @@ export const digestAPI = {
   },
 };
 
+// Referral API
+export const referralAPI = {
+  getMyCode: async (): Promise<{ referralCode: string }> => {
+    const response = await api.get('/referral/my-code');
+    return response.data;
+  },
+  getStats: async (): Promise<any> => {
+    const response = await api.get('/referral/stats');
+    return response.data;
+  },
+  validateCode: async (code: string): Promise<{ valid: boolean; referrerName?: string; message?: string }> => {
+    const response = await api.get(`/referral/validate/${code}`);
+    return response.data;
+  },
+  getCredits: async (): Promise<{ availableCredits: number }> => {
+    const response = await api.get('/referral/credits');
+    return response.data;
+  },
+};
+
