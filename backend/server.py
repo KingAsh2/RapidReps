@@ -6177,11 +6177,18 @@ async def admin_update_profile(
 async def admin_get_transactions_enriched(
     skip: int = 0,
     limit: int = 50,
+    status: Optional[str] = None,
+    session_type: Optional[str] = None,
     admin_user: dict = Depends(require_admin)
 ):
     """Get all sessions as transactions with user names for admin panel"""
-    sessions = await db.sessions.find().sort('createdAt', -1).skip(skip).limit(limit).to_list(limit)
-    total = await db.sessions.count_documents({})
+    query = {}
+    if status:
+        query['status'] = status
+    if session_type:
+        query['sessionType'] = session_type
+    sessions = await db.sessions.find(query).sort('createdAt', -1).skip(skip).limit(limit).to_list(limit)
+    total = await db.sessions.count_documents(query)
     
     # Batch fetch user names
     user_ids = set()
