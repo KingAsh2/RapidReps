@@ -485,6 +485,7 @@ export default function TrainerDetailScreen() {
                       styles.sessionTypeChip,
                       selectedSessionType === 'virtual' && styles.sessionTypeChipSelected,
                     ]}
+                    data-testid="session-type-virtual"
                   >
                     <Ionicons 
                       name="videocam" 
@@ -501,7 +502,7 @@ export default function TrainerDetailScreen() {
                       styles.sessionTypePrice,
                       selectedSessionType === 'virtual' && styles.sessionTypePriceSelected
                     ]}>
-                      from $30
+                      from ${trainer.virtualRateCents ? (trainer.virtualRateCents / 100) : 30}
                     </Text>
                   </TouchableOpacity>
                 )}
@@ -512,6 +513,7 @@ export default function TrainerDetailScreen() {
                       styles.sessionTypeChip,
                       selectedSessionType === 'outdoor' && styles.sessionTypeChipSelected,
                     ]}
+                    data-testid="session-type-outdoor"
                   >
                     <Ionicons 
                       name="sunny" 
@@ -528,17 +530,18 @@ export default function TrainerDetailScreen() {
                       styles.sessionTypePrice,
                       selectedSessionType === 'outdoor' && styles.sessionTypePriceSelected
                     ]}>
-                      from $40
+                      from ${trainer.outdoorRateCents ? (trainer.outdoorRateCents / 100) : 40}
                     </Text>
                   </TouchableOpacity>
                 )}
-                {(trainer as any).offersInHome && (
+                {trainer.offersInHome && (
                   <TouchableOpacity
                     onPress={() => setSelectedSessionType('in_home')}
                     style={[
                       styles.sessionTypeChip,
                       selectedSessionType === 'in_home' && styles.sessionTypeChipSelected,
                     ]}
+                    data-testid="session-type-at-home"
                   >
                     <Ionicons 
                       name="home" 
@@ -549,47 +552,13 @@ export default function TrainerDetailScreen() {
                       styles.sessionTypeText,
                       selectedSessionType === 'in_home' && styles.sessionTypeTextSelected
                     ]}>
-                      In-Home
+                      At Home
                     </Text>
                     <Text style={[
                       styles.sessionTypePrice,
                       selectedSessionType === 'in_home' && styles.sessionTypePriceSelected
                     ]}>
-                      from $60
-                    </Text>
-                  </TouchableOpacity>
-                )}
-                {/* Trainee's Home Option */}
-                {(trainer as any).offersInHome && (
-                  <TouchableOpacity
-                    onPress={() => {
-                      if (!traineeHomeConsented) {
-                        setShowTraineeHomeConsent(true);
-                      } else {
-                        setSelectedSessionType('trainee_home');
-                      }
-                    }}
-                    style={[
-                      styles.sessionTypeChip,
-                      selectedSessionType === 'trainee_home' && styles.sessionTypeChipSelected,
-                    ]}
-                  >
-                    <Ionicons 
-                      name="location" 
-                      size={18} 
-                      color={selectedSessionType === 'trainee_home' ? COLORS.white : COLORS.orange} 
-                    />
-                    <Text style={[
-                      styles.sessionTypeText,
-                      selectedSessionType === 'trainee_home' && styles.sessionTypeTextSelected
-                    ]}>
-                      Your Home
-                    </Text>
-                    <Text style={[
-                      styles.sessionTypePrice,
-                      selectedSessionType === 'trainee_home' && styles.sessionTypePriceSelected
-                    ]}>
-                      from $60
+                      from ${trainer.inHomeRateCents ? (trainer.inHomeRateCents / 100) : 60}
                     </Text>
                   </TouchableOpacity>
                 )}
