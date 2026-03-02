@@ -125,6 +125,7 @@ export default function TraineeProfileScreen() {
         preferredTrainingStyles: profileData.preferredTrainingStyles || [],
         injuriesOrLimitations: profileData.injuriesOrLimitations || '',
         homeGymOrZipCode: profileData.homeGymOrZipCode || '',
+        homeAddress: profileData.homeAddress || '',
         prefersInPerson: profileData.prefersInPerson ?? true,
         prefersVirtual: profileData.prefersVirtual ?? true,
         budgetMinPerMinuteCents: profileData.budgetMinPerMinuteCents || 50,
