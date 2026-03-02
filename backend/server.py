@@ -166,9 +166,13 @@ class TrainerTier:
 
 # PRICING & REVENUE SPLIT RULES
 class PricingRules:
-    # Revenue Split - Trainer keeps 75%, RapidReps keeps 25%
-    TRAINER_REVENUE_PERCENT = 75
-    PLATFORM_REVENUE_PERCENT = 25
+    # Revenue Split - Trainer keeps 80%, RapidReps keeps 20%
+    TRAINER_REVENUE_PERCENT = 80
+    PLATFORM_REVENUE_PERCENT = 20
+    
+    # Flat service fee charged to trainee per session ($2.00)
+    # This goes entirely to the platform, not deducted from trainer's cut
+    SERVICE_FEE_CENTS = 200  # $2.00
     
     # Minimum session prices (in cents)
     VIRTUAL_MIN_CENTS = 3000       # $30 minimum
@@ -183,13 +187,13 @@ class PricingRules:
     TRAINER_TRAVEL_FEE_PERCENT = 70
     PLATFORM_TRAVEL_FEE_PERCENT = 30
     
-    # Cancellation fees (in cents) - 75/25 split
+    # Cancellation fees (in cents) - 80/20 split
     CANCELLATION_FEE_VIRTUAL = 1500   # $15
     CANCELLATION_FEE_OUTDOOR = 2500   # $25
     CANCELLATION_FEE_IN_HOME = 3500   # $35
     CANCELLATION_FEE_TRAINEE_HOME = 3500  # $35
     
-    # No-show fee = full session price (75/25 split)
+    # No-show fee = full session price (80/20 split)
     
     # Paid Boosts - 100% to RapidReps
     BOOST_DAILY_CENTS = 999        # $9.99/day
@@ -202,7 +206,7 @@ class PricingRules:
     MEMBERSHIP_MATCHING_PRIORITY_BONUS = 0.15  # Score bonus in matching engine
     
     # Legacy fields for backward compatibility
-    PLATFORM_FEE_PERCENT = 25  # Kept for compatibility
+    PLATFORM_FEE_PERCENT = 20  # Updated from 25
     TRAVEL_FEE_0_5_MILES = 0
     TRAVEL_FEE_5_10_MILES = 500
     TRAVEL_FEE_10_15_MILES = 1000
