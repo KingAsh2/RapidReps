@@ -109,24 +109,26 @@ export default function TrainerDetailScreen() {
   const [selectedSessionType, setSelectedSessionType] = useState<'virtual' | 'outdoor' | 'in_home'>('outdoor');
 
   const calculatePrice = () => {
-    if (!trainer) return { base: 0, final: 0, platformFee: 0, travelFee: 0 };
+    if (!trainer) return { base: 0, final: 0, platformFee: 0, travelFee: 0, perHourRate: 0 };
     
-    // Get rate based on session type (PRD Rule #1)
-    let baseRateCents: number;
+    // Get per-hour rate based on session type
+    let hourlyRateCents: number;
     switch (selectedSessionType) {
       case 'virtual':
-        baseRateCents = (trainer as any).virtualRateCents || 3000; // $30 min
+        hourlyRateCents = trainer.virtualRateCents || 3000; // $30/hr min
         break;
       case 'in_home':
-        baseRateCents = (trainer as any).inHomeRateCents || 6000; // $60 min
+        hourlyRateCents = trainer.inHomeRateCents || 6000; // $60/hr min
         break;
       default:
-        baseRateCents = (trainer as any).outdoorRateCents || 4000; // $40 min
+        hourlyRateCents = trainer.outdoorRateCents || 4000; // $40/hr min
     }
     
-    const basePrice = baseRateCents / 100;
-    const platformFee = basePrice * 0.20; // 20% platform fee (PRD Rule #2)
-    const travelFee = selectedSessionType === 'in_home' ? 5 : 0; // Example travel fee
+    // Scale price by duration (rates are per hour)
+    const perHourRate = hourlyRateCents / 100;
+    const basePrice = (hourlyRateCents / 100) * (selectedDuration / 60);
+    const platformFee = basePrice * 0.25; // 25% platform fee (PRD: 75/25 split)
+    const travelFee = selectedSessionType === 'in_home' ? Math.min(15, Math.max(0, 5)) : 0;
     const finalPrice = basePrice + travelFee;
     
     return { 
@@ -134,7 +136,8 @@ export default function TrainerDetailScreen() {
       final: finalPrice, 
       platformFee,
       travelFee,
-      trainerEarnings: finalPrice - platformFee
+      perHourRate,
+      trainerEarnings: finalPrice * 0.75 // Trainer gets 75%
     };
   };
 
