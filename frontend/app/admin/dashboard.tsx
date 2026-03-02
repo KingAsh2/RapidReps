@@ -1456,6 +1456,13 @@ const s = StyleSheet.create({
   messageInput: { borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 10, padding: 14, minHeight: 100, fontSize: 14, color: C.navy, textAlignVertical: 'top' },
   textInput: { borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 10, padding: 12, fontSize: 14, color: C.navy, marginBottom: 12 },
   inputLabel: { fontSize: 13, fontWeight: '600', color: C.grayDark, marginBottom: 6 },
+  // Filter & Search
+  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: C.card, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 10, borderWidth: 1, borderColor: '#e2e8f0', gap: 8 },
+  searchInput: { flex: 1, fontSize: 14, color: C.navy, paddingVertical: 2 },
+  filterPill: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16, backgroundColor: C.card, borderWidth: 1, borderColor: '#e2e8f0' },
+  filterPillActive: { backgroundColor: C.teal, borderColor: C.teal },
+  filterPillText: { fontSize: 12, fontWeight: '600', color: C.gray },
+  filterPillTextActive: { color: C.white },
   paginationBar: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', paddingVertical: 16, gap: 16 },
   pageBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: C.white, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#e2e8f0' },
   pageBtnDisabled: { opacity: 0.4 },
