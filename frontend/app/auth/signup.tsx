@@ -526,10 +526,29 @@ export default function SignupScreen() {
               {/* Selection Confirmation */}
               {formData.roles.length > 0 && (
                 <Animated.Text style={styles.selectionConfirm}>
-                  Perfect — we'll tailor RapidReps for you ✨
+                  Perfect — we'll tailor RapidReps for you
                 </Animated.Text>
               )}
             </Animated.View>
+
+            {/* Referral Code Input */}
+            <View style={styles.referralSection}>
+              <View style={styles.referralInputRow}>
+                <Ionicons name="gift-outline" size={20} color={COLORS.orange} />
+                <TextInput
+                  style={styles.referralInput}
+                  placeholder="Have a referral code? (optional)"
+                  placeholderTextColor="rgba(255,255,255,0.4)"
+                  value={formData.referralCode}
+                  onChangeText={(text) => setFormData(prev => ({ ...prev, referralCode: text.toUpperCase() }))}
+                  autoCapitalize="characters"
+                  data-testid="signup-referral-code-input"
+                />
+              </View>
+              {formData.referralCode.length > 0 && (
+                <Text style={styles.referralHint}>You and the referrer each earn $5 after your first booking!</Text>
+              )}
+            </View>
 
             {/* CTA Button */}
             <Animated.View
