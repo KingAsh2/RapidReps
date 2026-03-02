@@ -1027,9 +1027,13 @@ def calculate_session_pricing(
         discount_amount += membership_discount
     
     # Calculate final amounts
+    # Revenue split: Trainer gets 80%, Platform gets 20% of session rate
+    # Plus $2 service fee goes entirely to platform (not from trainer's cut)
     subtotal = base_rate + travel_fee - discount_amount
-    platform_fee = int(subtotal * PricingRules.PLATFORM_FEE_PERCENT / 100)
-    trainer_earnings = subtotal - platform_fee + trainer_travel_earning
+    trainer_earnings = int(subtotal * PricingRules.TRAINER_REVENUE_PERCENT / 100)
+    platform_fee = subtotal - trainer_earnings  # 20% of session
+    service_fee = PricingRules.SERVICE_FEE_CENTS  # $2.00 flat fee
+    total_charged = subtotal + service_fee  # What trainee pays
     
     return {
         'baseSessionPriceCents': base_rate,
@@ -1040,10 +1044,13 @@ def calculate_session_pricing(
         'discountType': discount_type,
         'discountAmountCents': discount_amount,
         'membershipDiscountCents': membership_discount,
-        'finalSessionPriceCents': subtotal,
-        'platformFeePercent': PricingRules.PLATFORM_FEE_PERCENT,
-        'platformFeeCents': platform_fee,
+        'sessionSubtotalCents': subtotal,
+        'serviceFeeCents': service_fee,
+        'totalChargedCents': total_charged,
+        'platformFeePercent': PricingRules.PLATFORM_REVENUE_PERCENT,
+        'platformFeeCents': platform_fee + service_fee,
         'trainerEarningsCents': trainer_earnings,
+        'trainerRevenuePercent': PricingRules.TRAINER_REVENUE_PERCENT,
         'cancellationFeeCents': get_cancellation_fee(session_type),
     }
 
