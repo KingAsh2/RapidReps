@@ -60,6 +60,7 @@ export interface TraineeProfile {
   preferredTrainingStyles: string[];
   injuriesOrLimitations?: string;
   homeGymOrZipCode?: string;
+  homeAddress?: string;
   prefersInPerson: boolean;
   prefersVirtual: boolean;
   typicalAvailability?: any;
