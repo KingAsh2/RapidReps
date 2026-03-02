@@ -215,7 +215,7 @@ export default function WelcomeScreen() {
             ref={videoRef}
             source={require('../assets/videos/intro.mp4')}
             style={styles.video}
-            resizeMode={ResizeMode.COVER}
+            resizeMode={ResizeMode.CONTAIN}
             shouldPlay={true}
             isLooping={false}
             isMuted={false}
