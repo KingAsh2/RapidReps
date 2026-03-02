@@ -5644,20 +5644,41 @@ async def admin_get_users(
     skip: int = 0,
     limit: int = 50,
     role: Optional[str] = None,
+    search: Optional[str] = None,
     admin_user: dict = Depends(require_admin)
 ):
-    """Get all users for admin"""
+    """Get all users for admin with search and filter"""
     query = {}
     if role:
         query['roles'] = {'$in': [role]}
+    if search:
+        search_regex = {'$regex': search, '$options': 'i'}
+        query['$or'] = [
+            {'fullName': search_regex},
+            {'email': search_regex},
+            {'city': search_regex},
+            {'state': search_regex},
+        ]
     
     users = await db.users.find(query).skip(skip).limit(limit).to_list(limit)
     total = await db.users.count_documents(query)
+    
+    # Enrich with city/state from trainer_profiles if not on user doc
+    user_ids = [str(u['_id']) for u in users]
+    trainer_profiles = {}
+    async for tp in db.trainer_profiles.find({'userId': {'$in': user_ids}}, {'userId': 1, 'city': 1, 'state': 1, 'latitude': 1, 'longitude': 1}):
+        trainer_profiles[tp['userId']] = tp
     
     serialized_users = []
     for u in users:
         doc = serialize_doc(u)
         doc.pop('passwordHash', None)
+        uid = doc.get('id', '')
+        tp = trainer_profiles.get(uid, {})
+        if not doc.get('city') and tp.get('city'):
+            doc['city'] = tp['city']
+        if not doc.get('state') and tp.get('state'):
+            doc['state'] = tp['state']
         serialized_users.append(doc)
     
     return {
