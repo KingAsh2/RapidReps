@@ -7326,6 +7326,11 @@ async def accept_virtual_request(request_id: str, current_user: dict = Depends(g
     if "trainer" not in current_user.get("roles", []):
         raise HTTPException(400, "Only trainers can accept requests")
 
+    # Verification gate: trainer must be admin-verified
+    trainer_profile = await db.trainer_profiles.find_one({'userId': str(current_user['_id'])})
+    if not trainer_profile or trainer_profile.get('verificationStatus') != 'verified':
+        raise HTTPException(403, "Your account must be verified by an admin before you can accept sessions. Please complete your verification process.")
+
     try:
         oid = ObjectId(request_id)
     except Exception:
