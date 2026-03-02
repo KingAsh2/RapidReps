@@ -618,6 +618,49 @@ export default function TraineeHomeScreen() {
 
             {/* Available Trainers Section */}
             <View style={styles.trainersSection}>
+              {/* Travel to Trainer Proximity Dropdown */}
+              <View style={styles.proximityContainer} data-testid="proximity-container">
+                <View style={styles.proximityHeader}>
+                  <Ionicons name="navigate-outline" size={18} color="#22C1C3" />
+                  <Text style={styles.proximityLabel}>Travel to Trainer Proximity</Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.proximityDropdown}
+                  onPress={() => setShowProximityPicker(!showProximityPicker)}
+                  data-testid="proximity-dropdown-btn"
+                >
+                  <Text style={styles.proximityValue}>{travelProximity} miles</Text>
+                  <Ionicons name={showProximityPicker ? "chevron-up" : "chevron-down"} size={18} color="#1A2A5E" />
+                </TouchableOpacity>
+                {showProximityPicker && (
+                  <View style={styles.proximityPickerContainer}>
+                    <ScrollView style={styles.proximityPickerScroll} nestedScrollEnabled>
+                      {Array.from({ length: 35 }, (_, i) => i + 1).map((miles) => (
+                        <TouchableOpacity
+                          key={miles}
+                          style={[
+                            styles.proximityOption,
+                            travelProximity === miles && styles.proximityOptionActive,
+                          ]}
+                          onPress={() => { setTravelProximity(miles); setShowProximityPicker(false); }}
+                          data-testid={`proximity-option-${miles}`}
+                        >
+                          <Text style={[
+                            styles.proximityOptionText,
+                            travelProximity === miles && styles.proximityOptionTextActive,
+                          ]}>
+                            {miles} {miles === 1 ? 'mile' : 'miles'}
+                          </Text>
+                          {travelProximity === miles && (
+                            <Ionicons name="checkmark" size={16} color="#22C1C3" />
+                          )}
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </View>
+                )}
+              </View>
+
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>AVAILABLE TRAINERS</Text>
                 <Text style={styles.trainerCount}>{displayedTrainers.length} ready</Text>
