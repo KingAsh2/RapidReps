@@ -32,21 +32,19 @@ Build a fitness trainer-trainee matching platform with Uber-style real-time matc
 11. User Manual v3.0 — All 12 feedback points verified
 12. Testing Checklist — 295 test cases
 
-### Latest Changes (Feb 2026)
-13. **Intro video plays once only** — AsyncStorage flag prevents replay on return to main screen
-14. **Trainer locations updated to Elkridge, MD area** — All 6 trainers within 20 miles
-15. **Admin panel: City/State displayed** for trainers and trainees
-16. **Admin panel: All data filterable** — Users (search by name/email/city/state + role filter), Sessions (status + type filter), Transactions (status + type filter)
+### Recent Changes (Feb 2026)
+13. Intro video plays once only — AsyncStorage flag
+14. Trainer locations updated to Elkridge, MD area — All 6 trainers within 20 miles
+15. Admin panel: City/State displayed for trainers and trainees
+16. Admin panel: All data filterable — Users (search + role), Sessions (status + type), Transactions (status + type)
+17. Logo overlap fix — Reduced size, fixed tagline margin, cleaned up backing
+18. **Travel to Trainer Proximity dropdown** — 1-35 miles dropdown on trainee home screen, filters trainers by distance
 
-## Trainer Locations (Elkridge, MD Area)
-| Trainer | City | State | Distance |
-|---------|------|-------|----------|
-| Alex Trainer | Elkridge | MD | Center |
-| Jordan Fit | Columbia | MD | ~7 mi |
-| Sam Strong | Laurel | MD | ~10 mi |
-| New Trainer User | Hanover | MD | ~2 mi |
-| Test Trainer | Jessup | MD | ~5 mi |
-| Test Trainer New | Savage | MD | ~8 mi |
+## Key Files Modified
+- `/app/frontend/app/trainee/(tabs)/home.tsx` — Proximity dropdown, filter logic
+- `/app/frontend/app/admin/dashboard.tsx` — City/State, search, filters
+- `/app/frontend/app/index.tsx` — Intro video once, logo fix
+- `/app/backend/server.py` — Admin search/filter endpoints
 
 ## Test Credentials
 - Admin: admin@rapidreps.com / admin123
