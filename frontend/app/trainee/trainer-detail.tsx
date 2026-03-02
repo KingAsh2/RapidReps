@@ -1158,10 +1158,11 @@ const styles = StyleSheet.create({
   },
   durationChip: {
     flex: 1,
-    paddingVertical: 14,
+    paddingVertical: 12,
     borderRadius: 12,
     backgroundColor: COLORS.grayLight,
     alignItems: 'center',
+    gap: 2,
   },
   durationChipSelected: {
     backgroundColor: COLORS.teal,
@@ -1173,6 +1174,14 @@ const styles = StyleSheet.create({
   },
   durationTextSelected: {
     color: COLORS.white,
+  },
+  durationPrice: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: COLORS.gray,
+  },
+  durationPriceSelected: {
+    color: 'rgba(255,255,255,0.85)',
   },
   // Price Summary (NEW)
   priceSummary: {
