@@ -260,17 +260,30 @@ export default function WelcomeScreen() {
                   styles.logoSection,
                   {
                     opacity: fadeAnim,
-                    transform: [{ scale: logoScale }],
+                    transform: [{ scale: Animated.multiply(logoScale, pulseScale) }],
                   }
                 ]}
               >
-                <View style={styles.logoBacking}>
+                {/* Electric ring wave 1 */}
+                <Animated.View style={[styles.electricRing, {
+                  transform: [{ scale: ringScale1 }],
+                  opacity: ringOpacity1,
+                }]} />
+                {/* Electric ring wave 2 (staggered) */}
+                <Animated.View style={[styles.electricRing, styles.electricRing2, {
+                  transform: [{ scale: ringScale2 }],
+                  opacity: ringOpacity2,
+                }]} />
+                {/* Glow backing */}
+                <Animated.View style={[styles.logoBacking, {
+                  opacity: Animated.add(0.6, Animated.multiply(glowIntensity, 0.4)),
+                }]}>
                   <Image
                     source={require('../assets/rapidreps-logo.png')}
                     style={styles.logo}
                     resizeMode="contain"
                   />
-                </View>
+                </Animated.View>
               </Animated.View>
 
               {/* Tagline */}
