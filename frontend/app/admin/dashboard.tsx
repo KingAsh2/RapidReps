@@ -64,6 +64,14 @@ export default function AdminDashboard() {
   const [transTotal, setTransTotal] = useState(0);
   const [transPage, setTransPage] = useState(0);
 
+  // Filters
+  const [userSearch, setUserSearch] = useState('');
+  const [userRoleFilter, setUserRoleFilter] = useState<string>('');
+  const [sessionStatusFilter, setSessionStatusFilter] = useState<string>('');
+  const [sessionTypeFilter, setSessionTypeFilter] = useState<string>('');
+  const [transStatusFilter, setTransStatusFilter] = useState<string>('');
+  const [transTypeFilter, setTransTypeFilter] = useState<string>('');
+
   const PAGE_SIZE = 20;
 
   // Modals
