@@ -1317,6 +1317,77 @@ const styles = StyleSheet.create({
   trainersSection: {
     marginTop: 12,
   },
+  // Proximity Dropdown
+  proximityContainer: {
+    marginBottom: 14,
+    zIndex: 100,
+  },
+  proximityHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 6,
+  },
+  proximityLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+  },
+  proximityDropdown: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderWidth: 1.5,
+    borderColor: '#22C1C3',
+  },
+  proximityValue: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#1A2A5E',
+  },
+  proximityPickerContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    marginTop: 4,
+    maxHeight: 200,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  proximityPickerScroll: {
+    maxHeight: 200,
+  },
+  proximityOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F2F5',
+  },
+  proximityOptionActive: {
+    backgroundColor: 'rgba(34, 193, 195, 0.1)',
+  },
+  proximityOptionText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#4A5568',
+  },
+  proximityOptionTextActive: {
+    color: '#22C1C3',
+    fontWeight: '800',
+  },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
