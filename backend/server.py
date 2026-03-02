@@ -5888,7 +5888,7 @@ async def admin_get_transactions(
 async def admin_get_pending_verifications(admin_user: dict = Depends(require_admin)):
     """Get all pending trainer verifications"""
     pending = await db.trainer_profiles.find({
-        'verificationStatus': VerificationStatus.PENDING
+        'verificationStatus': {'$in': [VerificationStatus.PENDING, VerificationStatus.REJECTED]}
     }).to_list(None)
     
     # Get user names
@@ -5901,6 +5901,36 @@ async def admin_get_pending_verifications(admin_user: dict = Depends(require_adm
         })
     
     return {"pendingVerifications": result, "count": len(result)}
+
+@api_router.get("/admin/verifications/{trainer_id}/detail")
+async def admin_get_verification_detail(trainer_id: str, admin_user: dict = Depends(require_admin)):
+    """Get full verification details for a specific trainer"""
+    profile = await db.trainer_profiles.find_one({'userId': trainer_id})
+    if not profile:
+        raise HTTPException(status_code=404, detail="Trainer profile not found")
+    
+    user = await db.users.find_one({'_id': ObjectId(trainer_id)})
+    
+    steps = [
+        {'id': 'identity', 'label': 'Government ID', 'field': 'governmentIdUploaded', 'submitted': bool(profile.get('governmentIdUploaded'))},
+        {'id': 'background', 'label': 'Background Check', 'field': 'backgroundCheckPassed', 'submitted': bool(profile.get('backgroundCheckPassed'))},
+        {'id': 'certification', 'label': 'Fitness Certification', 'field': 'fitnessCertUploaded', 'submitted': bool(profile.get('fitnessCertUploaded'))},
+        {'id': 'cpr', 'label': 'CPR/AED Certification', 'field': 'cprAedCertUploaded', 'submitted': bool(profile.get('cprAedCertUploaded'))},
+        {'id': 'insurance', 'label': 'Insurance', 'field': 'insuranceUploaded', 'submitted': bool(profile.get('insuranceUploaded'))},
+        {'id': 'photo', 'label': 'Profile Photo', 'field': 'profilePhotoUploaded', 'submitted': bool(profile.get('profilePhotoUploaded')), 'url': profile.get('avatarUrl')},
+        {'id': 'video', 'label': 'Intro Video', 'field': 'introVideoUploaded', 'submitted': bool(profile.get('introVideoUploaded')), 'url': profile.get('introVideoUrl')},
+    ]
+    
+    return {
+        "user": serialize_doc(user) if user else None,
+        "profile": serialize_doc(profile),
+        "steps": steps,
+        "verificationStatus": profile.get('verificationStatus', 'pending'),
+        "submittedAt": profile.get('verificationSubmittedAt'),
+        "rejectionReason": profile.get('rejectionReason'),
+        "rejectedAt": profile.get('rejectedAt'),
+        "verifiedAt": profile.get('verifiedAt'),
+    }
 
 @api_router.post("/admin/verifications/{trainer_id}/approve")
 async def admin_approve_verification(
@@ -5916,7 +5946,9 @@ async def admin_approve_verification(
                 'isVerified': True,
                 'canGoLive': True,
                 'verifiedAt': datetime.utcnow(),
-                'verifiedBy': str(admin_user['_id'])
+                'verifiedBy': str(admin_user['_id']),
+                'rejectionReason': None,
+                'rejectedAt': None,
             }
         }
     )
@@ -5924,15 +5956,29 @@ async def admin_approve_verification(
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Trainer profile not found")
     
+    # Notify the trainer
+    await db.notifications.insert_one({
+        'userId': trainer_id,
+        'type': 'verification_approved',
+        'title': 'Verification Approved!',
+        'message': 'Congratulations! Your account has been verified. You can now accept sessions and start training.',
+        'read': False,
+        'createdAt': datetime.utcnow(),
+    })
+    
     return {"success": True, "message": "Trainer verification approved"}
 
 @api_router.post("/admin/verifications/{trainer_id}/reject")
 async def admin_reject_verification(
     trainer_id: str,
-    reason: str = "Verification requirements not met",
+    body: dict = None,
     admin_user: dict = Depends(require_admin)
 ):
-    """Reject trainer verification"""
+    """Reject trainer verification with reason"""
+    reason = "Verification requirements not met"
+    if body and isinstance(body, dict):
+        reason = body.get('reason', reason)
+    
     result = await db.trainer_profiles.update_one(
         {'userId': trainer_id},
         {
@@ -5949,6 +5995,17 @@ async def admin_reject_verification(
     
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Trainer profile not found")
+    
+    # Notify the trainer with the rejection reason
+    await db.notifications.insert_one({
+        'userId': trainer_id,
+        'type': 'verification_rejected',
+        'title': 'Verification Update',
+        'message': f'Your verification was not approved. Reason: {reason}. Please update your submission and try again.',
+        'read': False,
+        'createdAt': datetime.utcnow(),
+        'metadata': {'rejectionReason': reason},
+    })
     
     return {"success": True, "message": "Trainer verification rejected"}
 
