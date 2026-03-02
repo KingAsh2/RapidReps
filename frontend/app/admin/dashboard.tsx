@@ -1010,12 +1010,39 @@ export default function AdminDashboard() {
       )}
       <PaginationBar current={sessionsPage} total={sessionsTotal} pageSize={PAGE_SIZE} onPageChange={(p) => fetchSessions(p)} />
     </View>
-  );
+    );
+  };
 
   // --- RENDER: Payments/Transactions ---
-  const renderPayments = () => (
+  const renderPayments = () => {
+    const statusOptions = [
+      { key: '', label: 'All' },
+      { key: 'pending', label: 'Pending' },
+      { key: 'confirmed', label: 'Confirmed' },
+      { key: 'completed', label: 'Completed' },
+      { key: 'cancelled', label: 'Cancelled' },
+    ];
+    const typeOptions = [
+      { key: '', label: 'All Types' },
+      { key: 'virtual', label: 'Virtual' },
+      { key: 'outdoor', label: 'Outdoor' },
+      { key: 'in_home', label: 'In-Home' },
+    ];
+    return (
     <View>
       <Text style={s.sectionTitle}>Transactions ({transTotal})</Text>
+      <FilterPills
+        options={statusOptions}
+        selected={transStatusFilter}
+        onSelect={(st) => { setTransStatusFilter(st); fetchTransactions(0, st, transTypeFilter); }}
+        testIdPrefix="trans-status"
+      />
+      <FilterPills
+        options={typeOptions}
+        selected={transTypeFilter}
+        onSelect={(tp) => { setTransTypeFilter(tp); fetchTransactions(0, transStatusFilter, tp); }}
+        testIdPrefix="trans-type"
+      />
       {transactions.length === 0 ? (
         <View style={s.emptyState}>
           <Ionicons name="card-outline" size={48} color={C.gray} />
