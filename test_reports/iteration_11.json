@@ -1,96 +1,39 @@
 {
-  "summary": "QA Audit Fixes Testing Complete - Iteration 11. All 17 tests passed (15 main + 2 rate limiting). M1 Membership Stripe 2-step flow verified (subscribe returns clientSecret/paymentIntentId/membershipId/amountCents, confirm-payment validates Stripe status). M2 Boost Stripe 2-step flow verified (same pattern, free boost from membership works). M3 Rate limiting verified (login 10/min → 429, signup 5/min → 429). C2 Session auth regression passed (401/403 without token, 403 for non-participant). C3 Payment validation regression passed (rejects <100 cents, >500000 cents).",
-  "backend_issues": {
-    "critical": [],
-    "minor": []
-  },
-  "frontend_issues": {
-    "ui_bugs": [],
-    "integration_issues": [],
-    "design_issues": [],
-    "note": "Frontend testing skipped as per request - backend only testing"
-  },
-  "test_report_links": [
-    "/app/backend/tests/test_qa_audit_fixes.py",
-    "/app/test_reports/pytest/qa_audit_fixes_results.xml",
-    "/app/test_reports/pytest/qa_audit_rate_limiting_results.xml"
+  "iteration": 11,
+  "date": "2026-03-03",
+  "test_type": "backend_api_manual",
+  "tests": [
+    {
+      "name": "Valid login with admin credentials",
+      "status": "PASS",
+      "details": "POST /api/auth/login returns 200 with access_token and user object containing isAdmin=true, roles=['admin']"
+    },
+    {
+      "name": "Login with wrong password",
+      "status": "PASS",
+      "details": "POST /api/auth/login returns 401 with detail='Invalid email or password'"
+    },
+    {
+      "name": "Login with non-existent user",
+      "status": "PASS",
+      "details": "POST /api/auth/login returns 401"
+    },
+    {
+      "name": "Auth Me with valid token",
+      "status": "PASS",
+      "details": "GET /api/auth/me returns 200 with correct user data"
+    }
   ],
-  "action_items": [],
-  "critical_code_review_comments": [
-    "Stripe PaymentIntent integration working correctly with live keys",
-    "Rate limiting uses X-Forwarded-For for proper IP detection behind proxy",
-    "Membership confirm-payment validates Stripe payment status before activation",
-    "Boost confirm-payment has same validation pattern",
-    "Free boost from membership working (decrements freeBoostsRemaining)"
+  "summary": "All backend auth API tests pass. Login fix focused on frontend: removed redundant second API call, added proper error differentiation, login now returns user data for direct routing.",
+  "changes_made": [
+    "AuthContext.tsx: login() now returns User object",
+    "login.tsx: Removed redundant axios.get(/api/auth/me) call after login - uses returned user data directly",
+    "login.tsx: Improved error messages - differentiates 401, 429, network errors, and generic errors",
+    "login.tsx: Added admin redirect to useEffect navigation backup",
+    "login.tsx: Removed unused AsyncStorage and axios imports",
+    "app.json: Bumped version to 1.2.0, buildNumber to 3"
   ],
-  "updated_files": [
-    "/app/backend/tests/test_qa_audit_fixes.py"
-  ],
-  "success_rate": {
-    "backend": "100% (17/17 tests passed - 15 main + 2 rate limiting)"
-  },
-  "test_credentials": {
-    "admin": "admin@rapidreps.com / admin123",
-    "trainer1": "trainer1@test.com / test123",
-    "trainer2": "trainer2@test.com / test123",
-    "trainee1": "trainee1@test.com / test123",
-    "trainee2": "trainee2@test.com / test123"
-  },
-  "seed_data_creation": "Created test users during rate limit signup tests (test_rate_limit_<uuid>@test.com), test_membership_<timestamp>@test.com, test_trainer_boost_<timestamp>@test.com for manual verification",
   "retest_needed": false,
   "should_main_agent_self_test": false,
-  "context_for_next_testing_agent": "QA Audit fixes fully tested. M1: Membership subscribe returns Stripe PaymentIntent (clientSecret, paymentIntentId, membershipId, amountCents=1999). Confirm-payment checks Stripe status before activation. M2: Boost purchase same pattern (daily=999 cents). Free boost from membership works. M3: Rate limiting working - login 10/min, signup 5/min. Note: Both trainee1 and trainee2 already have active memberships, so subscription tests need new users. Rate limiting tests affect subsequent tests due to shared IP - run them separately or last.",
-  "verified_endpoints": [
-    {"endpoint": "POST /api/memberships/subscribe", "status": "PASS", "returns": "clientSecret, paymentIntentId, membershipId, amountCents=1999"},
-    {"endpoint": "POST /api/memberships/subscribe (already active)", "status": "PASS - returns 400"},
-    {"endpoint": "POST /api/memberships/{id}/confirm-payment", "status": "PASS - validates Stripe status"},
-    {"endpoint": "POST /api/memberships/{id}/confirm-payment (non-owner)", "status": "PASS - returns 403"},
-    {"endpoint": "POST /api/boosts/purchase?boost_type=daily", "status": "PASS", "returns": "clientSecret, paymentIntentId, boostId, amountCents=999"},
-    {"endpoint": "POST /api/boosts/purchase?boost_type=weekly", "status": "PASS"},
-    {"endpoint": "POST /api/boosts/purchase?boost_type=invalid", "status": "PASS - returns 400"},
-    {"endpoint": "POST /api/boosts/purchase (non-trainer)", "status": "PASS - returns 403"},
-    {"endpoint": "POST /api/boosts/{id}/confirm-payment (non-owner)", "status": "PASS - returns 403"},
-    {"endpoint": "POST /api/auth/login (rate limit)", "status": "PASS - 429 after 10 requests"},
-    {"endpoint": "POST /api/auth/signup (rate limit)", "status": "PASS - 429 after 5 requests"},
-    {"endpoint": "GET /api/sessions/{id} (no auth)", "status": "PASS - returns 401/403"},
-    {"endpoint": "GET /api/sessions/{id} (non-participant)", "status": "PASS - returns 403"},
-    {"endpoint": "POST /api/payments/create-payment-intent (amount < 100)", "status": "PASS - returns 400"},
-    {"endpoint": "POST /api/payments/create-payment-intent (amount > 500000)", "status": "PASS - returns 400"},
-    {"endpoint": "POST /api/payments/create-payment-intent (valid amount)", "status": "PASS - returns clientSecret"},
-    {"endpoint": "GET /api/admin/dashboard", "status": "PASS - regression"},
-    {"endpoint": "GET /api/streaks/me", "status": "PASS - regression"},
-    {"endpoint": "GET /api/leaderboard/weekly", "status": "PASS - regression"},
-    {"endpoint": "GET /api/trainee/achievements", "status": "PASS - regression"}
-  ],
-  "mocked_apis": {
-    "has_mocked_apis": false,
-    "mocked_apis_list": [],
-    "note": "Real Stripe PaymentIntents created using live API key"
-  },
-  "manual_verification": {
-    "membership_subscribe_new_user": {
-      "user": "test_membership_1772206660@test.com",
-      "response": {
-        "clientSecret": "pi_3T5T6nD3rmEVhGXF0HEyALAb_secret_...",
-        "paymentIntentId": "pi_3T5T6nD3rmEVhGXF0HEyALAb",
-        "membershipId": "69a1ba4583ff92de81aea279",
-        "amountCents": 1999
-      }
-    },
-    "boost_purchase_new_trainer": {
-      "user": "test_trainer_boost_1772206676@test.com",
-      "response": {
-        "clientSecret": "pi_3T5T72D3rmEVhGXF0H2O61RW_secret_...",
-        "paymentIntentId": "pi_3T5T72D3rmEVhGXF0H2O61RW",
-        "boostId": "69a1ba5483ff92de81aea27b",
-        "amountCents": 999,
-        "isFreeBoost": false
-      }
-    },
-    "confirm_payment_unfinished": {
-      "membershipId": "69a1ba4583ff92de81aea279",
-      "response": {"detail": "Payment not completed. Status: requires_payment_method"},
-      "note": "Correctly validates Stripe payment status before activation"
-    }
-  }
+  "notes": "User must redeploy and create new TestFlight build (v1.2.0 build 3) to test this fix."
 }

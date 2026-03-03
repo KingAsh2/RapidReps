@@ -21,8 +21,6 @@ import { Colors } from '../../src/utils/colors';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useAlert } from '../../src/contexts/AlertContext';
 import { AnimatedPillButton } from '../../src/components/AnimatedPillButton';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
 
 const { width } = Dimensions.get('window');
 
@@ -93,8 +91,10 @@ export default function LoginScreen() {
   useEffect(() => {
     if (user && activeRole && loginSuccess) {
       const timer = setTimeout(() => {
-        if (activeRole === 'trainer') {
-          router.replace('/trainer/home');
+        if (activeRole === 'admin') {
+          router.replace('/admin/dashboard');
+        } else if (activeRole === 'trainer') {
+          router.replace('/trainer/(tabs)/home');
         } else if (activeRole === 'trainee') {
           router.replace('/trainee/(tabs)/home');
         }
@@ -172,39 +172,36 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      await login(email.trim().toLowerCase(), password);
+      const loggedInUser = await login(email.trim().toLowerCase(), password);
       setLoginSuccess(true);
       
-      // Check if user is admin after login
-      const token = await AsyncStorage.getItem('auth_token');
-      if (token) {
-        try {
-          const response = await axios.get(
-            `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/auth/me`,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          // Admin redirect
-          if (response.data.isAdmin || response.data.roles?.includes('admin')) {
-            router.replace('/admin/dashboard');
-            return;
-          }
-          // Trainer redirect
-          if (response.data.roles?.includes('trainer')) {
-            router.replace('/trainer/(tabs)/home');
-            return;
-          }
-          // Trainee redirect (default)
-          router.replace('/trainee/(tabs)/home');
-        } catch (e) {
-          console.log('Error checking user role:', e);
-          // Default to trainee on error
-          router.replace('/trainee/(tabs)/home');
-        }
+      // Route based on user data returned directly from login
+      if (loggedInUser.isAdmin || loggedInUser.roles?.includes('admin')) {
+        router.replace('/admin/dashboard');
+      } else if (loggedInUser.roles?.includes('trainer')) {
+        router.replace('/trainer/(tabs)/home');
+      } else {
+        router.replace('/trainee/(tabs)/home');
       }
     } catch (error: any) {
+      // Differentiate between API errors and other failures
+      const apiDetail = error?.response?.data?.detail;
+      const statusCode = error?.response?.status;
+      let message = 'Something went wrong. Please try again.';
+      
+      if (statusCode === 401) {
+        message = apiDetail || 'Invalid email or password';
+      } else if (statusCode === 429) {
+        message = 'Too many login attempts. Please wait a moment.';
+      } else if (error?.message?.includes('Network Error') || error?.message?.includes('timeout')) {
+        message = 'Unable to reach the server. Check your connection.';
+      } else if (apiDetail) {
+        message = apiDetail;
+      }
+      
       showAlert({
         title: 'Login Failed',
-        message: error.response?.data?.detail || 'Invalid email or password',
+        message,
         type: 'error',
       });
     } finally {

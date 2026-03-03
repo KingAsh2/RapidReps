@@ -9,7 +9,7 @@ interface AuthContextType {
   activeRole: string | null;
   isDemoMode: boolean;
   signup: (data: any) => Promise<void>;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
   setActiveRole: (role: string) => Promise<void>;
   setDemoMode: (role: 'trainee' | 'trainer') => void;
@@ -108,7 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<User> => {
     const response = await authAPI.login(email, password);
     await AsyncStorage.setItem('auth_token', response.access_token);
     await AsyncStorage.removeItem('demo_role'); // Clear demo mode
@@ -124,6 +124,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setActiveRoleState(initialRole);
       await AsyncStorage.setItem('active_role', initialRole);
     }
+    
+    return response.user;
   };
 
   const logout = async () => {

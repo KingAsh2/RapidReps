@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 
 class FinalAPITester:
     def __init__(self):
-        self.base_url = "https://reps-build-repair.preview.emergentagent.com"
+        self.base_url = "https://rapid-reps-preview.preview.emergentagent.com"
         self.api_url = f"{self.base_url}/api"
         
         # Test credentials

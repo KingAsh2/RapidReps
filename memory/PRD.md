@@ -68,6 +68,12 @@ Build a fitness trainer-trainee matching platform with Uber-style real-time matc
     - Referral code input visibility: brighter background (35% white), darker placeholder text (50% black), white icon
     - Travel Radius changed from TextInput to dropdown picker (1-35 miles) in both edit-profile and onboarding
 31. **Sound Effects Fix** - Enabled `playsInSilentModeIOS: true` and wired `playTap()` into AnimatedPillButton for all major button taps
+32. **P0 Login Fix (Mar 3)** - Fixed critical TestFlight login failure:
+    - Root cause: Login screen made a redundant second API call via raw `axios.get(process.env.EXPO_PUBLIC_BACKEND_URL/api/auth/me)` which could fail silently in production builds, and the generic error handler showed "Invalid email or password" for ALL errors including network/URL failures
+    - Fix: AuthContext.login() now returns User object directly; login screen uses returned data for routing instead of second API call
+    - Added differentiated error messages: 401 (wrong credentials), 429 (rate limit), network errors, and generic failures
+    - Added admin redirect to useEffect navigation backup
+    - Version bumped to 1.2.0 (build 3) for new TestFlight upload
 
 ### Business Rules
 - Revenue Split: 80% trainer / 20% platform
