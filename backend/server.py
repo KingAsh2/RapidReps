@@ -1196,9 +1196,16 @@ async def signup(request: Request, user_data: UserSignUp):
 @limiter.limit("60/minute")
 async def login(request: Request, credentials: UserLogin):
     """Login user"""
+    import logging
+    logging.info(f"LOGIN ATTEMPT: email='{credentials.email}'")
+    
     # Find user
     user = await db.users.find_one({'email': credentials.email})
     if not user:
+        logging.warning(f"LOGIN FAIL: No user found for email='{credentials.email}'")
+        # Check all users in DB for debugging
+        all_users = await db.users.find({}, {'email': 1, '_id': 0}).to_list(10)
+        logging.warning(f"LOGIN FAIL: Existing users: {[u['email'] for u in all_users]}")
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
     # Verify password
