@@ -636,6 +636,18 @@ export default function TraineeProfileScreen() {
 
                 <TouchableOpacity 
                   style={styles.actionItem}
+                  onPress={() => router.push('/change-password')}
+                  data-testid="change-password-link"
+                >
+                  <View style={[styles.actionIconBg, { backgroundColor: 'rgba(31, 184, 180, 0.2)' }]}>
+                    <Ionicons name="lock-closed" size={22} color={COLORS.teal} />
+                  </View>
+                  <Text style={styles.actionText}>Change Password</Text>
+                  <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.5)" />
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={styles.actionItem}
                   onPress={() => router.push('/legal/terms')}
                 >
                   <View style={[styles.actionIconBg, { backgroundColor: 'rgba(136, 146, 176, 0.2)' }]}>

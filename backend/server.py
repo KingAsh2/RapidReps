@@ -6709,6 +6709,27 @@ class ResetPasswordRequest(BaseModel):
     token: str
     newPassword: str
 
+class ChangePasswordRequest(BaseModel):
+    currentPassword: str
+    newPassword: str
+
+@api_router.post("/auth/change-password")
+async def change_password(request: Request, data: ChangePasswordRequest, current_user: dict = Depends(get_current_user)):
+    """Change password for the currently authenticated user."""
+    if not verify_password(data.currentPassword, current_user['passwordHash']):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    
+    if len(data.newPassword) < 6:
+        raise HTTPException(status_code=400, detail="New password must be at least 6 characters")
+    
+    new_hash = hash_password(data.newPassword)
+    await db.users.update_one(
+        {'_id': current_user['_id']},
+        {'$set': {'passwordHash': new_hash}}
+    )
+    return {"success": True, "message": "Password updated successfully"}
+
+
 @api_router.post("/auth/forgot-password")
 async def forgot_password(request: Request, data: ForgotPasswordRequest):
     """Request a password reset. Sends email if SendGrid is configured, otherwise returns contact support."""

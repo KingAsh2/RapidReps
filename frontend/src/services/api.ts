@@ -91,6 +91,11 @@ export const authAPI = {
     const response = await api.delete('/auth/me');
     return response.data;
   },
+
+  changePassword: async (currentPassword: string, newPassword: string): Promise<{ success: boolean; message: string }> => {
+    const response = await api.post('/auth/change-password', { currentPassword, newPassword });
+    return response.data;
+  },
 };
 
 

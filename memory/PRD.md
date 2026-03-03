@@ -59,11 +59,8 @@ Build a fitness trainer-trainee matching platform with Uber-style real-time matc
     - Recursive `logoPulse()` callback → replaced with `Animated.loop`
 24. **Blue Emergent Icon Fix** - Replaced default Emergent icon.png and adaptive-icon.png with RapidReps logo on brand orange
 25. **Splash Screen Fix** - Regenerated splash-image.png with RapidReps branding
-26. **DB Query Optimizations** - 4 queries optimized with field projections and count_documents:
-    - Badge progress sessions: projection for `sessionDateTimeStart` + `trainerId` only
-    - Ratings count: `count_documents()` instead of fetching all docs
-    - Virtual trainer matching: projection for 5 needed fields only
-    - Trainer search: explicit field projection excluding unused heavy fields
+26. **DB Query Optimizations** - 4 queries optimized with field projections and count_documents
+27. **Change Password** - Users can change their password from profile (both trainee + trainer). Backend validates current password, enforces min 6 chars, updates hash in DB. Accessible via Profile → Change Password.
 
 ### Business Rules
 - Revenue Split: 80% trainer / 20% platform

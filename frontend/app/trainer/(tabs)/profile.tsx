@@ -222,6 +222,12 @@ export default function TrainerProfileScreen() {
                 <Ionicons name="chevron-forward" size={18} color={COLORS.gray} />
               </TouchableOpacity>
 
+              <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/change-password')} data-testid="go-change-password">
+                <Ionicons name="lock-closed" size={20} color={COLORS.teal} />
+                <Text style={styles.menuItemText}>Change Password</Text>
+                <Ionicons name="chevron-forward" size={18} color={COLORS.gray} />
+              </TouchableOpacity>
+
               <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/legal/terms')} data-testid="go-terms-privacy">
                 <Ionicons name="document-text" size={20} color={COLORS.gray} />
                 <Text style={styles.menuItemText}>Terms & Privacy</Text>
