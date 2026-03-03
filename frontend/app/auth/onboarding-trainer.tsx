@@ -11,6 +11,7 @@ import {
   ImageBackground,
   Modal,
   Linking,
+  FlatList,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
@@ -33,6 +34,8 @@ export default function TrainerOnboardingScreen() {
   const { showAlert } = useAlert();
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
+  const [showRadiusPicker, setShowRadiusPicker] = useState(false);
+  const RADIUS_OPTIONS = Array.from({ length: 35 }, (_, i) => i + 1);
   const totalSteps = 4;
 
   const [formData, setFormData] = useState({
@@ -410,14 +413,18 @@ export default function TrainerOnboardingScreen() {
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Travel Radius (miles)</Text>
-              <TextInput
+              <TouchableOpacity
                 style={styles.input}
-                value={formData.travelRadiusMiles.toString()}
-                onChangeText={(text) => setFormData({ ...formData, travelRadiusMiles: parseInt(text) || 10 })}
-                placeholder="10"
-                placeholderTextColor={Colors.textLight}
-                keyboardType="numeric"
-              />
+                onPress={() => setShowRadiusPicker(true)}
+                data-testid="onboard-travel-radius-dropdown"
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Text style={{ color: Colors.text, fontSize: 15, fontWeight: '600' }}>
+                    {formData.travelRadiusMiles} {formData.travelRadiusMiles === 1 ? 'mile' : 'miles'}
+                  </Text>
+                  <Ionicons name="chevron-down" size={18} color={Colors.textLight} />
+                </View>
+              </TouchableOpacity>
             </View>
 
             <View style={styles.inputGroup}>
@@ -599,6 +606,57 @@ export default function TrainerOnboardingScreen() {
             </TouchableOpacity>
           </View>
         </View>
+      </Modal>
+
+      {/* Travel Radius Picker Modal */}
+      <Modal visible={showRadiusPicker} transparent animationType="slide">
+        <TouchableOpacity
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}
+          activeOpacity={1}
+          onPress={() => setShowRadiusPicker(false)}
+        >
+          <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: 400 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 16, borderBottomWidth: 1, borderBottomColor: '#eee' }}>
+              <Text style={{ fontSize: 17, fontWeight: '700', color: Colors.text }}>Travel Radius (miles)</Text>
+              <TouchableOpacity onPress={() => setShowRadiusPicker(false)}>
+                <Ionicons name="close-circle" size={26} color={Colors.textLight} />
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={RADIUS_OPTIONS}
+              keyExtractor={(item) => item.toString()}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={{
+                    paddingVertical: 14,
+                    paddingHorizontal: 20,
+                    backgroundColor: formData.travelRadiusMiles === item ? 'rgba(31,184,180,0.1)' : '#fff',
+                    borderBottomWidth: 0.5,
+                    borderBottomColor: '#f0f0f0',
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                  onPress={() => {
+                    setFormData({ ...formData, travelRadiusMiles: item });
+                    setShowRadiusPicker(false);
+                  }}
+                >
+                  <Text style={{
+                    fontSize: 16,
+                    color: formData.travelRadiusMiles === item ? Colors.primary : Colors.text,
+                    fontWeight: formData.travelRadiusMiles === item ? '700' : '400',
+                  }}>
+                    {item} {item === 1 ? 'mile' : 'miles'}
+                  </Text>
+                  {formData.travelRadiusMiles === item && (
+                    <Ionicons name="checkmark-circle" size={22} color={Colors.primary} />
+                  )}
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </TouchableOpacity>
       </Modal>
     </ImageBackground>
   );

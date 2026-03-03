@@ -11,6 +11,8 @@ import {
   Platform,
   Switch,
   Animated,
+  Modal,
+  FlatList,
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { trainerAPI } from '../../src/services/api';
@@ -46,6 +48,8 @@ export default function EditTrainerProfileScreen() {
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<TrainerProfile | null>(null);
   const [gettingLocation, setGettingLocation] = useState(false);
+  const [showRadiusPicker, setShowRadiusPicker] = useState(false);
+  const RADIUS_OPTIONS = Array.from({ length: 35 }, (_, i) => i + 1);
 
   // Animations
   const headerAnim = useRef(new Animated.Value(0)).current;
@@ -341,14 +345,18 @@ export default function EditTrainerProfileScreen() {
                     </View>
                     <View style={styles.inputGroup}>
                       <Text style={styles.inputLabel}>Travel Radius (mi)</Text>
-                      <TextInput
+                      <TouchableOpacity
                         style={styles.input}
-                        value={formData.travelRadiusMiles}
-                        onChangeText={(text) => setFormData({ ...formData, travelRadiusMiles: text })}
-                        keyboardType="numeric"
-                        placeholder="10"
-                        placeholderTextColor={COLORS.gray}
-                      />
+                        onPress={() => setShowRadiusPicker(true)}
+                        data-testid="travel-radius-dropdown"
+                      >
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <Text style={{ color: COLORS.navy, fontSize: 15, fontWeight: '600' }}>
+                            {formData.travelRadiusMiles} mi
+                          </Text>
+                          <Ionicons name="chevron-down" size={18} color={COLORS.gray} />
+                        </View>
+                      </TouchableOpacity>
                     </View>
                   </View>
                 </LinearGradient>
@@ -547,6 +555,57 @@ export default function EditTrainerProfileScreen() {
           </KeyboardAvoidingView>
         </SafeAreaView>
       </View>
+
+      {/* Travel Radius Picker Modal */}
+      <Modal visible={showRadiusPicker} transparent animationType="slide">
+        <TouchableOpacity
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}
+          activeOpacity={1}
+          onPress={() => setShowRadiusPicker(false)}
+        >
+          <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: 400 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 16, borderBottomWidth: 1, borderBottomColor: '#eee' }}>
+              <Text style={{ fontSize: 17, fontWeight: '700', color: COLORS.navy }}>Travel Radius (miles)</Text>
+              <TouchableOpacity onPress={() => setShowRadiusPicker(false)}>
+                <Ionicons name="close-circle" size={26} color={COLORS.gray} />
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={RADIUS_OPTIONS}
+              keyExtractor={(item) => item.toString()}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={{
+                    paddingVertical: 14,
+                    paddingHorizontal: 20,
+                    backgroundColor: formData.travelRadiusMiles === item.toString() ? 'rgba(31,184,180,0.1)' : '#fff',
+                    borderBottomWidth: 0.5,
+                    borderBottomColor: '#f0f0f0',
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                  onPress={() => {
+                    setFormData({ ...formData, travelRadiusMiles: item.toString() });
+                    setShowRadiusPicker(false);
+                  }}
+                >
+                  <Text style={{
+                    fontSize: 16,
+                    color: formData.travelRadiusMiles === item.toString() ? COLORS.teal : COLORS.navy,
+                    fontWeight: formData.travelRadiusMiles === item.toString() ? '700' : '400',
+                  }}>
+                    {item} {item === 1 ? 'mile' : 'miles'}
+                  </Text>
+                  {formData.travelRadiusMiles === item.toString() && (
+                    <Ionicons name="checkmark-circle" size={22} color={COLORS.teal} />
+                  )}
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </>
   );
 }

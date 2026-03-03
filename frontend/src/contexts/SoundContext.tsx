@@ -36,7 +36,7 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const loadTapSound = async () => {
     try {
       await Audio.setAudioModeAsync({
-        playsInSilentModeIOS: false,
+        playsInSilentModeIOS: true,
         staysActiveInBackground: false,
         shouldDuckAndroid: true,
       });

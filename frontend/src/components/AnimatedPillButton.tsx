@@ -12,6 +12,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../utils/colors';
+import { useSoundEffects } from '../contexts/SoundContext';
 
 type ButtonVariant = 'primary' | 'outline' | 'teal' | 'danger' | 'navy';
 
@@ -42,6 +43,7 @@ export const AnimatedPillButton: React.FC<AnimatedPillButtonProps> = ({
   textStyle,
   testID,
 }) => {
+  const { playTap } = useSoundEffects();
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const flashAnim = useRef(new Animated.Value(0)).current;
   const shimmerPos = useRef(new Animated.Value(-200)).current;
@@ -88,6 +90,7 @@ export const AnimatedPillButton: React.FC<AnimatedPillButtonProps> = ({
   };
 
   const handlePressOut = () => {
+    playTap();
     Animated.parallel([
       Animated.sequence([
         Animated.spring(scaleAnim, {

@@ -60,7 +60,14 @@ Build a fitness trainer-trainee matching platform with Uber-style real-time matc
 24. **Blue Emergent Icon Fix** - Replaced default Emergent icon.png and adaptive-icon.png with RapidReps logo on brand orange
 25. **Splash Screen Fix** - Regenerated splash-image.png with RapidReps branding
 26. **DB Query Optimizations** - 4 queries optimized with field projections and count_documents
-27. **Change Password** - Users can change their password from profile (both trainee + trainer). Backend validates current password, enforces min 6 chars, updates hash in DB. Accessible via Profile → Change Password.
+27. **Change Password** - Users can change their password from profile (both trainee + trainer)
+28. **Error Boundary** - App-wide error boundary prevents white-screen crashes, shows recovery UI
+29. **Toast Notifications** - `react-native-toast-message` integrated app-wide for non-blocking feedback
+30. **UI Fixes (Mar 3):**
+    - Back button in signup moved down from `top: 12` to `top: 50` (was overlapping notch/status bar)
+    - Referral code input visibility: brighter background (35% white), darker placeholder text (50% black), white icon
+    - Travel Radius changed from TextInput to dropdown picker (1-35 miles) in both edit-profile and onboarding
+31. **Sound Effects Fix** - Enabled `playsInSilentModeIOS: true` and wired `playTap()` into AnimatedPillButton for all major button taps
 
 ### Business Rules
 - Revenue Split: 80% trainer / 20% platform

@@ -534,11 +534,11 @@ export default function SignupScreen() {
             {/* Referral Code Input */}
             <View style={styles.referralSection}>
               <View style={styles.referralInputRow}>
-                <Ionicons name="gift-outline" size={20} color={COLORS.orange} />
+                <Ionicons name="gift-outline" size={20} color="#FFFFFF" />
                 <TextInput
                   style={styles.referralInput}
                   placeholder="Have a referral code? (optional)"
-                  placeholderTextColor="rgba(255,255,255,0.4)"
+                  placeholderTextColor="rgba(0,0,0,0.5)"
                   value={formData.referralCode}
                   onChangeText={(text) => setFormData(prev => ({ ...prev, referralCode: text.toUpperCase() }))}
                   autoCapitalize="characters"
@@ -633,7 +633,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: 'absolute',
-    top: 12,
+    top: 50,
     left: 16,
     width: 44,
     height: 44,
@@ -882,12 +882,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.35)',
     borderRadius: 14,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(247,147,30,0.3)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.6)',
   },
   referralInput: {
     flex: 1,
