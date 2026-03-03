@@ -184,11 +184,11 @@ export default function LoginScreen() {
         router.replace('/trainee/(tabs)/home');
       }
     } catch (error: any) {
-      // Show detailed error for debugging
+      // v3: Show detailed error for debugging  
       const apiDetail = error?.response?.data?.detail;
       const statusCode = error?.response?.status;
-      const errorMsg = error?.message || '';
-      let message = `Error: ${errorMsg}`;
+      const errorMsg = error?.message || 'Unknown error';
+      let message = '';
       
       if (statusCode === 401) {
         message = apiDetail || 'Invalid email or password';
@@ -198,8 +198,9 @@ export default function LoginScreen() {
         message = 'Unable to reach the server. Check your connection.';
       } else if (errorMsg.startsWith('TOKEN_STORAGE_FAILED')) {
         message = 'Login succeeded but failed to save session. Please try again.';
-      } else if (apiDetail) {
-        message = apiDetail;
+      } else {
+        // Show raw error for debugging unknown issues
+        message = `[v3] ${statusCode ? 'HTTP ' + statusCode + ': ' : ''}${apiDetail || errorMsg}`;
       }
       
       showAlert({
@@ -376,6 +377,8 @@ export default function LoginScreen() {
                   <Text style={styles.signupLink}>Sign Up</Text>
                 </TouchableOpacity>
               </View>
+              {/* Build version indicator */}
+              <Text style={styles.versionText}>v3</Text>
             </View>
           </Animated.View>
         </KeyboardAvoidingView>
@@ -511,5 +514,11 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: Colors.white,
     textDecorationLine: 'underline',
+  },
+  versionText: {
+    fontSize: 10,
+    color: 'rgba(255, 255, 255, 0.3)',
+    textAlign: 'center',
+    marginTop: 12,
   },
 });
