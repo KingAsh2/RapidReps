@@ -184,17 +184,20 @@ export default function LoginScreen() {
         router.replace('/trainee/(tabs)/home');
       }
     } catch (error: any) {
-      // Differentiate between API errors and other failures
+      // Show detailed error for debugging
       const apiDetail = error?.response?.data?.detail;
       const statusCode = error?.response?.status;
-      let message = 'Something went wrong. Please try again.';
+      const errorMsg = error?.message || '';
+      let message = `Error: ${errorMsg}`;
       
       if (statusCode === 401) {
         message = apiDetail || 'Invalid email or password';
       } else if (statusCode === 429) {
         message = 'Too many login attempts. Please wait a moment.';
-      } else if (error?.message?.includes('Network Error') || error?.message?.includes('timeout')) {
+      } else if (errorMsg.includes('Network Error') || errorMsg.includes('timeout')) {
         message = 'Unable to reach the server. Check your connection.';
+      } else if (errorMsg.startsWith('TOKEN_STORAGE_FAILED')) {
+        message = 'Login succeeded but failed to save session. Please try again.';
       } else if (apiDetail) {
         message = apiDetail;
       }

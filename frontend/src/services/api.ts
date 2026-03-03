@@ -20,10 +20,10 @@ const getBackendUrl = (): string => {
     return envUrl;
   }
   
-  // Fallback - use relative URL (works when backend and frontend are on same domain)
-  // In production, EXPO_PUBLIC_BACKEND_URL will be set by the deployment system
-  console.log('[API] Using relative URL fallback (same-origin deployment)');
-  return '';
+  // Hardcoded production fallback - ensures native builds always have a valid URL
+  const PRODUCTION_URL = 'https://rapid-reps-preview.preview.emergentagent.com';
+  console.log('[API] Using hardcoded production fallback:', PRODUCTION_URL);
+  return PRODUCTION_URL;
 };
 
 const API_BASE_URL = `${getBackendUrl()}/api`;

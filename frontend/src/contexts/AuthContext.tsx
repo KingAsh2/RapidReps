@@ -109,20 +109,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const login = async (email: string, password: string): Promise<User> => {
-    const response = await authAPI.login(email, password);
-    await AsyncStorage.setItem('auth_token', response.access_token);
-    await AsyncStorage.removeItem('demo_role'); // Clear demo mode
+    let response;
+    try {
+      response = await authAPI.login(email, password);
+    } catch (apiErr) {
+      // Re-throw API errors as-is (axios errors with response/status)
+      throw apiErr;
+    }
+    
+    try {
+      await AsyncStorage.setItem('auth_token', response.access_token);
+    } catch (storageErr: any) {
+      throw new Error(`TOKEN_STORAGE_FAILED: ${storageErr?.message || 'Unknown'}`);
+    }
+    
+    try {
+      await AsyncStorage.removeItem('demo_role');
+    } catch (_) {
+      // Non-critical, ignore
+    }
+    
     setIsDemoMode(false);
     setUser(response.user);
     
     // Set active role
-    const savedRole = await AsyncStorage.getItem('active_role');
-    if (savedRole && response.user.roles.includes(savedRole)) {
-      setActiveRoleState(savedRole);
-    } else if (response.user.roles.length > 0) {
-      const initialRole = response.user.roles[0];
-      setActiveRoleState(initialRole);
-      await AsyncStorage.setItem('active_role', initialRole);
+    try {
+      const savedRole = await AsyncStorage.getItem('active_role');
+      if (savedRole && response.user.roles?.includes(savedRole)) {
+        setActiveRoleState(savedRole);
+      } else if (response.user.roles?.length > 0) {
+        const initialRole = response.user.roles[0];
+        setActiveRoleState(initialRole);
+        await AsyncStorage.setItem('active_role', initialRole);
+      }
+    } catch (roleErr: any) {
+      // Non-critical - role setting failed but login succeeded
+      console.error('Role setting error:', roleErr);
     }
     
     return response.user;
