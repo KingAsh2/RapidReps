@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet, Alert,
+  View, Text, TextInput, TouchableOpacity, StyleSheet,
   ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView,
   ImageBackground,
 } from 'react-native';
@@ -8,6 +8,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { authAPI } from '../src/services/api';
+import { toast } from '../src/utils/toast';
 
 const COLORS = {
   navy: '#0A1128',
@@ -31,31 +32,30 @@ export default function ChangePasswordScreen() {
 
   const handleChangePassword = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all fields');
+      toast.error('Missing Fields', 'Please fill in all fields');
       return;
     }
     if (newPassword.length < 6) {
-      Alert.alert('Error', 'New password must be at least 6 characters');
+      toast.error('Too Short', 'New password must be at least 6 characters');
       return;
     }
     if (newPassword !== confirmPassword) {
-      Alert.alert('Error', 'New passwords do not match');
+      toast.error('Mismatch', 'New passwords do not match');
       return;
     }
     if (currentPassword === newPassword) {
-      Alert.alert('Error', 'New password must be different from current password');
+      toast.error('Same Password', 'New password must be different from current password');
       return;
     }
 
     setLoading(true);
     try {
       await authAPI.changePassword(currentPassword, newPassword);
-      Alert.alert('Success', 'Your password has been updated', [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
+      toast.success('Password Updated', 'Your password has been changed successfully');
+      setTimeout(() => router.back(), 1500);
     } catch (error: any) {
       const msg = error?.response?.data?.detail || 'Failed to change password';
-      Alert.alert('Error', msg);
+      toast.error('Error', msg);
     } finally {
       setLoading(false);
     }

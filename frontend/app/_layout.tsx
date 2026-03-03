@@ -6,6 +6,8 @@ import { AlertProvider } from '../src/contexts/AlertContext';
 import { NotificationProvider } from '../src/contexts/NotificationContext';
 import { SoundProvider } from '../src/contexts/SoundContext';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { ErrorBoundary } from '../src/components/ErrorBoundary';
+import Toast from 'react-native-toast-message';
 
 let StripeProviderComponent: React.FC<{ children: React.ReactNode }> = ({ children }) => <>{children}</>;
 
@@ -25,18 +27,21 @@ if (Platform.OS !== 'web') {
 
 export default function RootLayout() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <AuthProvider>
-        <StripeProviderComponent>
-          <NotificationProvider>
-            <SoundProvider>
-              <AlertProvider>
-                <Slot />
-              </AlertProvider>
-            </SoundProvider>
-          </NotificationProvider>
-        </StripeProviderComponent>
-      </AuthProvider>
-    </GestureHandlerRootView>
+    <ErrorBoundary>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <AuthProvider>
+          <StripeProviderComponent>
+            <NotificationProvider>
+              <SoundProvider>
+                <AlertProvider>
+                  <Slot />
+                </AlertProvider>
+              </SoundProvider>
+            </NotificationProvider>
+          </StripeProviderComponent>
+        </AuthProvider>
+        <Toast />
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }
