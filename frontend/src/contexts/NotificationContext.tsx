@@ -92,8 +92,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     // Listen for notification taps (user interacts with notification)
     responseListener.current = Notifications.addNotificationResponseReceivedListener((response) => {
       const data = response.notification.request.content.data;
-      // Navigation can be handled here based on data.screen
-      console.log('Notification tapped:', data);
+      if (__DEV__) console.log('Notification tapped:', data);
       refreshNotifications();
       refreshMessageCount();
     });

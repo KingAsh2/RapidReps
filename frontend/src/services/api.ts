@@ -8,34 +8,24 @@ import { AuthResponse, User, TrainerProfile, TraineeProfile, Session } from '../
 const getBackendUrl = (): string => {
   // First try expo-constants (works in production builds)
   const extraBackendUrl = Constants.expoConfig?.extra?.backendUrl;
-  if (extraBackendUrl) {
-    console.log('[API] Using backend URL from Constants.extra:', extraBackendUrl);
-    return extraBackendUrl;
-  }
+  if (extraBackendUrl) return extraBackendUrl;
   
   // Then try environment variable (works in development)
   const envUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
-  if (envUrl) {
-    console.log('[API] Using backend URL from env:', envUrl);
-    return envUrl;
-  }
+  if (envUrl) return envUrl;
   
   // Hardcoded production fallback - ensures native builds always have a valid URL
-  const PRODUCTION_URL = 'https://real-time-fitness.preview.emergentagent.com';
-  console.log('[API] Using hardcoded production fallback:', PRODUCTION_URL);
-  return PRODUCTION_URL;
+  return 'https://real-time-fitness.preview.emergentagent.com';
 };
 
 const API_BASE_URL = `${getBackendUrl()}/api`;
-
-console.log('[API] Final backend URL:', API_BASE_URL);
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 15000, // 15 second timeout
+  timeout: 15000,
 });
 
 // Add auth token to requests
@@ -44,20 +34,15 @@ api.interceptors.request.use(async (config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  console.log('[API] Request:', config.method?.toUpperCase(), config.url);
   return config;
 });
 
-// Add response/error logging
+// Log errors only
 api.interceptors.response.use(
-  (response) => {
-    console.log('[API] Response OK:', response.config.url);
-    return response;
-  },
+  (response) => response,
   (error) => {
-    console.error('[API] Error:', error.config?.url, error.message);
-    if (error.response) {
-      console.error('[API] Status:', error.response.status, error.response.data);
+    if (__DEV__) {
+      console.error('[API] Error:', error.config?.url, error.response?.status, error.message);
     }
     throw error;
   }

@@ -1,0 +1,88 @@
+{
+  "summary": "Production Readiness Regression - 28/28 tests passed (100%). All major flows verified: Auth (signup/login/me), Trainer profile & rates, Session lifecycle (create/cancel/get), Stripe Connect (onboard/status), Admin payouts (pending/history), Admin dashboard, Notifications & preferences, Chat/conversations, Push tokens, Pricing model (SERVICE_FEE_CENTS=200, 80/20 split). Ready for iOS TestFlight build.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "note": "Frontend testing SKIPPED as requested - backend-only regression (React Native mobile app)"
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration27_production_readiness.py",
+    "/app/test_reports/pytest/iteration27_production_readiness_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "All 11 endpoint categories pass: auth, trainer profile, session lifecycle, session population, Stripe Connect, admin payouts, admin dashboard, notifications, conversations, push tokens, pricing",
+    "Pricing model verified: SERVICE_FEE_CENTS=200 ($2.00), TRAINER_REVENUE_PERCENT=80, PLATFORM_REVENUE_PERCENT=20",
+    "Session responses include populated fields: trainerName, traineeName, traineePhone (from users collection)",
+    "Note: trainerPhoto currently fetched from users.profilePhoto - consider also checking trainer_profiles.avatarUrl for consistency",
+    "Stripe Connect onboard endpoint properly creates Express accounts and returns onboarding URLs",
+    "Admin payout minimum correctly set to $35 (3500 cents)",
+    "Notification preferences correctly default to all true",
+    "GET /api/notifications returns {notifications: []} dict format (documented)"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration27_production_readiness.py"
+  ],
+  "success_rate": {
+    "backend": "100% (28/28 tests passed)",
+    "frontend": "SKIPPED (as requested - React Native mobile app)"
+  },
+  "test_credentials": {
+    "admin": "admin@rapidreps.com / admin123",
+    "test_prefix": "TEST_ITER27_"
+  },
+  "seed_data_creation": "Fresh test users created with TEST_ITER27_ prefix for each test class",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Production readiness regression complete. All 11 major endpoint categories verified. Ready for iOS TestFlight build. Key verified endpoints: POST /api/auth/signup (trainer+trainee), POST /api/auth/login, GET /api/auth/me, GET /api/trainer-profiles/{id}, POST /api/trainer/set-rates, POST /api/sessions, PATCH /api/sessions/{id}/cancel, GET /api/trainer/sessions, GET /api/trainee/sessions, POST /api/trainer/connect/onboard, GET /api/trainer/connect/status, GET /api/admin/payouts/pending, GET /api/admin/payouts/history, GET /api/admin/dashboard, GET /api/notifications, GET /api/notification-preferences, GET /api/conversations, POST /api/push-tokens/register, GET /api/trainer/pricing-limits.",
+  "verified_features": {
+    "health_endpoint": "✓ GET /api/health returns status:healthy",
+    "auth_signup_trainer": "✓ POST /api/auth/signup with roles=[trainer] creates trainer",
+    "auth_signup_trainee": "✓ POST /api/auth/signup with roles=[trainee] creates trainee",
+    "auth_login": "✓ POST /api/auth/login returns access_token",
+    "auth_me": "✓ GET /api/auth/me returns current user",
+    "auth_invalid_reject": "✓ Invalid credentials return 401",
+    "trainer_profile_get": "✓ GET /api/trainer-profiles/{user_id} works",
+    "trainer_profile_create": "✓ POST /api/trainer-profiles creates profile",
+    "trainer_set_rates": "✓ POST /api/trainer/set-rates updates rates",
+    "trainer_sessions": "✓ GET /api/trainer/sessions returns session list",
+    "trainee_sessions": "✓ GET /api/trainee/sessions returns session list",
+    "session_cancel_auth": "✓ PATCH /api/sessions/{id}/cancel requires auth",
+    "session_cancel_404": "✓ Returns 404 for invalid session",
+    "session_population": "✓ Sessions support trainerName, traineeName, trainerPhoto, traineePhoto, traineePhone",
+    "stripe_connect_onboard": "✓ POST /api/trainer/connect/onboard creates account or returns URL",
+    "stripe_connect_status": "✓ GET /api/trainer/connect/status returns connected/onboarded flags",
+    "admin_payouts_pending": "✓ GET /api/admin/payouts/pending returns trainers with $35 minimum",
+    "admin_payouts_history": "✓ GET /api/admin/payouts/history returns payout records",
+    "admin_payouts_auth": "✓ Admin endpoints require admin role (403 for non-admin)",
+    "admin_dashboard": "✓ GET /api/admin/dashboard returns stats",
+    "notifications": "✓ GET /api/notifications returns {notifications: []}",
+    "notification_prefs_defaults": "✓ GET /api/notification-preferences defaults all to true",
+    "conversations": "✓ GET /api/conversations returns conversation list",
+    "push_token_register": "✓ POST /api/push-tokens/register works",
+    "pricing_limits": "✓ Virtual=$30, Outdoor=$40, In-Home=$60 minimums",
+    "service_fee": "✓ SERVICE_FEE_CENTS=200 ($2.00)",
+    "revenue_split": "✓ 80% trainer / 20% platform",
+    "e2e_flow": "✓ Complete signup->profile->sessions flow works"
+  },
+  "mocked_apis": {
+    "has_mocked_apis": true,
+    "mocked_apis_list": [
+      "SendGrid email service (NOOP - no API key configured)",
+      "Virtual session payments use mock_payment_ prefix"
+    ]
+  },
+  "production_readiness": {
+    "status": "READY",
+    "stripe_live_keys": true,
+    "all_endpoints_working": true,
+    "data_persistence": true,
+    "auth_working": true,
+    "admin_protected": true
+  }
+}
