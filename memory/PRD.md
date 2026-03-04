@@ -94,12 +94,12 @@ Build a fitness trainer-trainee matching platform with Uber-style real-time matc
 - Backend iteration 22: 75/75 tests passed (100%) - all core features
 - Backend iteration 23: 29/29 tests passed (100%) - referral system + regression
 - Backend iteration 24: 22/22 tests passed (100%) - change password, all logins, DB optimizations
+- Backend iteration 25: 16/17 tests passed (94%) - bug fixes: cancel, pricing, photos, notifications (1 skipped: session flow needs verified trainer)
 
 ## Remaining Backlog
-1. P2: Push notifications with unread badge counts
-2. P3: SendGrid email integration (awaiting API key from user)
-3. P4: TypeScript strict-mode warnings cleanup (86+)
-4. P5: Refactor admin dashboard (1000+ lines) into smaller components
+1. P3: SendGrid email integration (awaiting API key from user)
+2. P4: TypeScript strict-mode warnings cleanup (86+)
+3. P5: Refactor admin dashboard (1000+ lines) into smaller components
 
 ### Toast Migration (Mar 4, 2026)
 45. **Alert.alert → Toast Migration** - Converted 54 of 60 Alert.alert calls to non-blocking toast notifications:
@@ -122,6 +122,16 @@ Build a fitness trainer-trainee matching platform with Uber-style real-time matc
 42. **Hide Submit Button** - Hold-to-submit button hidden after all required documents are submitted
 43. **Push Notification on Approval** - Backend sends push notification to trainer when admin approves verification (individual step or full approval)
 44. **Backend URL Hardcoded Fallback** - Production URL fallback ensures native builds always have valid backend URL
+
+### Bug Fixes & Enhancements (Mar 4, 2026 - Session 2)
+46. **P0: Session Cancellation Fix** - Fixed `session._id` → `session.id` in trainee sessions (tab) cancel flow. Backend cancel endpoint was working, frontend was passing undefined
+47. **P0: Trainer Navigate/Message Buttons Fix** - Fixed `handleNavigate` to use `traineeLatitude`/`traineeLongitude` fields instead of non-existent `traineeLocation` object. Fixed `handleCall` to also check params.
+48. **P0: Trainer Decline Session Fix** - Replaced mock delay with actual `trainerAPI.declineSession()` call in trainee-profile.tsx
+49. **P1: Session Pricing Fix** - Added $2 service fee to confirm-booking.tsx price breakdown. Pricing chain now passes `sessionType` and `priceCents` through trainer-detail → schedule-training → confirm-booking
+50. **P2: Profile Photos on Session Cards** - Backend `GET /api/trainer/sessions` and `GET /api/trainee/sessions` now do user lookups to populate `trainerName`, `traineeName`, `trainerPhoto`, `traineePhoto`, `traineePhone`
+51. **P2: Push Notifications Enhanced** - Push notifications now include `priority: "high"`, `badge: unread_count`, and `channelId: "default"` for reliable background delivery
+52. **P2: Unread Message Count Badges** - Added `unreadMessageCount` to NotificationContext, polls every 30s. Tab bars on both trainee and trainer layouts now show badge count on Messages tab
+53. **P2: Notification Refresh on Message** - Notification context now also refreshes message counts when push notifications are received
 
 ## Mocked/Inactive
 - SendGrid: No-op (awaiting API key)
