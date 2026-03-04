@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   ImageBackground,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -16,6 +15,7 @@ import { useAuth } from '../../src/contexts/AuthContext';
 import { traineeAPI } from '../../src/services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { toast } from '../../src/utils/toast';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -63,31 +63,23 @@ export default function PaymentScreen() {
         `${sessionType} training session`
       );
 
-      Alert.alert(
-        'Session Booked!',
-        `Your ${sessionType} session has been booked successfully.\n\nPayment of $${(priceCents / 100).toFixed(2)} processed via Stripe.`,
-        [
-          {
-            text: 'Go to Session',
-            onPress: () => {
-              if (sessionResponse?.sessionId) {
-                router.replace({
-                  pathname: '/trainee/session-active',
-                  params: {
-                    sessionId: sessionResponse.sessionId,
-                    trainerId: sessionResponse.trainerId,
-                    trainerName: sessionResponse.trainerName,
-                    duration: sessionResponse.durationMinutes,
-                    zoomLink: sessionResponse.zoomMeetingLink,
-                  },
-                });
-              } else {
-                router.replace('/trainee/(tabs)/sessions');
-              }
+      toast.success(`Session booked! Payment of $${(priceCents / 100).toFixed(2)} processed.`);
+      setTimeout(() => {
+        if (sessionResponse?.sessionId) {
+          router.replace({
+            pathname: '/trainee/session-active',
+            params: {
+              sessionId: sessionResponse.sessionId,
+              trainerId: sessionResponse.trainerId,
+              trainerName: sessionResponse.trainerName,
+              duration: sessionResponse.durationMinutes,
+              zoomLink: sessionResponse.zoomMeetingLink,
             },
-          },
-        ]
-      );
+          });
+        } else {
+          router.replace('/trainee/(tabs)/sessions');
+        }
+      }, 2000);
     } catch (err: any) {
       const detail = err?.response?.data?.detail || '';
       if (detail.includes('Invalid API Key') || detail.includes('No available')) {
@@ -98,16 +90,13 @@ export default function PaymentScreen() {
             duration,
             `${sessionType} training session`
           );
-          Alert.alert(
-            'Session Booked!',
-            'Your session has been booked. Payment will be processed when the session starts.',
-            [{ text: 'OK', onPress: () => router.replace('/trainee/(tabs)/sessions') }]
-          );
+          toast.success('Session booked! Payment will be processed at session start.');
+          setTimeout(() => router.replace('/trainee/(tabs)/sessions'), 2000);
         } catch (innerErr: any) {
-          Alert.alert('Error', innerErr?.response?.data?.detail || 'Failed to book session. Please try again.');
+          toast.error( innerErr?.response?.data?.detail || 'Failed to book session. Please try again.');
         }
       } else {
-        Alert.alert('Payment Error', detail || 'Payment failed. Please try again.');
+        toast.error(detail || 'Payment failed. Please try again.');
       }
     } finally {
       setProcessing(false);

@@ -24,6 +24,7 @@ import { useAlert } from '../../../src/contexts/AlertContext';
 import { useSoundEffects } from '../../../src/contexts/SoundContext';
 import { traineeAPI, streaksAPI } from '../../../src/services/api';
 import * as ImagePicker from 'expo-image-picker';
+import { toast } from '../../../src/utils/toast';
 
 const { width } = Dimensions.get('window');
 

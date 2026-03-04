@@ -20,6 +20,7 @@ import { useAuth } from '../../../src/contexts/AuthContext';
 import { streaksAPI } from '../../../src/services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { toast } from '../../../src/utils/toast';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 

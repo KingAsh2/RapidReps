@@ -30,6 +30,7 @@ import { useNotifications } from '../../../src/contexts/NotificationContext';
 import TrainingModeDialog from '../../../src/components/TrainingModeDialog';
 import TrainerFilters from '../../../src/components/TrainerFilters';
 import NearbyTrainersMap from '../../../src/components/NearbyTrainersMap';
+import { toast } from '../../../src/utils/toast';
 
 const { width, height } = Dimensions.get('window');
 

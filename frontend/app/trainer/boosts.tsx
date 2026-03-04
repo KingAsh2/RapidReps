@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   ScrollView,
   ImageBackground,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -16,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { Platform } from 'react-native';
+import { toast } from '../../src/utils/toast';
 
 let useStripeHook: any = null;
 if (Platform.OS !== 'web') {
@@ -91,7 +91,7 @@ export default function BoostsScreen() {
       const { boostId, isFreeBoost, paymentIntentId, clientSecret } = res.data;
       
       if (isFreeBoost) {
-        Alert.alert('Free Boost Activated!', `Your membership free boost is now active for ${option?.duration}.`);
+        toast.success(`Your membership free boost is now active for ${option?.duration}.`);
         loadBoosts();
         return;
       }
@@ -104,13 +104,13 @@ export default function BoostsScreen() {
           style: 'alwaysDark',
         });
         if (initError) {
-          Alert.alert('Payment Error', initError.message);
+          toast.error(initError.message);
           return;
         }
         const { error: presentError } = await stripe.presentPaymentSheet();
         if (presentError) {
           if (presentError.code !== 'Canceled') {
-            Alert.alert('Payment Failed', presentError.message);
+            toast.error(presentError.message);
           }
           return;
         }
@@ -123,13 +123,10 @@ export default function BoostsScreen() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      Alert.alert(
-        'Boost Activated!',
-        `Your ${option?.label} is now active for ${option?.duration}. Get ready for more visibility!`
-      );
+      toast.success(`${option?.label} boost activated for ${option?.duration}!`);
       loadBoosts();
     } catch (err: any) {
-      Alert.alert('Error', err?.response?.data?.detail || 'Failed to purchase boost');
+      toast.error( err?.response?.data?.detail || 'Failed to purchase boost');
     } finally {
       setPurchasing(false);
     }

@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   ScrollView,
   ImageBackground,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -16,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { Platform } from 'react-native';
+import { toast } from '../../src/utils/toast';
 
 let useStripeHook: any = null;
 if (Platform.OS !== 'web') {
@@ -98,13 +98,13 @@ export default function MembershipScreen() {
           style: 'alwaysDark',
         });
         if (initError) {
-          Alert.alert('Payment Error', initError.message);
+          toast.error(initError.message);
           return;
         }
         const { error: presentError } = await stripe.presentPaymentSheet();
         if (presentError) {
           if (presentError.code !== 'Canceled') {
-            Alert.alert('Payment Failed', presentError.message);
+            toast.error(presentError.message);
           }
           return; // User cancelled or payment failed — don't confirm
         }
@@ -117,13 +117,10 @@ export default function MembershipScreen() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      Alert.alert(
-        'Welcome to RapidReps Pro!',
-        'Your membership is now active. Enjoy discounted rates and exclusive perks!'
-      );
+      toast.success('Welcome to RapidReps Pro! Your membership is now active.');
       checkMembership();
     } catch (err: any) {
-      Alert.alert('Error', err?.response?.data?.detail || 'Failed to subscribe');
+      toast.error( err?.response?.data?.detail || 'Failed to subscribe');
     } finally {
       setSubscribing(false);
     }

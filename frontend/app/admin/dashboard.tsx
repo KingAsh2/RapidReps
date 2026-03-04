@@ -22,6 +22,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { toast } from '../../src/utils/toast';
 import Svg, { Circle, G, Rect, Text as SvgText, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://rapid-reps-preview.preview.emergentagent.com';
@@ -220,7 +221,7 @@ export default function AdminDashboard() {
       const res = await api.get(`/admin/verifications/${item.profile?.userId}/detail`, { headers });
       setVerificationDetail(res.data);
     } catch (err: any) {
-      Alert.alert('Error', 'Failed to load verification details');
+      toast.error('Failed to load verification details');
       setVerificationDetailVisible(false);
     } finally {
       setVerificationDetailLoading(false);
@@ -235,11 +236,11 @@ export default function AdminDashboard() {
           try {
             const headers = await getAuthHeader();
             await api.post(`/admin/verifications/${trainerId}/approve`, {}, { headers });
-            Alert.alert('Success', 'Trainer approved! They will receive a notification.');
+            toast.success('Trainer approved! They will receive a notification.');
             setVerificationDetailVisible(false);
             setVerificationDetail(null);
             fetchVerifications();
-          } catch (err: any) { Alert.alert('Error', err?.response?.data?.detail || 'Failed'); }
+          } catch (err: any) { toast.error( err?.response?.data?.detail || 'Failed'); }
         },
       },
     ]);
@@ -253,19 +254,19 @@ export default function AdminDashboard() {
 
   const handleSubmitRejection = async () => {
     if (!rejectReason.trim()) {
-      Alert.alert('Required', 'Please provide a reason for rejection');
+      toast.warning( 'Please provide a reason for rejection');
       return;
     }
     try {
       const headers = await getAuthHeader();
       await api.post(`/admin/verifications/${rejectTrainerId}/reject`, { reason: rejectReason.trim() }, { headers });
-      Alert.alert('Done', 'Verification rejected. Trainer will be notified with your reason.');
+      toast.success( 'Verification rejected. Trainer will be notified with your reason.');
       setShowRejectInput(false);
       setVerificationDetailVisible(false);
       setVerificationDetail(null);
       setRejectReason('');
       fetchVerifications();
-    } catch (err: any) { Alert.alert('Error', err?.response?.data?.detail || 'Failed'); }
+    } catch (err: any) { toast.error( err?.response?.data?.detail || 'Failed'); }
   };
 
   const handleViewUser = async (userId: string) => {
@@ -274,7 +275,7 @@ export default function AdminDashboard() {
       const res = await api.get(`/admin/users/${userId}`, { headers });
       setSelectedUser(res.data);
       setUserDetailVisible(true);
-    } catch { Alert.alert('Error', 'Failed to load user details'); }
+    } catch { toast.error( 'Failed to load user details'); }
   };
 
   const handleRemoveUser = (userId: string, userName: string) => {
@@ -285,10 +286,10 @@ export default function AdminDashboard() {
           try {
             const headers = await getAuthHeader();
             await api.delete(`/admin/users/${userId}`, { headers });
-            Alert.alert('Removed', `${userName} has been removed`);
+            toast.success( `${userName} has been removed`);
             setUserDetailVisible(false);
             fetchUsers();
-          } catch (err: any) { Alert.alert('Error', err?.response?.data?.detail || 'Failed to remove user'); }
+          } catch (err: any) { toast.error( err?.response?.data?.detail || 'Failed to remove user'); }
         },
       },
     ]);
@@ -305,10 +306,10 @@ export default function AdminDashboard() {
     try {
       const headers = await getAuthHeader();
       await api.post('/admin/message', { receiverId: messageRecipient.id, content: messageText.trim() }, { headers });
-      Alert.alert('Sent', `Message sent to ${messageRecipient.name}`);
+      toast.success( `Message sent to ${messageRecipient.name}`);
       setMessageModalVisible(false);
       setMessageText('');
-    } catch (err: any) { Alert.alert('Error', err?.response?.data?.detail || 'Failed to send'); }
+    } catch (err: any) { toast.error( err?.response?.data?.detail || 'Failed to send'); }
   };
 
   const handleRefund = (sessionId: string, amount: number) => {
@@ -319,9 +320,9 @@ export default function AdminDashboard() {
           try {
             const headers = await getAuthHeader();
             await api.post('/admin/refund', { sessionId, reason: 'Admin refund' }, { headers });
-            Alert.alert('Refunded', 'Payment has been refunded');
+            toast.success( 'Payment has been refunded');
             fetchTransactions();
-          } catch (err: any) { Alert.alert('Error', err?.response?.data?.detail || 'Refund failed'); }
+          } catch (err: any) { toast.error( err?.response?.data?.detail || 'Refund failed'); }
         },
       },
     ]);
@@ -335,9 +336,9 @@ export default function AdminDashboard() {
           try {
             const headers = await getAuthHeader();
             await api.post('/admin/confirm-payment', { sessionId }, { headers });
-            Alert.alert('Confirmed', 'Payment confirmed');
+            toast.success( 'Payment confirmed');
             fetchTransactions();
-          } catch (err: any) { Alert.alert('Error', err?.response?.data?.detail || 'Failed'); }
+          } catch (err: any) { toast.error( err?.response?.data?.detail || 'Failed'); }
         },
       },
     ]);
@@ -351,10 +352,10 @@ export default function AdminDashboard() {
       if (profilePhone.trim()) body.phone = profilePhone.trim();
       if (profileEmail.trim()) body.email = profileEmail.trim();
       await api.put('/admin/profile', body, { headers });
-      Alert.alert('Updated', 'Profile updated successfully');
+      toast.success( 'Profile updated successfully');
       setProfileModalVisible(false);
       fetchAdminProfile();
-    } catch (err: any) { Alert.alert('Error', err?.response?.data?.detail || 'Update failed'); }
+    } catch (err: any) { toast.error( err?.response?.data?.detail || 'Update failed'); }
   };
 
   const handleLogout = async () => {
@@ -1038,10 +1039,10 @@ export default function AdminDashboard() {
                                     try {
                                       const headers = await getAuthHeader();
                                       await api.post(`/admin/verifications/${verificationDetail.profile?.userId}/approve-step`, { stepId: step.id }, { headers });
-                                      Alert.alert('Approved', `${step.label} has been approved`);
+                                      toast.success( `${step.label} has been approved`);
                                       const updated = await api.get(`/admin/verifications/${verificationDetail.profile?.userId}/detail`, { headers });
                                       setVerificationDetail(updated.data);
-                                    } catch(e) { Alert.alert('Error', 'Failed to approve'); }
+                                    } catch(e) { toast.error( 'Failed to approve'); }
                                   }}
                                   style={{ backgroundColor: C.success, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }}
                                   data-testid={`approve-step-${step.id}`}
@@ -1054,10 +1055,10 @@ export default function AdminDashboard() {
                                     try {
                                       const headers = await getAuthHeader();
                                       await api.post(`/admin/verifications/${verificationDetail.profile?.userId}/reject-step`, { stepId: step.id, reason: 'Document needs revision' }, { headers });
-                                      Alert.alert('Rejected', `${step.label} has been rejected`);
+                                      toast.warning( `${step.label} has been rejected`);
                                       const updated = await api.get(`/admin/verifications/${verificationDetail.profile?.userId}/detail`, { headers });
                                       setVerificationDetail(updated.data);
-                                    } catch(e) { Alert.alert('Error', 'Failed to reject'); }
+                                    } catch(e) { toast.error( 'Failed to reject'); }
                                   }}
                                   style={{ backgroundColor: '#FDE8E8', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }}
                                   data-testid={`reject-step-${step.id}`}

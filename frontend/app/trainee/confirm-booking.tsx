@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   ScrollView,
   ImageBackground,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -15,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { toast } from '../../src/utils/toast';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -95,35 +95,18 @@ export default function ConfirmBookingScreen() {
       // For now, simulate successful payment
       setPaymentStep('success');
 
-      Alert.alert(
-        'Booking Confirmed!',
-        `Your ${getSessionLabel(sessionType).toLowerCase()} with ${trainerName} has been booked for ${date} at ${time}.\n\nPayment ID: ${paymentIntentId}`,
-        [
-          {
-            text: 'View Sessions',
-            onPress: () => router.replace('/trainee/(tabs)/sessions'),
-          },
-          {
-            text: 'Done',
-            onPress: () => router.replace('/trainee/(tabs)/home'),
-          },
-        ]
-      );
+      toast.success(`Session with ${trainerName} booked for ${date} at ${time}`);
+      setTimeout(() => router.replace('/trainee/(tabs)/sessions'), 2000);
     } catch (err: any) {
       const msg = err?.response?.data?.detail || 'Payment processing failed. Please try again.';
       // If Stripe key is invalid, still allow booking (demo mode)
       if (msg.includes('Invalid API Key')) {
         setPaymentStep('success');
-        Alert.alert(
-          'Booking Confirmed (Demo)',
-          `Your session with ${trainerName} has been booked.\n\nNote: Payment processing is in demo mode. Stripe integration will be activated with a valid API key.`,
-          [
-            { text: 'OK', onPress: () => router.replace('/trainee/(tabs)/home') },
-          ]
-        );
+        toast.success('Booking confirmed (Demo mode)');
+        setTimeout(() => router.replace('/trainee/(tabs)/home'), 2000);
       } else {
         setPaymentStep('review');
-        Alert.alert('Payment Error', msg);
+        toast.error(msg);
       }
     } finally {
       setIsProcessing(false);

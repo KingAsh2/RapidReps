@@ -9,7 +9,6 @@ import {
   ImageBackground,
   TextInput,
   Share,
-  Alert,
   Animated,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -17,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Contacts from 'expo-contacts';
+import { toast } from '../../src/utils/toast';
 
 // Brand colors
 const COLORS = {
@@ -94,7 +94,7 @@ export default function ShareSessionStatusScreen() {
 
   const handleAddContact = () => {
     if (!newContactName || !newContactPhone) {
-      Alert.alert('Error', 'Please fill in all fields');
+      toast.error( 'Please fill in all fields');
       return;
     }
 
@@ -113,7 +113,7 @@ export default function ShareSessionStatusScreen() {
 
   const handleShareStatus = async () => {
     if (selectedContacts.length === 0) {
-      Alert.alert('Select Contacts', 'Please select at least one contact to share with');
+      toast.warning('Please select at least one contact to share with');
       return;
     }
 
@@ -140,11 +140,8 @@ I'll let you know when I'm done. Track my session in the RapidReps app.
         title: 'Training Session Status',
       });
 
-      Alert.alert(
-        'Status Shared! ✅',
-        `Your training session status has been shared with ${selectedNames}. They will be notified when your session ends.`,
-        [{ text: 'Got it', onPress: () => router.back() }]
-      );
+      toast.success(`Status shared with ${selectedNames}`);
+      setTimeout(() => router.back(), 2000);
     } catch (error) {
       console.error('Error sharing:', error);
     }
@@ -159,7 +156,7 @@ I'll let you know when I'm done. Track my session in the RapidReps app.
 
       if (data.length > 0) {
         // Show contact picker (simplified - in real app use a modal)
-        Alert.alert('Contacts', 'Contact import feature - would open contact picker');
+        toast.warning('Contact import feature - would open contact picker');
       }
     }
   };

@@ -21,6 +21,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useAlert } from '../../src/contexts/AlertContext';
 import { Video, ResizeMode } from 'expo-av';
+import { toast } from '../../src/utils/toast';
 
 const { width } = Dimensions.get('window');
 

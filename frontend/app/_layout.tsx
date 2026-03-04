@@ -7,7 +7,37 @@ import { NotificationProvider } from '../src/contexts/NotificationContext';
 import { SoundProvider } from '../src/contexts/SoundContext';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ErrorBoundary } from '../src/components/ErrorBoundary';
-import Toast from 'react-native-toast-message';
+import Toast, { BaseToast } from 'react-native-toast-message';
+
+const toastConfig = {
+  success: (props: any) => (
+    <BaseToast
+      {...props}
+      style={{ borderLeftColor: '#2ECC71', backgroundColor: '#FAFBFC', borderLeftWidth: 5, borderRadius: 10, marginHorizontal: 16 }}
+      contentContainerStyle={{ paddingHorizontal: 14 }}
+      text1Style={{ fontSize: 14, fontWeight: '700', color: '#1a2a5e' }}
+      text1NumberOfLines={2}
+    />
+  ),
+  info: (props: any) => (
+    <BaseToast
+      {...props}
+      style={{ borderLeftColor: '#F7931E', backgroundColor: '#FAFBFC', borderLeftWidth: 5, borderRadius: 10, marginHorizontal: 16 }}
+      contentContainerStyle={{ paddingHorizontal: 14 }}
+      text1Style={{ fontSize: 14, fontWeight: '700', color: '#1a2a5e' }}
+      text1NumberOfLines={2}
+    />
+  ),
+  error: (props: any) => (
+    <BaseToast
+      {...props}
+      style={{ borderLeftColor: '#FF4757', backgroundColor: '#FAFBFC', borderLeftWidth: 5, borderRadius: 10, marginHorizontal: 16 }}
+      contentContainerStyle={{ paddingHorizontal: 14 }}
+      text1Style={{ fontSize: 14, fontWeight: '700', color: '#1a2a5e' }}
+      text1NumberOfLines={2}
+    />
+  ),
+};
 
 let StripeProviderComponent: React.FC<{ children: React.ReactNode }> = ({ children }) => <>{children}</>;
 
@@ -40,7 +70,7 @@ export default function RootLayout() {
             </NotificationProvider>
           </StripeProviderComponent>
         </AuthProvider>
-        <Toast />
+        <Toast config={toastConfig} />
       </GestureHandlerRootView>
     </ErrorBoundary>
   );

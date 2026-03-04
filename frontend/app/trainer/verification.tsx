@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import api from '../../src/services/api';
+import { toast } from '../../src/utils/toast';
 
 const COLORS = {
   orange: '#FF7F00',
@@ -183,7 +184,7 @@ export default function TrainerVerificationScreen() {
           const asset = result.assets[0];
           await submitStepToBackend(stepId, asset.uri, 'profile_photo.jpg');
           setVerificationStatus(prev => ({ ...prev, [stepId]: 'submitted' }));
-          Alert.alert('Success', 'Profile photo uploaded successfully!');
+          toast.success( 'Profile photo uploaded successfully!');
         } else {
           setVerificationStatus(prev => ({ ...prev, [stepId]: 'pending' }));
         }
@@ -198,7 +199,7 @@ export default function TrainerVerificationScreen() {
           const asset = result.assets[0];
           await submitStepToBackend(stepId, asset.uri, 'intro_video.mp4');
           setVerificationStatus(prev => ({ ...prev, [stepId]: 'submitted' }));
-          Alert.alert('Success', 'Intro video uploaded successfully!');
+          toast.success( 'Intro video uploaded successfully!');
         } else {
           setVerificationStatus(prev => ({ ...prev, [stepId]: 'pending' }));
         }
@@ -211,7 +212,7 @@ export default function TrainerVerificationScreen() {
           const asset = result.assets[0];
           await submitStepToBackend(stepId, asset.uri, asset.name);
           setVerificationStatus(prev => ({ ...prev, [stepId]: 'submitted' }));
-          Alert.alert('Success', 'Document uploaded successfully!');
+          toast.success( 'Document uploaded successfully!');
         } else {
           setVerificationStatus(prev => ({ ...prev, [stepId]: 'pending' }));
         }
@@ -219,7 +220,7 @@ export default function TrainerVerificationScreen() {
     } catch (error) {
       console.error('Upload error:', error);
       setVerificationStatus(prev => ({ ...prev, [stepId]: 'pending' }));
-      Alert.alert('Error', 'Failed to upload. Please try again.');
+      toast.error( 'Failed to upload. Please try again.');
     }
   };
 
@@ -234,7 +235,7 @@ export default function TrainerVerificationScreen() {
           onPress: async () => {
             await submitStepToBackend('background');
             setVerificationStatus(prev => ({ ...prev, background: 'submitted' }));
-            Alert.alert('Background Check Started', 'You will receive an email from Checkr to complete the process.');
+            toast.success('Background check started! Check your email from Checkr.');
           },
         },
       ]
@@ -253,13 +254,10 @@ export default function TrainerVerificationScreen() {
       setIsSubmitting(true);
       try {
         await api.post('/trainer/submit-all-verification');
-        Alert.alert(
-          'Verification Submitted!',
-          'Your documents have been submitted for review. You will be notified once your account is approved.',
-          [{ text: 'OK', onPress: () => router.back() }]
-        );
+        toast.success('Verification submitted for review!');
+        setTimeout(() => router.back(), 2000);
       } catch (err: any) {
-        Alert.alert('Error', err?.response?.data?.detail || 'Failed to submit verification.');
+        toast.error( err?.response?.data?.detail || 'Failed to submit verification.');
       } finally {
         setIsSubmitting(false);
       }

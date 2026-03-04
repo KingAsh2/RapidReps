@@ -8,7 +8,6 @@ import {
   RefreshControl,
   ImageBackground,
   ActivityIndicator,
-  Alert,
   Modal,
   TextInput,
   Animated,
@@ -19,6 +18,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { toast } from '../../../src/utils/toast';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BAR_MAX_HEIGHT = 100;
@@ -107,7 +107,7 @@ export default function TrainerEarningsScreen() {
 
   const handleRequestPayout = async () => {
     if (!payoutHandle.trim()) {
-      Alert.alert('Missing Info', 'Please enter your payment handle (CashApp tag, Zelle email, etc.)');
+      toast.warning('Please enter your payment handle (CashApp tag, Zelle email, etc.)');
       return;
     }
     setSubmittingPayout(true);
@@ -122,13 +122,13 @@ export default function TrainerEarningsScreen() {
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      Alert.alert('Payout Requested', res.data.message);
+      toast.success(res.data.message);
       setPayoutModalVisible(false);
       setPayoutHandle('');
       setPayoutNotes('');
       loadEarnings();
     } catch (err: any) {
-      Alert.alert('Error', err?.response?.data?.detail || 'Failed to request payout');
+      toast.error( err?.response?.data?.detail || 'Failed to request payout');
     } finally {
       setSubmittingPayout(false);
     }

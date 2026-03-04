@@ -23,6 +23,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useAlert } from '../../src/contexts/AlertContext';
 import * as Location from 'expo-location';
+import { toast } from '../../src/utils/toast';
 
 // Brand colors
 const COLORS = {

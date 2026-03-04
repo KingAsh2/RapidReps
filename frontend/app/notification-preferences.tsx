@@ -7,13 +7,13 @@ import {
   Switch,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { notificationsAPI } from '../src/services/api';
 import { Colors } from '../src/utils/colors';
+import { toast } from '../src/utils/toast';
 
 const PREF_ITEMS: { key: string; label: string; description: string; icon: string }[] = [
   { key: 'pushEnabled', label: 'Push Notifications', description: 'Receive push notifications on your device', icon: 'notifications' },
@@ -44,7 +44,7 @@ export default function NotificationPreferencesScreen() {
       const data = await notificationsAPI.getPreferences();
       setPrefs(data);
     } catch {
-      Alert.alert('Error', 'Failed to load notification preferences');
+      toast.error( 'Failed to load notification preferences');
     } finally {
       setLoading(false);
     }
@@ -58,9 +58,9 @@ export default function NotificationPreferencesScreen() {
     setSaving(true);
     try {
       await notificationsAPI.updatePreferences(prefs);
-      Alert.alert('Saved', 'Your notification preferences have been updated.');
+      toast.success( 'Your notification preferences have been updated.');
     } catch {
-      Alert.alert('Error', 'Failed to save preferences. Please try again.');
+      toast.error( 'Failed to save preferences. Please try again.');
     } finally {
       setSaving(false);
     }

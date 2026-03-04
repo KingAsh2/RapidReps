@@ -24,6 +24,7 @@ import { useRouter, Stack } from 'expo-router';
 import * as Location from 'expo-location';
 import { useAlert } from '../../../src/contexts/AlertContext';
 import { useNotifications } from '../../../src/contexts/NotificationContext';
+import { toast } from '../../../src/utils/toast';
 
 const { width } = Dimensions.get('window');
 
