@@ -355,6 +355,22 @@ export const trainerAPI = {
     const response = await api.post('/trainer/submit-all-verification');
     return response.data;
   },
+
+  // Stripe Connect
+  connectOnboard: async (): Promise<{ url?: string; accountId?: string; alreadyOnboarded?: boolean; message?: string }> => {
+    const response = await api.post('/trainer/connect/onboard');
+    return response.data;
+  },
+
+  connectStatus: async (): Promise<{ connected: boolean; onboarded: boolean; accountId?: string }> => {
+    const response = await api.get('/trainer/connect/status');
+    return response.data;
+  },
+
+  connectDashboard: async (): Promise<{ url: string }> => {
+    const response = await api.get('/trainer/connect/dashboard');
+    return response.data;
+  },
 };
 
 // Trainee Profile API
@@ -552,6 +568,26 @@ export const referralAPI = {
   },
   getCredits: async (): Promise<{ availableCredits: number }> => {
     const response = await api.get('/referral/credits');
+    return response.data;
+  },
+};
+
+// Admin Payouts API
+export const adminPayoutsAPI = {
+  getPending: async (): Promise<any> => {
+    const response = await api.get('/admin/payouts/pending');
+    return response.data;
+  },
+  payTrainer: async (trainerId: string, amountCents?: number, notes?: string): Promise<any> => {
+    const response = await api.post('/admin/payouts/pay-trainer', { trainerId, amountCents, notes });
+    return response.data;
+  },
+  payAll: async (): Promise<any> => {
+    const response = await api.post('/admin/payouts/pay-all');
+    return response.data;
+  },
+  getHistory: async (limit?: number): Promise<any> => {
+    const response = await api.get('/admin/payouts/history', { params: { limit: limit || 50 } });
     return response.data;
   },
 };

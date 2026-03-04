@@ -8,17 +8,18 @@ import {
   RefreshControl,
   ImageBackground,
   ActivityIndicator,
-  Modal,
-  TextInput,
   Animated,
   Dimensions,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { useRouter } from 'expo-router';
 import { toast } from '../../../src/utils/toast';
+import { trainerAPI } from '../../../src/services/api';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BAR_MAX_HEIGHT = 100;
@@ -43,23 +44,20 @@ const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 const backgroundImage = require('../../../assets/images/bg-gym-weights.png');
 
 type Period = 'week' | 'month';
-type PayoutMethod = 'cashapp' | 'zelle' | 'stripe';
 
 export default function TrainerEarningsScreen() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [data, setData] = useState<any>(null);
   const [period, setPeriod] = useState<Period>('week');
-  const [payoutModalVisible, setPayoutModalVisible] = useState(false);
-  const [payoutMethod, setPayoutMethod] = useState<PayoutMethod>('cashapp');
-  const [payoutHandle, setPayoutHandle] = useState('');
-  const [payoutNotes, setPayoutNotes] = useState('');
-  const [submittingPayout, setSubmittingPayout] = useState(false);
+  const [connectStatus, setConnectStatus] = useState<{ connected: boolean; onboarded: boolean }>({ connected: false, onboarded: false });
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const barAnims = useRef([...Array(7)].map(() => new Animated.Value(0))).current;
 
   useEffect(() => {
     loadEarnings();
+    loadConnectStatus();
   }, []);
 
   useEffect(() => {
@@ -103,34 +101,15 @@ export default function TrainerEarningsScreen() {
   const onRefresh = () => {
     setRefreshing(true);
     loadEarnings();
+    loadConnectStatus();
   };
 
-  const handleRequestPayout = async () => {
-    if (!payoutHandle.trim()) {
-      toast.warning('Please enter your payment handle (CashApp tag, Zelle email, etc.)');
-      return;
-    }
-    setSubmittingPayout(true);
+  const loadConnectStatus = async () => {
     try {
-      const token = await AsyncStorage.getItem('auth_token');
-      const res = await axios.post(
-        `${API_URL}/api/trainer/request-payout`,
-        {
-          paymentMethod: payoutMethod,
-          paymentHandle: payoutHandle.trim(),
-          notes: payoutNotes.trim() || null,
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success(res.data.message);
-      setPayoutModalVisible(false);
-      setPayoutHandle('');
-      setPayoutNotes('');
-      loadEarnings();
-    } catch (err: any) {
-      toast.error( err?.response?.data?.detail || 'Failed to request payout');
-    } finally {
-      setSubmittingPayout(false);
+      const res = await trainerAPI.connectStatus();
+      setConnectStatus(res);
+    } catch {
+      // Not connected yet - that's fine
     }
   };
 
@@ -141,7 +120,6 @@ export default function TrainerEarningsScreen() {
   const changePercent = lastPeriodEarnings > 0 ? Math.round(((periodEarnings - lastPeriodEarnings) / lastPeriodEarnings) * 100) : 0;
   const chartItems = period === 'week' ? (data?.dailyBreakdown || []) : (data?.weeklyBreakdown || []);
   const maxChartVal = Math.max(1, ...chartItems.map((i: any) => i.earningsCents));
-  const hasPendingRequest = data?.payoutRequests?.some((r: any) => r.status === 'pending');
 
   if (loading) {
     return (
@@ -202,23 +180,30 @@ export default function TrainerEarningsScreen() {
               </View>
             </LinearGradient>
 
-            {/* Request Payout Button */}
-            <TouchableOpacity
-              style={[styles.payoutButton, (data?.pendingBalanceCents <= 0 || hasPendingRequest) && styles.payoutButtonDisabled]}
-              onPress={() => setPayoutModalVisible(true)}
-              disabled={data?.pendingBalanceCents <= 0 || hasPendingRequest}
-              data-testid="request-payout-btn"
-            >
-              <LinearGradient
-                colors={data?.pendingBalanceCents > 0 && !hasPendingRequest ? [COLORS.success, '#00A844'] : ['#555', '#444']}
-                style={styles.payoutButtonGradient}
+            {/* Bank Account / Payout Button */}
+            {connectStatus.onboarded ? (
+              <View style={styles.connectedBanner}>
+                <Ionicons name="checkmark-circle" size={18} color={COLORS.success} />
+                <Text style={styles.connectedText}>Bank account connected</Text>
+                <TouchableOpacity onPress={() => router.push('/trainer/connect-bank')} data-testid="manage-bank-btn">
+                  <Text style={[styles.connectedText, { color: COLORS.teal, fontWeight: '700' }]}>Manage</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={styles.payoutButton}
+                onPress={() => router.push('/trainer/connect-bank')}
+                data-testid="connect-bank-btn"
               >
-                <Ionicons name={hasPendingRequest ? 'time' : 'cash'} size={20} color={COLORS.white} />
-                <Text style={styles.payoutButtonText}>
-                  {hasPendingRequest ? 'Payout Pending' : data?.pendingBalanceCents > 0 ? `Request Payout (${cents(data.pendingBalanceCents)})` : 'No Balance to Withdraw'}
-                </Text>
-              </LinearGradient>
-            </TouchableOpacity>
+                <LinearGradient
+                  colors={[COLORS.success, '#00A844']}
+                  style={styles.payoutButtonGradient}
+                >
+                  <Ionicons name="link" size={20} color={COLORS.white} />
+                  <Text style={styles.payoutButtonText}>Connect Bank Account</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            )}
 
             {/* Period Toggle */}
             <View style={styles.periodToggle}>
@@ -350,7 +335,7 @@ export default function TrainerEarningsScreen() {
               <View style={styles.infoContent}>
                 <Text style={styles.infoTitle}>How Earnings Work</Text>
                 <Text style={styles.infoText}>
-                  You keep 75% of every session. RapidReps takes 25% as a platform fee. Payouts are processed within 1-3 business days.
+                  You keep 80% of every session. RapidReps takes 20% as a platform fee. Payouts are processed by admin and transferred to your connected bank account. Minimum payout: $35.
                 </Text>
               </View>
             </View>
@@ -360,83 +345,6 @@ export default function TrainerEarningsScreen() {
         </Animated.View>
       </SafeAreaView>
 
-      {/* Payout Modal */}
-      <Modal visible={payoutModalVisible} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Request Payout</Text>
-              <TouchableOpacity onPress={() => setPayoutModalVisible(false)} data-testid="close-payout-modal">
-                <Ionicons name="close" size={24} color={COLORS.navy} />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView style={styles.modalBody}>
-              <Text style={styles.modalAmount}>{cents(data?.pendingBalanceCents || 0)}</Text>
-              <Text style={styles.modalAmountLabel}>Available Balance</Text>
-
-              <Text style={styles.modalFieldLabel}>Payment Method</Text>
-              <View style={styles.methodGrid}>
-                {([
-                  { id: 'cashapp' as PayoutMethod, icon: 'cash', label: 'Cash App' },
-                  { id: 'zelle' as PayoutMethod, icon: 'phone-portrait', label: 'Zelle' },
-                  { id: 'stripe' as PayoutMethod, icon: 'card', label: 'Stripe' },
-                ]).map((m) => (
-                  <TouchableOpacity
-                    key={m.id}
-                    style={[styles.methodCard, payoutMethod === m.id && styles.methodCardActive]}
-                    onPress={() => setPayoutMethod(m.id)}
-                    data-testid={`method-${m.id}`}
-                  >
-                    <Ionicons name={m.icon as any} size={22} color={payoutMethod === m.id ? COLORS.teal : COLORS.gray} />
-                    <Text style={[styles.methodLabel, payoutMethod === m.id && styles.methodLabelActive]}>{m.label}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              <Text style={styles.modalFieldLabel}>
-                {payoutMethod === 'cashapp' ? 'CashApp Tag ($cashtag)' : payoutMethod === 'zelle' ? 'Zelle Email or Phone' : 'Stripe Account ID'}
-              </Text>
-              <TextInput
-                style={styles.modalInput}
-                placeholder={payoutMethod === 'cashapp' ? '$yourcashtag' : payoutMethod === 'zelle' ? 'email@example.com' : 'acct_...'}
-                value={payoutHandle}
-                onChangeText={setPayoutHandle}
-                autoCapitalize="none"
-                data-testid="payout-handle-input"
-              />
-
-              <Text style={styles.modalFieldLabel}>Notes (optional)</Text>
-              <TextInput
-                style={[styles.modalInput, { height: 70, textAlignVertical: 'top' }]}
-                placeholder="Any special instructions..."
-                value={payoutNotes}
-                onChangeText={setPayoutNotes}
-                multiline
-                data-testid="payout-notes-input"
-              />
-
-              <TouchableOpacity
-                style={styles.modalSubmitBtn}
-                onPress={handleRequestPayout}
-                disabled={submittingPayout}
-                data-testid="submit-payout-btn"
-              >
-                <LinearGradient colors={[COLORS.success, '#00A844']} style={styles.modalSubmitGradient}>
-                  {submittingPayout ? (
-                    <ActivityIndicator size="small" color={COLORS.white} />
-                  ) : (
-                    <>
-                      <Ionicons name="paper-plane" size={18} color={COLORS.white} />
-                      <Text style={styles.modalSubmitText}>Submit Payout Request</Text>
-                    </>
-                  )}
-                </LinearGradient>
-              </TouchableOpacity>
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
     </ImageBackground>
   );
 }
@@ -469,6 +377,8 @@ const styles = StyleSheet.create({
   payoutButtonDisabled: { opacity: 0.6 },
   payoutButtonGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, gap: 10 },
   payoutButtonText: { fontSize: 16, fontWeight: '800', color: COLORS.white },
+  connectedBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(0,200,83,0.1)', borderRadius: 12, padding: 14, marginBottom: 20 },
+  connectedText: { fontSize: 14, fontWeight: '600', color: 'rgba(255,255,255,0.8)', flex: 1 },
 
   // Period Toggle
   periodToggle: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 12, padding: 4, marginBottom: 16 },
@@ -525,22 +435,4 @@ const styles = StyleSheet.create({
   infoTitle: { fontSize: 14, fontWeight: '700', color: COLORS.white },
   infoText: { fontSize: 12, color: 'rgba(255,255,255,0.6)', lineHeight: 18, marginTop: 4 },
 
-  // Modal
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
-  modalContent: { backgroundColor: COLORS.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: '85%' },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 22, paddingVertical: 18, borderBottomWidth: 1, borderBottomColor: '#eee' },
-  modalTitle: { fontSize: 20, fontWeight: '800', color: COLORS.navy },
-  modalBody: { paddingHorizontal: 22, paddingBottom: 40, paddingTop: 20 },
-  modalAmount: { fontSize: 36, fontWeight: '900', color: COLORS.success, textAlign: 'center' },
-  modalAmountLabel: { fontSize: 14, color: COLORS.gray, textAlign: 'center', marginBottom: 24 },
-  modalFieldLabel: { fontSize: 13, fontWeight: '700', color: COLORS.navy, marginBottom: 8, marginTop: 16 },
-  methodGrid: { flexDirection: 'row', gap: 10 },
-  methodCard: { flex: 1, alignItems: 'center', padding: 14, borderRadius: 12, borderWidth: 2, borderColor: '#eee', gap: 6 },
-  methodCardActive: { borderColor: COLORS.teal, backgroundColor: `${COLORS.teal}08` },
-  methodLabel: { fontSize: 12, fontWeight: '700', color: COLORS.gray },
-  methodLabelActive: { color: COLORS.teal },
-  modalInput: { backgroundColor: COLORS.grayLight, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14, fontSize: 15, color: COLORS.navy, borderWidth: 1, borderColor: '#e2e8f0' },
-  modalSubmitBtn: { borderRadius: 14, overflow: 'hidden', marginTop: 24 },
-  modalSubmitGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, gap: 10 },
-  modalSubmitText: { fontSize: 16, fontWeight: '800', color: COLORS.white },
 });

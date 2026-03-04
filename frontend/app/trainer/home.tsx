@@ -65,6 +65,7 @@ export default function TrainerHomeScreen() {
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [locationPermission, setLocationPermission] = useState<boolean | null>(null);
+  const [bankConnected, setBankConnected] = useState<boolean | null>(null);
 
   // Location tracking interval ref
   const locationIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -231,16 +232,18 @@ export default function TrainerHomeScreen() {
 
   const loadData = async () => {
     try {
-      const [sessionsData, earningsData, traineesData, profileData, locationStatus] = await Promise.all([
+      const [sessionsData, earningsData, traineesData, profileData, locationStatus, connectStatusData] = await Promise.all([
         trainerAPI.getSessions(),
         trainerAPI.getEarnings(),
         trainerAPI.getNearbyTrainees(),
         trainerAPI.getMyProfile().catch(() => null),
         trainerAPI.getLocationStatus().catch(() => null),
+        trainerAPI.connectStatus().catch(() => ({ connected: false, onboarded: false })),
       ]);
       setSessions(sessionsData);
       setEarnings(earningsData);
       setNearbyTrainees(traineesData.trainees || []);
+      setBankConnected(connectStatusData?.onboarded ?? false);
       
       if (profileData) {
         const available = profileData.isAvailable ?? false;
@@ -476,6 +479,32 @@ export default function TrainerHomeScreen() {
                 </Text>
               </LinearGradient>
             </Animated.View>
+
+            {/* Bank Account Required Banner */}
+            {bankConnected === false && (
+              <TouchableOpacity
+                style={{
+                  backgroundColor: 'rgba(255, 127, 0, 0.15)',
+                  borderRadius: 14,
+                  padding: 16,
+                  marginTop: 12,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 12,
+                  borderWidth: 1.5,
+                  borderColor: 'rgba(255, 127, 0, 0.3)',
+                }}
+                onPress={() => router.push('/trainer/connect-bank')}
+                data-testid="connect-bank-banner"
+              >
+                <Ionicons name="warning" size={24} color="#FF7F00" />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 14 }}>Connect Your Bank Account</Text>
+                  <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, marginTop: 2 }}>Required to receive payouts for sessions</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color="#FF7F00" />
+              </TouchableOpacity>
+            )}
 
             {/* Availability Status Card */}
             <Animated.View

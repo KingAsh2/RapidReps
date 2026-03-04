@@ -3952,6 +3952,411 @@ async def get_payout_requests(current_user: dict = Depends(get_current_user)):
     requests = await db.payout_requests.find({'trainerId': user_id}).sort('createdAt', -1).to_list(50)
     return {'requests': [serialize_doc(r) for r in requests]}
 
+
+# ============================================================================
+# STRIPE CONNECT (Trainer Bank Onboarding & Payouts)
+# ============================================================================
+
+# require_admin dependency (used by admin endpoints below)
+async def require_admin(current_user: dict = Depends(get_current_user)):
+    """Dependency to ensure user is admin"""
+    if not current_user.get('isAdmin', False) and UserRole.ADMIN not in current_user.get('roles', []):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return current_user
+
+PAYOUT_MINIMUM_CENTS = 3500  # $35.00
+
+@api_router.post("/trainer/connect/onboard")
+async def trainer_connect_onboard(
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create or retrieve a Stripe Connect Express account and return onboarding link."""
+    user_id = str(current_user['_id'])
+    
+    # Check if trainer already has a Stripe Connect account
+    existing_account_id = current_user.get('stripeConnectAccountId')
+    
+    if existing_account_id:
+        # Check if onboarding is already complete
+        try:
+            account = stripe.Account.retrieve(existing_account_id)
+            if account.charges_enabled and account.payouts_enabled:
+                return {"alreadyOnboarded": True, "message": "Your bank account is already connected."}
+        except stripe.error.StripeError:
+            # Account may be invalid, create a new one
+            existing_account_id = None
+    
+    if not existing_account_id:
+        try:
+            account = stripe.Account.create(
+                type="express",
+                country="US",
+                email=current_user.get('email'),
+                capabilities={
+                    "transfers": {"requested": True},
+                },
+                business_type="individual",
+                metadata={
+                    "rapidreps_user_id": user_id,
+                    "trainer_name": current_user.get('fullName', ''),
+                },
+            )
+            existing_account_id = account.id
+            await db.users.update_one(
+                {'_id': current_user['_id']},
+                {'$set': {
+                    'stripeConnectAccountId': account.id,
+                    'stripeConnectOnboarded': False,
+                }}
+            )
+        except stripe.error.StripeError as e:
+            raise HTTPException(status_code=400, detail=f"Failed to create Stripe account: {str(e)}")
+    
+    # Create onboarding link
+    host_url = str(request.base_url).rstrip('/')
+    try:
+        account_link = stripe.AccountLink.create(
+            account=existing_account_id,
+            refresh_url=f"{host_url}/api/trainer/connect/refresh?account_id={existing_account_id}",
+            return_url=f"{host_url}/api/trainer/connect/return?account_id={existing_account_id}",
+            type="account_onboarding",
+        )
+        return {"url": account_link.url, "accountId": existing_account_id}
+    except stripe.error.StripeError as e:
+        raise HTTPException(status_code=400, detail=f"Failed to create onboarding link: {str(e)}")
+
+
+@api_router.get("/trainer/connect/refresh")
+async def trainer_connect_refresh(request: Request, account_id: str):
+    """Handle Stripe Connect onboarding refresh (user needs to restart onboarding)."""
+    from fastapi.responses import HTMLResponse
+    return HTMLResponse(content="""
+        <html><body style="font-family:system-ui;text-align:center;padding:60px;">
+        <h2>Onboarding session expired</h2>
+        <p>Please go back to the RapidReps app and tap "Connect Bank Account" again.</p>
+        </body></html>
+    """)
+
+
+@api_router.get("/trainer/connect/return")
+async def trainer_connect_return(request: Request, account_id: str):
+    """Handle Stripe Connect onboarding return (user completed or exited onboarding)."""
+    try:
+        account = stripe.Account.retrieve(account_id)
+        if account.charges_enabled and account.payouts_enabled:
+            await db.users.update_one(
+                {'stripeConnectAccountId': account_id},
+                {'$set': {'stripeConnectOnboarded': True}}
+            )
+            status_msg = "Your bank account has been successfully connected!"
+        else:
+            status_msg = "Your onboarding is not yet complete. Please go back to the app and try again."
+    except stripe.error.StripeError:
+        status_msg = "Could not verify your account status. Please return to the app."
+    
+    from fastapi.responses import HTMLResponse
+    return HTMLResponse(content=f"""
+        <html><body style="font-family:system-ui;text-align:center;padding:60px;">
+        <h2>Bank Account Setup</h2>
+        <p>{status_msg}</p>
+        <p>You can close this window and return to the RapidReps app.</p>
+        </body></html>
+    """)
+
+
+@api_router.get("/trainer/connect/status")
+async def trainer_connect_status(current_user: dict = Depends(get_current_user)):
+    """Check if trainer's Stripe Connect account is set up and active."""
+    account_id = current_user.get('stripeConnectAccountId')
+    if not account_id:
+        return {"connected": False, "onboarded": False, "accountId": None}
+    
+    try:
+        account = stripe.Account.retrieve(account_id)
+        onboarded = bool(account.charges_enabled and account.payouts_enabled)
+        if onboarded and not current_user.get('stripeConnectOnboarded'):
+            await db.users.update_one(
+                {'_id': current_user['_id']},
+                {'$set': {'stripeConnectOnboarded': True}}
+            )
+        return {
+            "connected": True,
+            "onboarded": onboarded,
+            "accountId": account_id,
+            "chargesEnabled": account.charges_enabled,
+            "payoutsEnabled": account.payouts_enabled,
+        }
+    except stripe.error.StripeError as e:
+        return {"connected": False, "onboarded": False, "error": str(e)}
+
+
+@api_router.get("/trainer/connect/dashboard")
+async def trainer_connect_dashboard(current_user: dict = Depends(get_current_user)):
+    """Get a link to the trainer's Stripe Express dashboard."""
+    account_id = current_user.get('stripeConnectAccountId')
+    if not account_id:
+        raise HTTPException(status_code=400, detail="No Stripe Connect account found. Please complete bank onboarding first.")
+    
+    try:
+        login_link = stripe.Account.create_login_link(account_id)
+        return {"url": login_link.url}
+    except stripe.error.StripeError as e:
+        raise HTTPException(status_code=400, detail=f"Failed to create dashboard link: {str(e)}")
+
+
+# --- Admin: Stripe Connect Payouts ---
+
+class AdminPayoutRequest(BaseModel):
+    trainerId: str
+    amountCents: Optional[int] = None  # If None, pay full pending balance
+    notes: Optional[str] = None
+
+
+@api_router.get("/admin/payouts/pending")
+async def admin_get_pending_payouts(admin_user: dict = Depends(require_admin)):
+    """Get list of trainers eligible for payout ($35+ pending balance with connected Stripe)."""
+    # Get all trainers with Stripe Connect accounts
+    trainers = await db.users.find(
+        {'roles': 'trainer', 'stripeConnectOnboarded': True},
+        {'fullName': 1, 'email': 1, 'profilePhoto': 1, 'stripeConnectAccountId': 1}
+    ).to_list(500)
+    
+    results = []
+    for trainer in trainers:
+        trainer_id = str(trainer['_id'])
+        
+        # Calculate pending balance
+        completed = await db.sessions.find(
+            {'trainerId': trainer_id, 'status': SessionStatus.COMPLETED},
+            {'trainerEarningsCents': 1}
+        ).to_list(1000)
+        total_earnings = sum(s.get('trainerEarningsCents', 0) for s in completed)
+        
+        payouts = await db.trainer_payouts.find(
+            {'trainerId': trainer_id},
+            {'amountCents': 1}
+        ).to_list(1000)
+        total_paid = sum(p.get('amountCents', 0) for p in payouts)
+        
+        pending = total_earnings - total_paid
+        
+        results.append({
+            'trainerId': trainer_id,
+            'trainerName': trainer.get('fullName', 'Unknown'),
+            'trainerEmail': trainer.get('email', ''),
+            'profilePhoto': trainer.get('profilePhoto'),
+            'stripeAccountId': trainer.get('stripeConnectAccountId'),
+            'pendingBalanceCents': pending,
+            'totalEarningsCents': total_earnings,
+            'totalPaidOutCents': total_paid,
+            'eligible': pending >= PAYOUT_MINIMUM_CENTS,
+        })
+    
+    # Sort by pending balance descending
+    results.sort(key=lambda x: x['pendingBalanceCents'], reverse=True)
+    
+    return {
+        'trainers': results,
+        'payoutMinimumCents': PAYOUT_MINIMUM_CENTS,
+        'totalPendingCents': sum(r['pendingBalanceCents'] for r in results if r['eligible']),
+        'eligibleCount': sum(1 for r in results if r['eligible']),
+    }
+
+
+@api_router.post("/admin/payouts/pay-trainer")
+async def admin_pay_trainer(
+    req: AdminPayoutRequest,
+    admin_user: dict = Depends(require_admin)
+):
+    """Transfer funds to a single trainer via Stripe Connect."""
+    trainer = await db.users.find_one({'_id': ObjectId(req.trainerId)})
+    if not trainer:
+        raise HTTPException(status_code=404, detail="Trainer not found")
+    
+    account_id = trainer.get('stripeConnectAccountId')
+    if not account_id or not trainer.get('stripeConnectOnboarded'):
+        raise HTTPException(status_code=400, detail="Trainer has not completed Stripe bank onboarding")
+    
+    # Calculate pending balance
+    completed = await db.sessions.find(
+        {'trainerId': req.trainerId, 'status': SessionStatus.COMPLETED},
+        {'trainerEarningsCents': 1}
+    ).to_list(1000)
+    total_earnings = sum(s.get('trainerEarningsCents', 0) for s in completed)
+    
+    payouts = await db.trainer_payouts.find(
+        {'trainerId': req.trainerId},
+        {'amountCents': 1}
+    ).to_list(1000)
+    total_paid = sum(p.get('amountCents', 0) for p in payouts)
+    pending = total_earnings - total_paid
+    
+    # Determine payout amount
+    payout_amount = req.amountCents if req.amountCents else pending
+    if payout_amount <= 0:
+        raise HTTPException(status_code=400, detail="No balance to pay out")
+    if payout_amount > pending:
+        raise HTTPException(status_code=400, detail=f"Payout amount (${payout_amount/100:.2f}) exceeds pending balance (${pending/100:.2f})")
+    if payout_amount < PAYOUT_MINIMUM_CENTS:
+        raise HTTPException(status_code=400, detail=f"Minimum payout is ${PAYOUT_MINIMUM_CENTS/100:.2f}")
+    
+    # Create Stripe Transfer
+    try:
+        transfer = stripe.Transfer.create(
+            amount=payout_amount,
+            currency="usd",
+            destination=account_id,
+            metadata={
+                "trainer_id": req.trainerId,
+                "trainer_name": trainer.get('fullName', ''),
+                "admin_id": str(admin_user['_id']),
+            },
+            description=f"RapidReps payout to {trainer.get('fullName', 'Trainer')}",
+        )
+    except stripe.error.StripeError as e:
+        raise HTTPException(status_code=400, detail=f"Stripe transfer failed: {str(e)}")
+    
+    # Record payout in DB
+    payout_doc = {
+        'trainerId': req.trainerId,
+        'trainerName': trainer.get('fullName', ''),
+        'amountCents': payout_amount,
+        'stripeTransferId': transfer.id,
+        'stripeAccountId': account_id,
+        'status': 'completed',
+        'notes': req.notes,
+        'processedBy': str(admin_user['_id']),
+        'createdAt': datetime.utcnow(),
+    }
+    await db.trainer_payouts.insert_one(payout_doc)
+    
+    # Send notification to trainer
+    asyncio.create_task(create_and_send_notification(
+        req.trainerId,
+        "Payout Received!",
+        f"${payout_amount/100:.2f} has been transferred to your bank account.",
+        "payout",
+        {"amount": str(payout_amount)}
+    ))
+    
+    return {
+        'success': True,
+        'transferId': transfer.id,
+        'amountCents': payout_amount,
+        'trainerName': trainer.get('fullName', ''),
+        'message': f"${payout_amount/100:.2f} transferred to {trainer.get('fullName', 'Trainer')}",
+    }
+
+
+@api_router.post("/admin/payouts/pay-all")
+async def admin_pay_all_trainers(
+    admin_user: dict = Depends(require_admin)
+):
+    """Batch transfer funds to all eligible trainers ($35+ pending) via Stripe Connect."""
+    # Get all eligible trainers
+    trainers = await db.users.find(
+        {'roles': 'trainer', 'stripeConnectOnboarded': True},
+        {'fullName': 1, 'stripeConnectAccountId': 1}
+    ).to_list(500)
+    
+    results = []
+    total_paid = 0
+    errors = []
+    
+    for trainer in trainers:
+        trainer_id = str(trainer['_id'])
+        account_id = trainer.get('stripeConnectAccountId')
+        if not account_id:
+            continue
+        
+        # Calculate pending balance
+        completed = await db.sessions.find(
+            {'trainerId': trainer_id, 'status': SessionStatus.COMPLETED},
+            {'trainerEarningsCents': 1}
+        ).to_list(1000)
+        total_earnings = sum(s.get('trainerEarningsCents', 0) for s in completed)
+        
+        prev_payouts = await db.trainer_payouts.find(
+            {'trainerId': trainer_id},
+            {'amountCents': 1}
+        ).to_list(1000)
+        total_paid_prev = sum(p.get('amountCents', 0) for p in prev_payouts)
+        pending = total_earnings - total_paid_prev
+        
+        if pending < PAYOUT_MINIMUM_CENTS:
+            continue
+        
+        # Create transfer
+        try:
+            transfer = stripe.Transfer.create(
+                amount=pending,
+                currency="usd",
+                destination=account_id,
+                metadata={
+                    "trainer_id": trainer_id,
+                    "trainer_name": trainer.get('fullName', ''),
+                    "admin_id": str(admin_user['_id']),
+                    "batch": "true",
+                },
+                description=f"RapidReps batch payout to {trainer.get('fullName', 'Trainer')}",
+            )
+            
+            payout_doc = {
+                'trainerId': trainer_id,
+                'trainerName': trainer.get('fullName', ''),
+                'amountCents': pending,
+                'stripeTransferId': transfer.id,
+                'stripeAccountId': account_id,
+                'status': 'completed',
+                'notes': 'Batch payout',
+                'processedBy': str(admin_user['_id']),
+                'createdAt': datetime.utcnow(),
+            }
+            await db.trainer_payouts.insert_one(payout_doc)
+            
+            asyncio.create_task(create_and_send_notification(
+                trainer_id,
+                "Payout Received!",
+                f"${pending/100:.2f} has been transferred to your bank account.",
+                "payout",
+                {"amount": str(pending)}
+            ))
+            
+            results.append({
+                'trainerId': trainer_id,
+                'trainerName': trainer.get('fullName', ''),
+                'amountCents': pending,
+                'transferId': transfer.id,
+            })
+            total_paid += pending
+            
+        except stripe.error.StripeError as e:
+            errors.append({
+                'trainerId': trainer_id,
+                'trainerName': trainer.get('fullName', ''),
+                'error': str(e),
+            })
+    
+    return {
+        'success': True,
+        'paidCount': len(results),
+        'totalPaidCents': total_paid,
+        'payouts': results,
+        'errors': errors,
+        'message': f"Paid {len(results)} trainer(s) a total of ${total_paid/100:.2f}",
+    }
+
+
+@api_router.get("/admin/payouts/history")
+async def admin_payout_history(
+    limit: int = 50,
+    admin_user: dict = Depends(require_admin)
+):
+    """Get payout history for all trainers."""
+    payouts = await db.trainer_payouts.find().sort('createdAt', -1).to_list(limit)
+    return {'payouts': [serialize_doc(p) for p in payouts]}
+
 # ============================================================================
 # ADMIN ROUTES
 # ============================================================================
@@ -5835,12 +6240,6 @@ async def get_member_badge(user_id: str):
 # ============================================================================
 # ADMIN ENDPOINTS
 # ============================================================================
-
-async def require_admin(current_user: dict = Depends(get_current_user)):
-    """Dependency to ensure user is admin"""
-    if not current_user.get('isAdmin', False) and UserRole.ADMIN not in current_user.get('roles', []):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    return current_user
 
 @api_router.get("/admin/dashboard")
 async def get_admin_dashboard(admin_user: dict = Depends(require_admin)):
