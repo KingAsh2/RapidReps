@@ -95,11 +95,12 @@ Build a fitness trainer-trainee matching platform with Uber-style real-time matc
 - Backend iteration 23: 29/29 tests passed (100%) - referral system + regression
 - Backend iteration 24: 22/22 tests passed (100%) - change password, all logins, DB optimizations
 - Backend iteration 25: 16/17 tests passed (94%) - bug fixes: cancel, pricing, photos, notifications (1 skipped: session flow needs verified trainer)
+- Backend iteration 26: 16/16 tests passed (100%) - Stripe Connect Express payouts: onboard, status, admin pay-trainer, pay-all, history
 
 ## Remaining Backlog
 1. P3: SendGrid email integration (awaiting API key from user)
 2. P4: TypeScript strict-mode warnings cleanup (86+)
-3. P5: Refactor admin dashboard (1000+ lines) into smaller components
+3. P5: Refactor admin dashboard (1800+ lines) into smaller components
 
 ### Toast Migration (Mar 4, 2026)
 45. **Alert.alert → Toast Migration** - Converted 54 of 60 Alert.alert calls to non-blocking toast notifications:
@@ -132,6 +133,14 @@ Build a fitness trainer-trainee matching platform with Uber-style real-time matc
 51. **P2: Push Notifications Enhanced** - Push notifications now include `priority: "high"`, `badge: unread_count`, and `channelId: "default"` for reliable background delivery
 52. **P2: Unread Message Count Badges** - Added `unreadMessageCount` to NotificationContext, polls every 30s. Tab bars on both trainee and trainer layouts now show badge count on Messages tab
 53. **P2: Notification Refresh on Message** - Notification context now also refreshes message counts when push notifications are received
+
+### Stripe Connect Payouts (Mar 4, 2026 - Session 2)
+54. **Stripe Connect Express Onboarding** - Trainers can link bank account via Stripe Express. New screen at `/trainer/connect-bank`. Creates Express account + onboarding URL.
+55. **Admin Payout Management** - New "Payouts" tab on admin dashboard. Shows pending trainer balances, "Pay Now" per-trainer button, "Pay All" batch button. $35 minimum threshold.
+56. **Payout History** - Both admin (all payouts) and trainer-facing (via earnings) payout history with dates, amounts, and Stripe transfer IDs.
+57. **Trainer Home Banner** - Shows "Connect Your Bank Account" banner on trainer home if bank not linked.
+58. **Updated Earnings Page** - Replaced old payout request modal with Stripe Connect status + manage link. Updated 80/20 split info text.
+**NOTE:** Stripe Connect requires activation on the platform Stripe account. Visit https://dashboard.stripe.com/connect to enable it.
 
 ## Mocked/Inactive
 - SendGrid: No-op (awaiting API key)
