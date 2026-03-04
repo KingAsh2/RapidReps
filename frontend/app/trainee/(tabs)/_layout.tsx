@@ -1,7 +1,8 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { View, StyleSheet, Platform } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
+import { useNotifications } from '../../../src/contexts/NotificationContext';
 
 // Brand Colors
 const BRAND = {
@@ -14,6 +15,8 @@ const BRAND = {
 };
 
 export default function TabLayout() {
+  const { unreadMessageCount } = useNotifications();
+
   return (
     <Tabs
       screenOptions={{
@@ -76,6 +79,8 @@ export default function TabLayout() {
         name="messages"
         options={{
           title: 'Messages',
+          tabBarBadge: unreadMessageCount > 0 ? unreadMessageCount : undefined,
+          tabBarBadgeStyle: { backgroundColor: BRAND.orange, fontSize: 10, fontWeight: '700' },
           tabBarIcon: ({ color, focused }) => (
             <View style={focused ? styles.activeIconContainer : null}>
               <Ionicons 

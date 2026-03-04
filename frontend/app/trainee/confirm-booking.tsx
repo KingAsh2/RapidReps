@@ -65,10 +65,11 @@ export default function ConfirmBookingScreen() {
     }
   };
 
-  const sessionPriceCents = getMinPrice(sessionType);
-  const platformFeeCents = Math.round(sessionPriceCents * 0.25);
-  const totalCents = sessionPriceCents;
-  const trainerEarnings = sessionPriceCents - platformFeeCents;
+  const sessionPriceCents = Number(params.priceCents) || getMinPrice(sessionType);
+  const serviceFeeCents = 200; // $2.00 flat service fee
+  const trainerEarnings = Math.round(sessionPriceCents * 0.80);
+  const platformFeeCents = sessionPriceCents - trainerEarnings;
+  const totalCents = sessionPriceCents + serviceFeeCents;
 
   const handleConfirmPayment = async () => {
     setIsProcessing(true);
@@ -184,12 +185,16 @@ export default function ConfirmBookingScreen() {
               <Text style={styles.priceValue}>${(sessionPriceCents / 100).toFixed(2)}</Text>
             </View>
             <View style={styles.priceRow}>
-              <Text style={styles.priceSublabel}>Platform fee (25%)</Text>
+              <Text style={styles.priceSublabel}>Trainer receives (80%)</Text>
+              <Text style={[styles.priceSublabel, { color: COLORS.success }]}>${(trainerEarnings / 100).toFixed(2)}</Text>
+            </View>
+            <View style={styles.priceRow}>
+              <Text style={styles.priceSublabel}>Platform fee (20%)</Text>
               <Text style={styles.priceSublabel}>${(platformFeeCents / 100).toFixed(2)}</Text>
             </View>
             <View style={styles.priceRow}>
-              <Text style={styles.priceSublabel}>Trainer receives (75%)</Text>
-              <Text style={[styles.priceSublabel, { color: COLORS.success }]}>${(trainerEarnings / 100).toFixed(2)}</Text>
+              <Text style={styles.priceLabel}>Service Fee</Text>
+              <Text style={styles.priceValue}>${(serviceFeeCents / 100).toFixed(2)}</Text>
             </View>
 
             <View style={styles.priceDivider} />

@@ -21,7 +21,7 @@ const getBackendUrl = (): string => {
   }
   
   // Hardcoded production fallback - ensures native builds always have a valid URL
-  const PRODUCTION_URL = 'https://rapid-reps-preview.preview.emergentagent.com';
+  const PRODUCTION_URL = 'https://real-time-fitness.preview.emergentagent.com';
   console.log('[API] Using hardcoded production fallback:', PRODUCTION_URL);
   return PRODUCTION_URL;
 };

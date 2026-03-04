@@ -64,12 +64,16 @@ stripe.api_key = os.environ.get('STRIPE_SECRET_KEY', '')
 EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send"
 
 async def send_push_notification(user_id: str, title: str, body: str, data: dict = None):
-    """Send push notification to a user via Expo Push API. Fire-and-forget."""
+    """Send push notification to a user via Expo Push API. Fire-and-forget.
+    Works both in foreground and background (background handled by OS)."""
     try:
         tokens_cursor = db.push_tokens.find({'userId': user_id})
         tokens = await tokens_cursor.to_list(10)
         if not tokens:
             return
+
+        # Get unread count for badge
+        unread_count = await db.notifications.count_documents({'userId': user_id, 'read': False})
 
         messages = []
         for t in tokens:
@@ -78,6 +82,9 @@ async def send_push_notification(user_id: str, title: str, body: str, data: dict
                 "sound": "default",
                 "title": title,
                 "body": body,
+                "priority": "high",
+                "badge": unread_count,
+                "channelId": "default",
             }
             if data:
                 msg["data"] = data
@@ -586,6 +593,12 @@ class SessionResponse(BaseModel):
     scheduledTime: Optional[str] = None
     notes: Optional[str] = None
     createdAt: Optional[datetime] = None
+    # Populated fields (from user lookups)
+    trainerName: Optional[str] = None
+    traineeName: Optional[str] = None
+    trainerPhoto: Optional[str] = None
+    traineePhoto: Optional[str] = None
+    traineePhone: Optional[str] = None
 
 # Rating Models
 class RatingCreate(BaseModel):
@@ -3128,7 +3141,7 @@ async def get_trainer_sessions(
     session_status: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
-    """Get sessions for a trainer"""
+    """Get sessions for a trainer with trainee info populated"""
     user_id = str(current_user['_id'])
     query = {'trainerId': user_id}
     
@@ -3136,14 +3149,34 @@ async def get_trainer_sessions(
         query['status'] = session_status
     
     sessions = await db.sessions.find(query).sort('sessionDateTimeStart', -1).to_list(100)
-    return [SessionResponse(**serialize_doc(s)) for s in sessions]
+    
+    # Collect unique trainee IDs and look up their info
+    trainee_ids = list(set(s.get('traineeId') for s in sessions if s.get('traineeId')))
+    trainee_map = {}
+    if trainee_ids:
+        trainee_users = await db.users.find(
+            {'_id': {'$in': [ObjectId(tid) for tid in trainee_ids if ObjectId.is_valid(tid)]}},
+            {'fullName': 1, 'profilePhoto': 1, 'phone': 1}
+        ).to_list(200)
+        trainee_map = {str(u['_id']): u for u in trainee_users}
+    
+    results = []
+    for s in sessions:
+        doc = serialize_doc(s)
+        trainee = trainee_map.get(s.get('traineeId', ''))
+        if trainee:
+            doc['traineeName'] = trainee.get('fullName', 'Trainee')
+            doc['traineePhoto'] = trainee.get('profilePhoto')
+            doc['traineePhone'] = trainee.get('phone')
+        results.append(SessionResponse(**doc))
+    return results
 
 @api_router.get("/trainee/sessions", response_model=List[SessionResponse])
 async def get_trainee_sessions(
     session_status: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
-    """Get sessions for a trainee"""
+    """Get sessions for a trainee with trainer info populated"""
     user_id = str(current_user['_id'])
     query = {'traineeId': user_id}
     
@@ -3151,7 +3184,26 @@ async def get_trainee_sessions(
         query['status'] = session_status
     
     sessions = await db.sessions.find(query).sort('sessionDateTimeStart', -1).to_list(100)
-    return [SessionResponse(**serialize_doc(s)) for s in sessions]
+    
+    # Collect unique trainer IDs and look up their info
+    trainer_ids = list(set(s.get('trainerId') for s in sessions if s.get('trainerId')))
+    trainer_map = {}
+    if trainer_ids:
+        trainer_users = await db.users.find(
+            {'_id': {'$in': [ObjectId(tid) for tid in trainer_ids if ObjectId.is_valid(tid)]}},
+            {'fullName': 1, 'profilePhoto': 1}
+        ).to_list(200)
+        trainer_map = {str(u['_id']): u for u in trainer_users}
+    
+    results = []
+    for s in sessions:
+        doc = serialize_doc(s)
+        trainer = trainer_map.get(s.get('trainerId', ''))
+        if trainer:
+            doc['trainerName'] = trainer.get('fullName', 'Trainer')
+            doc['trainerPhoto'] = trainer.get('profilePhoto')
+        results.append(SessionResponse(**doc))
+    return results
 
 @api_router.patch("/sessions/{session_id}/accept", response_model=SessionResponse)
 async def accept_session(session_id: str, current_user: dict = Depends(get_current_user)):

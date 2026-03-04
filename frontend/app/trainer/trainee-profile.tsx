@@ -147,8 +147,7 @@ export default function TraineeProfileScreen() {
           onPress: async () => {
             setLoading(true);
             try {
-              // Mock API call - in real app would update session status
-              await new Promise(resolve => setTimeout(resolve, 1000));
+              await trainerAPI.declineSession(sessionId);
               
               showAlert({
                 title: 'Session Declined',
@@ -178,9 +177,11 @@ export default function TraineeProfileScreen() {
   };
 
   const handleNavigate = () => {
-    if (session?.traineeLocation) {
-      const { latitude, longitude } = session.traineeLocation;
-      const url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
+    if (session?.traineeLatitude && session?.traineeLongitude) {
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${session.traineeLatitude},${session.traineeLongitude}`;
+      Linking.openURL(url);
+    } else if (session?.locationNameOrAddress) {
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(session.locationNameOrAddress)}`;
       Linking.openURL(url);
     } else {
       showAlert({
@@ -192,8 +193,9 @@ export default function TraineeProfileScreen() {
   };
 
   const handleCall = () => {
-    if (session?.traineePhone) {
-      Linking.openURL(`tel:${session.traineePhone}`);
+    const phone = session?.traineePhone || params.traineePhone;
+    if (phone) {
+      Linking.openURL(`tel:${phone}`);
     } else {
       showAlert({
         title: 'Contact Unavailable',

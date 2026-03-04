@@ -2,6 +2,7 @@ import React from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Platform, View, Text, StyleSheet } from 'react-native';
+import { useNotifications } from '../../../src/contexts/NotificationContext';
 
 const COLORS = {
   orange: '#FF7F00',
@@ -12,6 +13,8 @@ const COLORS = {
 };
 
 export default function TrainerTabsLayout() {
+  const { unreadMessageCount } = useNotifications();
+
   return (
     <Tabs
       screenOptions={{
@@ -58,6 +61,8 @@ export default function TrainerTabsLayout() {
         name="messages"
         options={{
           title: 'Messages',
+          tabBarBadge: unreadMessageCount > 0 ? unreadMessageCount : undefined,
+          tabBarBadgeStyle: { backgroundColor: COLORS.orange, fontSize: 10, fontWeight: '700' },
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="chatbubbles" size={size} color={color} />
           ),

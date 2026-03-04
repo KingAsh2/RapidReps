@@ -112,28 +112,29 @@ export default function TrainerDetailScreen() {
   const calculatePrice = () => {
     if (!trainer) return { sessionRate: 0, serviceFee: 2, totalCharged: 2, trainerEarnings: 0, platformEarnings: 2, perHourRate: 0 };
     
-    // Get per-hour rate based on session type
-    let hourlyRateCents: number;
+    // Get trainer's per-hour earnings rate (what they set = their 80% cut)
+    let trainerHourlyCents: number;
     switch (selectedSessionType) {
       case 'virtual':
-        hourlyRateCents = trainer.virtualRateCents || 3000;
+        trainerHourlyCents = trainer.virtualRateCents || 3000;
         break;
       case 'in_home':
-        hourlyRateCents = trainer.inHomeRateCents || 6000;
+        trainerHourlyCents = trainer.inHomeRateCents || 6000;
         break;
       default:
-        hourlyRateCents = trainer.outdoorRateCents || 4000;
+        trainerHourlyCents = trainer.outdoorRateCents || 4000;
     }
     
-    // Scale price by duration (rates are per hour)
-    const perHourRate = hourlyRateCents / 100;
-    const sessionRate = (hourlyRateCents / 100) * (selectedDuration / 60);
+    // Full price = trainer rate / 0.80 (trainer gets 80%, platform gets 20%)
+    const fullHourlyCents = Math.round(trainerHourlyCents / 0.80);
+    const perHourRate = fullHourlyCents / 100;
+    const sessionRate = (fullHourlyCents / 100) * (selectedDuration / 60);
     const travelFee = selectedSessionType === 'in_home' ? Math.min(15, Math.max(0, 5)) : 0;
     
     // Pricing model:
-    // Trainer gets 80% of session rate
-    // Platform gets 20% of session rate + $2 service fee
-    // Trainee is charged: session rate + travel fee + $2 service fee
+    // User pays: full session rate + travel fee + $2 service fee
+    // Trainer gets 80% of (session rate + travel fee)
+    // Platform gets 20% of (session rate + travel fee) + $2 service fee
     const serviceFee = 2.00;
     const trainerEarnings = (sessionRate + travelFee) * 0.80;
     const platformEarnings = (sessionRate + travelFee) * 0.20 + serviceFee;
@@ -540,7 +541,7 @@ export default function TrainerDetailScreen() {
                       styles.sessionTypePrice,
                       selectedSessionType === 'virtual' && styles.sessionTypePriceSelected
                     ]}>
-                      from ${trainer.virtualRateCents ? (trainer.virtualRateCents / 100) : 30}
+                      from ${trainer.virtualRateCents ? Math.round(trainer.virtualRateCents / 0.80 / 100) : 38}
                     </Text>
                   </TouchableOpacity>
                 )}
@@ -568,7 +569,7 @@ export default function TrainerDetailScreen() {
                       styles.sessionTypePrice,
                       selectedSessionType === 'outdoor' && styles.sessionTypePriceSelected
                     ]}>
-                      from ${trainer.outdoorRateCents ? (trainer.outdoorRateCents / 100) : 40}
+                      from ${trainer.outdoorRateCents ? Math.round(trainer.outdoorRateCents / 0.80 / 100) : 50}
                     </Text>
                   </TouchableOpacity>
                 )}
@@ -602,7 +603,7 @@ export default function TrainerDetailScreen() {
                       styles.sessionTypePrice,
                       selectedSessionType === 'in_home' && styles.sessionTypePriceSelected
                     ]}>
-                      from ${trainer.inHomeRateCents ? (trainer.inHomeRateCents / 100) : 60}
+                      from ${trainer.inHomeRateCents ? Math.round(trainer.inHomeRateCents / 0.80 / 100) : 75}
                     </Text>
                   </TouchableOpacity>
                 )}
@@ -728,7 +729,7 @@ export default function TrainerDetailScreen() {
               style={styles.quickActionButton}
               onPress={() => router.push({
                 pathname: '/trainee/schedule-training',
-                params: { trainerName: trainer?.fullName, trainerId: trainerId }
+                params: { trainerName: trainer?.fullName, trainerId: trainerId, sessionType: selectedSessionType, priceCents: String(Math.round(prices.sessionRate * 100)) }
               })}
             >
               <View style={[styles.quickActionIconBg, { backgroundColor: 'rgba(31, 184, 180, 0.1)' }]}>

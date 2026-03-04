@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { useAuth } from './AuthContext';
-import { notificationsAPI } from '../services/api';
+import { notificationsAPI, chatAPI } from '../services/api';
 
 // Configure how notifications appear when the app is in the foreground
 Notifications.setNotificationHandler({
@@ -18,8 +18,10 @@ interface NotificationContextType {
   expoPushToken: string | null;
   notifications: any[];
   unreadCount: number;
+  unreadMessageCount: number;
   refreshNotifications: () => Promise<void>;
   markAllRead: () => Promise<void>;
+  refreshMessageCount: () => Promise<void>;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -29,6 +31,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
   const notificationListener = useRef<any>();
   const responseListener = useRef<any>();
 
@@ -83,6 +86,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     // Listen for incoming notifications while app is open
     notificationListener.current = Notifications.addNotificationReceivedListener((notification) => {
       refreshNotifications();
+      refreshMessageCount();
     });
 
     // Listen for notification taps (user interacts with notification)
@@ -91,10 +95,15 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       // Navigation can be handled here based on data.screen
       console.log('Notification tapped:', data);
       refreshNotifications();
+      refreshMessageCount();
     });
 
     // Initial fetch
     refreshNotifications();
+    refreshMessageCount();
+
+    // Poll for unread messages every 30 seconds
+    const messageInterval = setInterval(refreshMessageCount, 30000);
 
     return () => {
       if (notificationListener.current) {
@@ -103,6 +112,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       if (responseListener.current) {
         Notifications.removeNotificationSubscription(responseListener.current);
       }
+      clearInterval(messageInterval);
     };
   }, [user, token]);
 
@@ -114,6 +124,16 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       setUnreadCount(notifs.filter((n: any) => !n.read).length);
     } catch (error) {
       // Silently fail — notifications are non-critical
+    }
+  };
+
+  const refreshMessageCount = async () => {
+    try {
+      const convos = await chatAPI.getConversations();
+      const total = convos.reduce((acc: number, c: any) => acc + (c.unreadCount || 0), 0);
+      setUnreadMessageCount(total);
+    } catch (error) {
+      // Silently fail
     }
   };
 
@@ -133,8 +153,10 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         expoPushToken,
         notifications,
         unreadCount,
+        unreadMessageCount,
         refreshNotifications,
         markAllRead,
+        refreshMessageCount,
       }}
     >
       {children}

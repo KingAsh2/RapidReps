@@ -18,7 +18,7 @@ import os
 import time
 import uuid
 
-BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://rapid-reps-preview.preview.emergentagent.com')
+BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://real-time-fitness.preview.emergentagent.com')
 
 # Test credentials for all 7 accounts
 TEST_ACCOUNTS = [

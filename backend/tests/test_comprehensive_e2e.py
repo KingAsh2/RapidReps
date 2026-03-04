@@ -9,7 +9,7 @@ import os
 import uuid
 
 # Use public URL from env
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://rapid-reps-preview.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://real-time-fitness.preview.emergentagent.com').rstrip('/')
 
 # Test credentials
 ADMIN_EMAIL = "admin@rapidreps.com"

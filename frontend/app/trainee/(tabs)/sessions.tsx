@@ -149,7 +149,7 @@ export default function SessionsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await traineeAPI.cancelSession(session._id);
+              await traineeAPI.cancelSession(session.id);
               loadSessions();
             } catch (error: any) {
               showAlert({
@@ -620,9 +620,14 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     borderRadius: 18,
     overflow: 'hidden',
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.92)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: 'rgba(0,0,0,0.08)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   sessionGradient: {
     padding: 18,
@@ -681,13 +686,13 @@ const styles = StyleSheet.create({
   trainerName: {
     fontSize: 17,
     fontWeight: '800',
-    color: COLORS.white,
+    color: '#1a2a5e',
     marginBottom: 4,
   },
   sessionDate: {
     fontSize: 14,
     fontWeight: '600',
-    color: 'rgba(255,255,255,0.7)',
+    color: '#6B7B9E',
   },
   sessionStats: {
     flexDirection: 'row',
@@ -702,7 +707,7 @@ const styles = StyleSheet.create({
   sessionStatText: {
     fontSize: 13,
     fontWeight: '600',
-    color: 'rgba(255,255,255,0.8)',
+    color: '#6B7B9E',
   },
   cancelButton: {
     flexDirection: 'row',

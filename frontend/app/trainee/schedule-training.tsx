@@ -130,6 +130,8 @@ export default function ScheduleTrainingScreen() {
         time: timeSlot?.label,
         duration: selectedDuration,
         trainerId: params.trainerId,
+        sessionType: params.sessionType || 'outdoor',
+        priceCents: params.priceCents || '0',
       },
     });
   };
