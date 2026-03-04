@@ -191,6 +191,16 @@ export const trainerAPI = {
     return response.data;
   },
 
+  goLive: async (): Promise<any> => {
+    const response = await api.post('/trainer/go-live');
+    return response.data;
+  },
+
+  goOffline: async (): Promise<any> => {
+    const response = await api.post('/trainer/go-offline');
+    return response.data;
+  },
+
   updateAvailability: async (isAvailable: boolean, latitude?: number, longitude?: number): Promise<any> => {
     const response = await api.put('/trainer/availability', { 
       isAvailable, 
@@ -430,6 +440,36 @@ export const traineeAPI = {
     const response = await api.get('/trainers/nearby', {
       params: { latitude, longitude, radius_miles: radiusMiles }
     });
+    return response.data;
+  },
+
+  // Convenience features
+  getRecentTrainers: async (): Promise<any> => {
+    const response = await api.get('/trainee/recent-trainers');
+    return response.data;
+  },
+
+  getStreak: async (): Promise<any> => {
+    const response = await api.get('/trainee/streak');
+    return response.data;
+  },
+
+  createRecurringSessions: async (data: {
+    trainerId: string;
+    locationType?: string;
+    durationMinutes?: number;
+    dayOfWeek: number;
+    timeSlot: string;
+    recurrenceType?: string;
+    numberOfSessions?: number;
+    locationNameOrAddress?: string;
+  }): Promise<any> => {
+    const response = await api.post('/sessions/recurring', data);
+    return response.data;
+  },
+
+  getFavoriteAvailability: async (): Promise<any> => {
+    const response = await api.get('/trainee/favorite-availability');
     return response.data;
   },
 };

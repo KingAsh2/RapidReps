@@ -8,6 +8,7 @@ import {
   TextInput,
   ActivityIndicator,
   RefreshControl,
+  Image,
   Dimensions,
   Platform,
   Modal,
@@ -87,6 +88,11 @@ export default function TraineeHomeScreen() {
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [travelProximity, setTravelProximity] = useState(10);
   const [showProximityPicker, setShowProximityPicker] = useState(false);
+
+  // Convenience features state
+  const [recentTrainers, setRecentTrainers] = useState<any[]>([]);
+  const [streak, setStreak] = useState<any>(null);
+  const [favoriteAvailability, setFavoriteAvailability] = useState<any[]>([]);
 
   // Start entrance animations immediately
   useEffect(() => {
@@ -175,8 +181,8 @@ export default function TraineeHomeScreen() {
   useEffect(() => {
     if (user) {
       requestLocationPermission();
-      // Start loading trainers immediately, don't wait for location
       loadTrainers();
+      loadConvenienceData();
     }
   }, [user]);
 
@@ -261,6 +267,22 @@ export default function TraineeHomeScreen() {
       setRefreshing(false);
     }
   };
+
+  const loadConvenienceData = async () => {
+    try {
+      const [recentRes, streakRes, favRes] = await Promise.all([
+        traineeAPI.getRecentTrainers().catch(() => ({ recentTrainers: [] })),
+        traineeAPI.getStreak().catch(() => null),
+        traineeAPI.getFavoriteAvailability().catch(() => ({ trainers: [] })),
+      ]);
+      setRecentTrainers(recentRes.recentTrainers || []);
+      setStreak(streakRes);
+      setFavoriteAvailability(favRes.trainers || []);
+    } catch {
+      // Non-critical — silently fail
+    }
+  };
+
 
   const loadSessions = async () => {
     try {
@@ -557,6 +579,97 @@ export default function TraineeHomeScreen() {
                 </LinearGradient>
               </TouchableOpacity>
             </Animated.View>
+
+            {/* === CONVENIENCE FEATURES === */}
+
+            {/* Streak Banner */}
+            {streak && streak.currentStreak > 0 && (
+              <TouchableOpacity
+                style={hs.streakBanner}
+                onPress={() => router.push('/trainee/share-streak')}
+                data-testid="streak-banner"
+              >
+                <LinearGradient colors={['#FF6B00', '#FF9F43']} style={hs.streakGradient} start={{x:0,y:0}} end={{x:1,y:0}}>
+                  <Ionicons name="flame" size={28} color="#fff" />
+                  <View style={{flex:1}}>
+                    <Text style={hs.streakTitle}>{streak.currentStreak} Week Streak!</Text>
+                    <Text style={hs.streakSub}>{streak.thisWeekSessions} session{streak.thisWeekSessions !== 1 ? 's' : ''} this week | {streak.totalSessions} total</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.7)" />
+                </LinearGradient>
+              </TouchableOpacity>
+            )}
+
+            {/* Quick Book — Recent Trainers */}
+            {recentTrainers.length > 0 && (
+              <View style={hs.quickBookSection} data-testid="quick-book-section">
+                <Text style={hs.sectionLabel}>Quick Book</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{gap: 12, paddingRight: 16}}>
+                  {recentTrainers.map((t: any) => (
+                    <TouchableOpacity
+                      key={t.trainerId}
+                      style={hs.quickBookCard}
+                      onPress={() => router.push({ pathname: '/trainee/trainer-detail', params: { trainerId: t.trainerId } })}
+                      data-testid={`quick-book-${t.trainerId}`}
+                    >
+                      {t.trainerPhoto ? (
+                        <Image source={{uri: t.trainerPhoto}} style={hs.quickBookPhoto} />
+                      ) : (
+                        <View style={[hs.quickBookPhoto, {backgroundColor: '#FF7F00', justifyContent: 'center', alignItems: 'center'}]}>
+                          <Ionicons name="person" size={22} color="#fff" />
+                        </View>
+                      )}
+                      {t.isAvailable && <View style={hs.liveDot} />}
+                      <Text style={hs.quickBookName} numberOfLines={1}>{t.trainerName?.split(' ')[0]}</Text>
+                      <Text style={hs.quickBookMeta}>{t.sessionCount} sessions</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+
+            {/* Favorite Trainer Availability */}
+            {favoriteAvailability.length > 0 && (
+              <View style={hs.favSection} data-testid="fav-availability-section">
+                <Text style={hs.sectionLabel}>Your Trainers</Text>
+                {favoriteAvailability.slice(0, 3).map((t: any) => (
+                  <TouchableOpacity
+                    key={t.trainerId}
+                    style={hs.favCard}
+                    onPress={() => router.push({ pathname: '/trainee/trainer-detail', params: { trainerId: t.trainerId } })}
+                    data-testid={`fav-trainer-${t.trainerId}`}
+                  >
+                    <View style={{flexDirection:'row', alignItems:'center', gap: 12, flex: 1}}>
+                      {t.trainerPhoto ? (
+                        <Image source={{uri: t.trainerPhoto}} style={hs.favPhoto} />
+                      ) : (
+                        <View style={[hs.favPhoto, {backgroundColor: '#1FB8B4', justifyContent: 'center', alignItems: 'center'}]}>
+                          <Ionicons name="person" size={18} color="#fff" />
+                        </View>
+                      )}
+                      <View style={{flex:1}}>
+                        <Text style={hs.favName}>{t.trainerName}</Text>
+                        <View style={{flexDirection:'row', alignItems:'center', gap: 6}}>
+                          {t.isLiveNow ? (
+                            <View style={hs.liveBadge}><Text style={hs.liveBadgeText}>LIVE NOW</Text></View>
+                          ) : t.isAvailable ? (
+                            <Text style={{fontSize: 11, color: '#00C853', fontWeight: '700'}}>Available</Text>
+                          ) : (
+                            <Text style={{fontSize: 11, color: '#8892b0', fontWeight: '600'}}>Offline</Text>
+                          )}
+                          {t.averageRating > 0 && (
+                            <Text style={{fontSize: 11, color: '#8892b0'}}>
+                              <Ionicons name="star" size={10} color="#FFB800" /> {t.averageRating.toFixed(1)}
+                            </Text>
+                          )}
+                        </View>
+                      </View>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color="#8892b0" />
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
 
             {/* MAP - Trainers Near You */}
             <NearbyTrainersMap
@@ -919,6 +1032,38 @@ export default function TraineeHomeScreen() {
     </>
   );
 }
+
+
+// Convenience feature styles
+const hs = StyleSheet.create({
+  streakBanner: { borderRadius: 16, overflow: 'hidden', marginBottom: 16 },
+  streakGradient: { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 14 },
+  streakTitle: { fontSize: 18, fontWeight: '900', color: '#fff' },
+  streakSub: { fontSize: 12, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
+  sectionLabel: { fontSize: 16, fontWeight: '800', color: '#1a2a5e', marginBottom: 12 },
+  quickBookSection: { marginBottom: 16 },
+  quickBookCard: {
+    alignItems: 'center', width: 80, gap: 6,
+  },
+  quickBookPhoto: { width: 60, height: 60, borderRadius: 30, borderWidth: 2, borderColor: '#FF7F00' },
+  quickBookName: { fontSize: 12, fontWeight: '700', color: '#1a2a5e', textAlign: 'center' },
+  quickBookMeta: { fontSize: 10, color: '#8892b0' },
+  liveDot: {
+    position: 'absolute', top: 0, right: 8,
+    width: 14, height: 14, borderRadius: 7,
+    backgroundColor: '#00C853', borderWidth: 2.5, borderColor: '#fff',
+  },
+  favSection: { marginBottom: 16 },
+  favCard: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: '#fff', borderRadius: 14, padding: 14, marginBottom: 8,
+    shadowColor: '#000', shadowOffset: {width:0, height:2}, shadowOpacity: 0.05, shadowRadius: 8, elevation: 3,
+  },
+  favPhoto: { width: 42, height: 42, borderRadius: 21 },
+  favName: { fontSize: 14, fontWeight: '700', color: '#1a2a5e' },
+  liveBadge: { backgroundColor: '#FF4757', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
+  liveBadgeText: { fontSize: 9, fontWeight: '800', color: '#fff', letterSpacing: 0.5 },
+});
 
 const styles = StyleSheet.create({
   container: {

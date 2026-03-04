@@ -463,6 +463,23 @@ export default function SessionsScreen() {
                         </LinearGradient>
                       </TouchableOpacity>
                     )}
+
+                    {/* Rebook Button for Completed Sessions */}
+                    {isCompleted && (
+                      <TouchableOpacity
+                        style={styles.rebookButton}
+                        onPress={() => router.push({
+                          pathname: '/trainee/trainer-detail',
+                          params: { trainerId: session.trainerId }
+                        })}
+                        data-testid={`rebook-${session.id}`}
+                      >
+                        <View style={styles.rebookButtonInner}>
+                          <Ionicons name="refresh" size={16} color={COLORS.teal} />
+                          <Text style={styles.rebookButtonText}>Book Again</Text>
+                        </View>
+                      </TouchableOpacity>
+                    )}
                   </View>
                 </Animated.View>
               );
@@ -740,5 +757,23 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     color: COLORS.white,
+  },
+  rebookButton: {
+    marginTop: 8,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: COLORS.teal,
+  },
+  rebookButtonInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+  },
+  rebookButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.teal,
   },
 });

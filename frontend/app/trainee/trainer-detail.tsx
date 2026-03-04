@@ -747,6 +747,26 @@ export default function TrainerDetailScreen() {
             <TouchableOpacity 
               style={styles.quickActionButton}
               onPress={() => router.push({
+                pathname: '/trainee/recurring-sessions',
+                params: { trainerName: trainer?.fullName, trainerId: trainerId }
+              })}
+              data-testid="recurring-sessions-btn"
+            >
+              <View style={[styles.quickActionIconBg, { backgroundColor: 'rgba(0, 200, 83, 0.1)' }]}>
+                <Ionicons name="repeat" size={24} color="#00C853" />
+              </View>
+              <View style={styles.quickActionContent}>
+                <Text style={styles.quickActionTitle}>Recurring Sessions</Text>
+                <Text style={styles.quickActionSubtitle}>Set up weekly or biweekly</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={COLORS.gray} />
+            </TouchableOpacity>
+
+            <View style={styles.quickActionDivider} />
+
+            <TouchableOpacity 
+              style={styles.quickActionButton}
+              onPress={() => router.push({
                 pathname: '/trainee/share-status',
                 params: { 
                   trainerName: trainer?.fullName,

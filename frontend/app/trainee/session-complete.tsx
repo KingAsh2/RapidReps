@@ -88,7 +88,11 @@ export default function SessionCompleteScreen() {
   };
 
   const handleBookAnother = () => {
-    router.replace('/trainee/(tabs)/home');
+    if (trainerId) {
+      router.replace({ pathname: '/trainee/trainer-detail', params: { trainerId } });
+    } else {
+      router.replace('/trainee/(tabs)/home');
+    }
   };
 
   return (
@@ -205,11 +209,13 @@ export default function SessionCompleteScreen() {
           </Pressable>
         </View>
 
-        {/* Book Another Session */}
-        <Pressable onPress={handleBookAnother} style={styles.bookAnotherButton}>
+        {/* Book Again with Same Trainer */}
+        <Pressable onPress={handleBookAnother} style={styles.bookAnotherButton} data-testid="book-another-btn">
           <View style={styles.bookAnotherContent}>
-            <Ionicons name="add-circle-outline" size={24} color={Colors.white} />
-            <Text style={styles.bookAnotherText}>Book Another Session</Text>
+            <Ionicons name="refresh-circle-outline" size={24} color={Colors.white} />
+            <Text style={styles.bookAnotherText}>
+              {trainerId ? `Book Again with ${trainerName || 'Trainer'}` : 'Book Another Session'}
+            </Text>
           </View>
         </Pressable>
       </ScrollView>

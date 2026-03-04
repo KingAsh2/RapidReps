@@ -63,6 +63,8 @@ export default function TrainerHomeScreen() {
   const [isAvailable, setIsAvailable] = useState(false);
   const [nearbyTrainees, setNearbyTrainees] = useState<any[]>([]);
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [isLiveNow, setIsLiveNow] = useState(false);
+  const [goLiveLoading, setGoLiveLoading] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [locationPermission, setLocationPermission] = useState<boolean | null>(null);
   const [bankConnected, setBankConnected] = useState<boolean | null>(null);
@@ -336,6 +338,30 @@ export default function TrainerHomeScreen() {
     }
   };
 
+  const handleGoLive = async () => {
+    setGoLiveLoading(true);
+    try {
+      if (isLiveNow) {
+        await trainerAPI.goOffline();
+        setIsLiveNow(false);
+        toast.info('You are now offline');
+      } else {
+        // Ensure availability is on first
+        if (!isAvailable) {
+          await handleToggleAvailability(true);
+        }
+        const res = await trainerAPI.goLive();
+        setIsLiveNow(true);
+        toast.success(`You're live! ${res.notifiedTrainees} past trainees notified.`);
+      }
+    } catch (error) {
+      toast.error('Could not update live status');
+    } finally {
+      setGoLiveLoading(false);
+    }
+  };
+
+
   const handleAccept = async (sessionId: string) => {
     try {
       await trainerAPI.acceptSession(sessionId);
@@ -552,6 +578,27 @@ export default function TrainerHomeScreen() {
                 )}
               </LinearGradient>
             </Animated.View>
+
+            {/* Go Live Button */}
+            {isAvailable && (
+              <TouchableOpacity
+                style={[goLiveStyles.goLiveBtn, isLiveNow && goLiveStyles.goLiveBtnActive]}
+                onPress={handleGoLive}
+                disabled={goLiveLoading}
+                data-testid="go-live-btn"
+              >
+                {goLiveLoading ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <>
+                    <View style={[goLiveStyles.goLiveDot, isLiveNow && goLiveStyles.goLiveDotActive]} />
+                    <Text style={goLiveStyles.goLiveBtnText}>
+                      {isLiveNow ? 'GO OFFLINE' : 'GO LIVE — Notify Past Trainees'}
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            )}
 
             {/* Earnings Card */}
             {earnings && (
@@ -867,6 +914,40 @@ export default function TrainerHomeScreen() {
 }
 
 const styles = StyleSheet.create({
+const goLiveStyles = {
+  goLiveBtn: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 14,
+    paddingVertical: 14,
+    gap: 10,
+    marginBottom: 12,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  goLiveBtnActive: {
+    backgroundColor: 'rgba(255, 71, 87, 0.25)',
+    borderColor: '#FF4757',
+  },
+  goLiveDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#00C853',
+  },
+  goLiveDotActive: {
+    backgroundColor: '#FF4757',
+  },
+  goLiveBtnText: {
+    color: '#fff',
+    fontWeight: '800' as const,
+    fontSize: 14,
+    letterSpacing: 0.5,
+  },
+};
+
   container: {
     flex: 1,
   },

@@ -1,0 +1,81 @@
+{
+  "summary": "Convenience Features Testing - 21/21 tests passed (100%). Fixed critical bug: convenience feature routes were defined AFTER app.include_router(api_router), causing 404 errors. Also fixed PricingConfig -> PricingRules typo in recurring sessions endpoint. All 8 new convenience features now working correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [],
+    "bugs_fixed_by_testing_agent": [
+      {
+        "issue": "Convenience feature routes registered AFTER app.include_router(api_router) - routes were not accessible (404)",
+        "fix": "Moved app.include_router(api_router) to AFTER all route definitions including convenience features",
+        "file": "/app/backend/server.py",
+        "lines_affected": "8483-8787"
+      },
+      {
+        "issue": "PricingConfig.SERVICE_FEE_CENTS undefined - using wrong class name in recurring sessions endpoint",
+        "fix": "Changed PricingConfig to PricingRules",
+        "file": "/app/backend/server.py",
+        "line": "8638"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "note": "Frontend testing SKIPPED as requested - backend-only regression (React Native mobile app)"
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration28_convenience_features.py",
+    "/app/test_reports/pytest/iteration28_convenience_features_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Routes defined after app.include_router() are silently ignored - FastAPI design pattern requires all routes to be registered before include_router()",
+    "All 8 convenience features now working: Recent Trainers, Streak Tracking, Recurring Sessions, Go Live, Go Offline, Favorite Availability",
+    "Frontend API service (api.ts) already has correct client methods: traineeAPI.getRecentTrainers(), getStreak(), createRecurringSessions(), getFavoriteAvailability() and trainerAPI.goLive(), goOffline()"
+  ],
+  "updated_files": [
+    "/app/backend/server.py",
+    "/app/backend/tests/test_iteration28_convenience_features.py"
+  ],
+  "success_rate": {
+    "backend": "100% (21/21 tests passed)",
+    "frontend": "SKIPPED (as requested - React Native mobile app)"
+  },
+  "test_credentials": {
+    "admin": "admin@rapidreps.com / admin123",
+    "test_trainer": "stripe_connect_test@test.com / test123",
+    "test_prefix": "TEST_ITER28_"
+  },
+  "seed_data_creation": "Fresh test users created with TEST_ITER28_ prefix for each test class",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All 8 convenience features verified working. Key endpoints: GET /api/trainee/recent-trainers (returns up to 3 recent trainers with stats), GET /api/trainee/streak (currentStreak, longestStreak, totalSessions, thisWeekSessions), POST /api/sessions/recurring (creates N sessions with dayOfWeek, timeSlot, recurrenceType), POST /api/trainer/go-live (sets isLiveNow=true, notifies past trainees), POST /api/trainer/go-offline (sets isLiveNow=false), GET /api/trainee/favorite-availability (returns saved trainers with availability/isLiveNow). Regression tests also passed for health, auth, sessions, Stripe Connect, admin payouts.",
+  "verified_features": {
+    "recent_trainers": "✓ GET /api/trainee/recent-trainers - returns recentTrainers array with trainerName, trainerPhoto, sessionCount, rates",
+    "streak_tracking": "✓ GET /api/trainee/streak - returns currentStreak, longestStreak, totalSessions, thisWeekSessions",
+    "recurring_sessions": "✓ POST /api/sessions/recurring - creates N sessions with dayOfWeek (0-6), timeSlot ('HH:MM'), recurrenceType ('weekly'/'biweekly')",
+    "trainer_go_live": "✓ POST /api/trainer/go-live - sets isLiveNow=true, notifies past trainees, returns notifiedTrainees count",
+    "trainer_go_offline": "✓ POST /api/trainer/go-offline - sets isLiveNow=false",
+    "favorite_availability": "✓ GET /api/trainee/favorite-availability - returns saved trainers with availability windows, isLiveNow status",
+    "regression_health": "✓ GET /api/health returns status:healthy",
+    "regression_auth_login": "✓ POST /api/auth/login works with valid credentials",
+    "regression_trainer_sessions": "✓ GET /api/trainer/sessions returns session list",
+    "regression_trainee_sessions": "✓ GET /api/trainee/sessions returns session list",
+    "regression_stripe_connect_status": "✓ GET /api/trainer/connect/status returns connected/onboarded flags",
+    "regression_admin_payouts": "✓ GET /api/admin/payouts/pending works for admin"
+  },
+  "mocked_apis": {
+    "has_mocked_apis": true,
+    "mocked_apis_list": [
+      "SendGrid email service (NOOP - no API key configured)",
+      "Virtual session payments use mock_payment_ prefix",
+      "Push notifications via Expo Push API (fire-and-forget)"
+    ]
+  },
+  "production_readiness": {
+    "status": "READY",
+    "all_convenience_features_working": true,
+    "regression_tests_passing": true
+  }
+}
