@@ -14,6 +14,7 @@ import {
   Platform,
   Dimensions,
   Image,
+  Linking,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -23,7 +24,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import Svg, { Circle, G, Rect, Text as SvgText, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 
-const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://rapid-reps-preview.preview.emergentagent.com';
 
 const C = {
   orange: '#FF7F00',
@@ -626,42 +627,7 @@ export default function AdminDashboard() {
           <StatCard icon="hourglass" label="Pending" value={pendingCount} color={C.error} subtitle="Awaiting review" />
         </View>
 
-        {/* Session Status Pie */}
-        <Text style={s.sectionTitle}>Session Status</Text>
-        <View style={s.chartCard}>
-          <View style={s.chartRow}>
-            <DonutChart
-              segments={[
-                { value: dashboard.completedSessions, color: C.success, label: 'Completed' },
-                { value: Math.max(dashboard.totalSessions - dashboard.completedSessions, 0), color: C.warning, label: 'Active' },
-                { value: pendingCount, color: C.error, label: 'Pending' },
-              ]}
-              size={120}
-              strokeWidth={16}
-              centerLabel="Sessions"
-              centerValue={String(dashboard.totalSessions)}
-            />
-            <View style={s.chartLegend}>
-              <View style={s.legendItem}>
-                <View style={[s.legendDot, { backgroundColor: C.success }]} />
-                <Text style={s.legendLabel}>Completed</Text>
-                <Text style={s.legendValue}>{dashboard.completedSessions}</Text>
-              </View>
-              <View style={s.legendItem}>
-                <View style={[s.legendDot, { backgroundColor: C.warning }]} />
-                <Text style={s.legendLabel}>Active / Upcoming</Text>
-                <Text style={s.legendValue}>{Math.max(dashboard.totalSessions - dashboard.completedSessions, 0)}</Text>
-              </View>
-              <View style={s.legendItem}>
-                <View style={[s.legendDot, { backgroundColor: C.error }]} />
-                <Text style={s.legendLabel}>Pending Review</Text>
-                <Text style={s.legendValue}>{pendingCount}</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        {/* Attention Needed */}
+        {/* Attention Needed - Moved up for visibility */}
         <Text style={s.sectionTitle}>Attention Needed</Text>
         <View style={s.attentionCard}>
           <TouchableOpacity
@@ -699,6 +665,41 @@ export default function AdminDashboard() {
             <Text style={s.attentionText}><Text style={s.attentionCount}>0</Text> low-rated trainers ({'<'}3.0)</Text>
             <Ionicons name="chevron-forward" size={16} color={C.gray} />
           </TouchableOpacity>
+        </View>
+
+        {/* Session Status Pie */}
+        <Text style={s.sectionTitle}>Session Status</Text>
+        <View style={s.chartCard}>
+          <View style={s.chartRow}>
+            <DonutChart
+              segments={[
+                { value: dashboard.completedSessions, color: C.success, label: 'Completed' },
+                { value: Math.max(dashboard.totalSessions - dashboard.completedSessions, 0), color: C.warning, label: 'Active' },
+                { value: pendingCount, color: C.error, label: 'Pending' },
+              ]}
+              size={120}
+              strokeWidth={16}
+              centerLabel="Sessions"
+              centerValue={String(dashboard.totalSessions)}
+            />
+            <View style={s.chartLegend}>
+              <View style={s.legendItem}>
+                <View style={[s.legendDot, { backgroundColor: C.success }]} />
+                <Text style={s.legendLabel}>Completed</Text>
+                <Text style={s.legendValue}>{dashboard.completedSessions}</Text>
+              </View>
+              <View style={s.legendItem}>
+                <View style={[s.legendDot, { backgroundColor: C.warning }]} />
+                <Text style={s.legendLabel}>Active / Upcoming</Text>
+                <Text style={s.legendValue}>{Math.max(dashboard.totalSessions - dashboard.completedSessions, 0)}</Text>
+              </View>
+              <View style={s.legendItem}>
+                <View style={[s.legendDot, { backgroundColor: C.error }]} />
+                <Text style={s.legendLabel}>Pending Review</Text>
+                <Text style={s.legendValue}>{pendingCount}</Text>
+              </View>
+            </View>
+          </View>
         </View>
 
         {/* Top Trainers Leaderboard */}
@@ -986,38 +987,91 @@ export default function AdminDashboard() {
                     </View>
                   )}
 
-                  {/* Verification Steps */}
+                  {/* Verification Steps - Individual Approval */}
                   <View style={s.modalSection}>
                     <Text style={s.modalSectionTitle}>Verification Documents</Text>
-                    {verificationDetail.steps?.map((step: any) => (
+                    {verificationDetail.steps?.map((step: any) => {
+                      const stepApproved = verificationDetail.profile?.[`${step.id}Approved`];
+                      return (
                       <View key={step.id} style={{
-                        flexDirection: 'row', alignItems: 'center', paddingVertical: 12,
-                        borderBottomWidth: 1, borderBottomColor: '#f0f0f0', gap: 12,
+                        paddingVertical: 12,
+                        borderBottomWidth: 1, borderBottomColor: '#f0f0f0',
                       }}>
-                        <View style={{
-                          width: 36, height: 36, borderRadius: 18,
-                          backgroundColor: step.submitted ? '#E8FDE8' : '#FDE8E8',
-                          alignItems: 'center', justifyContent: 'center',
-                        }}>
-                          <Ionicons
-                            name={step.submitted ? 'checkmark-circle' : 'close-circle'}
-                            size={20}
-                            color={step.submitted ? C.success : C.error}
-                          />
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                          <View style={{
+                            width: 36, height: 36, borderRadius: 18,
+                            backgroundColor: stepApproved ? '#E8FDE8' : step.submitted ? '#FFF5EB' : '#FDE8E8',
+                            alignItems: 'center', justifyContent: 'center',
+                          }}>
+                            <Ionicons
+                              name={stepApproved ? 'checkmark-circle' : step.submitted ? 'time' : 'close-circle'}
+                              size={20}
+                              color={stepApproved ? C.success : step.submitted ? C.warning : C.error}
+                            />
+                          </View>
+                          <View style={{ flex: 1 }}>
+                            <Text style={{ fontSize: 14, fontWeight: '700', color: C.navy }}>{step.label}</Text>
+                            <Text style={{ fontSize: 12, color: stepApproved ? C.success : step.submitted ? C.warning : C.error, fontWeight: '600' }}>
+                              {stepApproved ? 'Approved' : step.submitted ? 'Under Review' : 'Not submitted'}
+                            </Text>
+                          </View>
                         </View>
-                        <View style={{ flex: 1 }}>
-                          <Text style={{ fontSize: 14, fontWeight: '700', color: C.navy }}>{step.label}</Text>
-                          <Text style={{ fontSize: 12, color: step.submitted ? C.success : C.error, fontWeight: '600' }}>
-                            {step.submitted ? 'Submitted' : 'Not submitted'}
-                          </Text>
-                        </View>
-                        {step.url && (
-                          <View style={{ backgroundColor: '#E8F0FE', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
-                            <Text style={{ fontSize: 11, fontWeight: '600', color: C.teal }}>File attached</Text>
+                        {/* Action row: View file + Approve/Reject per step */}
+                        {step.submitted && (
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8, marginLeft: 48 }}>
+                            {step.url && (
+                              <TouchableOpacity
+                                onPress={() => {
+                                  Linking.openURL(step.url);
+                                }}
+                                style={{ backgroundColor: '#E8F0FE', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                                data-testid={`view-doc-${step.id}`}
+                              >
+                                <Ionicons name="eye" size={14} color={C.teal} />
+                                <Text style={{ fontSize: 12, fontWeight: '600', color: C.teal }}>View</Text>
+                              </TouchableOpacity>
+                            )}
+                            {!stepApproved && (
+                              <>
+                                <TouchableOpacity
+                                  onPress={async () => {
+                                    try {
+                                      const headers = await getAuthHeader();
+                                      await api.post(`/admin/verifications/${verificationDetail.profile?.userId}/approve-step`, { stepId: step.id }, { headers });
+                                      Alert.alert('Approved', `${step.label} has been approved`);
+                                      const updated = await api.get(`/admin/verifications/${verificationDetail.profile?.userId}/detail`, { headers });
+                                      setVerificationDetail(updated.data);
+                                    } catch(e) { Alert.alert('Error', 'Failed to approve'); }
+                                  }}
+                                  style={{ backgroundColor: C.success, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                                  data-testid={`approve-step-${step.id}`}
+                                >
+                                  <Ionicons name="checkmark" size={14} color={C.white} />
+                                  <Text style={{ fontSize: 12, fontWeight: '600', color: C.white }}>Approve</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                  onPress={async () => {
+                                    try {
+                                      const headers = await getAuthHeader();
+                                      await api.post(`/admin/verifications/${verificationDetail.profile?.userId}/reject-step`, { stepId: step.id, reason: 'Document needs revision' }, { headers });
+                                      Alert.alert('Rejected', `${step.label} has been rejected`);
+                                      const updated = await api.get(`/admin/verifications/${verificationDetail.profile?.userId}/detail`, { headers });
+                                      setVerificationDetail(updated.data);
+                                    } catch(e) { Alert.alert('Error', 'Failed to reject'); }
+                                  }}
+                                  style={{ backgroundColor: '#FDE8E8', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                                  data-testid={`reject-step-${step.id}`}
+                                >
+                                  <Ionicons name="close" size={14} color={C.error} />
+                                  <Text style={{ fontSize: 12, fontWeight: '600', color: C.error }}>Reject</Text>
+                                </TouchableOpacity>
+                              </>
+                            )}
                           </View>
                         )}
                       </View>
-                    ))}
+                      );
+                    })}
                   </View>
 
                   {/* Reject with Reason */}

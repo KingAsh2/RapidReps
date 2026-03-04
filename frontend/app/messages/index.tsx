@@ -198,7 +198,7 @@ export default function MessagesScreen() {
       />
 
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        {/* Header - No back button since this is a tab */}
+        {/* Header with back button */}
         <Animated.View
           style={[
             styles.header,
@@ -208,7 +208,11 @@ export default function MessagesScreen() {
             },
           ]}
         >
-          <Text style={styles.headerTitle}>MESSAGES 💬</Text>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton} data-testid="messages-back-btn">
+            <Ionicons name="arrow-back" size={24} color={COLORS.white} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>MESSAGES</Text>
+          <View style={{ width: 40 }} />
         </Animated.View>
 
         {/* Conversation Count */}
@@ -274,9 +278,19 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 8,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {

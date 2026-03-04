@@ -188,6 +188,18 @@ export const trainerAPI = {
     return response.data;
   },
 
+  setRates: async (rates: {
+    offersInPerson?: boolean;
+    offersVirtual?: boolean;
+    offersInHome?: boolean;
+    outdoorRateCents?: number;
+    virtualRateCents?: number;
+    inHomeRateCents?: number;
+  }): Promise<any> => {
+    const response = await api.post('/trainer/set-rates', rates);
+    return response.data;
+  },
+
   // Location & Availability APIs (Uber-style)
   updateLocation: async (latitude: number, longitude: number): Promise<any> => {
     const response = await api.put('/trainer/location', { latitude, longitude });

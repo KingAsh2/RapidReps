@@ -65,6 +65,7 @@ export default function TrainerHomeScreen() {
   const [isAvailable, setIsAvailable] = useState(false);
   const [nearbyTrainees, setNearbyTrainees] = useState<any[]>([]);
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [trainerProfile, setTrainerProfile] = useState<any>(null);
   const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [locationPermission, setLocationPermission] = useState<boolean | null>(null);
 
@@ -245,6 +246,7 @@ export default function TrainerHomeScreen() {
       setNearbyTrainees(traineesData.trainees || []);
       
       if (profileData) {
+        setTrainerProfile(profileData);
         const available = profileData.isAvailable ?? false;
         setIsAvailable(available);
         
@@ -480,8 +482,16 @@ export default function TrainerHomeScreen() {
                 style={styles.heroGradient}
               >
                 <View style={styles.heroGlow} />
+                {/* Profile Photo */}
+                {trainerProfile?.avatarUrl ? (
+                  <Image source={{ uri: trainerProfile.avatarUrl }} style={styles.heroAvatar} />
+                ) : (
+                  <View style={[styles.heroAvatar, styles.heroAvatarPlaceholder]}>
+                    <Ionicons name="person" size={36} color="rgba(255,255,255,0.5)" />
+                  </View>
+                )}
                 <Text style={styles.heroTitle}>
-                  LET'S TRAIN, {user?.fullName?.split(' ')[0]?.toUpperCase() || 'COACH'}! 🔥
+                  LET'S TRAIN, {user?.fullName?.split(' ')[0]?.toUpperCase() || 'COACH'}!
                 </Text>
                 <Text style={styles.heroSubtitle}>
                   {pendingSessions.length > 0 
@@ -611,6 +621,21 @@ export default function TrainerHomeScreen() {
                     <Ionicons name="shield-checkmark" size={28} color={COLORS.teal} />
                   </View>
                   <Text style={styles.quickActionText}>Verification</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.quickAction}
+                onPress={() => router.push('/trainer/set-rates')}
+                data-testid="set-rates-btn"
+              >
+                <LinearGradient
+                  colors={[COLORS.white, COLORS.offWhite]}
+                  style={styles.quickActionGradient}
+                >
+                  <View style={styles.quickActionIcon}>
+                    <Ionicons name="cash" size={28} color={COLORS.success} />
+                  </View>
+                  <Text style={styles.quickActionText}>Set Rates</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </View>
@@ -939,6 +964,20 @@ const styles = StyleSheet.create({
     height: 150,
     borderRadius: 75,
     backgroundColor: 'rgba(247, 147, 30, 0.3)',
+  },
+  heroAvatar: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    borderWidth: 3,
+    borderColor: 'rgba(255,255,255,0.4)',
+    alignSelf: 'center',
+    marginBottom: 12,
+  },
+  heroAvatarPlaceholder: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   heroTitle: {
     fontSize: 26,

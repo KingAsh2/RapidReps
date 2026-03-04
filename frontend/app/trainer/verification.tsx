@@ -283,6 +283,11 @@ export default function TrainerVerificationScreen() {
     s => verificationStatus[s.id] === 'submitted' || verificationStatus[s.id] === 'approved'
   );
 
+  // Hide hold button once all docs are submitted or approved
+  const allSubmitted = VERIFICATION_STEPS.filter(s => s.required).every(
+    s => verificationStatus[s.id] === 'submitted' || verificationStatus[s.id] === 'approved'
+  );
+
   const holdBarWidth = holdProgress.interpolate({
     inputRange: [0, 1],
     outputRange: ['0%', '100%'],
@@ -458,7 +463,8 @@ export default function TrainerVerificationScreen() {
               </View>
             </View>
 
-            {/* Hold to Submit Button */}
+            {/* Hold to Submit Button - Only show if not all submitted/approved */}
+            {!allSubmitted && (
             <View style={styles.submitSection}>
               <Text style={styles.submitHint}>
                 {requiredComplete
@@ -496,6 +502,7 @@ export default function TrainerVerificationScreen() {
                 </View>
               </Pressable>
             </View>
+            )}
 
             <View style={{ height: 100 }} />
           </Animated.View>

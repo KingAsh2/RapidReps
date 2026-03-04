@@ -50,6 +50,13 @@ const COLORS = {
   cardBorder: 'rgba(255,255,255,0.2)',
 };
 
+const US_STATES = [
+  'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA',
+  'KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ',
+  'NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT',
+  'VA','WA','WV','WI','WY','DC',
+];
+
 export default function TraineeProfileScreen() {
   const router = useRouter();
   const { user, logout } = useAuth();
@@ -73,6 +80,9 @@ export default function TraineeProfileScreen() {
     injuriesOrLimitations: '',
     homeGymOrZipCode: '',
     homeAddress: '',
+    homeStreet: '',
+    homeCity: '',
+    homeState: '',
     prefersInPerson: true,
     prefersVirtual: true,
     budgetMinPerMinuteCents: 50,
@@ -126,6 +136,9 @@ export default function TraineeProfileScreen() {
         injuriesOrLimitations: profileData.injuriesOrLimitations || '',
         homeGymOrZipCode: profileData.homeGymOrZipCode || '',
         homeAddress: profileData.homeAddress || '',
+        homeStreet: profileData.homeStreet || '',
+        homeCity: profileData.homeCity || '',
+        homeState: profileData.homeState || '',
         prefersInPerson: profileData.prefersInPerson ?? true,
         prefersVirtual: profileData.prefersVirtual ?? true,
         budgetMinPerMinuteCents: profileData.budgetMinPerMinuteCents || 50,
@@ -495,19 +508,49 @@ export default function TraineeProfileScreen() {
                 </View>
                 <Text style={styles.addressHint}>Required for At Home training sessions</Text>
                 {isEditing ? (
-                  <TextInput
-                    style={styles.textArea}
-                    value={formData.homeAddress}
-                    onChangeText={(text) => setFormData({ ...formData, homeAddress: text })}
-                    placeholder="Enter your full home address"
-                    placeholderTextColor={COLORS.gray}
-                    multiline
-                    numberOfLines={2}
-                    data-testid="home-address-input"
-                  />
+                  <View>
+                    <TextInput
+                      style={[styles.textArea, { minHeight: 44, marginBottom: 10 }]}
+                      value={formData.homeStreet}
+                      onChangeText={(text) => setFormData({ ...formData, homeStreet: text, homeAddress: `${text}, ${formData.homeCity}, ${formData.homeState}` })}
+                      placeholder="Street Address"
+                      placeholderTextColor={COLORS.gray}
+                      data-testid="home-street-input"
+                    />
+                    <TextInput
+                      style={[styles.textArea, { minHeight: 44, marginBottom: 10 }]}
+                      value={formData.homeCity}
+                      onChangeText={(text) => setFormData({ ...formData, homeCity: text, homeAddress: `${formData.homeStreet}, ${text}, ${formData.homeState}` })}
+                      placeholder="City"
+                      placeholderTextColor={COLORS.gray}
+                      data-testid="home-city-input"
+                    />
+                    <View style={styles.statePickerContainer}>
+                      <Text style={styles.statePickerLabel}>State</Text>
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.stateScroll}>
+                        {US_STATES.map((st) => (
+                          <TouchableOpacity
+                            key={st}
+                            style={[
+                              styles.stateChip,
+                              formData.homeState === st && styles.stateChipSelected,
+                            ]}
+                            onPress={() => setFormData({ ...formData, homeState: st, homeAddress: `${formData.homeStreet}, ${formData.homeCity}, ${st}` })}
+                          >
+                            <Text style={[
+                              styles.stateChipText,
+                              formData.homeState === st && styles.stateChipTextSelected,
+                            ]}>{st}</Text>
+                          </TouchableOpacity>
+                        ))}
+                      </ScrollView>
+                    </View>
+                  </View>
                 ) : (
                   <Text style={styles.sectionContent}>
-                    {formData.homeAddress || 'No address set — required for At Home sessions'}
+                    {(formData.homeStreet || formData.homeCity || formData.homeState) 
+                      ? `${formData.homeStreet}${formData.homeCity ? ', ' + formData.homeCity : ''}${formData.homeState ? ', ' + formData.homeState : ''}`
+                      : 'No address set — required for At Home sessions'}
                   </Text>
                 )}
               </View>
@@ -1113,5 +1156,36 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.8)',
     marginTop: 4,
     textAlign: 'center',
+  },
+  statePickerContainer: {
+    marginTop: 4,
+  },
+  statePickerLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.navy,
+    marginBottom: 8,
+  },
+  stateScroll: {
+    flexDirection: 'row',
+  },
+  stateChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: COLORS.grayLight,
+    marginRight: 6,
+    marginBottom: 6,
+  },
+  stateChipSelected: {
+    backgroundColor: COLORS.teal,
+  },
+  stateChipText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.navy,
+  },
+  stateChipTextSelected: {
+    color: COLORS.white,
   },
 });

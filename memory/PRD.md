@@ -96,10 +96,25 @@ Build a fitness trainer-trainee matching platform with Uber-style real-time matc
 - Backend iteration 24: 22/22 tests passed (100%) - change password, all logins, DB optimizations
 
 ## Remaining Backlog
-1. P3: SendGrid email integration (awaiting API key from user)
-2. P4: Toast notifications using sonner component
-3. P5: TypeScript strict-mode warnings cleanup (86+)
-4. P5: Refactor admin dashboard (1000+ lines) into smaller components
+1. P2: Push notifications with unread badge counts
+2. P3: SendGrid email integration (awaiting API key from user)
+3. P3: Convert ~60 Alert.alert calls to Toast notifications
+4. P4: TypeScript strict-mode warnings cleanup (86+)
+5. P5: Refactor admin dashboard (1000+ lines) into smaller components
+
+### Recent Changes (Mar 4, 2026)
+33. **Messages Page Fix** - Added back button and proper header to messages screen (was trapping users)
+34. **At Home Safety Modal** - Updated "Let's Go" / "Change Session" buttons for at-home session booking consent
+35. **Trainee Address Fields** - Replaced single address field with Street Address, City, and US State dropdown
+36. **Admin Individual Doc Approval** - Admin can now approve/reject each verification document individually with per-step buttons
+37. **Admin Document Viewer** - Admin can now open/view all submitted verification documents (View button)
+38. **Trainer Profile Photo on Home** - Profile photo displayed above "Let's Train" banner on trainer home page
+39. **Trainer Set Rates Screen** - New dedicated screen for trainers to set hourly rates per session type (Outdoor, Virtual, At Home) with 80/20 split calculation
+40. **Admin Attention Section** - Moved "Attention Needed" section above Session Status pie chart for better visibility
+41. **Verification Status Text** - "Under Review" / "Approved" states properly reflected in both admin and trainer views
+42. **Hide Submit Button** - Hold-to-submit button hidden after all required documents are submitted
+43. **Push Notification on Approval** - Backend sends push notification to trainer when admin approves verification (individual step or full approval)
+44. **Backend URL Hardcoded Fallback** - Production URL fallback ensures native builds always have valid backend URL
 
 ## Mocked/Inactive
 - SendGrid: No-op (awaiting API key)

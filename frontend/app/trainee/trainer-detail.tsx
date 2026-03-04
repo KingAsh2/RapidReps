@@ -573,7 +573,13 @@ export default function TrainerDetailScreen() {
                 )}
                 {trainer.offersInHome && (
                   <TouchableOpacity
-                    onPress={() => setSelectedSessionType('in_home')}
+                    onPress={() => {
+                      if (!traineeHomeConsented) {
+                        setShowTraineeHomeConsent(true);
+                      } else {
+                        setSelectedSessionType('in_home');
+                      }
+                    }}
                     style={[
                       styles.sessionTypeChip,
                       selectedSessionType === 'in_home' && styles.sessionTypeChipSelected,
@@ -843,23 +849,25 @@ export default function TrainerDetailScreen() {
               style={styles.consentAgreeButton}
               onPress={() => {
                 setTraineeHomeConsented(true);
-                setSelectedSessionType('trainee_home');
+                setSelectedSessionType('in_home');
                 setShowTraineeHomeConsent(false);
               }}
+              data-testid="at-home-lets-go-btn"
             >
               <LinearGradient
                 colors={[COLORS.teal, '#18A09D']}
                 style={styles.consentAgreeGradient}
               >
-                <Text style={styles.consentAgreeText}>I Understand & Agree</Text>
+                <Text style={styles.consentAgreeText}>Let's Go</Text>
               </LinearGradient>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.consentCancelButton}
               onPress={() => setShowTraineeHomeConsent(false)}
+              data-testid="at-home-change-session-btn"
             >
-              <Text style={styles.consentCancelText}>Cancel</Text>
+              <Text style={styles.consentCancelText}>Change Session</Text>
             </TouchableOpacity>
           </View>
         </View>

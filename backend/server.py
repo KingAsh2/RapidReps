@@ -490,6 +490,9 @@ class TraineeProfileCreate(BaseModel):
     injuriesOrLimitations: Optional[str] = None
     homeGymOrZipCode: Optional[str] = None
     homeAddress: Optional[str] = None  # Full home address for in-home training sessions
+    homeStreet: Optional[str] = None
+    homeCity: Optional[str] = None
+    homeState: Optional[str] = None
     prefersInPerson: bool = True
     prefersVirtual: bool = False
     isVirtualEnabled: bool = False
@@ -511,6 +514,9 @@ class TraineeProfileResponse(BaseModel):
     injuriesOrLimitations: Optional[str] = None
     homeGymOrZipCode: Optional[str] = None
     homeAddress: Optional[str] = None
+    homeStreet: Optional[str] = None
+    homeCity: Optional[str] = None
+    homeState: Optional[str] = None
     prefersInPerson: bool = True
     prefersVirtual: bool = False
     isVirtualEnabled: bool = False
@@ -1971,6 +1977,11 @@ async def submit_verification_step(
         field_name: True,
         'updatedAt': datetime.utcnow()
     }
+
+    # Save file URI for ALL document types (admin needs to view them)
+    if submission.fileUri:
+        doc_uri_field = f'{submission.stepId}FileUri'
+        update_data[doc_uri_field] = submission.fileUri
 
     # If it's a photo, also save the URI as avatar
     if submission.stepId == 'photo' and submission.fileUri:
@@ -6130,13 +6141,13 @@ async def admin_get_verification_detail(trainer_id: str, admin_user: dict = Depe
     user = await db.users.find_one({'_id': ObjectId(trainer_id)})
     
     steps = [
-        {'id': 'identity', 'label': 'Government ID', 'field': 'governmentIdUploaded', 'submitted': bool(profile.get('governmentIdUploaded'))},
-        {'id': 'background', 'label': 'Background Check', 'field': 'backgroundCheckPassed', 'submitted': bool(profile.get('backgroundCheckPassed'))},
-        {'id': 'certification', 'label': 'Fitness Certification', 'field': 'fitnessCertUploaded', 'submitted': bool(profile.get('fitnessCertUploaded'))},
-        {'id': 'cpr', 'label': 'CPR/AED Certification', 'field': 'cprAedCertUploaded', 'submitted': bool(profile.get('cprAedCertUploaded'))},
-        {'id': 'insurance', 'label': 'Insurance', 'field': 'insuranceUploaded', 'submitted': bool(profile.get('insuranceUploaded'))},
-        {'id': 'photo', 'label': 'Profile Photo', 'field': 'profilePhotoUploaded', 'submitted': bool(profile.get('profilePhotoUploaded')), 'url': profile.get('avatarUrl')},
-        {'id': 'video', 'label': 'Intro Video', 'field': 'introVideoUploaded', 'submitted': bool(profile.get('introVideoUploaded')), 'url': profile.get('introVideoUrl')},
+        {'id': 'identity', 'label': 'Government ID', 'field': 'governmentIdUploaded', 'submitted': bool(profile.get('governmentIdUploaded')), 'url': profile.get('identityFileUri')},
+        {'id': 'background', 'label': 'Background Check', 'field': 'backgroundCheckPassed', 'submitted': bool(profile.get('backgroundCheckPassed')), 'url': profile.get('backgroundFileUri')},
+        {'id': 'certification', 'label': 'Fitness Certification', 'field': 'fitnessCertUploaded', 'submitted': bool(profile.get('fitnessCertUploaded')), 'url': profile.get('certificationFileUri')},
+        {'id': 'cpr', 'label': 'CPR/AED Certification', 'field': 'cprAedCertUploaded', 'submitted': bool(profile.get('cprAedCertUploaded')), 'url': profile.get('cprFileUri')},
+        {'id': 'insurance', 'label': 'Insurance', 'field': 'insuranceUploaded', 'submitted': bool(profile.get('insuranceUploaded')), 'url': profile.get('insuranceFileUri')},
+        {'id': 'photo', 'label': 'Profile Photo', 'field': 'profilePhotoUploaded', 'submitted': bool(profile.get('profilePhotoUploaded')), 'url': profile.get('avatarUrl') or profile.get('photoFileUri')},
+        {'id': 'video', 'label': 'Intro Video', 'field': 'introVideoUploaded', 'submitted': bool(profile.get('introVideoUploaded')), 'url': profile.get('introVideoUrl') or profile.get('videoFileUri')},
     ]
     
     return {
@@ -6184,6 +6195,22 @@ async def admin_approve_verification(
         'createdAt': datetime.utcnow(),
     })
     
+    # Send push notification
+    try:
+        user = await db.users.find_one({'_id': ObjectId(trainer_id)}, {'pushToken': 1})
+        if user and user.get('pushToken'):
+            from exponent_server_sdk import PushClient, PushMessage
+            push_client = PushClient()
+            push_client.publish(PushMessage(
+                to=user['pushToken'],
+                title='Verification Approved!',
+                body='Congratulations! Your account has been verified. You can now accept sessions.',
+                sound='default',
+                priority='high',
+            ))
+    except Exception:
+        pass  # Push is best-effort
+    
     return {"success": True, "message": "Trainer verification approved"}
 
 @api_router.post("/admin/verifications/{trainer_id}/reject")
@@ -6226,6 +6253,140 @@ async def admin_reject_verification(
     })
     
     return {"success": True, "message": "Trainer verification rejected"}
+
+@api_router.post("/admin/verifications/{trainer_id}/approve-step")
+async def admin_approve_verification_step(
+    trainer_id: str,
+    body: dict,
+    admin_user: dict = Depends(require_admin)
+):
+    """Approve a single verification document/step"""
+    step_id = body.get('stepId')
+    if not step_id:
+        raise HTTPException(400, "stepId is required")
+    
+    approval_field = f'{step_id}Approved'
+    result = await db.trainer_profiles.update_one(
+        {'userId': trainer_id},
+        {'$set': {
+            approval_field: True,
+            f'{step_id}ApprovedAt': datetime.utcnow(),
+            f'{step_id}ApprovedBy': str(admin_user['_id']),
+        }}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(404, "Trainer profile not found")
+    
+    step_names = {
+        'identity': 'Government ID',
+        'background': 'Background Check',
+        'certification': 'Fitness Certification',
+        'cpr': 'CPR/AED Certification',
+        'insurance': 'Liability Insurance',
+        'photo': 'Profile Photo',
+        'video': 'Intro Video',
+    }
+    step_name = step_names.get(step_id, step_id)
+    
+    await db.notifications.insert_one({
+        'userId': trainer_id,
+        'type': 'document_approved',
+        'title': f'{step_name} Approved',
+        'message': f'Your {step_name} has been reviewed and approved.',
+        'read': False,
+        'createdAt': datetime.utcnow(),
+    })
+    
+    # Try sending push notification
+    try:
+        user = await db.users.find_one({'_id': ObjectId(trainer_id)}, {'pushToken': 1})
+        if user and user.get('pushToken'):
+            from exponent_server_sdk import PushClient, PushMessage
+            push_client = PushClient()
+            push_client.publish(PushMessage(
+                to=user['pushToken'],
+                title=f'{step_name} Approved',
+                body=f'Your {step_name} has been reviewed and approved.',
+                sound='default',
+                priority='high',
+            ))
+    except Exception:
+        pass  # Push is best-effort
+    
+    return {"success": True, "message": f"{step_name} approved"}
+
+@api_router.post("/admin/verifications/{trainer_id}/reject-step")
+async def admin_reject_verification_step(
+    trainer_id: str,
+    body: dict,
+    admin_user: dict = Depends(require_admin)
+):
+    """Reject a single verification document/step"""
+    step_id = body.get('stepId')
+    reason = body.get('reason', 'Document did not meet requirements')
+    if not step_id:
+        raise HTTPException(400, "stepId is required")
+    
+    approval_field = f'{step_id}Approved'
+    result = await db.trainer_profiles.update_one(
+        {'userId': trainer_id},
+        {'$set': {
+            approval_field: False,
+            f'{step_id}RejectedAt': datetime.utcnow(),
+            f'{step_id}RejectionReason': reason,
+        }}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(404, "Trainer profile not found")
+    
+    step_names = {
+        'identity': 'Government ID',
+        'background': 'Background Check',
+        'certification': 'Fitness Certification',
+        'cpr': 'CPR/AED Certification',
+        'insurance': 'Liability Insurance',
+        'photo': 'Profile Photo',
+        'video': 'Intro Video',
+    }
+    step_name = step_names.get(step_id, step_id)
+    
+    return {"success": True, "message": f"{step_name} rejected"}
+
+@api_router.post("/trainer/set-rates")
+async def trainer_set_rates(
+    body: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Set trainer's per-session rates by session type"""
+    user_id = str(current_user['_id'])
+    
+    update_data = {'updatedAt': datetime.utcnow()}
+    
+    if 'outdoorRateCents' in body:
+        update_data['outdoorRateCents'] = int(body['outdoorRateCents'])
+    if 'virtualRateCents' in body:
+        update_data['virtualRateCents'] = int(body['virtualRateCents'])
+    if 'inHomeRateCents' in body:
+        update_data['inHomeRateCents'] = int(body['inHomeRateCents'])
+    if 'offersInPerson' in body:
+        update_data['offersInPerson'] = bool(body['offersInPerson'])
+    if 'offersVirtual' in body:
+        update_data['offersVirtual'] = bool(body['offersVirtual'])
+    if 'offersInHome' in body:
+        update_data['offersInHome'] = bool(body['offersInHome'])
+    
+    result = await db.trainer_profiles.update_one(
+        {'userId': user_id},
+        {'$set': update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(404, "Trainer profile not found. Complete onboarding first.")
+    
+    return {"success": True, "message": "Rates updated successfully"}
+
 
 @api_router.get("/admin/trainer-payout-info/{trainer_id}")
 async def admin_get_trainer_payout_info(
