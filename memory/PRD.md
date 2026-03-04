@@ -97,11 +97,22 @@ Build a fitness trainer-trainee matching platform with Uber-style real-time matc
 - Backend iteration 25: 16/17 tests passed (94%) - bug fixes: cancel, pricing, photos, notifications (1 skipped: session flow needs verified trainer)
 - Backend iteration 26: 16/16 tests passed (100%) - Stripe Connect Express payouts: onboard, status, admin pay-trainer, pay-all, history
 - Backend iteration 27: 28/28 tests passed (100%) - PRODUCTION READINESS REGRESSION: All 11 endpoint categories verified. Auth, Trainer profile, Session lifecycle, Stripe Connect, Admin payouts, Dashboard, Notifications, Chat, Push tokens, Pricing model
+- Backend iteration 28: 21/21 tests passed (100%) - CONVENIENCE FEATURES: Recent trainers, Streak tracking, Recurring sessions, Go Live/Offline, Favorite availability + full regression
 
 ## Remaining Backlog
 1. P3: SendGrid email integration (awaiting API key from user)
 2. P4: TypeScript strict-mode warnings cleanup (86+)
 3. P5: Refactor admin dashboard (1800+ lines) into smaller components
+
+## Convenience Features (Implemented Mar 4, 2026)
+1. **Rebook Button** — "Book Again" button on completed sessions → goes straight to trainer detail
+2. **Quick Book** — Last 3 trainers shown as quick-access cards on trainee home, with session count and live status
+3. **Post-Rating Rebook** — After rating, "Book Again with [Trainer]" redirects to trainer profile (not home)
+4. **Favorite Trainer Availability** — Saved trainers' availability/online/live status shown on trainee home
+5. **Recurring Sessions** — Weekly/biweekly scheduling, creates N sessions at once, each paid individually. Accessible from trainer-detail page
+6. **Streak Tracking** — Consecutive weeks trained displayed as flame banner on trainee home. Links to share-streak
+7. **Session Reminders** — Push notifications at 1hr AND 15min before sessions (both trainer and trainee)
+8. **Trainer "Go Live"** — Prominent Go Live button on trainer home. Notifies all past trainees via push notification. Toggle to go offline.
 
 ### Toast Migration (Mar 4, 2026)
 45. **Alert.alert → Toast Migration** - Converted 54 of 60 Alert.alert calls to non-blocking toast notifications:
