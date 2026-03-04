@@ -4013,8 +4013,10 @@ async def trainer_connect_onboard(
         except stripe.error.StripeError as e:
             raise HTTPException(status_code=400, detail=f"Failed to create Stripe account: {str(e)}")
     
-    # Create onboarding link
+    # Create onboarding link - use HTTPS for live mode
     host_url = str(request.base_url).rstrip('/')
+    if host_url.startswith('http://'):
+        host_url = host_url.replace('http://', 'https://', 1)
     try:
         account_link = stripe.AccountLink.create(
             account=existing_account_id,
