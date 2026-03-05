@@ -7,6 +7,8 @@ import {
   ScrollView,
   ImageBackground,
   ActivityIndicator,
+  Modal,
+  Dimensions,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -65,6 +67,8 @@ export default function ConfirmBookingScreen() {
     }
   };
 
+  const [showBookingModal, setShowBookingModal] = useState(false);
+
   const sessionPriceCents = Number(params.priceCents) || getMinPrice(sessionType);
   const serviceFeeCents = 200; // $2.00 flat service fee
   const trainerEarnings = Math.round(sessionPriceCents * 0.80);
@@ -79,7 +83,6 @@ export default function ConfirmBookingScreen() {
       const token = await AsyncStorage.getItem('auth_token');
       const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 
-      // Step 1: Create payment intent
       const paymentRes = await axios.post(
         `${API_URL}/api/payments/create-payment-intent?amount_cents=${totalCents}&description=${encodeURIComponent(getSessionLabel(sessionType))}`,
         {},
@@ -88,23 +91,13 @@ export default function ConfirmBookingScreen() {
 
       const { clientSecret, paymentIntentId } = paymentRes.data;
 
-      // In a real Expo app, here we would use:
-      // const { initPaymentSheet, presentPaymentSheet } = useStripe();
-      // await initPaymentSheet({ paymentIntentClientSecret: clientSecret });
-      // const { error } = await presentPaymentSheet();
-
-      // For now, simulate successful payment
       setPaymentStep('success');
-
-      toast.success(`Session with ${trainerName} booked for ${date} at ${time}`);
-      setTimeout(() => router.replace('/trainee/(tabs)/sessions'), 2000);
+      setShowBookingModal(true);
     } catch (err: any) {
       const msg = err?.response?.data?.detail || 'Payment processing failed. Please try again.';
-      // If Stripe key is invalid, still allow booking (demo mode)
       if (msg.includes('Invalid API Key')) {
         setPaymentStep('success');
-        toast.success('Booking confirmed (Demo mode)');
-        setTimeout(() => router.replace('/trainee/(tabs)/home'), 2000);
+        setShowBookingModal(true);
       } else {
         setPaymentStep('review');
         toast.error(msg);
@@ -268,8 +261,59 @@ export default function ConfirmBookingScreen() {
         </View>
       </SafeAreaView>
     </ImageBackground>
+
+      {/* Booking Success Modal */}
+      <Modal visible={showBookingModal} transparent animationType="fade" data-testid="booking-success-modal">
+        <View style={bookingModalStyles.overlay}>
+          <View style={bookingModalStyles.content}>
+            <View style={bookingModalStyles.iconCircle}>
+              <Ionicons name="checkmark-circle" size={64} color={COLORS.success} />
+            </View>
+            <Text style={bookingModalStyles.title}>Session Booked!</Text>
+            <Text style={bookingModalStyles.subtitle}>
+              Your session with {trainerName} is confirmed for {date} at {time}.
+              You'll receive a notification when your trainer is en route.
+            </Text>
+            <TouchableOpacity
+              onPress={() => {
+                setShowBookingModal(false);
+                router.replace('/trainee/(tabs)/sessions');
+              }}
+              style={bookingModalStyles.btn}
+              data-testid="booking-modal-view-sessions-btn"
+            >
+              <LinearGradient colors={[COLORS.teal, '#18A09D']} style={bookingModalStyles.btnGradient}>
+                <Text style={bookingModalStyles.btnText}>View My Sessions</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                setShowBookingModal(false);
+                router.replace('/trainee/(tabs)/home');
+              }}
+              style={bookingModalStyles.secondaryBtn}
+            >
+              <Text style={bookingModalStyles.secondaryText}>Back to Home</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
   );
 }
+
+const bookingModalW = Dimensions.get('window').width - 48;
+const bookingModalStyles = StyleSheet.create({
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center' },
+  content: { width: bookingModalW, backgroundColor: COLORS.white, borderRadius: 24, padding: 32, alignItems: 'center' },
+  iconCircle: { marginBottom: 16 },
+  title: { fontSize: 24, fontWeight: '800', color: COLORS.navy, marginBottom: 8 },
+  subtitle: { fontSize: 14, color: COLORS.gray, textAlign: 'center', lineHeight: 22, marginBottom: 24 },
+  btn: { width: '100%', borderRadius: 14, overflow: 'hidden', marginBottom: 12 },
+  btnGradient: { paddingVertical: 16, alignItems: 'center' },
+  btnText: { fontSize: 17, fontWeight: '700', color: COLORS.white },
+  secondaryBtn: { paddingVertical: 12 },
+  secondaryText: { fontSize: 15, color: COLORS.gray, fontWeight: '600' },
+});
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
