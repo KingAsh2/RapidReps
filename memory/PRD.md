@@ -1,77 +1,92 @@
 # RapidReps - Product Requirements Document
 
-## Problem Statement
-RapidReps is a mobile fitness platform connecting personal trainers with trainees. Trainers can manage profiles, sessions, and get paid via Stripe Connect. Trainees can discover, book, and track sessions with trainers. The platform handles pricing, payments, scheduling, messaging, and real-time en-route tracking.
+## Overview
+RapidReps is a full-stack fitness marketplace connecting trainees with personal trainers for outdoor, virtual, and group workout sessions. Built with React Native (Expo) + FastAPI + MongoDB.
 
-## Architecture
-- **Frontend**: React Native (Expo) with Expo Router, TypeScript
-- **Backend**: FastAPI (Python) with MongoDB
-- **Payments**: Stripe (Elements + Connect Express)
-- **Push Notifications**: Expo Push API
-- **Build System**: EAS Build
+## Core Architecture
+- **Frontend:** React Native (Expo Router) - Mobile-first app
+- **Backend:** FastAPI (Python) - Modular route architecture
+- **Database:** MongoDB
+- **Payments:** Stripe (Payment Sheet + Connect Express)
+- **Notifications:** Expo Push Notifications
 
-## What's Been Implemented
+## Implemented Features (Completed)
 
-### Core Features (Complete)
-- User auth (JWT-based) with role-based routing (admin, trainer, trainee)
-- Trainer profile creation, editing (bio, rates, certifications, photo/video URLs)
-- Trainer search with filters (location, specialty, availability)
-- Session booking flow with pricing calculator
-- Stripe payment integration (payment intents, Connect onboarding)
-- Real-time messaging (conversations, messages)
-- Admin dashboard (user management, verification, payouts)
+### Core Platform (v1)
+- Two-sided user roles (trainee, trainer, admin)
+- JWT authentication with token refresh
+- Full session lifecycle (book → confirm → arrive → selfie → active → complete)
+- Stripe Payment Sheet for session booking
+- Stripe Connect Express for trainer payouts
+- Push notifications
+- Trainer verification system
+- Safety features (selfie check-in, SOS button)
+- Gamification (badges, streaks, achievements)
+- En-route GPS tracking (trainer ↔ trainee)
+- User-friendly modals for key actions
 
-### Bug Fixes (March 5, 2026)
-- **P0**: Fixed pricing formula to `(trainer_rate / 0.8) + $2 service fee` — trainers earn their full set rate
-- **P1**: Fixed Stripe Connect logging and error handling
-- **P1**: Fixed trainer profile endpoint to enrich fullName from users collection
-- **P2**: Added profilePhotoUrl and introVideoUrl fields to edit profile
-- **P3**: Replaced orange gym backgrounds with blue-themed version
+### Platform Features v2 (Completed Feb 2026)
+1. **ETA-Weighted Trainer Matching** - Composite scoring: 40% ETA, 20% rating, 15% sessions, 10% price, 10% boost, 5% responsiveness
+2. **Instant Workout Mode** - Uber-style cascading match with 15-second accept windows
+3. **Trainer Tools** - Workout plan builder, session notes, client progress tracker
+4. **Group Workout Sessions** - Create, manage, join/leave group workouts with Stripe payments
+5. **Community Activity Feed** - Auto-generated posts for session completions, badge unlocks, user posts, likes
+6. **Virtual Session Instant Match** - 10-second auto-matching for virtual sessions
+7. **User Progress Tracking** - Total sessions, calories, minutes, streak levels, badges, workout history
+8. **Navigation Entry Points** - Quick action buttons on trainee/trainer home screens for all new features
 
-### Stripe Payment Integration (March 5, 2026)
-- **Payment Sheet**: Wired up `@stripe/stripe-react-native` Payment Sheet in confirm-booking flow
-  - Creates PaymentIntent via backend → initializes Payment Sheet → presents native card UI → handles success/cancel/error
-  - Graceful fallback for web preview where native SDK isn't available
-- **Connect Express**: Stripe Connect onboarding generates real onboarding URLs for trainers
-- Both live keys configured (backend `STRIPE_SECRET_KEY`, frontend `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY`)
-- **Auth resilience**: Token only cleared on 401, not on transient network errors
-- **Success modals**: Verification submission, booking confirmation, and en-route arrival show proper modals instead of toasts + redirects
-- **Trainer en-route screen** (`/trainer/en-route`): GPS sharing, distance/ETA tracking, navigation via native maps, "I've Arrived" modal, message trainee
-- **Trainee tracking screen** (`/trainee/trainer-en-route`): Real-time distance tracker, animated progress bar, ETA display, message trainer
-- **Session tracking API integration**: startEnRoute, gpsUpdate, getGpsTrack, startSession added to frontend API service
-- **Track Trainer button**: Trainee sessions tab shows "Track Trainer" for en_route sessions
-- **Metro config fix**: Reduced file watcher usage via blockList to prevent ENOSPC crashes
+### Backend Architecture
+```
+backend/
+├── routes/
+│   ├── __init__.py       # Shared utilities (serialize_doc, get_current_user, etc.)
+│   ├── matching.py       # ETA-weighted search + instant match cascading
+│   ├── feed.py           # Community feed CRUD + auto-post generation
+│   ├── group_sessions.py # Group workout lifecycle
+│   ├── progress.py       # User progress stats + workout history
+│   └── trainer_tools.py  # Plans, notes, client progress
+├── server.py             # Main server (routes registered at bottom)
+└── shared.py             # Shared utilities
+```
 
-## Key API Endpoints
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | /api/auth/login | Login |
-| GET | /api/auth/me | Current user |
-| GET/POST | /api/trainer-profiles/{userId} | Get/create trainer profile (enriched with fullName) |
-| POST | /api/sessions/book | Book a session |
-| POST | /api/sessions/{id}/start-en-route | Trainer starts en-route |
-| POST | /api/sessions/{id}/gps-update | Update GPS position |
-| GET | /api/sessions/{id}/gps-track | Get live GPS positions |
-| POST | /api/sessions/{id}/start-session | Start the session |
-| POST | /api/payments/calculate-session-cost | Calculate pricing |
-| POST | /api/messages | Send a message |
-| GET | /api/conversations | List conversations |
-| POST | /api/trainer/connect/onboard | Stripe Connect onboarding |
+### Key API Endpoints
+- `GET /api/trainers/ranked-search` - ETA-weighted composite score search
+- `POST /api/sessions/instant-match` - Start instant workout
+- `GET /api/sessions/instant-match/{id}/status` - Poll match status
+- `POST /api/sessions/instant-match/{id}/accept|decline|cancel`
+- `POST /api/sessions/virtual-instant` - Virtual instant match
+- `GET/POST /api/feed` - Community feed
+- `POST /api/feed/{id}/like` - Toggle like
+- `GET/POST /api/group-sessions` - Group sessions
+- `POST /api/group-sessions/{id}/join|leave|start|complete`
+- `GET /api/progress/{userId}` - User progress
+- `GET /api/progress/{userId}/history` - Workout history
+- `GET/POST /api/trainer-tools/workout-plans`
+- `GET/POST /api/trainer-tools/session-notes`
+- `GET/POST /api/trainer-tools/client-progress/{traineeId}`
+- `GET /api/trainer-tools/my-clients`
 
-## DB Schema (Key Collections)
-- **users**: fullName, email, passwordHash, roles, profilePhoto, stripeAccountId
-- **trainer_profiles**: userId, bio, rates, certifications, avatarUrl, introVideoUrl, location
-- **sessions**: traineeId, trainerId, status (requested/confirmed/en_route/in_progress/completed), GPS positions
-- **messages**: senderId, receiverId, content, conversationId
-- **conversations**: participants, lastMessage
+### DB Collections (New)
+- `feed_posts`, `group_sessions`, `instant_matches`
+- `workout_plans`, `session_notes`, `client_progress`, `progress_tracking`
+
+## Testing Status
+- Backend: 100% (33/33 tests passed - iteration_32)
+- All 25+ endpoints verified working
+- Role-based access control confirmed
+- Datetime timezone bug fixed in instant match
+
+## Mocked Services
+- SendGrid email (awaiting API key)
+
+## Backlog
+- P4: Enable SendGrid integration (blocked - needs API key)
+- P5: Address 86+ TypeScript strict-mode warnings
+- P5: File cleanup/refactoring
 
 ## Credentials
 | Role | Email | Password |
 |------|-------|----------|
 | Admin | admin@rapidreps.com | admin123 |
-
-## Backlog
-- P4: Enable SendGrid email integration (blocked: awaiting API key)
-- P5: Resolve 86+ TypeScript strict-mode warnings
-- Future: Push notification testing on real devices
-- Future: Stripe payment sheet integration for production
+| Test Trainer | test_trainer_iter25@test.com | test123 |
+| Test Trainee | test_trainee_iter25@test.com | test123 |
