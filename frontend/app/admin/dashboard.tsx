@@ -25,7 +25,7 @@ import axios from 'axios';
 import { toast } from '../../src/utils/toast';
 import Svg, { Circle, G, Rect, Text as SvgText, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 
-const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://real-time-fitness.preview.emergentagent.com';
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://build-debug-7.preview.emergentagent.com';
 
 const C = {
   orange: '#FF7F00',

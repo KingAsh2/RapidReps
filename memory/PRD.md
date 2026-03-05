@@ -99,10 +99,14 @@ Build a fitness trainer-trainee matching platform with Uber-style real-time matc
 - Backend iteration 27: 28/28 tests passed (100%) - PRODUCTION READINESS REGRESSION: All 11 endpoint categories verified. Auth, Trainer profile, Session lifecycle, Stripe Connect, Admin payouts, Dashboard, Notifications, Chat, Push tokens, Pricing model
 - Backend iteration 28: 21/21 tests passed (100%) - CONVENIENCE FEATURES: Recent trainers, Streak tracking, Recurring sessions, Go Live/Offline, Favorite availability + full regression
 
+### Deployment Fix (Mar 5, 2026)
+59. **P0: EAS Build Fix** - Removed duplicate `Image` import in `frontend/app/trainee/(tabs)/home.tsx` (lines 11 & 17 both imported `Image` from react-native). This was blocking the EAS production build with `SyntaxError: Identifier 'Image' has already been declared`.
+
 ## Remaining Backlog
 1. P3: SendGrid email integration (awaiting API key from user)
-2. P4: TypeScript strict-mode warnings cleanup (86+)
-3. P5: Refactor admin dashboard (1800+ lines) into smaller components
+2. P3: Refactor admin dashboard (1800+ lines) into smaller components
+3. P4: Refactor trainee home screen (2000+ lines) into smaller components
+4. P5: TypeScript strict-mode warnings cleanup (86+)
 
 ## Convenience Features (Implemented Mar 4, 2026)
 1. **Rebook Button** — "Book Again" button on completed sessions → goes straight to trainer detail

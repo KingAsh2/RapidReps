@@ -18,7 +18,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
 # Configuration
-BASE_URL = "https://real-time-fitness.preview.emergentagent.com/api"
+BASE_URL = "https://build-debug-7.preview.emergentagent.com/api"
 HEADERS = {"Content-Type": "application/json"}
 
 class RapidRepsComprehensiveTester:

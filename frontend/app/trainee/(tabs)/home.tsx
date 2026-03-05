@@ -14,7 +14,6 @@ import {
   Modal,
   Linking,
   Animated,
-  Image,
   ImageBackground,
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';

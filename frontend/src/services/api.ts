@@ -15,7 +15,7 @@ const getBackendUrl = (): string => {
   if (envUrl) return envUrl;
   
   // Hardcoded production fallback - ensures native builds always have a valid URL
-  return 'https://real-time-fitness.preview.emergentagent.com';
+  return 'https://build-debug-7.preview.emergentagent.com';
 };
 
 const API_BASE_URL = `${getBackendUrl()}/api`;

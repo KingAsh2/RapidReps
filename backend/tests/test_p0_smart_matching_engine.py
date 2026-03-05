@@ -21,7 +21,7 @@ from datetime import datetime
 
 BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', '').rstrip('/')
 if not BASE_URL:
-    BASE_URL = "https://real-time-fitness.preview.emergentagent.com"
+    BASE_URL = "https://build-debug-7.preview.emergentagent.com"
 
 
 # ============================================================================
