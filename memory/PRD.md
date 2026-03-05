@@ -75,6 +75,7 @@ backend/
 - All 25+ endpoints verified working
 - Role-based access control confirmed
 - Datetime timezone bug fixed in instant match
+- Deployment bundling fix: Removed `Libraries/vendor` from metro.config.js blockList (was blocking EventEmitter module)
 
 ## Mocked Services
 - SendGrid email (awaiting API key)

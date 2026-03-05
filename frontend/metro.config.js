@@ -52,7 +52,6 @@ config.resolver.blockList = [
   /node_modules\/.*\/(android|ios|windows|macos|__tests__|\.git|example|examples|__mocks__|__fixtures__|__snapshots__)\/.*/,
   /node_modules\/react-native\/ReactCommon\/.*/,
   /node_modules\/react-native\/types_generated\/.*/,
-  /node_modules\/react-native\/Libraries\/vendor\/.*/,
   /node_modules\/react-native\/sdks\/.*/,
   /node_modules\/react-native\/template\/.*/,
   /node_modules\/react-native\/scripts\/.*/,
