@@ -14,8 +14,8 @@ const getBackendUrl = (): string => {
   const envUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
   if (envUrl) return envUrl;
   
-  // Hardcoded production fallback - ensures native builds always have a valid URL
-  return 'https://build-debug-7.preview.emergentagent.com';
+  // No fallback - URL must come from environment
+  return '';
 };
 
 const API_BASE_URL = `${getBackendUrl()}/api`;

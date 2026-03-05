@@ -99,8 +99,11 @@ Build a fitness trainer-trainee matching platform with Uber-style real-time matc
 - Backend iteration 27: 28/28 tests passed (100%) - PRODUCTION READINESS REGRESSION: All 11 endpoint categories verified. Auth, Trainer profile, Session lifecycle, Stripe Connect, Admin payouts, Dashboard, Notifications, Chat, Push tokens, Pricing model
 - Backend iteration 28: 21/21 tests passed (100%) - CONVENIENCE FEATURES: Recent trainers, Streak tracking, Recurring sessions, Go Live/Offline, Favorite availability + full regression
 
-### Deployment Fix (Mar 5, 2026)
-59. **P0: EAS Build Fix** - Removed duplicate `Image` import in `frontend/app/trainee/(tabs)/home.tsx` (lines 11 & 17 both imported `Image` from react-native). This was blocking the EAS production build with `SyntaxError: Identifier 'Image' has already been declared`.
+### Deployment Fixes (Mar 5, 2026)
+59. **P0: EAS Build Fix** - Removed duplicate `Image` import in `frontend/app/trainee/(tabs)/home.tsx`
+60. **P0: Trainer Home Syntax Fix** - Fixed `goLiveStyles` declaration that was accidentally nested inside `StyleSheet.create()` in `frontend/app/trainer/home.tsx` (line 917)
+61. **Deployment: Hardcoded URL** - Removed hardcoded `build-debug-7.preview.emergentagent.com` fallback from `frontend/src/services/api.ts` - URL now comes only from environment variables
+62. **Deployment: Gitignore** - Removed `*.env` patterns from `.gitignore` that were blocking .env files during Emergent deployment
 
 ### Refactoring (Mar 5, 2026)
 60. **P3: Admin Dashboard Refactored** - Broke 1901-line dashboard.tsx into 7 tab components + shared utilities file (560 lines main, ~1400 lines across components). Components: OverviewTab, UsersTab, VerificationsTab, SessionsTab, PaymentsTab, PayoutsTab, ProfileTab, AdminShared.

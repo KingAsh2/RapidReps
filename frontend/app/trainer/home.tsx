@@ -913,7 +913,6 @@ export default function TrainerHomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
 const goLiveStyles = {
   goLiveBtn: {
     flexDirection: 'row' as const,
@@ -948,6 +947,7 @@ const goLiveStyles = {
   },
 };
 
+const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
