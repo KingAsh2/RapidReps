@@ -1,171 +1,199 @@
 <analysis>**original_problem_statement:**
-The user's initial goal was a complete overhaul of their Rapid Reps fitness application, which has been successfully implemented. Following the completion of all major functional requirements, including a real-time trainer matching engine, a dynamic pricing model, and an admin verification system, the user requested a series of convenience features to improve user retention and simplify the booking process. These features, such as Rebook, Recurring Sessions, and Quick Book, have been implemented. Most recently, the user attempted to deploy the application to production but encountered a build failure. The current task is to analyze the provided deployment logs, identify the root cause of the build error, and implement a code-level fix to ensure a successful deployment.
+The user has reported a new batch of five critical bugs and enhancement requests after the agent successfully refactored the frontend and resolved previous deployment blockers. The application is currently in a broken state regarding core functionality.
 
 PRODUCT REQUIREMENTS:
-- A feature-complete, production-ready fitness application (React Native/Expo + FastAPI).
-- An admin panel for user management, verification, and trainer payouts.
-- A dynamic pricing model: .
-- A Stripe Connect (Express) integration for handling trainer payouts, triggered by an admin.
-- A suite of convenience features designed to increase user retention.
-- The application must be deployable to iOS via EAS (Expo Application Services).
+- **(P0) Fix Trainer Pricing:** The formula for calculating the price a trainee pays is incorrect. The correct formula is . The trainer's rate is based on session length (e.g., 30 or 60 minutes).
+- **(P1) Fix Stripe Connection Error:** Trainers are receiving an error when attempting to connect their bank account via Stripe, which blocks them from being paid.
+- **(P1) Fix Missing Trainer Info:** The trainee-facing detail page is not displaying the trainer's name, photo, or introductory video.
+- **(P2) Update Edit Profile Page:** The Edit Profile screen for trainers is missing the functionality to upload or change their profile photo and intro video.
+- **(P3) UI Enhancement:** Apply a user-provided background image to all screens that currently have a plain, solid-color background.
 
 **User's preferred language**: English
 
 **what currently exists?**
-A full-stack fitness application built with React Native (Expo) and FastAPI. The agent has just completed a major development phase, implementing a full Stripe Connect payout system for trainers and a batch of eight user-requested convenience features (e.g., rebooking, recurring sessions, quick booking). The application has passed multiple comprehensive regression tests. However, the production deployment is failing. The agent has received the build logs and was in the process of debugging the failure.
+A full-stack fitness application built with React Native (Expo) and FastAPI. The codebase has recently been refactored to improve maintainability, with large components broken down into smaller, single-responsibility files. Multiple deployment-blocking bugs have been resolved. The agent has just completed the analysis phase for a new set of five user-reported issues and is ready to begin implementation.
 
 **Last working item**:
--   Last item agent was working: The agent was debugging a deployment failure reported by the user. By analyzing the build logs, the agent was tasked with identifying the root cause of the error preventing the Expo Application Services (EAS) build from completing.
+-   Last item agent was working: The agent was performing a comprehensive analysis of five new bugs reported by the user. The agent has reviewed all relevant frontend and backend files to pinpoint the root causes of issues related to pricing, Stripe connectivity, missing trainer data on the UI, and the outdated edit profile page. The analysis is complete, and the agent is prepared to implement the fixes.
 -   Status: IN PROGRESS
--   Agent Testing Done: N/A
--   Which testing method agent to use? The fix will be validated by a successful production deployment. No functional testing agent is needed for this specific issue.
+-   Agent Testing Done: N
+-   Which testing method agent to use? both
 -   User Testing Done: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Production Deployment Failure (P0)**
+-   Issue 1: Trainer Pricing Calculation Bug (P0)
+-   Issue 2: Stripe Bank Connection Error (P1)
+-   Issue 3: Trainer Info Not Displaying on Trainee Screen (P1)
+-   Issue 4: Outdated Edit Profile Page (P2)
+-   Issue 5: Apply New Background Image to UI (P3)
 
 Issues Detail:
--   **Issue 1: Production Deployment Failure (P0)**
-    -   **Attempted fixes:** None. The agent was analyzing logs when the session ended.
+-   **Issue 1: Trainer Pricing Calculation Bug (P0)**
+    -   **Attempted fixes:** None. Analysis is complete.
     -   **Next debug checklist:**
-        1.  The build log clearly indicates the error: .
-        2.  Inspect the file .
-        3.  Locate and remove the duplicate  statement. The agent added one from  while another likely exists from  or was also imported from  in a different block.
-    -   **Why fix this issue?** This is a critical blocker that prevents the application from being built and deployed to production for iOS.
+        1.  **Backend:** In , modify the  function. It currently adds a flat fee. It must be updated to use the correct formula: .
+        2.  **Backend:** In the  endpoint in , ensure the correct  is being pulled from the trainer's  dictionary (e.g., ) and passed to the pricing function.
+        3.  **Frontend:** Verify that  correctly displays the final price received from the backend.
+    -   **Why fix this issue?** This is a critical bug affecting the core business model and revenue calculations for both trainers and the admin.
+    -   **Status:** IN PROGRESS
+    -   **Is recurring issue?** Y
+    -   **Should Test frontend/backend/both after fix?** both
+
+-   **Issue 2: Stripe Bank Connection Error (P1)**
+    -   **Attempted fixes:** None. Analysis is complete.
+    -   **Next debug checklist:**
+        1.  **Backend:** In , add logging inside the  endpoint to capture and verify the  generated by the Stripe API. The error likely stems from an invalid URL or a misconfiguration in the user's Stripe account settings.
+        2.  **Frontend:** In , add error handling to the  component to catch loading failures and display a user-friendly message, instructing the user to contact support or check their Stripe dashboard.
+    -   **Why fix this issue?** Trainers cannot get paid, which is a critical failure for the platform's operation.
+    -   **Status:** IN PROGRESS
+    -   **Is recurring issue?** Y
+    -   **Should Test frontend/backend/both after fix?** both
+
+-   **Issue 3: Trainer Info Not Displaying on Trainee Screen (P1)**
+    -   **Attempted fixes:** None. Analysis is complete.
+    -   **Next debug checklist:**
+        1.  **Frontend:** The bug is in . The code incorrectly destructures  to get profile data.
+        2.  Change the line: 
+        3.  To: 
+    -   **Why fix this issue?** Trainees cannot see who they are booking, which breaks the core user experience.
     -   **Status:** IN PROGRESS
     -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** Neither. A successful deployment will confirm the fix.
-    -   **Blocked on other issue:** None.
+    -   **Should Test frontend/backend/both after fix?** Frontend
+
+-   **Issue 4: Outdated Edit Profile Page (P2)**
+    -   **Attempted fixes:** None. Analysis is complete.
+    -   **Next debug checklist:**
+        1.  **Backend:** Modify the  endpoint in  to accept and update the  and  fields in the user's MongoDB document.
+        2.  **Frontend:** In , add new input components for the profile photo URL and intro video URL.
+        3.  **Frontend:** Update the state and  function in  to include the new fields in the API request.
+    -   **Why fix this issue?** This is a key missing feature that prevents trainers from managing their own profiles effectively.
+    -   **Status:** IN PROGRESS
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** both
+
+-   **Issue 5: Apply New Background Image to UI (P3)**
+    -   **Attempted fixes:** None. Analysis is complete.
+    -   **Next debug checklist:**
+        1.  Save the user-provided image to .
+        2.  Modify the root layout file, , to use React Native's  component as the top-level wrapper around the main  or .
+        3.  Set the  of the  to the new image file.
+        4.  Review key screens (admin, trainee home, trainer home) to ensure the background doesn't clash with existing card or modal styles.
+    -   **Why fix this issue?** Fulfills a direct user request for UI improvement.
+    -   **Status:** IN PROGRESS
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** Frontend
 
 **In progress Task List**:
-- None.
+-   None.
 
 **Upcoming and Future Tasks**
 **Upcoming Tasks:**
--   **P3: Refactor Admin Panel:** The  component is over 1000 lines long and should be broken down into smaller, manageable components for maintainability.
--   **P4: Refactor Trainee Home Screen:** The  file has grown significantly with the addition of convenience features and should be refactored into smaller components.
+-   **P5: Resolve TypeScript Strict-Mode Warnings:** Address the 86+ non-blocking TypeScript warnings throughout the codebase to improve long-term stability.
 
 **Future Tasks (Backlog):**
--   **P4: Enable SendGrid Integration:** This is blocked, awaiting an API key from the user.
--   **P5: Resolve TypeScript Strict-Mode Warnings:** Over 86 warnings remain in the codebase that should be addressed for long-term stability.
+-   **P4: Enable SendGrid Integration:** Blocked, awaiting an API key from the user.
 
 **Completed work in this session**
--   **Batch Bug Fixes:** Resolved 5 critical user-reported bugs related to session cancellation, non-functional buttons, incomplete pricing, and missing profile photos.
--   **Push Notifications & Badges:** Implemented unread message and notification counts, displaying them as badges on the tab bar icons. Enhanced background push notification delivery.
--   **Stripe Connect Payout System (Option 3):**
-    -   **Backend:** Implemented endpoints for creating Stripe Express accounts for trainers, checking onboarding status, and allowing admins to trigger payouts.
-    -   **Frontend (Trainer):** Created a Connect Bank Account screen, updated the earnings page to show Stripe status, and added a banner on the home screen prompting trainers to connect their bank.
-    -   **Frontend (Admin):** Added a Payouts tab to the admin dashboard to view trainer balances and trigger single or bulk payouts.
-    -   **Live Debugging:** Successfully guided the user through enabling Stripe Connect and providing the correct API keys (switching from restricted to secret key).
--   **Convenience Features Implementation (8 total):**
-    -   **Backend:** Added new endpoints for Quick Book (), Go Live (), recurring sessions, and streak tracking.
-    -   **Frontend:**
-        -   **Rebook Button:** Added to completed sessions.
-        -   **Recurring Sessions:** Created a new screen to set up weekly/bi-weekly sessions.
-        -   **Quick Book:** Added a section on the trainee home screen showing recent trainers.
-        -   **Favorite Trainer Availability:** Added a section to the trainee home screen.
-        -   **Post-Session Rebook Prompt:** Updated the session rating screen to prompt for rebooking.
-        -   **Session Reminders:** Enhanced the scheduler to send reminders 1 hour and 15 minutes before a session.
-        -   **Trainer Go Live:** Added a prominent button for trainers to notify past trainees of immediate availability.
-        -   **Streak Tracking:** Added a UI component to the home screen to motivate users.
--   **Production Readiness:**
-    -   Removed numerous  statements and other debug artifacts from the codebase.
-    -   Ran and passed two comprehensive regression test suites (100% pass rate on 16 and 28 tests respectively).
+-   **Deployment Failure Fix (Duplicate Import):** Resolved a build-breaking error by removing a duplicate  import in .
+-   **Major Code Refactoring:**
+    -   Successfully refactored the monolithic  (1900+ lines) into a modular structure with components in , achieving a 70% line count reduction.
+    -   Refactored  by extracting sections into reusable components inside .
+-   **Second Deployment Failure Fix:**
+    -   Corrected a  in .
+    -   Removed a hardcoded preview URL from the newly refactored .
+    -   Added a missing  to  to prevent content overflow.
+-   **Regression Testing:** Successfully ran a comprehensive test suite using the testing agent ( tests passed), verifying that the major refactoring did not introduce any regressions.
 
 **Earlier issues found/mentioned but not fixed**
--   **SendGrid Integration:** Blocked, awaiting API key from the user.
--   **TypeScript Strict-Mode Warnings:** Over 86 non-blocking TypeScript warnings remain.
+-   None that are not already listed in the backlog.
 
 **Known issue recurrence from previous fork**
--   None. The previously recurring admin document viewer issue was resolved and passed testing.
+-   None.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **EAS Build Process:** The current task requires understanding the Expo Application Services (EAS) build pipeline and debugging errors from its logs.
--   **Stripe Connect (Express Accounts):** The application uses Stripe Connect to facilitate payouts. Trainers are onboarded as Express accounts, which allows the platform to programmatically create accounts and manage payouts.
--   **Admin-Triggered Payouts:** The implementation follows a model where the platform administrator manually triggers payouts to trainers from a dashboard, giving them control over fund transfers.
--   **API-Driven UI:** The new convenience features heavily rely on new backend endpoints to fetch data (recent trainers, streaks, availability) and display it on the frontend.
+-   **Component-Based Refactoring:** Breaking down large, monolithic React components into smaller, reusable, and more maintainable child components.
+-   **Expo Application Services (EAS) Build:** Debugging build logs from the EAS pipeline to resolve syntax and configuration errors.
+-   **Stripe Connect (Express):** Generating onboarding links () and embedding them in a  for trainers to connect their bank accounts.
+-   **Dynamic Pricing Logic:** Implementing business-specific pricing rules on the backend that factor in a base rate, a commission, and a service fee.
 
 **key DB schema**
 -   **users:**
-    -    (String): Stores the Stripe Connect account ID () for the trainer.
-    -    (Boolean): Flag indicating if the trainer has completed the Stripe onboarding flow.
-    -    (Boolean): For the Go Live feature.
+    -    (Object): e.g., . Stores the trainer's rate for different session lengths.
+    -    (String): URL for the trainer's profile picture.
+    -    (String): URL for the trainer's intro video.
+    -    (String): Stripe Connect account ID.
+    -    (Boolean): Flag for Stripe onboarding status.
 
 **All files of reference**
--   **Deployment Log:** The user-provided log containing the error.
--   : **File with the build-breaking error.**
--   : Contains all new backend logic for Stripe Connect and convenience features.
--   : Location of the new admin payouts panel.
--   : Refactored trainer earnings page.
--   : New screen for Stripe onboarding.
--   : New screen for recurring bookings.
--   , , : Contain new API service methods.
+-   **Files to be modified for current bugs:**
+    -   
+    -   
+    -   
+    -   
+    -   
+-   **Recently created/modified files:**
+    -    (Refactored)
+    -    (Refactored)
+    -    (Fixed)
+    -   All files under  and  (Created)
 
 **Areas that need refactoring**:
--   : This file is extremely large and complex. It should be broken down into sub-components for each tab (Verifications, Payouts, etc.).
--   : This file now contains logic for multiple distinct UI sections (Quick Book, Streaks, Availability, Map). These should be extracted into their own components.
+-   The major refactoring of the admin and trainee home screens is complete. The next focus should be on resolving the 86+ TypeScript strict-mode warnings across the project.
 
 **key api endpoints**
--   : (POST) Creates a Stripe Express account and returns an onboarding URL.
--   : (GET) Checks if a trainer has completed onboarding.
--   : (GET) Fetches all trainers' balances for the admin dashboard.
--   : (POST) Triggers a payout to a specific trainer.
--   : (GET) For the Quick Book feature.
--   : (GET) For the Favorite Trainer Availability feature.
--   : (GET) For the streak tracking feature.
--   : (POST) Creates a series of recurring sessions.
--   : (POST) Sets the trainer's status to Live and notifies trainees.
+-   : (Needs modification) To allow trainers to update their profile photo and intro video.
+-   : Uses the (currently broken) pricing logic.
+-   : Generates the URL for the Stripe onboarding WebView.
+-   : Provides data for the trainee-facing trainer detail page.
 
 **Critical Info for New Agent**
--   **Your immediate and only task is to fix the deployment failure.** The error is a duplicate  import in . You must find and remove the redundant import statement to unblock the user.
--   The application is otherwise feature-complete and has passed extensive testing. After fixing the deployment bug, the app should be considered production-ready from a functional standpoint.
--   The Stripe Connect integration is fully coded. However, it relies on the user having **Stripe Connect enabled** on their Stripe account dashboard. If they use new API keys in the future, they will need to ensure Connect is active for that account.
+-   Your immediate priority is to work through the list of 5 user-reported issues, starting with the P0 pricing bug.
+-   The agent has already completed the analysis phase for all 5 issues. You should proceed directly to implementing the fixes outlined in the  for each issue.
+-   Implement all fixes first, then perform a single comprehensive test run. Start with backend fixes, then move to frontend fixes. Use the testing agent for a full regression test once all fixes are in place.
 
 **documents and test reports created in this job**
--   
--    (Most recent)
--    (Updated with all completed features)
+-    (Result of testing the major refactoring)
+-    (Updated)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (Msg 579):** Shared deployment build logs and asked the agent to identify and fix the errors preventing deployment. **Status: IN PROGRESS.**
-2.  **User (Msg 575):** Asked for the status of their Stripe Connect integration. **Status: ADDRESSED.**
-3.  **User (Msg 439 & 442):** Requested the implementation of all 8 convenience features suggested by the agent. **Status: COMPLETED.**
-4.  **User (Msg 437):** Asked for ideas to make the app more convenient and engaging to improve user retention. **Status: ADDRESSED.**
-5.  **User (Msg 392):** Confirmed the Stripe Connect flow was understood and asked the agent to continue with any pending tasks to get the app production-ready. **Status: COMPLETED.**
-6.  **User (Msg 380-391):** A back-and-forth conversation where the user provided various Stripe API keys (restricted, secret) and the agent tested them until the correct key with the right permissions was provided and Stripe Connect was confirmed to be working. **Status: COMPLETED.**
-7.  **User (Msg 352-370):** A series of messages where the user was enabling Stripe Connect on their dashboard and providing new API keys, with the agent testing and guiding them through the process. **Status: COMPLETED.**
-8.  **User (Msg 348):** Told the agent they believed Stripe Connect was enabled on their account. **Status: ADDRESSED.**
-9.  **User (Msg 338):** Provided new live Stripe API keys. **Status: COMPLETED.**
-10. **User (Msg 159 & 156):** Confirmed choices for the Stripe Payout implementation (Option 3, C, 5 threshold, etc.). **Status: COMPLETED.**
+1.  **User (Msg 163):** Yes - Approved the agent's plan to fix the 5 new bugs. **Status: IN PROGRESS.**
+2.  **User (Msg 158):** Reported 5 new issues with screenshots: 1. Apply new background. 2. Fix trainer pricing. 3. Update Edit Profile page. 4. Stripe connect error. 5. Trainer info not showing. **Status: ADDRESSED (plan created).**
+3.  **User (Msg 155):** Intro [vid working? - Asking about the intro video feature. **Status: ADDRESSED (part of new bug list).**
+4.  **User (Msg 134):** Provided new build logs for another deployment failure. **Status: COMPLETED.**
+5.  **User (Msg 23):** Tes - Approved the agent's plan to refactor the code. **Status: COMPLETED.**
+6.  **User (Msg 20):** Hanl the refac before I deploy - Requested the agent to refactor large files before attempting another deployment. **Status: COMPLETED.**
+7.  **User (Msg 5):** Yes - Approved the agent's plan to fix the initial deployment bug. **Status: COMPLETED.**
 
 **Project Health Check:**
--   **Broken:** Production Deployment.
+-   **Broken:**
+    -   Trainer pricing and revenue calculation.
+    -   Stripe bank account connection for trainers.
+    -   Trainer profile editing (photo/video).
+    -   Display of trainer details to trainees.
 -   **Mocked**:
     -   SendGrid email service (awaiting user API key).
-    -   Stripe is configured with live keys but relies on test data for transactions within the sandbox.
 
 **3rd Party Integrations**
--   **Stripe (Payments & Payouts):** Uses Stripe Elements for payments and **Stripe Connect Express** for trainer payouts.
+-   **Stripe (Payments & Payouts):** Uses Stripe Elements and Stripe Connect Express.
 -   Expo / Expo Router
 -   expo-server-sdk-python (Push Notifications)
 -   APScheduler (Backend Jobs)
 -   wkhtmltopdf (PDF Generation)
--   react-native-toast-message (Notifications)
 -   SendGrid (Inactive)
 
 **Testing status**
--   Testing agent used after significant changes: **YES**. The last run was  which reported a 100% success rate on 28/28 tests covering all new features.
+-   Testing agent used after significant changes: **YES**. The last run () passed 100% (25/25 tests) after the major refactoring.
 -   Troubleshoot agent used after agent stuck in loop: NO
--   Test files created: YES, the testing agent created and used test files which are available in its own context, not in the main agent's workspace.
--   Known regressions: None. All previously reported bugs were fixed and verified.
+-   Test files created: None in the main workspace.
+-   Known regressions: The 5 new user-reported bugs are the current known regressions/issues.
 
 **Credentials to test flow:**
-| Role | Email | Password |
-|---|---|---|
+| Role  | Email                 | Password   |
+| :---- | :-------------------- | :--------- |
 | Admin |  |  |
 
 **What agent forgot to execute**
--   The previous agent did not forget to execute any tasks. It successfully completed a large batch of features and was actively debugging the user's latest and most critical request (the deployment failure) when the session ended.</analysis>
+-   Nothing was forgotten. The agent was actively analyzing the user's latest bug reports when the session concluded. The next logical step is to begin implementing the fixes.</analysis>

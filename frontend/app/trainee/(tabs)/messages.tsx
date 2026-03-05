@@ -32,7 +32,7 @@ const COLORS = {
 };
 
 // Background image
-const backgroundImage = require('../../../assets/images/bg-gym-weights.png');
+const backgroundImage = require('../../../assets/images/bg-gym-blue.png');
 
 export default function MessagesTab() {
   const router = useRouter();

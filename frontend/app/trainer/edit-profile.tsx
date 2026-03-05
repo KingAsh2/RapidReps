@@ -72,6 +72,8 @@ export default function EditTrainerProfileScreen() {
     longitude: null as number | null,
     locationAddress: '',
     isAvailable: true,
+    profilePhotoUrl: '',
+    introVideoUrl: '',
   });
 
   useEffect(() => {
@@ -121,6 +123,8 @@ export default function EditTrainerProfileScreen() {
           longitude: data.longitude || null,
           locationAddress: data.locationAddress || '',
           isAvailable: data.isAvailable ?? true,
+          profilePhotoUrl: data.avatarUrl || '',
+          introVideoUrl: data.introVideoUrl || '',
         });
       }
     } catch (error) {
@@ -226,6 +230,9 @@ export default function EditTrainerProfileScreen() {
         longitude: formData.longitude,
         locationAddress: formData.locationAddress,
         isAvailable: formData.isAvailable,
+        avatarUrl: formData.profilePhotoUrl.trim() || undefined,
+        introVideoUrl: formData.introVideoUrl.trim() || undefined,
+        introVideoUploaded: !!formData.introVideoUrl.trim(),
       };
 
       if (profile) {
@@ -526,6 +533,53 @@ export default function EditTrainerProfileScreen() {
                     onChangeText={(text) => setFormData({ ...formData, primaryGym: text })}
                     placeholder="e.g. LA Fitness Downtown"
                     placeholderTextColor={COLORS.gray}
+                  />
+                </LinearGradient>
+              </Animated.View>
+
+              {/* Profile Photo & Intro Video */}
+              <Animated.View
+                style={[
+                  styles.card,
+                  {
+                    opacity: cardAnims[4],
+                    transform: [{
+                      translateY: cardAnims[4].interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [30, 0],
+                      }),
+                    }],
+                  },
+                ]}
+              >
+                <LinearGradient colors={[COLORS.white, COLORS.offWhite]} style={styles.cardGradient}>
+                  <View style={styles.cardHeader}>
+                    <Ionicons name="image" size={22} color={COLORS.teal} />
+                    <Text style={styles.cardTitle}>Media</Text>
+                  </View>
+
+                  <Text style={styles.inputLabel}>Profile Photo URL</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={formData.profilePhotoUrl}
+                    onChangeText={(text) => setFormData({ ...formData, profilePhotoUrl: text })}
+                    placeholder="https://example.com/photo.jpg"
+                    placeholderTextColor={COLORS.gray}
+                    autoCapitalize="none"
+                    keyboardType="url"
+                    data-testid="profile-photo-url-input"
+                  />
+
+                  <Text style={styles.inputLabel}>Intro Video URL</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={formData.introVideoUrl}
+                    onChangeText={(text) => setFormData({ ...formData, introVideoUrl: text })}
+                    placeholder="https://example.com/video.mp4"
+                    placeholderTextColor={COLORS.gray}
+                    autoCapitalize="none"
+                    keyboardType="url"
+                    data-testid="intro-video-url-input"
                   />
                 </LinearGradient>
               </Animated.View>

@@ -37,12 +37,15 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
-// Log errors only
+// Handle errors — clear token on 401
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     if (__DEV__) {
       console.error('[API] Error:', error.config?.url, error.response?.status, error.message);
+    }
+    if (error?.response?.status === 401) {
+      await AsyncStorage.removeItem('auth_token');
     }
     throw error;
   }
@@ -613,6 +616,30 @@ export const adminPayoutsAPI = {
   },
   getHistory: async (limit?: number): Promise<any> => {
     const response = await api.get('/admin/payouts/history', { params: { limit: limit || 50 } });
+    return response.data;
+  },
+};
+
+// Session Tracking API (en-route + GPS)
+export const sessionTrackingAPI = {
+  startEnRoute: async (sessionId: string): Promise<any> => {
+    const response = await api.post(`/sessions/${sessionId}/start-en-route`);
+    return response.data;
+  },
+  gpsUpdate: async (sessionId: string, latitude: number, longitude: number, accuracy: number = 0): Promise<any> => {
+    const response = await api.post(
+      `/sessions/${sessionId}/gps-update`,
+      null,
+      { params: { latitude, longitude, accuracy } }
+    );
+    return response.data;
+  },
+  getGpsTrack: async (sessionId: string): Promise<any> => {
+    const response = await api.get(`/sessions/${sessionId}/gps-track`);
+    return response.data;
+  },
+  startSession: async (sessionId: string): Promise<any> => {
+    const response = await api.post(`/sessions/${sessionId}/start-session`);
     return response.data;
   },
 };

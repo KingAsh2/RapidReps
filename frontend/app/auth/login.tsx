@@ -25,7 +25,7 @@ import { AnimatedPillButton } from '../../src/components/AnimatedPillButton';
 const { width } = Dimensions.get('window');
 
 // Background image - Gym weights (strength/professional)
-const backgroundImage = require('../../assets/images/bg-gym-weights.png');
+const backgroundImage = require('../../assets/images/bg-gym-blue.png');
 
 export default function LoginScreen() {
   const router = useRouter();

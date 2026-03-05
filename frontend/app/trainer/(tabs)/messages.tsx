@@ -27,7 +27,7 @@ const COLORS = {
   gray: '#8892b0',
 };
 
-const backgroundImage = require('../../../assets/images/bg-gym-weights.png');
+const backgroundImage = require('../../../assets/images/bg-gym-blue.png');
 
 export default function TrainerMessagesTab() {
   const router = useRouter();

@@ -70,7 +70,7 @@ export default function RecurringSessionScreen() {
 
   return (
     <ImageBackground
-      source={require('../../assets/images/bg-gym-weights.png')}
+      source={require('../../assets/images/bg-gym-blue.png')}
       style={styles.container}
       resizeMode="cover"
     >

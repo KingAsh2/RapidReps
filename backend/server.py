@@ -1002,24 +1002,28 @@ def check_trainer_can_go_live(profile: dict) -> tuple:
 def calculate_session_pricing(
     session_type: str,
     trainer_profile: dict,
+    duration_minutes: int = 60,
     distance_miles: float = 0,
     trainee_session_count: int = 0,
     has_membership: bool = False,
 ) -> dict:
     """
     Calculate full session pricing including travel fees and discounts.
-    Members get an additional 10% discount on all sessions.
-    Returns a dict with all pricing components.
+    Trainer sets hourly rates. Trainee pays rate + $2 service fee.
+    Admin gets 100% via Stripe, sends 80% to trainer.
     """
-    # Get base rate based on session type
+    # Get base HOURLY rate based on session type
     if session_type == SessionType.VIRTUAL:
-        base_rate = trainer_profile.get('virtualRateCents', PricingRules.VIRTUAL_MIN_CENTS)
+        hourly_rate = trainer_profile.get('virtualRateCents', PricingRules.VIRTUAL_MIN_CENTS)
     elif session_type == SessionType.OUTDOOR:
-        base_rate = trainer_profile.get('outdoorRateCents', PricingRules.OUTDOOR_MIN_CENTS)
+        hourly_rate = trainer_profile.get('outdoorRateCents', PricingRules.OUTDOOR_MIN_CENTS)
     elif session_type == SessionType.IN_HOME:
-        base_rate = trainer_profile.get('inHomeRateCents', PricingRules.IN_HOME_MIN_CENTS)
+        hourly_rate = trainer_profile.get('inHomeRateCents', PricingRules.IN_HOME_MIN_CENTS)
     else:
-        base_rate = PricingRules.OUTDOOR_MIN_CENTS
+        hourly_rate = PricingRules.OUTDOOR_MIN_CENTS
+    
+    # Pro-rate by duration: base_rate = hourly_rate * (duration / 60)
+    base_rate = int(hourly_rate * duration_minutes / 60)
     
     # Enforce minimums
     minimum = get_session_minimum_price(session_type)
@@ -1052,13 +1056,16 @@ def calculate_session_pricing(
         discount_amount += membership_discount
     
     # Calculate final amounts
-    # Revenue split: Trainer gets 80%, Platform gets 20% of session rate
-    # Plus $2 service fee goes entirely to platform (not from trainer's cut)
-    subtotal = base_rate + travel_fee - discount_amount
-    trainer_earnings = int(subtotal * PricingRules.TRAINER_REVENUE_PERCENT / 100)
-    platform_fee = subtotal - trainer_earnings  # 20% of session
-    service_fee = PricingRules.SERVICE_FEE_CENTS  # $2.00 flat fee
-    total_charged = subtotal + service_fee  # What trainee pays
+    # Correct formula: Trainee pays (trainer_rate / 0.8) + $2 service fee
+    # Trainer's rate = their set hourly rate, pro-rated by duration
+    # This ensures trainer gets their FULL rate; platform takes 20% ON TOP
+    trainer_rate = base_rate - discount_amount
+    session_gross = int(round(trainer_rate / 0.80))
+    trainer_earnings = trainer_rate
+    platform_fee = session_gross - trainer_earnings
+    service_fee = PricingRules.SERVICE_FEE_CENTS
+    subtotal = session_gross + travel_fee
+    total_charged = subtotal + service_fee
     
     return {
         'baseSessionPriceCents': base_rate,
@@ -1074,8 +1081,8 @@ def calculate_session_pricing(
         'totalChargedCents': total_charged,
         'finalSessionPriceCents': total_charged,
         'platformFeePercent': PricingRules.PLATFORM_REVENUE_PERCENT,
-        'platformFeeCents': platform_fee + service_fee,
-        'trainerEarningsCents': trainer_earnings,
+        'platformFeeCents': platform_fee + service_fee + platform_travel_fee,
+        'trainerEarningsCents': trainer_earnings + trainer_travel_earning,
         'trainerRevenuePercent': PricingRules.TRAINER_REVENUE_PERCENT,
         'cancellationFeeCents': get_cancellation_fee(session_type),
     }
@@ -1682,10 +1689,16 @@ async def create_trainer_profile(profile: TrainerProfileCreate, current_user: di
 
 @api_router.get("/trainer-profiles/{user_id}", response_model=TrainerProfileResponse)
 async def get_trainer_profile(user_id: str):
-    """Get trainer profile by user ID"""
+    """Get trainer profile by user ID — enriched with user data (fullName, avatar)"""
     profile = await db.trainer_profiles.find_one({'userId': user_id})
     if not profile:
         raise HTTPException(status_code=404, detail="Trainer profile not found")
+    
+    user = await db.users.find_one({'_id': ObjectId(user_id)}, {'fullName': 1, 'profilePhoto': 1})
+    if user:
+        profile['fullName'] = user.get('fullName', 'Unknown Trainer')
+        if not profile.get('avatarUrl') and user.get('profilePhoto'):
+            profile['avatarUrl'] = user['profilePhoto']
     
     return TrainerProfileResponse(**serialize_doc(profile))
 
@@ -4017,6 +4030,7 @@ async def trainer_connect_onboard(
     host_url = str(request.base_url).rstrip('/')
     if host_url.startswith('http://'):
         host_url = host_url.replace('http://', 'https://', 1)
+    logger = logging.getLogger(__name__)
     try:
         account_link = stripe.AccountLink.create(
             account=existing_account_id,
@@ -4024,8 +4038,10 @@ async def trainer_connect_onboard(
             return_url=f"{host_url}/api/trainer/connect/return?account_id={existing_account_id}",
             type="account_onboarding",
         )
+        logger.info(f"Stripe onboarding link created for account {existing_account_id}: {account_link.url[:80]}...")
         return {"url": account_link.url, "accountId": existing_account_id}
     except stripe.error.StripeError as e:
+        logger.error(f"Stripe Connect onboarding link failed for {existing_account_id}: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Failed to create onboarding link: {str(e)}")
 
 

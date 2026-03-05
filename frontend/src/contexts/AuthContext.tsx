@@ -63,9 +63,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           } else if (userData.roles.length > 0) {
             setActiveRoleState(userData.roles[0]);
           }
-        } catch (apiError) {
-          console.error('Error fetching user data:', apiError);
-          await AsyncStorage.removeItem('auth_token');
+        } catch (apiError: any) {
+          // Only clear token on 401 Unauthorized — keep session alive on network/timeout errors
+          if (apiError?.response?.status === 401) {
+            console.error('Token expired or invalid, clearing auth');
+            await AsyncStorage.removeItem('auth_token');
+          } else {
+            console.error('Transient error fetching user (keeping token):', apiError?.message);
+          }
         }
       }
     } catch (error) {

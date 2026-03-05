@@ -177,19 +177,26 @@ export default function TraineeProfileScreen() {
   };
 
   const handleNavigate = () => {
-    if (session?.traineeLatitude && session?.traineeLongitude) {
-      const url = `https://www.google.com/maps/dir/?api=1&destination=${session.traineeLatitude},${session.traineeLongitude}`;
-      Linking.openURL(url);
-    } else if (session?.locationNameOrAddress) {
-      const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(session.locationNameOrAddress)}`;
-      Linking.openURL(url);
-    } else {
-      showAlert({
-        title: 'Location Not Available',
-        message: 'Trainee location will be shared after payment confirmation.',
-        type: 'info',
-      });
-    }
+    // Open en-route screen with GPS tracking instead of raw maps link
+    router.push({
+      pathname: '/trainer/en-route',
+      params: {
+        sessionId,
+        traineeName,
+        traineeId,
+        traineeAddress: session?.locationNameOrAddress || '',
+        traineeLat: session?.traineeLatitude?.toString() || '',
+        traineeLng: session?.traineeLongitude?.toString() || '',
+        sessionType: session?.sessionType || 'outdoor',
+      },
+    });
+  };
+
+  const handleMessage = () => {
+    router.push({
+      pathname: '/messages/chat',
+      params: { userId: traineeId, userName: traineeName },
+    });
   };
 
   const handleCall = () => {

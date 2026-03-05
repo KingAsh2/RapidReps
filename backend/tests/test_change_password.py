@@ -18,7 +18,7 @@ import os
 import time
 import uuid
 
-BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://build-debug-7.preview.emergentagent.com')
+BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://pricing-fix-9.preview.emergentagent.com')
 
 # Test credentials for all 7 accounts
 TEST_ACCOUNTS = [

@@ -10,6 +10,8 @@ import {
   Alert,
   Animated,
   Pressable,
+  Modal,
+  Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -34,7 +36,7 @@ const COLORS = {
   warning: '#FFB300',
 };
 
-const backgroundImage = require('../../assets/images/bg-gym-weights.png');
+const backgroundImage = require('../../assets/images/bg-gym-blue.png');
 
 const VERIFICATION_STEPS = [
   {
@@ -242,6 +244,8 @@ export default function TrainerVerificationScreen() {
     );
   };
 
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
   const handleHoldSubmitStart = () => {
     holdProgress.setValue(0);
     Animated.timing(holdProgress, {
@@ -254,8 +258,7 @@ export default function TrainerVerificationScreen() {
       setIsSubmitting(true);
       try {
         await api.post('/trainer/submit-all-verification');
-        toast.success('Verification submitted for review!');
-        setTimeout(() => router.back(), 2000);
+        setShowSuccessModal(true);
       } catch (err: any) {
         toast.error( err?.response?.data?.detail || 'Failed to submit verification.');
       } finally {
@@ -507,8 +510,47 @@ export default function TrainerVerificationScreen() {
         </ScrollView>
       </SafeAreaView>
     </ImageBackground>
+
+      {/* Verification Submitted Modal */}
+      <Modal visible={showSuccessModal} transparent animationType="fade" data-testid="verification-success-modal">
+        <View style={modalStyles.overlay}>
+          <View style={modalStyles.content}>
+            <View style={modalStyles.iconCircle}>
+              <Ionicons name="shield-checkmark" size={56} color={COLORS.success} />
+            </View>
+            <Text style={modalStyles.title}>Documents Submitted!</Text>
+            <Text style={modalStyles.subtitle}>
+              Your verification documents have been submitted to our admin team for review. This typically takes 1-3 business days. You'll be notified once approved.
+            </Text>
+            <TouchableOpacity
+              onPress={() => {
+                setShowSuccessModal(false);
+                router.back();
+              }}
+              style={modalStyles.btn}
+              data-testid="verification-modal-ok-btn"
+            >
+              <LinearGradient colors={[COLORS.teal, COLORS.tealLight]} style={modalStyles.btnGradient}>
+                <Text style={modalStyles.btnText}>Got it</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
   );
 }
+
+const modalW = Dimensions.get('window').width - 48;
+const modalStyles = StyleSheet.create({
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center' },
+  content: { width: modalW, backgroundColor: COLORS.white, borderRadius: 24, padding: 32, alignItems: 'center' },
+  iconCircle: { marginBottom: 16 },
+  title: { fontSize: 22, fontWeight: '800', color: COLORS.navy || '#1a2a5e', marginBottom: 8 },
+  subtitle: { fontSize: 14, color: COLORS.gray, textAlign: 'center', lineHeight: 22, marginBottom: 24 },
+  btn: { width: '100%', borderRadius: 14, overflow: 'hidden' },
+  btnGradient: { paddingVertical: 16, alignItems: 'center' },
+  btnText: { fontSize: 16, fontWeight: '700', color: COLORS.white },
+});
 
 const styles = StyleSheet.create({
   container: { flex: 1 },

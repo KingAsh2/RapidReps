@@ -357,6 +357,7 @@ export default function SessionsScreen() {
               const isPending = session.status === 'requested';
               const isCancelled = session.status === 'cancelled';
               const isCompleted = session.status === 'completed';
+              const isEnRoute = session.status === 'en_route';
 
               return (
                 <Animated.View
@@ -379,13 +380,14 @@ export default function SessionsScreen() {
                     <View style={[
                       styles.statusBadge,
                       isPending && styles.statusPending,
-                      isUpcoming && styles.statusUpcoming,
+                      (isUpcoming || isEnRoute) && styles.statusUpcoming,
                       isCompleted && styles.statusCompleted,
                       isCancelled && styles.statusCancelled,
                     ]}>
                       <Ionicons 
                         name={
                           isPending ? 'time' : 
+                          isEnRoute ? 'navigate' :
                           isUpcoming ? 'checkmark-circle' :
                           isCompleted ? 'checkmark-done' : 
                           'close-circle'
@@ -394,7 +396,7 @@ export default function SessionsScreen() {
                         color={COLORS.white} 
                       />
                       <Text style={styles.statusText}>
-                        {isPending ? 'PENDING' : isUpcoming ? 'CONFIRMED' : isCompleted ? 'COMPLETED' : 'CANCELLED'}
+                        {isPending ? 'PENDING' : isEnRoute ? 'EN ROUTE' : isUpcoming ? 'CONFIRMED' : isCompleted ? 'COMPLETED' : 'CANCELLED'}
                       </Text>
                     </View>
 
@@ -439,6 +441,30 @@ export default function SessionsScreen() {
                     </View>
 
                     {/* Action Buttons */}
+                    {session.status === 'en_route' && (
+                      <TouchableOpacity
+                        style={styles.trackButton}
+                        onPress={() => router.push({
+                          pathname: '/trainee/trainer-en-route',
+                          params: {
+                            sessionId: session.id,
+                            trainerName: session.trainerName || 'Trainer',
+                            trainerId: session.trainerId,
+                            sessionType: session.locationType,
+                          },
+                        })}
+                        data-testid="track-trainer-btn"
+                      >
+                        <LinearGradient
+                          colors={[COLORS.teal, COLORS.tealLight]}
+                          style={styles.trackButtonGradient}
+                        >
+                          <Ionicons name="navigate" size={18} color={COLORS.white} />
+                          <Text style={styles.trackButtonText}>Track Trainer</Text>
+                        </LinearGradient>
+                      </TouchableOpacity>
+                    )}
+
                     {(isPending || isUpcoming) && (
                       <TouchableOpacity
                         style={styles.cancelButton}
@@ -775,5 +801,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: COLORS.teal,
+  },
+  trackButton: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  trackButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+  },
+  trackButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: COLORS.white,
   },
 });
