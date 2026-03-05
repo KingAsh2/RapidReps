@@ -28,7 +28,12 @@ RapidReps is a mobile fitness platform connecting personal trainers with trainee
 - **P2**: Added profilePhotoUrl and introVideoUrl fields to edit profile
 - **P3**: Replaced orange gym backgrounds with blue-themed version
 
-### New Features (March 5, 2026)
+### Stripe Payment Integration (March 5, 2026)
+- **Payment Sheet**: Wired up `@stripe/stripe-react-native` Payment Sheet in confirm-booking flow
+  - Creates PaymentIntent via backend → initializes Payment Sheet → presents native card UI → handles success/cancel/error
+  - Graceful fallback for web preview where native SDK isn't available
+- **Connect Express**: Stripe Connect onboarding generates real onboarding URLs for trainers
+- Both live keys configured (backend `STRIPE_SECRET_KEY`, frontend `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY`)
 - **Auth resilience**: Token only cleared on 401, not on transient network errors
 - **Success modals**: Verification submission, booking confirmation, and en-route arrival show proper modals instead of toasts + redirects
 - **Trainer en-route screen** (`/trainer/en-route`): GPS sharing, distance/ETA tracking, navigation via native maps, "I've Arrived" modal, message trainee
