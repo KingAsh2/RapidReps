@@ -641,6 +641,55 @@ export default function TrainerHomeScreen() {
               </TouchableOpacity>
             </View>
 
+            {/* Trainer Feature Actions */}
+            <View style={styles.quickActionsRow}>
+              <TouchableOpacity 
+                style={styles.quickAction}
+                onPress={() => router.push('/trainer/trainer-tools')}
+                data-testid="trainer-tools-btn"
+              >
+                <LinearGradient
+                  colors={['#6C5CE7', '#A29BFE']}
+                  style={styles.quickActionGradient}
+                >
+                  <View style={styles.quickActionIcon}>
+                    <Ionicons name="construct" size={28} color={COLORS.white} />
+                  </View>
+                  <Text style={[styles.quickActionText, { color: COLORS.white }]}>My Tools</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.quickAction}
+                onPress={() => router.push('/trainer/group-sessions')}
+                data-testid="trainer-group-sessions-btn"
+              >
+                <LinearGradient
+                  colors={[COLORS.teal, COLORS.tealLight]}
+                  style={styles.quickActionGradient}
+                >
+                  <View style={styles.quickActionIcon}>
+                    <Ionicons name="people" size={28} color={COLORS.white} />
+                  </View>
+                  <Text style={[styles.quickActionText, { color: COLORS.white }]}>Group Sessions</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.quickAction}
+                onPress={() => router.push('/trainer/achievements')}
+                data-testid="trainer-achievements-btn"
+              >
+                <LinearGradient
+                  colors={[COLORS.orange, COLORS.orangeLight]}
+                  style={styles.quickActionGradient}
+                >
+                  <View style={styles.quickActionIcon}>
+                    <Ionicons name="trophy" size={28} color={COLORS.white} />
+                  </View>
+                  <Text style={[styles.quickActionText, { color: COLORS.white }]}>Achievements</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+
             {/* Pending Requests Section */}
             {pendingSessions.length > 0 && (
               <View style={styles.section}>

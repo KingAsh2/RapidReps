@@ -3073,6 +3073,23 @@ async def end_session(
         {"sessionId": session_id, "screen": "trainee/session-summary"}
     ))
 
+    # Auto-generate community feed post
+    try:
+        from routes.feed import auto_create_feed_post
+        trainee_name = session.get('traineeName', 'Someone')
+        trainer_name = session.get('trainerName', 'a trainer')
+        duration_mins = session.get('durationMinutes', 30)
+        session_type = session.get('sessionType', 'workout')
+        asyncio.create_task(auto_create_feed_post(
+            "session_complete",
+            session['traineeId'],
+            trainee_name,
+            f"{trainee_name} just completed a {duration_mins}-min {session_type} session with {trainer_name}!",
+            {"sessionId": session_id, "durationMinutes": duration_mins, "sessionType": session_type}
+        ))
+    except Exception:
+        pass
+
     return {
         'success': True,
         'message': 'Session ended. Awaiting client confirmation.',
@@ -4711,6 +4728,22 @@ async def check_badges(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=404, detail="Trainer profile not found")
     
     newly_unlocked = await check_and_unlock_badges(str(current_user['_id']))
+    
+    # Auto-generate feed posts for newly unlocked badges
+    if newly_unlocked:
+        try:
+            from routes.feed import auto_create_feed_post
+            user_name = current_user.get('fullName', 'A trainer')
+            for badge_type in newly_unlocked:
+                asyncio.create_task(auto_create_feed_post(
+                    "badge_unlock",
+                    str(current_user['_id']),
+                    user_name,
+                    f"{user_name} just unlocked the {badge_type.replace('_', ' ').title()} badge!",
+                    {"badgeType": badge_type}
+                ))
+        except Exception:
+            pass
     
     return {
         'newlyUnlocked': newly_unlocked,

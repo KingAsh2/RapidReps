@@ -583,6 +583,50 @@ export default function TraineeHomeScreen() {
               </TouchableOpacity>
             </Animated.View>
 
+            {/* === QUICK FEATURE ACTIONS === */}
+            <View style={styles.featureActionsGrid}>
+              <TouchableOpacity
+                style={styles.featureAction}
+                onPress={() => router.push('/trainee/instant-match')}
+                data-testid="instant-workout-btn"
+              >
+                <LinearGradient colors={['#FF6A00', '#FF9F1C']} style={styles.featureActionGrad}>
+                  <Ionicons name="flash" size={22} color="#fff" />
+                  <Text style={styles.featureActionText}>Instant{'\n'}Workout</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.featureAction}
+                onPress={() => router.push('/trainee/group-sessions')}
+                data-testid="group-workouts-btn"
+              >
+                <LinearGradient colors={['#00CFC1', '#18A09D']} style={styles.featureActionGrad}>
+                  <Ionicons name="people" size={22} color="#fff" />
+                  <Text style={styles.featureActionText}>Group{'\n'}Workouts</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.featureAction}
+                onPress={() => router.push('/trainee/feed')}
+                data-testid="community-feed-btn"
+              >
+                <LinearGradient colors={['#6C5CE7', '#A29BFE']} style={styles.featureActionGrad}>
+                  <Ionicons name="newspaper" size={22} color="#fff" />
+                  <Text style={styles.featureActionText}>Community{'\n'}Feed</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.featureAction}
+                onPress={() => router.push('/trainee/user-progress')}
+                data-testid="my-progress-btn"
+              >
+                <LinearGradient colors={['#E84393', '#FD79A8']} style={styles.featureActionGrad}>
+                  <Ionicons name="trending-up" size={22} color="#fff" />
+                  <Text style={styles.featureActionText}>My{'\n'}Progress</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+
             {/* === CONVENIENCE FEATURES === */}
 
             {/* Streak Banner */}
@@ -1003,6 +1047,35 @@ const styles = StyleSheet.create({
     color: '#22C1C3',
   },
   // Urgent Banner - Polished with more spacing
+  featureActionsGrid: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 14,
+  },
+  featureAction: {
+    flex: 1,
+    borderRadius: 14,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  featureActionGrad: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 4,
+    gap: 6,
+  },
+  featureActionText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#fff',
+    textAlign: 'center',
+    lineHeight: 14,
+  },
   urgentBannerContainer: {
     marginBottom: 14,
   },

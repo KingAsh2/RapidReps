@@ -251,6 +251,9 @@ async def get_instant_match_status(match_id: str, current_user: dict = Depends(g
     # Check if current offer has expired → cascade
     if match["status"] == "searching":
         offer_expires = match.get("currentOfferExpiresAt", now)
+        # Ensure timezone-aware comparison
+        if offer_expires.tzinfo is None:
+            offer_expires = offer_expires.replace(tzinfo=timezone.utc)
         if now > offer_expires:
             idx = match.get("currentCandidateIndex", 0) + 1
             candidates = match.get("candidateTrainerIds", [])
@@ -274,7 +277,10 @@ async def get_instant_match_status(match_id: str, current_user: dict = Depends(g
                 match["status"] = "expired"
 
         # Check overall timeout
-        if now > match.get("expiresAt", now):
+        expires_at = match.get("expiresAt", now)
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        if now > expires_at:
             await db.instant_matches.update_one({"_id": ObjectId(match_id)}, {"$set": {"status": "expired"}})
             match["status"] = "expired"
 

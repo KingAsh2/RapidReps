@@ -56,7 +56,6 @@ config.resolver.blockList = [
   /node_modules\/react-native\/sdks\/.*/,
   /node_modules\/react-native\/template\/.*/,
   /node_modules\/react-native\/scripts\/.*/,
-  /node_modules\/@react-native\/.*/,
   /node_modules\/hermes-engine\/.*/,
   /node_modules\/metro-symbolicate\/.*/,
   /\.git\/.*/,
