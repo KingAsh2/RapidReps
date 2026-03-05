@@ -31,6 +31,10 @@ import TrainingModeDialog from '../../../src/components/TrainingModeDialog';
 import TrainerFilters from '../../../src/components/TrainerFilters';
 import NearbyTrainersMap from '../../../src/components/NearbyTrainersMap';
 import { toast } from '../../../src/utils/toast';
+import { StreakBanner } from '../../../src/components/trainee-home/StreakBanner';
+import { QuickBookSection } from '../../../src/components/trainee-home/QuickBookSection';
+import { FavoriteAvailability } from '../../../src/components/trainee-home/FavoriteAvailability';
+import { TrainerCard } from '../../../src/components/trainee-home/TrainerCard';
 
 const { width, height } = Dimensions.get('window');
 
@@ -583,91 +587,23 @@ export default function TraineeHomeScreen() {
 
             {/* Streak Banner */}
             {streak && streak.currentStreak > 0 && (
-              <TouchableOpacity
-                style={hs.streakBanner}
-                onPress={() => router.push('/trainee/share-streak')}
-                data-testid="streak-banner"
-              >
-                <LinearGradient colors={['#FF6B00', '#FF9F43']} style={hs.streakGradient} start={{x:0,y:0}} end={{x:1,y:0}}>
-                  <Ionicons name="flame" size={28} color="#fff" />
-                  <View style={{flex:1}}>
-                    <Text style={hs.streakTitle}>{streak.currentStreak} Week Streak!</Text>
-                    <Text style={hs.streakSub}>{streak.thisWeekSessions} session{streak.thisWeekSessions !== 1 ? 's' : ''} this week | {streak.totalSessions} total</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.7)" />
-                </LinearGradient>
-              </TouchableOpacity>
+              <StreakBanner streak={streak} onPress={() => router.push('/trainee/share-streak')} />
             )}
 
             {/* Quick Book — Recent Trainers */}
             {recentTrainers.length > 0 && (
-              <View style={hs.quickBookSection} data-testid="quick-book-section">
-                <Text style={hs.sectionLabel}>Quick Book</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{gap: 12, paddingRight: 16}}>
-                  {recentTrainers.map((t: any) => (
-                    <TouchableOpacity
-                      key={t.trainerId}
-                      style={hs.quickBookCard}
-                      onPress={() => router.push({ pathname: '/trainee/trainer-detail', params: { trainerId: t.trainerId } })}
-                      data-testid={`quick-book-${t.trainerId}`}
-                    >
-                      {t.trainerPhoto ? (
-                        <Image source={{uri: t.trainerPhoto}} style={hs.quickBookPhoto} />
-                      ) : (
-                        <View style={[hs.quickBookPhoto, {backgroundColor: '#FF7F00', justifyContent: 'center', alignItems: 'center'}]}>
-                          <Ionicons name="person" size={22} color="#fff" />
-                        </View>
-                      )}
-                      {t.isAvailable && <View style={hs.liveDot} />}
-                      <Text style={hs.quickBookName} numberOfLines={1}>{t.trainerName?.split(' ')[0]}</Text>
-                      <Text style={hs.quickBookMeta}>{t.sessionCount} sessions</Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
+              <QuickBookSection
+                recentTrainers={recentTrainers}
+                onTrainerPress={(id) => router.push({ pathname: '/trainee/trainer-detail', params: { trainerId: id } })}
+              />
             )}
 
             {/* Favorite Trainer Availability */}
             {favoriteAvailability.length > 0 && (
-              <View style={hs.favSection} data-testid="fav-availability-section">
-                <Text style={hs.sectionLabel}>Your Trainers</Text>
-                {favoriteAvailability.slice(0, 3).map((t: any) => (
-                  <TouchableOpacity
-                    key={t.trainerId}
-                    style={hs.favCard}
-                    onPress={() => router.push({ pathname: '/trainee/trainer-detail', params: { trainerId: t.trainerId } })}
-                    data-testid={`fav-trainer-${t.trainerId}`}
-                  >
-                    <View style={{flexDirection:'row', alignItems:'center', gap: 12, flex: 1}}>
-                      {t.trainerPhoto ? (
-                        <Image source={{uri: t.trainerPhoto}} style={hs.favPhoto} />
-                      ) : (
-                        <View style={[hs.favPhoto, {backgroundColor: '#1FB8B4', justifyContent: 'center', alignItems: 'center'}]}>
-                          <Ionicons name="person" size={18} color="#fff" />
-                        </View>
-                      )}
-                      <View style={{flex:1}}>
-                        <Text style={hs.favName}>{t.trainerName}</Text>
-                        <View style={{flexDirection:'row', alignItems:'center', gap: 6}}>
-                          {t.isLiveNow ? (
-                            <View style={hs.liveBadge}><Text style={hs.liveBadgeText}>LIVE NOW</Text></View>
-                          ) : t.isAvailable ? (
-                            <Text style={{fontSize: 11, color: '#00C853', fontWeight: '700'}}>Available</Text>
-                          ) : (
-                            <Text style={{fontSize: 11, color: '#8892b0', fontWeight: '600'}}>Offline</Text>
-                          )}
-                          {t.averageRating > 0 && (
-                            <Text style={{fontSize: 11, color: '#8892b0'}}>
-                              <Ionicons name="star" size={10} color="#FFB800" /> {t.averageRating.toFixed(1)}
-                            </Text>
-                          )}
-                        </View>
-                      </View>
-                    </View>
-                    <Ionicons name="chevron-forward" size={18} color="#8892b0" />
-                  </TouchableOpacity>
-                ))}
-              </View>
+              <FavoriteAvailability
+                trainers={favoriteAvailability}
+                onTrainerPress={(id) => router.push({ pathname: '/trainee/trainer-detail', params: { trainerId: id } })}
+              />
             )}
 
             {/* MAP - Trainers Near You */}
@@ -803,119 +739,12 @@ export default function TraineeHomeScreen() {
                 </View>
               ) : (
                 displayedTrainers.map((trainer, index) => (
-                  <Animated.View
+                  <TrainerCard
                     key={trainer.id}
-                    style={[
-                      styles.trainerCard,
-                      {
-                        opacity: cardAnims[index] || 1,
-                        transform: [{
-                          translateY: (cardAnims[index] || new Animated.Value(1)).interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [40, 0],
-                          }),
-                        }],
-                      },
-                    ]}
-                  >
-                    <LinearGradient
-                      colors={['#FFFFFF', '#F8F9FA']}
-                      style={styles.trainerCardGradient}
-                    >
-                      {/* Trainer Header */}
-                      <View style={styles.trainerHeader}>
-                        <View style={styles.trainerAvatarContainer}>
-                          {trainer.avatarUrl ? (
-                            <Image
-                              source={{ uri: trainer.avatarUrl }}
-                              style={styles.trainerAvatar}
-                            />
-                          ) : (
-                            <LinearGradient
-                              colors={['#22C1C3', '#1FB8B4']}
-                              style={styles.trainerAvatarPlaceholder}
-                            >
-                              <Ionicons name="person" size={28} color="#FFFFFF" />
-                            </LinearGradient>
-                          )}
-                          {trainer.isVerified && (
-                            <View style={styles.verifiedBadge}>
-                              <Ionicons name="checkmark-circle" size={18} color="#22C1C3" />
-                            </View>
-                          )}
-                        </View>
-                        
-                        <View style={styles.trainerInfo}>
-                          <Text style={styles.trainerName}>{trainer.fullName || 'Trainer'}</Text>
-                          
-                          <View style={styles.trainerStats}>
-                            <View style={styles.statBadge}>
-                              <Ionicons name="star" size={14} color="#FFB347" />
-                              <Text style={styles.statText}>
-                                {trainer.averageRating?.toFixed(1) || '5.0'}
-                              </Text>
-                            </View>
-                            <View style={styles.statBadge}>
-                              <Ionicons name="cash" size={14} color="#22C1C3" />
-                              <Text style={styles.statText}>
-                                ${(trainer.ratePerMinuteCents / 100).toFixed(2)}/min
-                              </Text>
-                            </View>
-                            {trainer.distance !== null && (
-                              <View style={styles.statBadge}>
-                                <Ionicons name="location" size={14} color="#F7931E" />
-                                <Text style={styles.statText}>
-                                  {trainer.distance.toFixed(1)} mi
-                                </Text>
-                              </View>
-                            )}
-                          </View>
-                        </View>
-                      </View>
-
-                      {/* Bio */}
-                      {trainer.bio && (
-                        <Text style={styles.trainerBio} numberOfLines={2}>
-                          {trainer.bio}
-                        </Text>
-                      )}
-
-                      {/* Tags */}
-                      <View style={styles.tagRow}>
-                        {trainer.isVirtualTrainingAvailable && (
-                          <View style={styles.virtualTag}>
-                            <Ionicons name="videocam" size={12} color="#FFFFFF" />
-                            <Text style={styles.virtualTagText}>VIRTUAL</Text>
-                          </View>
-                        )}
-                        {trainer.trainingStyles?.slice(0, 2).map((style: string, i: number) => (
-                          <View key={i} style={styles.styleTag}>
-                            <Text style={styles.styleTagText}>{style}</Text>
-                          </View>
-                        ))}
-                        {trainer.trainingStyles?.length > 2 && (
-                          <Text style={styles.moreTag}>+{trainer.trainingStyles.length - 2}</Text>
-                        )}
-                      </View>
-
-                      {/* CTA Button */}
-                      <TouchableOpacity 
-                        style={styles.viewProfileButton}
-                        onPress={() => router.push(`/trainee/trainer-detail?trainerId=${trainer.userId}`)}
-                        activeOpacity={0.8}
-                      >
-                        <LinearGradient
-                          colors={['#1FB8B4', '#22C1C3']}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 0 }}
-                          style={styles.viewProfileGradient}
-                        >
-                          <Text style={styles.viewProfileText}>VIEW PROFILE</Text>
-                          <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
-                        </LinearGradient>
-                      </TouchableOpacity>
-                    </LinearGradient>
-                  </Animated.View>
+                    trainer={trainer}
+                    cardAnim={cardAnims[index] || new Animated.Value(1)}
+                    onViewProfile={(id) => router.push(`/trainee/trainer-detail?trainerId=${id}`)}
+                  />
                 ))
               )}
             </View>
@@ -1034,36 +863,6 @@ export default function TraineeHomeScreen() {
 
 
 // Convenience feature styles
-const hs = StyleSheet.create({
-  streakBanner: { borderRadius: 16, overflow: 'hidden', marginBottom: 16 },
-  streakGradient: { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 14 },
-  streakTitle: { fontSize: 18, fontWeight: '900', color: '#fff' },
-  streakSub: { fontSize: 12, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
-  sectionLabel: { fontSize: 16, fontWeight: '800', color: '#1a2a5e', marginBottom: 12 },
-  quickBookSection: { marginBottom: 16 },
-  quickBookCard: {
-    alignItems: 'center', width: 80, gap: 6,
-  },
-  quickBookPhoto: { width: 60, height: 60, borderRadius: 30, borderWidth: 2, borderColor: '#FF7F00' },
-  quickBookName: { fontSize: 12, fontWeight: '700', color: '#1a2a5e', textAlign: 'center' },
-  quickBookMeta: { fontSize: 10, color: '#8892b0' },
-  liveDot: {
-    position: 'absolute', top: 0, right: 8,
-    width: 14, height: 14, borderRadius: 7,
-    backgroundColor: '#00C853', borderWidth: 2.5, borderColor: '#fff',
-  },
-  favSection: { marginBottom: 16 },
-  favCard: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: '#fff', borderRadius: 14, padding: 14, marginBottom: 8,
-    shadowColor: '#000', shadowOffset: {width:0, height:2}, shadowOpacity: 0.05, shadowRadius: 8, elevation: 3,
-  },
-  favPhoto: { width: 42, height: 42, borderRadius: 21 },
-  favName: { fontSize: 14, fontWeight: '700', color: '#1a2a5e' },
-  liveBadge: { backgroundColor: '#FF4757', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
-  liveBadgeText: { fontSize: 9, fontWeight: '800', color: '#fff', letterSpacing: 0.5 },
-});
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
