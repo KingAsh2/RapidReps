@@ -102,11 +102,13 @@ Build a fitness trainer-trainee matching platform with Uber-style real-time matc
 ### Deployment Fix (Mar 5, 2026)
 59. **P0: EAS Build Fix** - Removed duplicate `Image` import in `frontend/app/trainee/(tabs)/home.tsx` (lines 11 & 17 both imported `Image` from react-native). This was blocking the EAS production build with `SyntaxError: Identifier 'Image' has already been declared`.
 
+### Refactoring (Mar 5, 2026)
+60. **P3: Admin Dashboard Refactored** - Broke 1901-line dashboard.tsx into 7 tab components + shared utilities file (560 lines main, ~1400 lines across components). Components: OverviewTab, UsersTab, VerificationsTab, SessionsTab, PaymentsTab, PayoutsTab, ProfileTab, AdminShared.
+61. **P4: Trainee Home Screen Refactored** - Extracted 4 reusable components from 2016-line home.tsx (now 1814 lines). Components: StreakBanner, QuickBookSection, FavoriteAvailability, TrainerCard.
+
 ## Remaining Backlog
 1. P3: SendGrid email integration (awaiting API key from user)
-2. P3: Refactor admin dashboard (1800+ lines) into smaller components
-3. P4: Refactor trainee home screen (2000+ lines) into smaller components
-4. P5: TypeScript strict-mode warnings cleanup (86+)
+2. P5: TypeScript strict-mode warnings cleanup (86+)
 
 ## Convenience Features (Implemented Mar 4, 2026)
 1. **Rebook Button** — "Book Again" button on completed sessions → goes straight to trainer detail
