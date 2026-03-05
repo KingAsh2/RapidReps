@@ -129,6 +129,11 @@ async def app_root():
 async def app_health():
     return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}
 
+@app.get("/api/download/workflow-guide")
+async def download_workflow_guide():
+    return FileResponse("/app/backend/static/RapidReps_Workflow_Guide.pdf", filename="RapidReps_Workflow_Guide.pdf", media_type="application/pdf")
+
+
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
