@@ -1,0 +1,131 @@
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, RefreshControl } from 'react-native';
+import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import { groupSessionAPI } from '../../src/services/api';
+import { useAuth } from '../../src/contexts/AuthContext';
+
+const COLORS = { orange: '#FF6A00', teal: '#00CFC1', navy: '#1a2a5e', white: '#FFFFFF', gray: '#8892b0', success: '#00D26A' };
+
+export default function GroupSessionsScreen() {
+  const router = useRouter();
+  const { user } = useAuth();
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => { load(); }, []);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const data = await groupSessionAPI.list('upcoming');
+      setSessions(data.sessions || []);
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
+  };
+
+  const handleJoin = async (id: string) => {
+    try {
+      const res = await groupSessionAPI.join(id);
+      load(); // Refresh
+    } catch (e: any) {
+      console.error(e?.response?.data?.detail);
+    }
+  };
+
+  const renderSession = ({ item }: { item: any }) => (
+    <View style={styles.card} data-testid={`group-session-${item.id}`}>
+      <View style={styles.cardHeader}>
+        <View style={styles.tagBadge}>
+          <Ionicons name="people" size={14} color={COLORS.white} />
+          <Text style={styles.tagText}>{item.participantCount}/{item.capacity}</Text>
+        </View>
+        <Text style={styles.price}>${(item.pricePerPersonCents / 100).toFixed(2)}/person</Text>
+      </View>
+      <Text style={styles.title}>{item.title}</Text>
+      <Text style={styles.desc}>{item.description}</Text>
+      <View style={styles.metaRow}>
+        <View style={styles.metaItem}>
+          <Ionicons name="calendar" size={14} color={COLORS.teal} />
+          <Text style={styles.metaText}>{new Date(item.dateTime).toLocaleDateString()}</Text>
+        </View>
+        <View style={styles.metaItem}>
+          <Ionicons name="time" size={14} color={COLORS.teal} />
+          <Text style={styles.metaText}>{item.durationMinutes} min</Text>
+        </View>
+        <View style={styles.metaItem}>
+          <Ionicons name="location" size={14} color={COLORS.teal} />
+          <Text style={styles.metaText}>{item.location || item.sessionType}</Text>
+        </View>
+      </View>
+      <View style={styles.cardFooter}>
+        <Text style={styles.trainerName}>by {item.trainerName}</Text>
+        {item.isJoined ? (
+          <View style={styles.joinedBadge}><Text style={styles.joinedText}>Joined</Text></View>
+        ) : item.spotsRemaining > 0 ? (
+          <TouchableOpacity onPress={() => handleJoin(item.id)} style={styles.joinBtn} data-testid={`join-group-${item.id}`}>
+            <Text style={styles.joinBtnText}>Join ({item.spotsRemaining} spots)</Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.fullBadge}><Text style={styles.fullText}>Full</Text></View>
+        )}
+      </View>
+    </View>
+  );
+
+  return (
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <LinearGradient colors={[COLORS.navy, '#0f1d42']} style={StyleSheet.absoluteFillObject} />
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <Ionicons name="arrow-back" size={24} color={COLORS.white} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Group Workouts</Text>
+        <View style={{ width: 40 }} />
+      </View>
+      <FlatList
+        data={sessions}
+        renderItem={renderSession}
+        keyExtractor={item => item.id}
+        contentContainerStyle={styles.list}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={load} tintColor={COLORS.teal} />}
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <Ionicons name="people" size={48} color={COLORS.gray} />
+            <Text style={styles.emptyText}>No group sessions scheduled yet. Check back soon!</Text>
+          </View>
+        }
+      />
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 },
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { fontSize: 18, fontWeight: '700', color: '#fff' },
+  list: { paddingHorizontal: 16, paddingBottom: 32 },
+  card: { backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 16, padding: 16, marginBottom: 12 },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  tagBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(0,207,193,0.2)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
+  tagText: { fontSize: 12, fontWeight: '700', color: COLORS.teal },
+  price: { fontSize: 16, fontWeight: '800', color: COLORS.orange },
+  title: { fontSize: 18, fontWeight: '800', color: '#fff', marginBottom: 4 },
+  desc: { fontSize: 13, color: COLORS.gray, marginBottom: 12, lineHeight: 18 },
+  metaRow: { flexDirection: 'row', gap: 16, marginBottom: 12 },
+  metaItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  metaText: { fontSize: 12, color: COLORS.gray },
+  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  trainerName: { fontSize: 13, color: COLORS.gray },
+  joinBtn: { backgroundColor: COLORS.teal, borderRadius: 10, paddingHorizontal: 16, paddingVertical: 8 },
+  joinBtnText: { fontSize: 13, fontWeight: '700', color: '#fff' },
+  joinedBadge: { backgroundColor: 'rgba(0,210,106,0.2)', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6 },
+  joinedText: { fontSize: 12, fontWeight: '700', color: COLORS.success },
+  fullBadge: { backgroundColor: 'rgba(255,71,87,0.2)', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6 },
+  fullText: { fontSize: 12, fontWeight: '700', color: '#FF4757' },
+  empty: { alignItems: 'center', marginTop: 80 },
+  emptyText: { fontSize: 14, color: COLORS.gray, textAlign: 'center', marginTop: 12, paddingHorizontal: 32 },
+});

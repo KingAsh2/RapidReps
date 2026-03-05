@@ -1,108 +1,87 @@
 <analysis>**original_problem_statement:**
-The user has reported a new batch of five critical bugs and enhancement requests after the agent successfully refactored the frontend and resolved previous deployment blockers. The application is currently in a broken state regarding core functionality.
+The user initially reported five critical bugs related to pricing, Stripe, and UI display issues. After those were fixed, the user requested a fix for an authentication issue causing random logouts and the implementation of a trainer en-route GPS tracking feature. Following that, the user requested a comprehensive workflow guide for the application.
 
-PRODUCT REQUIREMENTS:
-- **(P0) Fix Trainer Pricing:** The formula for calculating the price a trainee pays is incorrect. The correct formula is . The trainer's rate is based on session length (e.g., 30 or 60 minutes).
-- **(P1) Fix Stripe Connection Error:** Trainers are receiving an error when attempting to connect their bank account via Stripe, which blocks them from being paid.
-- **(P1) Fix Missing Trainer Info:** The trainee-facing detail page is not displaying the trainer's name, photo, or introductory video.
-- **(P2) Update Edit Profile Page:** The Edit Profile screen for trainers is missing the functionality to upload or change their profile photo and intro video.
-- **(P3) UI Enhancement:** Apply a user-provided background image to all screens that currently have a plain, solid-color background.
+Most recently, the user has provided a Platform Review Feedback document outlining eight major feature enhancements and has instructed the agent to implement all of them.
+
+**PRODUCT REQUIREMENTS (New Features):**
+1.  **(P0) Improve Trainer Matching Logic:** Prioritize ETA (Estimated Time of Arrival) in the trainer search ranking using a new weighted scoring model.
+2.  **(P0) Add Instant Workout Mode:** Implement an Uber-style cascading match system for immediate workout sessions.
+3.  **(P1) Prevent Marketplace Leakage:** Add platform-exclusive tools for trainers (client progress tracker, workout plan builder, session notes).
+4.  **(P1) Add Group Workout Sessions:** Allow trainers to create and manage group sessions with multiple participants.
+5.  **(P2) Add Community Activity Feed:** Create a feed to display user achievements like workout streaks and completed sessions to increase engagement.
+6.  **(P2) Improve Virtual Session Matching:** Add a 10-second accept timer for virtual session auto-matching to prevent assignments to unavailable trainers.
+7.  **(P2) Add User Progress Tracking:** Implement fitness progress tracking for users, including metrics like total sessions, calories burned, and workout history.
+8.  **(CRITICAL) Do Not Break Existing Systems:** All new features must be implemented as extensions, preserving the integrity of current core functionalities like payments, safety features, and session lifecycles.
 
 **User's preferred language**: English
 
 **what currently exists?**
-A full-stack fitness application built with React Native (Expo) and FastAPI. The codebase has recently been refactored to improve maintainability, with large components broken down into smaller, single-responsibility files. Multiple deployment-blocking bugs have been resolved. The agent has just completed the analysis phase for a new set of five user-reported issues and is ready to begin implementation.
+A functional full-stack fitness marketplace application built with React Native (Expo) and FastAPI. Core features like two-sided user roles (trainee, trainer), Stripe payments, Stripe Connect onboarding, a full session lifecycle, and safety/gamification systems are in place.
+
+In the last session, the agent successfully:
+-   Fixed 5 critical bugs related to pricing, Stripe, and UI.
+-   Resolved a persistent Expo  error that was causing frontend instability.
+-   Fixed an authentication bug that randomly logged users out.
+-   Implemented a full end-to-end Stripe Payment Sheet flow for session booking.
+-   Added an en-route GPS tracking feature for trainers and trainees.
+-   Replaced confusing redirects with user-friendly modals for key actions.
+-   Generated a comprehensive workflow guide in both Markdown and PDF formats.
+-   Began a major backend refactoring to support the 8 new user-requested features by modularizing the main  into separate route files.
 
 **Last working item**:
--   Last item agent was working: The agent was performing a comprehensive analysis of five new bugs reported by the user. The agent has reviewed all relevant frontend and backend files to pinpoint the root causes of issues related to pricing, Stripe connectivity, missing trainer data on the UI, and the outdated edit profile page. The analysis is complete, and the agent is prepared to implement the fixes.
+-   Last item agent was working: The agent was laying the architectural groundwork for the 8 new platform features. It successfully refactored the monolithic  by creating separate modules for each new feature (, , , , , ). The agent verified that these new modules were correctly registered and that their placeholder endpoints were responsive. On the frontend, it added the new API service functions to  and created placeholder files for the new screens.
 -   Status: IN PROGRESS
 -   Agent Testing Done: N
 -   Which testing method agent to use? both
 -   User Testing Done: N
 
 **All Pending/In progress Issue list**:
--   Issue 1: Trainer Pricing Calculation Bug (P0)
--   Issue 2: Stripe Bank Connection Error (P1)
--   Issue 3: Trainer Info Not Displaying on Trainee Screen (P1)
--   Issue 4: Outdated Edit Profile Page (P2)
--   Issue 5: Apply New Background Image to UI (P3)
-
-Issues Detail:
--   **Issue 1: Trainer Pricing Calculation Bug (P0)**
-    -   **Attempted fixes:** None. Analysis is complete.
-    -   **Next debug checklist:**
-        1.  **Backend:** In , modify the  function. It currently adds a flat fee. It must be updated to use the correct formula: .
-        2.  **Backend:** In the  endpoint in , ensure the correct  is being pulled from the trainer's  dictionary (e.g., ) and passed to the pricing function.
-        3.  **Frontend:** Verify that  correctly displays the final price received from the backend.
-    -   **Why fix this issue?** This is a critical bug affecting the core business model and revenue calculations for both trainers and the admin.
-    -   **Status:** IN PROGRESS
-    -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** both
-
--   **Issue 2: Stripe Bank Connection Error (P1)**
-    -   **Attempted fixes:** None. Analysis is complete.
-    -   **Next debug checklist:**
-        1.  **Backend:** In , add logging inside the  endpoint to capture and verify the  generated by the Stripe API. The error likely stems from an invalid URL or a misconfiguration in the user's Stripe account settings.
-        2.  **Frontend:** In , add error handling to the  component to catch loading failures and display a user-friendly message, instructing the user to contact support or check their Stripe dashboard.
-    -   **Why fix this issue?** Trainers cannot get paid, which is a critical failure for the platform's operation.
-    -   **Status:** IN PROGRESS
-    -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** both
-
--   **Issue 3: Trainer Info Not Displaying on Trainee Screen (P1)**
-    -   **Attempted fixes:** None. Analysis is complete.
-    -   **Next debug checklist:**
-        1.  **Frontend:** The bug is in . The code incorrectly destructures  to get profile data.
-        2.  Change the line: 
-        3.  To: 
-    -   **Why fix this issue?** Trainees cannot see who they are booking, which breaks the core user experience.
-    -   **Status:** IN PROGRESS
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** Frontend
-
--   **Issue 4: Outdated Edit Profile Page (P2)**
-    -   **Attempted fixes:** None. Analysis is complete.
-    -   **Next debug checklist:**
-        1.  **Backend:** Modify the  endpoint in  to accept and update the  and  fields in the user's MongoDB document.
-        2.  **Frontend:** In , add new input components for the profile photo URL and intro video URL.
-        3.  **Frontend:** Update the state and  function in  to include the new fields in the API request.
-    -   **Why fix this issue?** This is a key missing feature that prevents trainers from managing their own profiles effectively.
-    -   **Status:** IN PROGRESS
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** both
-
--   **Issue 5: Apply New Background Image to UI (P3)**
-    -   **Attempted fixes:** None. Analysis is complete.
-    -   **Next debug checklist:**
-        1.  Save the user-provided image to .
-        2.  Modify the root layout file, , to use React Native's  component as the top-level wrapper around the main  or .
-        3.  Set the  of the  to the new image file.
-        4.  Review key screens (admin, trainee home, trainer home) to ensure the background doesn't clash with existing card or modal styles.
-    -   **Why fix this issue?** Fulfills a direct user request for UI improvement.
-    -   **Status:** IN PROGRESS
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** Frontend
+-   None. Current work is focused on new feature development, not bug fixes.
 
 **In progress Task List**:
--   None.
+-   **Task 1: Implement 8 New Platform Features (P0)**
+    -   **Where to resume:**
+        1.  **Backend:** The boilerplate route modules have been created. The next step is to implement the full business logic inside each  file (e.g., the ETA scoring algorithm in , the cascading logic in ).
+        2.  **Frontend:** The screen files exist but are empty. The next step is to build the UI for each new feature (e.g., the Start Workout Now button and flow, the community feed, the trainer tools dashboard).
+    -   **What will be achieved with this?** A major platform upgrade introducing an instant matching engine, group sessions, community features, and enhanced user/trainer tools to improve retention and scalability.
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** both
+    -   **Blocked on something:** None
 
 **Upcoming and Future Tasks**
-**Upcoming Tasks:**
--   **P5: Resolve TypeScript Strict-Mode Warnings:** Address the 86+ non-blocking TypeScript warnings throughout the codebase to improve long-term stability.
+**Upcoming Tasks (Phases for Current Implementation):**
+-   **P0: Phase 1 - Improve Matching & Virtual Accept:**
+    -   Implement the ETA-weighted composite scoring model in .
+    -   Add a 10-second accept timer to the virtual session logic in .
+-   **P0: Phase 2 - Implement Instant Workout Mode:**
+    -   Build the cascading, polling-based matching logic in .
+    -   Create the Start Workout Now UI flow, starting from the trainee home screen ().
+-   **P1: Phase 3 - Implement Trainer Tools:**
+    -   Define models and build CRUD endpoints in  for session notes, workout plans, and client progress.
+    -   Build the trainer-facing UI for these tools under .
+-   **P1: Phase 4 - Implement Group Workouts:**
+    -   Create a separate  collection and build the backend logic in .
+    -   Build the UI for trainers to create and trainees to discover/join group workouts.
+-   **P2: Phase 5 - Implement Community Feed & User Progress:**
+    -   Build backend logic in  to auto-generate posts.
+    -   Build backend logic in  to calculate and store user stats.
+    -   Build the frontend screens for the community feed and user progress display.
 
-**Future Tasks (Backlog):**
+**Future Tasks:**
 -   **P4: Enable SendGrid Integration:** Blocked, awaiting an API key from the user.
+-   **P5: Resolve TypeScript Strict-Mode Warnings:** Address the 86+ non-blocking TypeScript warnings across the project.
 
 **Completed work in this session**
--   **Deployment Failure Fix (Duplicate Import):** Resolved a build-breaking error by removing a duplicate  import in .
--   **Major Code Refactoring:**
-    -   Successfully refactored the monolithic  (1900+ lines) into a modular structure with components in , achieving a 70% line count reduction.
-    -   Refactored  by extracting sections into reusable components inside .
--   **Second Deployment Failure Fix:**
-    -   Corrected a  in .
-    -   Removed a hardcoded preview URL from the newly refactored .
-    -   Added a missing  to  to prevent content overflow.
--   **Regression Testing:** Successfully ran a comprehensive test suite using the testing agent ( tests passed), verifying that the major refactoring did not introduce any regressions.
+-   **Critical Bug Fixes:** Resolved 5 major bugs related to trainer pricing, Stripe Connect, missing UI data, and the edit profile page.
+-   **Platform Stability:**
+    -   Fixed a critical Expo  file watcher error, stabilizing the frontend development environment.
+    -   Resolved an auth issue that caused users to be randomly logged out by improving token validation.
+-   **Stripe Integration:** Implemented the full client-side Stripe Payment Sheet, replacing a simulated payment flow with real payment processing.
+-   **Feature Implementation:**
+    -   Added an en-route GPS tracking feature for trainers to navigate to trainees.
+    -   Added user-friendly modals for document submission and booking confirmation.
+-   **Backend Architecture:** Refactored the monolithic  into feature-specific modules to prepare for large-scale development.
+-   **Documentation:** Created a comprehensive  and a downloadable PDF version detailing all application workflows.
 
 **Earlier issues found/mentioned but not fixed**
 -   None that are not already listed in the backlog.
@@ -114,86 +93,94 @@ Issues Detail:
 
 
 **Key Technical Concepts**
--   **Component-Based Refactoring:** Breaking down large, monolithic React components into smaller, reusable, and more maintainable child components.
--   **Expo Application Services (EAS) Build:** Debugging build logs from the EAS pipeline to resolve syntax and configuration errors.
--   **Stripe Connect (Express):** Generating onboarding links () and embedding them in a  for trainers to connect their bank accounts.
--   **Dynamic Pricing Logic:** Implementing business-specific pricing rules on the backend that factor in a base rate, a commission, and a service fee.
+-   **Modular Backend Architecture:** Refactoring a monolithic FastAPI server into feature-specific, self-contained routers to improve maintainability and scalability.
+-   **Cascading Match Logic:** Designing an Uber-style matching system where requests are sent sequentially to ranked providers until one accepts.
+-   **Composite Scoring Algorithm:** Creating a weighted score from multiple factors (ETA, rating, etc.) to rank search results.
+-   **Stripe Payment Sheet:** Full integration of Stripe's native UI for credit card input and payment confirmation.
+-   **Expo File Watcher Debugging:** Resolving  errors by modifying  to exclude unnecessary directories from the watcher.
 
 **key DB schema**
--   **users:**
-    -    (Object): e.g., . Stores the trainer's rate for different session lengths.
-    -    (String): URL for the trainer's profile picture.
-    -    (String): URL for the trainer's intro video.
-    -    (String): Stripe Connect account ID.
-    -    (Boolean): Flag for Stripe onboarding status.
+-   **users:** (Existing) , , , , etc.
+-   **sessions:** (Existing) , , , , etc.
+-   **(New Proposed Collections):**
+    -   : { trainerId, traineeId, name, exercises: [] }
+    -   : { sessionId, trainerId, traineeId, notes:  }
+    -   : { traineeId, milestones: [], metrics: {} }
+    -   : { trainerId, title, capacity, participants: [], paymentIntents: {} }
+    -   : { userId, postType, content, likes: [] }
+    -   : { userId, totalSessions, caloriesBurned, streakHistory: [] }
+
+**changes in tech stack**
+-   None.
 
 **All files of reference**
--   **Files to be modified for current bugs:**
-    -   
-    -   
-    -   
-    -   
-    -   
--   **Recently created/modified files:**
-    -    (Refactored)
-    -    (Refactored)
-    -    (Fixed)
-    -   All files under  and  (Created)
+-   **Newly Created Backend Files:** All files under  and .
+-   **Newly Created Frontend Files:** All files marked as  in the code architecture tree.
+-   **Key Modified Files:**
+    -    (to import new routers)
+    -    (to add new API functions)
+    -    (for Stripe Payment Sheet)
+    -    (for auth fix)
+    -    (for stability fix)
 
 **Areas that need refactoring**:
--   The major refactoring of the admin and trainee home screens is complete. The next focus should be on resolving the 86+ TypeScript strict-mode warnings across the project.
+-   The backend was just refactored. The main remaining area for cleanup is addressing the 86+ TypeScript strict-mode warnings across the frontend.
 
 **key api endpoints**
--   : (Needs modification) To allow trainers to update their profile photo and intro video.
--   : Uses the (currently broken) pricing logic.
--   : Generates the URL for the Stripe onboarding WebView.
--   : Provides data for the trainee-facing trainer detail page.
+-   **(New Proposed Endpoints):**
+    -   : Initiates an instant workout search.
+    -   : Lists available group sessions.
+    -   : Joins a group session.
+    -   : Retrieves the community feed.
+    -   : Creates a new workout plan.
+    -   : Gets the current user's progress stats.
 
 **Critical Info for New Agent**
--   Your immediate priority is to work through the list of 5 user-reported issues, starting with the P0 pricing bug.
--   The agent has already completed the analysis phase for all 5 issues. You should proceed directly to implementing the fixes outlined in the  for each issue.
--   Implement all fixes first, then perform a single comprehensive test run. Start with backend fixes, then move to frontend fixes. Use the testing agent for a full regression test once all fixes are in place.
+-   You are in the middle of a large, multi-phase feature implementation. The previous agent laid the foundation by refactoring the backend into modules and creating placeholder frontend files.
+-   Your primary task is to build out the full logic for each of the 8 new features, following the phased plan approved by the user. Start with the backend logic for each module, then build the corresponding frontend UI.
+-   **Phase 1 (ETA Matching & Virtual Accept Timer)** should be the immediate priority as it has the highest impact and lowest risk.
+-   All new features must be implemented as **extensions** to the existing system to avoid breaking core functionality. The strategy of using new, separate route modules and DB collections should be continued.
 
 **documents and test reports created in this job**
--    (Result of testing the major refactoring)
--    (Updated)
+-   
+-   
+-   
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (Msg 163):** Yes - Approved the agent's plan to fix the 5 new bugs. **Status: IN PROGRESS.**
-2.  **User (Msg 158):** Reported 5 new issues with screenshots: 1. Apply new background. 2. Fix trainer pricing. 3. Update Edit Profile page. 4. Stripe connect error. 5. Trainer info not showing. **Status: ADDRESSED (plan created).**
-3.  **User (Msg 155):** Intro [vid working? - Asking about the intro video feature. **Status: ADDRESSED (part of new bug list).**
-4.  **User (Msg 134):** Provided new build logs for another deployment failure. **Status: COMPLETED.**
-5.  **User (Msg 23):** Tes - Approved the agent's plan to refactor the code. **Status: COMPLETED.**
-6.  **User (Msg 20):** Hanl the refac before I deploy - Requested the agent to refactor large files before attempting another deployment. **Status: COMPLETED.**
-7.  **User (Msg 5):** Yes - Approved the agent's plan to fix the initial deployment bug. **Status: COMPLETED.**
+1.  **User (Latest):** Knock em all out - Approved the agent's plan to implement all 8 new features. **Status: IN PROGRESS.**
+2.  **User:** Asked for the agent's feedback on the 8 proposed features before implementation. **Status: COMPLETED.**
+3.  **User:** Provided a detailed Platform Review Feedback document outlining 8 major feature requests. **Status: ADDRESSED (plan created).**
+4.  **User:** Requested the workflow guide as a PDF. **Status: COMPLETED.**
+5.  **User:** Requested the raw text of the workflow guide because the link wasn't working. **Status: COMPLETED.**
+6.  **User:** Acknowledged the creation of the workflow guide. **Status: COMPLETED.**
+7.  **User:** Requested the creation of a user workflow guide. **Status: COMPLETED.**
+8.  **User:** Stripe integration isn’t setup yet? - A query that led the agent to discover and fix the missing Stripe Payment Sheet implementation. **Status: COMPLETED.**
+9.  **User:** Ok keep building... - Reported the random logout issue and requested the en-route navigation/messaging features. **Status: COMPLETED.**
+10. **User:** Provided a new background image and asked for it to be integrated. **Status: COMPLETED.**
 
 **Project Health Check:**
--   **Broken:**
-    -   Trainer pricing and revenue calculation.
-    -   Stripe bank account connection for trainers.
-    -   Trainer profile editing (photo/video).
-    -   Display of trainer details to trainees.
+-   **Broken:** None. The application is in a stable, functional state after the last session's bug fixes.
 -   **Mocked**:
     -   SendGrid email service (awaiting user API key).
 
 **3rd Party Integrations**
--   **Stripe (Payments & Payouts):** Uses Stripe Elements and Stripe Connect Express.
--   Expo / Expo Router
--   expo-server-sdk-python (Push Notifications)
--   APScheduler (Backend Jobs)
--   wkhtmltopdf (PDF Generation)
--   SendGrid (Inactive)
+-   **Stripe:** Payments (Payment Sheet) and Payouts (Connect Express). Fully integrated.
+-   **Expo / Expo Router:** Core of the React Native application.
+-   **expo-server-sdk-python:** Push Notifications.
+-   **APScheduler:** Backend background jobs.
+-   **wkhtmltopdf:** PDF Generation.
+-   **SendGrid:** Inactive, awaiting API key.
 
 **Testing status**
--   Testing agent used after significant changes: **YES**. The last run () passed 100% (25/25 tests) after the major refactoring.
--   Troubleshoot agent used after agent stuck in loop: NO
--   Test files created: None in the main workspace.
--   Known regressions: The 5 new user-reported bugs are the current known regressions/issues.
+-   Testing agent used after significant changes: **YES**. The last run () reported a 97% pass rate (29/30), with the single failed test being a non-issue after investigation.
+-   Troubleshoot agent used after agent stuck in loop: NO.
+-   Test files created: None.
+-   Known regressions: None.
 
 **Credentials to test flow:**
-| Role  | Email                 | Password   |
-| :---- | :-------------------- | :--------- |
-| Admin |  |  |
+| Role | Email | Password |
+| :--- | :--- | :--- |
+| Admin | |  |
 
 **What agent forgot to execute**
--   Nothing was forgotten. The agent was actively analyzing the user's latest bug reports when the session concluded. The next logical step is to begin implementing the fixes.</analysis>
+-   Nothing. The agent successfully pivoted from bug fixing to documentation to a major new feature implementation cycle, correctly laying the architectural groundwork as the first step before the session ended.</analysis>

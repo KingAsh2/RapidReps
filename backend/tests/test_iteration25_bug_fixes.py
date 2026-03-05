@@ -15,7 +15,7 @@ import requests
 import os
 from datetime import datetime, timedelta
 
-BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://pricing-fix-9.preview.emergentagent.com')
+BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://group-workouts.preview.emergentagent.com')
 
 # Test credentials
 TEST_ACCOUNTS = {

@@ -644,3 +644,85 @@ export const sessionTrackingAPI = {
   },
 };
 
+
+// Ranked Trainer Search (ETA-weighted)
+export const rankedSearchAPI = {
+  search: async (lat: number, lng: number, sessionType: string = 'outdoor', maxDistance: number = 20, specialty?: string): Promise<any> => {
+    const params: any = { latitude: lat, longitude: lng, session_type: sessionType, max_distance: maxDistance };
+    if (specialty) params.specialty = specialty;
+    const response = await api.get('/trainers/ranked-search', { params });
+    return response.data;
+  },
+};
+
+// Instant Workout Match
+export const instantMatchAPI = {
+  start: async (lat: number, lng: number, sessionType: string = 'outdoor', duration: number = 30): Promise<any> => {
+    const response = await api.post('/sessions/instant-match', { latitude: lat, longitude: lng, sessionType, durationMinutes: duration, maxDistanceMiles: 10 });
+    return response.data;
+  },
+  getStatus: async (matchId: string): Promise<any> => {
+    const response = await api.get(`/sessions/instant-match/${matchId}/status`);
+    return response.data;
+  },
+  accept: async (matchId: string): Promise<any> => {
+    const response = await api.post(`/sessions/instant-match/${matchId}/accept`);
+    return response.data;
+  },
+  decline: async (matchId: string): Promise<any> => {
+    const response = await api.post(`/sessions/instant-match/${matchId}/decline`);
+    return response.data;
+  },
+  cancel: async (matchId: string): Promise<any> => {
+    const response = await api.post(`/sessions/instant-match/${matchId}/cancel`);
+    return response.data;
+  },
+  virtualInstant: async (duration: number = 30): Promise<any> => {
+    const response = await api.post(`/sessions/virtual-instant?duration_minutes=${duration}`);
+    return response.data;
+  },
+};
+
+// Trainer Tools
+export const trainerToolsAPI = {
+  // Workout Plans
+  createPlan: async (data: any): Promise<any> => { const r = await api.post('/trainer-tools/workout-plans', data); return r.data; },
+  listPlans: async (traineeId?: string): Promise<any> => { const r = await api.get('/trainer-tools/workout-plans', { params: traineeId ? { trainee_id: traineeId } : {} }); return r.data; },
+  getPlan: async (id: string): Promise<any> => { const r = await api.get(`/trainer-tools/workout-plans/${id}`); return r.data; },
+  updatePlan: async (id: string, data: any): Promise<any> => { const r = await api.put(`/trainer-tools/workout-plans/${id}`, data); return r.data; },
+  deletePlan: async (id: string): Promise<any> => { const r = await api.delete(`/trainer-tools/workout-plans/${id}`); return r.data; },
+  // Session Notes
+  createNote: async (data: any): Promise<any> => { const r = await api.post('/trainer-tools/session-notes', data); return r.data; },
+  listNotes: async (traineeId?: string): Promise<any> => { const r = await api.get('/trainer-tools/session-notes', { params: traineeId ? { trainee_id: traineeId } : {} }); return r.data; },
+  deleteNote: async (id: string): Promise<any> => { const r = await api.delete(`/trainer-tools/session-notes/${id}`); return r.data; },
+  // Client Progress
+  updateProgress: async (traineeId: string, data: any): Promise<any> => { const r = await api.post(`/trainer-tools/client-progress/${traineeId}`, data); return r.data; },
+  getProgress: async (traineeId: string): Promise<any> => { const r = await api.get(`/trainer-tools/client-progress/${traineeId}`); return r.data; },
+  // My Clients
+  getClients: async (): Promise<any> => { const r = await api.get('/trainer-tools/my-clients'); return r.data; },
+};
+
+// Community Feed
+export const feedAPI = {
+  getFeed: async (page: number = 1): Promise<any> => { const r = await api.get('/feed', { params: { page } }); return r.data; },
+  toggleLike: async (postId: string): Promise<any> => { const r = await api.post(`/feed/${postId}/like`); return r.data; },
+  createPost: async (content: string, postType: string = 'user_post'): Promise<any> => { const r = await api.post(`/feed?content=${encodeURIComponent(content)}&post_type=${postType}`); return r.data; },
+};
+
+// Group Sessions
+export const groupSessionAPI = {
+  create: async (data: any): Promise<any> => { const r = await api.post('/group-sessions', data); return r.data; },
+  list: async (status?: string, page?: number): Promise<any> => { const r = await api.get('/group-sessions', { params: { status: status || 'upcoming', page: page || 1 } }); return r.data; },
+  get: async (id: string): Promise<any> => { const r = await api.get(`/group-sessions/${id}`); return r.data; },
+  join: async (id: string): Promise<any> => { const r = await api.post(`/group-sessions/${id}/join`); return r.data; },
+  leave: async (id: string): Promise<any> => { const r = await api.post(`/group-sessions/${id}/leave`); return r.data; },
+  start: async (id: string): Promise<any> => { const r = await api.post(`/group-sessions/${id}/start`); return r.data; },
+  complete: async (id: string): Promise<any> => { const r = await api.post(`/group-sessions/${id}/complete`); return r.data; },
+};
+
+// Progress Tracking
+export const progressAPI = {
+  get: async (userId: string): Promise<any> => { const r = await api.get(`/progress/${userId}`); return r.data; },
+  getHistory: async (userId: string, limit?: number): Promise<any> => { const r = await api.get(`/progress/${userId}/history`, { params: { limit: limit || 30 } }); return r.data; },
+};
+

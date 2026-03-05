@@ -8806,6 +8806,19 @@ async def get_favorite_trainer_availability(current_user: dict = Depends(get_cur
 # Include the router in the main app - MUST be after all route definitions
 app.include_router(api_router)
 
+# Include new feature route modules
+from routes.matching import router as matching_router
+from routes.trainer_tools import router as trainer_tools_router
+from routes.feed import router as feed_router
+from routes.group_sessions import router as group_sessions_router
+from routes.progress import router as progress_router
+
+app.include_router(matching_router)
+app.include_router(trainer_tools_router)
+app.include_router(feed_router)
+app.include_router(group_sessions_router)
+app.include_router(progress_router)
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
