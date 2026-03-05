@@ -43,4 +43,23 @@ config.cacheStores = [
 // Reduce the number of workers to decrease resource usage
 config.maxWorkers = 2;
 
+// Exclude unnecessary directories from file watching to avoid ENOSPC
+config.watcher = {
+  ...config.watcher,
+  additionalExts: [],
+};
+config.resolver.blockList = [
+  /node_modules\/.*\/(android|ios|windows|macos|__tests__|\.git|example|examples|__mocks__|__fixtures__|__snapshots__)\/.*/,
+  /node_modules\/react-native\/ReactCommon\/.*/,
+  /node_modules\/react-native\/types_generated\/.*/,
+  /node_modules\/react-native\/Libraries\/vendor\/.*/,
+  /node_modules\/react-native\/sdks\/.*/,
+  /node_modules\/react-native\/template\/.*/,
+  /node_modules\/react-native\/scripts\/.*/,
+  /node_modules\/@react-native\/.*/,
+  /node_modules\/hermes-engine\/.*/,
+  /node_modules\/metro-symbolicate\/.*/,
+  /\.git\/.*/,
+];
+
 module.exports = config;
