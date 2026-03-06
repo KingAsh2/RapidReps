@@ -156,7 +156,7 @@ export default function ConfirmBookingScreen() {
   };
 
   return (
-    <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
+    <><ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
       <LinearGradient
         colors={['rgba(247, 147, 30, 0.92)', 'rgba(247, 147, 30, 0.88)', 'rgba(255, 165, 38, 0.82)']}
         style={StyleSheet.absoluteFill}
@@ -346,6 +346,7 @@ export default function ConfirmBookingScreen() {
           </View>
         </View>
       </Modal>
+    </>
   );
 }
 
