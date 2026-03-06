@@ -48,16 +48,13 @@ config.watcher = {
   ...config.watcher,
   additionalExts: [],
 };
+
+// Only block truly unnecessary directories that cause ENOSPC in dev
+// NOTE: Keep this minimal - aggressive patterns break EAS production builds
 config.resolver.blockList = [
-  /node_modules\/.*\/(android|ios|windows|macos|__tests__|\.git|example|examples|__mocks__|__fixtures__|__snapshots__)\/.*/,
-  /node_modules\/react-native\/ReactCommon\/.*/,
-  /node_modules\/react-native\/types_generated\/.*/,
-  /node_modules\/react-native\/sdks\/.*/,
-  /node_modules\/react-native\/template\/.*/,
-  /node_modules\/react-native\/scripts\/.*/,
+  /\.git\/.*/,
   /node_modules\/hermes-engine\/.*/,
   /node_modules\/metro-symbolicate\/.*/,
-  /\.git\/.*/,
 ];
 
 module.exports = config;
