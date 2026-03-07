@@ -39,6 +39,24 @@ export const PaymentsTab = ({
   return (
     <View>
       <Text style={s.sectionTitle}>Transactions ({transTotal})</Text>
+      
+      {/* Cancellation Policy Card */}
+      <View style={[s.transCard, { backgroundColor: '#FFF9F0', borderWidth: 1, borderColor: C.orange, marginBottom: 16 }]} data-testid="cancellation-policy-card">
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+          <Ionicons name="information-circle" size={20} color={C.orange} />
+          <Text style={[s.listCardTitle, { color: C.navy, fontWeight: '800' }]}>Cancellation Policy</Text>
+        </View>
+        <Text style={{ fontSize: 13, color: C.navy, lineHeight: 20, marginBottom: 4 }}>
+          Virtual sessions: $15 cancellation fee | In-person: $20 cancellation fee
+        </Text>
+        <Text style={{ fontSize: 13, color: C.navy, lineHeight: 20, marginBottom: 4 }}>
+          Revenue split on cancellation fees: Platform keeps 20%, Trainer receives 80%
+        </Text>
+        <Text style={{ fontSize: 12, color: C.gray, lineHeight: 18, fontStyle: 'italic' }}>
+          Free cancellation if done 24+ hours before session. Fees apply for late cancellations.
+        </Text>
+      </View>
+
       <FilterPills
         options={statusOptions}
         selected={transStatusFilter}

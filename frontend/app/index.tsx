@@ -25,7 +25,7 @@ const { width } = Dimensions.get('window');
 const BRAND = {
   orange: '#FF7F00',
   orangeLight: '#FFA526',
-  teal: '#1FB8B4',
+  teal: '#1a2a5e',
   navy: '#1a2a5e',
   white: '#FFFFFF',
 };

@@ -31,13 +31,13 @@ export const TrainerCard = ({ trainer, cardAnim, onViewProfile }: Props) => (
           {trainer.avatarUrl ? (
             <Image source={{ uri: trainer.avatarUrl }} style={styles.avatar} />
           ) : (
-            <LinearGradient colors={['#22C1C3', '#1FB8B4']} style={styles.avatarPlaceholder}>
+            <LinearGradient colors={['#2a3a6e', '#1a2a5e']} style={styles.avatarPlaceholder}>
               <Ionicons name="person" size={28} color="#FFFFFF" />
             </LinearGradient>
           )}
           {trainer.isVerified && (
             <View style={styles.verifiedBadge}>
-              <Ionicons name="checkmark-circle" size={18} color="#22C1C3" />
+              <Ionicons name="checkmark-circle" size={18} color="#2a3a6e" />
             </View>
           )}
         </View>
@@ -49,7 +49,7 @@ export const TrainerCard = ({ trainer, cardAnim, onViewProfile }: Props) => (
               <Text style={styles.statText}>{trainer.averageRating?.toFixed(1) || '5.0'}</Text>
             </View>
             <View style={styles.statBadge}>
-              <Ionicons name="cash" size={14} color="#22C1C3" />
+              <Ionicons name="cash" size={14} color="#2a3a6e" />
               <Text style={styles.statText}>${(trainer.ratePerMinuteCents / 100).toFixed(2)}/min</Text>
             </View>
             {trainer.distance !== null && (
@@ -92,7 +92,7 @@ export const TrainerCard = ({ trainer, cardAnim, onViewProfile }: Props) => (
         activeOpacity={0.8}
       >
         <LinearGradient
-          colors={['#1FB8B4', '#22C1C3']}
+          colors={['#1a2a5e', '#2a3a6e']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.viewProfileGradient}
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
   statText: { fontSize: 12, fontWeight: '700', color: '#1a2a5e' },
   bio: { fontSize: 14, fontWeight: '500', color: '#5a6a8a', lineHeight: 20, marginBottom: 12 },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 },
-  virtualTag: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#22C1C3', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, gap: 4 },
+  virtualTag: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1a2a5e', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, gap: 4 },
   virtualTagText: { fontSize: 11, fontWeight: '800', color: '#FFFFFF', letterSpacing: 0.5 },
   styleTag: { backgroundColor: '#FFF3E0', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12 },
   styleTagText: { fontSize: 12, fontWeight: '600', color: '#1a2a5e' },

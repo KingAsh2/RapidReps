@@ -13,7 +13,7 @@ import { toast } from '../src/utils/toast';
 const COLORS = {
   navy: '#0A1128',
   navyLight: '#1B2A4A',
-  teal: '#1FB8B4',
+  teal: '#1a2a5e',
   orange: '#FF7F00',
   white: '#FFFFFF',
   gray: '#8892B0',

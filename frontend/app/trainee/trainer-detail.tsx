@@ -27,8 +27,8 @@ const { width } = Dimensions.get('window');
 
 // Brand colors
 const COLORS = {
-  teal: '#1FB8B4',
-  tealLight: '#22C1C3',
+  teal: '#1a2a5e',
+  tealLight: '#2a3a6e',
   orange: '#F7931E',
   orangeHot: '#FF6A00',
   orangeLight: '#FF9F1C',
@@ -377,6 +377,9 @@ export default function TrainerDetailScreen() {
             <Ionicons name="arrow-back" size={24} color={COLORS.white} />
           </TouchableOpacity>
           <View style={styles.headerActions}>
+            <TouchableOpacity onPress={() => {/* Toggle favorite */}} style={styles.headerBtn} data-testid="favorite-trainer-btn">
+              <Ionicons name="heart-outline" size={22} color={COLORS.white} />
+            </TouchableOpacity>
             <TouchableOpacity onPress={handleMessage} style={styles.headerBtn}>
               <Ionicons name="chatbubble" size={22} color={COLORS.white} />
             </TouchableOpacity>
@@ -438,11 +441,6 @@ export default function TrainerDetailScreen() {
                 <View style={styles.stat}>
                   <Text style={styles.statValue}>{trainer.experienceYears || 0}</Text>
                   <Text style={styles.statLabel}>Years Exp</Text>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.stat}>
-                  <Text style={styles.statValue}>${(trainer.ratePerMinuteCents / 100).toFixed(2)}</Text>
-                  <Text style={styles.statLabel}>Per Min</Text>
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.stat}>

@@ -33,8 +33,8 @@ const backgroundImage = require('../../../assets/images/bg-box-jumps.png');
 
 // Brand colors - UNIFIED DESIGN SYSTEM
 const COLORS = {
-  teal: '#1FB8B4',
-  tealLight: '#22C1C3',
+  teal: '#1a2a5e',
+  tealLight: '#2a3a6e',
   tealDark: '#0D8B88',
   orange: '#F7931E',
   orangeHot: '#FF6A00',
@@ -84,6 +84,7 @@ export default function TraineeProfileScreen() {
     homeStreet: '',
     homeCity: '',
     homeState: '',
+    homeZipCode: '',
     prefersInPerson: true,
     prefersVirtual: true,
     budgetMinPerMinuteCents: 50,
@@ -513,19 +514,31 @@ export default function TraineeProfileScreen() {
                     <TextInput
                       style={[styles.textArea, { minHeight: 44, marginBottom: 10 }]}
                       value={formData.homeStreet}
-                      onChangeText={(text) => setFormData({ ...formData, homeStreet: text, homeAddress: `${text}, ${formData.homeCity}, ${formData.homeState}` })}
+                      onChangeText={(text) => setFormData({ ...formData, homeStreet: text, homeAddress: `${text}, ${formData.homeCity}, ${formData.homeState} ${formData.homeZipCode}`.trim() })}
                       placeholder="Street Address"
                       placeholderTextColor={COLORS.gray}
                       data-testid="home-street-input"
                     />
-                    <TextInput
-                      style={[styles.textArea, { minHeight: 44, marginBottom: 10 }]}
-                      value={formData.homeCity}
-                      onChangeText={(text) => setFormData({ ...formData, homeCity: text, homeAddress: `${formData.homeStreet}, ${text}, ${formData.homeState}` })}
-                      placeholder="City"
-                      placeholderTextColor={COLORS.gray}
-                      data-testid="home-city-input"
-                    />
+                    <View style={{ flexDirection: 'row', gap: 10, marginBottom: 10 }}>
+                      <TextInput
+                        style={[styles.textArea, { minHeight: 44, flex: 2 }]}
+                        value={formData.homeCity}
+                        onChangeText={(text) => setFormData({ ...formData, homeCity: text, homeAddress: `${formData.homeStreet}, ${text}, ${formData.homeState} ${formData.homeZipCode}`.trim() })}
+                        placeholder="City"
+                        placeholderTextColor={COLORS.gray}
+                        data-testid="home-city-input"
+                      />
+                      <TextInput
+                        style={[styles.textArea, { minHeight: 44, flex: 1 }]}
+                        value={formData.homeZipCode}
+                        onChangeText={(text) => setFormData({ ...formData, homeZipCode: text, homeAddress: `${formData.homeStreet}, ${formData.homeCity}, ${formData.homeState} ${text}`.trim() })}
+                        placeholder="Zip Code"
+                        placeholderTextColor={COLORS.gray}
+                        keyboardType="numeric"
+                        maxLength={10}
+                        data-testid="home-zip-input"
+                      />
+                    </View>
                     <View style={styles.statePickerContainer}>
                       <Text style={styles.statePickerLabel}>State</Text>
                       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.stateScroll}>
@@ -536,7 +549,7 @@ export default function TraineeProfileScreen() {
                               styles.stateChip,
                               formData.homeState === st && styles.stateChipSelected,
                             ]}
-                            onPress={() => setFormData({ ...formData, homeState: st, homeAddress: `${formData.homeStreet}, ${formData.homeCity}, ${st}` })}
+                            onPress={() => setFormData({ ...formData, homeState: st, homeAddress: `${formData.homeStreet}, ${formData.homeCity}, ${st} ${formData.homeZipCode}`.trim() })}
                           >
                             <Text style={[
                               styles.stateChipText,
@@ -549,8 +562,8 @@ export default function TraineeProfileScreen() {
                   </View>
                 ) : (
                   <Text style={styles.sectionContent}>
-                    {(formData.homeStreet || formData.homeCity || formData.homeState) 
-                      ? `${formData.homeStreet}${formData.homeCity ? ', ' + formData.homeCity : ''}${formData.homeState ? ', ' + formData.homeState : ''}`
+                    {(formData.homeStreet || formData.homeCity || formData.homeState || formData.homeZipCode) 
+                      ? `${formData.homeStreet}${formData.homeCity ? ', ' + formData.homeCity : ''}${formData.homeState ? ', ' + formData.homeState : ''}${formData.homeZipCode ? ' ' + formData.homeZipCode : ''}`
                       : 'No address set — required for At Home sessions'}
                   </Text>
                 )}
@@ -928,14 +941,16 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   textArea: {
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: 'rgba(255,255,255,0.3)',
     borderRadius: 12,
     padding: 14,
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
     color: COLORS.white,
     minHeight: 80,
     textAlignVertical: 'top',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.25)',
   },
   preferenceRow: {
     flexDirection: 'row',

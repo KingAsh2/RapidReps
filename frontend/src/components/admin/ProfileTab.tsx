@@ -6,9 +6,10 @@ import { C, s } from './AdminShared';
 interface Props {
   adminUser: any;
   onEditProfile: () => void;
+  onChangePassword: () => void;
 }
 
-export const ProfileTab = ({ adminUser, onEditProfile }: Props) => (
+export const ProfileTab = ({ adminUser, onEditProfile, onChangePassword }: Props) => (
   <View>
     <Text style={s.sectionTitle}>Admin Profile</Text>
     {adminUser ? (
@@ -33,6 +34,14 @@ export const ProfileTab = ({ adminUser, onEditProfile }: Props) => (
         <TouchableOpacity style={s.editProfileBtn} onPress={onEditProfile} data-testid="edit-profile-btn">
           <Ionicons name="create" size={18} color={C.white} />
           <Text style={s.editProfileBtnText}>Edit Profile</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[s.editProfileBtn, { backgroundColor: C.navy, marginTop: 10 }]}
+          onPress={onChangePassword}
+          data-testid="change-password-btn"
+        >
+          <Ionicons name="lock-closed" size={18} color={C.white} />
+          <Text style={s.editProfileBtnText}>Change Password</Text>
         </TouchableOpacity>
       </View>
     ) : (

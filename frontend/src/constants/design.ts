@@ -8,9 +8,9 @@ export const BRAND = {
   orangeDark: '#E65C00',
   
   // Accent Colors
-  teal: '#1FB8B4',
-  tealLight: '#22C1C3',
-  tealDark: '#18A09D',
+  teal: '#1a2a5e',
+  tealLight: '#2a3a6e',
+  tealDark: '#152050',
   
   // Base Colors
   navy: '#1a2a5e',

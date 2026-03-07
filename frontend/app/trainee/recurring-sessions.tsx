@@ -17,7 +17,7 @@ import { toast } from '../../src/utils/toast';
 
 const COLORS = {
   orange: '#FF7F00',
-  teal: '#1FB8B4',
+  teal: '#1a2a5e',
   navy: '#1a2a5e',
   white: '#FFFFFF',
   gray: '#8892b0',
@@ -39,27 +39,54 @@ export default function RecurringSessionScreen() {
   const trainerName = params.trainerName as string || 'Trainer';
   const trainerId = params.trainerId as string;
 
-  const [selectedDay, setSelectedDay] = useState(1); // Tuesday default
+  const [selectedDays, setSelectedDays] = useState<number[]>([1]); // Multiple days, Tuesday default
   const [selectedTime, setSelectedTime] = useState('07:00');
   const [recurrenceType, setRecurrenceType] = useState<'weekly' | 'biweekly'>('weekly');
-  const [numberOfSessions, setNumberOfSessions] = useState(4);
+  const [numberOfWeeks, setNumberOfWeeks] = useState(4);
   const [locationType, setLocationType] = useState('outdoor');
   const [duration, setDuration] = useState(60);
   const [loading, setLoading] = useState(false);
 
+  // Get trainer rate from params (in cents per hour)
+  const trainerRateCentsPerHour = parseInt(params.rateCents as string) || 4000;
+  
+  // Calculate total sessions and pricing
+  const totalSessions = selectedDays.length * numberOfWeeks;
+  const sessionPriceDollars = (trainerRateCentsPerHour / 100) * (duration / 60);
+  const serviceFee = 2.00; // Flat $2 service fee total
+  const totalBeforeFee = sessionPriceDollars * totalSessions;
+  const totalWithFee = totalBeforeFee + serviceFee;
+  const trainerEarnings = totalBeforeFee * 0.80;
+  const platformEarnings = totalBeforeFee * 0.20 + serviceFee;
+
+  const toggleDay = (idx: number) => {
+    setSelectedDays(prev => 
+      prev.includes(idx) 
+        ? prev.filter(d => d !== idx) 
+        : [...prev, idx].sort()
+    );
+  };
+
   const handleCreate = async () => {
+    if (selectedDays.length === 0) {
+      toast.error('Please select at least one day');
+      return;
+    }
     setLoading(true);
     try {
-      const res = await traineeAPI.createRecurringSessions({
-        trainerId,
-        locationType,
-        durationMinutes: duration,
-        dayOfWeek: selectedDay,
-        timeSlot: selectedTime,
-        recurrenceType,
-        numberOfSessions,
-      });
-      toast.success(res.message);
+      // Create sessions for each selected day
+      for (const dayIdx of selectedDays) {
+        const res = await traineeAPI.createRecurringSessions({
+          trainerId,
+          locationType,
+          durationMinutes: duration,
+          dayOfWeek: dayIdx,
+          timeSlot: selectedTime,
+          recurrenceType,
+          numberOfSessions: numberOfWeeks,
+        });
+      }
+      toast.success(`${totalSessions} recurring sessions created!`);
       router.back();
     } catch (err: any) {
       toast.error(err?.response?.data?.detail || 'Failed to create recurring sessions');
@@ -87,20 +114,20 @@ export default function RecurringSessionScreen() {
 
         <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
           <Text style={styles.subtitle}>
-            Set up automatic {recurrenceType} sessions with {trainerName}. Each session is paid individually.
+            Set up automatic {recurrenceType} sessions with {trainerName}. Select multiple days and pay for all sessions upfront.
           </Text>
 
-          {/* Day Selection */}
-          <Text style={styles.label}>Day of Week</Text>
+          {/* Day Selection - Multiple */}
+          <Text style={styles.label}>Days of Week (select multiple)</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, marginBottom: 20 }}>
             {DAYS.map((day, idx) => (
               <TouchableOpacity
                 key={day}
-                style={[styles.chip, selectedDay === idx && styles.chipActive]}
-                onPress={() => setSelectedDay(idx)}
+                style={[styles.chip, selectedDays.includes(idx) && styles.chipActive]}
+                onPress={() => toggleDay(idx)}
                 data-testid={`day-${idx}`}
               >
-                <Text style={[styles.chipText, selectedDay === idx && styles.chipTextActive]}>
+                <Text style={[styles.chipText, selectedDays.includes(idx) && styles.chipTextActive]}>
                   {day.slice(0, 3)}
                 </Text>
               </TouchableOpacity>
@@ -145,17 +172,17 @@ export default function RecurringSessionScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Number of Sessions */}
-          <Text style={styles.label}>Number of Sessions</Text>
+          {/* Number of Weeks */}
+          <Text style={styles.label}>Number of Weeks</Text>
           <View style={styles.toggleRow}>
             {[4, 8, 12].map((n) => (
               <TouchableOpacity
                 key={n}
-                style={[styles.toggleBtn, numberOfSessions === n && styles.toggleBtnActive]}
-                onPress={() => setNumberOfSessions(n)}
+                style={[styles.toggleBtn, numberOfWeeks === n && styles.toggleBtnActive]}
+                onPress={() => setNumberOfWeeks(n)}
                 data-testid={`count-${n}`}
               >
-                <Text style={[styles.toggleText, numberOfSessions === n && styles.toggleTextActive]}>{n} Sessions</Text>
+                <Text style={[styles.toggleText, numberOfWeeks === n && styles.toggleTextActive]}>{n} Weeks</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -197,24 +224,39 @@ export default function RecurringSessionScreen() {
             ))}
           </View>
 
-          {/* Summary */}
+          {/* Pricing Summary */}
           <View style={styles.summaryCard}>
-            <Text style={styles.summaryTitle}>Summary</Text>
-            <Text style={styles.summaryText}>
-              {numberOfSessions} {locationType} sessions, {DAYS[selectedDay]}s at {selectedTime.replace(':00', '')}:00, {recurrenceType}, {duration} min each
+            <Text style={styles.summaryTitle}>Pricing Summary</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
+              <Text style={styles.summaryText}>{totalSessions} sessions x ${sessionPriceDollars.toFixed(2)}</Text>
+              <Text style={styles.summaryText}>${totalBeforeFee.toFixed(2)}</Text>
+            </View>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
+              <Text style={styles.summaryText}>Service fee (flat)</Text>
+              <Text style={styles.summaryText}>$2.00</Text>
+            </View>
+            <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.2)', marginVertical: 8 }} />
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
+              <Text style={[styles.summaryText, { fontWeight: '800', color: COLORS.white }]}>Total</Text>
+              <Text style={[styles.summaryText, { fontWeight: '800', color: COLORS.orange }]}>${totalWithFee.toFixed(2)}</Text>
+            </View>
+            <Text style={styles.summaryNote}>
+              {selectedDays.map(d => DAYS[d].slice(0, 3)).join(', ')} at {selectedTime.replace(':00', '')}:00 | {recurrenceType} | {duration} min each
             </Text>
-            <Text style={styles.summaryNote}>Each session is paid individually. Trainer must accept each request.</Text>
+            <Text style={[styles.summaryNote, { marginTop: 4 }]}>
+              Trainer earns 80% (${trainerEarnings.toFixed(2)}) | Platform 20% + fee (${platformEarnings.toFixed(2)})
+            </Text>
           </View>
 
           {/* Create Button */}
-          <TouchableOpacity onPress={handleCreate} disabled={loading} style={styles.createBtn} data-testid="create-recurring-btn">
+          <TouchableOpacity onPress={handleCreate} disabled={loading || selectedDays.length === 0} style={styles.createBtn} data-testid="create-recurring-btn">
             <LinearGradient colors={[COLORS.orange, '#FF9F43']} style={styles.createBtnGradient}>
               {loading ? (
                 <ActivityIndicator size="small" color={COLORS.white} />
               ) : (
                 <>
                   <Ionicons name="repeat" size={20} color={COLORS.white} />
-                  <Text style={styles.createBtnText}>Create {numberOfSessions} Sessions</Text>
+                  <Text style={styles.createBtnText}>Pay ${totalWithFee.toFixed(2)} for {totalSessions} Sessions</Text>
                 </>
               )}
             </LinearGradient>

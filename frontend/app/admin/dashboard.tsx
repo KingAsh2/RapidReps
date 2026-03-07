@@ -76,6 +76,10 @@ export default function AdminDashboard() {
   const [profilePhone, setProfilePhone] = useState('');
   const [profileEmail, setProfileEmail] = useState('');
   const [adminUser, setAdminUser] = useState<any>(null);
+  const [passwordModalVisible, setPasswordModalVisible] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   // --- Fetch Functions ---
   const fetchDashboard = async () => {
@@ -294,6 +298,32 @@ export default function AdminDashboard() {
     await AsyncStorage.removeItem('auth_token');
     await AsyncStorage.removeItem('active_role');
     router.replace('/');
+  };
+
+  const handleChangePassword = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error('New passwords do not match');
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+    try {
+      const headers = await getAuthHeader();
+      await api.post('/auth/change-password', { currentPassword, newPassword }, { headers });
+      toast.success('Password changed successfully');
+      setPasswordModalVisible(false);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail || 'Failed to change password');
+    }
   };
 
   // --- Tab Loading ---
@@ -546,7 +576,7 @@ export default function AdminDashboard() {
                 onPayTrainer={handlePayTrainer} onPayAll={handlePayAll}
               />
             )}
-            {activeTab === 'profile' && <ProfileTab adminUser={adminUser} onEditProfile={() => setProfileModalVisible(true)} />}
+            {activeTab === 'profile' && <ProfileTab adminUser={adminUser} onEditProfile={() => setProfileModalVisible(true)} onChangePassword={() => setPasswordModalVisible(true)} />}
           </>
         )}
         <View style={{ height: 40 }} />
@@ -555,6 +585,56 @@ export default function AdminDashboard() {
       {renderUserDetailModal()}
       {renderMessageModal()}
       {renderProfileModal()}
+      {/* Change Password Modal */}
+      <Modal visible={passwordModalVisible} animationType="slide" transparent>
+        <KeyboardAvoidingView style={s.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <View style={[s.modalContent, { maxHeight: '60%' }]}>
+            <View style={s.modalHeader}>
+              <Text style={s.modalTitle}>Change Password</Text>
+              <TouchableOpacity onPress={() => setPasswordModalVisible(false)} data-testid="close-password-modal">
+                <Ionicons name="close" size={24} color={C.navy} />
+              </TouchableOpacity>
+            </View>
+            <View style={{ padding: 20 }}>
+              <Text style={s.inputLabel}>Current Password</Text>
+              <TextInput
+                style={s.textInput}
+                value={currentPassword}
+                onChangeText={setCurrentPassword}
+                secureTextEntry
+                placeholder="Enter current password"
+                data-testid="current-password-input"
+              />
+              <Text style={s.inputLabel}>New Password</Text>
+              <TextInput
+                style={s.textInput}
+                value={newPassword}
+                onChangeText={setNewPassword}
+                secureTextEntry
+                placeholder="Enter new password"
+                data-testid="new-password-input"
+              />
+              <Text style={s.inputLabel}>Confirm New Password</Text>
+              <TextInput
+                style={s.textInput}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry
+                placeholder="Confirm new password"
+                data-testid="confirm-password-input"
+              />
+              <TouchableOpacity
+                style={[s.actionBtn, { backgroundColor: C.teal, justifyContent: 'center', marginTop: 16 }]}
+                onPress={handleChangePassword}
+                data-testid="save-password-btn"
+              >
+                <Ionicons name="lock-closed" size={18} color={C.white} />
+                <Text style={s.actionBtnText}>Update Password</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </SafeAreaView>
   );
 }

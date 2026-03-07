@@ -27,7 +27,7 @@ const BAR_MAX_HEIGHT = 100;
 const COLORS = {
   orange: '#FF7F00',
   orangeLight: '#FFA040',
-  teal: '#1FB8B4',
+  teal: '#1a2a5e',
   tealDark: '#18908D',
   navy: '#1a2a5e',
   navyLight: '#243b7f',

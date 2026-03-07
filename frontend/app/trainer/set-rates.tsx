@@ -12,7 +12,7 @@ import { trainerAPI } from '../../src/services/api';
 import { useAlert } from '../../src/contexts/AlertContext';
 
 const COLORS = {
-  teal: '#1FB8B4',
+  teal: '#1a2a5e',
   tealDark: '#0D8B88',
   orange: '#F7931E',
   orangeHot: '#FF6A00',

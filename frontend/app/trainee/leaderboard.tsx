@@ -19,7 +19,7 @@ import { streaksAPI } from '../../src/services/api';
 const C = {
   orange: '#FF7F00',
   orangeLight: '#FF9F1C',
-  teal: '#1FB8B4',
+  teal: '#1a2a5e',
   navy: '#0f1b3d',
   navyLight: '#1a2a5e',
   white: '#FFFFFF',

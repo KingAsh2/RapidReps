@@ -21,7 +21,7 @@ export const FavoriteAvailability = ({ trainers, onTrainerPress }: Props) => (
           {t.trainerPhoto ? (
             <Image source={{ uri: t.trainerPhoto }} style={styles.photo} />
           ) : (
-            <View style={[styles.photo, { backgroundColor: '#1FB8B4', justifyContent: 'center', alignItems: 'center' }]}>
+            <View style={[styles.photo, { backgroundColor: '#1a2a5e', justifyContent: 'center', alignItems: 'center' }]}>
               <Ionicons name="person" size={18} color="#fff" />
             </View>
           )}

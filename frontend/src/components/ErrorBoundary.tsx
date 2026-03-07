@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
   iconCircle: { width: 88, height: 88, borderRadius: 44, backgroundColor: 'rgba(255,127,0,0.15)', justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
   title: { fontSize: 22, fontWeight: '700', color: '#fff', marginBottom: 8, textAlign: 'center' },
   subtitle: { fontSize: 15, color: '#8892B0', textAlign: 'center', lineHeight: 22, marginBottom: 24 },
-  btn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#1FB8B4', paddingHorizontal: 28, paddingVertical: 14, borderRadius: 12 },
+  btn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#1a2a5e', paddingHorizontal: 28, paddingVertical: 14, borderRadius: 12 },
   btnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   debugBox: { marginTop: 20, maxHeight: 120, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: 12, width: '100%' },
   debugText: { fontSize: 12, color: '#FF4444', fontFamily: 'monospace' },

@@ -19,7 +19,7 @@ const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 const COLORS = {
   orange: '#FF7F00',
-  teal: '#1FB8B4',
+  teal: '#1a2a5e',
   navy: '#1a2a5e',
   white: '#FFFFFF',
   gray: '#8892b0',

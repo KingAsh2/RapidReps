@@ -18,7 +18,7 @@ import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 const MAP_HEIGHT = 300;
 
 const COLORS = {
-  teal: '#1FB8B4',
+  teal: '#1a2a5e',
   tealDark: '#0D8B88',
   orange: '#F7931E',
   orangeHot: '#FF6A00',

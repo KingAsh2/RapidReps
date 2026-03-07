@@ -435,7 +435,7 @@ export default function TraineeHomeScreen() {
   if (loading) {
     return (
       <LinearGradient
-        colors={['#1FB8B4', '#F7931E']}
+        colors={['#1a2a5e', '#F7931E']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.loadingContainer}
@@ -539,7 +539,7 @@ export default function TraineeHomeScreen() {
                 </Text>
                 {locationAddress && (
                   <View style={styles.heroLocation}>
-                    <Ionicons name="location" size={16} color="#22C1C3" />
+                    <Ionicons name="location" size={16} color="#2a3a6e" />
                     <Text style={styles.heroLocationText}>{locationAddress}</Text>
                   </View>
                 )}
@@ -714,7 +714,7 @@ export default function TraineeHomeScreen() {
               {/* Travel to Trainer Proximity Dropdown */}
               <View style={styles.proximityContainer} data-testid="proximity-container">
                 <View style={styles.proximityHeader}>
-                  <Ionicons name="navigate-outline" size={18} color="#22C1C3" />
+                  <Ionicons name="navigate-outline" size={18} color="#2a3a6e" />
                   <Text style={styles.proximityLabel}>Travel to Trainer Proximity</Text>
                 </View>
                 <TouchableOpacity
@@ -745,7 +745,7 @@ export default function TraineeHomeScreen() {
                             {miles} {miles === 1 ? 'mile' : 'miles'}
                           </Text>
                           {travelProximity === miles && (
-                            <Ionicons name="checkmark" size={16} color="#22C1C3" />
+                            <Ionicons name="checkmark" size={16} color="#2a3a6e" />
                           )}
                         </TouchableOpacity>
                       ))}
@@ -765,7 +765,7 @@ export default function TraineeHomeScreen() {
                     colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.9)']}
                     style={styles.emptyGradient}
                   >
-                    <Ionicons name="fitness-outline" size={64} color="#22C1C3" />
+                    <Ionicons name="fitness-outline" size={64} color="#2a3a6e" />
                     <Text style={styles.emptyTitle}>No trainers nearby</Text>
                     <Text style={styles.emptySubtitle}>Try virtual training instead!</Text>
                     <TouchableOpacity 
@@ -773,7 +773,7 @@ export default function TraineeHomeScreen() {
                       onPress={() => setShowTrainingModeDialog(true)}
                     >
                       <LinearGradient
-                        colors={['#22C1C3', '#1FB8B4']}
+                        colors={['#2a3a6e', '#1a2a5e']}
                         style={styles.emptyButtonGradient}
                       >
                         <Text style={styles.emptyButtonText}>Find Virtual Trainers</Text>
@@ -851,7 +851,7 @@ export default function TraineeHomeScreen() {
               ]}
             >
               <LinearGradient
-                colors={['#1FB8B4', '#F7931E']}
+                colors={['#1a2a5e', '#F7931E']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.dialogGradient}
@@ -910,7 +910,7 @@ export default function TraineeHomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1FB8B4',
+    backgroundColor: '#1a2a5e',
   },
   heroBackgroundImage: {
     ...StyleSheet.absoluteFillObject,
@@ -1044,7 +1044,7 @@ const styles = StyleSheet.create({
   heroLocationText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#22C1C3',
+    color: '#2a3a6e',
   },
   // Urgent Banner - Polished with more spacing
   featureActionsGrid: {
@@ -1257,7 +1257,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sortOptionTextActive: {
-    color: '#1FB8B4',
+    color: '#1a2a5e',
   },
   // Pending Card - Polished with border and more padding
   pendingCard: {
@@ -1361,7 +1361,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderWidth: 1.5,
-    borderColor: '#22C1C3',
+    borderColor: '#2a3a6e',
   },
   proximityValue: {
     fontSize: 15,
@@ -1402,7 +1402,7 @@ const styles = StyleSheet.create({
     color: '#4A5568',
   },
   proximityOptionTextActive: {
-    color: '#22C1C3',
+    color: '#2a3a6e',
     fontWeight: '800',
   },
   sectionHeader: {
@@ -1554,7 +1554,7 @@ const styles = StyleSheet.create({
   virtualTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#22C1C3',
+    backgroundColor: '#2a3a6e',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 12,
@@ -1704,7 +1704,7 @@ const styles = StyleSheet.create({
   dialogButtonTextYes: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#1FB8B4',
+    color: '#1a2a5e',
   },
   dialogCloseButton: {
     position: 'absolute',
@@ -1806,7 +1806,7 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 28,
     borderWidth: 2,
-    borderColor: '#1FB8B4',
+    borderColor: '#1a2a5e',
   },
   nearbyAvatarPlaceholder: {
     width: 56,
@@ -1815,7 +1815,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#1FB8B4',
+    borderColor: '#1a2a5e',
   },
   nearbyAvatarText: {
     fontSize: 22,

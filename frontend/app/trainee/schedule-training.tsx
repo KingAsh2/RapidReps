@@ -19,8 +19,8 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 const COLORS = {
   orange: '#FF7F00',
   orangeLight: '#FFA526',
-  teal: '#1FB8B4',
-  tealLight: '#22C1C3',
+  teal: '#1a2a5e',
+  tealLight: '#2a3a6e',
   navy: '#1a2a5e',
   white: '#FFFFFF',
   gray: '#8892b0',

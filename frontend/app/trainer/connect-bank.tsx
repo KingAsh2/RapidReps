@@ -20,7 +20,7 @@ const backgroundImage = require('../../assets/images/bg-gym-blue.png');
 
 const COLORS = {
   orange: '#FF7F00',
-  teal: '#1FB8B4',
+  teal: '#1a2a5e',
   tealDark: '#18908D',
   navy: '#1a2a5e',
   white: '#FFFFFF',

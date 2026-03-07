@@ -98,12 +98,12 @@ export const OverviewTab = ({ dashboard, leaderboard, setActiveTab }: Props) => 
           <View style={s.chartLegend}>
             <View style={s.legendItem}>
               <View style={[s.legendDot, { backgroundColor: C.success }]} />
-              <Text style={s.legendLabel}>Platform (25%)</Text>
+              <Text style={s.legendLabel}>Platform (20%)</Text>
               <Text style={[s.legendValue, { color: C.success }]}>{formatCents(dashboard.platformRevenueCents)}</Text>
             </View>
             <View style={s.legendItem}>
               <View style={[s.legendDot, { backgroundColor: C.orange }]} />
-              <Text style={s.legendLabel}>Trainers (75%)</Text>
+              <Text style={s.legendLabel}>Trainers (80%)</Text>
               <Text style={s.legendValue}>{formatCents(dashboard.trainerPayoutsCents)}</Text>
             </View>
           </View>

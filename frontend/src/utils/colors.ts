@@ -12,10 +12,10 @@ export const Colors = {
   orangeGlow: '#FFB347',
   
   // SECONDARY - Teal Accent (Energy & Pop)
-  secondary: '#1FB8B4',
+  secondary: '#1a2a5e',
   secondaryDark: '#18A09D',
-  teal: '#1FB8B4',
-  tealLight: '#22C1C3',
+  teal: '#1a2a5e',
+  tealLight: '#2a3a6e',
   tealDark: '#0D8B88',
   
   // BASE - Deep Navy (Strength & Authority)
@@ -54,10 +54,10 @@ export const Colors = {
   
   // GRADIENTS (Array format for LinearGradient)
   gradientOrange: ['#FFA526', '#FF7F00', '#E65C00'],
-  gradientTeal: ['#1FB8B4', '#18A09D'],
+  gradientTeal: ['#1a2a5e', '#18A09D'],
   gradientNavy: ['#2a3a6e', '#1a2a5e'],
   gradientMain: ['#FFA526', '#FF7F00', '#E65C00'],
-  gradientTealStart: ['#1FB8B4', '#18A09D'],
+  gradientTealStart: ['#1a2a5e', '#18A09D'],
   gradientOrangeStart: ['#FFA526', '#FF7F00'],
   
   // GLASS CARD EFFECTS

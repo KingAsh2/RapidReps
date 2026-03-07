@@ -21,7 +21,7 @@ const { width } = Dimensions.get('window');
 const C = {
   orange: '#FF6A00',
   orangeLight: '#FF9F1C',
-  teal: '#1FB8B4',
+  teal: '#1a2a5e',
   navy: '#1a2a5e',
   white: '#FFFFFF',
   gray: '#8892b0',

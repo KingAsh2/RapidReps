@@ -30,8 +30,8 @@ const { width } = Dimensions.get('window');
 
 // Brand colors
 const COLORS = {
-  teal: '#1FB8B4',
-  tealLight: '#22C1C3',
+  teal: '#1a2a5e',
+  tealLight: '#2a3a6e',
   orange: '#F7931E',
   orangeHot: '#FF6A00',
   orangeLight: '#FF9F1C',
