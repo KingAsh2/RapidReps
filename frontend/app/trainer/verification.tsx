@@ -295,6 +295,7 @@ export default function TrainerVerificationScreen() {
   });
 
   return (
+    <>
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
       <LinearGradient
         colors={['rgba(247, 147, 30, 0.9)', 'rgba(247, 147, 30, 0.85)', 'rgba(255, 165, 38, 0.8)']}
@@ -537,6 +538,7 @@ export default function TrainerVerificationScreen() {
           </View>
         </View>
       </Modal>
+    </>
   );
 }
 

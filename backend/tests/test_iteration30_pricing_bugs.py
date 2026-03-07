@@ -14,7 +14,7 @@ import os
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 if not BASE_URL:
-    BASE_URL = "https://balance-transfers.preview.emergentagent.com"
+    BASE_URL = "https://syntax-solve.preview.emergentagent.com"
 
 # Test credentials from agent_to_agent_context
 TEST_TRAINER_EMAIL = "test_trainer_iter25@test.com"

@@ -53,6 +53,11 @@ A full-stack fitness marketplace application (React Native/Expo frontend, FastAP
 - Share Profile button on trainer profile
 - Safety section on trainee home
 
+### Deployment Fix (March 7, 2026)
+- Fixed critical syntax error in `frontend/app/trainer/verification.tsx` (Modal outside root JSX element)
+- Wrapped return JSX in React Fragment (`<>...</>`) to support sibling elements (ImageBackground + Modal)
+- TypeScript and Metro bundler compile successfully
+
 ## Remaining Backlog
 - P3: SendGrid Integration (awaiting API key)
 - P4: TypeScript strict-mode warnings (86+)

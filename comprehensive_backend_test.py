@@ -18,7 +18,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
 # Configuration
-BASE_URL = "https://balance-transfers.preview.emergentagent.com/api"
+BASE_URL = "https://syntax-solve.preview.emergentagent.com/api"
 HEADERS = {"Content-Type": "application/json"}
 
 class RapidRepsComprehensiveTester:
