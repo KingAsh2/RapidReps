@@ -10,6 +10,7 @@ import {
   RefreshControl,
   Image,
   Animated,
+  Share,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -103,6 +104,17 @@ export default function TrainerProfileScreen() {
     );
   };
 
+  const handleShareProfile = async () => {
+    try {
+      await Share.share({
+        message: `Check out ${user?.fullName || 'this trainer'} on RapidReps! Book a session today. https://rapidreps.com/trainer/${user?.id}`,
+        title: `${user?.fullName || 'Trainer'} on RapidReps`,
+      });
+    } catch (e) {
+      console.error('Share error:', e);
+    }
+  };
+
   return (
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
       <LinearGradient colors={['rgba(26, 42, 94, 0.96)', 'rgba(26, 42, 94, 0.92)']} style={StyleSheet.absoluteFill} />
@@ -144,6 +156,12 @@ export default function TrainerProfileScreen() {
                   <View style={[styles.statusDot, { backgroundColor: profile?.isAvailable ? COLORS.success : COLORS.error }]} />
                   <Text style={styles.statusText}>{profile?.isAvailable ? 'Available' : 'Unavailable'}</Text>
                 </View>
+
+                {/* Share Profile Button */}
+                <TouchableOpacity onPress={handleShareProfile} style={styles.shareProfileBtn} data-testid="share-profile-btn">
+                  <Ionicons name="share-social" size={18} color={COLORS.white} />
+                  <Text style={styles.shareProfileBtnText}>Share Profile</Text>
+                </TouchableOpacity>
               </View>
 
               {/* Stats */}
@@ -284,6 +302,23 @@ const styles = StyleSheet.create({
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
   statusDot: { width: 8, height: 8, borderRadius: 4 },
   statusText: { fontSize: 13, color: 'rgba(255,255,255,0.6)', fontWeight: '600' },
+
+  shareProfileBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: COLORS.orange,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    marginTop: 14,
+  },
+  shareProfileBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.white,
+  },
 
   statsRow: { flexDirection: 'row', gap: 10, marginBottom: 20 },
   statCard: { flex: 1, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 14, padding: 16, alignItems: 'center' },

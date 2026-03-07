@@ -182,9 +182,22 @@ export default function SessionActiveScreen() {
           </LinearGradient>
         </Pressable>
 
+        {/* Report Issue - Top Right */}
+        <TouchableOpacity
+          onPress={() => router.push({
+            pathname: '/trainee/report-issue',
+            params: { sessionId, trainerName }
+          })}
+          style={styles.reportBtn}
+          data-testid="report-issue-btn"
+        >
+          <Ionicons name="flag" size={18} color={Colors.white} />
+          <Text style={styles.reportBtnText}>Report an Issue</Text>
+        </TouchableOpacity>
+
         {/* Having Trouble Link */}
         <TouchableOpacity onPress={() => setShowHelpModal(true)} style={styles.helpLink}>
-          <Text style={styles.helpLinkText}>Having trouble?</Text>
+          <Text style={styles.helpLinkText}>Having trouble connecting?</Text>
         </TouchableOpacity>
 
         {/* Session Tips */}
@@ -451,6 +464,25 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: Colors.white,
     textDecorationLine: 'underline',
+  },
+  reportBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(255,75,87,0.2)',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,75,87,0.4)',
+    alignSelf: 'flex-end',
+  },
+  reportBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: Colors.white,
   },
   modalOverlay: {
     flex: 1,

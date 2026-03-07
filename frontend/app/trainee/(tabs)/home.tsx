@@ -795,6 +795,29 @@ export default function TraineeHomeScreen() {
 
             {/* Bottom Spacer for FAB */}
             <View style={{ height: 100 }} />
+
+            {/* Safety Section */}
+            <TouchableOpacity
+              style={styles.safetySection}
+              onPress={() => router.push('/trainee/safety-center')}
+              data-testid="safety-section-btn"
+            >
+              <LinearGradient
+                colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.9)']}
+                style={styles.safetySectionGradient}
+              >
+                <View style={styles.safetySectionIcon}>
+                  <Ionicons name="shield-checkmark" size={28} color="#1a2a5e" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.safetySectionTitle}>Safety Center</Text>
+                  <Text style={styles.safetySectionSub}>Tips, emergency contacts & session safety</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color="#1a2a5e" />
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <View style={{ height: 30 }} />
           </ScrollView>
 
           {/* Floating Action Button */}
@@ -1883,5 +1906,36 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: 'rgba(255,255,255,0.6)',
     marginTop: 4,
+  },
+  safetySection: {
+    marginHorizontal: 16,
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginTop: -70,
+  },
+  safetySectionGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    gap: 14,
+  },
+  safetySectionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(26,42,94,0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  safetySectionTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#1a2a5e',
+    marginBottom: 2,
+  },
+  safetySectionSub: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#5a6a8a',
   },
 });
