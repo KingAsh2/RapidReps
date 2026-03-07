@@ -1,7 +1,7 @@
 # RapidReps - Product Requirements Document
 
 ## Original Problem Statement
-A full-stack fitness marketplace application (React Native/Expo frontend, FastAPI backend, MongoDB) connecting trainees with personal trainers. Features include user roles, Stripe payments, session lifecycles, instant matching, group sessions, and community feeds.
+A full-stack fitness marketplace application (React Native/Expo frontend, FastAPI backend, MongoDB) connecting trainees with personal trainers.
 
 ## Core Architecture
 - **Frontend:** React Native / Expo Router
@@ -9,73 +9,55 @@ A full-stack fitness marketplace application (React Native/Expo frontend, FastAP
 - **Database:** MongoDB
 - **Payments:** Stripe (Payment Sheet + Connect Express)
 - **Notifications:** expo-server-sdk-python (push)
-- **PDF:** wkhtmltopdf
 
-## What's Been Implemented
+## Implementation Status
 
-### UI/UX Updates Batch 2 (March 7, 2026)
-1. **Safety Center Screen:** New `/trainee/safety-center` with emergency buttons (Call 911, Report Issue), 6 safety tips, and session sharing info
-2. **Report Issue Screen:** New `/trainee/report-issue` with issue type selection and description, integrates with existing `/api/safety/report` endpoint
-3. **Session Active:** Added "Report an Issue" button (top-right, red accent) linking to report-issue screen
-4. **Trainer Profile:** Added "Share Profile" button using React Native Share API
-5. **Trainee Home:** Added "Safety Center" section at bottom of scroll view
+### All Phases Complete
 
-### UI/UX Updates Batch 1 (March 7, 2026)
-1. **Global Brand Color Update:** All teal buttons (#1FB8B4/#22C1C3) replaced with navy blue (#1a2a5e/#2a3a6e) across 30+ files
-2. **Admin Overview:** Revenue split display fixed from 75/25 to 80/20
-3. **Admin Profile:** Change password functionality added (modal + /api/auth/change-password endpoint)
-4. **Admin Payments:** Cancellation policy info card added (virtual $15, in-person $20, 80/20 split)
-5. **Trainer Detail:** Removed "Per Min" column from stats row
-6. **Trainer Detail:** Added heart/favorite button to header actions
-7. **Quick Book Section:** Improved accessibility (larger fonts, hint text, accessibility labels)
-8. **Share Status:** "Train Safely" banner made more visible (white bg, border, larger text)
-9. **Saved Trainers:** Heart icon on trainer profile detail page
-10. **Home Address:** Added zip code field + brightened input fields
-11. **Recurring Sessions:** Multi-day selection (Mon-Sun) + bulk payment pricing display
-12. **Trainer Card:** Updated colors from teal to navy
+**Phase 1: Matching & Virtual Accept** - COMPLETE
+- ETA-weighted composite scoring (distance 40%, rating 20%, sessions 15%, price 10%, boost 10%, responsiveness 5%)
+- `/api/trainers/ranked-search` returns trainers sorted by compositeScore
+- 10-second accept timer for virtual sessions
 
-### Previous Features (before this session)
-- User auth (JWT), Trainee/Trainer/Admin roles
-- Session booking, management, lifecycle
-- Stripe payments and payouts
-- GPS tracking, Push notifications
-- Instant matching, group sessions, community feed placeholders
-- Admin dashboard
+**Phase 2: Instant Workout Mode** - COMPLETE
+- Cascading polling-based matching at `/api/sessions/instant-match`
+- Accept/decline/cancel flows with status polling
+- Frontend screen at `/trainee/instant-match`
 
-## Prioritized Backlog
+**Phase 3: Trainer Tools** - COMPLETE
+- CRUD for workout plans, session notes, client progress
+- Backend: `/api/trainer-tools/*` endpoints
+- Frontend: `/trainer/trainer-tools` with tabs (clients/plans/notes)
 
-### P0 (Critical)
-- Phase 1: Improve Matching & Virtual Accept (ETA-weighted scoring, 10-second accept timer)
-- Phase 2: Implement Instant Workout Mode (cascading matching, "Start Workout Now")
+**Phase 4: Group Workouts** - COMPLETE
+- Create/join/leave/start/complete group sessions
+- Backend: `/api/group-sessions/*` endpoints
+- Frontend screens for both trainee and trainer
 
-### P1 (High)
-- Phase 3: Trainer Tools (CRUD for session notes, workout plans, client progress)
-- Phase 4: Group Workouts (create/join)
+**Phase 5: Community Feed & User Progress** - COMPLETE
+- Feed with auto-generated posts (session complete, badge unlock, streak milestone)
+- User-created posts, likes system
+- Progress tracking with streak levels, calorie estimates, consistency scores
+- Backend: `/api/feed/*` and `/api/progress/*`
+- Frontend: `/trainee/feed` and `/trainee/user-progress`
 
-### P2 (Medium)
-- Phase 5: Community Feed & User Progress
+### UI/UX Updates (March 7, 2026)
+- Global teal→navy blue (#1a2a5e/#2a3a6e) across 40+ files
+- Admin: 80/20 revenue split, change password, cancellation policy card
+- Trainer Detail: Removed Per Min column, added heart/favorite button
+- Quick Book: Improved accessibility
+- Share Status: "Train Safely" banner visibility improved
+- Home Address: Added zip code field, brightened inputs
+- Recurring Sessions: Multi-day selection, bulk payment pricing
+- Safety Center screen, Report Issue screen
+- Share Profile button on trainer profile
+- Safety section on trainee home
 
-### P3 (Low)
-- SendGrid Integration (awaiting API key)
-- TypeScript strict-mode warnings (86+)
+## Remaining Backlog
+- P3: SendGrid Integration (awaiting API key)
+- P4: TypeScript strict-mode warnings (86+)
 
 ## Test Credentials
 | Role | Email | Password |
 |------|-------|----------|
 | Admin | admin@rapidreps.com | admin123 |
-
-## Key Files Modified This Session
-- `/app/frontend/app/trainee/safety-center.tsx` - NEW
-- `/app/frontend/app/trainee/report-issue.tsx` - NEW
-- `/app/frontend/app/trainee/session-active.tsx` - Report Issue button
-- `/app/frontend/app/trainer/(tabs)/profile.tsx` - Share Profile
-- `/app/frontend/app/trainee/(tabs)/home.tsx` - Safety section
-- `/app/frontend/src/constants/design.ts` - Brand colors
-- `/app/frontend/src/components/admin/OverviewTab.tsx` - 80/20 split
-- `/app/frontend/src/components/admin/ProfileTab.tsx` - Change password
-- `/app/frontend/src/components/admin/PaymentsTab.tsx` - Cancellation policy
-- `/app/frontend/app/admin/dashboard.tsx` - Password modal
-- `/app/frontend/app/trainee/trainer-detail.tsx` - Per Min removed, heart btn
-- `/app/frontend/app/trainee/recurring-sessions.tsx` - Multi-day, bulk payment
-- `/app/frontend/app/trainee/(tabs)/profile.tsx` - Zip code
-- 30+ files: teal → navy color replacement
