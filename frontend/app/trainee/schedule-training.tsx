@@ -344,7 +344,7 @@ export default function ScheduleTrainingScreen() {
           <View style={styles.bottomContainer}>
             <TouchableOpacity style={styles.confirmButton} onPress={handleConfirm}>
               <LinearGradient
-                colors={[COLORS.teal, '#18A09D']}
+                colors={[COLORS.teal, '#2a3a6e']}
                 style={styles.confirmButtonGradient}
               >
                 <Text style={styles.confirmButtonText}>Continue to Book</Text>

@@ -875,7 +875,7 @@ export default function TrainerDetailScreen() {
               data-testid="at-home-lets-go-btn"
             >
               <LinearGradient
-                colors={[COLORS.teal, '#18A09D']}
+                colors={[COLORS.teal, '#2a3a6e']}
                 style={styles.consentAgreeGradient}
               >
                 <Text style={styles.consentAgreeText}>Let's Go</Text>

@@ -9,7 +9,7 @@ import { useAuth } from '../../src/contexts/AuthContext';
 import { toast } from '../../src/utils/toast';
 
 const { width } = Dimensions.get('window');
-const COLORS = { orange: '#FF6A00', teal: '#00CFC1', navy: '#1a2a5e', white: '#FFFFFF', offWhite: '#F8F9FA', gray: '#8892b0', success: '#00D26A' };
+const COLORS = { orange: '#FF6A00', teal: '#1a2a5e', navy: '#1a2a5e', white: '#FFFFFF', offWhite: '#F8F9FA', gray: '#8892b0', success: '#00D26A' };
 
 type ActiveTab = 'clients' | 'plans' | 'notes';
 
@@ -157,7 +157,7 @@ export default function TrainerToolsScreen() {
                 <Text style={styles.modalCancelText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={handleAddNote} style={styles.modalSave} data-testid="save-note-btn">
-                <LinearGradient colors={[COLORS.teal, '#18A09D']} style={styles.modalSaveGrad}>
+                <LinearGradient colors={[COLORS.teal, '#2a3a6e']} style={styles.modalSaveGrad}>
                   <Text style={styles.modalSaveText}>Save</Text>
                 </LinearGradient>
               </TouchableOpacity>

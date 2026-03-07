@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { groupSessionAPI } from '../../src/services/api';
 import { useAuth } from '../../src/contexts/AuthContext';
 
-const COLORS = { orange: '#FF6A00', teal: '#00CFC1', navy: '#1a2a5e', white: '#FFFFFF', gray: '#8892b0', success: '#00D26A' };
+const COLORS = { orange: '#FF6A00', teal: '#1a2a5e', navy: '#1a2a5e', white: '#FFFFFF', gray: '#8892b0', success: '#00D26A' };
 
 export default function GroupSessionsScreen() {
   const router = useRouter();

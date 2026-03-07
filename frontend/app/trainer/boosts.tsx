@@ -232,7 +232,7 @@ export default function BoostsScreen() {
             disabled={purchasing}
             data-testid="purchase-boost-btn"
           >
-            <LinearGradient colors={[COLORS.teal, '#18A09D']} style={styles.purchaseBtnGradient}>
+            <LinearGradient colors={[COLORS.teal, '#2a3a6e']} style={styles.purchaseBtnGradient}>
               {purchasing ? (
                 <ActivityIndicator size="small" color={COLORS.white} />
               ) : (

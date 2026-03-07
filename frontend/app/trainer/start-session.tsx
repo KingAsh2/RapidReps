@@ -23,7 +23,7 @@ const { width } = Dimensions.get('window');
 const COLORS = {
   orange: '#FF6A00',
   orangeLight: '#FF9F1C',
-  teal: '#00CFC1',
+  teal: '#1a2a5e',
   tealLight: '#22E8DF',
   navy: '#1a2a5e',
   white: '#FFFFFF',

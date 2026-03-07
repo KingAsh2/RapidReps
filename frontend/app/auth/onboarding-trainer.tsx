@@ -588,7 +588,7 @@ export default function TrainerOnboardingScreen() {
               }}
               data-testid="start-verification-btn"
             >
-              <LinearGradient colors={['#1a2a5e', '#18A09D']} style={styles.modalPrimaryGradient}>
+              <LinearGradient colors={['#1a2a5e', '#2a3a6e']} style={styles.modalPrimaryGradient}>
                 <Ionicons name="shield-checkmark" size={20} color="#FFFFFF" />
                 <Text style={styles.modalPrimaryText}>Start Verification</Text>
               </LinearGradient>

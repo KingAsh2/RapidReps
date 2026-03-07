@@ -322,7 +322,7 @@ I'll let you know when I'm done. Track my session in the RapidReps app.
             disabled={selectedContacts.length === 0}
           >
             <LinearGradient
-              colors={selectedContacts.length > 0 ? [COLORS.teal, '#18A09D'] : [COLORS.gray, COLORS.gray]}
+              colors={selectedContacts.length > 0 ? [COLORS.teal, '#2a3a6e'] : [COLORS.gray, COLORS.gray]}
               style={styles.shareButtonGradient}
             >
               <Ionicons name="share-social" size={24} color={COLORS.white} />

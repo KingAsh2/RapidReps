@@ -174,7 +174,7 @@ export default function PaymentScreen() {
             disabled={processing}
             data-testid="pay-now-btn"
           >
-            <LinearGradient colors={[COLORS.teal, '#18A09D']} style={styles.payBtnGradient}>
+            <LinearGradient colors={[COLORS.teal, '#2a3a6e']} style={styles.payBtnGradient}>
               {processing ? (
                 <ActivityIndicator size="small" color={COLORS.white} />
               ) : (

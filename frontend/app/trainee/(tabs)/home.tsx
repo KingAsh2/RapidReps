@@ -600,7 +600,7 @@ export default function TraineeHomeScreen() {
                 onPress={() => router.push('/trainee/group-sessions')}
                 data-testid="group-workouts-btn"
               >
-                <LinearGradient colors={['#00CFC1', '#18A09D']} style={styles.featureActionGrad}>
+                <LinearGradient colors={['#1a2a5e', '#2a3a6e']} style={styles.featureActionGrad}>
                   <Ionicons name="people" size={22} color="#fff" />
                   <Text style={styles.featureActionText}>Group{'\n'}Workouts</Text>
                 </LinearGradient>

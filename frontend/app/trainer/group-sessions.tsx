@@ -8,7 +8,7 @@ import { groupSessionAPI } from '../../src/services/api';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { toast } from '../../src/utils/toast';
 
-const COLORS = { orange: '#FF6A00', teal: '#00CFC1', navy: '#1a2a5e', white: '#FFFFFF', gray: '#8892b0', success: '#00D26A', error: '#FF4757' };
+const COLORS = { orange: '#FF6A00', teal: '#1a2a5e', navy: '#1a2a5e', white: '#FFFFFF', gray: '#8892b0', success: '#00D26A', error: '#FF4757' };
 
 export default function TrainerGroupSessionsScreen() {
   const router = useRouter();
@@ -180,7 +180,7 @@ export default function TrainerGroupSessionsScreen() {
                   <Text style={styles.cancelBtnText}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={handleCreate} style={styles.createBtn} disabled={creating} data-testid="submit-create-group">
-                  <LinearGradient colors={[COLORS.teal, '#18A09D']} style={styles.createBtnGrad}>
+                  <LinearGradient colors={[COLORS.teal, '#2a3a6e']} style={styles.createBtnGrad}>
                     <Text style={styles.createBtnText}>{creating ? 'Creating...' : 'Create'}</Text>
                   </LinearGradient>
                 </TouchableOpacity>

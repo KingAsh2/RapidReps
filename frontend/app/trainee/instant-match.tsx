@@ -9,7 +9,7 @@ import { instantMatchAPI } from '../../src/services/api';
 import { useAuth } from '../../src/contexts/AuthContext';
 
 const { width } = Dimensions.get('window');
-const COLORS = { orange: '#FF6A00', orangeLight: '#FF9F1C', teal: '#00CFC1', navy: '#1a2a5e', white: '#FFFFFF', gray: '#8892b0', success: '#00D26A', error: '#FF4757' };
+const COLORS = { orange: '#FF6A00', orangeLight: '#FF9F1C', teal: '#1a2a5e', navy: '#1a2a5e', white: '#FFFFFF', gray: '#8892b0', success: '#00D26A', error: '#FF4757' };
 
 export default function InstantMatchScreen() {
   const router = useRouter();
@@ -142,7 +142,7 @@ export default function InstantMatchScreen() {
 
         {status === 'matched' && (
           <TouchableOpacity onPress={handleGoToSession} style={styles.goBtn} data-testid="go-to-session-btn">
-            <LinearGradient colors={[COLORS.teal, '#18A09D']} style={styles.goBtnGrad}>
+            <LinearGradient colors={[COLORS.navy, '#2a3a6e']} style={styles.goBtnGrad}>
               <Text style={styles.goBtnText}>Go to Session</Text>
               <Ionicons name="arrow-forward" size={20} color={COLORS.white} />
             </LinearGradient>

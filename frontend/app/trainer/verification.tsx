@@ -404,7 +404,7 @@ export default function TrainerVerificationScreen() {
                           data-testid={`upload-btn-${step.id}`}
                         >
                           <LinearGradient
-                            colors={[COLORS.teal, '#18A09D']}
+                            colors={[COLORS.teal, '#2a3a6e']}
                             style={styles.uploadButtonGradient}
                           >
                             <Ionicons

@@ -291,7 +291,7 @@ export default function ConfirmBookingScreen() {
             disabled={isProcessing}
             data-testid="confirm-pay-btn"
           >
-            <LinearGradient colors={[COLORS.teal, '#18A09D']} style={styles.confirmBtnGradient}>
+            <LinearGradient colors={[COLORS.teal, '#2a3a6e']} style={styles.confirmBtnGradient}>
               {isProcessing ? (
                 <>
                   <ActivityIndicator size="small" color={COLORS.white} />
@@ -330,7 +330,7 @@ export default function ConfirmBookingScreen() {
               style={bookingModalStyles.btn}
               data-testid="booking-modal-view-sessions-btn"
             >
-              <LinearGradient colors={[COLORS.teal, '#18A09D']} style={bookingModalStyles.btnGradient}>
+              <LinearGradient colors={[COLORS.teal, '#2a3a6e']} style={bookingModalStyles.btnGradient}>
                 <Text style={bookingModalStyles.btnText}>View My Sessions</Text>
               </LinearGradient>
             </TouchableOpacity>

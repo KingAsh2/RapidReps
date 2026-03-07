@@ -126,7 +126,7 @@ export const AnimatedPillButton: React.FC<AnimatedPillButtonProps> = ({
     || (variant === 'teal' ? ['#1a2a5e', '#17A09D'] as const
       : variant === 'danger' ? [Colors.error, '#C0392B'] as const
       : variant === 'navy' ? ['#1A2A5E', '#0F1B3D'] as const
-      : ['#00CFC1', '#FF6B35'] as const);
+      : ['#1a2a5e', '#FF6B35'] as const);
 
   const iconColor = Colors.white;
 

@@ -185,7 +185,7 @@ export default function ShareStreakScreen() {
             disabled={sharing}
             data-testid="share-streak-btn"
           >
-            <LinearGradient colors={[C.teal, '#18A09D']} style={styles.shareBtnGradient}>
+            <LinearGradient colors={[C.teal, '#2a3a6e']} style={styles.shareBtnGradient}>
               {sharing ? (
                 <ActivityIndicator color={C.white} />
               ) : (

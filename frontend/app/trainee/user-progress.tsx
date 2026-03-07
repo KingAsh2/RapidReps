@@ -9,13 +9,13 @@ import { progressAPI } from '../../src/services/api';
 import { useAuth } from '../../src/contexts/AuthContext';
 
 const { width } = Dimensions.get('window');
-const COLORS = { orange: '#FF6A00', orangeLight: '#FF9F1C', teal: '#00CFC1', navy: '#1a2a5e', white: '#FFFFFF', gray: '#8892b0', success: '#00D26A', error: '#FF4757' };
+const COLORS = { orange: '#FF6A00', orangeLight: '#FF9F1C', teal: '#1a2a5e', navy: '#1a2a5e', white: '#FFFFFF', gray: '#8892b0', success: '#00D26A', error: '#FF4757' };
 
 const STREAK_COLORS: Record<string, string[]> = {
   Legend: ['#FFD700', '#FFA500'],
   Blazing: ['#FF4500', '#FF6347'],
   Fire: ['#FF6A00', '#FF9F1C'],
-  Warming: ['#00CFC1', '#18A09D'],
+  Warming: ['#1a2a5e', '#2a3a6e'],
   None: ['#8892b0', '#6a7a9a'],
 };
 
