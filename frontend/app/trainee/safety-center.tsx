@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Linking,
   ImageBackground,
+  Animated,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -36,6 +37,15 @@ const SAFETY_TIPS = [
 
 export default function SafetyCenterScreen() {
   const router = useRouter();
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 350, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 350, useNativeDriver: true }),
+    ]).start();
+  }, []);
 
   return (
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
@@ -79,6 +89,7 @@ export default function SafetyCenterScreen() {
           </View>
 
           {/* Safety Tips */}
+          <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
           <Text style={styles.sectionTitle}>Safety Tips</Text>
           {SAFETY_TIPS.map((tip, idx) => (
             <View key={idx} style={styles.tipCard} data-testid={`safety-tip-${idx}`}>
@@ -102,6 +113,7 @@ export default function SafetyCenterScreen() {
           </View>
 
           <View style={{ height: 40 }} />
+          </Animated.View>
         </ScrollView>
       </SafeAreaView>
     </ImageBackground>
