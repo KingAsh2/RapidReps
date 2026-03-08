@@ -183,13 +183,25 @@ export default function TrainerVerificationScreen() {
       setVerificationStatus(prev => ({ ...prev, [stepId]: 'uploading' }));
 
       if (stepId === 'identity') {
-        // #2: Scan ID with camera
-        const result = await ImagePicker.launchCameraAsync({
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          allowsEditing: true,
-          quality: 0.9,
-        });
-        if (!result.canceled && result.assets?.[0]) {
+        // #2: Scan ID with camera - request permission first
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        let result;
+        if (status === 'granted') {
+          result = await ImagePicker.launchCameraAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            quality: 0.9,
+          });
+        } else {
+          // Fallback to image library if camera permission denied
+          toast.info('Camera access denied. Please select your ID from gallery.');
+          result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            quality: 0.9,
+          });
+        }
+        if (result && !result.canceled && result.assets?.[0]) {
           const asset = result.assets[0];
           await submitStepToBackend(stepId, asset.uri, 'scanned_id.jpg');
           setVerificationStatus(prev => ({ ...prev, [stepId]: 'submitted' }));
@@ -567,8 +579,9 @@ export default function TrainerVerificationScreen() {
 
       {/* PII Collection Modal for Background Check */}
       <Modal visible={showPIIModal} transparent animationType="slide" data-testid="pii-modal">
-        <View style={modalStyles.overlay}>
-          <View style={[modalStyles.content, { padding: 24 }]}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-end' }} keyboardShouldPersistTaps="handled">
+        <View style={[modalStyles.content, { padding: 24, margin: 16, marginBottom: 24 }]}>
             <Text style={modalStyles.title}>Background Check Information</Text>
             <Text style={[modalStyles.subtitle, { marginBottom: 16 }]}>
               Provide your information below. Our admin team will run a background check via TruthFinder.
@@ -615,7 +628,8 @@ export default function TrainerVerificationScreen() {
               <Text style={{ color: COLORS.gray, fontWeight: '600', fontSize: 15 }}>Cancel</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </ScrollView>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Verification Submitted Modal */}

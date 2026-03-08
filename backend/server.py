@@ -1706,6 +1706,21 @@ async def get_trainer_profile(user_id: str):
         if not profile.get('avatarUrl') and user.get('profilePhoto'):
             profile['avatarUrl'] = user['profilePhoto']
     
+    # Ensure introVideoUrl is preserved from verification submissions
+    if not profile.get('introVideoUrl'):
+        v_steps = profile.get('verificationSteps', {})
+        if isinstance(v_steps, dict) and v_steps.get('video') == 'submitted':
+            subs = await db.verification_submissions.find_one(
+                {'userId': user_id, 'stepId': 'video'},
+                sort=[('createdAt', -1)]
+            )
+            if subs and subs.get('fileUri'):
+                profile['introVideoUrl'] = subs['fileUri']
+                await db.trainer_profiles.update_one(
+                    {'userId': user_id},
+                    {'$set': {'introVideoUrl': subs['fileUri']}}
+                )
+    
     return TrainerProfileResponse(**serialize_doc(profile))
 
 

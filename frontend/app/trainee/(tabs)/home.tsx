@@ -92,6 +92,7 @@ export default function TraineeHomeScreen() {
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [travelProximity, setTravelProximity] = useState(10);
   const [showProximityPicker, setShowProximityPicker] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
 
   // Convenience features state
   const [recentTrainers, setRecentTrainers] = useState<any[]>([]);
@@ -486,28 +487,43 @@ export default function TraineeHomeScreen() {
             </View>
             <View style={styles.headerActions}>
               <TouchableOpacity
-                onPress={() => router.push('/notifications')}
+                onPress={() => { haptic.light(); setMenuVisible(!menuVisible); }}
                 style={styles.headerButton}
-                data-testid="notification-bell-btn"
+                data-testid="trainee-hamburger-menu-btn"
               >
-                <Ionicons name="notifications" size={24} color="#FFFFFF" />
+                <Ionicons name="menu" size={26} color="#FFFFFF" />
                 {unreadCount > 0 && (
                   <View style={styles.notifBadge}>
                     <Text style={styles.notifBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
                   </View>
                 )}
               </TouchableOpacity>
-              <TouchableOpacity 
-                onPress={() => router.push('/trainee/(tabs)/profile')} 
-                style={styles.headerButton}
-              >
-                <Ionicons name="person-circle" size={30} color="#FFFFFF" />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={handleLogout} style={styles.headerButton}>
-                <Ionicons name="log-out-outline" size={24} color="#FFFFFF" />
-              </TouchableOpacity>
             </View>
           </View>
+
+          {/* Dropdown Menu */}
+          {menuVisible && (
+            <View style={{ position: 'absolute', top: 100, right: 20, backgroundColor: '#fff', borderRadius: 16, paddingVertical: 8, width: 220, zIndex: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 12, elevation: 10 }}>
+              <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 18, gap: 14 }} onPress={() => { setMenuVisible(false); router.push('/notifications'); }} data-testid="trainee-menu-notifications">
+                <Ionicons name="notifications" size={22} color="#FF7F00" />
+                <Text style={{ fontSize: 15, fontWeight: '700', color: '#1a2a5e' }}>Notifications</Text>
+                {unreadCount > 0 && <View style={{ backgroundColor: '#FF3B30', borderRadius: 10, paddingHorizontal: 6, paddingVertical: 2 }}><Text style={{ color: '#fff', fontSize: 13, fontWeight: '800' }}>{unreadCount}</Text></View>}
+              </TouchableOpacity>
+              <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 18, gap: 14 }} onPress={() => { setMenuVisible(false); router.push('/trainee/(tabs)/profile'); }} data-testid="trainee-menu-profile">
+                <Ionicons name="person-circle" size={22} color="#1a2a5e" />
+                <Text style={{ fontSize: 15, fontWeight: '700', color: '#1a2a5e' }}>My Profile</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 18, gap: 14 }} onPress={() => { setMenuVisible(false); router.push('/trainee/(tabs)/saved'); }} data-testid="trainee-menu-saved">
+                <Ionicons name="heart" size={22} color="#FF3B30" />
+                <Text style={{ fontSize: 15, fontWeight: '700', color: '#1a2a5e' }}>Saved Trainers</Text>
+              </TouchableOpacity>
+              <View style={{ height: 1, backgroundColor: '#E8ECF0', marginHorizontal: 18 }} />
+              <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 18, gap: 14 }} onPress={() => { setMenuVisible(false); handleLogout(); }} data-testid="trainee-menu-logout">
+                <Ionicons name="log-out-outline" size={22} color="#FF3B30" />
+                <Text style={{ fontSize: 15, fontWeight: '700', color: '#FF3B30' }}>Log Out</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           <ScrollView
             style={styles.scrollView}
