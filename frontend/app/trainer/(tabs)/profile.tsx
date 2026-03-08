@@ -11,6 +11,8 @@ import {
   Image,
   Animated,
   Share,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -106,8 +108,9 @@ export default function TrainerProfileScreen() {
 
   const handleShareProfile = async () => {
     try {
+      const profileLink = `rapidreps://trainer/${user?.id}`;
       await Share.share({
-        message: `Check out ${user?.fullName || 'this trainer'} on RapidReps! Book a session today. https://rapidreps.com/trainer/${user?.id}`,
+        message: `Check out ${user?.fullName || 'this trainer'} on RapidReps! Book a session today.\n\nOpen in app: ${profileLink}\n\nDownload RapidReps: https://rapidreps.com/download`,
         title: `${user?.fullName || 'Trainer'} on RapidReps`,
       });
     } catch (e) {

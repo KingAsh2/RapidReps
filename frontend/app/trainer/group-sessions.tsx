@@ -25,6 +25,12 @@ export default function TrainerGroupSessionsScreen() {
   const [price, setPrice] = useState('12');
   const [duration, setDuration] = useState('60');
   const [creating, setCreating] = useState(false);
+  const [editingSession, setEditingSession] = useState<any>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editCapacity, setEditCapacity] = useState('');
+  const [editPrice, setEditPrice] = useState('');
+  const [editDuration, setEditDuration] = useState('');
 
   useEffect(() => { load(); }, [tab]);
 
@@ -76,6 +82,31 @@ export default function TrainerGroupSessionsScreen() {
     } catch (e: any) { toast.error(e?.response?.data?.detail || 'Failed'); }
   };
 
+  const openEdit = (item: any) => {
+    setEditingSession(item);
+    setEditTitle(item.title || '');
+    setEditDescription(item.description || '');
+    setEditCapacity(String(item.capacity || 10));
+    setEditPrice(String((item.pricePerPersonCents || 1200) / 100));
+    setEditDuration(String(item.durationMinutes || 60));
+  };
+
+  const handleEdit = async () => {
+    if (!editingSession) return;
+    try {
+      await groupSessionAPI.edit(editingSession.id, {
+        title: editTitle.trim(),
+        description: editDescription.trim(),
+        capacity: parseInt(editCapacity) || 10,
+        pricePerPersonCents: Math.round((parseFloat(editPrice) || 12) * 100),
+        durationMinutes: parseInt(editDuration) || 60,
+      });
+      setEditingSession(null);
+      toast.success('Session updated!');
+      load();
+    } catch (e: any) { toast.error(e?.response?.data?.detail || 'Failed to update'); }
+  };
+
   const renderSession = ({ item }: { item: any }) => (
     <View style={styles.card} data-testid={`trainer-group-${item.id}`}>
       <View style={styles.cardRow}>
@@ -102,10 +133,15 @@ export default function TrainerGroupSessionsScreen() {
           <Text style={styles.metaText}>${(item.pricePerPersonCents / 100).toFixed(2)}/person</Text>
         </View>
       </View>
-      {item.status === 'upcoming' && (
-        <TouchableOpacity onPress={() => handleStart(item.id)} style={styles.actionBtn} data-testid={`start-group-${item.id}`}>
-          <Text style={styles.actionBtnText}>Start Session</Text>
-        </TouchableOpacity>
+      {item.status === 'upcoming' && item.trainerId === user?.id && (
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <TouchableOpacity onPress={() => openEdit(item)} style={[styles.actionBtn, { flex: 1, backgroundColor: COLORS.teal }]} data-testid={`edit-group-${item.id}`}>
+            <Text style={styles.actionBtnText}>Edit</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => handleStart(item.id)} style={[styles.actionBtn, { flex: 1 }]} data-testid={`start-group-${item.id}`}>
+            <Text style={styles.actionBtnText}>Start Session</Text>
+          </TouchableOpacity>
+        </View>
       )}
       {item.status === 'in_progress' && (
         <TouchableOpacity onPress={() => handleComplete(item.id)} style={[styles.actionBtn, { backgroundColor: COLORS.success }]} data-testid={`complete-group-${item.id}`}>
@@ -186,6 +222,30 @@ export default function TrainerGroupSessionsScreen() {
                 </TouchableOpacity>
               </View>
             </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Edit Modal */}
+      <Modal visible={!!editingSession} transparent animationType="slide">
+        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <View style={{ backgroundColor: '#1a2a5e', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24 }}>
+            <Text style={{ fontSize: 20, fontWeight: '800', color: '#fff', marginBottom: 16 }}>Edit Session</Text>
+            <TextInput style={styles.input} placeholder="Title" placeholderTextColor="#888" value={editTitle} onChangeText={setEditTitle} data-testid="edit-title" />
+            <TextInput style={[styles.input, { minHeight: 60 }]} placeholder="Description" placeholderTextColor="#888" multiline value={editDescription} onChangeText={setEditDescription} data-testid="edit-desc" />
+            <View style={{ flexDirection: 'row', gap: 10, marginBottom: 8 }}>
+              <TextInput style={[styles.input, { flex: 1 }]} placeholder="Capacity" placeholderTextColor="#888" keyboardType="numeric" value={editCapacity} onChangeText={setEditCapacity} data-testid="edit-capacity" />
+              <TextInput style={[styles.input, { flex: 1 }]} placeholder="Price ($)" placeholderTextColor="#888" keyboardType="numeric" value={editPrice} onChangeText={setEditPrice} data-testid="edit-price" />
+              <TextInput style={[styles.input, { flex: 1 }]} placeholder="Duration" placeholderTextColor="#888" keyboardType="numeric" value={editDuration} onChangeText={setEditDuration} data-testid="edit-duration" />
+            </View>
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 8 }}>
+              <TouchableOpacity onPress={() => setEditingSession(null)} style={{ flex: 1, padding: 14, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center' }}>
+                <Text style={{ color: '#fff', fontWeight: '700' }}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleEdit} style={[styles.actionBtn, { flex: 1 }]} data-testid="save-edit-btn">
+                <Text style={styles.actionBtnText}>Save Changes</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>

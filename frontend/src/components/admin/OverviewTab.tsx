@@ -48,10 +48,18 @@ export const OverviewTab = ({ dashboard, leaderboard, setActiveTab }: Props) => 
 
       <Text style={s.sectionTitle}>Platform Stats</Text>
       <View style={s.statsGrid}>
-        <StatCard icon="people" label="Total Users" value={dashboard.totalUsers} color={C.teal} subtitle="All-time" growth="+12%" />
-        <StatCard icon="fitness" label="Trainers" value={dashboard.totalTrainers} color={C.orange} subtitle="Approved trainers" growth="+3%" />
-        <StatCard icon="person" label="Trainees" value={dashboard.totalTrainees} color={C.navyLight} subtitle="Active clients" growth="+8%" />
-        <StatCard icon="calendar" label="Sessions" value={dashboard.totalSessions} color={C.success} subtitle="Booked in period" growth="+5%" />
+        <TouchableOpacity onPress={() => setActiveTab('users')} data-testid="stat-total-users">
+          <StatCard icon="people" label="Total Users" value={dashboard.totalUsers} color={C.teal} subtitle="All-time" growth="+12%" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => setActiveTab('users')} data-testid="stat-trainers">
+          <StatCard icon="fitness" label="Trainers" value={dashboard.totalTrainers} color={C.orange} subtitle="Approved trainers" growth="+3%" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => setActiveTab('users')} data-testid="stat-trainees">
+          <StatCard icon="person" label="Trainees" value={dashboard.totalTrainees} color={C.navyLight} subtitle="Active clients" growth="+8%" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => setActiveTab('sessions')} data-testid="stat-sessions">
+          <StatCard icon="calendar" label="Sessions" value={dashboard.totalSessions} color={C.success} subtitle="Booked in period" growth="+5%" />
+        </TouchableOpacity>
       </View>
 
       <Text style={s.sectionTitle}>User Breakdown</Text>

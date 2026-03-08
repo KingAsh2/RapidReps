@@ -12,6 +12,9 @@ import {
   Pressable,
   Modal,
   Dimensions,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -42,14 +45,14 @@ const VERIFICATION_STEPS = [
   {
     id: 'identity',
     title: 'Identity Verification',
-    description: "Upload a valid government ID (Driver's License or Passport)",
+    description: "Use your camera to scan a valid government ID (Driver's License or Passport)",
     icon: 'id-card',
     required: true,
   },
   {
     id: 'background',
     title: 'Background Check',
-    description: 'Authorize a secure background screening through Checkr',
+    description: 'Provide your personal information so our admin team can run a background check via TruthFinder.',
     icon: 'shield-checkmark',
     required: true,
   },
@@ -115,6 +118,9 @@ export default function TrainerVerificationScreen() {
       const response = await api.get('/trainer/verification-status');
       const steps = response.data.steps || {};
       setVerificationStatus(steps);
+      // Check if user has previously submitted
+      const anySubmitted = Object.values(steps).some((s: any) => s === 'submitted' || s === 'approved');
+      if (anySubmitted) setHasEverSubmitted(true);
     } catch (err) {
       console.log('Could not load verification status, using defaults');
       setVerificationStatus({
@@ -175,7 +181,22 @@ export default function TrainerVerificationScreen() {
     try {
       setVerificationStatus(prev => ({ ...prev, [stepId]: 'uploading' }));
 
-      if (stepId === 'photo') {
+      if (stepId === 'identity') {
+        // #2: Scan ID with camera
+        const result = await ImagePicker.launchCameraAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          quality: 0.9,
+        });
+        if (!result.canceled && result.assets?.[0]) {
+          const asset = result.assets[0];
+          await submitStepToBackend(stepId, asset.uri, 'scanned_id.jpg');
+          setVerificationStatus(prev => ({ ...prev, [stepId]: 'submitted' }));
+          toast.success('ID scanned successfully!');
+        } else {
+          setVerificationStatus(prev => ({ ...prev, [stepId]: 'pending' }));
+        }
+      } else if (stepId === 'photo') {
         const result = await ImagePicker.launchImageLibraryAsync({
           mediaTypes: ImagePicker.MediaTypeOptions.Images,
           allowsEditing: true,
@@ -227,24 +248,38 @@ export default function TrainerVerificationScreen() {
   };
 
   const handleStartBackgroundCheck = () => {
-    Alert.alert(
-      'Background Check',
-      'You will be redirected to Checkr to complete your background check. This typically takes 2-5 business days.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Continue',
-          onPress: async () => {
-            await submitStepToBackend('background');
-            setVerificationStatus(prev => ({ ...prev, background: 'submitted' }));
-            toast.success('Background check started! Check your email from Checkr.');
-          },
-        },
-      ]
-    );
+    setShowPIIModal(true);
+  };
+
+  const handleSubmitPII = async () => {
+    if (!piiData.fullName || !piiData.dob || !piiData.address) {
+      toast.error('Please fill in all required fields.');
+      return;
+    }
+    try {
+      await api.post('/trainer/submit-background-pii', piiData);
+      setVerificationStatus(prev => ({ ...prev, background: 'submitted' }));
+      setShowPIIModal(false);
+      toast.success('Information submitted! Admin will run your background check.');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail || 'Failed to submit information.');
+    }
+  };
+
+  const handleMarkNotCertified = async (stepId: string) => {
+    try {
+      await submitStepToBackend(stepId, undefined, 'NOT_CERTIFIED');
+      setVerificationStatus(prev => ({ ...prev, [stepId]: 'submitted' }));
+      toast.success('Status updated. Admin has been notified.');
+    } catch (err) {
+      toast.error('Failed to update status.');
+    }
   };
 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showPIIModal, setShowPIIModal] = useState(false);
+  const [piiData, setPiiData] = useState({ fullName: '', dob: '', ssn: '', address: '' });
+  const [hasEverSubmitted, setHasEverSubmitted] = useState(false);
 
   const handleHoldSubmitStart = () => {
     holdProgress.setValue(0);
@@ -259,6 +294,7 @@ export default function TrainerVerificationScreen() {
       try {
         await api.post('/trainer/submit-all-verification');
         setShowSuccessModal(true);
+        setHasEverSubmitted(true);
       } catch (err: any) {
         toast.error( err?.response?.data?.detail || 'Failed to submit verification.');
       } finally {
@@ -311,7 +347,8 @@ export default function TrainerVerificationScreen() {
           <View style={{ width: 40 }} />
         </View>
 
-        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <Animated.View style={{ opacity: fadeAnim }}>
             {/* Progress Card */}
             <View style={styles.progressCard}>
@@ -393,33 +430,47 @@ export default function TrainerVerificationScreen() {
                       <Text style={styles.stepDescription}>{step.description}</Text>
 
                       {status !== 'approved' && status !== 'uploading' && (
-                        <TouchableOpacity
-                          style={styles.uploadButton}
-                          onPress={() => {
-                            if (step.id === 'background') {
-                              handleStartBackgroundCheck();
-                            } else {
-                              handleUploadDocument(step.id);
-                            }
-                          }}
-                          data-testid={`upload-btn-${step.id}`}
-                        >
-                          <LinearGradient
-                            colors={[COLORS.teal, '#2a3a6e']}
-                            style={styles.uploadButtonGradient}
+                        <>
+                          <TouchableOpacity
+                            style={styles.uploadButton}
+                            onPress={() => {
+                              if (step.id === 'background') {
+                                handleStartBackgroundCheck();
+                              } else {
+                                handleUploadDocument(step.id);
+                              }
+                            }}
+                            data-testid={`upload-btn-${step.id}`}
                           >
-                            <Ionicons
-                              name={step.id === 'background' ? 'open-outline' : 'cloud-upload'}
-                              size={20}
-                              color={COLORS.white}
-                            />
-                            <Text style={styles.uploadButtonText}>
-                              {status === 'submitted' ? 'Re-upload' :
-                               step.id === 'background' ? 'Start Check' :
-                               step.id === 'photo' || step.id === 'video' ? 'Select File' : 'Upload Document'}
-                            </Text>
-                          </LinearGradient>
-                        </TouchableOpacity>
+                            <LinearGradient
+                              colors={[COLORS.teal, '#2a3a6e']}
+                              style={styles.uploadButtonGradient}
+                            >
+                              <Ionicons
+                                name={step.id === 'identity' ? 'scan' : step.id === 'background' ? 'document-text' : 'cloud-upload'}
+                                size={20}
+                                color={COLORS.white}
+                              />
+                              <Text style={styles.uploadButtonText}>
+                                {status === 'submitted' ? 'Re-upload' :
+                                 step.id === 'identity' ? 'Scan ID' :
+                                 step.id === 'background' ? 'Provide Information' :
+                                 step.id === 'photo' || step.id === 'video' ? 'Select File' : 'Upload Document'}
+                              </Text>
+                            </LinearGradient>
+                          </TouchableOpacity>
+
+                          {/* Not Certified option for certification & CPR */}
+                          {(step.id === 'certification' || step.id === 'cpr') && status !== 'submitted' && (
+                            <TouchableOpacity
+                              style={{ marginTop: 10, paddingVertical: 12, borderRadius: 12, borderWidth: 1.5, borderColor: COLORS.gray, alignItems: 'center' }}
+                              onPress={() => handleMarkNotCertified(step.id)}
+                              data-testid={`not-certified-btn-${step.id}`}
+                            >
+                              <Text style={{ color: COLORS.gray, fontWeight: '700', fontSize: 14 }}>Not Certified</Text>
+                            </TouchableOpacity>
+                          )}
+                        </>
                       )}
 
                       {status === 'uploading' && (
@@ -450,8 +501,8 @@ export default function TrainerVerificationScreen() {
                 <Text style={styles.trustTitle}>Trust & Safety</Text>
               </View>
               <Text style={styles.trustText}>
-                Your documents are encrypted and stored securely. We partner with Checkr for background checks,
-                the same service used by Uber, Lyft, and other major platforms.
+                Your documents are encrypted and stored securely. We partner with TruthFinder for background checks
+                to ensure the safety of all platform users.
               </Text>
               <View style={styles.trustBadges}>
                 <View style={styles.trustBadge}>
@@ -465,8 +516,7 @@ export default function TrainerVerificationScreen() {
               </View>
             </View>
 
-            {/* Hold to Submit Button - Only show if not all submitted/approved */}
-            {!allSubmitted && (
+            {/* Hold to Submit Button - always visible */}
             <View style={styles.submitSection}>
               <Text style={styles.submitHint}>
                 {requiredComplete
@@ -498,19 +548,72 @@ export default function TrainerVerificationScreen() {
                       <Ionicons name="hand-left" size={24} color={COLORS.white} />
                     )}
                     <Text style={styles.holdButtonText}>
-                      {isSubmitting ? 'Submitting...' : 'Hold to Submit Verification'}
+                      {isSubmitting ? 'Submitting...' : hasEverSubmitted ? 'Hold for Resubmission' : 'Hold to Submit Verification'}
                     </Text>
                   </View>
                 </View>
               </Pressable>
             </View>
-            )}
 
             <View style={{ height: 100 }} />
           </Animated.View>
         </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </ImageBackground>
+
+      {/* PII Collection Modal for Background Check */}
+      <Modal visible={showPIIModal} transparent animationType="slide" data-testid="pii-modal">
+        <View style={modalStyles.overlay}>
+          <View style={[modalStyles.content, { padding: 24 }]}>
+            <Text style={modalStyles.title}>Background Check Information</Text>
+            <Text style={[modalStyles.subtitle, { marginBottom: 16 }]}>
+              Provide your information below. Our admin team will run a background check via TruthFinder.
+            </Text>
+            <TextInput
+              style={{ backgroundColor: '#F5F6F8', borderRadius: 12, padding: 14, fontSize: 15, marginBottom: 10, color: '#1a2a5e' }}
+              placeholder="Full Legal Name *"
+              placeholderTextColor="#8892b0"
+              value={piiData.fullName}
+              onChangeText={(t) => setPiiData(p => ({ ...p, fullName: t }))}
+              data-testid="pii-fullname"
+            />
+            <TextInput
+              style={{ backgroundColor: '#F5F6F8', borderRadius: 12, padding: 14, fontSize: 15, marginBottom: 10, color: '#1a2a5e' }}
+              placeholder="Date of Birth (MM/DD/YYYY) *"
+              placeholderTextColor="#8892b0"
+              value={piiData.dob}
+              onChangeText={(t) => setPiiData(p => ({ ...p, dob: t }))}
+              data-testid="pii-dob"
+            />
+            <TextInput
+              style={{ backgroundColor: '#F5F6F8', borderRadius: 12, padding: 14, fontSize: 15, marginBottom: 10, color: '#1a2a5e' }}
+              placeholder="SSN (optional)"
+              placeholderTextColor="#8892b0"
+              value={piiData.ssn}
+              onChangeText={(t) => setPiiData(p => ({ ...p, ssn: t }))}
+              secureTextEntry
+              data-testid="pii-ssn"
+            />
+            <TextInput
+              style={{ backgroundColor: '#F5F6F8', borderRadius: 12, padding: 14, fontSize: 15, marginBottom: 16, color: '#1a2a5e' }}
+              placeholder="Current Address *"
+              placeholderTextColor="#8892b0"
+              value={piiData.address}
+              onChangeText={(t) => setPiiData(p => ({ ...p, address: t }))}
+              data-testid="pii-address"
+            />
+            <TouchableOpacity onPress={handleSubmitPII} style={modalStyles.btn} data-testid="pii-submit-btn">
+              <LinearGradient colors={[COLORS.teal, COLORS.tealLight]} style={modalStyles.btnGradient}>
+                <Text style={modalStyles.btnText}>Submit Information</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setShowPIIModal(false)} style={{ marginTop: 12, alignItems: 'center' }}>
+              <Text style={{ color: COLORS.gray, fontWeight: '600', fontSize: 15 }}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* Verification Submitted Modal */}
       <Modal visible={showSuccessModal} transparent animationType="fade" data-testid="verification-success-modal">

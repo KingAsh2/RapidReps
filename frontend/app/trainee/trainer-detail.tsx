@@ -62,6 +62,7 @@ export default function TrainerDetailScreen() {
   const pressProgress = useRef(new Animated.Value(0)).current;
   const pressTimer = useRef<NodeJS.Timeout | null>(null);
   const [isHolding, setIsHolding] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   useEffect(() => {
     loadTrainerDetails();
@@ -94,6 +95,10 @@ export default function TrainerDetailScreen() {
       ]);
       setTrainer(trainerData);
       setRatings(ratingsData);
+      // Check if this trainer is in user's favorites
+      if (user?.savedTrainers?.includes(trainerId as string)) {
+        setIsFavorite(true);
+      }
     } catch (error) {
       console.error('Error loading trainer:', error);
       showAlert({
@@ -103,6 +108,16 @@ export default function TrainerDetailScreen() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggleFavorite = async () => {
+    try {
+      const res = await traineeAPI.toggleFavorite(trainerId as string);
+      setIsFavorite(res.isFavorite);
+      toast.success(res.isFavorite ? 'Added to favorites!' : 'Removed from favorites');
+    } catch (err) {
+      toast.error('Failed to update favorite');
     }
   };
 
@@ -377,8 +392,8 @@ export default function TrainerDetailScreen() {
             <Ionicons name="arrow-back" size={24} color={COLORS.white} />
           </TouchableOpacity>
           <View style={styles.headerActions}>
-            <TouchableOpacity onPress={() => {/* Toggle favorite */}} style={styles.headerBtn} data-testid="favorite-trainer-btn">
-              <Ionicons name="heart-outline" size={22} color={COLORS.white} />
+            <TouchableOpacity onPress={handleToggleFavorite} style={styles.headerBtn} data-testid="favorite-trainer-btn">
+              <Ionicons name={isFavorite ? "heart" : "heart-outline"} size={22} color={isFavorite ? COLORS.error : COLORS.white} />
             </TouchableOpacity>
             <TouchableOpacity onPress={handleMessage} style={styles.headerBtn}>
               <Ionicons name="chatbubble" size={22} color={COLORS.white} />

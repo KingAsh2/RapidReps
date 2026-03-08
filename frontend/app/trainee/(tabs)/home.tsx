@@ -820,29 +820,7 @@ export default function TraineeHomeScreen() {
             <View style={{ height: 30 }} />
           </ScrollView>
 
-          {/* Floating Action Button */}
-          <Animated.View
-            style={[
-              styles.fabContainer,
-              { transform: [{ scale: fabPulseAnim }] },
-            ]}
-          >
-            <TouchableOpacity
-              style={styles.fab}
-              onPress={() => setShowTrainingModeDialog(true)}
-              activeOpacity={0.9}
-            >
-              <LinearGradient
-                colors={['#FF6A00', '#F7931E']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.fabGradient}
-              >
-                <Ionicons name="flash" size={28} color="#FFFFFF" />
-                <Text style={styles.fabText}>START TRAINING</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          </Animated.View>
+          {/* Start Training button removed from floating position per design */}
 
           {/* Training Mode Dialog */}
           <TrainingModeDialog

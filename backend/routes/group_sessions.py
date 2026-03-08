@@ -1,5 +1,5 @@
 """Phase 5: Group workout sessions."""
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime, timezone
@@ -194,3 +194,37 @@ async def complete_group_session(session_id: str, current_user: dict = Depends(g
         {"$set": {"status": "completed", "completedAt": datetime.now(timezone.utc)}}
     )
     return {"message": "Group session completed"}
+
+
+@router.put("/{session_id}")
+async def edit_group_session(session_id: str, request: Request, current_user: dict = Depends(get_current_user)):
+    """Allow the creator trainer to edit their group session."""
+    if not ObjectId.is_valid(session_id):
+        raise HTTPException(status_code=400, detail="Invalid session ID format")
+    session = await db.group_sessions.find_one({"_id": ObjectId(session_id)})
+    if not session:
+        raise HTTPException(status_code=404, detail="Group session not found")
+    if session.get("trainerId") != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Only the creator can edit this session")
+    if session.get("status") != "upcoming":
+        raise HTTPException(status_code=400, detail="Can only edit upcoming sessions")
+
+    body = await request.json()
+    update_fields = {}
+    for field in ["title", "description", "dateTime", "durationMinutes", "locationType", "locationName", "capacity", "pricePerPersonCents"]:
+        if field in body:
+            update_fields[field] = body[field]
+
+    if "capacity" in update_fields:
+        current_participants = len(session.get("participants", []))
+        update_fields["spotsRemaining"] = update_fields["capacity"] - current_participants
+
+    if update_fields:
+        update_fields["updatedAt"] = datetime.now(timezone.utc)
+        await db.group_sessions.update_one(
+            {"_id": ObjectId(session_id)},
+            {"$set": update_fields}
+        )
+
+    updated = await db.group_sessions.find_one({"_id": ObjectId(session_id)})
+    return serialize_doc(updated)

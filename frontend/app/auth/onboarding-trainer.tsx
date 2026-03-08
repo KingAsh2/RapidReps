@@ -12,6 +12,8 @@ import {
   Modal,
   Linking,
   FlatList,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
@@ -534,9 +536,11 @@ export default function TrainerOnboardingScreen() {
       </SafeAreaView>
 
       {/* Form */}
-      <ScrollView style={styles.scrollView}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+      <ScrollView style={styles.scrollView} keyboardShouldPersistTaps="handled">
         {renderStep()}
       </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* Navigation Buttons */}
       <View style={styles.footer}>
@@ -751,8 +755,9 @@ const styles = StyleSheet.create({
   },
   helpText: {
     fontSize: 12,
-    color: Colors.textLight,
+    color: '#FFFFFF',
     marginTop: 4,
+    fontWeight: '600',
   },
   locationButton: {
     flexDirection: 'row',

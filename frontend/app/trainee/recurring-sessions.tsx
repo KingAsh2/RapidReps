@@ -42,7 +42,7 @@ export default function RecurringSessionScreen() {
   const [selectedDays, setSelectedDays] = useState<number[]>([1]); // Multiple days, Tuesday default
   const [selectedTime, setSelectedTime] = useState('07:00');
   const [recurrenceType, setRecurrenceType] = useState<'weekly' | 'biweekly'>('weekly');
-  const [numberOfWeeks, setNumberOfWeeks] = useState(4);
+  const [sessionsPerWeek, setSessionsPerWeek] = useState(2);
   const [locationType, setLocationType] = useState('outdoor');
   const [duration, setDuration] = useState(60);
   const [loading, setLoading] = useState(false);
@@ -50,14 +50,12 @@ export default function RecurringSessionScreen() {
   // Get trainer rate from params (in cents per hour)
   const trainerRateCentsPerHour = parseInt(params.rateCents as string) || 4000;
   
-  // Calculate total sessions and pricing
-  const totalSessions = selectedDays.length * numberOfWeeks;
+  // Price = trainer rate × sessions per week × duration (per week cost)
   const sessionPriceDollars = (trainerRateCentsPerHour / 100) * (duration / 60);
+  const totalSessions = sessionsPerWeek * 4; // 4 weeks default billing cycle
   const serviceFee = 2.00; // Flat $2 service fee total
   const totalBeforeFee = sessionPriceDollars * totalSessions;
   const totalWithFee = totalBeforeFee + serviceFee;
-  const trainerEarnings = totalBeforeFee * 0.80;
-  const platformEarnings = totalBeforeFee * 0.20 + serviceFee;
 
   const toggleDay = (idx: number) => {
     setSelectedDays(prev => 
@@ -83,7 +81,7 @@ export default function RecurringSessionScreen() {
           dayOfWeek: dayIdx,
           timeSlot: selectedTime,
           recurrenceType,
-          numberOfSessions: numberOfWeeks,
+          numberOfSessions: sessionsPerWeek,
         });
       }
       toast.success(`${totalSessions} recurring sessions created!`);
@@ -172,17 +170,17 @@ export default function RecurringSessionScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Number of Weeks */}
-          <Text style={styles.label}>Number of Weeks</Text>
+          {/* Sessions Per Week */}
+          <Text style={styles.label}>Sessions Per Week</Text>
           <View style={styles.toggleRow}>
-            {[4, 8, 12].map((n) => (
+            {[2, 3, 4, 5, 6, 7].map((n) => (
               <TouchableOpacity
                 key={n}
-                style={[styles.toggleBtn, numberOfWeeks === n && styles.toggleBtnActive]}
-                onPress={() => setNumberOfWeeks(n)}
-                data-testid={`count-${n}`}
+                style={[styles.toggleBtn, sessionsPerWeek === n && styles.toggleBtnActive]}
+                onPress={() => setSessionsPerWeek(n)}
+                data-testid={`sessions-${n}`}
               >
-                <Text style={[styles.toggleText, numberOfWeeks === n && styles.toggleTextActive]}>{n} Weeks</Text>
+                <Text style={[styles.toggleText, sessionsPerWeek === n && styles.toggleTextActive]}>{n}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -241,10 +239,7 @@ export default function RecurringSessionScreen() {
               <Text style={[styles.summaryText, { fontWeight: '800', color: COLORS.orange }]}>${totalWithFee.toFixed(2)}</Text>
             </View>
             <Text style={styles.summaryNote}>
-              {selectedDays.map(d => DAYS[d].slice(0, 3)).join(', ')} at {selectedTime.replace(':00', '')}:00 | {recurrenceType} | {duration} min each
-            </Text>
-            <Text style={[styles.summaryNote, { marginTop: 4 }]}>
-              Trainer earns 80% (${trainerEarnings.toFixed(2)}) | Platform 20% + fee (${platformEarnings.toFixed(2)})
+              {selectedDays.map(d => DAYS[d].slice(0, 3)).join(', ')} at {selectedTime.replace(':00', '')}:00 | {sessionsPerWeek}x/week | {duration} min each
             </Text>
           </View>
 

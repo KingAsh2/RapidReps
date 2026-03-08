@@ -604,6 +604,7 @@ class SessionResponse(BaseModel):
     trainerPhoto: Optional[str] = None
     traineePhoto: Optional[str] = None
     traineePhone: Optional[str] = None
+    isGroupSession: bool = False
 
 # Rating Models
 class RatingCreate(BaseModel):
@@ -2083,6 +2084,34 @@ async def submit_all_verification(current_user: dict = Depends(get_current_user)
     return {'success': True, 'message': 'Verification submitted for review. You will be notified once approved.'}
 
 
+@api_router.post("/trainer/submit-background-pii")
+async def submit_background_pii(request: Request, current_user: dict = Depends(get_current_user)):
+    """Submit PII for admin-run background check via TruthFinder."""
+    user_id = str(current_user['_id'])
+    body = await request.json()
+    full_name = sanitize_text(body.get('fullName', ''))
+    dob = sanitize_text(body.get('dob', ''))
+    ssn = body.get('ssn', '')  # stored encrypted in real prod
+    address = sanitize_text(body.get('address', ''))
+    if not full_name or not dob or not address:
+        raise HTTPException(status_code=400, detail="Full name, date of birth, and address are required.")
+    await db.background_check_requests.insert_one({
+        'userId': user_id,
+        'fullName': full_name,
+        'dob': dob,
+        'ssn': ssn,
+        'address': address,
+        'status': 'pending_admin_review',
+        'createdAt': datetime.utcnow(),
+    })
+    # Mark verification step as submitted
+    await db.trainer_profiles.update_one(
+        {'userId': user_id},
+        {'$set': {'verificationSteps.background': 'submitted', 'updatedAt': datetime.utcnow()}}
+    )
+    return {'success': True, 'message': 'Your information has been submitted for background check review.'}
+
+
 @api_router.get("/trainer/pricing-limits")
 async def get_trainer_pricing_limits(current_user: dict = Depends(get_current_user)):
     """
@@ -3176,7 +3205,7 @@ async def get_trainer_sessions(
     session_status: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
-    """Get sessions for a trainer with trainee info populated"""
+    """Get sessions for a trainer with trainee info populated, including group sessions"""
     user_id = str(current_user['_id'])
     query = {'trainerId': user_id}
     
@@ -3184,6 +3213,12 @@ async def get_trainer_sessions(
         query['status'] = session_status
     
     sessions = await db.sessions.find(query).sort('sessionDateTimeStart', -1).to_list(100)
+    
+    # Also fetch group sessions created by this trainer
+    group_query = {'trainerId': user_id}
+    if session_status:
+        group_query['status'] = session_status
+    group_sessions = await db.group_sessions.find(group_query).sort('dateTime', -1).to_list(50)
     
     # Collect unique trainee IDs and look up their info
     trainee_ids = list(set(s.get('traineeId') for s in sessions if s.get('traineeId')))
@@ -3204,6 +3239,21 @@ async def get_trainer_sessions(
             doc['traineePhoto'] = trainee.get('profilePhoto')
             doc['traineePhone'] = trainee.get('phone')
         results.append(SessionResponse(**doc))
+    
+    # Convert group sessions to session-like format
+    for gs in group_sessions:
+        doc = serialize_doc(gs)
+        results.append(SessionResponse(
+            id=doc.get('id', ''),
+            trainerId=doc.get('trainerId', ''),
+            traineeId='group',
+            traineeName=f"Group: {doc.get('title', 'Bootcamp')}",
+            locationType=doc.get('locationType', 'outdoor'),
+            durationMinutes=doc.get('durationMinutes', 60),
+            sessionDateTimeStart=doc.get('dateTime', ''),
+            status=doc.get('status', 'upcoming'),
+            isGroupSession=True,
+        ))
     return results
 
 @api_router.get("/trainee/sessions", response_model=List[SessionResponse])
@@ -3211,7 +3261,7 @@ async def get_trainee_sessions(
     session_status: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
-    """Get sessions for a trainee with trainer info populated"""
+    """Get sessions for a trainee with trainer info populated, including joined group sessions"""
     user_id = str(current_user['_id'])
     query = {'traineeId': user_id}
     
@@ -3220,12 +3270,21 @@ async def get_trainee_sessions(
     
     sessions = await db.sessions.find(query).sort('sessionDateTimeStart', -1).to_list(100)
     
+    # Also fetch group sessions this trainee has joined
+    group_sessions = await db.group_sessions.find({
+        'participants': user_id,
+        **({"status": session_status} if session_status else {})
+    }).sort('dateTime', -1).to_list(50)
+    
     # Collect unique trainer IDs and look up their info
-    trainer_ids = list(set(s.get('trainerId') for s in sessions if s.get('trainerId')))
+    all_trainer_ids = list(set(
+        [s.get('trainerId') for s in sessions if s.get('trainerId')] +
+        [gs.get('trainerId') for gs in group_sessions if gs.get('trainerId')]
+    ))
     trainer_map = {}
-    if trainer_ids:
+    if all_trainer_ids:
         trainer_users = await db.users.find(
-            {'_id': {'$in': [ObjectId(tid) for tid in trainer_ids if ObjectId.is_valid(tid)]}},
+            {'_id': {'$in': [ObjectId(tid) for tid in all_trainer_ids if ObjectId.is_valid(tid)]}},
             {'fullName': 1, 'profilePhoto': 1}
         ).to_list(200)
         trainer_map = {str(u['_id']): u for u in trainer_users}
@@ -3238,6 +3297,24 @@ async def get_trainee_sessions(
             doc['trainerName'] = trainer.get('fullName', 'Trainer')
             doc['trainerPhoto'] = trainer.get('profilePhoto')
         results.append(SessionResponse(**doc))
+    
+    # Convert group sessions to session-like format
+    for gs in group_sessions:
+        doc = serialize_doc(gs)
+        trainer = trainer_map.get(gs.get('trainerId', ''))
+        results.append(SessionResponse(
+            id=doc.get('id', ''),
+            trainerId=doc.get('trainerId', ''),
+            traineeId=user_id,
+            trainerName=trainer.get('fullName', 'Trainer') if trainer else doc.get('trainerName', 'Trainer'),
+            trainerPhoto=trainer.get('profilePhoto') if trainer else None,
+            traineeName=f"Group: {doc.get('title', 'Bootcamp')}",
+            locationType=doc.get('locationType', 'outdoor'),
+            durationMinutes=doc.get('durationMinutes', 60),
+            sessionDateTimeStart=doc.get('dateTime', ''),
+            status=doc.get('status', 'upcoming'),
+            isGroupSession=True,
+        ))
     return results
 
 @api_router.patch("/sessions/{session_id}/accept", response_model=SessionResponse)
@@ -4046,7 +4123,26 @@ async def trainer_connect_onboard(
                 }}
             )
         except stripe.error.StripeError as e:
-            raise HTTPException(status_code=400, detail=f"Failed to create Stripe account: {str(e)}")
+            error_msg = str(e)
+            # Handle duplicate account creation error - find existing account
+            if 'already' in error_msg.lower() or 'duplicate' in error_msg.lower():
+                # Try to find existing account by email
+                accounts = stripe.Account.list(limit=100)
+                for acct in accounts.auto_paging_iter():
+                    if acct.get('email') == current_user.get('email'):
+                        existing_account_id = acct.id
+                        await db.users.update_one(
+                            {'_id': current_user['_id']},
+                            {'$set': {
+                                'stripeConnectAccountId': acct.id,
+                                'stripeConnectOnboarded': acct.charges_enabled and acct.payouts_enabled,
+                            }}
+                        )
+                        break
+                if not existing_account_id:
+                    raise HTTPException(status_code=400, detail=f"Failed to create Stripe account: {error_msg}")
+            else:
+                raise HTTPException(status_code=400, detail=f"Failed to create Stripe account: {error_msg}")
     
     # Create onboarding link - use HTTPS for live mode
     host_url = str(request.base_url).rstrip('/')
@@ -8798,6 +8894,24 @@ async def trainer_go_offline(current_user: dict = Depends(get_current_user)):
 
 
 # --- 5. Favorite Trainer Availability ---
+@api_router.post("/trainee/toggle-favorite/{trainer_id}")
+async def toggle_favorite_trainer(trainer_id: str, current_user: dict = Depends(get_current_user)):
+    """Toggle a trainer as favorite/saved."""
+    user_doc = await db.users.find_one({'_id': current_user['_id']}, {'savedTrainers': 1})
+    saved = user_doc.get('savedTrainers', []) if user_doc else []
+    if trainer_id in saved:
+        saved.remove(trainer_id)
+        is_fav = False
+    else:
+        saved.append(trainer_id)
+        is_fav = True
+    await db.users.update_one(
+        {'_id': current_user['_id']},
+        {'$set': {'savedTrainers': saved}}
+    )
+    return {'success': True, 'isFavorite': is_fav, 'savedTrainers': saved}
+
+
 @api_router.get("/trainee/favorite-availability")
 async def get_favorite_trainer_availability(current_user: dict = Depends(get_current_user)):
     """Get availability windows for trainee's favorited trainers."""

@@ -475,6 +475,11 @@ export const traineeAPI = {
     const response = await api.get('/trainee/favorite-availability');
     return response.data;
   },
+
+  toggleFavorite: async (trainerId: string): Promise<any> => {
+    const response = await api.post(`/trainee/toggle-favorite/${trainerId}`);
+    return response.data;
+  },
 };
 
 export default api;
@@ -718,6 +723,7 @@ export const groupSessionAPI = {
   leave: async (id: string): Promise<any> => { const r = await api.post(`/group-sessions/${id}/leave`); return r.data; },
   start: async (id: string): Promise<any> => { const r = await api.post(`/group-sessions/${id}/start`); return r.data; },
   complete: async (id: string): Promise<any> => { const r = await api.post(`/group-sessions/${id}/complete`); return r.data; },
+  edit: async (id: string, data: any): Promise<any> => { const r = await api.put(`/group-sessions/${id}`, data); return r.data; },
 };
 
 // Progress Tracking

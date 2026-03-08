@@ -225,14 +225,7 @@ export default function ConfirmBookingScreen() {
               <Text style={styles.priceLabel}>Session Fee</Text>
               <Text style={styles.priceValue}>${(sessionPriceCents / 100).toFixed(2)}</Text>
             </View>
-            <View style={styles.priceRow}>
-              <Text style={styles.priceSublabel}>Trainer receives (80%)</Text>
-              <Text style={[styles.priceSublabel, { color: COLORS.success }]}>${(trainerEarnings / 100).toFixed(2)}</Text>
-            </View>
-            <View style={styles.priceRow}>
-              <Text style={styles.priceSublabel}>Platform fee (20%)</Text>
-              <Text style={styles.priceSublabel}>${(platformFeeCents / 100).toFixed(2)}</Text>
-            </View>
+            {/* Price split hidden from trainee per design */}
             <View style={styles.priceRow}>
               <Text style={styles.priceLabel}>Service Fee</Text>
               <Text style={styles.priceValue}>${(serviceFeeCents / 100).toFixed(2)}</Text>

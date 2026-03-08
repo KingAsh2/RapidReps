@@ -64,7 +64,7 @@ export default function TrainerHomeScreen() {
   const [nearbyTrainees, setNearbyTrainees] = useState<any[]>([]);
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
   const [isLiveNow, setIsLiveNow] = useState(false);
-  const [goLiveLoading, setGoLiveLoading] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [locationPermission, setLocationPermission] = useState<boolean | null>(null);
   const [bankConnected, setBankConnected] = useState<boolean | null>(null);
@@ -453,24 +453,39 @@ export default function TrainerHomeScreen() {
         <View style={styles.overlay} />
 
         <SafeAreaView style={styles.safeArea} edges={['top']}>
-          {/* Header Actions */}
+          {/* Header Actions - Hamburger Menu */}
           <View style={styles.headerActions}>
             <TouchableOpacity 
-              onPress={() => router.push('/messages')} 
+              onPress={() => setMenuVisible(!menuVisible)} 
               style={styles.headerButton}
+              data-testid="hamburger-menu-btn"
             >
-              <Ionicons name="chatbubbles" size={24} color={COLORS.white} />
-            </TouchableOpacity>
-            <TouchableOpacity 
-              onPress={() => router.push('/trainer/achievements')} 
-              style={styles.headerButton}
-            >
-              <Ionicons name="trophy" size={24} color={COLORS.yellow} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleLogout} style={styles.headerButton}>
-              <Ionicons name="log-out-outline" size={24} color={COLORS.white} />
+              <Ionicons name="menu" size={26} color={COLORS.white} />
             </TouchableOpacity>
           </View>
+
+          {/* Dropdown Menu */}
+          {menuVisible && (
+            <View style={{ position: 'absolute', top: 100, right: 20, backgroundColor: '#fff', borderRadius: 16, paddingVertical: 8, width: 220, zIndex: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 12, elevation: 10 }}>
+              <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 18, gap: 14 }} onPress={() => { setMenuVisible(false); router.push('/notifications'); }} data-testid="menu-notifications">
+                <Ionicons name="notifications" size={22} color={COLORS.orange} />
+                <Text style={{ fontSize: 15, fontWeight: '700', color: COLORS.navy }}>Notifications</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 18, gap: 14 }} onPress={() => { setMenuVisible(false); router.push('/messages'); }} data-testid="menu-messages">
+                <Ionicons name="chatbubbles" size={22} color={COLORS.teal} />
+                <Text style={{ fontSize: 15, fontWeight: '700', color: COLORS.navy }}>Messages</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 18, gap: 14 }} onPress={() => { setMenuVisible(false); router.push('/trainer/achievements'); }} data-testid="menu-achievements">
+                <Ionicons name="trophy" size={22} color={COLORS.yellow} />
+                <Text style={{ fontSize: 15, fontWeight: '700', color: COLORS.navy }}>Achievements</Text>
+              </TouchableOpacity>
+              <View style={{ height: 1, backgroundColor: '#E8ECF0', marginHorizontal: 18 }} />
+              <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 18, gap: 14 }} onPress={() => { setMenuVisible(false); handleLogout(); }} data-testid="menu-logout">
+                <Ionicons name="log-out-outline" size={22} color={COLORS.error} />
+                <Text style={{ fontSize: 15, fontWeight: '700', color: COLORS.error }}>Log Out</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           <ScrollView
             style={styles.scrollView}
@@ -495,8 +510,18 @@ export default function TrainerHomeScreen() {
                 style={styles.heroGradient}
               >
                 <View style={styles.heroGlow} />
+                {/* Profile Photo */}
+                <View style={{ alignItems: 'center', marginBottom: 12 }}>
+                  {(user as any)?.profilePhoto ? (
+                    <Image source={{ uri: (user as any).profilePhoto }} style={{ width: 72, height: 72, borderRadius: 36, borderWidth: 3, borderColor: COLORS.orange }} />
+                  ) : (
+                    <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: COLORS.orange, justifyContent: 'center', alignItems: 'center', borderWidth: 3, borderColor: 'rgba(255,255,255,0.3)' }}>
+                      <Ionicons name="person" size={36} color={COLORS.white} />
+                    </View>
+                  )}
+                </View>
                 <Text style={styles.heroTitle}>
-                  LET'S TRAIN, {user?.fullName?.split(' ')[0]?.toUpperCase() || 'COACH'}! 🔥
+                  LET'S TRAIN, {user?.fullName?.split(' ')[0]?.toUpperCase() || 'COACH'}!
                 </Text>
                 <Text style={styles.heroSubtitle}>
                   {pendingSessions.length > 0 
