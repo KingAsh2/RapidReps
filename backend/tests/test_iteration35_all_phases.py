@@ -14,7 +14,7 @@ import os
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 if not BASE_URL:
-    BASE_URL = "https://syntax-solve.preview.emergentagent.com"
+    BASE_URL = "https://trainer-ui-align.preview.emergentagent.com"
 
 
 class TestAuthAndAdmin:

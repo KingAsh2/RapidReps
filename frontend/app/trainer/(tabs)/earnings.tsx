@@ -124,9 +124,9 @@ export default function TrainerEarningsScreen() {
   if (loading) {
     return (
       <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
-        <LinearGradient colors={['rgba(26, 42, 94, 0.96)', 'rgba(26, 42, 94, 0.92)']} style={StyleSheet.absoluteFill} />
+        <LinearGradient colors={['rgba(247, 147, 30, 0.85)', 'rgba(247, 147, 30, 0.75)', 'rgba(255, 165, 38, 0.7)']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.teal} />
+          <ActivityIndicator size="large" color={COLORS.white} />
           <Text style={styles.loadingText}>Loading earnings...</Text>
         </View>
       </ImageBackground>
@@ -135,7 +135,7 @@ export default function TrainerEarningsScreen() {
 
   return (
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
-      <LinearGradient colors={['rgba(26, 42, 94, 0.96)', 'rgba(26, 42, 94, 0.92)']} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={['rgba(247, 147, 30, 0.85)', 'rgba(247, 147, 30, 0.75)', 'rgba(255, 165, 38, 0.7)']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} />
 
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
@@ -150,7 +150,7 @@ export default function TrainerEarningsScreen() {
           <ScrollView
             style={styles.content}
             showsVerticalScrollIndicator={false}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.teal} />}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.white} />}
           >
             {/* Hero Card - Pending Balance */}
             <LinearGradient
@@ -289,7 +289,7 @@ export default function TrainerEarningsScreen() {
                     <Ionicons
                       name={session.sessionType === 'virtual' ? 'videocam' : session.sessionType === 'outdoor' ? 'sunny' : 'home'}
                       size={18}
-                      color={COLORS.teal}
+                      color={COLORS.white}
                     />
                   </View>
                   <View style={styles.sessionInfo}>
@@ -331,7 +331,7 @@ export default function TrainerEarningsScreen() {
 
             {/* Revenue Split Info */}
             <View style={styles.infoCard}>
-              <Ionicons name="information-circle" size={22} color={COLORS.teal} />
+              <Ionicons name="information-circle" size={22} color={COLORS.white} />
               <View style={styles.infoContent}>
                 <Text style={styles.infoTitle}>How Earnings Work</Text>
                 <Text style={styles.infoText}>
@@ -353,10 +353,10 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   safeArea: { flex: 1 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },
-  loadingText: { color: COLORS.gray, fontSize: 14 },
+  loadingText: { color: COLORS.white, fontSize: 14, fontWeight: '600' },
   header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12 },
   headerTitle: { fontSize: 28, fontWeight: '900', color: COLORS.white, textShadowColor: 'rgba(0,0,0,0.3)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 },
-  headerSubtitle: { fontSize: 14, color: 'rgba(255,255,255,0.6)', marginTop: 2 },
+  headerSubtitle: { fontSize: 14, color: 'rgba(255,255,255,0.9)', fontWeight: '600', marginTop: 2 },
   content: { flex: 1, paddingHorizontal: 16 },
 
   // Hero Card
@@ -381,38 +381,38 @@ const styles = StyleSheet.create({
   connectedText: { fontSize: 14, fontWeight: '600', color: 'rgba(255,255,255,0.8)', flex: 1 },
 
   // Period Toggle
-  periodToggle: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 12, padding: 4, marginBottom: 16 },
-  periodBtn: { flex: 1, paddingVertical: 10, borderRadius: 10, alignItems: 'center' },
+  periodToggle: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 14, padding: 4, marginBottom: 16 },
+  periodBtn: { flex: 1, paddingVertical: 12, borderRadius: 12, alignItems: 'center' },
   periodBtnActive: { backgroundColor: COLORS.white },
-  periodBtnText: { fontSize: 14, fontWeight: '700', color: 'rgba(255,255,255,0.5)' },
+  periodBtnText: { fontSize: 14, fontWeight: '700', color: 'rgba(255,255,255,0.8)' },
   periodBtnTextActive: { color: COLORS.navy },
 
   // Summary Row
   summaryRow: { flexDirection: 'row', gap: 12, marginBottom: 16 },
-  summaryCard: { flex: 1, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 16, padding: 16 },
-  summaryLabel: { fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: '600' },
+  summaryCard: { flex: 1, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
+  summaryLabel: { fontSize: 13, color: 'rgba(255,255,255,0.8)', fontWeight: '600' },
   summaryValue: { fontSize: 24, fontWeight: '900', color: COLORS.white, marginTop: 4 },
   summarySubtext: { fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 4 },
   changeBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, marginTop: 6 },
   changeText: { fontSize: 13, fontWeight: '700' },
 
   // Chart
-  chartCard: { backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 16, padding: 18, marginBottom: 20 },
-  chartTitle: { fontSize: 14, fontWeight: '700', color: 'rgba(255,255,255,0.7)', marginBottom: 16 },
+  chartCard: { backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 16, padding: 18, marginBottom: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
+  chartTitle: { fontSize: 14, fontWeight: '700', color: 'rgba(255,255,255,0.9)', marginBottom: 16 },
   chartContainer: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-around', height: BAR_MAX_HEIGHT + 40, paddingTop: 20 },
   chartBarWrapper: { alignItems: 'center', flex: 1 },
-  chartBarValue: { fontSize: 13, color: COLORS.teal, fontWeight: '700', marginBottom: 4, height: 14 },
+  chartBarValue: { fontSize: 13, color: COLORS.white, fontWeight: '700', marginBottom: 4, height: 14 },
   chartBar: { width: 28, borderRadius: 6, minHeight: 4 },
   chartBarLabel: { fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 6, fontWeight: '600' },
 
   // Section
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, marginTop: 4 },
   sectionTitle: { fontSize: 16, fontWeight: '700', color: COLORS.white },
-  sectionCount: { fontSize: 13, fontWeight: '700', color: COLORS.teal, backgroundColor: `${COLORS.teal}20`, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10 },
+  sectionCount: { fontSize: 13, fontWeight: '700', color: COLORS.white, backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10 },
 
   // Session Card
-  sessionCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 14, padding: 14, marginBottom: 8, gap: 12 },
-  sessionIconBg: { width: 40, height: 40, borderRadius: 10, backgroundColor: `${COLORS.teal}20`, justifyContent: 'center', alignItems: 'center' },
+  sessionCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 14, padding: 14, marginBottom: 8, gap: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
+  sessionIconBg: { width: 40, height: 40, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
   sessionInfo: { flex: 1 },
   sessionName: { fontSize: 14, fontWeight: '700', color: COLORS.white },
   sessionMeta: { fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
@@ -423,14 +423,14 @@ const styles = StyleSheet.create({
   emptyText: { fontSize: 13, color: 'rgba(255,255,255,0.4)' },
 
   // Payout History
-  payoutHistoryCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 12, padding: 14, marginBottom: 8, gap: 12 },
+  payoutHistoryCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 12, padding: 14, marginBottom: 8, gap: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
   payoutStatusDot: { width: 10, height: 10, borderRadius: 5 },
   payoutHistoryInfo: { flex: 1 },
   payoutHistoryAmount: { fontSize: 15, fontWeight: '700', color: COLORS.white },
   payoutHistoryMeta: { fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
 
   // Info Card
-  infoCard: { flexDirection: 'row', backgroundColor: `${COLORS.teal}15`, borderRadius: 14, padding: 16, gap: 12, marginTop: 8 },
+  infoCard: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 14, padding: 16, gap: 12, marginTop: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
   infoContent: { flex: 1 },
   infoTitle: { fontSize: 14, fontWeight: '700', color: COLORS.white },
   infoText: { fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 18, marginTop: 4 },

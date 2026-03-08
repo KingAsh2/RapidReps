@@ -96,7 +96,7 @@ export default function SetRatesScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={[COLORS.navy, '#0f1a3e']} style={StyleSheet.absoluteFillObject} />
+      <LinearGradient colors={['rgba(247, 147, 30, 0.88)', 'rgba(247, 147, 30, 0.80)', 'rgba(255, 165, 38, 0.75)']} style={StyleSheet.absoluteFillObject} />
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} data-testid="rates-back-btn">

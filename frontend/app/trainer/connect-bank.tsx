@@ -90,7 +90,7 @@ export default function ConnectBankScreen() {
   if (checking) {
     return (
       <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
-        <LinearGradient colors={['rgba(26, 42, 94, 0.96)', 'rgba(26, 42, 94, 0.92)']} style={StyleSheet.absoluteFill} />
+        <LinearGradient colors={['rgba(247, 147, 30, 0.85)', 'rgba(247, 147, 30, 0.75)', 'rgba(255, 165, 38, 0.7)']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} />
         <View style={styles.centerContent}>
           <ActivityIndicator size="large" color={COLORS.teal} />
           <Text style={styles.checkingText}>Checking bank status...</Text>
@@ -101,7 +101,7 @@ export default function ConnectBankScreen() {
 
   return (
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
-      <LinearGradient colors={['rgba(26, 42, 94, 0.96)', 'rgba(26, 42, 94, 0.92)']} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={['rgba(247, 147, 30, 0.85)', 'rgba(247, 147, 30, 0.75)', 'rgba(255, 165, 38, 0.7)']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} />
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         {/* Header */}
         <View style={styles.header}>
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' },
+  backBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
   headerTitle: { fontSize: 20, fontWeight: '800', color: COLORS.white },
   content: { flex: 1, paddingHorizontal: 24, alignItems: 'center', paddingTop: 30 },
   iconContainer: { marginBottom: 24 },
@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
   infoCards: { width: '100%', gap: 12, marginBottom: 30 },
   infoCard: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.15)',
     borderRadius: 14,
     padding: 16,
     gap: 14,

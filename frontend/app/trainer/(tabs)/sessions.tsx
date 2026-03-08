@@ -118,7 +118,7 @@ export default function TrainerSessionsScreen() {
         <ScrollView
           style={styles.content}
           showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.teal} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.white} />}
         >
           {loading ? (
             <View style={styles.loadingBox}>
@@ -191,30 +191,30 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 4 },
   headerTitle: { fontSize: 28, fontWeight: '900', color: COLORS.white },
-  headerSubtitle: { fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
+  headerSubtitle: { fontSize: 14, fontWeight: '600', color: 'rgba(255,255,255,0.9)', marginTop: 4 },
 
   filterBar: { flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 12, gap: 8 },
-  filterTab: { flex: 1, paddingVertical: 10, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center' },
-  filterTabActive: { backgroundColor: COLORS.teal },
-  filterTabText: { fontSize: 13, fontWeight: '700', color: 'rgba(255,255,255,0.5)' },
-  filterTabTextActive: { color: COLORS.white },
+  filterTab: { flex: 1, paddingVertical: 12, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', overflow: 'hidden' },
+  filterTabActive: { backgroundColor: COLORS.white, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.15, shadowRadius: 6, elevation: 4 },
+  filterTabText: { fontSize: 13, fontWeight: '700', color: 'rgba(255,255,255,0.8)' },
+  filterTabTextActive: { color: COLORS.navy },
 
   content: { flex: 1, paddingHorizontal: 16 },
   loadingBox: { paddingTop: 60, alignItems: 'center' },
-  emptyState: { alignItems: 'center', paddingTop: 60, gap: 8 },
-  emptyTitle: { fontSize: 18, fontWeight: '700', color: COLORS.white },
-  emptySubtitle: { fontSize: 13, color: 'rgba(255,255,255,0.4)', textAlign: 'center', lineHeight: 20 },
+  emptyState: { alignItems: 'center', paddingTop: 60, gap: 8, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 20, padding: 40, marginTop: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)' },
+  emptyTitle: { fontSize: 20, fontWeight: '800', color: COLORS.white },
+  emptySubtitle: { fontSize: 14, fontWeight: '600', color: 'rgba(255,255,255,0.7)', textAlign: 'center', lineHeight: 20 },
 
-  sessionCard: { backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 16, padding: 16, marginBottom: 10 },
+  sessionCard: { backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: 18, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: 'rgba(0,0,0,0.08)', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3 },
   sessionHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   sessionIconBg: { width: 42, height: 42, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   sessionInfo: { flex: 1 },
-  sessionType: { fontSize: 15, fontWeight: '700', color: COLORS.white },
-  sessionDate: { fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
+  sessionType: { fontSize: 15, fontWeight: '700', color: COLORS.navy },
+  sessionDate: { fontSize: 13, color: COLORS.gray, marginTop: 2 },
   statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
   statusText: { fontSize: 13, fontWeight: '700' },
 
   sessionDetails: { flexDirection: 'row', gap: 10, marginTop: 12 },
-  detailChip: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(255,255,255,0.06)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
+  detailChip: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(0,0,0,0.05)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
   detailChipText: { fontSize: 13, fontWeight: '600', color: COLORS.gray },
 });

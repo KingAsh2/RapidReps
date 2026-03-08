@@ -120,7 +120,7 @@ export default function TrainerProfileScreen() {
 
   return (
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
-      <LinearGradient colors={['rgba(26, 42, 94, 0.96)', 'rgba(26, 42, 94, 0.92)']} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={['rgba(247, 147, 30, 0.85)', 'rgba(247, 147, 30, 0.75)', 'rgba(255, 165, 38, 0.7)']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} />
 
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.header}>
@@ -133,7 +133,7 @@ export default function TrainerProfileScreen() {
         <ScrollView
           style={styles.content}
           showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadProfile(); }} tintColor={COLORS.teal} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadProfile(); }} tintColor={COLORS.white} />}
         >
           {loading ? (
             <View style={styles.loadingBox}><ActivityIndicator size="large" color={COLORS.teal} /></View>
@@ -291,20 +291,20 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 8, paddingBottom: 8 },
   headerTitle: { fontSize: 28, fontWeight: '900', color: COLORS.white, textShadowColor: 'rgba(0,0,0,0.3)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 },
-  logoutBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center' },
+  logoutBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
   content: { flex: 1, paddingHorizontal: 16 },
   loadingBox: { paddingTop: 60, alignItems: 'center' },
 
   avatarSection: { alignItems: 'center', paddingVertical: 20 },
   avatarContainer: { position: 'relative' },
-  avatar: { width: 100, height: 100, borderRadius: 50, borderWidth: 3, borderColor: COLORS.teal },
-  avatarPlaceholder: { width: 100, height: 100, borderRadius: 50, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: 'rgba(255,255,255,0.2)' },
-  verifiedBadge: { position: 'absolute', bottom: 2, right: 2, width: 26, height: 26, borderRadius: 13, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: COLORS.navy },
+  avatar: { width: 100, height: 100, borderRadius: 50, borderWidth: 4, borderColor: COLORS.white },
+  avatarPlaceholder: { width: 100, height: 100, borderRadius: 50, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center', borderWidth: 4, borderColor: COLORS.white },
+  verifiedBadge: { position: 'absolute', bottom: 2, right: 2, width: 26, height: 26, borderRadius: 13, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: COLORS.white },
   name: { fontSize: 22, fontWeight: '800', color: COLORS.white, marginTop: 12 },
-  email: { fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
+  email: { fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
   statusDot: { width: 8, height: 8, borderRadius: 4 },
-  statusText: { fontSize: 13, color: 'rgba(255,255,255,0.6)', fontWeight: '600' },
+  statusText: { fontSize: 13, color: 'rgba(255,255,255,0.9)', fontWeight: '600' },
 
   shareProfileBtn: {
     flexDirection: 'row',
@@ -324,23 +324,23 @@ const styles = StyleSheet.create({
   },
 
   statsRow: { flexDirection: 'row', gap: 10, marginBottom: 20 },
-  statCard: { flex: 1, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 14, padding: 16, alignItems: 'center' },
+  statCard: { flex: 1, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 14, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
   statValue: { fontSize: 24, fontWeight: '900', color: COLORS.white },
-  statLabel: { fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 4 },
+  statLabel: { fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 4 },
 
   sectionTitle: { fontSize: 16, fontWeight: '700', color: COLORS.white, marginBottom: 12 },
 
-  menuItem: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 14, padding: 16, marginBottom: 8 },
+  menuItem: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 14, padding: 16, marginBottom: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
   menuItemText: { flex: 1, fontSize: 15, fontWeight: '600', color: COLORS.white },
 
-  bioCard: { backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 14, padding: 16, marginTop: 12 },
+  bioCard: { backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 14, padding: 16, marginTop: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
   bioTitle: { fontSize: 14, fontWeight: '700', color: COLORS.white, marginBottom: 8 },
   bioText: { fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 20 },
 
   tagSection: { marginTop: 16 },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  tag: { backgroundColor: `${COLORS.teal}20`, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
-  tagText: { fontSize: 13, fontWeight: '600', color: COLORS.teal },
+  tag: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
+  tagText: { fontSize: 13, fontWeight: '600', color: COLORS.white },
   // Streak styles
   streakCard: { borderRadius: 16, overflow: 'hidden', marginBottom: 20, shadowColor: '#FF6A00', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 6 },
   streakGradient: { padding: 16 },

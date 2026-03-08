@@ -18,7 +18,7 @@ from bson import ObjectId
 from pymongo import MongoClient
 
 # Test configuration
-BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://syntax-solve.preview.emergentagent.com')
+BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://trainer-ui-align.preview.emergentagent.com')
 BASE_URL = BASE_URL.rstrip('/')
 
 # Direct MongoDB connection for test setup/verification
