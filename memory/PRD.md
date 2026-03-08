@@ -53,10 +53,32 @@ A full-stack fitness marketplace application (React Native/Expo frontend, FastAP
 - Share Profile button on trainer profile
 - Safety section on trainee home
 
-### Deployment Fix (March 7, 2026)
-- Fixed critical syntax error in `frontend/app/trainer/verification.tsx` (Modal outside root JSX element)
-- Wrapped return JSX in React Fragment (`<>...</>`) to support sibling elements (ImageBackground + Modal)
-- TypeScript and Metro bundler compile successfully
+### 23 UI/UX Screenshot Updates (March 8, 2026)
+All 23 requested changes implemented and tested (iteration_37.json - 100% pass):
+
+1. **#1 Location text visibility** - Changed gray help text to white on orange background (onboarding-trainer.tsx)
+2. **#2 Scan ID** - Identity verification now opens camera with "Scan ID" button instead of file upload
+3. **#3 TruthFinder PII modal** - Background check collects PII (name, DOB, SSN, address) for admin review via TruthFinder, replacing Checkr
+4. **#4 Not Certified option** - Added "Not Certified" button for Fitness & CPR certifications
+5. **#5 Hold for Resubmission** - Submit button always visible; shows "Hold for Resubmission" on updates
+6. **#6 Clickable admin stat tiles** - Platform Stats tiles navigate to relevant tabs on tap
+7. **#7 Hamburger menu** - Replaced 4 header icons with single hamburger menu + dropdown (both home screens)
+8. **#8 Larger profile photo + fix name** - Hero profile photo enlarged to 90px, greeting shows actual first name
+9. **#9 Stripe Connect duplicate fix** - Backend handles existing accounts gracefully, finds by email if duplicate error
+10. **#10 Boosts audit** - Confirmed end-to-end: purchase, activation, search ranking boost, analytics tracking
+11. **#11 Referrals audit** - Confirmed end-to-end: code generation, tracking, credit system
+12. **#12 Share Profile deep link** - Updated to use `rapidreps://trainer/{id}` deep link + download link
+13. **#13 Keyboard overlap fix** - Added KeyboardAvoidingView to onboarding, verification, and profile screens
+14. **#14 Remove floating Start Training** - Removed obstructive floating action button from trainee home
+15. **#15 Push notifications audit** - Confirmed Expo Push API implementation for instant match and sessions
+16. **#16 Favorites toggle** - New `/api/trainee/toggle-favorite/{id}` endpoint + wired heart button
+17. **#17 Hide price split** - Removed trainer/platform split from trainee booking confirmation
+18. **#18 Recurring sessions redesign** - "Sessions Per Week" (2-7), price from trainer rates, no split shown
+19. **#19 Trainee sessions show bootcamps** - Group sessions appear in trainee "Upcoming" tab
+20. **#20 Achievements alignment** - Fixed tile text size and alignment
+21. **#21 Group session edit** - New PUT `/api/group-sessions/{id}` endpoint + edit modal for creator
+22. **#22 Trainer sessions show group sessions** - Group sessions appear in trainer "Upcoming" tab
+23. **#23 Login page brightness** - Reduced overlay opacity from 0.85 to 0.65
 
 ## Remaining Backlog
 - P3: SendGrid Integration (awaiting API key)
