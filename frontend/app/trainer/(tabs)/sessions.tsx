@@ -91,7 +91,7 @@ export default function TrainerSessionsScreen() {
 
   return (
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
-      <LinearGradient colors={['rgba(26, 42, 94, 0.96)', 'rgba(26, 42, 94, 0.92)']} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={['rgba(247, 147, 30, 0.88)', 'rgba(247, 147, 30, 0.80)', 'rgba(255, 165, 38, 0.75)']} style={StyleSheet.absoluteFill} />
 
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.header}>

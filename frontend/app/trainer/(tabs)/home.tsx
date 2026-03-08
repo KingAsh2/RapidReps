@@ -427,12 +427,21 @@ export default function TrainerHomeScreen() {
         style={styles.container}
         resizeMode="cover"
       >
-        {/* Dark overlay for better text readability */}
-        <View style={styles.overlay} />
+        {/* Orange gradient overlay — matching trainee home */}
+        <LinearGradient
+          colors={['rgba(247, 147, 30, 0.85)', 'rgba(247, 147, 30, 0.75)', 'rgba(255, 165, 38, 0.7)']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
 
         <SafeAreaView style={styles.safeArea} edges={['top']}>
-          {/* Header Actions - Hamburger Menu */}
-          <View style={styles.headerActions}>
+          {/* Header with Logo and Actions — matching trainee */}
+          <View style={styles.header}>
+            <View style={styles.headerLogo}>
+              <Text style={styles.logoText}>RapidReps</Text>
+            </View>
+            <View style={styles.headerActions}>
             <TouchableOpacity 
               onPress={() => { haptic.light(); setMenuVisible(!menuVisible); }} 
               style={styles.headerButton}
@@ -445,6 +454,7 @@ export default function TrainerHomeScreen() {
                 </View>
               )}
             </TouchableOpacity>
+            </View>
           </View>
 
           {/* Dropdown Menu */}
@@ -947,6 +957,23 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 4,
+  },
+  headerLogo: {
+    flex: 1,
+  },
+  logoText: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: COLORS.white,
+    letterSpacing: 0.5,
   },
   loadingContainer: {
     flex: 1,
