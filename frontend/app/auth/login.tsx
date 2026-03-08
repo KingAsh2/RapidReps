@@ -12,6 +12,7 @@ import {
   Dimensions,
   Image,
   ImageBackground,
+  ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -25,8 +26,16 @@ import { haptic } from '../../src/utils/haptics';
 
 const { width } = Dimensions.get('window');
 
-// Background image - Gym weights (strength/professional)
-const backgroundImage = require('../../assets/images/bg-gym-blue.png');
+// Match main screen brand colors exactly
+const BRAND = {
+  orange: '#FF7F00',
+  orangeLight: '#FFA526',
+  navy: '#1a2a5e',
+  white: '#FFFFFF',
+};
+
+// Same background as main screen
+const backgroundImage = require('../../assets/images/bg-battle-ropes.png');
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -38,98 +47,85 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [loginSuccess, setLoginSuccess] = useState(false);
 
-  // Animation values
-  const gradientAnim = useRef(new Animated.Value(0)).current;
-  const cardAnim = useRef(new Animated.Value(0)).current;
-  const emailFocusAnim = useRef(new Animated.Value(0)).current;
-  const passwordFocusAnim = useRef(new Animated.Value(0)).current;
-  const buttonPressAnim = useRef(new Animated.Value(1)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
+  // Animations matching main screen
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+  const logoScale = useRef(new Animated.Value(0.8)).current;
+  const pulseScale = useRef(new Animated.Value(1)).current;
+  const glowOpacity = useRef(new Animated.Value(0.6)).current;
+  const combinedLogoScale = useRef(Animated.multiply(logoScale, pulseScale)).current;
+  const emailBorderAnim = useRef(new Animated.Value(0)).current;
+  const passwordBorderAnim = useRef(new Animated.Value(0)).current;
   const lockShakeAnim = useRef(new Animated.Value(0)).current;
+  const buttonPressAnim = useRef(new Animated.Value(1)).current;
+  const animationsAlive = useRef(true);
 
   useEffect(() => {
-    // Animated gradient background
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(gradientAnim, {
-          toValue: 1,
-          duration: 3000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(gradientAnim, {
-          toValue: 0,
-          duration: 3000,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
+    // Entrance animations — same as main screen
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        friction: 8,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+      Animated.spring(logoScale, {
+        toValue: 1,
+        friction: 6,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      if (animationsAlive.current) startPulse();
+    });
 
-    // Card entrance animation
-    Animated.spring(cardAnim, {
-      toValue: 1,
-      tension: 50,
-      friction: 7,
-      useNativeDriver: true,
-    }).start();
-
-    // Pulse animation for button
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.05,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
+    return () => { animationsAlive.current = false; };
   }, []);
+
+  const startPulse = () => {
+    // Heartbeat pulse — same as main screen
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseScale, { toValue: 1.06, duration: 150, useNativeDriver: true }),
+        Animated.timing(pulseScale, { toValue: 0.98, duration: 100, useNativeDriver: true }),
+        Animated.timing(pulseScale, { toValue: 1.03, duration: 100, useNativeDriver: true }),
+        Animated.timing(pulseScale, { toValue: 1, duration: 120, useNativeDriver: true }),
+        Animated.delay(1800),
+      ])
+    ).start();
+    // Glow pulse — same as main screen
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+        Animated.timing(glowOpacity, { toValue: 0.5, duration: 500, useNativeDriver: true }),
+        Animated.timing(glowOpacity, { toValue: 0.9, duration: 200, useNativeDriver: true }),
+        Animated.timing(glowOpacity, { toValue: 0.6, duration: 600, useNativeDriver: true }),
+        Animated.delay(1200),
+      ])
+    ).start();
+  };
 
   useEffect(() => {
     if (user && activeRole && loginSuccess) {
       const timer = setTimeout(() => {
-        if (activeRole === 'admin') {
-          router.replace('/admin/dashboard');
-        } else if (activeRole === 'trainer') {
-          router.replace('/trainer/(tabs)/home');
-        } else if (activeRole === 'trainee') {
-          router.replace('/trainee/(tabs)/home');
-        }
-      }, 2500);
+        if (activeRole === 'admin') router.replace('/admin/dashboard');
+        else if (activeRole === 'trainer') router.replace('/trainer/(tabs)/home');
+        else router.replace('/trainee/(tabs)/home');
+      }, 1500);
       return () => clearTimeout(timer);
     }
   }, [user, activeRole, loginSuccess]);
 
-  const handleEmailFocus = () => {
-    Animated.spring(emailFocusAnim, {
-      toValue: 1,
-      tension: 50,
-      friction: 3,
-      useNativeDriver: false,
-    }).start();
-  };
-
-  const handleEmailBlur = () => {
-    Animated.spring(emailFocusAnim, {
-      toValue: 0,
-      tension: 50,
-      friction: 3,
-      useNativeDriver: false,
-    }).start();
-  };
+  const animateFocus = (anim: Animated.Value, toValue: number) =>
+    Animated.spring(anim, { toValue, tension: 50, friction: 3, useNativeDriver: false }).start();
 
   const handlePasswordFocus = () => {
-    Animated.spring(passwordFocusAnim, {
-      toValue: 1,
-      tension: 50,
-      friction: 3,
-      useNativeDriver: false,
-    }).start();
-    // Lock shake animation
+    animateFocus(passwordBorderAnim, 1);
     Animated.sequence([
       Animated.timing(lockShakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
       Animated.timing(lockShakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
@@ -138,180 +134,149 @@ export default function LoginScreen() {
     ]).start();
   };
 
-  const handlePasswordBlur = () => {
-    Animated.spring(passwordFocusAnim, {
-      toValue: 0,
-      tension: 50,
-      friction: 3,
-      useNativeDriver: false,
-    }).start();
-  };
-
   const handleLogin = async () => {
     if (!email || !password) {
       haptic.warning();
-      showAlert({
-        title: 'Missing Info',
-        message: 'Please enter both email and password',
-        type: 'warning',
-      });
+      showAlert({ title: 'Missing Info', message: 'Please enter both email and password', type: 'warning' });
       return;
     }
-
     haptic.medium();
-    // Button press animation
     Animated.sequence([
-      Animated.timing(buttonPressAnim, {
-        toValue: 0.95,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(buttonPressAnim, {
-        toValue: 1,
-        duration: 100,
-        useNativeDriver: true,
-      }),
+      Animated.timing(buttonPressAnim, { toValue: 0.95, duration: 100, useNativeDriver: true }),
+      Animated.timing(buttonPressAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
     ]).start();
 
     setLoading(true);
     try {
       const loggedInUser = await login(email.trim().toLowerCase(), password);
+      haptic.success();
       setLoginSuccess(true);
-      
-      // Route based on user data returned directly from login
-      if (loggedInUser.isAdmin || loggedInUser.roles?.includes('admin')) {
-        router.replace('/admin/dashboard');
-      } else if (loggedInUser.roles?.includes('trainer')) {
-        router.replace('/trainer/(tabs)/home');
-      } else {
-        router.replace('/trainee/(tabs)/home');
-      }
+      if (loggedInUser.isAdmin || loggedInUser.roles?.includes('admin')) router.replace('/admin/dashboard');
+      else if (loggedInUser.roles?.includes('trainer')) router.replace('/trainer/(tabs)/home');
+      else router.replace('/trainee/(tabs)/home');
     } catch (error: any) {
-      // v3: Show detailed error for debugging  
+      haptic.error();
       const apiDetail = error?.response?.data?.detail;
       const statusCode = error?.response?.status;
       const errorMsg = error?.message || 'Unknown error';
       let message = '';
-      
-      if (statusCode === 401) {
-        message = apiDetail || 'Invalid email or password';
-      } else if (statusCode === 429) {
-        message = 'Too many login attempts. Please wait a moment.';
-      } else if (errorMsg.includes('Network Error') || errorMsg.includes('timeout')) {
-        message = 'Unable to reach the server. Check your connection.';
-      } else if (errorMsg.startsWith('TOKEN_STORAGE_FAILED')) {
-        message = 'Login succeeded but failed to save session. Please try again.';
-      } else {
-        // Show raw error for debugging unknown issues
-        message = `[v3] ${statusCode ? 'HTTP ' + statusCode + ': ' : ''}${apiDetail || errorMsg}`;
-      }
-      
-      showAlert({
-        title: 'Login Failed',
-        message,
-        type: 'error',
-      });
+      if (statusCode === 401) message = apiDetail || 'Invalid email or password';
+      else if (statusCode === 429) message = 'Too many attempts. Please wait.';
+      else if (errorMsg.includes('Network Error')) message = 'Unable to reach server. Check your connection.';
+      else message = apiDetail || errorMsg;
+      showAlert({ title: 'Login Failed', message, type: 'error' });
     } finally {
       setLoading(false);
     }
   };
 
-  const emailBorderColor = emailFocusAnim.interpolate({
+  const emailBorderColor = emailBorderAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ['rgba(255, 255, 255, 0.3)', Colors.warning],
+    outputRange: ['rgba(255,255,255,0.25)', '#FFD700'],
   });
-
-  const passwordBorderColor = passwordFocusAnim.interpolate({
+  const passwordBorderColor = passwordBorderAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ['rgba(255, 255, 255, 0.3)', Colors.warning],
-  });
-
-  const cardTranslateY = cardAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [50, 0],
-  });
-
-  const gradientTranslateX = gradientAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 100],
+    outputRange: ['rgba(255,255,255,0.25)', '#FFD700'],
   });
 
   return (
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
-      {/* Orange overlay — brightened for readability */}
+      {/* Orange gradient overlay — matching main screen exactly */}
       <LinearGradient
-        colors={['rgba(247, 147, 30, 0.65)', 'rgba(247, 147, 30, 0.55)', 'rgba(255, 165, 38, 0.50)']}
+        colors={['rgba(255, 127, 0, 0.92)', 'rgba(255, 127, 0, 0.88)', 'rgba(255, 165, 38, 0.85)']}
         style={StyleSheet.absoluteFill}
       />
 
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.keyboardView}
+          style={{ flex: 1 }}
         >
           {/* Back Button */}
-          <TouchableOpacity onPress={() => router.replace('/')} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={28} color={Colors.white} />
+          <TouchableOpacity
+            onPress={() => router.replace('/')}
+            style={styles.backButton}
+            accessibilityLabel="Go back"
+            data-testid="login-back-btn"
+          >
+            <Ionicons name="arrow-back" size={26} color={BRAND.white} />
           </TouchableOpacity>
 
-          {/* Login Card */}
-          <Animated.View
-            style={[
-              styles.cardContainer,
-              {
-                opacity: cardAnim,
-                transform: [{ translateY: cardTranslateY }],
-              },
-            ]}
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
           >
-            {/* Glassmorphism Card */}
-            <View style={styles.glassCard}>
-              {/* Logo */}
-              <View style={styles.logoContainer}>
-                <Image 
-                  source={require('../../assets/rapidreps-logo.png')} 
+            {/* Pulsating Logo — same as main screen */}
+            <Animated.View
+              style={[
+                styles.logoSection,
+                {
+                  opacity: fadeAnim,
+                  transform: [{ scale: combinedLogoScale }],
+                },
+              ]}
+            >
+              <Animated.View style={[styles.logoBacking, { opacity: glowOpacity }]}>
+                <Image
+                  source={require('../../assets/rapidreps-logo.png')}
                   style={styles.logo}
                   resizeMode="contain"
                 />
-              </View>
+              </Animated.View>
+            </Animated.View>
 
-              {/* Header */}
-              <View style={styles.header}>
-                <Text style={styles.title}>Let's Finish What{"\n"}You Started</Text>
-                <Text style={styles.subtitle}>Time to lock in 💪⚡</Text>
+            {/* Welcome Text */}
+            <Animated.View
+              style={[
+                styles.headerSection,
+                { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+              ]}
+            >
+              <Text style={styles.welcomeTitle}>WELCOME BACK</Text>
+              <View style={styles.taglineRow}>
+                <Text style={styles.taglineBold}>LET'S GET TO WORK</Text>
+                <Text style={styles.fireEmoji}>&#x1F525;</Text>
               </View>
+            </Animated.View>
 
-              {/* Email Input */}
+            {/* Login Form */}
+            <Animated.View
+              style={[
+                styles.formSection,
+                { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+              ]}
+            >
+              {/* Email */}
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Email</Text>
                 <Animated.View
                   style={[
                     styles.inputContainer,
-                    {
-                      borderColor: emailBorderColor,
-                      borderWidth: 2,
-                    },
+                    { borderColor: emailBorderColor, borderWidth: 2 },
                   ]}
                 >
-                  <Ionicons name="mail" size={20} color={Colors.white} style={styles.inputIcon} />
+                  <View style={styles.inputIconCircle}>
+                    <Ionicons name="mail" size={18} color={BRAND.navy} />
+                  </View>
                   <TextInput
                     style={styles.input}
-                    placeholder="john@example.com"
-                    placeholderTextColor="rgba(255, 255, 255, 0.5)"
+                    placeholder="Email address"
+                    placeholderTextColor="rgba(255,255,255,0.55)"
                     value={email}
                     onChangeText={setEmail}
-                    onFocus={handleEmailFocus}
-                    onBlur={handleEmailBlur}
+                    onFocus={() => animateFocus(emailBorderAnim, 1)}
+                    onBlur={() => animateFocus(emailBorderAnim, 0)}
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoCorrect={false}
+                    accessibilityLabel="Email address input"
+                    data-testid="login-email-input"
                   />
                 </Animated.View>
               </View>
 
-              {/* Password Input */}
+              {/* Password */}
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Password</Text>
                 <Animated.View
                   style={[
                     styles.inputContainer,
@@ -322,31 +287,35 @@ export default function LoginScreen() {
                     },
                   ]}
                 >
-                  <Ionicons
-                    name={showPassword ? 'lock-open' : 'lock-closed'}
-                    size={20}
-                    color={Colors.white}
-                    style={styles.inputIcon}
-                  />
+                  <View style={styles.inputIconCircle}>
+                    <Ionicons
+                      name={showPassword ? 'lock-open' : 'lock-closed'}
+                      size={18}
+                      color={BRAND.navy}
+                    />
+                  </View>
                   <TextInput
                     style={styles.input}
-                    placeholder="••••••••"
-                    placeholderTextColor="rgba(255, 255, 255, 0.5)"
+                    placeholder="Password"
+                    placeholderTextColor="rgba(255,255,255,0.55)"
                     value={password}
                     onChangeText={setPassword}
                     onFocus={handlePasswordFocus}
-                    onBlur={handlePasswordBlur}
+                    onBlur={() => animateFocus(passwordBorderAnim, 0)}
                     secureTextEntry={!showPassword}
                     autoCapitalize="none"
+                    accessibilityLabel="Password input"
+                    data-testid="login-password-input"
                   />
                   <TouchableOpacity
                     onPress={() => setShowPassword(!showPassword)}
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
                   >
                     <Ionicons
                       name={showPassword ? 'eye-off' : 'eye'}
-                      size={20}
-                      color="rgba(255, 255, 255, 0.7)"
+                      size={22}
+                      color="rgba(255,255,255,0.8)"
                     />
                   </TouchableOpacity>
                 </Animated.View>
@@ -356,34 +325,31 @@ export default function LoginScreen() {
               <TouchableOpacity
                 onPress={() => router.push('/auth/forgot-password')}
                 style={styles.forgotButton}
+                accessibilityLabel="Forgot password"
               >
                 <Text style={styles.forgotText}>Forgot password?</Text>
               </TouchableOpacity>
 
-              {/* Login Button */}
-              <View style={styles.loginButtonContainer}>
-                <AnimatedPillButton
-                  title="Log In"
-                  onPress={handleLogin}
-                  loading={loading}
-                  disabled={loading}
-                  icon="flash"
-                  showArrow={false}
-                  testID="login-submit-btn"
-                />
-              </View>
+              {/* Login Button — using AnimatedPillButton to match main screen */}
+              <AnimatedPillButton
+                title="Log In"
+                onPress={handleLogin}
+                loading={loading}
+                disabled={loading}
+                icon="flash"
+                showArrow={false}
+                testID="login-submit-btn"
+              />
 
               {/* Sign Up Link */}
               <View style={styles.signupContainer}>
                 <Text style={styles.signupText}>Don't have an account? </Text>
-                <TouchableOpacity onPress={() => router.push('/auth/signup')}>
+                <TouchableOpacity onPress={() => router.push('/auth/signup')} accessibilityLabel="Sign up">
                   <Text style={styles.signupLink}>Sign Up</Text>
                 </TouchableOpacity>
               </View>
-              {/* Build version indicator */}
-              <Text style={styles.versionText}>v3</Text>
-            </View>
-          </Animated.View>
+            </Animated.View>
+          </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
     </ImageBackground>
@@ -393,135 +359,135 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.navy,
-  },
-  gradientBackground: {
-    ...StyleSheet.absoluteFillObject,
-    width: width * 2,
+    backgroundColor: BRAND.orange,
   },
   safeArea: {
     flex: 1,
   },
-  keyboardView: {
-    flex: 1,
-    padding: 20,
-    justifyContent: 'center',
-  },
   backButton: {
     position: 'absolute',
-    top: 60,
-    left: 20,
+    top: 12,
+    left: 16,
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,
   },
-  cardContainer: {
-    width: '100%',
-    maxWidth: 400,
-    alignSelf: 'center',
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 60,
+    paddingBottom: 30,
   },
-  glassCard: {
-    backgroundColor: 'transparent',
-    borderRadius: 24,
-    padding: 32,
-    borderWidth: 0,
-  },
-  logoContainer: {
+  // Logo — same as main screen
+  logoSection: {
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 8,
+  },
+  logoBacking: {
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: 100,
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 20,
+    elevation: 10,
   },
   logo: {
-    width: 120,
-    height: 60,
+    width: width * 0.38,
+    height: width * 0.38,
+    maxWidth: 160,
+    maxHeight: 160,
   },
-  header: {
-    marginBottom: 32,
+  // Header text — matching main screen tagline style
+  headerSection: {
     alignItems: 'center',
+    marginBottom: 28,
   },
-  title: {
-    fontSize: 32,
+  welcomeTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: BRAND.white,
+    letterSpacing: 2,
+  },
+  taglineRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  taglineBold: {
+    fontSize: 24,
     fontWeight: '900',
-    color: Colors.white,
-    textAlign: 'center',
-    lineHeight: 38,
-    marginBottom: 8,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    color: BRAND.navy,
+    letterSpacing: 1,
   },
-  subtitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: Colors.white,
-    textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
+  fireEmoji: {
+    fontSize: 24,
+    marginLeft: 8,
+  },
+  // Form
+  formSection: {
+    gap: 4,
   },
   inputGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: Colors.white,
-    marginBottom: 8,
-    letterSpacing: 0.5,
+    marginBottom: 14,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
     borderRadius: 16,
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     height: 56,
+    gap: 12,
   },
-  inputIcon: {
-    marginRight: 12,
+  inputIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: BRAND.white,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   input: {
     flex: 1,
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.white,
+    color: BRAND.white,
   },
   forgotButton: {
     alignSelf: 'flex-end',
-    marginBottom: 24,
+    marginBottom: 20,
+    paddingVertical: 4,
   },
   forgotText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: Colors.white,
+    fontWeight: '700',
+    color: BRAND.white,
     textDecorationLine: 'underline',
-  },
-  loginButtonContainer: {
-    marginBottom: 24,
   },
   signupContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: 20,
   },
   signupText: {
     fontSize: 14,
     fontWeight: '600',
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: 'rgba(255, 255, 255, 0.85)',
   },
   signupLink: {
     fontSize: 14,
     fontWeight: '900',
-    color: Colors.white,
+    color: BRAND.white,
     textDecorationLine: 'underline',
-  },
-  versionText: {
-    fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.3)',
-    textAlign: 'center',
-    marginTop: 12,
   },
 });
