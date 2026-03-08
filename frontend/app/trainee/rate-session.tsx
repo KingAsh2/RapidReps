@@ -18,6 +18,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useAlert } from '../../src/contexts/AlertContext';
+import { haptic } from '../../src/utils/haptics';
 
 // Brand colors
 const COLORS = {
@@ -29,7 +30,7 @@ const COLORS = {
   navy: '#1a2a5e',
   white: '#FFFFFF',
   offWhite: '#FAFBFC',
-  gray: '#8892b0',
+  gray: '#5a6785',
   grayLight: '#E8ECF0',
   gold: '#FFD700',
   goldDark: '#FFA500',
@@ -79,6 +80,7 @@ export default function RateSessionScreen() {
   }, []);
 
   const handleStarPress = (star: number) => {
+    haptic.selection();
     setRating(star);
     // Bounce animation on selected star
     Animated.sequence([
@@ -89,6 +91,7 @@ export default function RateSessionScreen() {
 
   const handleSubmit = async () => {
     if (rating === 0) {
+      haptic.warning();
       showAlert({
         title: 'Rating Required',
         message: 'Please select a star rating',

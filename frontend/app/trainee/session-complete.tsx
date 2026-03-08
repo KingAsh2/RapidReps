@@ -194,7 +194,7 @@ export default function SessionCompleteScreen() {
             style={styles.submitButton}
           >
             <LinearGradient
-              colors={submitting || rating === 0 ? ['#CCCCCC', '#999999'] : [Colors.secondary, Colors.primary]}
+              colors={submitting || rating === 0 ? ['#7a8aac', '#999999'] : [Colors.secondary, Colors.primary]}
               style={styles.submitButtonGradient}
             >
               <Text style={styles.submitButtonText}>

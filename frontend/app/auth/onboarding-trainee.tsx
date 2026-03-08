@@ -42,7 +42,7 @@ const COLORS = {
   navy: '#1a2a5e',
   white: '#FFFFFF',
   offWhite: '#FAFBFC',
-  gray: '#8892b0',
+  gray: '#5a6785',
   grayLight: '#E8ECF0',
   success: '#00C853',
 };
@@ -814,7 +814,7 @@ const styles = StyleSheet.create({
     padding: 2,
   },
   helperText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '500',
     color: COLORS.gray,
     textAlign: 'center',

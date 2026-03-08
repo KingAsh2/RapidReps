@@ -470,7 +470,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   valuePropText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: BRAND.white,
     textAlign: 'center',
@@ -513,7 +513,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   termsText: {
-    fontSize: 12,
+    fontSize: 13,
     color: 'rgba(255,255,255,0.8)',
     textAlign: 'center',
     marginTop: 8,

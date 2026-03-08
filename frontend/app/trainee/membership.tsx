@@ -32,7 +32,7 @@ const COLORS = {
   teal: '#1a2a5e',
   navy: '#1a2a5e',
   white: '#FFFFFF',
-  gray: '#8892b0',
+  gray: '#5a6785',
   grayLight: '#F5F6F8',
   success: '#00C853',
   warning: '#FFB300',
@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
 
   activeCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: `${COLORS.success}15`, borderRadius: 14, padding: 16, marginBottom: 20, borderWidth: 1, borderColor: `${COLORS.success}30` },
   activeTitle: { fontSize: 16, fontWeight: '700', color: COLORS.success },
-  activeSubtitle: { fontSize: 12, color: COLORS.gray, marginTop: 2 },
+  activeSubtitle: { fontSize: 13, color: COLORS.gray, marginTop: 2 },
 
   sectionTitle: { fontSize: 18, fontWeight: '700', color: COLORS.white, marginBottom: 14 },
   benefitRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 12 },
@@ -277,5 +277,5 @@ const styles = StyleSheet.create({
   subscribeBtn: { borderRadius: 16, overflow: 'hidden' },
   subscribeBtnGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 18, gap: 10 },
   subscribeBtnText: { fontSize: 17, fontWeight: '800', color: COLORS.navy },
-  cancelNote: { fontSize: 12, color: COLORS.gray, textAlign: 'center', marginTop: 8 },
+  cancelNote: { fontSize: 13, color: COLORS.gray, textAlign: 'center', marginTop: 8 },
 });

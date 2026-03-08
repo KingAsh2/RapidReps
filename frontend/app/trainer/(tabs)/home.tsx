@@ -25,6 +25,7 @@ import * as Location from 'expo-location';
 import { useAlert } from '../../../src/contexts/AlertContext';
 import { useNotifications } from '../../../src/contexts/NotificationContext';
 import { toast } from '../../../src/utils/toast';
+import { haptic } from '../../../src/utils/haptics';
 
 const { width } = Dimensions.get('window');
 
@@ -41,7 +42,7 @@ const COLORS = {
   navyLight: '#2a3a6e',
   white: '#FFFFFF',
   offWhite: '#FAFBFC',
-  gray: '#8892b0',
+  gray: '#5a6785',
   grayLight: '#E8ECF0',
   success: '#00C853',
   successDark: '#00A844',
@@ -433,7 +434,7 @@ export default function TrainerHomeScreen() {
           {/* Header Actions - Hamburger Menu */}
           <View style={styles.headerActions}>
             <TouchableOpacity 
-              onPress={() => setMenuVisible(!menuVisible)} 
+              onPress={() => { haptic.light(); setMenuVisible(!menuVisible); }} 
               style={styles.headerButton}
               data-testid="hamburger-menu-btn"
             >
@@ -452,7 +453,7 @@ export default function TrainerHomeScreen() {
               <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 18, gap: 14 }} onPress={() => { setMenuVisible(false); router.push('/notifications'); }} data-testid="menu-notifications">
                 <Ionicons name="notifications" size={22} color={COLORS.orange} />
                 <Text style={{ fontSize: 15, fontWeight: '700', color: COLORS.navy }}>Notifications</Text>
-                {unreadCount > 0 && <View style={{ backgroundColor: COLORS.error, borderRadius: 10, paddingHorizontal: 6, paddingVertical: 2 }}><Text style={{ color: '#fff', fontSize: 11, fontWeight: '800' }}>{unreadCount}</Text></View>}
+                {unreadCount > 0 && <View style={{ backgroundColor: COLORS.error, borderRadius: 10, paddingHorizontal: 6, paddingVertical: 2 }}><Text style={{ color: '#fff', fontSize: 13, fontWeight: '800' }}>{unreadCount}</Text></View>}
               </TouchableOpacity>
               <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 18, gap: 14 }} onPress={() => { setMenuVisible(false); router.push('/messages'); }} data-testid="menu-messages">
                 <Ionicons name="chatbubbles" size={22} color={COLORS.teal} />
@@ -989,7 +990,7 @@ const styles = StyleSheet.create({
   },
   notifBadgeText: {
     color: '#FFF',
-    fontSize: 10,
+    fontSize: 13,
     fontWeight: '800',
   },
   scrollView: {
@@ -1141,7 +1142,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   earningsStatLabel: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: 'rgba(255,255,255,0.8)',
     marginBottom: 4,
@@ -1181,7 +1182,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   quickActionText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: COLORS.navy,
     textAlign: 'center',
@@ -1274,7 +1275,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   pendingBadgeText: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '800',
     color: COLORS.white,
     letterSpacing: 0.5,
@@ -1305,7 +1306,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   tapHintText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: COLORS.navy,
   },
@@ -1381,7 +1382,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   confirmedBadgeText: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '800',
     color: COLORS.white,
     letterSpacing: 0.5,
@@ -1453,7 +1454,7 @@ const styles = StyleSheet.create({
     color: COLORS.navy,
   },
   traineeCardGoal: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '500',
     color: COLORS.gray,
     marginTop: 2,
@@ -1468,7 +1469,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   distanceText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: COLORS.white,
   },

@@ -24,7 +24,7 @@ const COLORS = {
   tealLight: '#2a3a6e',
   navy: '#1a2a5e',
   white: '#FFFFFF',
-  gray: '#8892b0',
+  gray: '#5a6785',
 };
 
 const backgroundImage = require('../../../assets/images/bg-gym-blue.png');
@@ -184,15 +184,15 @@ const styles = StyleSheet.create({
   conversationContent: { flex: 1 },
   conversationHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
   userName: { fontSize: 16, fontWeight: '700', color: '#1a2a5e' },
-  time: { fontSize: 12, color: '#8892b0', fontWeight: '500' },
+  time: { fontSize: 13, color: '#5a6785', fontWeight: '500' },
   messagePreview: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  previewText: { flex: 1, fontSize: 14, color: '#8892b0', marginRight: 8 },
+  previewText: { flex: 1, fontSize: 14, color: '#5a6785', marginRight: 8 },
   unreadText: { fontWeight: '600', color: '#1a2a5e' },
   unreadBadge: { backgroundColor: '#FF7F00', borderRadius: 12, minWidth: 24, height: 24, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 8 },
-  unreadCount: { fontSize: 12, fontWeight: '700', color: '#fff' },
+  unreadCount: { fontSize: 13, fontWeight: '700', color: '#fff' },
   emptyCard: { marginTop: 40, borderRadius: 20, overflow: 'hidden', backgroundColor: '#fff', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 5 },
   emptyContent: { padding: 40, alignItems: 'center' },
   emptyIconBg: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,127,0,0.1)', justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
   emptyTitle: { fontSize: 20, fontWeight: '800', color: '#1a2a5e', marginBottom: 8 },
-  emptySubtext: { fontSize: 14, color: '#8892b0', textAlign: 'center', lineHeight: 20 },
+  emptySubtext: { fontSize: 14, color: '#5a6785', textAlign: 'center', lineHeight: 20 },
 });

@@ -29,7 +29,7 @@ const COLORS = {
   navy: '#1a2a5e',
   white: '#FFFFFF',
   offWhite: '#F8F9FA',
-  gray: '#8892b0',
+  gray: '#5a6785',
   grayLight: '#E8ECF0',
   success: '#00D26A',
   error: '#FF4757',

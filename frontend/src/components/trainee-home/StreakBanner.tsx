@@ -27,5 +27,5 @@ const styles = StyleSheet.create({
   container: { borderRadius: 16, overflow: 'hidden', marginBottom: 16 },
   gradient: { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 14 },
   title: { fontSize: 18, fontWeight: '900', color: '#fff' },
-  sub: { fontSize: 12, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
+  sub: { fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
 });

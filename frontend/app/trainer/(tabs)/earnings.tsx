@@ -32,7 +32,7 @@ const COLORS = {
   navy: '#1a2a5e',
   navyLight: '#243b7f',
   white: '#FFFFFF',
-  gray: '#8892b0',
+  gray: '#5a6785',
   grayLight: '#F5F6F8',
   success: '#00C853',
   successLight: '#69F0AE',
@@ -305,7 +305,7 @@ export default function TrainerEarningsScreen() {
               <View style={styles.emptyBox}>
                 <Ionicons name="barbell-outline" size={36} color="rgba(255,255,255,0.3)" />
                 <Text style={styles.emptyText}>No completed sessions yet</Text>
-                <Text style={[styles.emptyText, { fontSize: 11, marginTop: 4 }]}>Complete sessions to start earning and request payouts.</Text>
+                <Text style={[styles.emptyText, { fontSize: 13, marginTop: 4 }]}>Complete sessions to start earning and request payouts.</Text>
               </View>
             )}
 
@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
   heroBottom: { flexDirection: 'row' },
   heroStat: { flex: 1 },
   heroStatDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.2)', marginHorizontal: 16 },
-  heroStatLabel: { fontSize: 12, color: 'rgba(255,255,255,0.6)' },
+  heroStatLabel: { fontSize: 13, color: 'rgba(255,255,255,0.6)' },
   heroStatValue: { fontSize: 18, fontWeight: '800', color: COLORS.white, marginTop: 2 },
 
   // Payout Button
@@ -390,20 +390,20 @@ const styles = StyleSheet.create({
   // Summary Row
   summaryRow: { flexDirection: 'row', gap: 12, marginBottom: 16 },
   summaryCard: { flex: 1, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 16, padding: 16 },
-  summaryLabel: { fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: '600' },
+  summaryLabel: { fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: '600' },
   summaryValue: { fontSize: 24, fontWeight: '900', color: COLORS.white, marginTop: 4 },
-  summarySubtext: { fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 4 },
+  summarySubtext: { fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 4 },
   changeBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, marginTop: 6 },
-  changeText: { fontSize: 11, fontWeight: '700' },
+  changeText: { fontSize: 13, fontWeight: '700' },
 
   // Chart
   chartCard: { backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 16, padding: 18, marginBottom: 20 },
   chartTitle: { fontSize: 14, fontWeight: '700', color: 'rgba(255,255,255,0.7)', marginBottom: 16 },
   chartContainer: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-around', height: BAR_MAX_HEIGHT + 40, paddingTop: 20 },
   chartBarWrapper: { alignItems: 'center', flex: 1 },
-  chartBarValue: { fontSize: 10, color: COLORS.teal, fontWeight: '700', marginBottom: 4, height: 14 },
+  chartBarValue: { fontSize: 13, color: COLORS.teal, fontWeight: '700', marginBottom: 4, height: 14 },
   chartBar: { width: 28, borderRadius: 6, minHeight: 4 },
-  chartBarLabel: { fontSize: 10, color: 'rgba(255,255,255,0.5)', marginTop: 6, fontWeight: '600' },
+  chartBarLabel: { fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 6, fontWeight: '600' },
 
   // Section
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, marginTop: 4 },
@@ -415,7 +415,7 @@ const styles = StyleSheet.create({
   sessionIconBg: { width: 40, height: 40, borderRadius: 10, backgroundColor: `${COLORS.teal}20`, justifyContent: 'center', alignItems: 'center' },
   sessionInfo: { flex: 1 },
   sessionName: { fontSize: 14, fontWeight: '700', color: COLORS.white },
-  sessionMeta: { fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
+  sessionMeta: { fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
   sessionEarning: { fontSize: 16, fontWeight: '800', color: COLORS.success },
 
   // Empty
@@ -427,12 +427,12 @@ const styles = StyleSheet.create({
   payoutStatusDot: { width: 10, height: 10, borderRadius: 5 },
   payoutHistoryInfo: { flex: 1 },
   payoutHistoryAmount: { fontSize: 15, fontWeight: '700', color: COLORS.white },
-  payoutHistoryMeta: { fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
+  payoutHistoryMeta: { fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
 
   // Info Card
   infoCard: { flexDirection: 'row', backgroundColor: `${COLORS.teal}15`, borderRadius: 14, padding: 16, gap: 12, marginTop: 8 },
   infoContent: { flex: 1 },
   infoTitle: { fontSize: 14, fontWeight: '700', color: COLORS.white },
-  infoText: { fontSize: 12, color: 'rgba(255,255,255,0.6)', lineHeight: 18, marginTop: 4 },
+  infoText: { fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 18, marginTop: 4 },
 
 });

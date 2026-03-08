@@ -39,7 +39,7 @@ const COLORS = {
   navyLight: '#2a3a6e',
   white: '#FFFFFF',
   offWhite: '#FAFBFC',
-  gray: '#8892b0',
+  gray: '#5a6785',
   grayLight: '#E8ECF0',
   success: '#00C853',
   error: '#FF4757',
@@ -605,7 +605,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.teal,
   },
   tabBadgeText: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '800',
     color: COLORS.white,
   },
@@ -699,7 +699,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.error,
   },
   statusText: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '800',
     color: COLORS.white,
     letterSpacing: 0.5,

@@ -9,7 +9,7 @@ const COLORS = {
   teal: '#1a2a5e',
   navy: '#1a2a5e',
   white: '#FFFFFF',
-  gray: '#8892b0',
+  gray: '#5a6785',
 };
 
 export default function TrainerTabsLayout() {
@@ -34,7 +34,7 @@ export default function TrainerTabsLayout() {
         tabBarActiveTintColor: COLORS.orange,
         tabBarInactiveTintColor: COLORS.gray,
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 13,
           fontWeight: '700',
         },
       }}
@@ -43,6 +43,7 @@ export default function TrainerTabsLayout() {
         name="home"
         options={{
           title: 'Home',
+          tabBarAccessibilityLabel: 'Trainer home tab',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home" size={size} color={color} />
           ),
@@ -52,6 +53,7 @@ export default function TrainerTabsLayout() {
         name="sessions"
         options={{
           title: 'Sessions',
+          tabBarAccessibilityLabel: 'My sessions tab',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="calendar" size={size} color={color} />
           ),
@@ -61,8 +63,9 @@ export default function TrainerTabsLayout() {
         name="messages"
         options={{
           title: 'Messages',
+          tabBarAccessibilityLabel: 'Messages tab',
           tabBarBadge: unreadMessageCount > 0 ? unreadMessageCount : undefined,
-          tabBarBadgeStyle: { backgroundColor: COLORS.orange, fontSize: 10, fontWeight: '700' },
+          tabBarBadgeStyle: { backgroundColor: COLORS.orange, fontSize: 13, fontWeight: '700' },
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="chatbubbles" size={size} color={color} />
           ),
@@ -72,6 +75,7 @@ export default function TrainerTabsLayout() {
         name="earnings"
         options={{
           title: 'Earnings',
+          tabBarAccessibilityLabel: 'Earnings tab',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="wallet" size={size} color={color} />
           ),
@@ -81,6 +85,7 @@ export default function TrainerTabsLayout() {
         name="profile"
         options={{
           title: 'Profile',
+          tabBarAccessibilityLabel: 'Trainer profile tab',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person-circle" size={size} color={color} />
           ),

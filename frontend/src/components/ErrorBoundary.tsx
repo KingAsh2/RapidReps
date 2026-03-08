@@ -67,5 +67,5 @@ const styles = StyleSheet.create({
   btn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#1a2a5e', paddingHorizontal: 28, paddingVertical: 14, borderRadius: 12 },
   btnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   debugBox: { marginTop: 20, maxHeight: 120, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: 12, width: '100%' },
-  debugText: { fontSize: 12, color: '#FF4444', fontFamily: 'monospace' },
+  debugText: { fontSize: 13, color: '#FF4444', fontFamily: 'monospace' },
 });

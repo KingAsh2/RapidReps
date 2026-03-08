@@ -18,7 +18,7 @@ const COLORS = {
   orangeHot: '#FF6A00',
   navy: '#1a2a5e',
   white: '#FFFFFF',
-  gray: '#8892b0',
+  gray: '#5a6785',
   grayLight: '#F0F2F5',
   success: '#2ECC71',
 };
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(46,204,113,0.2)', borderRadius: 8,
     paddingHorizontal: 10, paddingVertical: 4, marginLeft: 'auto',
   },
-  earningsText: { fontSize: 12, fontWeight: '700', color: COLORS.success },
+  earningsText: { fontSize: 13, fontWeight: '700', color: COLORS.success },
   infoCard: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 10,
     backgroundColor: 'rgba(31,184,180,0.1)', borderRadius: 12,

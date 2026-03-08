@@ -21,6 +21,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AnimatedPillButton } from '../../src/components/AnimatedPillButton';
+import { haptic } from '../../src/utils/haptics';
 
 const { width } = Dimensions.get('window');
 
@@ -40,7 +41,7 @@ const COLORS = {
   navyLight: '#2a3a6e',
   white: '#FFFFFF',
   offWhite: '#FAFBFC',
-  gray: '#8892b0',
+  gray: '#5a6785',
   grayLight: '#E8ECF0',
   border: '#E0E4E8',
 };
@@ -570,7 +571,7 @@ export default function SignupScreen() {
                 disabled={loading}
                 icon="rocket"
                 showArrow={false}
-                gradientColors={loading ? ['#CCCCCC', '#999999'] as const : [COLORS.orangeHot, COLORS.orangeGlow] as const}
+                gradientColors={loading ? ['#7a8aac', '#999999'] as const : [COLORS.orangeHot, COLORS.orangeGlow] as const}
                 testID="signup-submit-btn"
               />
             </Animated.View>
@@ -723,7 +724,7 @@ const styles = StyleSheet.create({
     color: COLORS.navy,
   },
   helperText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '500',
     color: COLORS.gray,
     marginTop: 6,
@@ -847,7 +848,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   termsText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '500',
     color: 'rgba(255,255,255,0.8)',
     textAlign: 'center',
@@ -897,7 +898,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   referralHint: {
-    fontSize: 12,
+    fontSize: 13,
     color: COLORS.orangeLight,
     marginTop: 6,
     marginLeft: 4,

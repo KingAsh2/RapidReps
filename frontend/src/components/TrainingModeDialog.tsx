@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.secondary,
   },
   optionBadgeText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '800',
     color: Colors.white,
     letterSpacing: 0.5,

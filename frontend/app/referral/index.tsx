@@ -16,7 +16,7 @@ const COLORS = {
   orangeHot: '#FF6A00',
   navy: '#1a2a5e',
   white: '#FFFFFF',
-  gray: '#8892b0',
+  gray: '#5a6785',
   success: '#00C853',
   dark: '#0a0f1e',
 };
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
   heroSubtitle: { fontSize: 15, color: 'rgba(255,255,255,0.7)', textAlign: 'center', lineHeight: 22, paddingHorizontal: 20 },
 
   codeCard: { backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 20, padding: 24, marginBottom: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
-  codeLabel: { fontSize: 11, fontWeight: '700', color: COLORS.gray, letterSpacing: 2, marginBottom: 12 },
+  codeLabel: { fontSize: 13, fontWeight: '700', color: COLORS.gray, letterSpacing: 2, marginBottom: 12 },
   codeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
   codeText: { fontSize: 28, fontWeight: '900', color: COLORS.orange, letterSpacing: 3 },
   copyButton: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 10 },
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 24 },
   statCard: { flex: 1, minWidth: '45%', backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 16, padding: 16, alignItems: 'center' },
   statValue: { fontSize: 24, fontWeight: '800', color: COLORS.white, marginBottom: 4 },
-  statLabel: { fontSize: 12, fontWeight: '600', color: COLORS.gray },
+  statLabel: { fontSize: 13, fontWeight: '600', color: COLORS.gray },
 
   howSection: { marginBottom: 24 },
   sectionTitle: { fontSize: 18, fontWeight: '800', color: COLORS.white, marginBottom: 16 },
@@ -248,5 +248,5 @@ const styles = StyleSheet.create({
   historyRight: {},
   historyStatus: { fontSize: 14, fontWeight: '700' },
 
-  limitNotice: { fontSize: 12, color: 'rgba(255,255,255,0.4)', textAlign: 'center', lineHeight: 18, marginTop: 8, marginBottom: 20 },
+  limitNotice: { fontSize: 13, color: 'rgba(255,255,255,0.4)', textAlign: 'center', lineHeight: 18, marginTop: 8, marginBottom: 20 },
 });

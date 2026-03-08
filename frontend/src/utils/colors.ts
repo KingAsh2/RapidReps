@@ -39,14 +39,14 @@ export const Colors = {
   warning: '#FFB300',
   warningLight: '#FFF8E1',
   
-  // TEXT
+  // TEXT (508 compliant - all meet 4.5:1 contrast ratio on white)
   text: '#1a2a5e',
   textPrimary: '#1a2a5e',
-  textSecondary: '#5a6785',
-  textLight: '#8892b0',
-  textMuted: '#8892b0',
+  textSecondary: '#4a5578',   // Upgraded from #5a6785 for better contrast
+  textLight: '#5a6785',       // Upgraded from #8892b0 (was 3.1:1, now 4.6:1)
+  textMuted: '#5a6785',       // Upgraded from #8892b0
   textWhite: '#FFFFFF',
-  gray: '#8892b0',
+  gray: '#5a6785',            // Upgraded from #8892b0
   
   // UI ELEMENTS
   border: '#E8ECF0',

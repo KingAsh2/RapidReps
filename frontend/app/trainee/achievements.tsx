@@ -497,7 +497,7 @@ export default function TrainerAchievementsScreen() {
               <View style={styles.streakBannerRow}>
                 <Animated.View style={{ transform: [{ scale: streakFireAnim }] }}>
                   <View style={styles.streakBannerFireBg}>
-                    <Ionicons name="flame" size={32} color={streakData.currentStreak >= 2 ? '#FF6A00' : '#999'} />
+                    <Ionicons name="flame" size={32} color={streakData.currentStreak >= 2 ? '#FF6A00' : '#5a6785'} />
                   </View>
                 </Animated.View>
                 <View style={{ flex: 1 }}>
@@ -653,7 +653,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: 'rgba(255,255,255,0.9)',
   },
@@ -773,7 +773,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.success,
   },
   progressText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: Colors.text,
   },
@@ -788,7 +788,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   rewardText: {
-    fontSize: 10,
+    fontSize: 13,
     fontWeight: '900',
     color: Colors.white,
   },
@@ -955,15 +955,15 @@ const styles = StyleSheet.create({
   streakBannerRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   streakBannerFireBg: { width: 54, height: 54, borderRadius: 27, backgroundColor: 'rgba(255,255,255,0.25)', justifyContent: 'center', alignItems: 'center' },
   streakBannerTitle: { fontSize: 20, fontWeight: '900', color: Colors.white },
-  streakBannerSub: { fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.8)', marginTop: 2 },
+  streakBannerSub: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.8)', marginTop: 2 },
   streakBannerLevel: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10 },
-  streakBannerLevelText: { fontSize: 10, fontWeight: '800', color: Colors.white, letterSpacing: 0.5 },
+  streakBannerLevelText: { fontSize: 13, fontWeight: '800', color: Colors.white, letterSpacing: 0.5 },
   streakBannerStats: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 14, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 12, padding: 12 },
   streakBannerStat: { alignItems: 'center' },
   streakBannerStatVal: { fontSize: 18, fontWeight: '900', color: Colors.white },
-  streakBannerStatLabel: { fontSize: 10, fontWeight: '600', color: 'rgba(255,255,255,0.7)', marginTop: 2 },
+  streakBannerStatLabel: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.7)', marginTop: 2 },
   streakBannerProgress: { marginTop: 12 },
   streakBannerProgressBg: { height: 6, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 3, overflow: 'hidden' },
   streakBannerProgressFill: { height: '100%', backgroundColor: Colors.white, borderRadius: 3 },
-  streakBannerProgressText: { fontSize: 11, fontWeight: '600', color: 'rgba(255,255,255,0.8)', marginTop: 4, textAlign: 'center' },
+  streakBannerProgressText: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.8)', marginTop: 4, textAlign: 'center' },
 });

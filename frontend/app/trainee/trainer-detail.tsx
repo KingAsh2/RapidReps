@@ -22,6 +22,7 @@ import { useAuth } from '../../src/contexts/AuthContext';
 import { useAlert } from '../../src/contexts/AlertContext';
 import { Video, ResizeMode } from 'expo-av';
 import { toast } from '../../src/utils/toast';
+import { haptic } from '../../src/utils/haptics';
 
 const { width } = Dimensions.get('window');
 
@@ -35,7 +36,7 @@ const COLORS = {
   navy: '#1a2a5e',
   white: '#FFFFFF',
   offWhite: '#FAFBFC',
-  gray: '#8892b0',
+  gray: '#5a6785',
   grayLight: '#E8ECF0',
   success: '#00C853',
   error: '#FF4757',
@@ -1076,7 +1077,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: COLORS.gray,
   },
@@ -1090,7 +1091,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sectionLabel: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '800',
     color: COLORS.gray,
     letterSpacing: 1,
@@ -1108,7 +1109,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   tagText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: COLORS.white,
   },
@@ -1170,7 +1171,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.orange,
   },
   sessionTypeText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: COLORS.navy,
   },
@@ -1178,7 +1179,7 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
   sessionTypePrice: {
-    fontSize: 10,
+    fontSize: 13,
     fontWeight: '600',
     color: COLORS.gray,
   },
@@ -1198,7 +1199,7 @@ const styles = StyleSheet.create({
   },
   safetyNoticeText: {
     flex: 1,
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: COLORS.navy,
     lineHeight: 16,
@@ -1228,7 +1229,7 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
   durationPrice: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '600',
     color: COLORS.gray,
   },
@@ -1274,7 +1275,7 @@ const styles = StyleSheet.create({
     color: COLORS.navy,
   },
   platformFeeNote: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '500',
     color: COLORS.gray,
     textAlign: 'center',
@@ -1289,7 +1290,7 @@ const styles = StyleSheet.create({
   },
   cancellationText: {
     flex: 1,
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '500',
     color: COLORS.gray,
     lineHeight: 16,
@@ -1356,7 +1357,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   quickActionSubtitle: {
-    fontSize: 12,
+    fontSize: 13,
     color: COLORS.gray,
   },
   quickActionDivider: {
@@ -1400,7 +1401,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   reviewDate: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '500',
     color: COLORS.gray,
   },
@@ -1518,7 +1519,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   videoPlayText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: COLORS.white,
   },

@@ -52,7 +52,7 @@ export const PaymentsTab = ({
         <Text style={{ fontSize: 13, color: C.navy, lineHeight: 20, marginBottom: 4 }}>
           Revenue split on cancellation fees: Platform keeps 20%, Trainer receives 80%
         </Text>
-        <Text style={{ fontSize: 12, color: C.gray, lineHeight: 18, fontStyle: 'italic' }}>
+        <Text style={{ fontSize: 13, color: C.gray, lineHeight: 18, fontStyle: 'italic' }}>
           Free cancellation if done 24+ hours before session. Fees apply for late cancellations.
         </Text>
       </View>

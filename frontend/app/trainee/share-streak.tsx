@@ -24,7 +24,7 @@ const C = {
   teal: '#1a2a5e',
   navy: '#1a2a5e',
   white: '#FFFFFF',
-  gray: '#8892b0',
+  gray: '#5a6785',
   gold: '#FFD700',
 };
 
@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 20,
   },
-  levelText: { fontSize: 11, fontWeight: '800', color: C.white, letterSpacing: 1 },
+  levelText: { fontSize: 13, fontWeight: '800', color: C.white, letterSpacing: 1 },
   streakCenter: { alignItems: 'center', marginBottom: 28 },
   streakNumber: { fontSize: 72, fontWeight: '900', color: C.white, marginTop: -4 },
   streakLabel: { fontSize: 14, fontWeight: '800', color: 'rgba(255,255,255,0.8)', letterSpacing: 4, marginTop: -6 },
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
   },
   statItem: { flex: 1, alignItems: 'center' },
   statValue: { fontSize: 20, fontWeight: '800', color: C.white },
-  statLabel: { fontSize: 11, color: 'rgba(255,255,255,0.65)', marginTop: 2 },
+  statLabel: { fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 2 },
   statDivider: { width: 1, height: 30, backgroundColor: 'rgba(255,255,255,0.2)' },
   userName: { fontSize: 16, fontWeight: '700', color: 'rgba(255,255,255,0.9)' },
   bottom: { paddingHorizontal: 24, paddingBottom: 24 },
@@ -273,5 +273,5 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   shareBtnText: { fontSize: 17, fontWeight: '800', color: C.white },
-  hint: { textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.35)' },
+  hint: { textAlign: 'center', fontSize: 13, color: 'rgba(255,255,255,0.35)' },
 });

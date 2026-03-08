@@ -215,8 +215,8 @@ const s = StyleSheet.create({
     alignItems: 'center',
   },
   traineeName: { fontSize: 16, fontWeight: '800', color: Colors.navy },
-  sessionType: { fontSize: 12, fontWeight: '600', color: Colors.gray, marginTop: 2 },
-  timeAgo: { fontSize: 11, fontWeight: '600', color: Colors.gray },
+  sessionType: { fontSize: 13, fontWeight: '600', color: Colors.gray, marginTop: 2 },
+  timeAgo: { fontSize: 13, fontWeight: '600', color: Colors.gray },
   startInfo: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -8,7 +8,7 @@ import { groupSessionAPI } from '../../src/services/api';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { toast } from '../../src/utils/toast';
 
-const COLORS = { orange: '#FF6A00', teal: '#1a2a5e', navy: '#1a2a5e', white: '#FFFFFF', gray: '#8892b0', success: '#00D26A', error: '#FF4757' };
+const COLORS = { orange: '#FF6A00', teal: '#1a2a5e', navy: '#1a2a5e', white: '#FFFFFF', gray: '#5a6785', success: '#00D26A', error: '#FF4757' };
 
 export default function TrainerGroupSessionsScreen() {
   const router = useRouter();
@@ -270,10 +270,10 @@ const styles = StyleSheet.create({
   cardTitle: { fontSize: 16, fontWeight: '800', color: '#fff', marginBottom: 4 },
   cardDesc: { fontSize: 13, color: COLORS.gray, lineHeight: 18 },
   participantBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(0,207,193,0.15)', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4 },
-  participantText: { fontSize: 12, fontWeight: '700', color: COLORS.teal },
+  participantText: { fontSize: 13, fontWeight: '700', color: COLORS.teal },
   metaRow: { flexDirection: 'row', gap: 16, marginBottom: 12 },
   metaItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  metaText: { fontSize: 12, color: COLORS.gray },
+  metaText: { fontSize: 13, color: COLORS.gray },
   actionBtn: { backgroundColor: COLORS.orange, borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
   actionBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
   empty: { alignItems: 'center', marginTop: 80 },

@@ -22,7 +22,7 @@ const COLORS = {
   teal: '#1a2a5e',
   navy: '#1a2a5e',
   white: '#FFFFFF',
-  gray: '#8892b0',
+  gray: '#5a6785',
   grayLight: '#F5F6F8',
   success: '#00C853',
   warning: '#FFB300',
@@ -210,11 +210,11 @@ const styles = StyleSheet.create({
   sessionIconBg: { width: 42, height: 42, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   sessionInfo: { flex: 1 },
   sessionType: { fontSize: 15, fontWeight: '700', color: COLORS.white },
-  sessionDate: { fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
+  sessionDate: { fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
   statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  statusText: { fontSize: 10, fontWeight: '700' },
+  statusText: { fontSize: 13, fontWeight: '700' },
 
   sessionDetails: { flexDirection: 'row', gap: 10, marginTop: 12 },
   detailChip: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(255,255,255,0.06)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
-  detailChipText: { fontSize: 12, fontWeight: '600', color: COLORS.gray },
+  detailChipText: { fontSize: 13, fontWeight: '600', color: COLORS.gray },
 });

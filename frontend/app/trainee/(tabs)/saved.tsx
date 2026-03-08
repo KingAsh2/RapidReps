@@ -29,7 +29,7 @@ const COLORS = {
   navy: '#1a2a5e',
   white: '#FFFFFF',
   offWhite: '#FAFBFC',
-  gray: '#8892b0',
+  gray: '#5a6785',
   grayLight: '#F5F6F8',
   success: '#00C853',
   error: '#FF4757',
@@ -464,7 +464,7 @@ const styles = StyleSheet.create({
     color: COLORS.navy,
   },
   metaSubtext: {
-    fontSize: 12,
+    fontSize: 13,
     color: COLORS.gray,
   },
   metaDivider: {
@@ -479,7 +479,7 @@ const styles = StyleSheet.create({
     color: COLORS.teal,
   },
   distanceText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: COLORS.navy,
   },
@@ -495,7 +495,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   specialtyText: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '700',
     color: COLORS.navy,
   },

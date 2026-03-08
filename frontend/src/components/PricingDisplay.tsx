@@ -146,8 +146,8 @@ export const TrainerTierBadge: React.FC<TrainerTierBadgeProps> = ({
   size = 'medium' 
 }) => {
   const sizes = {
-    small: { padding: 4, fontSize: 10, iconSize: 10 },
-    medium: { padding: 6, fontSize: 12, iconSize: 14 },
+    small: { padding: 4, fontSize: 13, iconSize: 10 },
+    medium: { padding: 6, fontSize: 13, iconSize: 14 },
     large: { padding: 8, fontSize: 14, iconSize: 16 },
   };
 
@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   tierText: {
-    fontSize: 10,
+    fontSize: 13,
     fontWeight: '800',
     color: COLORS.white,
     letterSpacing: 0.5,

@@ -27,7 +27,7 @@ export const PayoutsTab = ({
       </View>
     </View>
 
-    <Text style={[s.sectionTitle, { fontSize: 12, marginBottom: 6, color: C.gray }]}>
+    <Text style={[s.sectionTitle, { fontSize: 13, marginBottom: 6, color: C.gray }]}>
       Minimum payout: {formatCents(payoutsData?.payoutMinimumCents || 3500)}
     </Text>
 
@@ -53,11 +53,11 @@ export const PayoutsTab = ({
       <View key={t.trainerId} style={[s.userCard, { borderLeftWidth: 3, borderLeftColor: t.eligible ? C.success : C.gray }]} data-testid={`payout-trainer-${t.trainerId}`}>
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: 15, fontWeight: '700', color: C.navy }}>{t.trainerName}</Text>
-          <Text style={{ fontSize: 12, color: C.gray }}>{t.trainerEmail}</Text>
+          <Text style={{ fontSize: 13, color: C.gray }}>{t.trainerEmail}</Text>
           <View style={{ flexDirection: 'row', gap: 14, marginTop: 6 }}>
-            <Text style={{ fontSize: 12, color: C.gray }}>Earned: <Text style={{ fontWeight: '700', color: C.navy }}>{formatCents(t.totalEarningsCents)}</Text></Text>
-            <Text style={{ fontSize: 12, color: C.gray }}>Paid: <Text style={{ fontWeight: '700', color: C.success }}>{formatCents(t.totalPaidOutCents)}</Text></Text>
-            <Text style={{ fontSize: 12, color: C.gray }}>Pending: <Text style={{ fontWeight: '700', color: C.orange }}>{formatCents(t.pendingBalanceCents)}</Text></Text>
+            <Text style={{ fontSize: 13, color: C.gray }}>Earned: <Text style={{ fontWeight: '700', color: C.navy }}>{formatCents(t.totalEarningsCents)}</Text></Text>
+            <Text style={{ fontSize: 13, color: C.gray }}>Paid: <Text style={{ fontWeight: '700', color: C.success }}>{formatCents(t.totalPaidOutCents)}</Text></Text>
+            <Text style={{ fontSize: 13, color: C.gray }}>Pending: <Text style={{ fontWeight: '700', color: C.orange }}>{formatCents(t.pendingBalanceCents)}</Text></Text>
           </View>
         </View>
         <TouchableOpacity
@@ -92,15 +92,15 @@ export const PayoutsTab = ({
         <View key={p.id || i} style={[s.userCard, { borderLeftWidth: 3, borderLeftColor: p.status === 'completed' ? C.success : C.orange }]} data-testid={`payout-history-${i}`}>
           <View style={{ flex: 1 }}>
             <Text style={{ fontSize: 14, fontWeight: '700', color: C.navy }}>{p.trainerName}</Text>
-            <Text style={{ fontSize: 12, color: C.gray }}>
+            <Text style={{ fontSize: 13, color: C.gray }}>
               {new Date(p.createdAt).toLocaleDateString()} - {formatCents(p.amountCents)}
             </Text>
             {p.stripeTransferId && (
-              <Text style={{ fontSize: 10, color: C.gray }}>{p.stripeTransferId}</Text>
+              <Text style={{ fontSize: 13, color: C.gray }}>{p.stripeTransferId}</Text>
             )}
           </View>
           <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: p.status === 'completed' ? `${C.success}20` : `${C.orange}20` }}>
-            <Text style={{ fontSize: 11, fontWeight: '700', color: p.status === 'completed' ? C.success : C.orange }}>{p.status?.toUpperCase()}</Text>
+            <Text style={{ fontSize: 13, fontWeight: '700', color: p.status === 'completed' ? C.success : C.orange }}>{p.status?.toUpperCase()}</Text>
           </View>
         </View>
       ))

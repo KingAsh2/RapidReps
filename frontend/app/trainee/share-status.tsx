@@ -26,7 +26,7 @@ const COLORS = {
   tealLight: '#2a3a6e',
   navy: '#1a2a5e',
   white: '#FFFFFF',
-  gray: '#8892b0',
+  gray: '#5a6785',
   grayLight: '#F5F6F8',
   success: '#00C853',
   error: '#FF4757',
@@ -456,7 +456,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   addContactText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: COLORS.white,
     textAlign: 'center',
@@ -486,7 +486,7 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
   contactName: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: COLORS.white,
     textAlign: 'center',

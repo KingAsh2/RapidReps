@@ -24,6 +24,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import api from '../../src/services/api';
 import { toast } from '../../src/utils/toast';
+import { haptic } from '../../src/utils/haptics';
 
 const COLORS = {
   orange: '#FF7F00',
@@ -32,7 +33,7 @@ const COLORS = {
   tealLight: '#2a3a6e',
   navy: '#1a2a5e',
   white: '#FFFFFF',
-  gray: '#8892b0',
+  gray: '#5a6785',
   grayLight: '#F5F6F8',
   success: '#00C853',
   error: '#FF4757',
@@ -282,6 +283,7 @@ export default function TrainerVerificationScreen() {
   const [hasEverSubmitted, setHasEverSubmitted] = useState(false);
 
   const handleHoldSubmitStart = () => {
+    haptic.heavy();
     holdProgress.setValue(0);
     Animated.timing(holdProgress, {
       toValue: 1,
@@ -290,6 +292,7 @@ export default function TrainerVerificationScreen() {
     }).start();
 
     holdTimer.current = setTimeout(async () => {
+      haptic.success();
       setIsSubmitting(true);
       try {
         await api.post('/trainer/submit-all-verification');
@@ -573,7 +576,7 @@ export default function TrainerVerificationScreen() {
             <TextInput
               style={{ backgroundColor: '#F5F6F8', borderRadius: 12, padding: 14, fontSize: 15, marginBottom: 10, color: '#1a2a5e' }}
               placeholder="Full Legal Name *"
-              placeholderTextColor="#8892b0"
+              placeholderTextColor="#5a6785"
               value={piiData.fullName}
               onChangeText={(t) => setPiiData(p => ({ ...p, fullName: t }))}
               data-testid="pii-fullname"
@@ -581,7 +584,7 @@ export default function TrainerVerificationScreen() {
             <TextInput
               style={{ backgroundColor: '#F5F6F8', borderRadius: 12, padding: 14, fontSize: 15, marginBottom: 10, color: '#1a2a5e' }}
               placeholder="Date of Birth (MM/DD/YYYY) *"
-              placeholderTextColor="#8892b0"
+              placeholderTextColor="#5a6785"
               value={piiData.dob}
               onChangeText={(t) => setPiiData(p => ({ ...p, dob: t }))}
               data-testid="pii-dob"
@@ -589,7 +592,7 @@ export default function TrainerVerificationScreen() {
             <TextInput
               style={{ backgroundColor: '#F5F6F8', borderRadius: 12, padding: 14, fontSize: 15, marginBottom: 10, color: '#1a2a5e' }}
               placeholder="SSN (optional)"
-              placeholderTextColor="#8892b0"
+              placeholderTextColor="#5a6785"
               value={piiData.ssn}
               onChangeText={(t) => setPiiData(p => ({ ...p, ssn: t }))}
               secureTextEntry
@@ -598,7 +601,7 @@ export default function TrainerVerificationScreen() {
             <TextInput
               style={{ backgroundColor: '#F5F6F8', borderRadius: 12, padding: 14, fontSize: 15, marginBottom: 16, color: '#1a2a5e' }}
               placeholder="Current Address *"
-              placeholderTextColor="#8892b0"
+              placeholderTextColor="#5a6785"
               value={piiData.address}
               onChangeText={(t) => setPiiData(p => ({ ...p, address: t }))}
               data-testid="pii-address"
@@ -725,9 +728,9 @@ const styles = StyleSheet.create({
   stepTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
   stepTitle: { fontSize: 15, fontWeight: '700', color: COLORS.navy },
   requiredBadge: { backgroundColor: COLORS.error, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  requiredText: { fontSize: 9, fontWeight: '700', color: COLORS.white, letterSpacing: 0.5 },
+  requiredText: { fontSize: 13, fontWeight: '700', color: COLORS.white, letterSpacing: 0.5 },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  statusText: { fontSize: 12, fontWeight: '600' },
+  statusText: { fontSize: 13, fontWeight: '600' },
   stepExpanded: { padding: 16, paddingTop: 0, borderTopWidth: 1, borderTopColor: COLORS.grayLight },
   stepDescription: { fontSize: 13, color: COLORS.gray, lineHeight: 20, marginBottom: 16, marginTop: 12 },
   uploadButton: { borderRadius: 12, overflow: 'hidden' },
@@ -744,14 +747,14 @@ const styles = StyleSheet.create({
     gap: 8,
     marginTop: 12,
   },
-  rejectedText: { flex: 1, fontSize: 12, color: COLORS.error },
+  rejectedText: { flex: 1, fontSize: 13, color: COLORS.error },
   trustCard: { backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: 16, padding: 20, marginTop: 8 },
   trustHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
   trustTitle: { fontSize: 16, fontWeight: '700', color: COLORS.navy },
   trustText: { fontSize: 13, color: COLORS.gray, lineHeight: 20, marginBottom: 16 },
   trustBadges: { flexDirection: 'row', gap: 16 },
   trustBadge: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  trustBadgeText: { fontSize: 12, fontWeight: '600', color: COLORS.success },
+  trustBadgeText: { fontSize: 13, fontWeight: '600', color: COLORS.success },
   // Hold to Submit
   submitSection: { marginTop: 24, alignItems: 'center' },
   submitHint: { fontSize: 13, color: COLORS.white, textAlign: 'center', marginBottom: 16, lineHeight: 18, opacity: 0.9 },

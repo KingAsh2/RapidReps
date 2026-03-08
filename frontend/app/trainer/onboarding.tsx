@@ -30,7 +30,7 @@ const COLORS = {
   navy: '#1a2a5e',
   white: '#FFFFFF',
   offWhite: '#F8F9FA',
-  gray: '#8892b0',
+  gray: '#5a6785',
   grayLight: '#E8ECF0',
   success: '#00D26A',
   error: '#FF4757',
@@ -605,7 +605,7 @@ const styles = StyleSheet.create({
     color: COLORS.navy,
   },
   tierStatLabel: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: COLORS.gray,
     marginTop: 4,
@@ -685,7 +685,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   optionalText: {
-    fontSize: 10,
+    fontSize: 13,
     fontWeight: '700',
     color: COLORS.gray,
   },
@@ -727,7 +727,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   pricingLabel: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: COLORS.gray,
     marginTop: 6,
@@ -745,7 +745,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   feeText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '500',
     color: COLORS.gray,
   },

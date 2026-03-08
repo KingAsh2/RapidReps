@@ -16,6 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { Platform } from 'react-native';
 import { toast } from '../../src/utils/toast';
+import { haptic } from '../../src/utils/haptics';
 
 let useStripeHook: any = null;
 if (Platform.OS !== 'web') {
@@ -32,7 +33,7 @@ const COLORS = {
   teal: '#1a2a5e',
   navy: '#1a2a5e',
   white: '#FFFFFF',
-  gray: '#8892b0',
+  gray: '#5a6785',
   grayLight: '#F5F6F8',
   success: '#00C853',
 };
@@ -271,12 +272,12 @@ const styles = StyleSheet.create({
   boostCard: { backgroundColor: COLORS.white, borderRadius: 16, padding: 18, marginBottom: 10, borderWidth: 2, borderColor: 'transparent', position: 'relative', overflow: 'hidden' },
   boostCardSelected: { borderColor: COLORS.orange },
   popularBadge: { position: 'absolute', top: 0, right: 0, backgroundColor: COLORS.orange, paddingHorizontal: 10, paddingVertical: 4, borderBottomLeftRadius: 10 },
-  popularText: { fontSize: 9, fontWeight: '800', color: COLORS.white, letterSpacing: 0.5 },
+  popularText: { fontSize: 13, fontWeight: '800', color: COLORS.white, letterSpacing: 0.5 },
   boostRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   boostIconBg: { width: 48, height: 48, borderRadius: 12, backgroundColor: COLORS.grayLight, justifyContent: 'center', alignItems: 'center' },
   boostInfo: { flex: 1 },
   boostLabel: { fontSize: 16, fontWeight: '700', color: COLORS.gray },
-  boostDuration: { fontSize: 12, color: COLORS.gray, marginTop: 2 },
+  boostDuration: { fontSize: 13, color: COLORS.gray, marginTop: 2 },
   boostPriceBox: {},
   boostPrice: { fontSize: 20, fontWeight: '900', color: COLORS.gray },
   selectedIndicator: { position: 'absolute', top: 14, left: 14 },
@@ -286,7 +287,7 @@ const styles = StyleSheet.create({
   benefitText: { fontSize: 14, color: COLORS.white, flex: 1 },
 
   noteCard: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: `${COLORS.teal}15`, borderRadius: 12, padding: 14, marginTop: 12 },
-  noteText: { fontSize: 12, color: 'rgba(255,255,255,0.7)', flex: 1, lineHeight: 18 },
+  noteText: { fontSize: 13, color: 'rgba(255,255,255,0.7)', flex: 1, lineHeight: 18 },
 
   bottomBar: { paddingHorizontal: 16, paddingBottom: 24, paddingTop: 8 },
   purchaseBtn: { borderRadius: 16, overflow: 'hidden' },

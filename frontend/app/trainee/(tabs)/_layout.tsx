@@ -10,7 +10,7 @@ const BRAND = {
   teal: '#1a2a5e',
   navy: '#1a2a5e',
   white: '#FFFFFF',
-  gray: '#8892b0',
+  gray: '#5a6785',
   grayLight: '#F5F6F8',
 };
 
@@ -36,7 +36,7 @@ export default function TabLayout() {
           elevation: 10,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 13,
           fontWeight: '600',
           marginTop: 2,
         },
@@ -49,6 +49,7 @@ export default function TabLayout() {
         name="home"
         options={{
           title: 'Discover',
+          tabBarAccessibilityLabel: 'Discover trainers tab',
           tabBarIcon: ({ color, focused }) => (
             <View style={focused ? styles.activeIconContainer : null}>
               <Ionicons 
@@ -64,6 +65,7 @@ export default function TabLayout() {
         name="sessions"
         options={{
           title: 'Sessions',
+          tabBarAccessibilityLabel: 'My sessions tab',
           tabBarIcon: ({ color, focused }) => (
             <View style={focused ? styles.activeIconContainer : null}>
               <Ionicons 
@@ -79,8 +81,9 @@ export default function TabLayout() {
         name="messages"
         options={{
           title: 'Messages',
+          tabBarAccessibilityLabel: 'Messages tab',
           tabBarBadge: unreadMessageCount > 0 ? unreadMessageCount : undefined,
-          tabBarBadgeStyle: { backgroundColor: BRAND.orange, fontSize: 10, fontWeight: '700' },
+          tabBarBadgeStyle: { backgroundColor: BRAND.orange, fontSize: 13, fontWeight: '700' },
           tabBarIcon: ({ color, focused }) => (
             <View style={focused ? styles.activeIconContainer : null}>
               <Ionicons 
@@ -96,6 +99,7 @@ export default function TabLayout() {
         name="saved"
         options={{
           title: 'Saved',
+          tabBarAccessibilityLabel: 'Saved trainers tab',
           tabBarIcon: ({ color, focused }) => (
             <View style={focused ? styles.activeIconContainer : null}>
               <Ionicons 
@@ -111,6 +115,7 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: 'Profile',
+          tabBarAccessibilityLabel: 'My profile tab',
           tabBarIcon: ({ color, focused }) => (
             <View style={focused ? styles.activeIconContainer : null}>
               <Ionicons 

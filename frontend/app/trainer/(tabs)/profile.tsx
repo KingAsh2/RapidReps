@@ -32,7 +32,7 @@ const COLORS = {
   teal: '#1a2a5e',
   navy: '#1a2a5e',
   white: '#FFFFFF',
-  gray: '#8892b0',
+  gray: '#5a6785',
   grayLight: '#F5F6F8',
   success: '#00C853',
   error: '#FF4757',
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
   statsRow: { flexDirection: 'row', gap: 10, marginBottom: 20 },
   statCard: { flex: 1, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 14, padding: 16, alignItems: 'center' },
   statValue: { fontSize: 24, fontWeight: '900', color: COLORS.white },
-  statLabel: { fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 4 },
+  statLabel: { fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 4 },
 
   sectionTitle: { fontSize: 16, fontWeight: '700', color: COLORS.white, marginBottom: 12 },
 
@@ -340,12 +340,12 @@ const styles = StyleSheet.create({
   tagSection: { marginTop: 16 },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   tag: { backgroundColor: `${COLORS.teal}20`, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
-  tagText: { fontSize: 12, fontWeight: '600', color: COLORS.teal },
+  tagText: { fontSize: 13, fontWeight: '600', color: COLORS.teal },
   // Streak styles
   streakCard: { borderRadius: 16, overflow: 'hidden', marginBottom: 20, shadowColor: '#FF6A00', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 6 },
   streakGradient: { padding: 16 },
   streakRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   streakFireBg: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.25)', justifyContent: 'center', alignItems: 'center' },
   streakTitle: { fontSize: 17, fontWeight: '900', color: COLORS.white },
-  streakSub: { fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.8)', marginTop: 2 },
+  streakSub: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.8)', marginTop: 2 },
 });

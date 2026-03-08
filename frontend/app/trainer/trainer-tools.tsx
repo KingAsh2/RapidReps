@@ -9,7 +9,7 @@ import { useAuth } from '../../src/contexts/AuthContext';
 import { toast } from '../../src/utils/toast';
 
 const { width } = Dimensions.get('window');
-const COLORS = { orange: '#FF6A00', teal: '#1a2a5e', navy: '#1a2a5e', white: '#FFFFFF', offWhite: '#F8F9FA', gray: '#8892b0', success: '#00D26A' };
+const COLORS = { orange: '#FF6A00', teal: '#1a2a5e', navy: '#1a2a5e', white: '#FFFFFF', offWhite: '#F8F9FA', gray: '#5a6785', success: '#00D26A' };
 
 type ActiveTab = 'clients' | 'plans' | 'notes';
 
@@ -183,18 +183,18 @@ const styles = StyleSheet.create({
   clientCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 14, padding: 14, marginBottom: 8 },
   clientAvatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(0,207,193,0.15)', alignItems: 'center', justifyContent: 'center' },
   clientName: { fontSize: 15, fontWeight: '700', color: '#fff' },
-  clientMeta: { fontSize: 12, color: COLORS.gray, marginTop: 2 },
+  clientMeta: { fontSize: 13, color: COLORS.gray, marginTop: 2 },
   planCard: { backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 14, padding: 16, marginBottom: 8 },
   planTitle: { fontSize: 16, fontWeight: '700', color: '#fff', marginBottom: 4 },
   planDesc: { fontSize: 13, color: COLORS.gray, marginBottom: 8 },
-  planMeta: { fontSize: 11, color: COLORS.teal, fontWeight: '600' },
+  planMeta: { fontSize: 13, color: COLORS.teal, fontWeight: '600' },
   noteCard: { backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 14, padding: 16, marginBottom: 8 },
   noteText: { fontSize: 14, color: '#e0e0e0', lineHeight: 20, marginBottom: 8 },
   noteFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  noteDate: { fontSize: 11, color: COLORS.gray },
+  noteDate: { fontSize: 13, color: COLORS.gray },
   tagRow: { flexDirection: 'row', gap: 4 },
   tag: { backgroundColor: 'rgba(0,207,193,0.15)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
-  tagLabel: { fontSize: 10, color: COLORS.teal, fontWeight: '600' },
+  tagLabel: { fontSize: 13, color: COLORS.teal, fontWeight: '600' },
   empty: { alignItems: 'center', marginTop: 80 },
   emptyText: { fontSize: 14, color: COLORS.gray, textAlign: 'center', marginTop: 12, paddingHorizontal: 32 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },

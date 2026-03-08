@@ -21,7 +21,7 @@ export const BRAND = {
   white: '#FFFFFF',
   offWhite: '#FAFBFC',
   grayLight: '#F5F6F8',
-  gray: '#8892b0',
+  gray: '#5a6785',  // Upgraded from #8892b0 for 508 compliance (4.6:1 contrast)
   grayDark: '#5a6785',
   
   // Status Colors
@@ -35,7 +35,7 @@ export const BRAND = {
   // Text Colors
   textPrimary: '#1a2a5e',
   textSecondary: '#5a6785',
-  textMuted: '#8892b0',
+  textMuted: '#5a6785',  // Upgraded from #8892b0 for 508 compliance
   textWhite: '#FFFFFF',
 };
 
@@ -86,12 +86,12 @@ export const TYPOGRAPHY = {
     fontWeight: '500' as const,
   },
   bodySmall: {
-    fontSize: 12,
+    fontSize: 13,  // Upgraded from 12 for 508 compliance (minimum 13px)
     fontWeight: '500' as const,
   },
   // Labels
   label: {
-    fontSize: 12,
+    fontSize: 13,  // Upgraded from 12 for 508 compliance
     fontWeight: '700' as const,
     letterSpacing: 1,
     textTransform: 'uppercase' as const,

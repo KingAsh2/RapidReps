@@ -24,7 +24,7 @@ const COLORS = {
   orangeHot: '#FF6A00',
   navy: '#1a2a5e',
   white: '#FFFFFF',
-  gray: '#8892b0',
+  gray: '#5a6785',
   success: '#00D68F',
 };
 
@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.success,
   },
   liveText: {
-    fontSize: 10,
+    fontSize: 13,
     fontWeight: '700',
     color: COLORS.success,
   },
@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   distanceLabelText: {
-    fontSize: 9,
+    fontSize: 13,
     fontWeight: '800',
     color: COLORS.white,
     letterSpacing: 0.3,
@@ -498,17 +498,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cardRating: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: COLORS.orange,
     marginLeft: 3,
   },
   cardDistance: {
-    fontSize: 12,
+    fontSize: 13,
     color: COLORS.gray,
   },
   cardEta: {
-    fontSize: 12,
+    fontSize: 13,
     color: COLORS.gray,
   },
   viewBtn: {

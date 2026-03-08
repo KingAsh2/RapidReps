@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { toast } from '../../src/utils/toast';
+import { haptic } from '../../src/utils/haptics';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -38,7 +39,7 @@ const COLORS = {
   teal: '#1a2a5e',
   navy: '#1a2a5e',
   white: '#FFFFFF',
-  gray: '#8892b0',
+  gray: '#5a6785',
   grayLight: '#F5F6F8',
   success: '#00C853',
   error: '#FF4757',
@@ -91,6 +92,7 @@ export default function ConfirmBookingScreen() {
   const totalCents = sessionPriceCents + serviceFeeCents;
 
   const handleConfirmPayment = async () => {
+    haptic.medium();
     setIsProcessing(true);
     setPaymentStep('processing');
 
@@ -372,14 +374,14 @@ const styles = StyleSheet.create({
 
   detailGrid: { gap: 14 },
   detailItem: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  detailLabel: { fontSize: 11, color: COLORS.gray },
+  detailLabel: { fontSize: 13, color: COLORS.gray },
   detailValue: { fontSize: 15, fontWeight: '700', color: COLORS.navy },
 
   priceTitle: { fontSize: 16, fontWeight: '700', color: COLORS.navy, marginBottom: 14 },
   priceRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
   priceLabel: { fontSize: 14, color: COLORS.navy, fontWeight: '600' },
   priceValue: { fontSize: 14, fontWeight: '700', color: COLORS.navy },
-  priceSublabel: { fontSize: 12, color: COLORS.gray },
+  priceSublabel: { fontSize: 13, color: COLORS.gray },
   priceDivider: { height: 1, backgroundColor: COLORS.grayLight, marginVertical: 12 },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   totalLabel: { fontSize: 18, fontWeight: '700', color: COLORS.navy },
@@ -391,16 +393,16 @@ const styles = StyleSheet.create({
   stripeBadge: { width: 36, height: 36, borderRadius: 8, backgroundColor: '#635BFF', justifyContent: 'center', alignItems: 'center' },
   stripeInfo: { flex: 1 },
   stripeText: { fontSize: 14, fontWeight: '700', color: COLORS.navy },
-  stripeSubtext: { fontSize: 11, color: COLORS.gray, marginTop: 1 },
+  stripeSubtext: { fontSize: 13, color: COLORS.gray, marginTop: 1 },
 
   policyCard: { backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 14, padding: 16, gap: 10, marginBottom: 14 },
   policyRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  policyText: { fontSize: 12, color: COLORS.gray, flex: 1 },
+  policyText: { fontSize: 13, color: COLORS.gray, flex: 1 },
 
   bottomBar: { paddingHorizontal: 16, paddingBottom: 24, paddingTop: 8 },
   confirmBtn: { borderRadius: 16, overflow: 'hidden' },
   confirmBtnDisabled: { opacity: 0.7 },
   confirmBtnGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 18, gap: 10 },
   confirmBtnText: { fontSize: 18, fontWeight: '800', color: COLORS.white },
-  secureNote: { fontSize: 11, color: COLORS.gray, textAlign: 'center', marginTop: 8 },
+  secureNote: { fontSize: 13, color: COLORS.gray, textAlign: 'center', marginTop: 8 },
 });

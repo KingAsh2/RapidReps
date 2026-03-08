@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
   card: { alignItems: 'center', width: 84, gap: 6 },
   photo: { width: 64, height: 64, borderRadius: 32, borderWidth: 3, borderColor: '#FF7F00' },
   name: { fontSize: 13, fontWeight: '700', color: '#1a2a5e', textAlign: 'center' },
-  meta: { fontSize: 11, fontWeight: '600', color: '#5a6a8a' },
+  meta: { fontSize: 13, fontWeight: '600', color: '#5a6a8a' },
   liveDot: {
     position: 'absolute', top: 0, right: 8,
     width: 14, height: 14, borderRadius: 7,

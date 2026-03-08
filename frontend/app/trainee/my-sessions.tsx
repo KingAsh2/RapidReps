@@ -32,7 +32,7 @@ const COLORS = {
   success: '#00D68F',
   warning: '#FFAA00',
   error: '#FF4757',
-  gray: '#8892b0',
+  gray: '#5a6785',
 };
 
 export default function MySessionsScreen() {
@@ -510,7 +510,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   statusText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: COLORS.white,
   },
@@ -534,7 +534,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   dateMonth: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: 'rgba(255,255,255,0.8)',
     textTransform: 'uppercase',
@@ -624,7 +624,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   safetyPinLabel: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: 'rgba(255,255,255,0.85)',
     marginBottom: 6,
@@ -648,7 +648,7 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
   safetyPinNote: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '600',
     color: 'rgba(255,255,255,0.75)',
   },

@@ -754,7 +754,7 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   helpText: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#FFFFFF',
     marginTop: 4,
     fontWeight: '600',
@@ -796,7 +796,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   photoPlaceholderText: {
-    fontSize: 12,
+    fontSize: 13,
     color: Colors.textLight,
     marginTop: 8,
   },
@@ -940,7 +940,7 @@ const styles = StyleSheet.create({
   },
   modalSubtitle: {
     fontSize: 14,
-    color: '#8892b0',
+    color: '#5a6785',
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: 20,
@@ -964,7 +964,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalStepNum: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: '#FFFFFF',
   },
@@ -997,6 +997,6 @@ const styles = StyleSheet.create({
   modalSecondaryText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#8892b0',
+    color: '#5a6785',
   },
 });

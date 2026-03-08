@@ -7,9 +7,10 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { instantMatchAPI } from '../../src/services/api';
 import { useAuth } from '../../src/contexts/AuthContext';
+import { haptic } from '../../src/utils/haptics';
 
 const { width } = Dimensions.get('window');
-const COLORS = { orange: '#FF6A00', orangeLight: '#FF9F1C', teal: '#1a2a5e', navy: '#1a2a5e', white: '#FFFFFF', gray: '#8892b0', success: '#00D26A', error: '#FF4757' };
+const COLORS = { orange: '#FF6A00', orangeLight: '#FF9F1C', teal: '#1a2a5e', navy: '#1a2a5e', white: '#FFFFFF', gray: '#5a6785', success: '#00D26A', error: '#FF4757' };
 
 export default function InstantMatchScreen() {
   const router = useRouter();
@@ -66,6 +67,7 @@ export default function InstantMatchScreen() {
         setCandidateIndex(res.currentCandidateIndex || 0);
         if (res.status === 'matched') {
           if (pollRef.current) clearInterval(pollRef.current);
+          haptic.success();
           setStatus('matched');
           setSessionId(res.sessionId);
           setMessage('Trainer found!');

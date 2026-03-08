@@ -21,6 +21,7 @@ import { Colors } from '../../src/utils/colors';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useAlert } from '../../src/contexts/AlertContext';
 import { AnimatedPillButton } from '../../src/components/AnimatedPillButton';
+import { haptic } from '../../src/utils/haptics';
 
 const { width } = Dimensions.get('window');
 
@@ -148,6 +149,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email || !password) {
+      haptic.warning();
       showAlert({
         title: 'Missing Info',
         message: 'Please enter both email and password',
@@ -156,6 +158,7 @@ export default function LoginScreen() {
       return;
     }
 
+    haptic.medium();
     // Button press animation
     Animated.sequence([
       Animated.timing(buttonPressAnim, {
@@ -516,7 +519,7 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
   versionText: {
-    fontSize: 10,
+    fontSize: 13,
     color: 'rgba(255, 255, 255, 0.3)',
     textAlign: 'center',
     marginTop: 12,

@@ -24,7 +24,7 @@ const COLORS = {
   tealDark: '#18908D',
   navy: '#1a2a5e',
   white: '#FFFFFF',
-  gray: '#8892b0',
+  gray: '#5a6785',
   success: '#00C853',
   error: '#FF4757',
 };
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
   },
   infoCardContent: { flex: 1 },
   infoCardTitle: { fontSize: 14, fontWeight: '700', color: COLORS.white, marginBottom: 3 },
-  infoCardText: { fontSize: 12, color: 'rgba(255,255,255,0.6)', lineHeight: 18 },
+  infoCardText: { fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 18 },
   buttonGroup: { width: '100%', gap: 12 },
   primaryBtn: { width: '100%', borderRadius: 14, overflow: 'hidden' },
   btnGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, gap: 10 },

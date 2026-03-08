@@ -39,7 +39,7 @@ const COLORS = {
   navyLight: '#2a3a6e',
   white: '#FFFFFF',
   offWhite: '#FAFBFC',
-  gray: '#8892b0',
+  gray: '#5a6785',
   grayLight: '#E8ECF0',
   success: '#00C853',
   successDark: '#00A844',
@@ -551,7 +551,7 @@ export default function TrainerHomeScreen() {
                 <Ionicons name="warning" size={24} color="#FF7F00" />
                 <View style={{ flex: 1 }}>
                   <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 14 }}>Connect Your Bank Account</Text>
-                  <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, marginTop: 2 }}>Required to receive payouts for sessions</Text>
+                  <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, marginTop: 2 }}>Required to receive payouts for sessions</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color="#FF7F00" />
               </TouchableOpacity>
@@ -1145,7 +1145,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   earningsStatLabel: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: 'rgba(255,255,255,0.8)',
     marginBottom: 4,
@@ -1276,7 +1276,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   pendingBadgeText: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '800',
     color: COLORS.white,
     letterSpacing: 0.5,
@@ -1307,7 +1307,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   tapHintText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: COLORS.navy,
   },
@@ -1383,7 +1383,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   confirmedBadgeText: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '800',
     color: COLORS.white,
     letterSpacing: 0.5,
@@ -1455,7 +1455,7 @@ const styles = StyleSheet.create({
     color: COLORS.navy,
   },
   traineeCardGoal: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '500',
     color: COLORS.gray,
     marginTop: 2,
@@ -1470,7 +1470,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   distanceText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: COLORS.white,
   },

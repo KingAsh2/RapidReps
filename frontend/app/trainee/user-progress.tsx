@@ -9,14 +9,14 @@ import { progressAPI } from '../../src/services/api';
 import { useAuth } from '../../src/contexts/AuthContext';
 
 const { width } = Dimensions.get('window');
-const COLORS = { orange: '#FF6A00', orangeLight: '#FF9F1C', teal: '#1a2a5e', navy: '#1a2a5e', white: '#FFFFFF', gray: '#8892b0', success: '#00D26A', error: '#FF4757' };
+const COLORS = { orange: '#FF6A00', orangeLight: '#FF9F1C', teal: '#1a2a5e', navy: '#1a2a5e', white: '#FFFFFF', gray: '#5a6785', success: '#00D26A', error: '#FF4757' };
 
 const STREAK_COLORS: Record<string, string[]> = {
   Legend: ['#FFD700', '#FFA500'],
   Blazing: ['#FF4500', '#FF6347'],
   Fire: ['#FF6A00', '#FF9F1C'],
   Warming: ['#1a2a5e', '#2a3a6e'],
-  None: ['#8892b0', '#6a7a9a'],
+  None: ['#5a6785', '#6a7a9a'],
 };
 
 export default function UserProgressScreen() {
@@ -157,22 +157,22 @@ const styles = StyleSheet.create({
   streakLevel: { fontSize: 18, fontWeight: '800', color: '#fff' },
   streakCount: { fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
   streakBest: { alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6 },
-  streakBestLabel: { fontSize: 10, color: 'rgba(255,255,255,0.7)', fontWeight: '600' },
+  streakBestLabel: { fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: '600' },
   streakBestVal: { fontSize: 20, fontWeight: '800', color: '#fff' },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16 },
   statCard: { width: (width - 42) / 2, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 14, padding: 16, alignItems: 'center' },
   statVal: { fontSize: 28, fontWeight: '800', color: '#fff', marginTop: 6 },
-  statLabel: { fontSize: 12, color: COLORS.gray, fontWeight: '600', marginTop: 2 },
+  statLabel: { fontSize: 13, color: COLORS.gray, fontWeight: '600', marginTop: 2 },
   section: { marginTop: 8, marginBottom: 16 },
   sectionTitle: { fontSize: 15, fontWeight: '700', color: COLORS.teal, marginBottom: 12, letterSpacing: 0.5 },
   badgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   badge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8 },
-  badgeName: { fontSize: 12, color: '#e0e0e0', fontWeight: '600' },
+  badgeName: { fontSize: 13, color: '#e0e0e0', fontWeight: '600' },
   emptyState: { alignItems: 'center', paddingVertical: 32 },
   emptyText: { fontSize: 14, color: COLORS.gray, textAlign: 'center', marginTop: 12, paddingHorizontal: 20 },
   historyItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 12, padding: 14, marginBottom: 8 },
   historyDot: { width: 10, height: 10, borderRadius: 5, marginRight: 12 },
   historyType: { fontSize: 13, fontWeight: '700', color: '#fff', letterSpacing: 0.5 },
-  historyMeta: { fontSize: 12, color: COLORS.gray, marginTop: 2 },
-  historyDate: { fontSize: 11, color: COLORS.gray, fontWeight: '600' },
+  historyMeta: { fontSize: 13, color: COLORS.gray, marginTop: 2 },
+  historyDate: { fontSize: 13, color: COLORS.gray, fontWeight: '600' },
 });

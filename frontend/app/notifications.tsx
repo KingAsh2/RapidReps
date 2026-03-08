@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
   notifContent: { flex: 1 },
   notifTitle: { fontSize: 15, fontWeight: '700', color: Colors.navy, marginBottom: 2 },
   notifBody: { fontSize: 13, color: Colors.textSecondary, lineHeight: 18 },
-  notifTime: { fontSize: 11, color: Colors.textMuted, marginTop: 4 },
+  notifTime: { fontSize: 13, color: Colors.textMuted, marginTop: 4 },
   unreadDot: {
     width: 9,
     height: 9,

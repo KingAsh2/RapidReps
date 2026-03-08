@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.secondary,
   },
   progressText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: Colors.text,
   },

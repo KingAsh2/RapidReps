@@ -204,6 +204,6 @@ const styles = StyleSheet.create({
   },
   prefText: { flex: 1 },
   prefLabel: { fontSize: 15, fontWeight: '600', color: Colors.navy },
-  prefDesc: { fontSize: 12, color: Colors.textMuted, marginTop: 2 },
+  prefDesc: { fontSize: 13, color: Colors.textMuted, marginTop: 2 },
   disabledText: { color: Colors.grayLight },
 });

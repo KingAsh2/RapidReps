@@ -6,8 +6,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { groupSessionAPI } from '../../src/services/api';
 import { useAuth } from '../../src/contexts/AuthContext';
+import { haptic } from '../../src/utils/haptics';
 
-const COLORS = { orange: '#FF6A00', teal: '#1a2a5e', navy: '#1a2a5e', white: '#FFFFFF', gray: '#8892b0', success: '#00D26A' };
+const COLORS = { orange: '#FF6A00', teal: '#1a2a5e', navy: '#1a2a5e', white: '#FFFFFF', gray: '#5a6785', success: '#00D26A' };
 
 export default function GroupSessionsScreen() {
   const router = useRouter();
@@ -111,21 +112,21 @@ const styles = StyleSheet.create({
   card: { backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 16, padding: 16, marginBottom: 12 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   tagBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(0,207,193,0.2)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
-  tagText: { fontSize: 12, fontWeight: '700', color: COLORS.teal },
+  tagText: { fontSize: 13, fontWeight: '700', color: COLORS.teal },
   price: { fontSize: 16, fontWeight: '800', color: COLORS.orange },
   title: { fontSize: 18, fontWeight: '800', color: '#fff', marginBottom: 4 },
   desc: { fontSize: 13, color: COLORS.gray, marginBottom: 12, lineHeight: 18 },
   metaRow: { flexDirection: 'row', gap: 16, marginBottom: 12 },
   metaItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  metaText: { fontSize: 12, color: COLORS.gray },
+  metaText: { fontSize: 13, color: COLORS.gray },
   cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   trainerName: { fontSize: 13, color: COLORS.gray },
   joinBtn: { backgroundColor: COLORS.teal, borderRadius: 10, paddingHorizontal: 16, paddingVertical: 8 },
   joinBtnText: { fontSize: 13, fontWeight: '700', color: '#fff' },
   joinedBadge: { backgroundColor: 'rgba(0,210,106,0.2)', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6 },
-  joinedText: { fontSize: 12, fontWeight: '700', color: COLORS.success },
+  joinedText: { fontSize: 13, fontWeight: '700', color: COLORS.success },
   fullBadge: { backgroundColor: 'rgba(255,71,87,0.2)', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6 },
-  fullText: { fontSize: 12, fontWeight: '700', color: '#FF4757' },
+  fullText: { fontSize: 13, fontWeight: '700', color: '#FF4757' },
   empty: { alignItems: 'center', marginTop: 80 },
   emptyText: { fontSize: 14, color: COLORS.gray, textAlign: 'center', marginTop: 12, paddingHorizontal: 32 },
 });

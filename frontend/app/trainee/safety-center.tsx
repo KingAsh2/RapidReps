@@ -18,7 +18,7 @@ const COLORS = {
   navyLight: '#2a3a6e',
   orange: '#F7931E',
   white: '#FFFFFF',
-  gray: '#8892b0',
+  gray: '#5a6785',
   success: '#00C853',
   error: '#FF4757',
 };

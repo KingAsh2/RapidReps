@@ -35,6 +35,7 @@ import { StreakBanner } from '../../../src/components/trainee-home/StreakBanner'
 import { QuickBookSection } from '../../../src/components/trainee-home/QuickBookSection';
 import { FavoriteAvailability } from '../../../src/components/trainee-home/FavoriteAvailability';
 import { TrainerCard } from '../../../src/components/trainee-home/TrainerCard';
+import { haptic } from '../../../src/utils/haptics';
 
 const { width, height } = Dimensions.get('window');
 
@@ -587,7 +588,7 @@ export default function TraineeHomeScreen() {
             <View style={styles.featureActionsGrid}>
               <TouchableOpacity
                 style={styles.featureAction}
-                onPress={() => router.push('/trainee/instant-match')}
+                onPress={() => { haptic.light(); router.push('/trainee/instant-match'); }}
                 data-testid="instant-workout-btn"
               >
                 <LinearGradient colors={['#FF6A00', '#FF9F1C']} style={styles.featureActionGrad}>
@@ -597,7 +598,7 @@ export default function TraineeHomeScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.featureAction}
-                onPress={() => router.push('/trainee/group-sessions')}
+                onPress={() => { haptic.light(); router.push('/trainee/group-sessions'); }}
                 data-testid="group-workouts-btn"
               >
                 <LinearGradient colors={['#1a2a5e', '#2a3a6e']} style={styles.featureActionGrad}>
@@ -607,7 +608,7 @@ export default function TraineeHomeScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.featureAction}
-                onPress={() => router.push('/trainee/feed')}
+                onPress={() => { haptic.light(); router.push('/trainee/feed'); }}
                 data-testid="community-feed-btn"
               >
                 <LinearGradient colors={['#6C5CE7', '#A29BFE']} style={styles.featureActionGrad}>
@@ -963,7 +964,7 @@ const styles = StyleSheet.create({
   },
   notifBadgeText: {
     color: '#FFF',
-    fontSize: 10,
+    fontSize: 13,
     fontWeight: '800',
   },
   header: {
@@ -1071,7 +1072,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   featureActionText: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '700',
     color: '#fff',
     textAlign: 'center',
@@ -1452,7 +1453,7 @@ const styles = StyleSheet.create({
   emptySubtitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#8892b0',
+    color: '#5a6785',
     marginBottom: 20,
   },
   emptyButton: {
@@ -1535,7 +1536,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   statText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: '#1a2a5e',
   },
@@ -1562,7 +1563,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   virtualTagText: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '800',
     color: '#FFFFFF',
     letterSpacing: 0.5,
@@ -1574,14 +1575,14 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   styleTagText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: '#1a2a5e',
   },
   moreTag: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
-    color: '#8892b0',
+    color: '#5a6785',
     alignSelf: 'center',
   },
   viewProfileButton: {
@@ -1754,7 +1755,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#00D68F',
   },
   liveTextSmall: {
-    fontSize: 10,
+    fontSize: 13,
     fontWeight: '700',
     color: '#00D68F',
   },
@@ -1847,13 +1848,13 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   nearbyRating: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: '#FFB347',
     marginLeft: 3,
   },
   nearbyDistance: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '500',
     color: 'rgba(255,255,255,0.6)',
     marginBottom: 8,
@@ -1865,7 +1866,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   nearbyPrice: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: '#FFFFFF',
   },

@@ -14,13 +14,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { traineeAPI } from '../../src/services/api';
 import { toast } from '../../src/utils/toast';
+import { haptic } from '../../src/utils/haptics';
 
 const COLORS = {
   orange: '#FF7F00',
   teal: '#1a2a5e',
   navy: '#1a2a5e',
   white: '#FFFFFF',
-  gray: '#8892b0',
+  gray: '#5a6785',
   success: '#00C853',
   grayLight: '#F5F6F8',
 };
@@ -294,7 +295,7 @@ const styles = StyleSheet.create({
   },
   summaryTitle: { color: COLORS.white, fontWeight: '800', fontSize: 16, marginBottom: 8 },
   summaryText: { color: 'rgba(255,255,255,0.8)', fontSize: 14, lineHeight: 20 },
-  summaryNote: { color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 8, fontStyle: 'italic' },
+  summaryNote: { color: 'rgba(255,255,255,0.5)', fontSize: 13, marginTop: 8, fontStyle: 'italic' },
   createBtn: { borderRadius: 14, overflow: 'hidden' },
   createBtnGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, gap: 10 },
   createBtnText: { fontSize: 16, fontWeight: '800', color: COLORS.white },

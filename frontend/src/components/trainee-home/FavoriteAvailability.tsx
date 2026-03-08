@@ -31,19 +31,19 @@ export const FavoriteAvailability = ({ trainers, onTrainerPress }: Props) => (
               {t.isLiveNow ? (
                 <View style={styles.liveBadge}><Text style={styles.liveBadgeText}>LIVE NOW</Text></View>
               ) : t.isAvailable ? (
-                <Text style={{ fontSize: 11, color: '#00C853', fontWeight: '700' }}>Available</Text>
+                <Text style={{ fontSize: 13, color: '#00C853', fontWeight: '700' }}>Available</Text>
               ) : (
-                <Text style={{ fontSize: 11, color: '#8892b0', fontWeight: '600' }}>Offline</Text>
+                <Text style={{ fontSize: 13, color: '#5a6785', fontWeight: '600' }}>Offline</Text>
               )}
               {t.averageRating > 0 && (
-                <Text style={{ fontSize: 11, color: '#8892b0' }}>
+                <Text style={{ fontSize: 13, color: '#5a6785' }}>
                   <Ionicons name="star" size={10} color="#FFB800" /> {t.averageRating.toFixed(1)}
                 </Text>
               )}
             </View>
           </View>
         </View>
-        <Ionicons name="chevron-forward" size={18} color="#8892b0" />
+        <Ionicons name="chevron-forward" size={18} color="#5a6785" />
       </TouchableOpacity>
     ))}
   </View>
@@ -60,5 +60,5 @@ const styles = StyleSheet.create({
   photo: { width: 42, height: 42, borderRadius: 21 },
   name: { fontSize: 14, fontWeight: '700', color: '#1a2a5e' },
   liveBadge: { backgroundColor: '#FF4757', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
-  liveBadgeText: { fontSize: 9, fontWeight: '800', color: '#fff', letterSpacing: 0.5 },
+  liveBadgeText: { fontSize: 13, fontWeight: '800', color: '#fff', letterSpacing: 0.5 },
 });

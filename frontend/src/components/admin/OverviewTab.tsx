@@ -132,7 +132,7 @@ export const OverviewTab = ({ dashboard, leaderboard, setActiveTab }: Props) => 
           <Text style={s.chartCardTitle}>Sessions This Week</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
             <Ionicons name="trending-up" size={14} color={C.success} />
-            <Text style={{ fontSize: 12, fontWeight: '700', color: C.success }}>+15%</Text>
+            <Text style={{ fontSize: 13, fontWeight: '700', color: C.success }}>+15%</Text>
           </View>
         </View>
         <View style={{ alignItems: 'center' }}>

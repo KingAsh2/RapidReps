@@ -27,7 +27,7 @@ const COLORS = {
   navy: '#1a2a5e',
   white: '#FFFFFF',
   offWhite: '#FAFBFC',
-  gray: '#8892b0',
+  gray: '#5a6785',
   grayLight: '#E8ECF0',
 };
 
@@ -360,7 +360,7 @@ const styles = StyleSheet.create({
     color: COLORS.navy,
   },
   time: {
-    fontSize: 12,
+    fontSize: 13,
     color: COLORS.gray,
     fontWeight: '500',
   },
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   unreadCount: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: COLORS.white,
   },

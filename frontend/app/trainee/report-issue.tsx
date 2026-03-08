@@ -24,7 +24,7 @@ const COLORS = {
   navyLight: '#2a3a6e',
   orange: '#F7931E',
   white: '#FFFFFF',
-  gray: '#8892b0',
+  gray: '#5a6785',
   error: '#FF4757',
 };
 
@@ -171,5 +171,5 @@ const styles = StyleSheet.create({
   submitBtn: { borderRadius: 14, overflow: 'hidden', marginBottom: 16 },
   submitBtnGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, gap: 10 },
   submitBtnText: { fontSize: 16, fontWeight: '800', color: COLORS.white },
-  disclaimer: { fontSize: 12, color: 'rgba(255,255,255,0.5)', textAlign: 'center', lineHeight: 18 },
+  disclaimer: { fontSize: 13, color: 'rgba(255,255,255,0.5)', textAlign: 'center', lineHeight: 18 },
 });

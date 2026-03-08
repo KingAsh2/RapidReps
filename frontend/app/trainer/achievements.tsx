@@ -536,7 +536,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: 'rgba(255,255,255,0.9)',
   },
@@ -651,7 +651,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.success,
   },
   progressText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: Colors.text,
   },
@@ -666,7 +666,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   rewardText: {
-    fontSize: 10,
+    fontSize: 13,
     fontWeight: '900',
     color: Colors.white,
   },

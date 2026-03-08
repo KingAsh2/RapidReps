@@ -157,7 +157,7 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                       <Text style={[s.modalSectionTitle, { color: C.error }]}>Previous Rejection Reason</Text>
                       <Text style={[s.modalField, { color: '#555' }]}>{verificationDetail.rejectionReason}</Text>
                       {verificationDetail.rejectedAt && (
-                        <Text style={[s.modalField, { fontSize: 11, color: C.gray }]}>Rejected on {new Date(verificationDetail.rejectedAt).toLocaleDateString()}</Text>
+                        <Text style={[s.modalField, { fontSize: 13, color: C.gray }]}>Rejected on {new Date(verificationDetail.rejectedAt).toLocaleDateString()}</Text>
                       )}
                     </View>
                   )}
@@ -182,7 +182,7 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                             </View>
                             <View style={{ flex: 1 }}>
                               <Text style={{ fontSize: 14, fontWeight: '700', color: C.navy }}>{step.label}</Text>
-                              <Text style={{ fontSize: 12, color: stepApproved ? C.success : step.submitted ? C.warning : C.error, fontWeight: '600' }}>
+                              <Text style={{ fontSize: 13, color: stepApproved ? C.success : step.submitted ? C.warning : C.error, fontWeight: '600' }}>
                                 {stepApproved ? 'Approved' : step.submitted ? 'Under Review' : 'Not submitted'}
                               </Text>
                             </View>
@@ -196,7 +196,7 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                                   data-testid={`view-doc-${step.id}`}
                                 >
                                   <Ionicons name="eye" size={14} color={C.teal} />
-                                  <Text style={{ fontSize: 12, fontWeight: '600', color: C.teal }}>View</Text>
+                                  <Text style={{ fontSize: 13, fontWeight: '600', color: C.teal }}>View</Text>
                                 </TouchableOpacity>
                               )}
                               {!stepApproved && (
@@ -215,7 +215,7 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                                     data-testid={`approve-step-${step.id}`}
                                   >
                                     <Ionicons name="checkmark" size={14} color={C.white} />
-                                    <Text style={{ fontSize: 12, fontWeight: '600', color: C.white }}>Approve</Text>
+                                    <Text style={{ fontSize: 13, fontWeight: '600', color: C.white }}>Approve</Text>
                                   </TouchableOpacity>
                                   <TouchableOpacity
                                     onPress={async () => {
@@ -231,7 +231,7 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                                     data-testid={`reject-step-${step.id}`}
                                   >
                                     <Ionicons name="close" size={14} color={C.error} />
-                                    <Text style={{ fontSize: 12, fontWeight: '600', color: C.error }}>Reject</Text>
+                                    <Text style={{ fontSize: 13, fontWeight: '600', color: C.error }}>Reject</Text>
                                   </TouchableOpacity>
                                 </>
                               )}
@@ -245,7 +245,7 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                   {showRejectInput ? (
                     <View style={[s.modalSection, { backgroundColor: '#FFF5F5', borderRadius: 12, padding: 14 }]}>
                       <Text style={[s.modalSectionTitle, { color: C.error }]}>Rejection Reason</Text>
-                      <Text style={{ fontSize: 12, color: C.gray, marginBottom: 8 }}>This reason will be sent to the trainer as a notification.</Text>
+                      <Text style={{ fontSize: 13, color: C.gray, marginBottom: 8 }}>This reason will be sent to the trainer as a notification.</Text>
                       <TextInput
                         style={{
                           borderWidth: 1, borderColor: C.error, borderRadius: 10, padding: 14,

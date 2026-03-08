@@ -27,7 +27,7 @@ const COLORS = {
   navy: '#1a2a5e',
   white: '#FFFFFF',
   offWhite: '#FAFBFC',
-  gray: '#8892b0',
+  gray: '#5a6785',
   grayLight: '#E8ECF0',
 };
 
@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
   headerStatus: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: 'rgba(255,255,255,0.8)',
     marginTop: 2,
@@ -384,14 +384,14 @@ const styles = StyleSheet.create({
     color: COLORS.navy,
   },
   myMessageTime: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '500',
     color: 'rgba(255, 255, 255, 0.75)',
     alignSelf: 'flex-end',
     marginTop: 6,
   },
   theirMessageTime: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '500',
     color: COLORS.gray,
     alignSelf: 'flex-start',

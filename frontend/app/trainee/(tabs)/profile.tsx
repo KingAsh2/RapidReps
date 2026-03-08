@@ -43,7 +43,7 @@ const COLORS = {
   navyLight: '#2a3a6e',
   white: '#FFFFFF',
   offWhite: '#FAFBFC',
-  gray: '#8892b0',
+  gray: '#5a6785',
   grayLight: '#E8ECF0',
   error: '#FF4757',
   // Glass card colors
@@ -895,7 +895,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: 'rgba(255,255,255,0.85)',
   },
@@ -934,7 +934,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   addressHint: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '500',
     color: 'rgba(255,255,255,0.5)',
     marginBottom: 8,
@@ -1097,7 +1097,7 @@ const styles = StyleSheet.create({
     color: COLORS.navy,
   },
   soundToggleSub: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '500',
     color: COLORS.gray,
     marginTop: 2,
@@ -1136,7 +1136,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   streakSub: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: 'rgba(255,255,255,0.85)',
   },
@@ -1147,7 +1147,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   streakBadgeText: {
-    fontSize: 10,
+    fontSize: 13,
     fontWeight: '800',
     color: COLORS.white,
     letterSpacing: 0.5,
@@ -1167,7 +1167,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   streakProgressText: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '600',
     color: 'rgba(255,255,255,0.8)',
     marginTop: 4,

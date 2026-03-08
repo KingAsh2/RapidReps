@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { feedAPI } from '../../src/services/api';
 import { useAuth } from '../../src/contexts/AuthContext';
 
-const COLORS = { orange: '#FF6A00', teal: '#1a2a5e', navy: '#1a2a5e', white: '#FFFFFF', offWhite: '#F8F9FA', gray: '#8892b0', success: '#00D26A' };
+const COLORS = { orange: '#FF6A00', teal: '#1a2a5e', navy: '#1a2a5e', white: '#FFFFFF', offWhite: '#F8F9FA', gray: '#5a6785', success: '#00D26A' };
 
 const POST_ICONS: Record<string, string> = {
   session_complete: 'checkmark-circle',
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   postHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
   postIconCircle: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   postUser: { fontSize: 15, fontWeight: '700', color: '#fff' },
-  postTime: { fontSize: 11, color: COLORS.gray },
+  postTime: { fontSize: 13, color: COLORS.gray },
   postContent: { fontSize: 14, color: '#e0e0e0', lineHeight: 20, marginBottom: 12 },
   postActions: { flexDirection: 'row' },
   likeBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
