@@ -8981,6 +8981,9 @@ app.include_router(feed_router)
 app.include_router(group_sessions_router)
 app.include_router(progress_router)
 
+from routes.safety_check import router as safety_check_router
+app.include_router(safety_check_router)
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,

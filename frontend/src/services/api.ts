@@ -732,3 +732,56 @@ export const progressAPI = {
   getHistory: async (userId: string, limit?: number): Promise<any> => { const r = await api.get(`/progress/${userId}/history`, { params: { limit: limit || 30 } }); return r.data; },
 };
 
+// Safety Check - QR Verification System
+export const safetyCheckAPI = {
+  generateToken: async (sessionId: string): Promise<any> => {
+    const r = await api.post(`/safety-check/generate-token/${sessionId}`);
+    return r.data;
+  },
+  verify: async (token: string): Promise<any> => {
+    const r = await api.post('/safety-check/verify', { token });
+    return r.data;
+  },
+  getBadgeData: async (sessionId: string): Promise<any> => {
+    const r = await api.get(`/safety-check/badge/${sessionId}`);
+    return r.data;
+  },
+  getActiveSession: async (): Promise<any> => {
+    const r = await api.get('/safety-check/active-session');
+    return r.data;
+  },
+  getTimerStatus: async (sessionId: string): Promise<any> => {
+    const r = await api.get(`/safety-check/timer/${sessionId}`);
+    return r.data;
+  },
+  completeTimer: async (sessionId: string): Promise<any> => {
+    const r = await api.post(`/safety-check/timer/${sessionId}/complete`);
+    return r.data;
+  },
+  canStart: async (sessionId: string): Promise<any> => {
+    const r = await api.get(`/safety-check/can-start/${sessionId}`);
+    return r.data;
+  },
+  // Admin endpoints
+  adminActiveSessions: async (): Promise<any> => {
+    const r = await api.get('/safety-check/admin/active-sessions');
+    return r.data;
+  },
+  adminVerificationLog: async (limit?: number, skip?: number): Promise<any> => {
+    const r = await api.get('/safety-check/admin/verification-log', { params: { limit: limit || 50, skip: skip || 0 } });
+    return r.data;
+  },
+  adminSafetyEvents: async (): Promise<any> => {
+    const r = await api.get('/safety-check/admin/safety-events');
+    return r.data;
+  },
+  adminDurationTracking: async (): Promise<any> => {
+    const r = await api.get('/safety-check/admin/duration-tracking');
+    return r.data;
+  },
+  adminOverride: async (sessionId: string, reason: string): Promise<any> => {
+    const r = await api.post('/safety-check/admin/override', { sessionId, reason });
+    return r.data;
+  },
+};
+

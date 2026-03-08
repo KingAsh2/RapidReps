@@ -30,8 +30,9 @@ import { SessionsTab } from '../../src/components/admin/SessionsTab';
 import { PaymentsTab } from '../../src/components/admin/PaymentsTab';
 import { PayoutsTab } from '../../src/components/admin/PayoutsTab';
 import { ProfileTab } from '../../src/components/admin/ProfileTab';
+import { SafetyTab } from '../../src/components/admin/SafetyTab';
 
-type Tab = 'overview' | 'users' | 'verifications' | 'sessions' | 'payments' | 'payouts' | 'profile';
+type Tab = 'overview' | 'users' | 'verifications' | 'sessions' | 'payments' | 'payouts' | 'safety' | 'profile';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -354,6 +355,7 @@ export default function AdminDashboard() {
     { id: 'sessions', icon: 'calendar', label: 'Sessions' },
     { id: 'payments', icon: 'card', label: 'Payments' },
     { id: 'payouts', icon: 'wallet', label: 'Payouts' },
+    { id: 'safety', icon: 'shield-half', label: 'Safety' },
     { id: 'profile', icon: 'person-circle', label: 'Profile' },
   ];
 
@@ -576,6 +578,7 @@ export default function AdminDashboard() {
                 onPayTrainer={handlePayTrainer} onPayAll={handlePayAll}
               />
             )}
+            {activeTab === 'safety' && <SafetyTab />}
             {activeTab === 'profile' && <ProfileTab adminUser={adminUser} onEditProfile={() => setProfileModalVisible(true)} onChangePassword={() => setPasswordModalVisible(true)} />}
           </>
         )}

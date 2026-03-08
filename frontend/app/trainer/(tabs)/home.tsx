@@ -473,6 +473,10 @@ export default function TrainerHomeScreen() {
                 <Ionicons name="trophy" size={22} color={COLORS.yellow} />
                 <Text style={{ fontSize: 15, fontWeight: '700', color: COLORS.navy }}>Achievements</Text>
               </TouchableOpacity>
+              <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 18, gap: 14 }} onPress={() => { setMenuVisible(false); router.push('/trainer/badge'); }} data-testid="menu-badge">
+                <Ionicons name="shield-checkmark" size={22} color={COLORS.orange} />
+                <Text style={{ fontSize: 15, fontWeight: '700', color: COLORS.navy }}>My Badge</Text>
+              </TouchableOpacity>
               <View style={{ height: 1, backgroundColor: '#E8ECF0', marginHorizontal: 18 }} />
               <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 18, gap: 14 }} onPress={() => { setMenuVisible(false); handleLogout(); }} data-testid="menu-logout">
                 <Ionicons name="log-out-outline" size={22} color={COLORS.error} />

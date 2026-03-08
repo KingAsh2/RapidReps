@@ -517,6 +517,10 @@ export default function TraineeHomeScreen() {
                 <Ionicons name="heart" size={22} color="#FF3B30" />
                 <Text style={{ fontSize: 15, fontWeight: '700', color: '#1a2a5e' }}>Saved Trainers</Text>
               </TouchableOpacity>
+              <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 18, gap: 14 }} onPress={() => { setMenuVisible(false); router.push('/trainee/verify-trainer'); }} data-testid="trainee-menu-verify">
+                <Ionicons name="shield-checkmark" size={22} color="#FF7F00" />
+                <Text style={{ fontSize: 15, fontWeight: '700', color: '#1a2a5e' }}>Verify Trainer</Text>
+              </TouchableOpacity>
               <View style={{ height: 1, backgroundColor: '#E8ECF0', marginHorizontal: 18 }} />
               <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 18, gap: 14 }} onPress={() => { setMenuVisible(false); handleLogout(); }} data-testid="trainee-menu-logout">
                 <Ionicons name="log-out-outline" size={22} color="#FF3B30" />
