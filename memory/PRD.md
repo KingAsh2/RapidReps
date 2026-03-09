@@ -43,7 +43,12 @@ A full-stack React Native/Expo fitness application connecting trainees with pers
 | POST /api/safety-check/admin/override | Manual verification |
 
 ## Latest Fix (December 2025)
-### Deployment Bug Fixed
+### Deployment Bug Fixed - expo-barcode-scanner Removal
+- **Issue:** iOS build failed with error: `'ExpoModulesCore/EXBarcodeScannerInterface.h' file not found`
+- **Root Cause:** `expo-barcode-scanner` package is deprecated and incompatible with Expo SDK 54. The native code references removed interfaces from ExpoModulesCore.
+- **Fix:** Removed `expo-barcode-scanner` from package.json dependencies. The app already uses `expo-camera`'s built-in `CameraView` with `barcodeScannerSettings` for QR code scanning (in `verify-trainer.tsx`).
+
+### Previous Fix - Missing Image Asset
 - **Issue:** Build failed due to missing image asset `gym-bg.jpg` in `frontend/app/trainer/badge.tsx`
 - **Fix:** Replaced with existing assets (`bg-gym-blue.png` for background, `icon.png` for badge logo)
 
