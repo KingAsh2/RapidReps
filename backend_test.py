@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
 # Test Configuration
-BASE_URL = "https://trainer-ui-align.preview.emergentagent.com/api"
+BASE_URL = "https://safety-check-deploy.preview.emergentagent.com/api"
 TEST_TIMEOUT = 30
 
 # Test Credentials from review request

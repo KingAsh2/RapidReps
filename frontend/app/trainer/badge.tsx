@@ -11,7 +11,7 @@ import { safetyCheckAPI } from '../../src/services/api';
 import { Colors as COLORS } from '../../src/utils/colors';
 import * as Haptics from 'expo-haptics';
 
-const backgroundImage = require('../../assets/images/gym-bg.jpg');
+const backgroundImage = require('../../assets/images/bg-gym-blue.png');
 
 export default function TrainerBadge() {
   const router = useRouter();
@@ -186,7 +186,7 @@ export default function TrainerBadge() {
           >
             <View style={styles.badgeHeaderContent}>
               <Image
-                source={require('../../assets/images/gym-bg.jpg')}
+                source={require('../../assets/images/icon.png')}
                 style={styles.badgeLogo}
                 resizeMode="contain"
               />

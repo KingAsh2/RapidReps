@@ -25,7 +25,7 @@ from datetime import datetime
 # Get BASE_URL from environment - DO NOT add default
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL')
 if not BASE_URL:
-    BASE_URL = "https://trainer-ui-align.preview.emergentagent.com"
+    BASE_URL = "https://safety-check-deploy.preview.emergentagent.com"
 BASE_URL = BASE_URL.rstrip('/')
 
 # Test credentials

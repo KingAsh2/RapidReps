@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 
 class FinalAPITester:
     def __init__(self):
-        self.base_url = "https://trainer-ui-align.preview.emergentagent.com"
+        self.base_url = "https://safety-check-deploy.preview.emergentagent.com"
         self.api_url = f"{self.base_url}/api"
         
         # Test credentials

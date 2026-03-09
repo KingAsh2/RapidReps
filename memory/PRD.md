@@ -42,6 +42,11 @@ A full-stack React Native/Expo fitness application connecting trainees with pers
 | GET /api/safety-check/admin/duration-tracking | Booked vs actual |
 | POST /api/safety-check/admin/override | Manual verification |
 
+## Latest Fix (December 2025)
+### Deployment Bug Fixed
+- **Issue:** Build failed due to missing image asset `gym-bg.jpg` in `frontend/app/trainer/badge.tsx`
+- **Fix:** Replaced with existing assets (`bg-gym-blue.png` for background, `icon.png` for badge logo)
+
 ## Prioritized Backlog
 - **P4:** SendGrid Integration (blocked - awaiting API key)
 - **P5:** TypeScript strict-mode warnings cleanup (86+ warnings)
