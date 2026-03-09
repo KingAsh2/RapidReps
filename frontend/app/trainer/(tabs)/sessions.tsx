@@ -14,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { SessionCountdown } from '../../../src/components/SessionCountdown';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -46,7 +47,7 @@ export default function TrainerSessionsScreen() {
   const loadSessions = async () => {
     try {
       const token = await AsyncStorage.getItem('auth_token');
-      const res = await axios.get(`${API_URL}/api/sessions/trainer`, {
+      const res = await axios.get(`${API_URL}/api/trainer/sessions`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSessions(res.data || []);
@@ -174,7 +175,22 @@ export default function TrainerSessionsScreen() {
                       </Text>
                     </View>
                   )}
+                  {session.status === 'in_progress' && session.sessionStartedAt && (
+                    <SessionCountdown
+                      sessionStartedAt={session.sessionStartedAt}
+                      durationMinutes={session.durationMinutes || 60}
+                      compact
+                    />
+                  )}
                 </View>
+
+                {/* Full countdown timer for in-progress sessions */}
+                {session.status === 'in_progress' && session.sessionStartedAt && (
+                  <SessionCountdown
+                    sessionStartedAt={session.sessionStartedAt}
+                    durationMinutes={session.durationMinutes || 60}
+                  />
+                )}
               </View>
             ))
           )}

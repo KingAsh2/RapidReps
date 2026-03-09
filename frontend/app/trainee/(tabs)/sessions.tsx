@@ -19,6 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { useAlert } from '../../../src/contexts/AlertContext';
 import { traineeAPI } from '../../../src/services/api';
+import { SessionCountdown } from '../../../src/components/SessionCountdown';
 
 const { width } = Dimensions.get('window');
 
@@ -439,6 +440,14 @@ export default function SessionsScreen() {
                         </Text>
                       </View>
                     </View>
+
+                    {/* Live Session Timer */}
+                    {session.status === 'in_progress' && session.sessionStartedAt && (
+                      <SessionCountdown
+                        sessionStartedAt={session.sessionStartedAt}
+                        durationMinutes={session.durationMinutes || 60}
+                      />
+                    )}
 
                     {/* Action Buttons */}
                     {session.status === 'en_route' && (
