@@ -136,104 +136,56 @@ export default function SavedTrainersScreen() {
           transform: [{ 
             translateY: listAnim.interpolate({
               inputRange: [0, 1],
-              outputRange: [30 * (index + 1), 0],
+              outputRange: [30, 0],
             })
           }],
         }}
       >
         <TouchableOpacity
-          style={styles.trainerCard}
+          style={styles.trainerThumbnail}
           onPress={() => router.push(`/trainee/trainer-detail?trainerId=${trainer.id}`)}
-          activeOpacity={0.9}
+          activeOpacity={0.85}
         >
-          {/* Accent stripe */}
-          <View style={styles.cardAccent} />
-          
-          <View style={styles.cardContent}>
-            {/* Trainer Avatar */}
-            {trainer.profilePhoto ? (
-              <Image source={{ uri: trainer.profilePhoto }} style={styles.trainerAvatar} />
-            ) : (
-              <LinearGradient
-                colors={[COLORS.teal, COLORS.tealLight]}
-                style={styles.trainerAvatarPlaceholder}
-              >
-                <Text style={styles.avatarInitials}>
-                  {trainer.name.split(' ').map((n: string) => n[0]).join('')}
-                </Text>
-              </LinearGradient>
-            )}
-
-            {/* Trainer Info */}
-            <View style={styles.trainerInfo}>
-              <View style={styles.trainerHeader}>
-                <Text style={styles.trainerName}>{trainer.name}</Text>
-                {trainer.isVerified && (
-                  <View style={styles.verifiedBadge}>
-                    <Ionicons name="checkmark-circle" size={16} color={COLORS.teal} />
-                  </View>
-                )}
-              </View>
-              
-              <View style={styles.trainerMeta}>
-                <View style={styles.metaItem}>
-                  <Ionicons name="star" size={14} color={COLORS.warning} />
-                  <Text style={styles.metaText}>{trainer.rating?.toFixed(1)}</Text>
-                  <Text style={styles.metaSubtext}>({trainer.reviewCount})</Text>
-                </View>
-                <View style={styles.metaDivider} />
-                <View style={styles.metaItem}>
-                  <Text style={styles.priceText}>${trainer.hourlyRate}/hr</Text>
-                </View>
-                {trainer.distance && (
-                  <>
-                    <View style={styles.metaDivider} />
-                    <View style={styles.metaItem}>
-                      <Ionicons name="location" size={12} color={COLORS.orange} />
-                      <Text style={styles.distanceText}>{trainer.distance.toFixed(1)} mi</Text>
-                    </View>
-                  </>
-                )}
-              </View>
-
-              <View style={styles.specialtiesRow}>
-                {trainer.specialties?.slice(0, 2).map((spec: string, i: number) => (
-                  <View key={i} style={styles.specialtyTag}>
-                    <Text style={styles.specialtyText}>{spec}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-
-            {/* Heart Button */}
-            <TouchableOpacity
-              style={styles.heartButton}
-              onPress={(e) => {
-                e.stopPropagation();
-                handleRemoveFavorite(trainer.id);
-              }}
-            >
-              <Animated.View style={{ transform: [{ scale: heartPulseAnim }] }}>
-                <Ionicons name="heart" size={24} color={COLORS.error} />
-              </Animated.View>
-            </TouchableOpacity>
-          </View>
-
-          {/* Book Now Button */}
-          <TouchableOpacity 
-            style={styles.bookButton}
-            onPress={() => router.push(`/trainee/trainer-detail?trainerId=${trainer.id}`)}
-          >
+          {/* Trainer Avatar */}
+          {trainer.profilePhoto ? (
+            <Image source={{ uri: trainer.profilePhoto }} style={styles.thumbnailAvatar} />
+          ) : (
             <LinearGradient
-              colors={[COLORS.orange, COLORS.orangeLight]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.bookButtonGradient}
+              colors={[COLORS.teal, COLORS.tealLight]}
+              style={styles.thumbnailAvatarPlaceholder}
             >
-              <Text style={styles.bookButtonText}>Book Session</Text>
-              <Ionicons name="arrow-forward" size={18} color={COLORS.white} />
+              <Text style={styles.thumbnailInitials}>
+                {trainer.name.split(' ').map((n: string) => n[0]).join('')}
+              </Text>
             </LinearGradient>
+          )}
+          
+          {/* Verified Badge */}
+          {trainer.isVerified && (
+            <View style={styles.thumbnailVerified}>
+              <Ionicons name="checkmark-circle" size={14} color={COLORS.teal} />
+            </View>
+          )}
+          
+          {/* Heart Button */}
+          <TouchableOpacity
+            style={styles.thumbnailHeart}
+            onPress={(e) => {
+              e.stopPropagation();
+              handleRemoveFavorite(trainer.id);
+            }}
+          >
+            <Ionicons name="heart" size={14} color={COLORS.error} />
           </TouchableOpacity>
+          
+          {/* Trainer Name */}
+          <Text style={styles.thumbnailName} numberOfLines={1}>{trainer.name.split(' ')[0]}</Text>
+          
+          {/* Rating */}
+          <View style={styles.thumbnailRating}>
+            <Ionicons name="star" size={10} color={COLORS.warning} />
+            <Text style={styles.thumbnailRatingText}>{trainer.rating?.toFixed(1)}</Text>
+          </View>
         </TouchableOpacity>
       </Animated.View>
     );
@@ -324,7 +276,7 @@ export default function SavedTrainersScreen() {
               </TouchableOpacity>
             </Animated.View>
           ) : (
-            <View style={styles.trainersList}>
+            <View style={styles.trainersGrid}>
               {savedTrainers.map((trainer, index) => renderTrainer(trainer, index))}
             </View>
           )}
@@ -387,6 +339,76 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 16,
+  },
+  trainersGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    justifyContent: 'flex-start',
+  },
+  trainerThumbnail: {
+    width: (width - 32 - 36) / 4,
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderRadius: 16,
+    padding: 10,
+    shadowColor: '#1a2a5e',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  thumbnailAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginBottom: 6,
+  },
+  thumbnailAvatarPlaceholder: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  thumbnailInitials: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: COLORS.white,
+  },
+  thumbnailVerified: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    borderRadius: 10,
+    padding: 2,
+  },
+  thumbnailHeart: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    borderRadius: 10,
+    padding: 4,
+  },
+  thumbnailName: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.navy,
+    textAlign: 'center',
+    marginBottom: 2,
+  },
+  thumbnailRating: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  thumbnailRatingText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: COLORS.gray,
   },
   trainersList: {
     gap: 16,

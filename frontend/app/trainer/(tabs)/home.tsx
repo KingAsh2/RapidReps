@@ -900,7 +900,7 @@ export default function TrainerHomeScreen() {
               )}
             </View>
 
-            {/* Nearby Trainees */}
+            {/* Nearby Trainees - Thumbnail Grid */}
             {nearbyTrainees.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
@@ -909,37 +909,29 @@ export default function TrainerHomeScreen() {
                     <Text style={styles.countBadgeText}>{nearbyTrainees.length}</Text>
                   </View>
                 </View>
-                {nearbyTrainees.slice(0, 3).map((trainee, index) => (
-                  <View key={index} style={styles.traineeCard}>
-                    <LinearGradient
-                      colors={[COLORS.white, COLORS.offWhite]}
-                      style={styles.traineeCardGradient}
-                    >
-                      <View style={styles.traineeCardRow}>
-                        {trainee.profilePhoto ? (
-                          <Image source={{ uri: trainee.profilePhoto }} style={styles.traineeCardAvatar} />
-                        ) : (
-                          <LinearGradient
-                            colors={[COLORS.teal, COLORS.tealLight]}
-                            style={styles.traineeCardAvatarPlaceholder}
-                          >
-                            <Ionicons name="person" size={24} color={COLORS.white} />
-                          </LinearGradient>
-                        )}
-                        <View style={styles.traineeCardInfo}>
-                          <Text style={styles.traineeCardName}>{trainee.fullName}</Text>
-                          {trainee.fitnessGoals && (
-                            <Text style={styles.traineeCardGoal} numberOfLines={1}>{trainee.fitnessGoals}</Text>
-                          )}
-                        </View>
-                        <View style={styles.distanceBadge}>
-                          <Ionicons name="location" size={12} color={COLORS.white} />
-                          <Text style={styles.distanceText}>{trainee.distance} mi</Text>
-                        </View>
+                <View style={styles.traineeThumbnailGrid}>
+                  {nearbyTrainees.slice(0, 8).map((trainee, index) => (
+                    <View key={index} style={styles.traineeThumbnail}>
+                      {trainee.profilePhoto ? (
+                        <Image source={{ uri: trainee.profilePhoto }} style={styles.traineeThumbnailAvatar} />
+                      ) : (
+                        <LinearGradient
+                          colors={[COLORS.teal, COLORS.tealLight]}
+                          style={styles.traineeThumbnailAvatarPlaceholder}
+                        >
+                          <Ionicons name="person" size={20} color={COLORS.white} />
+                        </LinearGradient>
+                      )}
+                      <Text style={styles.traineeThumbnailName} numberOfLines={1}>
+                        {trainee.fullName?.split(' ')[0]}
+                      </Text>
+                      <View style={styles.traineeThumbnailDistance}>
+                        <Ionicons name="location" size={10} color={COLORS.orange} />
+                        <Text style={styles.traineeThumbnailDistanceText}>{trainee.distance} mi</Text>
                       </View>
-                    </LinearGradient>
-                  </View>
-                ))}
+                    </View>
+                  ))}
+                </View>
               </View>
             )}
 
@@ -1503,5 +1495,55 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: COLORS.white,
+  },
+  // Trainee Thumbnail Grid
+  traineeThumbnailGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    justifyContent: 'flex-start',
+  },
+  traineeThumbnail: {
+    width: (width - 40 - 30) / 4,
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderRadius: 14,
+    padding: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  traineeThumbnailAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    marginBottom: 6,
+  },
+  traineeThumbnailAvatarPlaceholder: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  traineeThumbnailName: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.navy,
+    textAlign: 'center',
+    marginBottom: 2,
+  },
+  traineeThumbnailDistance: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  traineeThumbnailDistanceText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: COLORS.gray,
   },
 });

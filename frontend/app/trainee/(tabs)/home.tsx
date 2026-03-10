@@ -27,6 +27,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import { useNotifications } from '../../../src/contexts/NotificationContext';
+import Slider from '@react-native-community/slider';
 import TrainingModeDialog from '../../../src/components/TrainingModeDialog';
 import TrainerFilters from '../../../src/components/TrainerFilters';
 import NearbyTrainersMap from '../../../src/components/NearbyTrainersMap';
@@ -732,47 +733,28 @@ export default function TraineeHomeScreen() {
 
             {/* Available Trainers Section */}
             <View style={styles.trainersSection}>
-              {/* Travel to Trainer Proximity Dropdown */}
+              {/* Travel to Trainer Proximity Slider */}
               <View style={styles.proximityContainer} data-testid="proximity-container">
                 <View style={styles.proximityHeader}>
                   <Ionicons name="navigate-outline" size={18} color="#2a3a6e" />
                   <Text style={styles.proximityLabel}>Travel to Trainer Proximity</Text>
-                </View>
-                <TouchableOpacity
-                  style={styles.proximityDropdown}
-                  onPress={() => setShowProximityPicker(!showProximityPicker)}
-                  data-testid="proximity-dropdown-btn"
-                >
                   <Text style={styles.proximityValue}>{travelProximity} miles</Text>
-                  <Ionicons name={showProximityPicker ? "chevron-up" : "chevron-down"} size={18} color="#1A2A5E" />
-                </TouchableOpacity>
-                {showProximityPicker && (
-                  <View style={styles.proximityPickerContainer}>
-                    <ScrollView style={styles.proximityPickerScroll} nestedScrollEnabled>
-                      {Array.from({ length: 35 }, (_, i) => i + 1).map((miles) => (
-                        <TouchableOpacity
-                          key={miles}
-                          style={[
-                            styles.proximityOption,
-                            travelProximity === miles && styles.proximityOptionActive,
-                          ]}
-                          onPress={() => { setTravelProximity(miles); setShowProximityPicker(false); }}
-                          data-testid={`proximity-option-${miles}`}
-                        >
-                          <Text style={[
-                            styles.proximityOptionText,
-                            travelProximity === miles && styles.proximityOptionTextActive,
-                          ]}>
-                            {miles} {miles === 1 ? 'mile' : 'miles'}
-                          </Text>
-                          {travelProximity === miles && (
-                            <Ionicons name="checkmark" size={16} color="#2a3a6e" />
-                          )}
-                        </TouchableOpacity>
-                      ))}
-                    </ScrollView>
-                  </View>
-                )}
+                </View>
+                <View style={styles.sliderContainer}>
+                  <Text style={styles.sliderMinMax}>1</Text>
+                  <Slider
+                    style={styles.proximitySlider}
+                    minimumValue={1}
+                    maximumValue={35}
+                    step={1}
+                    value={travelProximity}
+                    onValueChange={(value) => setTravelProximity(Math.round(value))}
+                    minimumTrackTintColor="#F7931E"
+                    maximumTrackTintColor="#ddd"
+                    thumbTintColor="#F7931E"
+                  />
+                  <Text style={styles.sliderMinMax}>35</Text>
+                </View>
               </View>
 
               <View style={styles.sectionHeader}>
@@ -1365,7 +1347,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: 6,
+    marginBottom: 8,
   },
   proximityLabel: {
     fontSize: 13,
@@ -1373,6 +1355,35 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     letterSpacing: 0.3,
     textTransform: 'uppercase',
+    flex: 1,
+  },
+  proximityValue: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    backgroundColor: 'rgba(247,147,30,0.3)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  sliderContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  proximitySlider: {
+    flex: 1,
+    height: 40,
+  },
+  sliderMinMax: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.7)',
+    width: 24,
+    textAlign: 'center',
   },
   proximityDropdown: {
     flexDirection: 'row',

@@ -65,6 +65,9 @@ Applied 8 new fitness-themed background images across multiple screens:
 1. **Chat header profile photo:** Added profile photo display in messaging header
 2. **"Need a Trainer Now" banner:** Removed pricing text ($18/30-min), now shows "Get matched instantly"
 3. **Set Rates 30/60/90 pricing:** Added duration breakdown showing calculated prices for 30, 60, and 90 minute sessions
+4. **Travel Proximity slider:** Converted dropdown list to interactive range slider (1-35 miles) on trainee home
+5. **Saved Trainers compact view:** Converted to 4-column thumbnail grid with profile pic, name, rating
+6. **Nearby Trainees compact view:** Converted to 4-column thumbnail grid (up to 8 trainees visible)
 
 ### Deployment Bug Fixed - expo-barcode-scanner Removal
 - **Issue:** iOS build failed with error: `'ExpoModulesCore/EXBarcodeScannerInterface.h' file not found`
