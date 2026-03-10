@@ -41,6 +41,167 @@ const COLORS = {
 };
 
 const backgroundImage = require('../../assets/images/bg-gym-blue.png');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+// Scanning Animation Component
+const ScanningOverlay = ({ visible, onComplete }: { visible: boolean; onComplete: () => void }) => {
+  const scanLineAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  
+  useEffect(() => {
+    if (visible) {
+      // Scanning line animation
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(scanLineAnim, {
+            toValue: 1,
+            duration: 1500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(scanLineAnim, {
+            toValue: 0,
+            duration: 1500,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+      
+      // Pulse animation
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.1,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+      
+      // Auto-complete after 3 seconds
+      const timer = setTimeout(() => {
+        onComplete();
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [visible]);
+  
+  if (!visible) return null;
+  
+  return (
+    <Modal visible={visible} transparent animationType="fade">
+      <View style={scanStyles.overlay}>
+        <LinearGradient
+          colors={['rgba(26, 42, 94, 0.95)', 'rgba(42, 58, 110, 0.95)']}
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={scanStyles.content}>
+          <Animated.View style={[scanStyles.scanFrame, { transform: [{ scale: pulseAnim }] }]}>
+            <View style={scanStyles.corner} />
+            <View style={[scanStyles.corner, { right: 0, borderLeftWidth: 0, borderRightWidth: 4 }]} />
+            <View style={[scanStyles.corner, { bottom: 0, borderTopWidth: 0, borderBottomWidth: 4 }]} />
+            <View style={[scanStyles.corner, { bottom: 0, right: 0, borderTopWidth: 0, borderLeftWidth: 0, borderBottomWidth: 4, borderRightWidth: 4 }]} />
+            
+            <Animated.View 
+              style={[
+                scanStyles.scanLine,
+                {
+                  transform: [{
+                    translateY: scanLineAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, 200],
+                    })
+                  }]
+                }
+              ]}
+            />
+            
+            <Ionicons name="id-card" size={60} color="rgba(255,255,255,0.3)" style={{ position: 'absolute' }} />
+          </Animated.View>
+          
+          <Text style={scanStyles.title}>Scanning ID...</Text>
+          <Text style={scanStyles.subtitle}>Please hold still while we verify your document</Text>
+          
+          <View style={scanStyles.progressContainer}>
+            <ActivityIndicator size="small" color={COLORS.orange} />
+            <Text style={scanStyles.progressText}>Processing verification</Text>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
+const scanStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  content: {
+    alignItems: 'center',
+    padding: 40,
+  },
+  scanFrame: {
+    width: 260,
+    height: 180,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  corner: {
+    position: 'absolute',
+    width: 40,
+    height: 40,
+    borderColor: COLORS.orange,
+    borderTopWidth: 4,
+    borderLeftWidth: 4,
+    top: 0,
+    left: 0,
+  },
+  scanLine: {
+    position: 'absolute',
+    left: 10,
+    right: 10,
+    height: 3,
+    backgroundColor: COLORS.orange,
+    shadowColor: COLORS.orange,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: COLORS.white,
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.7)',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  progressContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 20,
+  },
+  progressText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.white,
+  },
+});
 
 const VERIFICATION_STEPS = [
   {
@@ -104,6 +265,8 @@ export default function TrainerVerificationScreen() {
   const [holdProgress] = useState(new Animated.Value(0));
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fadeAnim = useState(new Animated.Value(0))[0];
+  const [showScanningOverlay, setShowScanningOverlay] = useState(false);
+  const [pendingIdUri, setPendingIdUri] = useState<string | null>(null);
 
   useEffect(() => {
     loadVerificationStatus();
@@ -203,9 +366,9 @@ export default function TrainerVerificationScreen() {
         }
         if (result && !result.canceled && result.assets?.[0]) {
           const asset = result.assets[0];
-          await submitStepToBackend(stepId, asset.uri, 'scanned_id.jpg');
-          setVerificationStatus(prev => ({ ...prev, [stepId]: 'submitted' }));
-          toast.success('ID scanned successfully!');
+          // Show scanning animation
+          setPendingIdUri(asset.uri);
+          setShowScanningOverlay(true);
         } else {
           setVerificationStatus(prev => ({ ...prev, [stepId]: 'pending' }));
         }
@@ -262,6 +425,23 @@ export default function TrainerVerificationScreen() {
 
   const handleStartBackgroundCheck = () => {
     setShowPIIModal(true);
+  };
+
+  // Handle scanning overlay completion
+  const handleScanComplete = async () => {
+    setShowScanningOverlay(false);
+    if (pendingIdUri) {
+      try {
+        await submitStepToBackend('identity', pendingIdUri, 'scanned_id.jpg');
+        setVerificationStatus(prev => ({ ...prev, identity: 'submitted' }));
+        toast.success('ID verified successfully!');
+        haptic.success();
+      } catch (err) {
+        setVerificationStatus(prev => ({ ...prev, identity: 'pending' }));
+        toast.error('Failed to submit ID. Please try again.');
+      }
+      setPendingIdUri(null);
+    }
   };
 
   const handleSubmitPII = async () => {
@@ -347,6 +527,9 @@ export default function TrainerVerificationScreen() {
 
   return (
     <>
+    {/* Scanning Animation Overlay */}
+    <ScanningOverlay visible={showScanningOverlay} onComplete={handleScanComplete} />
+    
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
       <LinearGradient
         colors={['rgba(247, 147, 30, 0.9)', 'rgba(247, 147, 30, 0.85)', 'rgba(255, 165, 38, 0.8)']}
