@@ -19,6 +19,23 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
   const [showRejectInput, setShowRejectInput] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [rejectTrainerId, setRejectTrainerId] = useState('');
+  const [approvedTrainers, setApprovedTrainers] = useState<any[]>([]);
+  const [showApproved, setShowApproved] = useState(false);
+  const [loadingApproved, setLoadingApproved] = useState(false);
+
+  const fetchApprovedTrainers = async () => {
+    setLoadingApproved(true);
+    try {
+      const headers = await getAuthHeader();
+      const res = await api.get('/admin/verifications/approved', { headers });
+      setApprovedTrainers(res.data || []);
+    } catch (err) {
+      // If endpoint doesn't exist yet, use empty array
+      setApprovedTrainers([]);
+    } finally {
+      setLoadingApproved(false);
+    }
+  };
 
   const handleOpenVerification = async (item: any) => {
     setVerificationDetailLoading(true);
@@ -69,7 +86,72 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
 
   return (
     <View>
-      <Text style={s.sectionTitle}>Pending Verifications ({verifications.length})</Text>
+      {/* Toggle between Pending and Approved */}
+      <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
+        <TouchableOpacity
+          style={{
+            flex: 1, paddingVertical: 12, borderRadius: 12, alignItems: 'center',
+            backgroundColor: !showApproved ? C.teal : '#f0f0f0',
+          }}
+          onPress={() => setShowApproved(false)}
+        >
+          <Text style={{ fontSize: 14, fontWeight: '700', color: !showApproved ? C.white : C.gray }}>
+            Pending ({verifications.length})
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={{
+            flex: 1, paddingVertical: 12, borderRadius: 12, alignItems: 'center',
+            backgroundColor: showApproved ? C.success : '#f0f0f0',
+          }}
+          onPress={() => { setShowApproved(true); fetchApprovedTrainers(); }}
+        >
+          <Text style={{ fontSize: 14, fontWeight: '700', color: showApproved ? C.white : C.gray }}>
+            Approved Trainers
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {showApproved ? (
+        // Approved Trainers List
+        <>
+          <Text style={s.sectionTitle}>Approved Trainers</Text>
+          {loadingApproved ? (
+            <ActivityIndicator size="large" color={C.teal} style={{ marginVertical: 20 }} />
+          ) : approvedTrainers.length === 0 ? (
+            <View style={s.emptyState}>
+              <Ionicons name="people-circle" size={48} color={C.gray} />
+              <Text style={s.emptyTitle}>No Approved Trainers</Text>
+              <Text style={s.emptySub}>Trainers will appear here once approved.</Text>
+            </View>
+          ) : (
+            approvedTrainers.map((trainer: any, idx: number) => (
+              <TouchableOpacity
+                key={idx}
+                style={s.verifyCard}
+                onPress={() => handleOpenVerification({ profile: { userId: trainer.userId }, user: trainer })}
+              >
+                <View style={s.verifyHeader}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.verifyName}>{trainer.fullName || 'Trainer'}</Text>
+                    <Text style={s.verifySub}>{trainer.email || ''}</Text>
+                  </View>
+                  <View style={[s.pendingBadge, { backgroundColor: '#E8FDE8' }]}>
+                    <Text style={[s.pendingBadgeText, { color: C.success }]}>VERIFIED</Text>
+                  </View>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
+                  <Ionicons name="document-text-outline" size={16} color={C.teal} />
+                  <Text style={{ fontSize: 13, fontWeight: '600', color: C.teal }}>View Documents</Text>
+                </View>
+              </TouchableOpacity>
+            ))
+          )}
+        </>
+      ) : (
+        // Pending Verifications List
+        <>
+          <Text style={s.sectionTitle}>Pending Verifications ({verifications.length})</Text>
       {verifications.length === 0 ? (
         <View style={s.emptyState}>
           <Ionicons name="checkmark-done-circle" size={48} color={C.success} />
@@ -116,6 +198,8 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
             </TouchableOpacity>
           );
         })
+      )}
+        </>
       )}
 
       {/* Verification Detail Modal */}

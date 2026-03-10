@@ -6749,6 +6749,34 @@ async def admin_get_pending_verifications(admin_user: dict = Depends(require_adm
     
     return {"pendingVerifications": result, "count": len(result)}
 
+@api_router.get("/admin/verifications/approved")
+async def admin_get_approved_trainers(admin_user: dict = Depends(require_admin)):
+    """Get all approved/verified trainers with their documents"""
+    approved = await db.trainer_profiles.find({
+        'verificationStatus': VerificationStatus.VERIFIED
+    }).to_list(None)
+    
+    # Get user names
+    result = []
+    for profile in approved:
+        user = await db.users.find_one({'_id': ObjectId(profile['userId'])})
+        if user:
+            result.append({
+                "userId": profile['userId'],
+                "fullName": user.get('fullName', ''),
+                "email": user.get('email', ''),
+                "verifiedAt": profile.get('verifiedAt'),
+                "documentsUploaded": {
+                    "governmentId": profile.get('governmentIdUploaded', False),
+                    "backgroundCheck": profile.get('backgroundCheckPassed', False),
+                    "fitnessCert": profile.get('fitnessCertUploaded', False),
+                    "cprAedCert": profile.get('cprAedCertUploaded', False),
+                    "introVideo": profile.get('introVideoUploaded', False),
+                }
+            })
+    
+    return result
+
 @api_router.get("/admin/verifications/{trainer_id}/detail")
 async def admin_get_verification_detail(trainer_id: str, admin_user: dict = Depends(require_admin)):
     """Get full verification details for a specific trainer"""

@@ -68,6 +68,10 @@ Applied 8 new fitness-themed background images across multiple screens:
 4. **Travel Proximity slider:** Converted dropdown list to interactive range slider (1-35 miles) on trainee home
 5. **Saved Trainers compact view:** Converted to 4-column thumbnail grid with profile pic, name, rating
 6. **Nearby Trainees compact view:** Converted to 4-column thumbnail grid (up to 8 trainees visible)
+7. **Map edge-to-edge:** Made map component full-width (0 horizontal margin) and taller (320px)
+8. **Travel Radius slider (Trainer):** Converted trainer's travel radius dropdown to slider on Edit Profile
+9. **Admin Panel Approved Trainers:** Added toggle to view approved trainers with documents access
+10. **Backend endpoint:** Added /admin/verifications/approved endpoint for approved trainers list
 
 ### Deployment Bug Fixed - expo-barcode-scanner Removal
 - **Issue:** iOS build failed with error: `'ExpoModulesCore/EXBarcodeScannerInterface.h' file not found`

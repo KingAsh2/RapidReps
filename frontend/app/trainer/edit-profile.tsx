@@ -355,19 +355,25 @@ export default function EditTrainerProfileScreen() {
                       />
                     </View>
                     <View style={styles.inputGroup}>
-                      <Text style={styles.inputLabel}>Travel Radius (mi)</Text>
-                      <TouchableOpacity
-                        style={styles.input}
-                        onPress={() => setShowRadiusPicker(true)}
-                        data-testid="travel-radius-dropdown"
-                      >
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <Text style={{ color: COLORS.navy, fontSize: 15, fontWeight: '600' }}>
-                            {formData.travelRadiusMiles} mi
-                          </Text>
-                          <Ionicons name="chevron-down" size={18} color={COLORS.gray} />
+                      <Text style={styles.inputLabel}>Travel Radius</Text>
+                      <View style={styles.sliderContainer}>
+                        <Text style={styles.sliderValue}>{formData.travelRadiusMiles} mi</Text>
+                        <View style={styles.sliderRow}>
+                          <Text style={styles.sliderMinMax}>1</Text>
+                          <Slider
+                            style={styles.radiusSlider}
+                            minimumValue={1}
+                            maximumValue={35}
+                            step={1}
+                            value={parseInt(formData.travelRadiusMiles) || 10}
+                            onValueChange={(value) => setFormData({ ...formData, travelRadiusMiles: Math.round(value).toString() })}
+                            minimumTrackTintColor={COLORS.teal}
+                            maximumTrackTintColor="#ddd"
+                            thumbTintColor={COLORS.teal}
+                          />
+                          <Text style={styles.sliderMinMax}>35</Text>
                         </View>
-                      </TouchableOpacity>
+                      </View>
                     </View>
                   </View>
                 </LinearGradient>
@@ -778,6 +784,33 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
     color: COLORS.navy,
+  },
+  sliderContainer: {
+    backgroundColor: COLORS.grayLight,
+    borderRadius: 12,
+    padding: 14,
+  },
+  sliderValue: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: COLORS.teal,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  sliderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  radiusSlider: {
+    flex: 1,
+    height: 40,
+  },
+  sliderMinMax: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.gray,
+    width: 24,
+    textAlign: 'center',
   },
   chipsContainer: {
     flexDirection: 'row',

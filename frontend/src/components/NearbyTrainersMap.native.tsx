@@ -15,7 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 
-const MAP_HEIGHT = 300;
+const MAP_HEIGHT = 320;
 
 const COLORS = {
   teal: '#1a2a5e',
@@ -247,9 +247,9 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: 16,
+    marginHorizontal: 0,
     marginBottom: 16,
-    borderRadius: 20,
+    borderRadius: 0,
     overflow: 'hidden',
     backgroundColor: COLORS.navy,
   },
