@@ -10,6 +10,7 @@ import {
   Platform,
   ActivityIndicator,
   Animated,
+  Image,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -33,7 +34,7 @@ const COLORS = {
 
 export default function ChatScreen() {
   const router = useRouter();
-  const { conversationId, userId, userName } = useLocalSearchParams();
+  const { conversationId, userId, userName, userPhoto } = useLocalSearchParams();
   const { user } = useAuth();
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -175,6 +176,14 @@ export default function ChatScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color={COLORS.white} />
           </TouchableOpacity>
+          {/* Profile Photo */}
+          {userPhoto ? (
+            <Image source={{ uri: userPhoto as string }} style={styles.headerPhoto} />
+          ) : (
+            <View style={styles.headerPhotoPlaceholder}>
+              <Ionicons name="person" size={20} color={COLORS.white} />
+            </View>
+          )}
           <View style={styles.headerInfo}>
             <Text style={styles.headerTitle}>{userName}</Text>
             <Text style={styles.headerStatus}>Online</Text>
@@ -284,7 +293,25 @@ const styles = StyleSheet.create({
   },
   headerInfo: {
     flex: 1,
+    marginLeft: 12,
+    alignItems: 'flex-start',
+  },
+  headerPhoto: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  headerPhotoPlaceholder: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.3)',
   },
   headerTitle: {
     fontSize: 18,

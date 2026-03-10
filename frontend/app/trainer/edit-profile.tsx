@@ -13,6 +13,7 @@ import {
   Animated,
   Modal,
   FlatList,
+  ImageBackground,
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { trainerAPI } from '../../src/services/api';
@@ -24,6 +25,8 @@ import { useAuth } from '../../src/contexts/AuthContext';
 import { useAlert } from '../../src/contexts/AlertContext';
 import * as Location from 'expo-location';
 import { toast } from '../../src/utils/toast';
+
+const backgroundImage = require('../../assets/images/bg-box-jumps-orange.jpg');
 
 // Brand colors
 const COLORS = {
@@ -275,11 +278,11 @@ export default function EditTrainerProfileScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <View style={styles.container}>
+      <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
         <LinearGradient
-          colors={[COLORS.orange, COLORS.orangeLight, COLORS.teal]}
+          colors={['rgba(247, 147, 30, 0.85)', 'rgba(247, 147, 30, 0.75)', 'rgba(255, 165, 38, 0.7)']}
           start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+          end={{ x: 0, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
 
@@ -609,7 +612,7 @@ export default function EditTrainerProfileScreen() {
             </ScrollView>
           </KeyboardAvoidingView>
         </SafeAreaView>
-      </View>
+      </ImageBackground>
 
       {/* Travel Radius Picker Modal */}
       <Modal visible={showRadiusPicker} transparent animationType="slide">

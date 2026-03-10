@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, TextInput, RefreshControl, Modal, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, TextInput, RefreshControl, Modal, Dimensions, ImageBackground } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -9,6 +9,7 @@ import { useAuth } from '../../src/contexts/AuthContext';
 import { toast } from '../../src/utils/toast';
 
 const { width } = Dimensions.get('window');
+const backgroundImage = require('../../assets/images/bg-boxing.png');
 const COLORS = { orange: '#FF6A00', teal: '#1a2a5e', navy: '#1a2a5e', white: '#FFFFFF', offWhite: '#F8F9FA', gray: '#5a6785', success: '#00D26A' };
 
 type ActiveTab = 'clients' | 'plans' | 'notes';
@@ -103,7 +104,8 @@ export default function TrainerToolsScreen() {
   ];
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
+      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
       <LinearGradient colors={['rgba(247, 147, 30, 0.88)', 'rgba(247, 147, 30, 0.80)', 'rgba(255, 165, 38, 0.75)']} style={StyleSheet.absoluteFillObject} />
 
       <View style={styles.header}>
@@ -165,7 +167,8 @@ export default function TrainerToolsScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 

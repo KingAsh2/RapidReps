@@ -41,7 +41,7 @@ const COLORS = {
 };
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
-const backgroundImage = require('../../../assets/images/bg-gym-blue.png');
+const backgroundImage = require('../../../assets/images/bg-jump-rope.jpg');
 
 type Period = 'week' | 'month';
 

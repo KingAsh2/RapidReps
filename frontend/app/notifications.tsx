@@ -6,12 +6,16 @@ import {
   StyleSheet,
   TouchableOpacity,
   RefreshControl,
+  ImageBackground,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useNotifications } from '../src/contexts/NotificationContext';
 import { Colors } from '../src/utils/colors';
+import { LinearGradient } from 'expo-linear-gradient';
+
+const backgroundImage = require('../assets/images/bg-swimming.png');
 
 const ICON_MAP: Record<string, { name: string; color: string }> = {
   session_requested: { name: 'calendar', color: Colors.primary },
@@ -71,8 +75,10 @@ export default function NotificationsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
+      <LinearGradient colors={['rgba(255, 255, 255, 0.95)', 'rgba(245, 246, 248, 0.92)']} style={StyleSheet.absoluteFillObject} />
+      <SafeAreaView style={{ flex: 1 }}>
+        <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} data-testid="notifications-back-btn">
           <Ionicons name="arrow-back" size={26} color={Colors.navy} />
         </TouchableOpacity>
@@ -109,7 +115,8 @@ export default function NotificationsScreen() {
           </View>
         }
       />
-    </SafeAreaView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 

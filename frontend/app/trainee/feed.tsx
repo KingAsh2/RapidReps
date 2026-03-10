@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, RefreshControl, ImageBackground } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { feedAPI } from '../../src/services/api';
 import { useAuth } from '../../src/contexts/AuthContext';
+
+const backgroundImage = require('../../assets/images/bg-plank-ropes.png');
 
 const COLORS = { orange: '#FF6A00', teal: '#1a2a5e', navy: '#1a2a5e', white: '#FFFFFF', offWhite: '#F8F9FA', gray: '#5a6785', success: '#00D26A' };
 
@@ -70,8 +72,9 @@ export default function FeedScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <LinearGradient colors={[COLORS.navy, '#0f1d42']} style={StyleSheet.absoluteFillObject} />
+    <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
+      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <LinearGradient colors={['rgba(26, 42, 94, 0.92)', 'rgba(15, 29, 66, 0.90)']} style={StyleSheet.absoluteFillObject} />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color={COLORS.white} />
@@ -94,7 +97,8 @@ export default function FeedScreen() {
           </View>
         }
       />
-    </SafeAreaView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 

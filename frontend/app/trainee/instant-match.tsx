@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions, Modal, ImageBackground } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -9,6 +9,7 @@ import { instantMatchAPI } from '../../src/services/api';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { haptic } from '../../src/utils/haptics';
 
+const backgroundImage = require('../../assets/images/bg-jump-rope.jpg');
 const { width } = Dimensions.get('window');
 const COLORS = { orange: '#FF6A00', orangeLight: '#FF9F1C', teal: '#1a2a5e', navy: '#1a2a5e', white: '#FFFFFF', gray: '#5a6785', success: '#00D26A', error: '#FF4757' };
 
@@ -93,8 +94,9 @@ export default function InstantMatchScreen() {
   const spin = rotateAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <LinearGradient colors={[COLORS.navy, '#0f1d42']} style={StyleSheet.absoluteFillObject} />
+    <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
+      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <LinearGradient colors={['rgba(26, 42, 94, 0.92)', 'rgba(15, 29, 66, 0.90)']} style={StyleSheet.absoluteFillObject} />
 
       <View style={styles.header}>
         <TouchableOpacity onPress={handleCancel} style={styles.backBtn} data-testid="instant-match-back">
@@ -163,7 +165,8 @@ export default function InstantMatchScreen() {
           </TouchableOpacity>
         )}
       </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 

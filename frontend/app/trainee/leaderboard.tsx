@@ -9,12 +9,15 @@ import {
   RefreshControl,
   Image,
   Animated,
+  ImageBackground,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { streaksAPI } from '../../src/services/api';
+
+const backgroundImage = require('../../assets/images/bg-group-gym.png');
 
 const C = {
   orange: '#FF7F00',
@@ -118,7 +121,7 @@ export default function LeaderboardScreen() {
   }
 
   return (
-    <View style={s.container}>
+    <ImageBackground source={backgroundImage} style={s.container} resizeMode="cover">
       <LinearGradient colors={[C.navy, '#1e3470']} style={s.header}>
         <SafeAreaView edges={['top']}>
           <View style={s.headerRow}>
@@ -251,7 +254,7 @@ export default function LeaderboardScreen() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
-    </View>
+    </ImageBackground>
   );
 }
 

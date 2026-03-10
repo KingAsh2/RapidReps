@@ -42,7 +42,30 @@ A full-stack React Native/Expo fitness application connecting trainees with pers
 | GET /api/safety-check/admin/duration-tracking | Booked vs actual |
 | POST /api/safety-check/admin/override | Manual verification |
 
-## Latest Fix (December 2025)
+## Latest Updates (December 2025)
+
+### Background Image Updates
+Applied 8 new fitness-themed background images across multiple screens:
+- Edit Profile: bg-box-jumps-orange.jpg
+- Set Rates: bg-plank-ropes.png
+- Trainer Tools: bg-boxing.png
+- Group Sessions: bg-group-gym.png
+- Connect Bank: bg-swimming.png
+- Change Password: bg-cardio-gym.png
+- Referral: bg-box-jumps-wide.png
+- Leaderboard: bg-group-gym.png
+- Notifications: bg-swimming.png
+- User Progress: bg-box-jumps-orange.jpg
+- Community Feed: bg-plank-ropes.png
+- Instant Match: bg-jump-rope.jpg
+- Earnings: bg-jump-rope.jpg
+- Terms of Service: bg-cardio-gym.png
+
+### Feature Updates Implemented
+1. **Chat header profile photo:** Added profile photo display in messaging header
+2. **"Need a Trainer Now" banner:** Removed pricing text ($18/30-min), now shows "Get matched instantly"
+3. **Set Rates 30/60/90 pricing:** Added duration breakdown showing calculated prices for 30, 60, and 90 minute sessions
+
 ### Deployment Bug Fixed - expo-barcode-scanner Removal
 - **Issue:** iOS build failed with error: `'ExpoModulesCore/EXBarcodeScannerInterface.h' file not found`
 - **Root Cause:** `expo-barcode-scanner` package is deprecated and incompatible with Expo SDK 54. The native code references removed interfaces from ExpoModulesCore.

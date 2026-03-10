@@ -16,7 +16,7 @@ import { useRouter } from 'expo-router';
 import { trainerAPI } from '../../src/services/api';
 import { toast } from '../../src/utils/toast';
 
-const backgroundImage = require('../../assets/images/bg-gym-blue.png');
+const backgroundImage = require('../../assets/images/bg-swimming.png');
 
 const COLORS = {
   orange: '#FF7F00',

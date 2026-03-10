@@ -1,9 +1,11 @@
 import React from 'react';
-import { ScrollView, Text, StyleSheet, View, TouchableOpacity } from 'react-native';
+import { ScrollView, Text, StyleSheet, View, TouchableOpacity, ImageBackground } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+
+const backgroundImage = require('../../assets/images/bg-cardio-gym.png');
 
 // Brand colors
 const COLORS = {
@@ -20,9 +22,9 @@ export default function TermsScreen() {
   const router = useRouter();
   
   return (
-    <View style={styles.container}>
+    <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
       <LinearGradient
-        colors={[COLORS.navy, '#2a3a6e', COLORS.teal]}
+        colors={['rgba(26, 42, 94, 0.9)', 'rgba(42, 58, 110, 0.88)', 'rgba(26, 42, 94, 0.9)']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
@@ -86,7 +88,7 @@ export default function TermsScreen() {
           <View style={{ height: 40 }} />
         </ScrollView>
       </SafeAreaView>
-    </View>
+    </ImageBackground>
   );
 }
 

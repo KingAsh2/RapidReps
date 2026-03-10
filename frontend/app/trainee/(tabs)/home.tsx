@@ -595,7 +595,7 @@ export default function TraineeHomeScreen() {
                   </View>
                   <View style={styles.urgentContent}>
                     <Text style={styles.urgentTitle}>⚡ NEED A TRAINER NOW?</Text>
-                    <Text style={styles.urgentSubtitle}>30-min virtual session • Just $18</Text>
+                    <Text style={styles.urgentSubtitle}>Get matched instantly with a trainer</Text>
                   </View>
                   <View style={styles.urgentArrow}>
                     <Ionicons name="chevron-forward-circle" size={44} color="#FFFFFF" />

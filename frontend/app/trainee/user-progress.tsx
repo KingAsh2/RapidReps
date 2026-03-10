@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, Dimensions, ImageBackground } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -8,6 +8,7 @@ import { TouchableOpacity } from 'react-native';
 import { progressAPI } from '../../src/services/api';
 import { useAuth } from '../../src/contexts/AuthContext';
 
+const backgroundImage = require('../../assets/images/bg-box-jumps-orange.jpg');
 const { width } = Dimensions.get('window');
 const COLORS = { orange: '#FF6A00', orangeLight: '#FF9F1C', teal: '#1a2a5e', navy: '#1a2a5e', white: '#FFFFFF', gray: '#5a6785', success: '#00D26A', error: '#FF4757' };
 
@@ -45,8 +46,9 @@ export default function UserProgressScreen() {
   const streakColors = STREAK_COLORS[progress?.streakLevel || 'None'];
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <LinearGradient colors={[COLORS.navy, '#0f1d42']} style={StyleSheet.absoluteFillObject} />
+    <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
+      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <LinearGradient colors={['rgba(26, 42, 94, 0.92)', 'rgba(15, 29, 66, 0.90)']} style={StyleSheet.absoluteFillObject} />
 
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} data-testid="progress-back-btn">
@@ -142,7 +144,8 @@ export default function UserProgressScreen() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 

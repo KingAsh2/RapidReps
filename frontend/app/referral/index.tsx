@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  ActivityIndicator, Share, Platform,
+  ActivityIndicator, Share, Platform, ImageBackground,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { referralAPI } from '../../src/services/api';
+
+const backgroundImage = require('../../assets/images/bg-box-jumps-wide.png');
 
 const COLORS = {
   teal: '#1a2a5e',
@@ -71,8 +73,8 @@ export default function ReferralScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <LinearGradient colors={['#0a0f1e', '#1a2a5e']} style={StyleSheet.absoluteFill} />
+    <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
+      <LinearGradient colors={['rgba(10, 15, 30, 0.85)', 'rgba(26, 42, 94, 0.85)']} style={StyleSheet.absoluteFill} />
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton} data-testid="referral-back-button">
@@ -198,7 +200,7 @@ export default function ReferralScreen() {
           </Text>
         </ScrollView>
       </SafeAreaView>
-    </View>
+    </ImageBackground>
   );
 }
 

@@ -10,6 +10,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { authAPI } from '../src/services/api';
 import { toast } from '../src/utils/toast';
 
+const backgroundImage = require('../assets/images/bg-cardio-gym.png');
+
 const COLORS = {
   navy: '#0A1128',
   navyLight: '#1B2A4A',
@@ -63,7 +65,7 @@ export default function ChangePasswordScreen() {
 
   return (
     <ImageBackground
-      source={require('../assets/images/bg-battle-ropes.png')}
+      source={backgroundImage}
       style={styles.container}
       blurRadius={20}
     >
