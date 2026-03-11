@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 import uuid
 
 # Configuration
-BASE_URL = "https://safety-check-deploy.preview.emergentagent.com/api"
+BASE_URL = "https://orange-ui-refresh.preview.emergentagent.com/api"
 HEADERS = {"Content-Type": "application/json"}
 
 class SupplementaryTester:

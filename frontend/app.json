@@ -62,6 +62,12 @@
       "expo-font",
       "expo-web-browser",
       [
+        "expo-camera",
+        {
+          "cameraPermission": "RapidReps needs camera access for QR code scanning and profile photos."
+        }
+      ],
+      [
         "expo-image-picker",
         {
           "photosPermission": "Allow RapidReps to access your photos/videos so you can upload profile and session content.",
@@ -81,7 +87,14 @@
         }
       ],
       "expo-document-picker",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.kingash.rapidreps",
+          "enableGooglePay": true
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

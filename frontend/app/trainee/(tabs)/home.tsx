@@ -1396,11 +1396,6 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#2a3a6e',
   },
-  proximityValue: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#1A2A5E',
-  },
   proximityPickerContainer: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,

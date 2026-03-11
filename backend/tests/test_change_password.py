@@ -18,7 +18,7 @@ import os
 import time
 import uuid
 
-BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://safety-check-deploy.preview.emergentagent.com')
+BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://orange-ui-refresh.preview.emergentagent.com')
 
 # Test credentials for all 7 accounts
 TEST_ACCOUNTS = [
