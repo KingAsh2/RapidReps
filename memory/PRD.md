@@ -42,7 +42,14 @@ A full-stack React Native/Expo fitness application connecting trainees with pers
 | GET /api/safety-check/admin/duration-tracking | Booked vs actual |
 | POST /api/safety-check/admin/override | Manual verification |
 
-## Latest Updates (December 2025)
+## Latest Updates (March 2026)
+
+### P1 Features Completed (March 2026)
+1. **Admin Verification Details Enhancement:** Admin panel now displays full trainer profile info (bio, experience years, certifications, training styles, location) when reviewing verification requests
+2. **Intro Video Playback (15s Limit):** Video player in admin panel auto-stops after 15 seconds with both timer and playback status monitoring
+3. **Saved Trainers Backend API:** New `/api/trainee/saved-trainers` endpoint returns full trainer details for favorited trainers
+4. **Smart Back Navigation:** Created `goBack()` utility with role-based fallbacks for edge cases (deep links, empty history)
+5. **30/60/90 Min Pricing:** Correctly implemented as frontend calculation from backend hourly rates (design-intended)
 
 ### iOS Build Fixes (March 2026)
 1. **Removed `package-lock.json`** - Multiple lock files caused EAS Build issues
