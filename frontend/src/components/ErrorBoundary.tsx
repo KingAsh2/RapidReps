@@ -1,6 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface Props {
   children: ReactNode;
@@ -23,6 +24,20 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught:', error, errorInfo);
+    // Log error to AsyncStorage for debugging
+    const errorLog = {
+      timestamp: new Date().toISOString(),
+      error: error.toString(),
+      stack: error.stack,
+      componentStack: errorInfo.componentStack,
+    };
+    AsyncStorage.getItem('error_log').then((existing) => {
+      const logs = existing ? JSON.parse(existing) : [];
+      logs.push(errorLog);
+      // Keep only last 10 errors
+      const trimmedLogs = logs.slice(-10);
+      AsyncStorage.setItem('error_log', JSON.stringify(trimmedLogs)).catch(() => {});
+    }).catch(() => {});
   }
 
   handleRestart = () => {
@@ -31,6 +46,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
+      const errorMessage = this.state.error?.toString() || 'Unknown error';
       return (
         <View style={styles.container}>
           <View style={styles.content}>
@@ -45,11 +61,10 @@ export class ErrorBoundary extends Component<Props, State> {
               <Ionicons name="refresh" size={20} color="#fff" />
               <Text style={styles.btnText}>Try Again</Text>
             </TouchableOpacity>
-            {__DEV__ && this.state.error && (
-              <ScrollView style={styles.debugBox}>
-                <Text style={styles.debugText}>{this.state.error.toString()}</Text>
-              </ScrollView>
-            )}
+            {/* Always show error in production for debugging */}
+            <ScrollView style={styles.debugBox}>
+              <Text style={styles.debugText}>{errorMessage}</Text>
+            </ScrollView>
           </View>
         </View>
       );

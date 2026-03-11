@@ -56,8 +56,14 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
 
 export function useAlert() {
   const context = useContext(AlertContext);
+  // Return a no-op implementation if context is not available
+  // This prevents crashes during app initialization
   if (!context) {
-    throw new Error('useAlert must be used within AlertProvider');
+    return {
+      showAlert: (config: AlertConfig) => {
+        console.warn('useAlert called outside AlertProvider:', config);
+      },
+    };
   }
   return context;
 }

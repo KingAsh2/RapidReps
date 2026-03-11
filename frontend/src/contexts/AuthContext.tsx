@@ -193,8 +193,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
+  // Return safe defaults if context is not available (during app initialization)
   if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
+    return {
+      user: null,
+      loading: true,
+      activeRole: null,
+      isDemoMode: false,
+      signup: async () => { throw new Error('Auth not initialized'); },
+      login: async () => { throw new Error('Auth not initialized'); },
+      logout: async () => {},
+      setActiveRole: async () => {},
+      setDemoMode: () => {},
+    };
   }
   return context;
 };
