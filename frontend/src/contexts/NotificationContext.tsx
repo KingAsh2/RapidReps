@@ -27,7 +27,7 @@ interface NotificationContextType {
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -37,7 +37,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   // Register for push notifications
   useEffect(() => {
-    if (!user || !token) return;
+    if (!user) return;
 
     const registerForPush = async () => {
       try {
