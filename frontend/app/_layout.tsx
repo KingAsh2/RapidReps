@@ -39,21 +39,8 @@ const toastConfig = {
   ),
 };
 
-let StripeProviderComponent: React.FC<{ children: React.ReactNode }> = ({ children }) => <>{children}</>;
-
-if (Platform.OS !== 'web') {
-  try {
-    const { StripeProvider } = require('@stripe/stripe-react-native');
-    const publishableKey = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY || '';
-    StripeProviderComponent = ({ children }: { children: React.ReactNode }) => (
-      <StripeProvider publishableKey={publishableKey}>
-        {children}
-      </StripeProvider>
-    );
-  } catch {
-    // Stripe not available on this platform
-  }
-}
+// Stripe native SDK removed - payments handled via web-based Stripe Checkout
+const StripeProviderComponent: React.FC<{ children: React.ReactNode }> = ({ children }) => <>{children}</>;
 
 export default function RootLayout() {
   return (

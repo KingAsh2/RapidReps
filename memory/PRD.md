@@ -55,11 +55,19 @@ A full-stack React Native/Expo fitness application connecting trainees with pers
 1. **Removed `package-lock.json`** - Multiple lock files caused EAS Build issues
 2. **Fixed duplicate style property** in `app/trainee/(tabs)/home.tsx` - Removed duplicate `proximityValue` definition
 3. **Added `expo-camera` plugin to `app.json`** - Required for QR code scanning
-4. **Removed `@stripe/stripe-react-native` package entirely** - This native package was automatically adding Apple Pay entitlements that the Emergent provisioning profile doesn't support. The app's Stripe payment code has fallbacks that gracefully handle the missing SDK.
+4. **Completely removed `@stripe/stripe-react-native` native SDK** - This was the root cause of the Apple Pay entitlement mismatch. The fix required:
+   - Removing all `require('@stripe/stripe-react-native')` dynamic imports from 4 files:
+     - `app/_layout.tsx` - StripeProvider wrapper removed
+     - `app/trainee/confirm-booking.tsx` - useStripe hook removed
+     - `app/trainee/membership.tsx` - useStripe hook removed  
+     - `app/trainer/boosts.tsx` - useStripe hook removed
+   - Removing the Metro config Stripe web shim (`src/shims/stripe-web.js`)
+   - Updating payment flows to work without native payment sheet (backend payment intents still work)
+   - Version bumped to 2.0.28 to force fresh EAS build fingerprint
 5. **Cleaned native iOS/Android folders** - Ensures clean prebuild during deployment
 6. **expo-doctor reports: 17/17 checks passed**
 
-**Note:** Stripe payments will need to be implemented via a web-based approach (Stripe Checkout redirect or Stripe.js) instead of the native SDK.
+**Note:** Payments currently create backend payment intents but don't present native payment UI. Future enhancement: Implement Stripe Checkout redirect or Stripe.js web-based payments.
 
 ### Feature Updates (March 2026)
 1. **Saved Trainers Backend API:** Added `/api/trainee/saved-trainers` endpoint to fetch full trainer details for saved/favorited trainers

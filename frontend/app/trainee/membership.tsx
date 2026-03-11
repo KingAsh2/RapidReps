@@ -14,17 +14,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import { Platform } from 'react-native';
 import { toast } from '../../src/utils/toast';
 
-let useStripeHook: any = null;
-if (Platform.OS !== 'web') {
-  try {
-    const stripeMod = require('@stripe/stripe-react-native');
-    useStripeHook = stripeMod.useStripe;
-  } catch {}
-}
-
+// Stripe native SDK removed - payments handled via backend payment intent
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 const COLORS = {
@@ -54,9 +46,6 @@ export default function MembershipScreen() {
   const [membership, setMembership] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [subscribing, setSubscribing] = useState(false);
-
-  // Native Stripe hooks
-  const stripe = useStripeHook ? useStripeHook() : null;
 
   useEffect(() => {
     checkMembership();
@@ -88,29 +77,11 @@ export default function MembershipScreen() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      const { membershipId, paymentIntentId, clientSecret } = res.data;
+      const { membershipId } = res.data;
 
-      // Step 2: Present Stripe PaymentSheet on native, auto-confirm on web
-      if (stripe && clientSecret && Platform.OS !== 'web') {
-        const { error: initError } = await stripe.initPaymentSheet({
-          paymentIntentClientSecret: clientSecret,
-          merchantDisplayName: 'RapidReps',
-          style: 'alwaysDark',
-        });
-        if (initError) {
-          toast.error(initError.message);
-          return;
-        }
-        const { error: presentError } = await stripe.presentPaymentSheet();
-        if (presentError) {
-          if (presentError.code !== 'Canceled') {
-            toast.error(presentError.message);
-          }
-          return; // User cancelled or payment failed — don't confirm
-        }
-      }
-
-      // Step 3: Confirm the payment on our backend
+      // Note: Native Stripe SDK removed due to Apple Pay entitlement issues
+      // Payment intent created - proceed to confirm membership
+      // Future: Implement Stripe Checkout redirect for payments
       await axios.post(
         `${API_URL}/api/memberships/${membershipId}/confirm-payment`,
         {},

@@ -11,7 +11,7 @@
         "simulator": true
       },
       "env": {
-        "EXPO_PUBLIC_BACKEND_URL": "https://orange-ui-refresh.preview.emergentagent.com",
+        "EXPO_PUBLIC_BACKEND_URL": "https://eas-cache-fix.preview.emergentagent.com",
         "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyDPQjkEm9BIaB6t-v_IZ4AQXCcPssqEJQU"
       }
     },
@@ -21,14 +21,14 @@
         "simulator": false
       },
       "env": {
-        "EXPO_PUBLIC_BACKEND_URL": "https://orange-ui-refresh.preview.emergentagent.com",
+        "EXPO_PUBLIC_BACKEND_URL": "https://eas-cache-fix.preview.emergentagent.com",
         "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyDPQjkEm9BIaB6t-v_IZ4AQXCcPssqEJQU"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_BACKEND_URL": "https://orange-ui-refresh.preview.emergentagent.com",
+        "EXPO_PUBLIC_BACKEND_URL": "https://eas-cache-fix.preview.emergentagent.com",
         "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyDPQjkEm9BIaB6t-v_IZ4AQXCcPssqEJQU"
       }
     }

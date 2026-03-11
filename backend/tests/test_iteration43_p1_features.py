@@ -12,7 +12,7 @@ import os
 import random
 import string
 
-BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://orange-ui-refresh.preview.emergentagent.com')
+BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://eas-cache-fix.preview.emergentagent.com')
 
 # Test credentials
 ADMIN_EMAIL = "admin@rapidreps.com"

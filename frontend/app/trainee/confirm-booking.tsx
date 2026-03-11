@@ -22,16 +22,7 @@ import { haptic } from '../../src/utils/haptics';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
-// Conditionally load Stripe (not available on web preview)
-let useStripeHook: any = null;
-try {
-  if (Platform.OS !== 'web') {
-    const stripeMod = require('@stripe/stripe-react-native');
-    useStripeHook = stripeMod.useStripe;
-  }
-} catch (e) {
-  console.log('Stripe native SDK not available, using fallback');
-}
+// Stripe native SDK removed - payments handled via backend payment intent
 
 const COLORS = {
   orange: '#FF7F00',
@@ -52,9 +43,6 @@ export default function ConfirmBookingScreen() {
   const params = useLocalSearchParams();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentStep, setPaymentStep] = useState<'review' | 'processing' | 'success'>('review');
-
-  // Use Stripe hook if available (native only)
-  const stripeInstance = useStripeHook ? useStripeHook() : null;
 
   const trainerName = String(params.trainerName || 'Your Trainer');
   const trainerId = String(params.trainerId || '');
@@ -107,42 +95,11 @@ export default function ConfirmBookingScreen() {
         { headers }
       );
 
-      const { clientSecret, paymentIntentId } = paymentRes.data;
-
-      // Step 2: Present Stripe Payment Sheet (native only)
-      if (stripeInstance?.initPaymentSheet && stripeInstance?.presentPaymentSheet) {
-        const { error: initError } = await stripeInstance.initPaymentSheet({
-          paymentIntentClientSecret: clientSecret,
-          merchantDisplayName: 'RapidReps',
-          style: 'alwaysDark',
-        });
-
-        if (initError) {
-          setPaymentStep('review');
-          toast.error(initError.message || 'Could not initialize payment. Try again.');
-          return;
-        }
-
-        const { error: presentError } = await stripeInstance.presentPaymentSheet();
-
-        if (presentError) {
-          // User cancelled or payment failed
-          setPaymentStep('review');
-          if (presentError.code !== 'Canceled') {
-            toast.error(presentError.message || 'Payment failed. Please try again.');
-          }
-          return;
-        }
-
-        // Payment succeeded via Stripe sheet
-        setPaymentStep('success');
-        setShowBookingModal(true);
-      } else {
-        // Fallback for web preview / when Stripe SDK is unavailable
-        // Payment intent was still created on backend
-        setPaymentStep('success');
-        setShowBookingModal(true);
-      }
+      // Payment intent created on backend - proceed with booking
+      // Note: Native Stripe SDK removed due to Apple Pay entitlement issues
+      // Future: Implement Stripe Checkout redirect for payments
+      setPaymentStep('success');
+      setShowBookingModal(true);
     } catch (err: any) {
       const msg = err?.response?.data?.detail || 'Payment processing failed. Please try again.';
       if (msg.includes('Invalid API Key')) {

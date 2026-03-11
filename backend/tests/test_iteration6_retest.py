@@ -18,7 +18,7 @@ import time
 from datetime import datetime, timedelta
 
 # Get base URL from environment
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://orange-ui-refresh.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://eas-cache-fix.preview.emergentagent.com').rstrip('/')
 
 # Test credentials
 TRAINER1_EMAIL = "trainer1@test.com"

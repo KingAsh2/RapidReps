@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 
 class ReviewRequestTester:
     def __init__(self):
-        self.base_url = "https://orange-ui-refresh.preview.emergentagent.com"
+        self.base_url = "https://eas-cache-fix.preview.emergentagent.com"
         self.api_url = f"{self.base_url}/api"
         self.session = requests.Session()
         self.session.timeout = 30

@@ -11,21 +11,6 @@ config.transformer = {
   unstable_allowRequireContext: true,
 };
 
-// Redirect native-only modules to web shims when building for web
-const originalResolveRequest = config.resolver.resolveRequest;
-config.resolver.resolveRequest = (context, moduleName, platform) => {
-  if (platform === 'web' && moduleName === '@stripe/stripe-react-native') {
-    return {
-      filePath: path.resolve(__dirname, 'src/shims/stripe-web.js'),
-      type: 'sourceFile',
-    };
-  }
-  if (originalResolveRequest) {
-    return originalResolveRequest(context, moduleName, platform);
-  }
-  return context.resolveRequest(context, moduleName, platform);
-};
-
 // Use a stable on-disk store (shared across web/android)
 const root = process.env.METRO_CACHE_ROOT || path.join(__dirname, '.metro-cache');
 config.cacheStores = [
