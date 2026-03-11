@@ -79,7 +79,7 @@ export default function GroupSessionsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <LinearGradient colors={[COLORS.navy, '#0f1d42']} style={StyleSheet.absoluteFillObject} />
+      <LinearGradient colors={['rgba(255, 127, 0, 0.95)', 'rgba(255, 106, 0, 0.92)']} style={StyleSheet.absoluteFillObject} />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => goBack('/trainee/(tabs)/home')} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color={COLORS.white} />
