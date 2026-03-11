@@ -54,10 +54,9 @@ A full-stack React Native/Expo fitness application connecting trainees with pers
 ### iOS Build Fixes (March 2026)
 1. **Removed `package-lock.json`** - Multiple lock files caused EAS Build issues
 2. **Fixed duplicate style property** in `app/trainee/(tabs)/home.tsx` - Removed duplicate `proximityValue` definition
-3. **Added missing native plugins to `app.json`:**
-   - `expo-camera` plugin with camera permission
-   - `@stripe/stripe-react-native` plugin with merchant identifier
-4. **expo-doctor reports: 17/17 checks passed**
+3. **Added `expo-camera` plugin to `app.json`** - Required for QR code scanning
+4. **Removed `@stripe/stripe-react-native` plugin with Apple Pay config** - Provisioning profile doesn't support Apple Pay entitlements. Stripe still works via web-based payment sheet.
+5. **expo-doctor reports: 17/17 checks passed**
 
 ### Feature Updates (March 2026)
 1. **Saved Trainers Backend API:** Added `/api/trainee/saved-trainers` endpoint to fetch full trainer details for saved/favorited trainers

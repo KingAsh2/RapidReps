@@ -87,14 +87,7 @@
         }
       ],
       "expo-document-picker",
-      "@react-native-community/datetimepicker",
-      [
-        "@stripe/stripe-react-native",
-        {
-          "merchantIdentifier": "merchant.com.kingash.rapidreps",
-          "enableGooglePay": true
-        }
-      ]
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true
