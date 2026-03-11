@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { TouchableOpacity } from 'react-native';
 import { progressAPI } from '../../src/services/api';
 import { useAuth } from '../../src/contexts/AuthContext';
+import { goBack } from '../../src/utils/navigation';
 
 const backgroundImage = require('../../assets/images/bg-box-jumps-orange.jpg');
 const { width } = Dimensions.get('window');
@@ -51,7 +52,7 @@ export default function UserProgressScreen() {
       <LinearGradient colors={['rgba(26, 42, 94, 0.92)', 'rgba(15, 29, 66, 0.90)']} style={StyleSheet.absoluteFillObject} />
 
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} data-testid="progress-back-btn">
+        <TouchableOpacity onPress={() => goBack('/trainee/(tabs)/home')} style={styles.backBtn} data-testid="progress-back-btn">
           <Ionicons name="arrow-back" size={24} color={COLORS.white} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>My Progress</Text>

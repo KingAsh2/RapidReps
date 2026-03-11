@@ -17,6 +17,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../../src/contexts/AuthContext';
+import { traineeAPI } from '../../../src/services/api';
+import { toast } from '../../../src/utils/toast';
 
 const { width } = Dimensions.get('window');
 
@@ -98,10 +100,11 @@ export default function SavedTrainersScreen() {
   const loadSavedTrainers = async () => {
     try {
       setLoading(true);
-      // TODO: Fetch from backend when saved trainers API is implemented
-      setSavedTrainers([]);
+      const response = await traineeAPI.getSavedTrainers();
+      setSavedTrainers(response.savedTrainers || []);
     } catch (error) {
       console.error('Error loading saved trainers:', error);
+      setSavedTrainers([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -113,8 +116,15 @@ export default function SavedTrainersScreen() {
     loadSavedTrainers();
   };
 
-  const handleRemoveFavorite = (trainerId: string) => {
-    setSavedTrainers(savedTrainers.filter(t => t.id !== trainerId));
+  const handleRemoveFavorite = async (trainerId: string) => {
+    try {
+      await traineeAPI.toggleFavorite(trainerId);
+      setSavedTrainers(savedTrainers.filter(t => t.id !== trainerId));
+      toast.success('Trainer removed from favorites');
+    } catch (error) {
+      console.error('Error removing favorite:', error);
+      toast.error('Failed to remove trainer');
+    }
   };
 
   const headerTranslateY = headerAnim.interpolate({

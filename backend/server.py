@@ -8955,6 +8955,46 @@ async def toggle_favorite_trainer(trainer_id: str, current_user: dict = Depends(
     return {'success': True, 'isFavorite': is_fav, 'savedTrainers': saved}
 
 
+@api_router.get("/trainee/saved-trainers")
+async def get_saved_trainers(current_user: dict = Depends(get_current_user)):
+    """Get full details of all saved/favorited trainers."""
+    user_doc = await db.users.find_one({'_id': current_user['_id']}, {'savedTrainers': 1})
+    saved_ids = user_doc.get('savedTrainers', []) if user_doc else []
+
+    if not saved_ids:
+        return {'savedTrainers': []}
+
+    # Fetch trainer profiles with full details
+    trainers = await db.users.find(
+        {'_id': {'$in': [ObjectId(tid) for tid in saved_ids if ObjectId.is_valid(tid)]}},
+        {
+            'fullName': 1, 'profilePhoto': 1, 'email': 1, 'phone': 1,
+            'averageRating': 1, 'totalSessionsCompleted': 1, 'isVerified': 1,
+            'trainingStyles': 1, 'ratePerMinuteCents': 1, 'bio': 1,
+            'latitude': 1, 'longitude': 1, 'city': 1, 'state': 1
+        }
+    ).to_list(100)
+
+    results = []
+    for t in trainers:
+        results.append({
+            'id': str(t['_id']),
+            'name': t.get('fullName', 'Trainer'),
+            'profilePhoto': t.get('profilePhoto'),
+            'email': t.get('email'),
+            'rating': t.get('averageRating', 0),
+            'totalSessions': t.get('totalSessionsCompleted', 0),
+            'isVerified': t.get('isVerified', False),
+            'trainingStyles': t.get('trainingStyles', []),
+            'ratePerMinuteCents': t.get('ratePerMinuteCents', 0),
+            'bio': t.get('bio', ''),
+            'city': t.get('city'),
+            'state': t.get('state'),
+        })
+
+    return {'savedTrainers': results}
+
+
 @api_router.get("/trainee/favorite-availability")
 async def get_favorite_trainer_availability(current_user: dict = Depends(get_current_user)):
     """Get availability windows for trainee's favorited trainers."""

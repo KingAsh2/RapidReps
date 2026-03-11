@@ -6,6 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { feedAPI } from '../../src/services/api';
 import { useAuth } from '../../src/contexts/AuthContext';
+import { goBack } from '../../src/utils/navigation';
 
 const backgroundImage = require('../../assets/images/bg-plank-ropes.png');
 
@@ -76,7 +77,7 @@ export default function FeedScreen() {
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
       <LinearGradient colors={['rgba(26, 42, 94, 0.92)', 'rgba(15, 29, 66, 0.90)']} style={StyleSheet.absoluteFillObject} />
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <TouchableOpacity onPress={() => goBack('/trainee/(tabs)/home')} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color={COLORS.white} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Community</Text>

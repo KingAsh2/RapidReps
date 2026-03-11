@@ -480,6 +480,11 @@ export const traineeAPI = {
     const response = await api.post(`/trainee/toggle-favorite/${trainerId}`);
     return response.data;
   },
+
+  getSavedTrainers: async (): Promise<any> => {
+    const response = await api.get('/trainee/saved-trainers');
+    return response.data;
+  },
 };
 
 export default api;

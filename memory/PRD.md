@@ -44,6 +44,19 @@ A full-stack React Native/Expo fitness application connecting trainees with pers
 
 ## Latest Updates (December 2025)
 
+### iOS Build Fixes (March 2026)
+1. **Removed `package-lock.json`** - Multiple lock files caused EAS Build issues
+2. **Fixed duplicate style property** in `app/trainee/(tabs)/home.tsx` - Removed duplicate `proximityValue` definition
+3. **Added missing native plugins to `app.json`:**
+   - `expo-camera` plugin with camera permission
+   - `@stripe/stripe-react-native` plugin with merchant identifier
+4. **expo-doctor reports: 17/17 checks passed**
+
+### Feature Updates (March 2026)
+1. **Saved Trainers Backend API:** Added `/api/trainee/saved-trainers` endpoint to fetch full trainer details for saved/favorited trainers
+2. **Saved Trainers Screen:** Updated to fetch real data from backend and allow removing trainers from favorites
+3. **Smart Back Navigation:** Created `goBack()` utility function that handles edge cases (deep links, empty history) with appropriate fallbacks
+
 ### Background Image Updates
 Applied 8 new fitness-themed background images across multiple screens:
 - Edit Profile: bg-box-jumps-orange.jpg
