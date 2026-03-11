@@ -15,7 +15,7 @@ const BRAND = {
 };
 
 export default function TabLayout() {
-  const { unreadMessageCount } = useNotifications();
+  const { unreadMessageCount = 0 } = useNotifications() || {};
 
   return (
     <Tabs

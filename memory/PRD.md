@@ -63,10 +63,17 @@ A full-stack React Native/Expo fitness application connecting trainees with pers
      - `app/trainer/boosts.tsx` - useStripe hook removed
    - Removing the Metro config Stripe web shim (`src/shims/stripe-web.js`)
    - Updating payment flows to work without native payment sheet (backend payment intents still work)
-   - Version bumped to 2.0.29 to force fresh EAS build fingerprint
-5. **Fixed NotificationContext crash** - Removed reference to non-existent `token` property from `useAuth()` hook
+5. **Fixed NotificationContext race condition crash** - Major rewrite to fix intermittent crash after login:
+   - Removed invalid `token` reference from `useAuth()` hook
+   - Added 500ms initialization delay to allow navigation to settle
+   - Added `isMounted` ref to prevent state updates on unmounted components
+   - Changed context default from `undefined` to safe default values
+   - Added `isReady` flag for consumers to check initialization status
+   - Wrapped all async operations in `Promise.allSettled()` for error isolation
+   - Added defensive defaults in tab layouts: `const { unreadMessageCount = 0 } = useNotifications() || {}`
 6. **Cleaned native iOS/Android folders** - Ensures clean prebuild during deployment
-7. **expo-doctor reports: 17/17 checks passed**
+7. **Version bumped to 2.0.31**
+8. **expo-doctor reports: 17/17 checks passed**
 
 **Note:** Payments currently create backend payment intents but don't present native payment UI. Future enhancement: Implement Stripe Checkout redirect or Stripe.js web-based payments.
 

@@ -13,7 +13,7 @@ const COLORS = {
 };
 
 export default function TrainerTabsLayout() {
-  const { unreadMessageCount } = useNotifications();
+  const { unreadMessageCount = 0 } = useNotifications() || {};
 
   return (
     <Tabs

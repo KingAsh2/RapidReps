@@ -22,9 +22,19 @@ interface NotificationContextType {
   refreshNotifications: () => Promise<void>;
   markAllRead: () => Promise<void>;
   refreshMessageCount: () => Promise<void>;
+  isReady: boolean;
 }
 
-const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
+const NotificationContext = createContext<NotificationContextType>({
+  expoPushToken: null,
+  notifications: [],
+  unreadCount: 0,
+  unreadMessageCount: 0,
+  refreshNotifications: async () => {},
+  markAllRead: async () => {},
+  refreshMessageCount: async () => {},
+  isReady: false,
+});
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
@@ -32,56 +42,123 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+  const [isReady, setIsReady] = useState(false);
   const notificationListener = useRef<any>();
   const responseListener = useRef<any>();
+  const isMounted = useRef(true);
+
+  // Safe state setters that check if component is still mounted
+  const safeSetState = <T,>(setter: React.Dispatch<React.SetStateAction<T>>) => (value: T | ((prev: T) => T)) => {
+    if (isMounted.current) {
+      setter(value);
+    }
+  };
+
+  const refreshNotifications = async () => {
+    if (!user) return;
+    try {
+      const data = await notificationsAPI.getNotifications();
+      const notifs = data?.notifications || [];
+      if (isMounted.current) {
+        setNotifications(notifs);
+        setUnreadCount(notifs.filter((n: any) => !n.read).length);
+      }
+    } catch (error) {
+      // Silently fail — notifications are non-critical
+      console.log('Notification fetch error (non-critical):', error);
+    }
+  };
+
+  const refreshMessageCount = async () => {
+    if (!user) return;
+    try {
+      const convos = await chatAPI.getConversations();
+      const total = (convos || []).reduce((acc: number, c: any) => acc + (c.unreadCount || 0), 0);
+      if (isMounted.current) {
+        setUnreadMessageCount(total);
+      }
+    } catch (error) {
+      // Silently fail
+      console.log('Message count fetch error (non-critical):', error);
+    }
+  };
+
+  const markAllRead = async () => {
+    if (!user) return;
+    try {
+      await notificationsAPI.markAllRead();
+      if (isMounted.current) {
+        setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+        setUnreadCount(0);
+      }
+    } catch (error) {
+      console.log('Failed to mark notifications as read:', error);
+    }
+  };
 
   // Register for push notifications
   useEffect(() => {
-    if (!user) return;
-
-    const registerForPush = async () => {
-      try {
-        if (!Device.isDevice) {
-          // Push notifications only work on physical devices
-          return;
-        }
-
-        const { status: existingStatus } = await Notifications.getPermissionsAsync();
-        let finalStatus = existingStatus;
-
-        if (existingStatus !== 'granted') {
-          const { status } = await Notifications.requestPermissionsAsync();
-          finalStatus = status;
-        }
-
-        if (finalStatus !== 'granted') {
-          return;
-        }
-
-        const tokenData = await Notifications.getExpoPushTokenAsync({
-          projectId: undefined, // Uses the project ID from app.json
-        });
-        const pushToken = tokenData.data;
-        setExpoPushToken(pushToken);
-
-        // Register the token with our backend
-        await notificationsAPI.registerToken(pushToken, Device.modelName || undefined);
-      } catch (error) {
-        console.log('Push notification registration error:', error);
-      }
-    };
-
-    registerForPush();
-
-    // Configure Android channel
-    if (Platform.OS === 'android') {
-      Notifications.setNotificationChannelAsync('default', {
-        name: 'Default',
-        importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: '#FF6B35',
-      });
+    isMounted.current = true;
+    
+    // Mark as ready immediately so consumers don't crash
+    setIsReady(true);
+    
+    if (!user) {
+      // Reset state when user logs out
+      setExpoPushToken(null);
+      setNotifications([]);
+      setUnreadCount(0);
+      setUnreadMessageCount(0);
+      return;
     }
+
+    // Delay initialization to allow navigation to settle
+    const initTimeout = setTimeout(async () => {
+      try {
+        // Register for push notifications (async, non-blocking)
+        if (Device.isDevice && Platform.OS !== 'web') {
+          const { status: existingStatus } = await Notifications.getPermissionsAsync();
+          let finalStatus = existingStatus;
+
+          if (existingStatus !== 'granted') {
+            const { status } = await Notifications.requestPermissionsAsync();
+            finalStatus = status;
+          }
+
+          if (finalStatus === 'granted') {
+            try {
+              const tokenData = await Notifications.getExpoPushTokenAsync();
+              const pushToken = tokenData.data;
+              if (isMounted.current) {
+                setExpoPushToken(pushToken);
+              }
+              // Register token with backend (fire and forget)
+              notificationsAPI.registerToken(pushToken, Device.modelName || undefined).catch(() => {});
+            } catch (tokenError) {
+              console.log('Push token registration skipped:', tokenError);
+            }
+          }
+        }
+
+        // Configure Android channel
+        if (Platform.OS === 'android') {
+          Notifications.setNotificationChannelAsync('default', {
+            name: 'Default',
+            importance: Notifications.AndroidImportance.MAX,
+            vibrationPattern: [0, 250, 250, 250],
+            lightColor: '#FF6B35',
+          }).catch(() => {});
+        }
+
+        // Fetch initial data
+        await Promise.allSettled([
+          refreshNotifications(),
+          refreshMessageCount(),
+        ]);
+      } catch (error) {
+        console.log('Notification initialization error (non-critical):', error);
+      }
+    }, 500); // 500ms delay to let navigation settle
 
     // Listen for incoming notifications while app is open
     notificationListener.current = Notifications.addNotificationReceivedListener((notification) => {
@@ -97,14 +174,12 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       refreshMessageCount();
     });
 
-    // Initial fetch
-    refreshNotifications();
-    refreshMessageCount();
-
     // Poll for unread messages every 30 seconds
     const messageInterval = setInterval(refreshMessageCount, 30000);
 
     return () => {
+      isMounted.current = false;
+      clearTimeout(initTimeout);
       if (notificationListener.current) {
         Notifications.removeNotificationSubscription(notificationListener.current);
       }
@@ -114,37 +189,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       clearInterval(messageInterval);
     };
   }, [user]);
-
-  const refreshNotifications = async () => {
-    try {
-      const data = await notificationsAPI.getNotifications();
-      const notifs = data.notifications || [];
-      setNotifications(notifs);
-      setUnreadCount(notifs.filter((n: any) => !n.read).length);
-    } catch (error) {
-      // Silently fail — notifications are non-critical
-    }
-  };
-
-  const refreshMessageCount = async () => {
-    try {
-      const convos = await chatAPI.getConversations();
-      const total = convos.reduce((acc: number, c: any) => acc + (c.unreadCount || 0), 0);
-      setUnreadMessageCount(total);
-    } catch (error) {
-      // Silently fail
-    }
-  };
-
-  const markAllRead = async () => {
-    try {
-      await notificationsAPI.markAllRead();
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-      setUnreadCount(0);
-    } catch (error) {
-      console.log('Failed to mark notifications as read:', error);
-    }
-  };
 
   return (
     <NotificationContext.Provider
@@ -156,6 +200,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         refreshNotifications,
         markAllRead,
         refreshMessageCount,
+        isReady,
       }}
     >
       {children}
@@ -165,8 +210,15 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
 export const useNotifications = () => {
   const context = useContext(NotificationContext);
-  if (!context) {
-    throw new Error('useNotifications must be used within a NotificationProvider');
-  }
-  return context;
+  // Return safe defaults even if context is somehow undefined
+  return context || {
+    expoPushToken: null,
+    notifications: [],
+    unreadCount: 0,
+    unreadMessageCount: 0,
+    refreshNotifications: async () => {},
+    markAllRead: async () => {},
+    refreshMessageCount: async () => {},
+    isReady: false,
+  };
 };
