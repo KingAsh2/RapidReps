@@ -113,7 +113,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
       clearInterval(messageInterval);
     };
-  }, [user, token]);
+  }, [user]);
 
   const refreshNotifications = async () => {
     try {
