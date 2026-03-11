@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View, Text, TouchableOpacity, Modal, ScrollView, TextInput,
   KeyboardAvoidingView, Platform, ActivityIndicator, Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Video, ResizeMode } from 'expo-av';
 import { C, s, api, getAuthHeader } from './AdminShared';
 import { toast } from '../../utils/toast';
 
@@ -22,6 +23,33 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
   const [approvedTrainers, setApprovedTrainers] = useState<any[]>([]);
   const [showApproved, setShowApproved] = useState(false);
   const [loadingApproved, setLoadingApproved] = useState(false);
+  const [showVideoModal, setShowVideoModal] = useState(false);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const videoRef = useRef<Video>(null);
+  const videoTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handlePlayVideo = (url: string) => {
+    setVideoUrl(url);
+    setShowVideoModal(true);
+    // Auto-stop after 15 seconds
+    videoTimerRef.current = setTimeout(() => {
+      if (videoRef.current) {
+        videoRef.current.stopAsync();
+      }
+      toast.info('Video preview limited to 15 seconds');
+    }, 15000);
+  };
+
+  const handleCloseVideo = () => {
+    if (videoTimerRef.current) {
+      clearTimeout(videoTimerRef.current);
+    }
+    if (videoRef.current) {
+      videoRef.current.stopAsync();
+    }
+    setShowVideoModal(false);
+    setVideoUrl(null);
+  };
 
   const fetchApprovedTrainers = async () => {
     setLoadingApproved(true);
@@ -222,6 +250,7 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                     <Text style={s.modalSectionTitle}>Trainer Information</Text>
                     <Text style={s.modalField}>Name: {verificationDetail.user?.fullName}</Text>
                     <Text style={s.modalField}>Email: {verificationDetail.user?.email}</Text>
+                    <Text style={s.modalField}>Phone: {verificationDetail.user?.phone || 'Not provided'}</Text>
                     {verificationDetail.submittedAt && (
                       <Text style={s.modalField}>Submitted: {new Date(verificationDetail.submittedAt).toLocaleDateString()}</Text>
                     )}
@@ -235,6 +264,45 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                       </Text>
                     </View>
                   </View>
+
+                  {/* Profile Details Section - NEW */}
+                  {verificationDetail.profile && (
+                    <View style={[s.modalSection, { backgroundColor: '#F8FAFC', borderRadius: 12, padding: 14 }]}>
+                      <Text style={s.modalSectionTitle}>Profile Details</Text>
+                      {verificationDetail.profile.bio && (
+                        <View style={{ marginBottom: 10 }}>
+                          <Text style={{ fontSize: 12, fontWeight: '600', color: C.gray, marginBottom: 4 }}>Bio</Text>
+                          <Text style={{ fontSize: 14, color: C.navy, lineHeight: 20 }}>{verificationDetail.profile.bio}</Text>
+                        </View>
+                      )}
+                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+                        {verificationDetail.profile.experienceYears > 0 && (
+                          <View style={{ minWidth: '45%' }}>
+                            <Text style={{ fontSize: 12, fontWeight: '600', color: C.gray }}>Experience</Text>
+                            <Text style={{ fontSize: 14, color: C.navy, fontWeight: '600' }}>{verificationDetail.profile.experienceYears} years</Text>
+                          </View>
+                        )}
+                        {verificationDetail.profile.trainingStyles?.length > 0 && (
+                          <View style={{ minWidth: '45%' }}>
+                            <Text style={{ fontSize: 12, fontWeight: '600', color: C.gray }}>Training Styles</Text>
+                            <Text style={{ fontSize: 14, color: C.navy, fontWeight: '600' }}>{verificationDetail.profile.trainingStyles.join(', ')}</Text>
+                          </View>
+                        )}
+                        {verificationDetail.profile.certifications?.length > 0 && (
+                          <View style={{ width: '100%', marginTop: 4 }}>
+                            <Text style={{ fontSize: 12, fontWeight: '600', color: C.gray }}>Listed Certifications</Text>
+                            <Text style={{ fontSize: 14, color: C.navy, fontWeight: '600' }}>{verificationDetail.profile.certifications.join(', ')}</Text>
+                          </View>
+                        )}
+                        {verificationDetail.profile.locationAddress && (
+                          <View style={{ width: '100%', marginTop: 4 }}>
+                            <Text style={{ fontSize: 12, fontWeight: '600', color: C.gray }}>Location</Text>
+                            <Text style={{ fontSize: 14, color: C.navy, fontWeight: '600' }}>{verificationDetail.profile.locationAddress}</Text>
+                          </View>
+                        )}
+                      </View>
+                    </View>
+                  )}
 
                   {verificationDetail.rejectionReason && (
                     <View style={[s.modalSection, { backgroundColor: '#FFF5F5', borderRadius: 12, padding: 14, borderLeftWidth: 4, borderLeftColor: C.error }]}>
@@ -274,14 +342,25 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                           {step.submitted && (
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8, marginLeft: 48 }}>
                               {step.url && (
-                                <TouchableOpacity
-                                  onPress={() => Linking.openURL(step.url)}
-                                  style={{ backgroundColor: '#E8F0FE', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }}
-                                  data-testid={`view-doc-${step.id}`}
-                                >
-                                  <Ionicons name="eye" size={14} color={C.teal} />
-                                  <Text style={{ fontSize: 13, fontWeight: '600', color: C.teal }}>View</Text>
-                                </TouchableOpacity>
+                                step.id === 'video' ? (
+                                  <TouchableOpacity
+                                    onPress={() => handlePlayVideo(step.url)}
+                                    style={{ backgroundColor: '#FFF0E8', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                                    data-testid={`play-video-${step.id}`}
+                                  >
+                                    <Ionicons name="play-circle" size={14} color="#FF6A00" />
+                                    <Text style={{ fontSize: 13, fontWeight: '600', color: '#FF6A00' }}>Play (15s preview)</Text>
+                                  </TouchableOpacity>
+                                ) : (
+                                  <TouchableOpacity
+                                    onPress={() => Linking.openURL(step.url)}
+                                    style={{ backgroundColor: '#E8F0FE', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                                    data-testid={`view-doc-${step.id}`}
+                                  >
+                                    <Ionicons name="eye" size={14} color={C.teal} />
+                                    <Text style={{ fontSize: 13, fontWeight: '600', color: C.teal }}>View</Text>
+                                  </TouchableOpacity>
+                                )
                               )}
                               {!stepApproved && (
                                 <>
@@ -384,6 +463,40 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
               ) : null}
             </ScrollView>
           </KeyboardAvoidingView>
+        </View>
+      </Modal>
+
+      {/* Video Preview Modal */}
+      <Modal visible={showVideoModal} animationType="fade" transparent>
+        <View style={s.modalOverlay}>
+          <View style={{ backgroundColor: '#000', borderRadius: 16, padding: 4, width: '90%', maxWidth: 400 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 12 }}>
+              <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>Intro Video (15s preview)</Text>
+              <TouchableOpacity onPress={handleCloseVideo} data-testid="close-video-modal">
+                <Ionicons name="close-circle" size={28} color="#fff" />
+              </TouchableOpacity>
+            </View>
+            {videoUrl && (
+              <Video
+                ref={videoRef}
+                source={{ uri: videoUrl }}
+                style={{ width: '100%', height: 300, borderRadius: 12 }}
+                useNativeControls
+                resizeMode={ResizeMode.CONTAIN}
+                shouldPlay
+                isLooping={false}
+                onPlaybackStatusUpdate={(status) => {
+                  if (status.isLoaded && status.positionMillis >= 15000) {
+                    videoRef.current?.stopAsync();
+                    toast.info('Video preview limited to 15 seconds');
+                  }
+                }}
+              />
+            )}
+            <Text style={{ color: '#999', fontSize: 12, textAlign: 'center', padding: 8 }}>
+              Preview auto-stops after 15 seconds
+            </Text>
+          </View>
         </View>
       </Modal>
     </View>

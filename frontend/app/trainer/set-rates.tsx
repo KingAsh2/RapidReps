@@ -10,6 +10,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { trainerAPI } from '../../src/services/api';
 import { useAlert } from '../../src/contexts/AlertContext';
+import { goBack } from '../../src/utils/navigation';
 
 const backgroundImage = require('../../assets/images/bg-plank-ropes.png');
 
@@ -101,7 +102,7 @@ export default function SetRatesScreen() {
       <LinearGradient colors={['rgba(247, 147, 30, 0.88)', 'rgba(247, 147, 30, 0.80)', 'rgba(255, 165, 38, 0.75)']} style={StyleSheet.absoluteFillObject} />
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} data-testid="rates-back-btn">
+          <TouchableOpacity onPress={() => goBack('/trainer/(tabs)/home')} style={styles.backBtn} data-testid="rates-back-btn">
             <Ionicons name="arrow-back" size={24} color={COLORS.white} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>SET YOUR RATES</Text>
