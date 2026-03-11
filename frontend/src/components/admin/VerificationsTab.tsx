@@ -341,7 +341,7 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                           </View>
                           {step.submitted && (
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8, marginLeft: 48 }}>
-                              {step.url && (
+                              {step.url ? (
                                 step.id === 'video' ? (
                                   <TouchableOpacity
                                     onPress={() => handlePlayVideo(step.url)}
@@ -361,6 +361,11 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                                     <Text style={{ fontSize: 13, fontWeight: '600', color: C.teal }}>View</Text>
                                   </TouchableOpacity>
                                 )
+                              ) : (
+                                <View style={{ backgroundColor: '#F0F0F0', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                                  <Ionicons name="cloud-offline-outline" size={14} color={C.gray} />
+                                  <Text style={{ fontSize: 13, fontWeight: '600', color: C.gray }}>No file</Text>
+                                </View>
                               )}
                               {!stepApproved && (
                                 <>

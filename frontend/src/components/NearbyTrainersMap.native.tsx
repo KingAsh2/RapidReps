@@ -247,7 +247,7 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: 0,
+    marginHorizontal: -20,
     marginBottom: 16,
     borderRadius: 0,
     overflow: 'hidden',

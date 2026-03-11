@@ -466,12 +466,12 @@ export default function TrainerOnboardingScreen() {
       case 4:
         return (
           <View style={styles.stepContent}>
-            <Text style={styles.stepTitle}>Pricing & Sessions</Text>
+            <Text style={styles.stepTitle}>Session Durations</Text>
             
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Session Durations You Offer</Text>
               <View style={styles.durationContainer}>
-                {[30, 45, 60].map((duration) => (
+                {[30, 45, 60, 90].map((duration) => (
                   <TouchableOpacity
                     key={duration}
                     style={[

@@ -96,7 +96,7 @@ export default function InstantMatchScreen() {
   return (
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-      <LinearGradient colors={['rgba(26, 42, 94, 0.92)', 'rgba(15, 29, 66, 0.90)']} style={StyleSheet.absoluteFillObject} />
+      <LinearGradient colors={['rgba(255, 127, 0, 0.92)', 'rgba(255, 106, 0, 0.88)']} style={StyleSheet.absoluteFillObject} />
 
       <View style={styles.header}>
         <TouchableOpacity onPress={handleCancel} style={styles.backBtn} data-testid="instant-match-back">
