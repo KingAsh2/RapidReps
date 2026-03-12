@@ -56,12 +56,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (token) {
         try {
           const userData = await authAPI.getMe();
-          setUser(userData);
-          
-          if (savedRole && userData.roles.includes(savedRole)) {
-            setActiveRoleState(savedRole);
-          } else if (userData.roles.length > 0) {
-            setActiveRoleState(userData.roles[0]);
+          // Defensive check - make sure userData is valid
+          if (userData && typeof userData === 'object' && userData.roles) {
+            setUser(userData);
+            
+            if (savedRole && Array.isArray(userData.roles) && userData.roles.includes(savedRole)) {
+              setActiveRoleState(savedRole);
+            } else if (Array.isArray(userData.roles) && userData.roles.length > 0) {
+              setActiveRoleState(userData.roles[0]);
+            }
+          } else {
+            // Invalid user data, clear token
+            console.error('Invalid user data received, clearing auth');
+            await AsyncStorage.removeItem('auth_token');
           }
         } catch (apiError: any) {
           // Only clear token on 401 Unauthorized — keep session alive on network/timeout errors
@@ -75,6 +82,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error) {
       console.error('Error loading user:', error);
+      // Clear potentially corrupted state
+      try {
+        await AsyncStorage.removeItem('auth_token');
+        await AsyncStorage.removeItem('active_role');
+      } catch (e) {
+        // Ignore cleanup errors
+      }
     } finally {
       setLoading(false);
       setIsInitialized(true);
