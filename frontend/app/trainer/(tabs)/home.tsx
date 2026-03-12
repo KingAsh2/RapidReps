@@ -57,9 +57,9 @@ const heroBackground = require('../../../assets/images/bg-battle-ropes.png');
 
 export default function TrainerHomeScreen() {
   const router = useRouter();
-  const { user, logout } = useAuth() || {};
-  const { showAlert } = useAlert() || {};
-  const { unreadCount = 0 } = useNotifications() || {};
+  const { user, logout } = useAuth();
+  const { showAlert } = useAlert();
+  const { unreadCount } = useNotifications();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [sessions, setSessions] = useState<Session[]>([]);
