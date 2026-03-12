@@ -1,216 +1,344 @@
 <analysis>**original_problem_statement:**
-The user is facing a persistent and critical iOS build failure when trying to deploy the application. The failure is caused by an Apple Pay entitlement mismatch. The build logs consistently show that the provisioning profile lacks the necessary Apple Pay capabilities, which seem to be automatically requested by a Stripe dependency.
+The user's application has been plagued by a series of critical, cascading frontend crashes. Initially, the primary blocker was a persistent iOS deployment failure due to an Apple Pay entitlement mismatch, which was resolved by removing all Stripe dependencies. However, this was immediately followed by a severe and frustrating bug where the app crashes intermittently upon login, after signing out, or after being closed and reopened.
 
-Before this deployment issue became the primary focus, the user requested the agent to complete all remaining P1 feature updates, which included linking Your Trainers to a Saved Trainers page, fixing the app's back-button navigation, and enhancing the admin verification details screen.
+Despite numerous attempts by the agent to harden the codebase—by fixing context race conditions, implementing safe defaults for hooks, and enhancing the JavaScript —the crashes persist. The user is understandably frustrated by the repeated claims that the issue is fixed.
 
-The user has provided multiple sets of failing build logs, and despite several attempts by the agent to fix the issue by removing Stripe configurations and dependencies from the local project, the build system continues to fail with the exact same error.
+The current working theory is that the crashes are native (force closes), which are not captured by the current JS-level error handling. The user has approved the integration of a free native crash reporting tool to get to the bottom of the issue. The agent's last action was to request an integration playbook for Sentry.
 
 **PRODUCT REQUIREMENTS:**
-1.  **iOS Deployment Fix:** The primary, blocking requirement is to resolve the iOS build failure so the application can be deployed.
-2.  **P1 Feature Completion:**
-    *   Link Your Trainers ↔ Saved Trainers: Functionally connect these two lists. (Completed)
-    *   Fix Back Button Behavior: Implement a global fix for back-button navigation. (Completed)
-    *   Admin Verification Details: Enhance the admin panel to show trainer's submitted info and add limited video playback. (Completed)
-    *   Backend for 30/60/90 Min Pricing: Ensure the backend supports this pricing structure. (Completed - No change needed).
-3.  **User Verification:** Once the build is fixed, the user needs to verify all the newly completed P1 features.
+1.  **Fix App Crashing (P0):** Resolve the critical and recurring crash that makes the application unusable for testers. This is the absolute top priority.
+2.  **Integrate Native Crash Reporting (P0):** Implement Sentry to capture native-level crashes and provide actionable debug information.
+3.  **User Verification of P1 Features:** Once the app is stable, guide the user to test and verify previously completed features (Saved Trainers, Back Button, Admin UI).
+4.  **Future Tasks:** Enable SendGrid (P2, blocked on API key) and resolve TypeScript warnings (P3).
 
 **User's preferred language**: English
 
 **what currently exists?**
-A full-stack React/FastAPI fitness application where all recent P1 feature requests have been implemented and have passed a full suite of E2E tests run by the testing agent. These completed features include a new backend endpoint and UI for Saved Trainers, a global utility for smarter back-button navigation, and an enhanced admin verification modal with video playback.
-
-However, the application is in a **non-deployable state**. A recurring iOS build failure related to Apple Pay entitlements is blocking all progress. The agent has correctly identified that the  package is the cause but has been unable to prevent the build environment from re-installing it, even after removing it from all local configuration files (, , ).
+A full-stack React/FastAPI fitness application that is functionally complete for its P1 features but is in a **critically unstable and unusable state** due to persistent frontend crashes. The codebase has been significantly hardened with defensive coding patterns in React contexts and components, and features an enhanced  for detailed JS error reporting. However, these measures have not resolved the core instability. The process to integrate Sentry for native crash reporting has just begun.
 
 **Last working item**:
--   Last item agent was working: Debugging a persistent iOS deployment failure. The agent's final conclusion was that the Emergent deployment environment is forcing the re-installation of  during the build process, overriding local project configuration and causing an Apple Pay entitlement mismatch with the provisioning profile.
--   Status: BLOCKED
--   Agent Testing Done: Y (for features), N/A (for deployment issue)
--   Which testing method agent to use? The issue is not in the application code but in the build environment's behavior. The  was used but provided no new insights. The next agent must investigate why the build environment is overriding local dependencies. Manual debugging of build server caches or configurations may be required.
+-   Last item agent was working: Initiating the integration of the Sentry crash reporting service to diagnose suspected native-level crashes. The agent has called the  tool to get the implementation plan for Sentry.
+-   Status: IN PROGRESS
+-   Agent Testing Done: N
+-   Which testing method agent to use? After Sentry is implemented, manual testing by the user is required. The agent must guide the user to rebuild the app, reproduce the crash, and then the agent (or the next one) will need to analyze the reports generated in the Sentry dashboard.
 -   User Testing Done: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: iOS Deployment Failure due to Forced Stripe Dependency (P0)**
-    -   **Description:** The EAS build fails because the provisioning profile does not support Apple Pay. This entitlement is being added by the  package. Despite the agent removing this package from  and , the build logs confirm it is still being installed during the cloud build process.
-    -   **Attempted fixes:**
-        1.  Removed  to resolve lock file conflicts.
-        2.  Added  and  plugins to . (This made the problem visible).
-        3.  Removed the  plugin from . (Insufficient).
-        4.  Completely removed the  package from  and verified all code importing it has fallbacks. (Insufficient).
-        5.  Bumped the app version in  to force a new EAS build fingerprint and bust the cache. (Insufficient, the dependency was still installed).
+-   **Issue 1: Persistent and Intermittent App Crash (P0)**
+    -   **Description:** The app crashes after login, after signing out, or when the app is closed and reopened. The pattern (works on fresh install, fails on restart) strongly suggests an issue with state restoration from AsyncStorage or a native module initialization failure.
+    -   **Attempted fixes:** Fixed  race condition, implemented safe defaults for all major context hooks (, ), removed unsafe  fallbacks, hardened  against corrupted stored data, and enhanced the JS . These fixes have not resolved the issue.
     -   **Next debug checklist:**
-        -   The root cause is external to the codebase in the workspace. Investigate why the build environment forces the installation of .
-        -   Check for platform-level configurations or cached files () on the Emergent build server that might be injecting the dependency.
-        -   The logs show both 
-up to date, audited 1046 packages in 4s
-
-191 packages are looking for funding
-  run `npm fund` for details
-
-7 vulnerabilities (1 low, 2 moderate, 4 high)
-
-To address all issues, run:
-  npm audit fix
-
-Run `npm audit` for details. and yarn install v1.22.22
-[1/4] Resolving packages...
-[2/4] Fetching packages...
-[3/4] Linking dependencies...
-[4/4] Building fresh packages...
-success Saved lockfile.
-Done in 4.81s. being run. Investigate if there's a conflict or if a cached  is being used by npm <command>
-
-Usage:
-
-npm install        install all the dependencies in your project
-npm install <foo>  add the <foo> dependency to your project
-npm test           run this project's tests
-npm run <foo>      run the script named <foo>
-npm <command> -h   quick help on <command>
-npm -l             display usage info for all commands
-npm help <term>    search for help on <term>
-npm help npm       more involved overview
-
-All commands:
-
-    access, adduser, audit, bugs, cache, ci, completion,
-    config, dedupe, deprecate, diff, dist-tag, docs, doctor,
-    edit, exec, explain, explore, find-dupes, fund, get, help,
-    help-search, hook, init, install, install-ci-test,
-    install-test, link, ll, login, logout, ls, org, outdated,
-    owner, pack, ping, pkg, prefix, profile, prune, publish,
-    query, rebuild, repo, restart, root, run-script, sbom,
-    search, set, shrinkwrap, star, stars, start, stop, team,
-    test, token, uninstall, unpublish, unstar, update, version,
-    view, whoami
-
-Specify configs in the ini-formatted file:
-    /root/.npmrc
-or on the command line via: npm <command> --key=value
-
-More configuration info: npm help config
-Configuration fields: npm help 7 config
-
-npm@10.8.2 /usr/lib/node_modules/npm on the server.
-    -   **Why fix this issue and what will be achieved with the fix?** This is a critical blocker. The application cannot be deployed to production until this is resolved.
-    -   **Status:** BLOCKED
+        1.  Receive and implement the Sentry integration playbook from the  tool.
+        2.  Initialize Sentry at the earliest possible point in the app's lifecycle ( or root ).
+        3.  Guide the user to rebuild the app (e.g., version  or higher).
+        4.  Ask the user to reproduce the crash.
+        5.  Analyze the crash reports in Sentry to identify the native or JS root cause.
+    -   **Why fix this issue and what will be achieved with the fix?** This is a critical blocker. The app is unusable until this is fixed. Success will make the app stable enough for user testing.
+    -   **Status:** IN PROGRESS
     -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** both
-    -   **Blocked on other issue:** None. This is the primary blocker.
+    -   **Should Test frontend/backend/both after fix?** Frontend (Manual user testing is required to generate the crash report).
+    -   **Blocked on other issue:** None. This is the main blocker.
 
 **In progress Task List**:
--   None.
+-   **Task 1: Implement Sentry for Native Crash Reporting (P0)**
+    -   **Where to resume:** The agent is waiting for the response from the  tool. The next action is to parse the playbook and apply the code changes to integrate Sentry into the frontend application.
+    -   **What will be achieved with this?** This will provide visibility into native-level crashes (force closes) that are currently invisible, which is essential for diagnosing the persistent stability problem.
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** Frontend.
+    -   **Blocked on something:** Waiting for the  tool response.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **P0: User Verification of Completed P1 Features:** Once the deployment is fixed, the next agent must guide the user to test and verify the following completed features:
-        -   The Saved Trainers page now fetches and displays real data.
-        -   The app's back button navigates to the previous screen correctly.
-        -   The admin verification modal shows more trainer details and allows 15-second video playback.
+    -   **P0: User Verification of Completed P1 Features:** (Blocked by crash issue). Once the app is stable, guide the user to verify the Saved Trainers page, back-button navigation, and the admin verification modal.
 -   **Future Tasks:**
     -   **P2: Enable SendGrid Integration:** Blocked, awaiting API key from the user.
-    -   **P3: Resolve TypeScript Strict-Mode Warnings:** Address the 100+ warnings in the codebase for long-term stability.
+    -   **P3: Resolve TypeScript Strict-Mode Warnings:** A backlog item to improve long-term code quality.
 
 **Completed work in this session**
--   **P1 Task - Saved Trainers Feature:**
-    -   Created a new backend endpoint  in .
-    -   Updated  with a method to call the new endpoint.
-    -   Refactored  to use the live API data.
--   **P1 Task - Back Button Fix:**
-    -   Created a reusable navigation utility  in .
-    -   Applied the  utility across multiple screens to fix navigation.
--   **P1 Task - Admin Verification UI:**
-    -   Enhanced  to show more trainer details.
-    -   Added a video player modal with a 15-second playback limit for verification videos.
--   **Deployment Debugging:**
-    -   Removed  to prevent dependency conflicts.
-    -   Fixed a duplicate style property in .
-    -   Added and then subsequently removed the  and  plugins from .
-    -   Completely removed the  dependency from .
-    -   Bumped the app version to attempt to clear the EAS build cache.
--   **Testing:**
-    -   Successfully ran a comprehensive E2E test suite for all completed P1 features via .
+-   **Resolved iOS Deployment Blocker:** Thoroughly removed all  dependencies and dynamic  calls, allowing iOS builds to pass the entitlement check.
+-   **Comprehensive Crash Hardening (Frontend):**
+    -   Rewrote  to fix a critical race condition.
+    -   Rewrote , , and  hooks to return safe defaults, preventing undefined is not a function errors.
+    -   Made  defensive against corrupted state from .
+    -   Enhanced  to display detailed error messages, component stacks, and a Share button for easier debugging in production.
+-   **Multiple UI Fixes:** Addressed 5+ UI bugs identified by the user from screenshots, including fixing background colors, map layout, and admin panel button functionality.
+-   **Deployment & Config Fixes:** Corrected a malformed  file and invalid environment variables that were causing deployment pipeline failures.
+-   **Backend Testing:** Verified login APIs for all user roles and reset test account passwords.
 
 **Earlier issues found/mentioned but not fixed**
 -   **Issue 1: Pre-existing TypeScript Errors (P2)**
-    -   The frontend codebase has 100+ TypeScript strict-mode warnings. This is a known backlog item for improving code quality.
+    -   **Debug checklist:** Run app/admin/dashboard.tsx(546,103): error TS2322: Type 'Dispatch<SetStateAction<Tab>>' is not assignable to type '(tab: string) => void'.
+  Types of parameters 'value' and 'tab' are incompatible.
+    Type 'string' is not assignable to type 'SetStateAction<Tab>'.
+app/auth/forgot-password.tsx(64,11): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: LinearGradientProps): LinearGradient', gave the following error.
+    Type 'string[]' is not assignable to type 'readonly [ColorValue, ColorValue, ...ColorValue[]]'.
+      Source provides no match for required element at position 0 in target.
+  Overload 2 of 2, '(props: LinearGradientProps, context: any): LinearGradient', gave the following error.
+    Type 'string[]' is not assignable to type 'readonly [ColorValue, ColorValue, ...ColorValue[]]'.
+      Source provides no match for required element at position 0 in target.
+app/auth/forgot-password.tsx(98,9): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: LinearGradientProps): LinearGradient', gave the following error.
+    Type 'string[]' is not assignable to type 'readonly [ColorValue, ColorValue, ...ColorValue[]]'.
+      Source provides no match for required element at position 0 in target.
+  Overload 2 of 2, '(props: LinearGradientProps, context: any): LinearGradient', gave the following error.
+    Type 'string[]' is not assignable to type 'readonly [ColorValue, ColorValue, ...ColorValue[]]'.
+      Source provides no match for required element at position 0 in target.
+app/auth/signup.tsx(61,18): error TS2749: 'UserRole' refers to a value, but is being used as a type here. Did you mean 'typeof UserRole'?
+app/auth/signup.tsx(217,29): error TS2749: 'UserRole' refers to a value, but is being used as a type here. Did you mean 'typeof UserRole'?
+app/change-password.tsx(37,37): error TS2554: Expected 1 arguments, but got 2.
+app/change-password.tsx(41,32): error TS2554: Expected 1 arguments, but got 2.
+app/change-password.tsx(45,31): error TS2554: Expected 1 arguments, but got 2.
+app/change-password.tsx(49,36): error TS2554: Expected 1 arguments, but got 2.
+app/change-password.tsx(56,41): error TS2554: Expected 1 arguments, but got 2.
+app/change-password.tsx(60,28): error TS2554: Expected 1 arguments, but got 2.
+app/trainee/(tabs)/home.tsx(259,19): error TS2345: Argument of type 'any[]' is not assignable to parameter of type 'SetStateAction<never[]>'.
+  Type 'any[]' is not assignable to type 'never[]'.
+    Type 'any' is not assignable to type 'never'.
+app/trainee/(tabs)/home.tsx(266,28): error TS2345: Argument of type 'any[]' is not assignable to parameter of type 'SetStateAction<never[]>'.
+  Type 'any[]' is not assignable to type 'never[]'.
+    Type 'any' is not assignable to type 'never'.
+app/trainee/(tabs)/home.tsx(297,19): error TS2345: Argument of type 'Session[]' is not assignable to parameter of type 'SetStateAction<never[]>'.
+  Type 'Session[]' is not assignable to type 'never[]'.
+    Type 'Session' is not assignable to type 'never'.
+app/trainee/(tabs)/home.tsx(362,15): error TS2339: Property 'distance' does not exist on type 'never'.
+app/trainee/(tabs)/home.tsx(362,38): error TS2339: Property 'distance' does not exist on type 'never'.
+app/trainee/(tabs)/home.tsx(363,18): error TS2339: Property 'distance' does not exist on type 'never'.
+app/trainee/(tabs)/home.tsx(368,44): error TS2339: Property 'averageRating' does not exist on type 'never'.
+app/trainee/(tabs)/home.tsx(372,43): error TS2339: Property 'gender' does not exist on type 'never'.
+app/trainee/(tabs)/home.tsx(377,33): error TS2339: Property 'trainingStyles' does not exist on type 'never'.
+app/trainee/(tabs)/home.tsx(383,34): error TS2339: Property 'distance' does not exist on type 'never'.
+app/trainee/(tabs)/home.tsx(383,56): error TS2339: Property 'distance' does not exist on type 'never'.
+app/trainee/(tabs)/home.tsx(385,34): error TS2339: Property 'averageRating' does not exist on type 'never'.
+app/trainee/(tabs)/home.tsx(385,59): error TS2339: Property 'averageRating' does not exist on type 'never'.
+app/trainee/(tabs)/home.tsx(387,34): error TS2339: Property 'ratePerMinuteCents' does not exist on type 'never'.
+app/trainee/(tabs)/home.tsx(387,68): error TS2339: Property 'ratePerMinuteCents' does not exist on type 'never'.
+app/trainee/(tabs)/home.tsx(790,34): error TS2339: Property 'id' does not exist on type 'never'.
+app/trainee/(tabs)/profile.tsx(132,19): error TS2345: Argument of type '{ profilePhoto: any; fitnessGoals: string; experienceLevel: any; currentFitnessLevel: string; preferredTrainingStyles: string[]; injuriesOrLimitations: string; homeGymOrZipCode: string; ... 7 more ...; budgetMaxPerMinuteCents: number; }' is not assignable to parameter of type 'SetStateAction<{ profilePhoto: string; fitnessGoals: string; experienceLevel: string; currentFitnessLevel: string; preferredTrainingStyles: string[]; injuriesOrLimitations: string; homeGymOrZipCode: string; ... 8 more ...; budgetMaxPerMinuteCents: number; }>'.
+  Property 'homeZipCode' is missing in type '{ profilePhoto: any; fitnessGoals: string; experienceLevel: any; currentFitnessLevel: string; preferredTrainingStyles: string[]; injuriesOrLimitations: string; homeGymOrZipCode: string; ... 7 more ...; budgetMaxPerMinuteCents: number; }' but required in type '{ profilePhoto: string; fitnessGoals: string; experienceLevel: string; currentFitnessLevel: string; preferredTrainingStyles: string[]; injuriesOrLimitations: string; homeGymOrZipCode: string; ... 8 more ...; budgetMaxPerMinuteCents: number; }'.
+app/trainee/(tabs)/profile.tsx(133,35): error TS2339: Property 'profilePhoto' does not exist on type 'TraineeProfile'.
+app/trainee/(tabs)/profile.tsx(135,38): error TS2339: Property 'experienceLevel' does not exist on type 'TraineeProfile'.
+app/trainee/(tabs)/profile.tsx(141,33): error TS2339: Property 'homeStreet' does not exist on type 'TraineeProfile'.
+app/trainee/(tabs)/profile.tsx(142,31): error TS2339: Property 'homeCity' does not exist on type 'TraineeProfile'.
+app/trainee/(tabs)/profile.tsx(143,32): error TS2339: Property 'homeState' does not exist on type 'TraineeProfile'.
+app/trainee/session-active.tsx(137,9): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: LinearGradientProps): LinearGradient', gave the following error.
+    Type 'string[]' is not assignable to type 'readonly [ColorValue, ColorValue, ...ColorValue[]]'.
+      Source provides no match for required element at position 0 in target.
+  Overload 2 of 2, '(props: LinearGradientProps, context: any): LinearGradient', gave the following error.
+    Type 'string[]' is not assignable to type 'readonly [ColorValue, ColorValue, ...ColorValue[]]'.
+      Source provides no match for required element at position 0 in target.
+app/trainee/session-active.tsx(262,27): error TS2322: Type '"logo-zoom"' is not assignable to type '"time-outline" | "checkmark-circle-outline" | "fitness-outline" | "trophy-outline" | "close-circle-outline" | "radio-button-on" | "radio-button-off" | "fitness" | "location" | ... 1348 more ... | undefined'.
+app/trainee/session-complete.tsx(101,9): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: LinearGradientProps): LinearGradient', gave the following error.
+    Type 'string[]' is not assignable to type 'readonly [ColorValue, ColorValue, ...ColorValue[]]'.
+      Source provides no match for required element at position 0 in target.
+  Overload 2 of 2, '(props: LinearGradientProps, context: any): LinearGradient', gave the following error.
+    Type 'string[]' is not assignable to type 'readonly [ColorValue, ColorValue, ...ColorValue[]]'.
+      Source provides no match for required element at position 0 in target.
+app/trainee/share-streak.tsx(135,13): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: LinearGradientProps): LinearGradient', gave the following error.
+    Type 'string[]' is not assignable to type 'readonly [ColorValue, ColorValue, ...ColorValue[]]'.
+      Source provides no match for required element at position 0 in target.
+  Overload 2 of 2, '(props: LinearGradientProps, context: any): LinearGradient', gave the following error.
+    Type 'string[]' is not assignable to type 'readonly [ColorValue, ColorValue, ...ColorValue[]]'.
+      Source provides no match for required element at position 0 in target.
+app/trainee/trainer-detail.tsx(100,17): error TS2339: Property 'savedTrainers' does not exist on type 'User'.
+app/trainee/trainer-detail.tsx(189,5): error TS2322: Type 'number' is not assignable to type 'Timeout'.
+app/trainee/trainer-detail.tsx(288,117): error TS2339: Property 'fullName' does not exist on type 'TrainerProfile'.
+app/trainee/trainer-detail.tsx(441,57): error TS2339: Property 'fullName' does not exist on type 'TrainerProfile'.
+app/trainee/trainer-detail.tsx(675,18): error TS18048: 'prices.travelFee' is possibly 'undefined'.
+app/trainee/trainer-detail.tsx(678,55): error TS18048: 'prices.travelFee' is possibly 'undefined'.
+app/trainee/trainer-detail.tsx(746,49): error TS2339: Property 'fullName' does not exist on type 'TrainerProfile'.
+app/trainee/trainer-detail.tsx(765,49): error TS2339: Property 'fullName' does not exist on type 'TrainerProfile'.
+app/trainee/trainer-detail.tsx(786,41): error TS2339: Property 'fullName' does not exist on type 'TrainerProfile'.
+app/trainee/user-progress.tsx(67,25): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: LinearGradientProps): LinearGradient', gave the following error.
+    Type 'string[]' is not assignable to type 'readonly [ColorValue, ColorValue, ...ColorValue[]]'.
+      Source provides no match for required element at position 0 in target.
+  Overload 2 of 2, '(props: LinearGradientProps, context: any): LinearGradient', gave the following error.
+    Type 'string[]' is not assignable to type 'readonly [ColorValue, ColorValue, ...ColorValue[]]'.
+      Source provides no match for required element at position 0 in target.
+app/trainee/virtual-confirm.tsx(90,5): error TS2322: Type 'number' is not assignable to type 'Timeout'.
+app/trainee/virtual-confirm.tsx(132,5): error TS2322: Type 'number' is not assignable to type 'Timeout'.
+app/trainee/virtual-confirm.tsx(201,7): error TS2322: Type 'number' is not assignable to type 'Timeout'.
+app/trainer/(tabs)/home.tsx(163,5): error TS2322: Type 'number' is not assignable to type 'Timeout'.
+app/trainer/(tabs)/home.tsx(750,48): error TS2339: Property 'traineeName' does not exist on type 'Session'.
+app/trainer/(tabs)/home.tsx(751,49): error TS2339: Property 'traineePhoto' does not exist on type 'Session'.
+app/trainer/(tabs)/home.tsx(762,38): error TS2339: Property 'traineePhoto' does not exist on type 'Session'.
+app/trainer/(tabs)/home.tsx(764,56): error TS2339: Property 'traineePhoto' does not exist on type 'Session'.
+app/trainer/(tabs)/home.tsx(776,73): error TS2339: Property 'traineeName' does not exist on type 'Session'.
+app/trainer/(tabs)/home.tsx(1212,5): error TS2345: Argument of type '{ container: { flex: number; }; overlay: { backgroundColor: string; position: "absolute"; left: 0; right: 0; top: 0; bottom: 0; }; safeArea: { flex: number; }; header: { flexDirection: "row"; justifyContent: "space-between"; alignItems: "center"; paddingHorizontal: number; paddingTop: number; paddingBottom: number; ...' is not assignable to parameter of type '{ container: { flex: number; }; overlay: { backgroundColor: string; position: "absolute"; left: 0; right: 0; top: 0; bottom: 0; }; safeArea: { flex: number; }; header: { flexDirection: "row"; justifyContent: "space-between"; alignItems: "center"; paddingHorizontal: number; paddingTop: number; paddingBottom: number; ...'.
+  Property 'quickActionText' is incompatible with index signature.
+    Object literal may only specify known properties, and 'numberOfLines' does not exist in type 'ViewStyle | TextStyle | ImageStyle'.
+app/trainer/(tabs)/sessions.tsx(135,21): error TS2367: This comparison appears to be unintentional because the types '"cancelled" | "completed"' and '"pending"' have no overlap.
+app/trainer/edit-profile.tsx(130,31): error TS2339: Property 'introVideoUrl' does not exist on type 'TrainerProfile'.
+app/trainer/edit-profile.tsx(363,28): error TS2304: Cannot find name 'Slider'.
+app/trainer/edit-profile.tsx(369,45): error TS7006: Parameter 'value' implicitly has an 'any' type.
+app/trainer/home.tsx(160,5): error TS2322: Type 'number' is not assignable to type 'Timeout'.
+app/trainer/home.tsx(342,5): error TS2304: Cannot find name 'setGoLiveLoading'.
+app/trainer/home.tsx(347,9): error TS2304: Cannot find name 'toast'.
+app/trainer/home.tsx(355,9): error TS2304: Cannot find name 'toast'.
+app/trainer/home.tsx(358,7): error TS2304: Cannot find name 'toast'.
+app/trainer/home.tsx(360,7): error TS2304: Cannot find name 'setGoLiveLoading'.
+app/trainer/home.tsx(612,27): error TS2304: Cannot find name 'goLiveLoading'.
+app/trainer/home.tsx(615,18): error TS2304: Cannot find name 'goLiveLoading'.
+app/trainer/home.tsx(737,48): error TS2339: Property 'traineeName' does not exist on type 'Session'.
+app/trainer/home.tsx(738,49): error TS2339: Property 'traineePhoto' does not exist on type 'Session'.
+app/trainer/home.tsx(749,38): error TS2339: Property 'traineePhoto' does not exist on type 'Session'.
+app/trainer/home.tsx(751,56): error TS2339: Property 'traineePhoto' does not exist on type 'Session'.
+app/trainer/home.tsx(763,73): error TS2339: Property 'traineeName' does not exist on type 'Session'.
+app/trainer/onboarding.tsx(279,19): error TS2322: Type '"hourglass" | "checkmark-shield"' is not assignable to type '"time-outline" | "checkmark-circle-outline" | "fitness-outline" | "trophy-outline" | "close-circle-outline" | "radio-button-on" | "radio-button-off" | "fitness" | "location" | ... 1348 more ... | undefined'.
+  Type '"checkmark-shield"' is not assignable to type '"time-outline" | "checkmark-circle-outline" | "fitness-outline" | "trophy-outline" | "close-circle-outline" | "radio-button-on" | "radio-button-off" | "fitness" | "location" | ... 1348 more ... | undefined'.
+app/trainer/trainee-profile.tsx(218,9): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: LinearGradientProps): LinearGradient', gave the following error.
+    Type 'string[]' is not assignable to type 'readonly [ColorValue, ColorValue, ...ColorValue[]]'.
+      Source provides no match for required element at position 0 in target.
+  Overload 2 of 2, '(props: LinearGradientProps, context: any): LinearGradient', gave the following error.
+    Type 'string[]' is not assignable to type 'readonly [ColorValue, ColorValue, ...ColorValue[]]'.
+      Source provides no match for required element at position 0 in target.
+app/trainer/trainee-profile.tsx(582,29): error TS2339: Property 'surface' does not exist on type '{ primary: string; primaryLight: string; primaryDark: string; orange: string; orangeLight: string; orangeHot: string; orangeGlow: string; secondary: string; secondaryDark: string; teal: string; ... 33 more ...; cardBorder: string; }'.
+app/trainer/verification.tsx(360,17): error TS2339: Property 'info' does not exist on type '{ success: (message: string) => void; warning: (message: string) => void; error: (message: string) => void; }'.
+src/components/AthleticButton.tsx(37,43): error TS2345: Argument of type '{ paddingVertical: number; paddingHorizontal: number; }' is not assignable to parameter of type '{ borderRadius: number; borderWidth: number; justifyContent: "center"; alignItems: "center"; shadowColor: string; shadowOffset: { width: number; height: number; }; shadowOpacity: number; shadowRadius: number; elevation: number; }'.
+  Type '{ paddingVertical: number; paddingHorizontal: number; }' is missing the following properties from type '{ borderRadius: number; borderWidth: number; justifyContent: "center"; alignItems: "center"; shadowColor: string; shadowOffset: { width: number; height: number; }; shadowOpacity: number; shadowRadius: number; elevation: number; }': borderRadius, borderWidth, justifyContent, alignItems, and 5 more.
+src/components/AthleticButton.tsx(38,44): error TS2345: Argument of type '{ paddingVertical: number; paddingHorizontal: number; }' is not assignable to parameter of type '{ borderRadius: number; borderWidth: number; justifyContent: "center"; alignItems: "center"; shadowColor: string; shadowOffset: { width: number; height: number; }; shadowOpacity: number; shadowRadius: number; elevation: number; }'.
+  Type '{ paddingVertical: number; paddingHorizontal: number; }' is missing the following properties from type '{ borderRadius: number; borderWidth: number; justifyContent: "center"; alignItems: "center"; shadowColor: string; shadowOffset: { width: number; height: number; }; shadowOpacity: number; shadowRadius: number; elevation: number; }': borderRadius, borderWidth, justifyContent, alignItems, and 5 more.
+src/components/AthleticButton.tsx(39,43): error TS2345: Argument of type '{ paddingVertical: number; paddingHorizontal: number; }' is not assignable to parameter of type '{ borderRadius: number; borderWidth: number; justifyContent: "center"; alignItems: "center"; shadowColor: string; shadowOffset: { width: number; height: number; }; shadowOpacity: number; shadowRadius: number; elevation: number; }'.
+  Type '{ paddingVertical: number; paddingHorizontal: number; }' is missing the following properties from type '{ borderRadius: number; borderWidth: number; justifyContent: "center"; alignItems: "center"; shadowColor: string; shadowOffset: { width: number; height: number; }; shadowOpacity: number; shadowRadius: number; elevation: number; }': borderRadius, borderWidth, justifyContent, alignItems, and 5 more.
+src/components/AthleticButton.tsx(42,48): error TS2345: Argument of type '{ backgroundColor: string; borderColor: string; }' is not assignable to parameter of type '{ borderRadius: number; borderWidth: number; justifyContent: "center"; alignItems: "center"; shadowColor: string; shadowOffset: { width: number; height: number; }; shadowOpacity: number; shadowRadius: number; elevation: number; }'.
+  Type '{ backgroundColor: string; borderColor: string; }' is missing the following properties from type '{ borderRadius: number; borderWidth: number; justifyContent: "center"; alignItems: "center"; shadowColor: string; shadowOffset: { width: number; height: number; }; shadowOpacity: number; shadowRadius: number; elevation: number; }': borderRadius, borderWidth, justifyContent, alignItems, and 5 more.
+src/components/AthleticButton.tsx(43,50): error TS2345: Argument of type '{ backgroundColor: string; borderColor: string; }' is not assignable to parameter of type '{ borderRadius: number; borderWidth: number; justifyContent: "center"; alignItems: "center"; shadowColor: string; shadowOffset: { width: number; height: number; }; shadowOpacity: number; shadowRadius: number; elevation: number; }'.
+  Type '{ backgroundColor: string; borderColor: string; }' is missing the following properties from type '{ borderRadius: number; borderWidth: number; justifyContent: "center"; alignItems: "center"; shadowColor: string; shadowOffset: { width: number; height: number; }; shadowOpacity: number; shadowRadius: number; elevation: number; }': borderRadius, borderWidth, justifyContent, alignItems, and 5 more.
+src/components/AthleticButton.tsx(44,48): error TS2345: Argument of type '{ backgroundColor: string; borderColor: string; }' is not assignable to parameter of type '{ borderRadius: number; borderWidth: number; justifyContent: "center"; alignItems: "center"; shadowColor: string; shadowOffset: { width: number; height: number; }; shadowOpacity: number; shadowRadius: number; elevation: number; }'.
+  Type '{ backgroundColor: string; borderColor: string; }' is missing the following properties from type '{ borderRadius: number; borderWidth: number; justifyContent: "center"; alignItems: "center"; shadowColor: string; shadowOffset: { width: number; height: number; }; shadowOpacity: number; shadowRadius: number; elevation: number; }': borderRadius, borderWidth, justifyContent, alignItems, and 5 more.
+src/components/AthleticButton.tsx(45,47): error TS2345: Argument of type '{ backgroundColor: string; borderColor: string; }' is not assignable to parameter of type '{ borderRadius: number; borderWidth: number; justifyContent: "center"; alignItems: "center"; shadowColor: string; shadowOffset: { width: number; height: number; }; shadowOpacity: number; shadowRadius: number; elevation: number; }'.
+  Type '{ backgroundColor: string; borderColor: string; }' is missing the following properties from type '{ borderRadius: number; borderWidth: number; justifyContent: "center"; alignItems: "center"; shadowColor: string; shadowOffset: { width: number; height: number; }; shadowOpacity: number; shadowRadius: number; elevation: number; }': borderRadius, borderWidth, justifyContent, alignItems, and 5 more.
+src/components/AthleticButton.tsx(48,46): error TS2345: Argument of type '{ backgroundColor: string; borderColor: string; opacity: number; }' is not assignable to parameter of type '{ borderRadius: number; borderWidth: number; justifyContent: "center"; alignItems: "center"; shadowColor: string; shadowOffset: { width: number; height: number; }; shadowOpacity: number; shadowRadius: number; elevation: number; }'.
+  Type '{ backgroundColor: string; borderColor: string; opacity: number; }' is missing the following properties from type '{ borderRadius: number; borderWidth: number; justifyContent: "center"; alignItems: "center"; shadowColor: string; shadowOffset: { width: number; height: number; }; shadowOpacity: number; shadowRadius: number; elevation: number; }': borderRadius, borderWidth, justifyContent, alignItems, and 5 more.
+src/components/AthleticButton.tsx(49,36): error TS2345: Argument of type '{ width: "100%"; }' is not assignable to parameter of type '{ borderRadius: number; borderWidth: number; justifyContent: "center"; alignItems: "center"; shadowColor: string; shadowOffset: { width: number; height: number; }; shadowOpacity: number; shadowRadius: number; elevation: number; }'.
+  Type '{ width: "100%"; }' is missing the following properties from type '{ borderRadius: number; borderWidth: number; justifyContent: "center"; alignItems: "center"; shadowColor: string; shadowOffset: { width: number; height: number; }; shadowOpacity: number; shadowRadius: number; elevation: number; }': borderRadius, borderWidth, justifyContent, alignItems, and 5 more.
+src/components/AthleticButton.tsx(57,48): error TS2345: Argument of type '{ color: string; }' is not assignable to parameter of type '{ fontSize: number; fontWeight: "900"; letterSpacing: number; textTransform: "uppercase"; }'.
+  Type '{ color: string; }' is missing the following properties from type '{ fontSize: number; fontWeight: "900"; letterSpacing: number; textTransform: "uppercase"; }': fontSize, fontWeight, letterSpacing, textTransform
+src/components/AthleticButton.tsx(58,50): error TS2345: Argument of type '{ color: string; }' is not assignable to parameter of type '{ fontSize: number; fontWeight: "900"; letterSpacing: number; textTransform: "uppercase"; }'.
+  Type '{ color: string; }' is missing the following properties from type '{ fontSize: number; fontWeight: "900"; letterSpacing: number; textTransform: "uppercase"; }': fontSize, fontWeight, letterSpacing, textTransform
+src/components/AthleticButton.tsx(59,48): error TS2345: Argument of type '{ color: string; }' is not assignable to parameter of type '{ fontSize: number; fontWeight: "900"; letterSpacing: number; textTransform: "uppercase"; }'.
+  Type '{ color: string; }' is missing the following properties from type '{ fontSize: number; fontWeight: "900"; letterSpacing: number; textTransform: "uppercase"; }': fontSize, fontWeight, letterSpacing, textTransform
+src/components/AthleticButton.tsx(60,47): error TS2345: Argument of type '{ color: string; }' is not assignable to parameter of type '{ fontSize: number; fontWeight: "900"; letterSpacing: number; textTransform: "uppercase"; }'.
+  Type '{ color: string; }' is missing the following properties from type '{ fontSize: number; fontWeight: "900"; letterSpacing: number; textTransform: "uppercase"; }': fontSize, fontWeight, letterSpacing, textTransform
+src/components/AthleticButton.tsx(61,46): error TS2345: Argument of type '{ color: string; }' is not assignable to parameter of type '{ fontSize: number; fontWeight: "900"; letterSpacing: number; textTransform: "uppercase"; }'.
+  Type '{ color: string; }' is missing the following properties from type '{ fontSize: number; fontWeight: "900"; letterSpacing: number; textTransform: "uppercase"; }': fontSize, fontWeight, letterSpacing, textTransform
+src/components/PricingDisplay.tsx(210,17): error TS2322: Type '"checkmark-shield"' is not assignable to type '"time-outline" | "checkmark-circle-outline" | "fitness-outline" | "trophy-outline" | "close-circle-outline" | "radio-button-on" | "radio-button-off" | "fitness" | "location" | ... 1348 more ... | undefined'.
+src/components/SafetyPinEntry.tsx(185,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextInputProps): TextInput', gave the following error.
+    Type '(ref: TextInput | null) => TextInput | null' is not assignable to type 'Ref<TextInput> | undefined'.
+      Type '(ref: TextInput | null) => TextInput | null' is not assignable to type '(instance: TextInput | null) => void | (() => VoidOrUndefinedOnly)'.
+        Type 'TextInput | null' is not assignable to type 'void | (() => VoidOrUndefinedOnly)'.
+          Type 'null' is not assignable to type 'void | (() => VoidOrUndefinedOnly)'.
+  Overload 2 of 2, '(props: TextInputProps, context: any): TextInput', gave the following error.
+    Type '(ref: TextInput | null) => TextInput | null' is not assignable to type 'Ref<TextInput> | undefined'.
+      Type '(ref: TextInput | null) => TextInput | null' is not assignable to type '(instance: TextInput | null) => void | (() => VoidOrUndefinedOnly)'.
+        Type 'TextInput | null' is not assignable to type 'void | (() => VoidOrUndefinedOnly)'.
+          Type 'null' is not assignable to type 'void | (() => VoidOrUndefinedOnly)'.
+src/components/TrainerFilters.tsx(251,29): error TS2339: Property 'neonBlue' does not exist on type '{ primary: string; primaryLight: string; primaryDark: string; orange: string; orangeLight: string; orangeHot: string; orangeGlow: string; secondary: string; secondaryDark: string; teal: string; ... 33 more ...; cardBorder: string; }'.
+src/components/TrainerFilters.tsx(252,25): error TS2339: Property 'neonBlue' does not exist on type '{ primary: string; primaryLight: string; primaryDark: string; orange: string; orangeLight: string; orangeHot: string; orangeGlow: string; secondary: string; secondaryDark: string; teal: string; ... 33 more ...; cardBorder: string; }'.
+src/components/TrainingModeDialog.tsx(39,13): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: LinearGradientProps): LinearGradient', gave the following error.
+    Type 'string[]' is not assignable to type 'readonly [ColorValue, ColorValue, ...ColorValue[]]'.
+      Source provides no match for required element at position 0 in target.
+  Overload 2 of 2, '(props: LinearGradientProps, context: any): LinearGradient', gave the following error.
+    Type 'string[]' is not assignable to type 'readonly [ColorValue, ColorValue, ...ColorValue[]]'.
+      Source provides no match for required element at position 0 in target.
+src/components/admin/VerificationsTab.tsx(35,5): error TS2322: Type 'number' is not assignable to type 'Timeout'.
+src/components/admin/VerificationsTab.tsx(39,13): error TS2339: Property 'info' does not exist on type '{ success: (message: string) => void; warning: (message: string) => void; error: (message: string) => void; }'.
+src/components/admin/VerificationsTab.tsx(496,27): error TS2339: Property 'info' does not exist on type '{ success: (message: string) => void; warning: (message: string) => void; error: (message: string) => void; }'.
+src/contexts/NotificationContext.tsx(10,35): error TS2322: Type 'Promise<{ shouldShowAlert: true; shouldPlaySound: true; shouldSetBadge: true; }>' is not assignable to type 'Promise<NotificationBehavior>'.
+  Type '{ shouldShowAlert: true; shouldPlaySound: true; shouldSetBadge: true; }' is missing the following properties from type 'NotificationBehavior': shouldShowBanner, shouldShowList
+src/contexts/NotificationContext.tsx(46,32): error TS2554: Expected 1 arguments, but got 0.
+src/contexts/NotificationContext.tsx(47,28): error TS2554: Expected 1 arguments, but got 0.
+src/contexts/NotificationContext.tsx(184,23): error TS2339: Property 'removeNotificationSubscription' does not exist on type 'typeof import("/app/frontend/node_modules/expo-notifications/build/index")'.
+src/contexts/NotificationContext.tsx(187,23): error TS2339: Property 'removeNotificationSubscription' does not exist on type 'typeof import("/app/frontend/node_modules/expo-notifications/build/index")'. and address the 100+ warnings.
+    -   **Why to solve this issue and what will be achieved with this?** Improves code quality and long-term maintainability.
+    -   **Should Test frontend/backend/both after fix:** Frontend.
+    -   **Is recurring issue?** N
 
 **Known issue recurrence from previous fork**
--   **Issue recurrence in previous fork:** Deployment Failures.
--   **Recurrence count:** 5+ (This is a persistent problem for this project).
+-   **Issue recurrence in previous fork:** App Instability & Crashing. The initial deployment failure has been replaced by a critical runtime crash.
+-   **Recurrence count:** High (reported in nearly every user interaction).
 -   **Status:** IN PROGRESS
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Expo EAS Build System:** The core of the current problem. The agent has interacted with build logs, plugins, and fingerprinting.
--   **Provisioning Profiles & Entitlements:** The root cause of the build error is a mismatch between the entitlements required by a dependency (Apple Pay) and those provided by the provisioning profile.
--   **Dependency Management:** The agent has used yarn remove v1.22.22
-info Visit https://yarnpkg.com/en/docs/cli/remove for documentation about this command. and edited  and  in an attempt to control dependencies. The failure shows a disconnect between the local workspace and the remote build environment.
--   **Full-Stack Feature Implementation:** Successfully added a new API endpoint, a frontend service call, and a UI component to deliver the Saved Trainers feature.
+-   **Native vs. JavaScript Crashes:** The core problem has evolved from debugging JS errors (which are now largely handled) to needing to capture native-level crashes (force closes), which require specialized tools.
+-   **Defensive State Management:** A key strategy has been to make React Contexts and hooks resilient to race conditions and unexpected  states, especially during app initialization and state restoration.
+-   **Crash Reporting Integration:** The current task involves integrating a third-party service (Sentry) to gain visibility into the full application crash lifecycle, including native code.
 
 **key DB schema**
--   No DB schema changes were made in this session.
+-   No changes made.
 
 **changes in tech stack**
--   **Removed:**  (dependency and plugin).
+-   **Removed:** 
+-   **Pending Addition:** Sentry (for crash reporting)
 
 **All files of reference**
--    (Stripe dependency was removed here)
--    (Stripe plugin was removed here, version was bumped)
--    (Should not contain Stripe)
--    (New endpoint)
--    (Updated UI)
--    (Updated UI)
--    (New file)
+-   
+-   
+-   
+-    (Contains the )
+-    (For version bumps)
 
 **Areas that need refactoring**:
--   The 100+ TypeScript strict-mode warnings are a known technical debt item.
+-   The 100+ TypeScript strict-mode warnings are a known technical debt item that should be addressed after the app is stable.
 
 **key api endpoints**
--   : **NEW**. Fetches a trainee's saved/favorited trainers.
+-   No new endpoints were added. All work was focused on frontend stability.
 
 **Critical Info for New Agent**
--   **The deployment issue is NOT in the local codebase.** You have tried all reasonable local fixes (removing packages, clearing caches, bumping versions). The build logs confirm that  is being re-installed by the remote build environment. Do not repeat the steps of removing the package locally; it will not work.
--   **Focus your investigation on the build environment itself.** The problem lies with how the Emergent deployment platform is caching or managing dependencies. Escalate this as a platform issue if necessary.
--   All P1 features are implemented and have passed E2E tests. Once the deployment is unblocked, the next step is to initiate user verification for these features.
+-   **Your top priority is to complete the Sentry integration.** The previous agent has already called the  tool. You must act on its response to add Sentry to the project.
+-   **The user is highly frustrated.** Do not claim the app is fixed until there is concrete evidence from crash reports (or lack thereof). Your primary role is now to facilitate the data-gathering process via Sentry.
+-   **The crash happens after a fresh install works**, specifically after signing out or closing and reopening the app. This strongly points to an issue with  state restoration or a native module failing to re-initialize correctly.
+-   **You cannot test the crash yourself.** You must guide the user to rebuild the app with Sentry integrated and then reproduce the crash. Your job will be to analyze the report that is generated.
 
 **documents and test reports created in this job**
--    (updated with feature completion and deployment fixes)
--    (successful E2E test of P1 features)
+-   
+-   
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Provided final failing build logs, reiterating the issue is a signing/entitlement mismatch and that the root cause was not fixed. - **Status: Unresolved.**
-2.  **User:** Provided failing build logs. - **Status: Unresolved.**
-3.  **User:** Build still failing. - **Status: Unresolved.**
-4.  **User:** Provided first set of failing build logs after P1 feature completion. - **Status: Unresolved.**
-5.  **User:** Finish p1 - **Status: Completed.**
-6.  **User:** Proceed. I don’t want to generate iOS build until everything is fixed - **Status: In Progress.**
-7.  **User:** fix everything so my iOS build doesn’t fail anymore - **Status: In Progress.**
-8.  **User:** proceed - **Status: In Progress.**
-9.  **User:** my build keeps failing - **Status: In Progress.**
+1.  **User:** Yes whatever is free - **Status: In Progress.** Agent is acting on this by integrating Sentry.
+2.  **User:** Does this capture force closes too? - **Status: Completed.** Agent answered and proposed Sentry.
+3.  **User:** Yes make the error logging extremely clear... - **Status: Completed.** Agent enhanced the ErrorBoundary.
+4.  **User:** Did you try signing in? Yes or no? - **Status: Completed.** Agent clarified its testing limitations.
+5.  **User:** It happend again... Do we need to recreate from scratch? - **Status: In Progress.** This is the core unresolved crash issue.
+6.  **User:** Still crashing. (with screenshot) - **Status: Completed.** Agent implemented a fix for the specific JS error shown.
+7.  **User:** SO this will not happen again...? - **Status: In Progress.** User expressed doubt, which was warranted as the app kept crashing.
+8.  **User:** Use deployment agent... - **Status: Completed.** Agent fixed the reported deployment errors.
+9.  **User:** one more. then test again... - **Status: Completed.** Agent fixed the UI bug.
+10. **User:** Take care of these before I try again... - **Status: Completed.** Agent fixed 5 UI bugs.
 
 **Project Health Check:**
--   **Broken:** The application is un-deployable due to a persistent iOS build failure.
--   **Mocked:** SendGrid integration remains non-functional, awaiting an API key.
+-   **Broken:** The application is critically unstable and unusable due to recurring crashes on launch/login.
+-   **Mocked:** SendGrid integration is non-functional and pending a user-provided API key.
 
 **3rd Party Integrations**
--   Stripe: The native iOS package () has been removed from the local project but is being anomalously re-installed during cloud builds.
--   Expo / Expo Router: Core frontend framework.
--   : Used for range sliders.
--   : Used for generating QR codes.
--   SendGrid: Awaiting API key.
+-   **Expo / Expo Router:** Core framework.
+-   **Sentry:** Pending integration for native crash reporting.
+-   **react-native-maps:** Used for map features.
+-   **Stripe:** Fully removed from the project.
+-   **SendGrid:** Awaiting API key.
 
 **Testing status**
--   Testing agent used after significant changes: **YES**. All P1 features were successfully tested.
--   Troubleshoot agent used after agent stuck in loop: NO.
+-   Testing agent used after significant changes: **YES** (for backend APIs).
+-   Troubleshoot agent used after agent stuck in loop: **YES** (identified the  race condition).
 -   Test files created: .
--   Known regressions: None from a feature perspective. The deployment is the only regression.
+-   Known regressions: A massive regression in app stability occurred after the initial Stripe-related work.
 
 **Credentials to test flow:**
 | Role | Email | Password |
 | :--- | :--- | :--- |
 | Admin | |  |
+| Trainee |  |  |
+| Trainer |  |  |
 
 **What agent forgot to execute**
--   The agent did not successfully resolve the root cause of the deployment failure, which appears to be an issue with the build environment caching or configuration, rather than an oversight in execution.</analysis>
+-   The previous agent failed to recognize the limitations of JS-level error handling early on. It spent too many cycles trying to fix symptoms with defensive JS code instead of escalating to a proper native crash reporting tool sooner. This is now being corrected with the Sentry integration.</analysis>
