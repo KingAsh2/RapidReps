@@ -70,10 +70,25 @@ A full-stack React Native/Expo fitness application connecting trainees with pers
    - Changed context default from `undefined` to safe default values
    - Added `isReady` flag for consumers to check initialization status
    - Wrapped all async operations in `Promise.allSettled()` for error isolation
-   - Added defensive defaults in tab layouts: `const { unreadMessageCount = 0 } = useNotifications() || {}`
-6. **Cleaned native iOS/Android folders** - Ensures clean prebuild during deployment
-7. **Version bumped to 2.0.31**
-8. **expo-doctor reports: 17/17 checks passed**
+6. **Fixed "TypeError: undefined is not a function" crash** - Removed redundant `|| {}` fallbacks from hook destructuring that were overriding context safe defaults
+7. **Fixed context hooks to never throw:**
+   - `useAuth()` - Returns safe defaults if context unavailable
+   - `useAlert()` - Returns no-op implementation if context unavailable
+   - `useNotifications()` - Already fixed earlier
+8. **Fixed deployment blockers:**
+   - Cleaned `.gitignore` - Removed malformed lines 80-111 with `-e` flags and `*.env` patterns
+   - Fixed `EXPO_TUNNEL_SUBDOMAIN=rapidreps` in frontend/.env
+9. **UI Fixes:**
+   - Renamed "Pricing & Sessions" → "Session Durations" in trainer onboarding
+   - Added 90 min option to session durations: `[30, 45, 60, 90]`
+   - Changed Streak Share screen background from navy to orange gradient
+   - Changed Virtual Live Session screen background from navy to orange gradient
+   - Changed Group Workouts screen background from navy to orange gradient
+   - Made map edge-to-edge with `marginHorizontal: -20`
+   - Added null check for verification documents in admin panel
+10. **ErrorBoundary Enhancement:** Now shows actual error message in production (not just DEV mode)
+11. **Version: 2.0.36**
+12. **expo-doctor: 17/17 checks passed**
 
 **Note:** Payments currently create backend payment intents but don't present native payment UI. Future enhancement: Implement Stripe Checkout redirect or Stripe.js web-based payments.
 
