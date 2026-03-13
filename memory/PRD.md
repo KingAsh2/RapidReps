@@ -70,7 +70,8 @@ A full-stack React Native/Expo fitness application connecting trainees with pers
   - `.env` - Added SENTRY_AUTH_TOKEN
 - **IMPORTANT FIX:** Removed Sentry metro wrapper (`withSentryConfig`/`getSentryExpoConfig`) which caused "TypeError: Cannot read properties of undefined (reading 'match')" during EAS Update bundling. The Expo plugin in app.json handles source maps during EAS builds.
 - **EAS BUILD FIX (Feb 2026):** Added `SENTRY_ALLOW_FAILURE=true` to all build profiles in eas.json. This prevents sentry-cli source map upload failures (400 Bad Request) from blocking the entire build. Root cause: likely incorrect org/project slug — user should verify credentials in Sentry dashboard.
-- **Status:** Implementation complete - Awaiting user re-deploy to verify build succeeds
+- **EAS BUILD FIX v2 (Mar 2026):** Removed `@sentry/react-native/expo` plugin from `app.json` entirely and added `SENTRY_DISABLE_AUTO_UPLOAD=true` to `.env`. The Expo config plugin was adding a Xcode build phase that ran `sentry-cli` to upload source maps, and since the deployment pipeline creates its own `eas.json`, env vars like `SENTRY_ALLOW_FAILURE` from our eas.json never reached the EAS build. Removing the plugin eliminates the build phase entirely. Runtime crash reporting via `Sentry.init()` in `_layout.tsx` still works.
+- **Status:** Plugin removed - Awaiting user re-deploy to verify build succeeds
 
 ### iOS Build Fixes (March 2026)
 1. **Removed `package-lock.json`** - Multiple lock files caused EAS Build issues
