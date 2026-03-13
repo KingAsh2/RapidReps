@@ -52,7 +52,7 @@ A full-stack React Native/Expo fitness application connecting trainees with pers
 5. **30/60/90 Min Pricing:** Correctly implemented as frontend calculation from backend hourly rates (design-intended)
 
 ### Sentry Crash Reporting Integration (December 2025)
-- **Package:** `@sentry/react-native@8.4.0` installed
+- **Package:** `@sentry/react-native@7.2.0` installed (downgraded from 8.4.0 for Expo SDK 54 compatibility)
 - **DSN:** Configured in `app/_layout.tsx` 
 - **Organization:** rapidreps
 - **Project:** rapidreps
@@ -63,12 +63,13 @@ A full-stack React Native/Expo fitness application connecting trainees with pers
   - `attachStacktrace: true` - Full stack traces on all events
   - Environment tagging (development/production)
 - **Files modified:**
-  - `metro.config.js` - Added `withSentryConfig` wrapper
+  - `metro.config.js` - Reverted to standard Expo config (Sentry metro wrapper caused bundling error)
   - `app.json` - Added `@sentry/react-native/expo` plugin, version bumped to 2.0.39
   - `app/_layout.tsx` - Sentry.init() at app startup, Sentry.wrap() on root component
   - `eas.json` - Added SENTRY_AUTH_TOKEN to all build profiles
   - `.env` - Added SENTRY_AUTH_TOKEN
-- **Status:** Implementation complete - Awaiting user rebuild and crash reproduction
+- **IMPORTANT FIX:** Removed Sentry metro wrapper (`withSentryConfig`/`getSentryExpoConfig`) which caused "TypeError: Cannot read properties of undefined (reading 'match')" during EAS Update bundling. The Expo plugin in app.json handles source maps during EAS builds.
+- **Status:** Implementation complete - Ready for deployment
 
 ### iOS Build Fixes (March 2026)
 1. **Removed `package-lock.json`** - Multiple lock files caused EAS Build issues
