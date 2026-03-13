@@ -2,7 +2,7 @@
   "expo": {
     "name": "RapidReps",
     "slug": "rapidreps",
-    "version": "2.0.38",
+    "version": "2.0.39",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "rapidreps",
@@ -49,6 +49,14 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "organization": "rapidreps",
+          "project": "rapidreps"
+        }
+      ],
       "expo-router",
       [
         "expo-splash-screen",

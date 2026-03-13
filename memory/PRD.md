@@ -51,6 +51,25 @@ A full-stack React Native/Expo fitness application connecting trainees with pers
 4. **Smart Back Navigation:** Created `goBack()` utility with role-based fallbacks for edge cases (deep links, empty history)
 5. **30/60/90 Min Pricing:** Correctly implemented as frontend calculation from backend hourly rates (design-intended)
 
+### Sentry Crash Reporting Integration (December 2025)
+- **Package:** `@sentry/react-native@8.4.0` installed
+- **DSN:** Configured in `app/_layout.tsx` 
+- **Organization:** rapidreps
+- **Project:** rapidreps
+- **Features enabled:**
+  - `enableNative: true` - Captures native-level crashes
+  - `enableNativeCrashHandling: true` - Catches force closes before JS loads
+  - `enableAutoSessionTracking: true` - Tracks user sessions
+  - `attachStacktrace: true` - Full stack traces on all events
+  - Environment tagging (development/production)
+- **Files modified:**
+  - `metro.config.js` - Added `withSentryConfig` wrapper
+  - `app.json` - Added `@sentry/react-native/expo` plugin, version bumped to 2.0.39
+  - `app/_layout.tsx` - Sentry.init() at app startup, Sentry.wrap() on root component
+  - `eas.json` - Added SENTRY_AUTH_TOKEN to all build profiles
+  - `.env` - Added SENTRY_AUTH_TOKEN
+- **Status:** Implementation complete - Awaiting user rebuild and crash reproduction
+
 ### iOS Build Fixes (March 2026)
 1. **Removed `package-lock.json`** - Multiple lock files caused EAS Build issues
 2. **Fixed duplicate style property** in `app/trainee/(tabs)/home.tsx` - Removed duplicate `proximityValue` definition
@@ -142,8 +161,10 @@ Applied 8 new fitness-themed background images across multiple screens:
 - **Fix:** Replaced with existing assets (`bg-gym-blue.png` for background, `icon.png` for badge logo)
 
 ## Prioritized Backlog
-- **P4:** SendGrid Integration (blocked - awaiting API key)
-- **P5:** TypeScript strict-mode warnings cleanup (86+ warnings)
+- **P0:** Diagnose crash from Sentry reports (waiting on user to rebuild and reproduce)
+- **P1:** User verification of Saved Trainers, Back Navigation, Admin Verification UI
+- **P2:** SendGrid Integration (blocked - awaiting API key)
+- **P3:** TypeScript strict-mode warnings cleanup (86+ warnings)
 
 ## Credentials
 - Admin: admin@rapidreps.com / admin123

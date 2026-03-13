@@ -7,6 +7,32 @@ import { SoundProvider } from '../src/contexts/SoundContext';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ErrorBoundary } from '../src/components/ErrorBoundary';
 import Toast, { BaseToast } from 'react-native-toast-message';
+import * as Sentry from '@sentry/react-native';
+
+// Initialize Sentry as early as possible for native crash capturing
+Sentry.init({
+  dsn: 'https://303fdbcfaa15c23693d7944e2eed47a5@o4511035618361344.ingest.us.sentry.io/4511035640315904',
+  // Enable native crash handling - CRITICAL for force closes
+  enableNative: true,
+  enableNativeCrashHandling: true,
+  // Capture all errors in development, reduce in production
+  tracesSampleRate: __DEV__ ? 1.0 : 0.2,
+  // Enable auto session tracking
+  enableAutoSessionTracking: true,
+  // Attach stack traces to all messages
+  attachStacktrace: true,
+  // Debug mode in development
+  debug: __DEV__,
+  // Capture unhandled promise rejections
+  enableCaptureFailedRequests: true,
+  // Environment tag
+  environment: __DEV__ ? 'development' : 'production',
+  beforeSend(event) {
+    // Add extra context before sending
+    console.log('[Sentry] Capturing event:', event.event_id);
+    return event;
+  },
+});
 
 const toastConfig = {
   success: (props: any) => (
@@ -47,7 +73,7 @@ const toastConfig = {
 // Stripe native SDK removed - payments handled via web-based Stripe Checkout
 const StripeProviderComponent: React.FC<{ children: React.ReactNode }> = ({ children }) => <>{children}</>;
 
-export default function RootLayout() {
+function RootLayout() {
   return (
     <ErrorBoundary>
       <GestureHandlerRootView style={{ flex: 1 }}>
@@ -67,3 +93,6 @@ export default function RootLayout() {
     </ErrorBoundary>
   );
 }
+
+// Wrap with Sentry for automatic error boundary and performance monitoring
+export default Sentry.wrap(RootLayout);

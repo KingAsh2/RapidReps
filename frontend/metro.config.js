@@ -1,5 +1,6 @@
 // metro.config.js
 const { getDefaultConfig } = require("expo/metro-config");
+const { withSentryConfig } = require("@sentry/react-native/metro");
 const path = require('path');
 const { FileStore } = require('metro-cache');
 
@@ -42,4 +43,4 @@ config.resolver.blockList = [
   /node_modules\/metro-symbolicate\/.*/,
 ];
 
-module.exports = config;
+module.exports = withSentryConfig(config);
