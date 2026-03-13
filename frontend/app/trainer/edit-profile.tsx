@@ -15,6 +15,7 @@ import {
   FlatList,
   ImageBackground,
 } from 'react-native';
+import Slider from '@react-native-community/slider';
 import { useRouter, Stack } from 'expo-router';
 import { trainerAPI } from '../../src/services/api';
 import { TrainerProfile, TrainingStyles } from '../../src/types';

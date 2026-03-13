@@ -99,7 +99,7 @@ A full-stack React Native/Expo fitness application connecting trainees with pers
    - `useNotifications()` - Already fixed earlier
 8. **Fixed deployment blockers:**
    - Cleaned `.gitignore` - Removed malformed lines 80-111 with `-e` flags and `*.env` patterns
-   - Fixed `EXPO_TUNNEL_SUBDOMAIN=rapidreps-preview
+   - Fixed `EXPO_TUNNEL_SUBDOMAIN=useeffect-debug
 9. **UI Fixes:**
    - Renamed "Pricing & Sessions" → "Session Durations" in trainer onboarding
    - Added 90 min option to session durations: `[30, 45, 60, 90]`

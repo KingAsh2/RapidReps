@@ -178,15 +178,22 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const messageInterval = setInterval(refreshMessageCount, 30000);
 
     return () => {
-      isMounted.current = false;
-      clearTimeout(initTimeout);
-      if (notificationListener.current) {
-        Notifications.removeNotificationSubscription(notificationListener.current);
+      try {
+        isMounted.current = false;
+        clearTimeout(initTimeout);
+        clearInterval(messageInterval);
+        if (notificationListener.current) {
+          notificationListener.current.remove();
+          notificationListener.current = undefined;
+        }
+        if (responseListener.current) {
+          responseListener.current.remove();
+          responseListener.current = undefined;
+        }
+      } catch (e) {
+        // Prevent cleanup errors from crashing the app
+        console.log('Notification cleanup error (non-critical):', e);
       }
-      if (responseListener.current) {
-        Notifications.removeNotificationSubscription(responseListener.current);
-      }
-      clearInterval(messageInterval);
     };
   }, [user]);
 

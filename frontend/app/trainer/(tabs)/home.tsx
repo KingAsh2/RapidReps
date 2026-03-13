@@ -109,7 +109,9 @@ export default function TrainerHomeScreen() {
       }
     });
 
-    return () => subscription.remove();
+    return () => {
+      try { subscription?.remove(); } catch (e) { /* cleanup */ }
+    };
   }, [isAvailable]);
 
   const checkLocationPermission = async () => {
