@@ -15,6 +15,7 @@ import {
   Linking,
   Animated,
   ImageBackground,
+  FlatList,
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { useAuth } from '../../../src/contexts/AuthContext';
@@ -27,7 +28,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import { useNotifications } from '../../../src/contexts/NotificationContext';
-import Slider from '@react-native-community/slider';
 import TrainingModeDialog from '../../../src/components/TrainingModeDialog';
 import TrainerFilters from '../../../src/components/TrainerFilters';
 import NearbyTrainersMap from '../../../src/components/NearbyTrainersMap';
@@ -733,29 +733,21 @@ export default function TraineeHomeScreen() {
 
             {/* Available Trainers Section */}
             <View style={styles.trainersSection}>
-              {/* Travel to Trainer Proximity Slider */}
-              <View style={styles.proximityContainer} data-testid="proximity-container">
+              {/* Travel to Trainer Proximity Selector */}
+              <TouchableOpacity 
+                style={styles.proximityContainer} 
+                data-testid="proximity-container"
+                onPress={() => setShowProximityPicker(true)}
+              >
                 <View style={styles.proximityHeader}>
                   <Ionicons name="navigate-outline" size={18} color="#2a3a6e" />
                   <Text style={styles.proximityLabel}>Travel to Trainer Proximity</Text>
-                  <Text style={styles.proximityValue}>{travelProximity} miles</Text>
                 </View>
-                <View style={styles.sliderContainer}>
-                  <Text style={styles.sliderMinMax}>1</Text>
-                  <Slider
-                    style={styles.proximitySlider}
-                    minimumValue={1}
-                    maximumValue={35}
-                    step={1}
-                    value={travelProximity}
-                    onValueChange={(value) => setTravelProximity(Math.round(value))}
-                    minimumTrackTintColor="#F7931E"
-                    maximumTrackTintColor="#ddd"
-                    thumbTintColor="#F7931E"
-                  />
-                  <Text style={styles.sliderMinMax}>35</Text>
+                <View style={styles.proximityDropdown}>
+                  <Text style={styles.proximityDropdownText}>{travelProximity} miles</Text>
+                  <Ionicons name="chevron-down" size={18} color="#2a3a6e" />
                 </View>
-              </View>
+              </TouchableOpacity>
 
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>AVAILABLE TRAINERS</Text>
@@ -903,6 +895,53 @@ export default function TraineeHomeScreen() {
             onFiltersChange={setFilters}
             onClose={() => setShowFilters(false)}
           />
+        </Modal>
+
+        {/* Proximity Picker Modal */}
+        <Modal visible={showProximityPicker} transparent animationType="slide">
+          <TouchableOpacity
+            style={styles.proximityModalOverlay}
+            activeOpacity={1}
+            onPress={() => setShowProximityPicker(false)}
+          >
+            <View style={styles.proximityPickerContainer}>
+              <View style={styles.proximityPickerHeader}>
+                <Text style={styles.proximityPickerTitle}>Travel Proximity (miles)</Text>
+                <TouchableOpacity onPress={() => setShowProximityPicker(false)}>
+                  <Ionicons name="close-circle" size={26} color="#5a6785" />
+                </TouchableOpacity>
+              </View>
+              <FlatList
+                data={Array.from({ length: 35 }, (_, i) => i + 1)}
+                keyExtractor={(item) => item.toString()}
+                style={styles.proximityPickerList}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={[
+                      styles.proximityPickerItem,
+                      travelProximity === item && styles.proximityPickerItemSelected,
+                    ]}
+                    onPress={() => {
+                      setTravelProximity(item);
+                      setShowProximityPicker(false);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.proximityPickerItemText,
+                        travelProximity === item && styles.proximityPickerItemTextSelected,
+                      ]}
+                    >
+                      {item} {item === 1 ? 'mile' : 'miles'}
+                    </Text>
+                    {travelProximity === item && (
+                      <Ionicons name="checkmark-circle" size={22} color="#2a3a6e" />
+                    )}
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+          </TouchableOpacity>
         </Modal>
       </ImageBackground>
     </>
@@ -1366,25 +1405,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
   },
-  sliderContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  proximitySlider: {
-    flex: 1,
-    height: 40,
-  },
-  sliderMinMax: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: 'rgba(255,255,255,0.7)',
-    width: 24,
-    textAlign: 'center',
-  },
   proximityDropdown: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1393,24 +1413,60 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderWidth: 1.5,
-    borderColor: '#2a3a6e',
+    marginTop: 8,
+  },
+  proximityDropdownText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#2a3a6e',
+  },
+  proximityModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
   },
   proximityPickerContainer: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    marginTop: 4,
-    maxHeight: 200,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: 400,
   },
-  proximityPickerScroll: {
-    maxHeight: 200,
+  proximityPickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  proximityPickerTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#1a2a5e',
+  },
+  proximityPickerList: {
+    maxHeight: 350,
+  },
+  proximityPickerItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#f0f0f0',
+  },
+  proximityPickerItemSelected: {
+    backgroundColor: 'rgba(42, 58, 110, 0.1)',
+  },
+  proximityPickerItemText: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#1a2a5e',
+  },
+  proximityPickerItemTextSelected: {
+    fontWeight: '700',
+    color: '#2a3a6e',
   },
   proximityOption: {
     flexDirection: 'row',

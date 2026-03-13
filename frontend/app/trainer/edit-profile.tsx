@@ -15,7 +15,6 @@ import {
   FlatList,
   ImageBackground,
 } from 'react-native';
-import Slider from '@react-native-community/slider';
 import { useRouter, Stack } from 'expo-router';
 import { trainerAPI } from '../../src/services/api';
 import { TrainerProfile, TrainingStyles } from '../../src/types';
@@ -357,24 +356,13 @@ export default function EditTrainerProfileScreen() {
                     </View>
                     <View style={styles.inputGroup}>
                       <Text style={styles.inputLabel}>Travel Radius</Text>
-                      <View style={styles.sliderContainer}>
-                        <Text style={styles.sliderValue}>{formData.travelRadiusMiles} mi</Text>
-                        <View style={styles.sliderRow}>
-                          <Text style={styles.sliderMinMax}>1</Text>
-                          <Slider
-                            style={styles.radiusSlider}
-                            minimumValue={1}
-                            maximumValue={35}
-                            step={1}
-                            value={parseInt(formData.travelRadiusMiles) || 10}
-                            onValueChange={(value) => setFormData({ ...formData, travelRadiusMiles: Math.round(value).toString() })}
-                            minimumTrackTintColor={COLORS.teal}
-                            maximumTrackTintColor="#ddd"
-                            thumbTintColor={COLORS.teal}
-                          />
-                          <Text style={styles.sliderMinMax}>35</Text>
-                        </View>
-                      </View>
+                      <TouchableOpacity 
+                        style={styles.radiusSelector}
+                        onPress={() => setShowRadiusPicker(true)}
+                      >
+                        <Text style={styles.radiusSelectorValue}>{formData.travelRadiusMiles} mi</Text>
+                        <Ionicons name="chevron-down" size={18} color={COLORS.gray} />
+                      </TouchableOpacity>
                     </View>
                   </View>
                 </LinearGradient>
@@ -786,32 +774,18 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: COLORS.navy,
   },
-  sliderContainer: {
+  radiusSelector: {
     backgroundColor: COLORS.grayLight,
     borderRadius: 12,
     padding: 14,
-  },
-  sliderValue: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: COLORS.teal,
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  sliderRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  radiusSlider: {
-    flex: 1,
-    height: 40,
-  },
-  sliderMinMax: {
-    fontSize: 12,
+  radiusSelectorValue: {
+    fontSize: 16,
     fontWeight: '700',
-    color: COLORS.gray,
-    width: 24,
-    textAlign: 'center',
+    color: COLORS.teal,
   },
   chipsContainer: {
     flexDirection: 'row',
