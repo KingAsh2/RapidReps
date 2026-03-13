@@ -11,7 +11,7 @@
         "simulator": true
       },
       "env": {
-        "EXPO_PUBLIC_BACKEND_URL": "https://crash-reporter-v2.preview.emergentagent.com",
+        "EXPO_PUBLIC_BACKEND_URL": "https://rapidreps-preview.preview.emergentagent.com",
         "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyDPQjkEm9BIaB6t-v_IZ4AQXCcPssqEJQU",
         "SENTRY_AUTH_TOKEN": "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"
       }
@@ -22,7 +22,7 @@
         "simulator": false
       },
       "env": {
-        "EXPO_PUBLIC_BACKEND_URL": "https://crash-reporter-v2.preview.emergentagent.com",
+        "EXPO_PUBLIC_BACKEND_URL": "https://rapidreps-preview.preview.emergentagent.com",
         "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyDPQjkEm9BIaB6t-v_IZ4AQXCcPssqEJQU",
         "SENTRY_AUTH_TOKEN": "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"
       }
@@ -30,7 +30,7 @@
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_BACKEND_URL": "https://crash-reporter-v2.preview.emergentagent.com",
+        "EXPO_PUBLIC_BACKEND_URL": "https://rapidreps-preview.preview.emergentagent.com",
         "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyDPQjkEm9BIaB6t-v_IZ4AQXCcPssqEJQU",
         "SENTRY_AUTH_TOKEN": "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"
       }
