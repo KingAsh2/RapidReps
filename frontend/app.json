@@ -2,9 +2,9 @@
   "expo": {
     "name": "RapidReps",
     "slug": "rapidreps",
-    "version": "2.0.39",
+    "version": "2.0.40",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/icon.png",
     "scheme": "rapidreps",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -19,7 +19,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.kingash.rapidreps",
-      "buildNumber": "4",
+      "buildNumber": "5",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "RapidReps uses your location to show nearby trainers and estimate their arrival time for your workouts.",
         "NSCameraUsageDescription": "RapidReps uses the camera for profile photos, verification, and uploading session media.",
@@ -62,7 +62,7 @@
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-image.png",
-          "imageWidth": 200,
+          "imageWidth": 400,
           "resizeMode": "contain",
           "backgroundColor": "#000000"
         }
