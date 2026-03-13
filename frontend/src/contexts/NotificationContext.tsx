@@ -182,14 +182,20 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         isMounted.current = false;
         clearTimeout(initTimeout);
         clearInterval(messageInterval);
-        if (notificationListener.current) {
-          notificationListener.current.remove();
-          notificationListener.current = undefined;
+        
+        // Safe cleanup of notification listeners
+        const notifSub = notificationListener.current;
+        const respSub = responseListener.current;
+        
+        if (notifSub && typeof notifSub.remove === 'function') {
+          notifSub.remove();
         }
-        if (responseListener.current) {
-          responseListener.current.remove();
-          responseListener.current = undefined;
+        notificationListener.current = undefined;
+        
+        if (respSub && typeof respSub.remove === 'function') {
+          respSub.remove();
         }
+        responseListener.current = undefined;
       } catch (e) {
         // Prevent cleanup errors from crashing the app
         console.log('Notification cleanup error (non-critical):', e);

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, Modal, ScrollView, TextInput,
   KeyboardAvoidingView, Platform, ActivityIndicator, Linking,
@@ -27,14 +27,28 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const videoRef = useRef<Video>(null);
   const videoTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isMountedRef = useRef(true);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      if (videoTimerRef.current) {
+        clearTimeout(videoTimerRef.current);
+        videoTimerRef.current = null;
+      }
+    };
+  }, []);
 
   const handlePlayVideo = (url: string) => {
     setVideoUrl(url);
     setShowVideoModal(true);
     // Auto-stop after 15 seconds
     videoTimerRef.current = setTimeout(() => {
+      if (!isMountedRef.current) return;
       if (videoRef.current) {
-        videoRef.current.stopAsync();
+        videoRef.current.stopAsync().catch(() => {});
       }
       toast.info('Video preview limited to 15 seconds');
     }, 15000);
