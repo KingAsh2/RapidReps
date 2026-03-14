@@ -121,8 +121,16 @@ export default function LoginScreen() {
     }
   }, [user, activeRole, loginSuccess]);
 
-  const animateFocus = (anim: Animated.Value, toValue: number) =>
-    Animated.spring(anim, { toValue, tension: 50, friction: 3, useNativeDriver: false }).start();
+  const animateFocus = (anim: Animated.Value, toValue: number) => {
+    try {
+      // Stop any running animation on this value first
+      anim.stopAnimation();
+      Animated.spring(anim, { toValue, tension: 50, friction: 3, useNativeDriver: false }).start();
+    } catch (e) {
+      // Fallback: just set the value directly if animation fails
+      anim.setValue(toValue);
+    }
+  };
 
   const handlePasswordFocus = () => {
     animateFocus(passwordBorderAnim, 1);
