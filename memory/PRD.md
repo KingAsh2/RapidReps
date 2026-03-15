@@ -165,6 +165,18 @@ Applied 8 new fitness-themed background images across multiple screens:
 
 ## Prioritized Backlog
 
+### UI/Design Enhancements Implemented (March 2026)
+1. **Uber-style Map Display** - Trainers displayed like Uber cars with glowing avatars and ETA badges:
+   - Increased map height (400px)
+   - Trainers shown as circular avatars with orange glow effect
+   - ETA badge below each trainer marker showing arrival time
+   - Bottom card redesigned like Uber's ride selection panel with:
+     - Drag indicator at top
+     - Trainer photo, name, and rating
+     - Price section showing rate per 30 minutes
+     - ETA and distance info row
+     - Full-width "View Profile & Book" button
+
 ### Crash Fixes Applied (March 2026)
 1. **Slider Crash Fix:** Removed `@react-native-community/slider` dependency entirely. Replaced with TouchableOpacity picker modals in:
    - `app/trainer/edit-profile.tsx` - Travel radius selection

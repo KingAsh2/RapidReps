@@ -15,7 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 
-const MAP_HEIGHT = 320;
+const MAP_HEIGHT = 400;
 
 const COLORS = {
   teal: '#1a2a5e',
@@ -182,19 +182,22 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
               key={trainer.id}
               coordinate={{ latitude: trainer.latitude, longitude: trainer.longitude }}
               onPress={() => handleTrainerPress(trainer)}
-              anchor={{ x: 0.5, y: 1 }}
+              anchor={{ x: 0.5, y: 0.5 }}
             >
-              <View style={[styles.trainerPin, selectedTrainer?.id === trainer.id && styles.trainerPinSelected]}>
-                {trainer.avatarUrl ? (
-                  <Image source={{ uri: trainer.avatarUrl }} style={styles.trainerAvatar} />
-                ) : (
-                  <View style={styles.trainerIcon}>
-                    <Ionicons name="fitness" size={18} color={COLORS.white} />
-                  </View>
-                )}
-                <View style={styles.trainerArrow} />
-                <View style={styles.distanceLabel}>
-                  <Text style={styles.distanceLabelText}>{trainer.distanceMiles?.toFixed(1)} mi</Text>
+              <View style={[styles.trainerMarkerContainer, selectedTrainer?.id === trainer.id && styles.trainerMarkerSelected]}>
+                {/* Uber-style circular avatar with glow effect */}
+                <View style={styles.trainerMarkerGlow}>
+                  {trainer.avatarUrl ? (
+                    <Image source={{ uri: trainer.avatarUrl }} style={styles.trainerMarkerAvatar} />
+                  ) : (
+                    <LinearGradient colors={[COLORS.orange, COLORS.orangeHot]} style={styles.trainerMarkerIcon}>
+                      <Ionicons name="fitness" size={20} color={COLORS.white} />
+                    </LinearGradient>
+                  )}
+                </View>
+                {/* ETA badge like Uber shows for cars */}
+                <View style={styles.etaBadge}>
+                  <Text style={styles.etaBadgeText}>{trainer.etaMinutes}m</Text>
                 </View>
               </View>
             </Marker>
@@ -208,36 +211,59 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
         {selectedTrainer && (
           <Animated.View style={[styles.trainerCard, { 
             opacity: cardAnim,
-            transform: [{ translateY: cardAnim.interpolate({ inputRange: [0, 1], outputRange: [60, 0] }) }]
+            transform: [{ translateY: cardAnim.interpolate({ inputRange: [0, 1], outputRange: [80, 0] }) }]
           }]}>
+            {/* Uber-style drag indicator */}
+            <View style={styles.dragIndicator} />
+            
             <View style={styles.cardRow}>
               <View style={styles.cardLeft}>
                 {selectedTrainer.avatarUrl ? (
                   <Image source={{ uri: selectedTrainer.avatarUrl }} style={styles.cardAvatar} />
                 ) : (
-                  <LinearGradient colors={[COLORS.teal, COLORS.tealDark]} style={styles.cardAvatarPlaceholder}>
+                  <LinearGradient colors={[COLORS.orange, COLORS.orangeHot]} style={styles.cardAvatarPlaceholder}>
                     <Text style={styles.cardInitial}>{selectedTrainer.fullName.charAt(0)}</Text>
                   </LinearGradient>
                 )}
                 <View style={styles.cardInfo}>
                   <Text style={styles.cardName} numberOfLines={1}>{selectedTrainer.fullName}</Text>
                   <View style={styles.cardMeta}>
-                    <Ionicons name="star" size={12} color={COLORS.orange} />
+                    <Ionicons name="star" size={14} color={COLORS.orange} />
                     <Text style={styles.cardRating}>{selectedTrainer.averageRating?.toFixed(1)}</Text>
-                    <Text style={styles.cardDistance}> • {selectedTrainer.distanceMiles?.toFixed(1)} mi</Text>
-                    <Text style={styles.cardEta}> • {selectedTrainer.etaMinutes} min</Text>
                   </View>
                 </View>
               </View>
-              <TouchableOpacity 
-                style={styles.viewBtn}
-                onPress={() => router.push(`/trainee/trainer-detail?trainerId=${selectedTrainer.trainerId}`)}
-              >
-                <LinearGradient colors={[COLORS.orange, COLORS.orangeHot]} style={styles.viewBtnGradient}>
-                  <Text style={styles.viewBtnText}>View</Text>
-                </LinearGradient>
-              </TouchableOpacity>
+              
+              {/* Price section like Uber */}
+              <View style={styles.priceSection}>
+                <Text style={styles.priceLabel}>From</Text>
+                <Text style={styles.priceValue}>${((selectedTrainer.ratePerMinuteCents * 30) / 100).toFixed(0)}</Text>
+                <Text style={styles.priceUnit}>/30 min</Text>
+              </View>
             </View>
+            
+            {/* ETA and distance row */}
+            <View style={styles.etaRow}>
+              <View style={styles.etaItem}>
+                <Ionicons name="time-outline" size={16} color={COLORS.gray} />
+                <Text style={styles.etaText}>{selectedTrainer.etaMinutes} min away</Text>
+              </View>
+              <View style={styles.etaItem}>
+                <Ionicons name="location-outline" size={16} color={COLORS.gray} />
+                <Text style={styles.etaText}>{selectedTrainer.distanceMiles?.toFixed(1)} miles</Text>
+              </View>
+            </View>
+            
+            {/* Book button */}
+            <TouchableOpacity 
+              style={styles.bookBtn}
+              onPress={() => router.push(`/trainee/trainer-detail?trainerId=${selectedTrainer.trainerId}`)}
+            >
+              <LinearGradient colors={[COLORS.orange, COLORS.orangeHot]} style={styles.bookBtnGradient}>
+                <Text style={styles.bookBtnText}>View Profile & Book</Text>
+                <Ionicons name="arrow-forward" size={18} color={COLORS.white} />
+              </LinearGradient>
+            </TouchableOpacity>
           </Animated.View>
         )}
       </View>
@@ -373,6 +399,63 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: COLORS.white,
   },
+  trainerMarkerContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  trainerMarkerSelected: {
+    transform: [{ scale: 1.2 }],
+  },
+  trainerMarkerGlow: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: 'rgba(247, 147, 30, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: COLORS.orange,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  trainerMarkerAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 3,
+    borderColor: COLORS.white,
+  },
+  trainerMarkerIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: COLORS.white,
+  },
+  etaBadge: {
+    position: 'absolute',
+    bottom: -4,
+    backgroundColor: COLORS.navy,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: COLORS.white,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 4,
+  },
+  etaBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: COLORS.white,
+    letterSpacing: 0.3,
+  },
   trainerPin: {
     alignItems: 'center',
   },
@@ -443,17 +526,18 @@ const styles = StyleSheet.create({
   },
   trainerCard: {
     position: 'absolute',
-    bottom: 12,
-    left: 12,
-    right: 12,
+    bottom: 16,
+    left: 16,
+    right: 16,
     backgroundColor: COLORS.white,
-    borderRadius: 14,
-    padding: 12,
+    borderRadius: 20,
+    padding: 16,
+    paddingTop: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowRadius: 12,
+    elevation: 8,
   },
   cardRow: {
     flexDirection: 'row',
@@ -522,6 +606,68 @@ const styles = StyleSheet.create({
   },
   viewBtnText: {
     fontSize: 13,
+    fontWeight: '700',
+    color: COLORS.white,
+  },
+  // Uber-style card enhancements
+  dragIndicator: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#E0E0E0',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 12,
+  },
+  priceSection: {
+    alignItems: 'flex-end',
+  },
+  priceLabel: {
+    fontSize: 11,
+    color: COLORS.gray,
+    fontWeight: '500',
+  },
+  priceValue: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: COLORS.navy,
+  },
+  priceUnit: {
+    fontSize: 11,
+    color: COLORS.gray,
+    fontWeight: '500',
+  },
+  etaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+  },
+  etaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  etaText: {
+    fontSize: 13,
+    color: COLORS.gray,
+    fontWeight: '500',
+  },
+  bookBtn: {
+    marginTop: 14,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  bookBtnGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    gap: 8,
+  },
+  bookBtnText: {
+    fontSize: 15,
     fontWeight: '700',
     color: COLORS.white,
   },
