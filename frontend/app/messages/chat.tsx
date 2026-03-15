@@ -120,7 +120,7 @@ export default function ChatScreen() {
       >
         {isMyMessage ? (
           <LinearGradient
-            colors={[COLORS.teal, COLORS.tealLight]}
+            colors={['#FF7F00', '#F7931E']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={[styles.messageBubble, styles.myMessageBubble]}
@@ -129,10 +129,15 @@ export default function ChatScreen() {
             <Text style={styles.myMessageTime}>{formatTime(item.createdAt)}</Text>
           </LinearGradient>
         ) : (
-          <View style={[styles.messageBubble, styles.theirMessageBubble]}>
-            <Text style={styles.theirMessageText}>{item.content}</Text>
-            <Text style={styles.theirMessageTime}>{formatTime(item.createdAt)}</Text>
-          </View>
+          <LinearGradient
+            colors={[COLORS.teal, COLORS.tealLight]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[styles.messageBubble, styles.theirMessageBubble]}
+          >
+            <Text style={styles.myMessageText}>{item.content}</Text>
+            <Text style={styles.myMessageTime}>{formatTime(item.createdAt)}</Text>
+          </LinearGradient>
         )}
       </View>
     );
@@ -395,7 +400,6 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 6,
   },
   theirMessageBubble: {
-    backgroundColor: COLORS.white,
     borderBottomLeftRadius: 6,
   },
   myMessageText: {

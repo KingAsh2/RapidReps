@@ -318,6 +318,39 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                     </View>
                   )}
 
+                  {/* Background Check Info - from PII submission */}
+                  {verificationDetail.backgroundInfo && (
+                    <View style={[s.modalSection, { backgroundColor: '#FFF8E8', borderRadius: 12, padding: 14, borderLeftWidth: 4, borderLeftColor: '#F7931E' }]}>
+                      <Text style={[s.modalSectionTitle, { color: '#1a2a5e' }]}>Background Check Info</Text>
+                      <View style={{ gap: 8 }}>
+                        {verificationDetail.backgroundInfo.fullName && (
+                          <View>
+                            <Text style={{ fontSize: 12, fontWeight: '600', color: C.gray }}>Full Legal Name</Text>
+                            <Text style={{ fontSize: 14, color: C.navy, fontWeight: '600' }}>{verificationDetail.backgroundInfo.fullName}</Text>
+                          </View>
+                        )}
+                        {verificationDetail.backgroundInfo.dob && (
+                          <View>
+                            <Text style={{ fontSize: 12, fontWeight: '600', color: C.gray }}>Date of Birth</Text>
+                            <Text style={{ fontSize: 14, color: C.navy, fontWeight: '600' }}>{verificationDetail.backgroundInfo.dob}</Text>
+                          </View>
+                        )}
+                        {verificationDetail.backgroundInfo.address && (
+                          <View>
+                            <Text style={{ fontSize: 12, fontWeight: '600', color: C.gray }}>Address</Text>
+                            <Text style={{ fontSize: 14, color: C.navy, fontWeight: '600' }}>{verificationDetail.backgroundInfo.address}</Text>
+                          </View>
+                        )}
+                        {verificationDetail.backgroundInfo.submittedAt && (
+                          <View>
+                            <Text style={{ fontSize: 12, fontWeight: '600', color: C.gray }}>Submitted</Text>
+                            <Text style={{ fontSize: 14, color: C.navy }}>{new Date(verificationDetail.backgroundInfo.submittedAt).toLocaleDateString()}</Text>
+                          </View>
+                        )}
+                      </View>
+                    </View>
+                  )}
+
                   {verificationDetail.rejectionReason && (
                     <View style={[s.modalSection, { backgroundColor: '#FFF5F5', borderRadius: 12, padding: 14, borderLeftWidth: 4, borderLeftColor: C.error }]}>
                       <Text style={[s.modalSectionTitle, { color: C.error }]}>Previous Rejection Reason</Text>

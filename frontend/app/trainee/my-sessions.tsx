@@ -253,7 +253,12 @@ export default function MySessionsScreen() {
               const statusConfig = getStatusConfig(session.status);
               
               return (
-                <View key={session.id} style={styles.sessionCard}>
+                <TouchableOpacity 
+                  key={session.id} 
+                  style={styles.sessionCard}
+                  onPress={() => router.push(`/trainee/session-detail?sessionId=${session.id}`)}
+                  activeOpacity={0.85}
+                >
                   <LinearGradient
                     colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.9)']}
                     style={styles.sessionCardGradient}
@@ -359,7 +364,7 @@ export default function MySessionsScreen() {
                       </TouchableOpacity>
                     )}
                   </LinearGradient>
-                </View>
+                </TouchableOpacity>
               );
             })
           )}

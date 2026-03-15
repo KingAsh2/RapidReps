@@ -8,12 +8,14 @@ interface SoundContextType {
   soundEnabled: boolean;
   setSoundEnabled: (enabled: boolean) => void;
   playTap: () => void;
+  playNotification: () => void;
 }
 
 const SoundContext = createContext<SoundContextType>({
   soundEnabled: true,
   setSoundEnabled: () => {},
   playTap: () => {},
+  playNotification: () => {},
 });
 
 export const useSoundEffects = () => useContext(SoundContext);
@@ -21,15 +23,20 @@ export const useSoundEffects = () => useContext(SoundContext);
 export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [soundEnabled, setSoundEnabledState] = useState(true);
   const tapSoundRef = useRef<Audio.Sound | null>(null);
+  const notificationSoundRef = useRef<Audio.Sound | null>(null);
 
   useEffect(() => {
     AsyncStorage.getItem(SOUND_ENABLED_KEY).then((val) => {
       if (val !== null) setSoundEnabledState(val === 'true');
     });
-    // Preload the tap sound
+    // Preload sounds
     loadTapSound();
+    loadNotificationSound();
     return () => {
-      tapSoundRef.current?.unloadAsync();
+      try {
+        tapSoundRef.current?.unloadAsync();
+        notificationSoundRef.current?.unloadAsync();
+      } catch (e) { /* cleanup */ }
     };
   }, []);
 
@@ -50,6 +57,18 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  const loadNotificationSound = async () => {
+    try {
+      const { sound } = await Audio.Sound.createAsync(
+        require('../../assets/sounds/notification.mp3'),
+        { volume: 0.6 }
+      );
+      notificationSoundRef.current = sound;
+    } catch (e) {
+      // Sound file may not exist yet - fail silently
+    }
+  };
+
   const setSoundEnabled = useCallback((enabled: boolean) => {
     setSoundEnabledState(enabled);
     AsyncStorage.setItem(SOUND_ENABLED_KEY, String(enabled));
@@ -62,8 +81,15 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }).catch(() => {});
   }, [soundEnabled]);
 
+  const playNotification = useCallback(() => {
+    if (!soundEnabled || !notificationSoundRef.current) return;
+    notificationSoundRef.current.setPositionAsync(0).then(() => {
+      notificationSoundRef.current?.playAsync();
+    }).catch(() => {});
+  }, [soundEnabled]);
+
   return (
-    <SoundContext.Provider value={{ soundEnabled, setSoundEnabled, playTap }}>
+    <SoundContext.Provider value={{ soundEnabled, setSoundEnabled, playTap, playNotification }}>
       {children}
     </SoundContext.Provider>
   );

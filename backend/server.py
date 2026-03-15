@@ -4139,23 +4139,35 @@ async def trainer_connect_onboard(
             )
         except stripe.error.StripeError as e:
             error_msg = str(e)
+            logger = logging.getLogger(__name__)
+            logger.error(f"Stripe Connect account creation error: {error_msg}")
+            
             # Handle duplicate account creation error - find existing account
-            if 'already' in error_msg.lower() or 'duplicate' in error_msg.lower():
-                # Try to find existing account by email
-                accounts = stripe.Account.list(limit=100)
-                for acct in accounts.auto_paging_iter():
-                    if acct.get('email') == current_user.get('email'):
-                        existing_account_id = acct.id
-                        await db.users.update_one(
-                            {'_id': current_user['_id']},
-                            {'$set': {
-                                'stripeConnectAccountId': acct.id,
-                                'stripeConnectOnboarded': acct.charges_enabled and acct.payouts_enabled,
-                            }}
-                        )
-                        break
+            if 'already' in error_msg.lower() or 'duplicate' in error_msg.lower() or 'only create' in error_msg.lower() or 'one express' in error_msg.lower():
+                # Try to find existing account by email in Stripe
+                try:
+                    accounts = stripe.Account.list(limit=100)
+                    for acct in accounts.auto_paging_iter():
+                        if acct.get('email') == current_user.get('email'):
+                            existing_account_id = acct.id
+                            await db.users.update_one(
+                                {'_id': current_user['_id']},
+                                {'$set': {
+                                    'stripeConnectAccountId': acct.id,
+                                    'stripeConnectOnboarded': acct.charges_enabled and acct.payouts_enabled,
+                                }}
+                            )
+                            logger.info(f"Found existing Stripe account {acct.id} for user {current_user.get('email')}")
+                            break
+                except Exception as search_err:
+                    logger.error(f"Failed to search existing Stripe accounts: {search_err}")
+                
                 if not existing_account_id:
-                    raise HTTPException(status_code=400, detail=f"Failed to create Stripe account: {error_msg}")
+                    # Provide a more helpful error message
+                    raise HTTPException(
+                        status_code=400, 
+                        detail="A Stripe account may already exist for this email. Please contact support or try using a different email address."
+                    )
             else:
                 raise HTTPException(status_code=400, detail=f"Failed to create Stripe account: {error_msg}")
     
@@ -6796,10 +6808,23 @@ async def admin_get_verification_detail(trainer_id: str, admin_user: dict = Depe
         {'id': 'video', 'label': 'Intro Video', 'field': 'introVideoUploaded', 'submitted': bool(profile.get('introVideoUploaded')), 'url': profile.get('introVideoUrl') or profile.get('videoFileUri')},
     ]
     
+    # Get background check request info if submitted
+    background_request = await db.background_check_requests.find_one({'userId': trainer_id})
+    background_info = None
+    if background_request:
+        background_info = {
+            'fullName': background_request.get('fullName'),
+            'dob': background_request.get('dob'),
+            'address': background_request.get('address'),
+            'status': background_request.get('status'),
+            'submittedAt': background_request.get('createdAt'),
+        }
+    
     return {
         "user": serialize_doc(user) if user else None,
         "profile": serialize_doc(profile),
         "steps": steps,
+        "backgroundInfo": background_info,
         "verificationStatus": profile.get('verificationStatus', 'pending'),
         "submittedAt": profile.get('verificationSubmittedAt'),
         "rejectionReason": profile.get('rejectionReason'),

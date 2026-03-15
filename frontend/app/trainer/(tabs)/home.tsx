@@ -82,6 +82,18 @@ export default function TrainerHomeScreen() {
   const cardAnims = useRef([...Array(10)].map(() => new Animated.Value(0))).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
+  // Poll for new session requests periodically
+  useEffect(() => {
+    // Poll every 30 seconds for new requests when trainer is available
+    const pollInterval = setInterval(() => {
+      if (isAvailable) {
+        trainerAPI.getSessions().then(setSessions).catch(() => {});
+      }
+    }, 30000);
+
+    return () => clearInterval(pollInterval);
+  }, [isAvailable]);
+
   useEffect(() => {
     loadData();
     checkLocationPermission();
@@ -103,9 +115,14 @@ export default function TrainerHomeScreen() {
           clearInterval(locationIntervalRef.current);
           locationIntervalRef.current = null;
         }
-      } else if (nextAppState === 'active' && isAvailable) {
-        // Resume location updates when app comes back to foreground
-        startLocationTracking();
+      } else if (nextAppState === 'active') {
+        // Refresh data when app comes back to foreground
+        loadData();
+        
+        // Resume location updates if available
+        if (isAvailable) {
+          startLocationTracking();
+        }
       }
     });
 

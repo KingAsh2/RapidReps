@@ -164,10 +164,60 @@ Applied 8 new fitness-themed background images across multiple screens:
 - **Fix:** Replaced with existing assets (`bg-gym-blue.png` for background, `icon.png` for badge logo)
 
 ## Prioritized Backlog
-- **P0:** Diagnose crash from Sentry reports (waiting on user to rebuild and reproduce)
-- **P1:** User verification of Saved Trainers, Back Navigation, Admin Verification UI
-- **P2:** SendGrid Integration (blocked - awaiting API key)
-- **P3:** TypeScript strict-mode warnings cleanup (86+ warnings)
+
+### Crash Fixes Applied (March 2026)
+1. **Slider Crash Fix:** Removed `@react-native-community/slider` dependency entirely. Replaced with TouchableOpacity picker modals in:
+   - `app/trainer/edit-profile.tsx` - Travel radius selection
+   - `app/trainee/(tabs)/home.tsx` - Proximity selection modal
+
+2. **Notification Cleanup Crash Fix:** Improved cleanup logic in `NotificationContext.tsx`:
+   - Added `typeof .remove === 'function'` check before calling
+   - Store subscription refs in local variables before cleanup
+   - Added try/catch with fallback to prevent crash
+
+3. **Animation Conflict Fix:** Fixed login.tsx animation crash:
+   - Added `stopAnimation()` before starting new animation
+   - Wrapped in try/catch with fallback to `setValue()`
+
+4. **Toast Fix:** Added missing `toast.info()` method in `src/utils/toast.ts`
+
+5. **Video Timer Cleanup:** Added proper cleanup for video timer in `VerificationsTab.tsx`:
+   - Added `isMountedRef` to prevent async updates on unmounted components
+   - Added useEffect cleanup for video timer
+
+### Bug Fixes Implemented (March 2026)
+1. **Stripe Connect Error Handling:** Improved error handling for "You can only create one Express account" error:
+   - Added more error message patterns to detect duplicate account
+   - Search existing Stripe accounts by email if creation fails
+   - Better error message for users
+
+2. **Messaging Bubble Colors:** Changed chat bubbles to orange (sender) and teal/blue (receiver):
+   - Modified `app/messages/chat.tsx` renderMessage function
+   - Both bubbles now use LinearGradient
+
+3. **Sessions Clickable:** Made session cards clickable in My Sessions:
+   - Modified `app/trainee/my-sessions.tsx` to use TouchableOpacity
+   - Created new `app/trainee/session-detail.tsx` screen with full session info
+
+4. **Background Info for Admin:** Admin can now see trainer's background check submission:
+   - Modified backend `/api/admin/verifications/{id}/detail` to include background check data
+   - Added Background Check Info section in `VerificationsTab.tsx`
+
+5. **Auto-refresh Sessions:** Added automatic polling for trainer sessions:
+   - Poll every 30 seconds when trainer is available
+   - Refresh data when app returns to foreground
+
+6. **Notification Sound:** Added `playNotification()` function to `SoundContext.tsx`:
+   - Loads `notification.mp3` sound file
+   - Available for use when new notifications arrive
+
+### Pending Issues (Requires More Work)
+- **P1:** Session pricing per duration (not just hourly) - requires database schema changes
+- **P1:** Outdoor location agreement flow - needs new UI and backend endpoints
+- **P2:** Address auto-population for navigation
+- **P2:** Trainee profile photo/video in booking view
+- **P2:** Payment confirmation for sessions
+- **P2:** Uber-style trainer map display
 
 ## Credentials
 - Admin: admin@rapidreps.com / admin123
