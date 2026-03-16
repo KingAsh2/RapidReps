@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 import base64
 import json
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://useeffect-debug.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://crash-fixes.preview.emergentagent.com').rstrip('/')
 
 # Test Credentials
 ADMIN_EMAIL = "admin@rapidreps.com"

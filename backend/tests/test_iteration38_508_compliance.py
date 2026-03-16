@@ -6,7 +6,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://useeffect-debug.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://crash-fixes.preview.emergentagent.com')
 
 class TestHealthAndAuth:
     """Basic health check and authentication tests"""

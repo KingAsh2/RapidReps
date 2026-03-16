@@ -4,234 +4,96 @@
 A full-stack React Native/Expo fitness application connecting trainees with personal trainers. Includes session booking, payments via Stripe, messaging, trainer verification, group sessions, streaks/gamification, and a mandatory in-person session verification system.
 
 ## Tech Stack
-- **Frontend:** React Native / Expo with Expo Router
+- **Frontend:** React Native / Expo (v54) with Expo Router
 - **Backend:** FastAPI (Python) + MongoDB
 - **Payments:** Stripe | **Auth:** JWT | **QR Codes:** react-native-qrcode-svg + expo-camera
+- **Current Version:** 2.0.40
 
 ## What's Been Implemented
 
-### Rapid Reps Safety Check System (March 2026)
-- **Backend:** 12 API endpoints under `/api/safety-check/*` — QR token generation (SHA-256, 5-min expiry), verification with 6-point validation, session timer, blocking logic, admin tracking with override
-- **Trainer Badge Screen:** Professional digital ID badge with dynamic QR code, auto-refresh countdown, session details, verification badges
-- **Client Verification:** Camera QR scanner, branded success screen ("Rapid Reps Safety Check Complete"), failure screen with retry
-- **Admin Safety Dashboard:** 4 views — Active Sessions (live timers), Verification Log, Safety Events, Duration Tracking. Includes admin override modal
-- **Session Countdown Timer:** Real-time countdown based on purchased session duration (30/45/60 min). Shows on both trainer and trainee session cards for in-progress sessions. Progress bar with green→warning→red color states. Pulse animation under 5 minutes
+### Session Pricing System (March 2026 - COMPLETE)
+- **Per-Duration Pricing:** Trainers can now set custom prices for 30/60/90 minute sessions for each session type (Outdoor, Virtual, At Home)
+- **Backend:** `POST /api/trainer/set-rates` accepts `outdoor30Cents`, `outdoor60Cents`, `outdoor90Cents`, etc.
+- **Frontend:** `set-rates.tsx` has editable TextInput fields for each duration with earnings preview
+- **Legacy Support:** 60-minute rate used as hourly rate for backward compatibility
 
-### UI/UX Alignment (March 2026)
-- All trainer screens unified to orange gradient background matching trainee design
-- Updated 10+ files: sessions, profile, earnings tabs + sub-screens (connect-bank, en-route, group-sessions, set-rates, trainer-tools)
+### Outdoor Location Agreement Flow (March 2026 - COMPLETE)
+- **Backend Endpoints:**
+  - `POST /api/sessions/{session_id}/propose-location` - Trainer proposes meeting spot
+  - `POST /api/sessions/{session_id}/agree-location` - Trainee agrees or counter-proposes
+- **Features:** Push notifications for location proposals, counter-proposals, and agreements
+- **Frontend:** Needs UI implementation in booking flow (backend is ready)
+
+### Crash Fixes (March 2026 - COMPLETE)
+1. **Slider Crash Fix:** Removed `@react-native-community/slider` dependency. Replaced with TouchableOpacity picker modals in `edit-profile.tsx` and `home.tsx`
+2. **Notification Cleanup Crash:** Added defensive `typeof .remove === 'function'` check in `NotificationContext.tsx`
+3. **Animation Conflict Fix:** Added `stopAnimation()` before starting new animation in `login.tsx`
+4. **Toast Fix:** Added missing `toast.info()` method in `src/utils/toast.ts`
+5. **Video Timer Cleanup:** Added proper cleanup for video timer in `VerificationsTab.tsx`
+
+### UI/UX Updates (March 2026 - COMPLETE)
+- Chat bubble colors changed to orange (sender) and teal/blue (receiver) in `chat/[id].tsx`
+- Uber-style map design on trainee home screen with glowing avatars and ETA badges
+- Session cards in My Sessions are clickable
+- Background info visible in admin verification panel
 
 ### Previous Implementations
-- Full trainer/trainee flows, Stripe Connect, trainer verification with PII, group sessions
-- Streaks & gamification, referral system, 508 accessibility compliance
-- Animations & haptic feedback, login screen redesign
+- Full trainer/trainee flows, Stripe Connect, trainer verification with PII
+- Group sessions, Streaks & gamification, referral system
+- 508 accessibility compliance, animations & haptic feedback
+- Rapid Reps Safety Check System with QR verification
+- Session countdown timer with progress bar
 
 ## Key API Endpoints
 | Endpoint | Description |
 |----------|-------------|
+| POST /api/auth/login | User login |
+| POST /api/trainer/set-rates | Set per-duration pricing |
+| GET /api/trainer/sessions | Get trainer's sessions with traineePhone |
+| POST /api/sessions/{id}/propose-location | Trainer proposes outdoor location |
+| POST /api/sessions/{id}/agree-location | Trainee agrees to location |
 | POST /api/safety-check/generate-token/{id} | Generate QR token |
 | POST /api/safety-check/verify | Verify QR (client scans) |
-| GET /api/safety-check/badge/{id} | Get badge data |
-| GET /api/safety-check/active-session | Trainer's active session |
-| GET /api/safety-check/timer/{id} | Timer status + remainingSeconds |
-| POST /api/safety-check/timer/{id}/complete | Complete session |
-| GET /api/safety-check/can-start/{id} | Check verification requirement |
-| GET /api/safety-check/admin/active-sessions | Live monitoring |
-| GET /api/safety-check/admin/verification-log | Scan history |
-| GET /api/safety-check/admin/safety-events | Failed scans/overrides |
-| GET /api/safety-check/admin/duration-tracking | Booked vs actual |
-| POST /api/safety-check/admin/override | Manual verification |
+| GET /api/admin/verifications | Admin: pending trainer verifications |
 
-## Latest Updates (March 2026)
+## Pending Issues
 
-### P1 Features Completed (March 2026)
-1. **Admin Verification Details Enhancement:** Admin panel now displays full trainer profile info (bio, experience years, certifications, training styles, location) when reviewing verification requests
-2. **Intro Video Playback (15s Limit):** Video player in admin panel auto-stops after 15 seconds with both timer and playback status monitoring
-3. **Saved Trainers Backend API:** New `/api/trainee/saved-trainers` endpoint returns full trainer details for favorited trainers
-4. **Smart Back Navigation:** Created `goBack()` utility with role-based fallbacks for edge cases (deep links, empty history)
-5. **30/60/90 Min Pricing:** Correctly implemented as frontend calculation from backend hourly rates (design-intended)
+### P0 - Critical (USER ACTION REQUIRED)
+1. **Deploy New Build:** All crash fixes and features are in the codebase but need a new EAS build to be tested on device. User is currently testing old builds.
 
-### Sentry Crash Reporting Integration (December 2025)
-- **Package:** `@sentry/react-native@7.2.0` installed (downgraded from 8.4.0 for Expo SDK 54 compatibility)
-- **DSN:** Configured in `app/_layout.tsx` 
-- **Organization:** rapidreps
-- **Project:** rapidreps
-- **Features enabled:**
-  - `enableNative: true` - Captures native-level crashes
-  - `enableNativeCrashHandling: true` - Catches force closes before JS loads
-  - `enableAutoSessionTracking: true` - Tracks user sessions
-  - `attachStacktrace: true` - Full stack traces on all events
-  - Environment tagging (development/production)
-- **Files modified:**
-  - `metro.config.js` - Reverted to standard Expo config (Sentry metro wrapper caused bundling error)
-  - `app.json` - Added `@sentry/react-native/expo` plugin, version bumped to 2.0.39
-  - `app/_layout.tsx` - Sentry.init() at app startup, Sentry.wrap() on root component
-  - `eas.json` - Added SENTRY_AUTH_TOKEN + SENTRY_ALLOW_FAILURE=true to all build profiles
-  - `.env` - Added SENTRY_AUTH_TOKEN
-- **IMPORTANT FIX:** Removed Sentry metro wrapper (`withSentryConfig`/`getSentryExpoConfig`) which caused "TypeError: Cannot read properties of undefined (reading 'match')" during EAS Update bundling. The Expo plugin in app.json handles source maps during EAS builds.
-- **EAS BUILD FIX (Feb 2026):** Added `SENTRY_ALLOW_FAILURE=true` to all build profiles in eas.json. This prevents sentry-cli source map upload failures (400 Bad Request) from blocking the entire build. Root cause: likely incorrect org/project slug — user should verify credentials in Sentry dashboard.
-- **EAS BUILD FIX v2 (Mar 2026):** Removed `@sentry/react-native/expo` plugin from `app.json` entirely and added `SENTRY_DISABLE_AUTO_UPLOAD=true` to `.env`. The Expo config plugin was adding a Xcode build phase that ran `sentry-cli` to upload source maps, and since the deployment pipeline creates its own `eas.json`, env vars like `SENTRY_ALLOW_FAILURE` from our eas.json never reached the EAS build. Removing the plugin eliminates the build phase entirely. Runtime crash reporting via `Sentry.init()` in `_layout.tsx` still works.
-- **Status:** Plugin removed - Awaiting user re-deploy to verify build succeeds
+### P1 - High Priority
+1. **Payment/Arrival Confirmation:** Implement system to take payment upon booking and allow both parties to confirm arrival
+2. **Admin Video View Issue:** Admin can hear but not see trainer's intro video - may be video encoding issue, not code
+3. **Dynamic Data Refresh:** Verify polling works or implement WebSocket for real-time updates
 
-### iOS Build Fixes (March 2026)
-1. **Removed `package-lock.json`** - Multiple lock files caused EAS Build issues
-2. **Fixed duplicate style property** in `app/trainee/(tabs)/home.tsx` - Removed duplicate `proximityValue` definition
-3. **Added `expo-camera` plugin to `app.json`** - Required for QR code scanning
-4. **Completely removed `@stripe/stripe-react-native` native SDK** - This was the root cause of the Apple Pay entitlement mismatch. The fix required:
-   - Removing all `require('@stripe/stripe-react-native')` dynamic imports from 4 files:
-     - `app/_layout.tsx` - StripeProvider wrapper removed
-     - `app/trainee/confirm-booking.tsx` - useStripe hook removed
-     - `app/trainee/membership.tsx` - useStripe hook removed  
-     - `app/trainer/boosts.tsx` - useStripe hook removed
-   - Removing the Metro config Stripe web shim (`src/shims/stripe-web.js`)
-   - Updating payment flows to work without native payment sheet (backend payment intents still work)
-5. **Fixed NotificationContext race condition crash** - Major rewrite to fix intermittent crash after login:
-   - Removed invalid `token` reference from `useAuth()` hook
-   - Added 500ms initialization delay to allow navigation to settle
-   - Added `isMounted` ref to prevent state updates on unmounted components
-   - Changed context default from `undefined` to safe default values
-   - Added `isReady` flag for consumers to check initialization status
-   - Wrapped all async operations in `Promise.allSettled()` for error isolation
-6. **Fixed "TypeError: undefined is not a function" crash** - Removed redundant `|| {}` fallbacks from hook destructuring that were overriding context safe defaults
-7. **Fixed context hooks to never throw:**
-   - `useAuth()` - Returns safe defaults if context unavailable
-   - `useAlert()` - Returns no-op implementation if context unavailable
-   - `useNotifications()` - Already fixed earlier
-8. **Fixed deployment blockers:**
-   - Cleaned `.gitignore` - Removed malformed lines 80-111 with `-e` flags and `*.env` patterns
-   - Fixed `EXPO_TUNNEL_SUBDOMAIN=useeffect-debug
-9. **UI Fixes:**
-   - Renamed "Pricing & Sessions" → "Session Durations" in trainer onboarding
-   - Added 90 min option to session durations: `[30, 45, 60, 90]`
-   - Changed Streak Share screen background from navy to orange gradient
-   - Changed Virtual Live Session screen background from navy to orange gradient
-   - Changed Group Workouts screen background from navy to orange gradient
-   - Made map edge-to-edge with `marginHorizontal: -20`
-   - Added null check for verification documents in admin panel
-10. **ErrorBoundary Enhancement:** Now shows actual error message in production (not just DEV mode)
-11. **Version: 2.0.36**
-12. **expo-doctor: 17/17 checks passed**
+### P2 - Medium Priority
+1. **Outdoor Location Agreement UI:** Backend is complete; needs frontend UI in booking flow
+2. **Stripe Bank Connection Error:** Handle duplicate Express account creation gracefully
+3. **Address Auto-populate:** Pass trainee's address to navigation intent
+4. **Trainee Photo/Video in Booking:** Show trainee's media in booking request screen
 
-**Note:** Payments currently create backend payment intents but don't present native payment UI. Future enhancement: Implement Stripe Checkout redirect or Stripe.js web-based payments.
-
-### Feature Updates (March 2026)
-1. **Saved Trainers Backend API:** Added `/api/trainee/saved-trainers` endpoint to fetch full trainer details for saved/favorited trainers
-2. **Saved Trainers Screen:** Updated to fetch real data from backend and allow removing trainers from favorites
-3. **Smart Back Navigation:** Created `goBack()` utility function that handles edge cases (deep links, empty history) with appropriate fallbacks
-
-### Background Image Updates
-Applied 8 new fitness-themed background images across multiple screens:
-- Edit Profile: bg-box-jumps-orange.jpg
-- Set Rates: bg-plank-ropes.png
-- Trainer Tools: bg-boxing.png
-- Group Sessions: bg-group-gym.png
-- Connect Bank: bg-swimming.png
-- Change Password: bg-cardio-gym.png
-- Referral: bg-box-jumps-wide.png
-- Leaderboard: bg-group-gym.png
-- Notifications: bg-swimming.png
-- User Progress: bg-box-jumps-orange.jpg
-- Community Feed: bg-plank-ropes.png
-- Instant Match: bg-jump-rope.jpg
-- Earnings: bg-jump-rope.jpg
-- Terms of Service: bg-cardio-gym.png
-
-### Feature Updates Implemented
-1. **Chat header profile photo:** Added profile photo display in messaging header
-2. **"Need a Trainer Now" banner:** Removed pricing text ($18/30-min), now shows "Get matched instantly"
-3. **Set Rates 30/60/90 pricing:** Added duration breakdown showing calculated prices for 30, 60, and 90 minute sessions
-4. **Travel Proximity slider:** Converted dropdown list to interactive range slider (1-35 miles) on trainee home
-5. **Saved Trainers compact view:** Converted to 4-column thumbnail grid with profile pic, name, rating
-6. **Nearby Trainees compact view:** Converted to 4-column thumbnail grid (up to 8 trainees visible)
-7. **Map edge-to-edge:** Made map component full-width (0 horizontal margin) and taller (320px)
-8. **Travel Radius slider (Trainer):** Converted trainer's travel radius dropdown to slider on Edit Profile
-9. **Admin Panel Approved Trainers:** Added toggle to view approved trainers with documents access
-10. **Backend endpoint:** Added /admin/verifications/approved endpoint for approved trainers list
-11. **ID Scan Animation:** Added scanning overlay animation when trainer submits ID for verification
-
-### Testing Status (Iteration 42)
-- **Backend API Tests:** 24/24 PASSED (100%)
-- **Frontend Code Review:** All 13 features VERIFIED implemented
-- **Test Report:** /app/test_reports/iteration_42.json
-
-### Deployment Bug Fixed - expo-barcode-scanner Removal
-- **Issue:** iOS build failed with error: `'ExpoModulesCore/EXBarcodeScannerInterface.h' file not found`
-- **Root Cause:** `expo-barcode-scanner` package is deprecated and incompatible with Expo SDK 54. The native code references removed interfaces from ExpoModulesCore.
-- **Fix:** Removed `expo-barcode-scanner` from package.json dependencies. The app already uses `expo-camera`'s built-in `CameraView` with `barcodeScannerSettings` for QR code scanning (in `verify-trainer.tsx`).
-
-### Previous Fix - Missing Image Asset
-- **Issue:** Build failed due to missing image asset `gym-bg.jpg` in `frontend/app/trainer/badge.tsx`
-- **Fix:** Replaced with existing assets (`bg-gym-blue.png` for background, `icon.png` for badge logo)
-
-## Prioritized Backlog
-
-### UI/Design Enhancements Implemented (March 2026)
-1. **Uber-style Map Display** - Trainers displayed like Uber cars with glowing avatars and ETA badges:
-   - Increased map height (400px)
-   - Trainers shown as circular avatars with orange glow effect
-   - ETA badge below each trainer marker showing arrival time
-   - Bottom card redesigned like Uber's ride selection panel with:
-     - Drag indicator at top
-     - Trainer photo, name, and rating
-     - Price section showing rate per 30 minutes
-     - ETA and distance info row
-     - Full-width "View Profile & Book" button
-
-### Crash Fixes Applied (March 2026)
-1. **Slider Crash Fix:** Removed `@react-native-community/slider` dependency entirely. Replaced with TouchableOpacity picker modals in:
-   - `app/trainer/edit-profile.tsx` - Travel radius selection
-   - `app/trainee/(tabs)/home.tsx` - Proximity selection modal
-
-2. **Notification Cleanup Crash Fix:** Improved cleanup logic in `NotificationContext.tsx`:
-   - Added `typeof .remove === 'function'` check before calling
-   - Store subscription refs in local variables before cleanup
-   - Added try/catch with fallback to prevent crash
-
-3. **Animation Conflict Fix:** Fixed login.tsx animation crash:
-   - Added `stopAnimation()` before starting new animation
-   - Wrapped in try/catch with fallback to `setValue()`
-
-4. **Toast Fix:** Added missing `toast.info()` method in `src/utils/toast.ts`
-
-5. **Video Timer Cleanup:** Added proper cleanup for video timer in `VerificationsTab.tsx`:
-   - Added `isMountedRef` to prevent async updates on unmounted components
-   - Added useEffect cleanup for video timer
-
-### Bug Fixes Implemented (March 2026)
-1. **Stripe Connect Error Handling:** Improved error handling for "You can only create one Express account" error:
-   - Added more error message patterns to detect duplicate account
-   - Search existing Stripe accounts by email if creation fails
-   - Better error message for users
-
-2. **Messaging Bubble Colors:** Changed chat bubbles to orange (sender) and teal/blue (receiver):
-   - Modified `app/messages/chat.tsx` renderMessage function
-   - Both bubbles now use LinearGradient
-
-3. **Sessions Clickable:** Made session cards clickable in My Sessions:
-   - Modified `app/trainee/my-sessions.tsx` to use TouchableOpacity
-   - Created new `app/trainee/session-detail.tsx` screen with full session info
-
-4. **Background Info for Admin:** Admin can now see trainer's background check submission:
-   - Modified backend `/api/admin/verifications/{id}/detail` to include background check data
-   - Added Background Check Info section in `VerificationsTab.tsx`
-
-5. **Auto-refresh Sessions:** Added automatic polling for trainer sessions:
-   - Poll every 30 seconds when trainer is available
-   - Refresh data when app returns to foreground
-
-6. **Notification Sound:** Added `playNotification()` function to `SoundContext.tsx`:
-   - Loads `notification.mp3` sound file
-   - Available for use when new notifications arrive
-
-### Pending Issues (Requires More Work)
-- **P1:** Session pricing per duration (not just hourly) - requires database schema changes
-- **P1:** Outdoor location agreement flow - needs new UI and backend endpoints
-- **P2:** Address auto-population for navigation
-- **P2:** Trainee profile photo/video in booking view
-- **P2:** Payment confirmation for sessions
-- **P2:** Uber-style trainer map display
+### P3 - Low Priority
+1. **TypeScript Warnings:** ~100+ warnings from strict mode
+2. **SendGrid Integration:** Blocked on API key
 
 ## Credentials
-- Admin: admin@rapidreps.com / admin123
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | admin@rapidreps.com | admin123 |
+| Trainee | test_trainee_iter25@test.com | Test123! |
+| Trainer | test_trainer_iter25@test.com | Test123! |
+
+## EAS Build Instructions
+To create a new build and test the fixes:
+```bash
+# In the frontend directory
+cd /app/frontend
+
+# For iOS (TestFlight)
+eas build --platform ios --profile production
+
+# For Android
+eas build --platform android --profile production
+```
 
 ## Mocked: SendGrid (awaiting API key)

@@ -2567,6 +2567,10 @@ async def create_session(session: SessionCreate, current_user: dict = Depends(ge
         'locationNameOrAddress': session.locationNameOrAddress,
         'traineeLatitude': session.traineeLatitude,
         'traineeLongitude': session.traineeLongitude,
+        # Outdoor location agreement (trainer must confirm outdoor meeting spot)
+        'outdoorLocationProposed': session.locationNameOrAddress if session_type == SessionType.OUTDOOR else None,
+        'outdoorLocationAgreed': False if session_type == SessionType.OUTDOOR else None,
+        'outdoorLocationTrainerProposal': None,
         'notes': sanitize_text(session.notes),
         'paymentIntentId': None,
         'createdAt': datetime.utcnow(),
@@ -2779,6 +2783,124 @@ async def get_verification_status(session_id: str, current_user: dict = Depends(
         'trainerSelfieAt': session.get('trainerSelfieAt', '').isoformat() if session.get('trainerSelfieAt') else None,
         'traineeSelfieAt': session.get('traineeSelfieAt', '').isoformat() if session.get('traineeSelfieAt') else None,
     }
+
+
+@api_router.post("/sessions/{session_id}/propose-location")
+async def propose_outdoor_location(
+    session_id: str,
+    body: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Trainer proposes a different outdoor meeting location."""
+    try:
+        oid = ObjectId(session_id)
+    except Exception:
+        raise HTTPException(400, "Invalid session ID")
+    
+    session = await db.sessions.find_one({'_id': oid})
+    if not session:
+        raise HTTPException(404, "Session not found")
+    
+    user_id = str(current_user['_id'])
+    if session.get('trainerId') != user_id:
+        raise HTTPException(403, "Only trainer can propose location")
+    
+    if session.get('sessionType') != SessionType.OUTDOOR:
+        raise HTTPException(400, "Location proposals only for outdoor sessions")
+    
+    new_location = body.get('proposedLocation', '').strip()
+    if not new_location:
+        raise HTTPException(400, "Location cannot be empty")
+    
+    await db.sessions.update_one(
+        {'_id': oid},
+        {'$set': {
+            'outdoorLocationTrainerProposal': new_location,
+            'outdoorLocationAgreed': False,
+            'updatedAt': datetime.utcnow()
+        }}
+    )
+    
+    # Notify trainee about the new location proposal
+    trainee_name = session.get('traineeName', 'Trainee')
+    await create_and_send_notification(
+        session['traineeId'],
+        "Location Proposal",
+        f"Your trainer has proposed a new meeting location: {new_location}",
+        "location_proposed",
+        {"sessionId": session_id}
+    )
+    
+    return {"success": True, "message": "Location proposal sent to trainee"}
+
+
+@api_router.post("/sessions/{session_id}/agree-location")
+async def agree_outdoor_location(
+    session_id: str,
+    body: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Trainee agrees to the proposed outdoor location."""
+    try:
+        oid = ObjectId(session_id)
+    except Exception:
+        raise HTTPException(400, "Invalid session ID")
+    
+    session = await db.sessions.find_one({'_id': oid})
+    if not session:
+        raise HTTPException(404, "Session not found")
+    
+    user_id = str(current_user['_id'])
+    if session.get('traineeId') != user_id:
+        raise HTTPException(403, "Only trainee can agree to location")
+    
+    if session.get('sessionType') != SessionType.OUTDOOR:
+        raise HTTPException(400, "Location agreement only for outdoor sessions")
+    
+    agreed = body.get('agreed', True)
+    
+    if agreed:
+        final_location = session.get('outdoorLocationTrainerProposal') or session.get('outdoorLocationProposed')
+        await db.sessions.update_one(
+            {'_id': oid},
+            {'$set': {
+                'outdoorLocationAgreed': True,
+                'locationNameOrAddress': final_location,
+                'updatedAt': datetime.utcnow()
+            }}
+        )
+        # Notify trainer
+        await create_and_send_notification(
+            session['trainerId'],
+            "Location Confirmed",
+            f"Trainee has agreed to meet at: {final_location}",
+            "location_agreed",
+            {"sessionId": session_id}
+        )
+        return {"success": True, "message": "Location agreed", "finalLocation": final_location}
+    else:
+        # Trainee rejected, they can propose their own location
+        counter_proposal = body.get('counterProposal', '').strip()
+        if counter_proposal:
+            await db.sessions.update_one(
+                {'_id': oid},
+                {'$set': {
+                    'outdoorLocationProposed': counter_proposal,
+                    'outdoorLocationTrainerProposal': None,
+                    'outdoorLocationAgreed': False,
+                    'updatedAt': datetime.utcnow()
+                }}
+            )
+            # Notify trainer
+            await create_and_send_notification(
+                session['trainerId'],
+                "Counter Proposal",
+                f"Trainee proposed a different location: {counter_proposal}",
+                "location_counter",
+                {"sessionId": session_id}
+            )
+            return {"success": True, "message": "Counter proposal sent"}
+        return {"success": False, "message": "Please provide a counter proposal"}
 
 
 
@@ -7030,17 +7152,44 @@ async def trainer_set_rates(
     body: dict,
     current_user: dict = Depends(get_current_user)
 ):
-    """Set trainer's per-session rates by session type"""
+    """Set trainer's per-session rates by session type and duration"""
     user_id = str(current_user['_id'])
     
     update_data = {'updatedAt': datetime.utcnow()}
     
+    # Legacy hourly rates
     if 'outdoorRateCents' in body:
         update_data['outdoorRateCents'] = int(body['outdoorRateCents'])
     if 'virtualRateCents' in body:
         update_data['virtualRateCents'] = int(body['virtualRateCents'])
     if 'inHomeRateCents' in body:
         update_data['inHomeRateCents'] = int(body['inHomeRateCents'])
+    
+    # Per-duration rates - Outdoor
+    if 'outdoor30Cents' in body:
+        update_data['outdoor30Cents'] = int(body['outdoor30Cents'])
+    if 'outdoor60Cents' in body:
+        update_data['outdoor60Cents'] = int(body['outdoor60Cents'])
+    if 'outdoor90Cents' in body:
+        update_data['outdoor90Cents'] = int(body['outdoor90Cents'])
+    
+    # Per-duration rates - Virtual
+    if 'virtual30Cents' in body:
+        update_data['virtual30Cents'] = int(body['virtual30Cents'])
+    if 'virtual60Cents' in body:
+        update_data['virtual60Cents'] = int(body['virtual60Cents'])
+    if 'virtual90Cents' in body:
+        update_data['virtual90Cents'] = int(body['virtual90Cents'])
+    
+    # Per-duration rates - At Home
+    if 'inHome30Cents' in body:
+        update_data['inHome30Cents'] = int(body['inHome30Cents'])
+    if 'inHome60Cents' in body:
+        update_data['inHome60Cents'] = int(body['inHome60Cents'])
+    if 'inHome90Cents' in body:
+        update_data['inHome90Cents'] = int(body['inHome90Cents'])
+    
+    # Service type toggles
     if 'offersInPerson' in body:
         update_data['offersInPerson'] = bool(body['offersInPerson'])
     if 'offersVirtual' in body:

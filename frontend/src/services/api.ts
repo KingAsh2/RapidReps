@@ -183,6 +183,16 @@ export const trainerAPI = {
     outdoorRateCents?: number;
     virtualRateCents?: number;
     inHomeRateCents?: number;
+    // Per-duration pricing
+    outdoor30Cents?: number;
+    outdoor60Cents?: number;
+    outdoor90Cents?: number;
+    virtual30Cents?: number;
+    virtual60Cents?: number;
+    virtual90Cents?: number;
+    inHome30Cents?: number;
+    inHome60Cents?: number;
+    inHome90Cents?: number;
   }): Promise<any> => {
     const response = await api.post('/trainer/set-rates', rates);
     return response.data;

@@ -1,88 +1,115 @@
 <analysis>**original_problem_statement:**
-The user's primary goal is to fix a persistent and intermittent frontend crash that renders their React Native application unusable. The initial blocker was a failing EAS (Expo Application Services) build, which prevented any new deployments. The agent successfully diagnosed and resolved the build failure, which was caused by a misconfigured Sentry integration.
-
-With the build now working, the user provided a Sentry crash report detailing the primary issue: a  that occurs during component unmounting, likely related to  cleanup functions within the 's component tree. The agent has implemented a potential fix for this crash, but it has not been deployed or tested yet.
+The user initially wanted to fix persistent frontend crashes that made their React Native app unusable. After the agent fixed three distinct crashes (a  component issue, a  cleanup issue, and an  conflict), the user provided a comprehensive list of 15+ new feature requests and bug fixes they want implemented before the next deployment. The agent has begun working on this extensive list, leaving several features in a partially implemented state.
 
 **PRODUCT REQUIREMENTS:**
-1.  **Fix App Crashing (P0, HIGHEST PRIORITY):** Deploy the implemented fix and verify with the user that the app no longer crashes after login, sign-out, or restart.
-2.  **Apply New App Icon (P1):** Now that builds are unblocked, ensure the new app icon is successfully applied in a new TestFlight build.
-3.  **User Verification of P1 Features:** Guide the user to test and verify previously completed features (Saved Trainers, Back Button, Admin UI) once the app is stable.
-4.  **Future Tasks:** Enable SendGrid (P2, blocked on API key) and resolve TypeScript warnings (P3).
+1.  **Fix All App Crashes (P0, IN PROGRESS):** The agent has implemented fixes for three separate crashes. These fixes MUST be deployed to a new build and verified by the user to confirm app stability.
+2.  **Implement New Features & Fixes (P0, IN PROGRESS):** Address the large list of items provided by the user (message #171). This includes major changes to session pricing, location handling, UI design, and bug fixes across the application.
+3.  **Apply New App Icon (P1):** Ensure the new app icon is applied in a new build.
+4.  **User Verification of P1 Features:** Guide the user to test previously completed features (Saved Trainers, Back Button, Admin UI) once the app is stable.
+5.  **Future Tasks:** Enable SendGrid (P2, blocked on API key) and resolve TypeScript warnings (P3).
 
 **User's preferred language**: English
 
 **what currently exists?**
-A full-stack React/FastAPI application that is now **deployable**. The critical EAS build failure has been resolved. A comprehensive fix for the main application crash () has been implemented across multiple files (, , , ). This fix involves correcting how  cleanup functions handle notification subscriptions. However, this fix is untested and has not been deployed to the user's device.
+The application is a React Native (Expo) and FastAPI stack. The agent has successfully fixed three critical, distinct crashes related to a missing Slider component, a notification cleanup race condition, and an animation driver conflict. Following these fixes, the agent began implementing a large number of user-requested features. Work has started on: flexible session pricing, an outdoor location agreement flow, making sessions clickable, changing chat bubble colors, and improving data refresh logic. Much of this new work is incomplete, with changes made across both frontend and backend files.
 
 **Last working item**:
--   Last item agent was working: Implementing a fix for the primary application crash reported by Sentry. The crash was a  occurring during the cleanup phase of a  hook, likely within the notification system. The agent refactored the cleanup logic in , , and  to safely remove notification listeners.
+-   Last item agent was working: Implementing the backend endpoints and database schema changes for the Outdoor Location Agreement feature. This involves adding new fields to the  model and creating new API routes in  for trainers and trainees to propose and agree upon an outdoor meeting spot.
 -   Status: IN PROGRESS
 -   Agent Testing Done: N
--   Which testing method agent to use? The user must deploy the new build and attempt to reproduce the crash conditions (e.g., logging out, restarting the app). This is a manual user verification step.
+-   Which testing method agent to use? both. The backend endpoints need to be tested with . The full frontend flow will require the  due to its complexity.
 -   User Testing Done: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Persistent and Intermittent App Crash (P0, HIGHEST PRIORITY)**
-    -   **Description:** The original critical issue where the app crashes with a  during component unmount, as captured by Sentry. A potential fix has been implemented.
-    -   **Attempted fixes:** The agent refactored the  cleanup logic in  to call  directly on the subscription objects instead of using the potentially deprecated . It also added guards and  blocks to the cleanup functions in related components (, , ).
+-   **Issue 1: Deploy and Verify All Crash Fixes (P0)**
+-   **Issue 2: Complete Flexible Session Pricing Feature (P0)**
+-   **Issue 3: Complete Outdoor Location Agreement Feature (P0)**
+-   **Issue 4: Payment Not Taken / No Arrival Confirmation (P1)**
+-   **Issue 5: Admin cannot see trainer's intro video (P1)**
+-   **Issue 6: 'Call trainee' button doesn't work (P1)**
+-   **Issue 7: Accounts should refresh dynamically without manual log-out/log-in (P1)**
+-   **Issue 8: Stripe bank account connection error persists (P2)**
+-   **Issue 9: Background Info isn’t flowing from trainer profile to admin verification screen (P2)**
+-   **Issue 10: System should make a sound for unread notifications (P2)**
+-   **Issue 11: My Sessions screen items are not clickable (P2)**
+-   **Issue 12: Address from profile should auto-populate for Navigate to Trainee (P2)**
+-   **Issue 13: Trainee profile photo/video missing during booking process (P2)**
+-   **Issue 14: Pre-existing TypeScript Strict-Mode Warnings (P3)**
+
+**Issues Detail:**
+-   **Issue 1: Deploy and Verify All Crash Fixes (P0)**
+    -   **Description:** The user has repeatedly tested OLD builds and reported crashes that have already been fixed in the codebase. It is critical to ensure the user deploys a NEW build containing all the recent fixes.
+    -   **Attempted fixes:** The agent fixed three distinct crashes: ,  (notification cleanup), and an animation conflict ().
     -   **Next debug checklist:**
-        1.  Instruct the user to trigger a new deployment to get the latest fixes into a build.
-        2.  Once the build is installed, ask the user to perform the actions that previously caused the crash (logging in/out, restarting the app).
-        3.  Monitor Sentry for any new crash reports. If the crash persists, analyze the new stack trace.
-    -   **Why fix this issue and what will be achieved with the fix?** This is the core instability issue that makes the app unusable. Fixing it will restore basic functionality and unblock all other development and testing.
-    -   **Status:** IN PROGRESS
+        1.  Guide the user to trigger a new EAS build.
+        2.  Instruct the user to install the new build from TestFlight.
+        3.  Have the user test the specific scenarios that previously caused crashes (opening Edit Trainer Profile, blurring TextInputs on the login screen, backgrounding/foregrounding the app).
+    -   **Why fix this issue and what will be achieved with the fix?** This will confirm the app is stable and unblock testing of all other features.
+    -   **Status:** USER VERIFICATION PENDING
     -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** Frontend (user testing on device).
-    -   **Blocked on other issue:** None.
+    -   **Should Test frontend/backend/both after fix?** Frontend (user testing).
+    -   **Blocked on other issue:** None. This is the primary blocker.
+
+-   **Issue 2: Complete Flexible Session Pricing Feature (P0)**
+    -   **Description:** Trainers should be able to set custom prices for different session durations (e.g., 30, 60, 90 mins) instead of having them auto-calculated from a single hourly rate.
+    -   **Attempted fixes:** The agent started refactoring the backend  endpoint in  and the frontend UI in . The work is incomplete.
+    -   **Next debug checklist:**
+        1.  Finish the backend logic in  to accept and store an object with rates per duration (e.g., ).
+        2.  Complete the frontend UI in  to display editable  fields for each duration.
+        3.  Ensure the  function sends the data in the new format.
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** Both.
+
+-   **Issue 3 to 14**: These issues have been identified from the user's list but are either not started or have only been partially investigated. The next agent should prioritize them after the main crash-fix verification and completion of the in-progress tasks.
 
 **In progress Task List**:
--   None.
+-   **Task 1: Complete Flexible Session Pricing (P0)**
+    -   **Where to resume:**
+        -   Backend:  - The  endpoint needs to be finished to handle the new  object format.
+        -   Frontend:  - The UI needs to be fully updated with editable inputs for each duration, and the state management and save logic must be completed.
+    -   **What will be achieved with this?** Trainers will have granular control over their session pricing.
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** Both.
+
+-   **Task 2: Complete Outdoor Location Agreement (P0)**
+    -   **Where to resume:**
+        -   Backend:  - The agent was adding new endpoints (, ) and modifying the session schema. This needs to be completed and tested.
+        -   Frontend: The booking flow needs to be modified to include UI for proposing and accepting locations when Outdoor is selected. No frontend work has been started.
+    -   **What will be achieved with this?** A clear workflow for sessions held at non-fixed outdoor locations.
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** Both.
+
+-   **Task 3: Implement Uber-style Map UI (P1)**
+    -   **Where to resume:** The agent has modified  to change map styles and marker styles. The user should verify if this matches their expectation from the screenshot. The bottom sheet for trainer selection is not fully implemented.
+    -   **What will be achieved with this?** A more modern and intuitive UI for finding trainers, as requested by the user.
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** Frontend.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **P1: Apply New App Icon:** (Unblocked) Deploy and verify the new app icon is visible.
-    -   **P1: User Verification of Completed P1 Features:** (Blocked on crash fix verification) Once the app is stable, guide the user to verify the Saved Trainers page, back-button navigation, and the admin verification modal.
+    -   **P1: Payment/Arrival Confirmation:** Implement a system to take payment upon booking and allow both parties to confirm arrival.
+    -   **P1: Fix Call Trainee Button:** Ensure the trainee's phone number is correctly passed to the session object upon confirmation and available to the trainer. (File: )
+    -   **P1: Fix Admin Video View:** Debug why the admin can hear but not see the trainer's intro video. (File: )
+    -   **P1: Dynamic Data Refresh:** Verify the polling implementation works as expected or switch to a WebSocket-based solution for real-time updates on new requests. (File: )
+    -   **P2: Complete Clickable My Sessions:** Finish the  screen and implement the navigation from .
+    -   **P2: Implement Notification Sound:** Verify the sound plays when there are unread notifications upon app open. (File: )
+    -   **P2: Fix Stripe Connection Error:** Implement a better user flow to handle cases where a Stripe Express account already exists.
 -   **Future Tasks:**
-    -   **P2: Enable SendGrid Integration:** Blocked, awaiting API key from the user.
-    -   **P3: Resolve TypeScript Strict-Mode Warnings:** A backlog item to improve long-term code quality.
+    -   **P2: Auto-populate Navigation Address:** Pass the trainee's address to the maps/navigation intent.
+    -   **P2: Add Trainee Photo/Video to Booking:** Include the trainee's media in the booking request screen for the trainer.
+    -   **P2: Enable SendGrid Integration** (Blocked on API Key).
+    -   **P3: Resolve All TypeScript Warnings**.
 
 **Completed work in this session**
--   **Resolved EAS Build Failure:** Fixed the critical build-time error by removing the  plugin from  and adding  to the  file, successfully bypassing the failing source map upload.
--   **Project Cleanup:** Removed  to resolve the /npm <command>
-
-Usage:
-
-npm install        install all the dependencies in your project
-npm install <foo>  add the <foo> dependency to your project
-npm test           run this project's tests
-npm run <foo>      run the script named <foo>
-npm <command> -h   quick help on <command>
-npm -l             display usage info for all commands
-npm help <term>    search for help on <term>
-npm help npm       more involved overview
-
-All commands:
-
-    access, adduser, audit, bugs, cache, ci, completion,
-    config, dedupe, deprecate, diff, dist-tag, docs, doctor,
-    edit, exec, explain, explore, find-dupes, fund, get, help,
-    help-search, hook, init, install, install-ci-test,
-    install-test, link, ll, login, logout, ls, org, outdated,
-    owner, pack, ping, pkg, prefix, profile, prune, publish,
-    query, rebuild, repo, restart, root, run-script, sbom,
-    search, set, shrinkwrap, star, stars, start, stop, team,
-    test, token, uninstall, unpublish, unstar, update, version,
-    view, whoami
-
-Specify configs in the ini-formatted file:
-    /root/.npmrc
-or on the command line via: npm <command> --key=value
-
-More configuration info: npm help config
-Configuration fields: npm help 7 config
-
-npm@10.8.2 /usr/lib/node_modules/npm lock file conflict reported during the build.
--   **Implemented Crash Fix:** Applied a potential fix for the  crash by refactoring  cleanup logic in , , , and .
+-   **Slider Crash Fix:** Resolved  by completely removing the  dependency and refactoring the UI with standard components in  and .
+-   **Notification Crash Fix:** Resolved intermittent  by adding defensive checks for the  function on notification subscriptions in .
+-   **Animation Crash Fix:** Resolved  animation conflict on the login screen by stopping previous animations before starting new ones in .
+-   **Missing Method Fix:** Added the missing  method in .
+-   **Memory Leak Fix:** Added a  cleanup for a timer in .
+-   **UI/UX Updates:**
+    -   Implemented a new Uber-style map design on the trainee home screen.
+    -   Changed chat bubble colors to orange and blue in .
+-   **Partial Implementation:** Started work on flexible pricing, outdoor location agreement, clickable sessions, background info flow to admin, and real-time data refresh.
 
 **Earlier issues found/mentioned but not fixed**
 -   **Issue 1: Pre-existing TypeScript Errors (P3)**
@@ -132,7 +159,7 @@ app/trainee/(tabs)/home.tsx(385,34): error TS2339: Property 'averageRating' does
 app/trainee/(tabs)/home.tsx(385,59): error TS2339: Property 'averageRating' does not exist on type 'never'.
 app/trainee/(tabs)/home.tsx(387,34): error TS2339: Property 'ratePerMinuteCents' does not exist on type 'never'.
 app/trainee/(tabs)/home.tsx(387,68): error TS2339: Property 'ratePerMinuteCents' does not exist on type 'never'.
-app/trainee/(tabs)/home.tsx(790,34): error TS2339: Property 'id' does not exist on type 'never'.
+app/trainee/(tabs)/home.tsx(782,34): error TS2339: Property 'id' does not exist on type 'never'.
 app/trainee/(tabs)/profile.tsx(132,19): error TS2345: Argument of type '{ profilePhoto: any; fitnessGoals: string; experienceLevel: any; currentFitnessLevel: string; preferredTrainingStyles: string[]; injuriesOrLimitations: string; homeGymOrZipCode: string; ... 7 more ...; budgetMaxPerMinuteCents: number; }' is not assignable to parameter of type 'SetStateAction<{ profilePhoto: string; fitnessGoals: string; experienceLevel: string; currentFitnessLevel: string; preferredTrainingStyles: string[]; injuriesOrLimitations: string; homeGymOrZipCode: string; ... 8 more ...; budgetMaxPerMinuteCents: number; }>'.
   Property 'homeZipCode' is missing in type '{ profilePhoto: any; fitnessGoals: string; experienceLevel: any; currentFitnessLevel: string; preferredTrainingStyles: string[]; injuriesOrLimitations: string; homeGymOrZipCode: string; ... 7 more ...; budgetMaxPerMinuteCents: number; }' but required in type '{ profilePhoto: string; fitnessGoals: string; experienceLevel: string; currentFitnessLevel: string; preferredTrainingStyles: string[]; injuriesOrLimitations: string; homeGymOrZipCode: string; ... 8 more ...; budgetMaxPerMinuteCents: number; }'.
 app/trainee/(tabs)/profile.tsx(133,35): error TS2339: Property 'profilePhoto' does not exist on type 'TraineeProfile'.
@@ -155,6 +182,9 @@ app/trainee/session-complete.tsx(101,9): error TS2769: No overload matches this 
   Overload 2 of 2, '(props: LinearGradientProps, context: any): LinearGradient', gave the following error.
     Type 'string[]' is not assignable to type 'readonly [ColorValue, ColorValue, ...ColorValue[]]'.
       Source provides no match for required element at position 0 in target.
+app/trainee/session-detail.tsx(55,36): error TS2749: 'SessionStatus' refers to a value, but is being used as a type here. Did you mean 'typeof SessionStatus'?
+app/trainee/session-detail.tsx(57,26): error TS2339: Property 'PENDING' does not exist on type '{ REQUESTED: string; CONFIRMED: string; DECLINED: string; CANCELLED: string; COMPLETED: string; NO_SHOW: string; }'.
+app/trainee/session-detail.tsx(61,26): error TS2339: Property 'IN_PROGRESS' does not exist on type '{ REQUESTED: string; CONFIRMED: string; DECLINED: string; CANCELLED: string; COMPLETED: string; NO_SHOW: string; }'.
 app/trainee/share-streak.tsx(135,13): error TS2769: No overload matches this call.
   Overload 1 of 2, '(props: LinearGradientProps): LinearGradient', gave the following error.
     Type 'string[]' is not assignable to type 'readonly [ColorValue, ColorValue, ...ColorValue[]]'.
@@ -181,19 +211,17 @@ app/trainee/user-progress.tsx(67,25): error TS2769: No overload matches this cal
 app/trainee/virtual-confirm.tsx(90,5): error TS2322: Type 'number' is not assignable to type 'Timeout'.
 app/trainee/virtual-confirm.tsx(132,5): error TS2322: Type 'number' is not assignable to type 'Timeout'.
 app/trainee/virtual-confirm.tsx(201,7): error TS2322: Type 'number' is not assignable to type 'Timeout'.
-app/trainer/(tabs)/home.tsx(165,5): error TS2322: Type 'number' is not assignable to type 'Timeout'.
-app/trainer/(tabs)/home.tsx(752,48): error TS2339: Property 'traineeName' does not exist on type 'Session'.
-app/trainer/(tabs)/home.tsx(753,49): error TS2339: Property 'traineePhoto' does not exist on type 'Session'.
-app/trainer/(tabs)/home.tsx(764,38): error TS2339: Property 'traineePhoto' does not exist on type 'Session'.
-app/trainer/(tabs)/home.tsx(766,56): error TS2339: Property 'traineePhoto' does not exist on type 'Session'.
-app/trainer/(tabs)/home.tsx(778,73): error TS2339: Property 'traineeName' does not exist on type 'Session'.
-app/trainer/(tabs)/home.tsx(1214,5): error TS2345: Argument of type '{ container: { flex: number; }; overlay: { backgroundColor: string; position: "absolute"; left: 0; right: 0; top: 0; bottom: 0; }; safeArea: { flex: number; }; header: { flexDirection: "row"; justifyContent: "space-between"; alignItems: "center"; paddingHorizontal: number; paddingTop: number; paddingBottom: number; ...' is not assignable to parameter of type '{ container: { flex: number; }; overlay: { backgroundColor: string; position: "absolute"; left: 0; right: 0; top: 0; bottom: 0; }; safeArea: { flex: number; }; header: { flexDirection: "row"; justifyContent: "space-between"; alignItems: "center"; paddingHorizontal: number; paddingTop: number; paddingBottom: number; ...'.
+app/trainer/(tabs)/home.tsx(182,5): error TS2322: Type 'number' is not assignable to type 'Timeout'.
+app/trainer/(tabs)/home.tsx(769,48): error TS2339: Property 'traineeName' does not exist on type 'Session'.
+app/trainer/(tabs)/home.tsx(770,49): error TS2339: Property 'traineePhoto' does not exist on type 'Session'.
+app/trainer/(tabs)/home.tsx(781,38): error TS2339: Property 'traineePhoto' does not exist on type 'Session'.
+app/trainer/(tabs)/home.tsx(783,56): error TS2339: Property 'traineePhoto' does not exist on type 'Session'.
+app/trainer/(tabs)/home.tsx(795,73): error TS2339: Property 'traineeName' does not exist on type 'Session'.
+app/trainer/(tabs)/home.tsx(1231,5): error TS2345: Argument of type '{ container: { flex: number; }; overlay: { backgroundColor: string; position: "absolute"; left: 0; right: 0; top: 0; bottom: 0; }; safeArea: { flex: number; }; header: { flexDirection: "row"; justifyContent: "space-between"; alignItems: "center"; paddingHorizontal: number; paddingTop: number; paddingBottom: number; ...' is not assignable to parameter of type '{ container: { flex: number; }; overlay: { backgroundColor: string; position: "absolute"; left: 0; right: 0; top: 0; bottom: 0; }; safeArea: { flex: number; }; header: { flexDirection: "row"; justifyContent: "space-between"; alignItems: "center"; paddingHorizontal: number; paddingTop: number; paddingBottom: number; ...'.
   Property 'quickActionText' is incompatible with index signature.
     Object literal may only specify known properties, and 'numberOfLines' does not exist in type 'ViewStyle | TextStyle | ImageStyle'.
 app/trainer/(tabs)/sessions.tsx(135,21): error TS2367: This comparison appears to be unintentional because the types '"cancelled" | "completed"' and '"pending"' have no overlap.
 app/trainer/edit-profile.tsx(130,31): error TS2339: Property 'introVideoUrl' does not exist on type 'TrainerProfile'.
-app/trainer/edit-profile.tsx(363,28): error TS2304: Cannot find name 'Slider'.
-app/trainer/edit-profile.tsx(369,45): error TS7006: Parameter 'value' implicitly has an 'any' type.
 app/trainer/home.tsx(162,5): error TS2322: Type 'number' is not assignable to type 'Timeout'.
 app/trainer/home.tsx(344,5): error TS2304: Cannot find name 'setGoLiveLoading'.
 app/trainer/home.tsx(349,9): error TS2304: Cannot find name 'toast'.
@@ -209,6 +237,16 @@ app/trainer/home.tsx(753,56): error TS2339: Property 'traineePhoto' does not exi
 app/trainer/home.tsx(765,73): error TS2339: Property 'traineeName' does not exist on type 'Session'.
 app/trainer/onboarding.tsx(279,19): error TS2322: Type '"hourglass" | "checkmark-shield"' is not assignable to type '"time-outline" | "checkmark-circle-outline" | "fitness-outline" | "trophy-outline" | "close-circle-outline" | "radio-button-on" | "radio-button-off" | "fitness" | "location" | ... 1348 more ... | undefined'.
   Type '"checkmark-shield"' is not assignable to type '"time-outline" | "checkmark-circle-outline" | "fitness-outline" | "trophy-outline" | "close-circle-outline" | "radio-button-on" | "radio-button-off" | "fitness" | "location" | ... 1348 more ... | undefined'.
+app/trainer/set-rates.tsx(67,38): error TS2339: Property 'outdoor30Cents' does not exist on type 'TrainerProfile'.
+app/trainer/set-rates.tsx(68,38): error TS2339: Property 'outdoor60Cents' does not exist on type 'TrainerProfile'.
+app/trainer/set-rates.tsx(69,38): error TS2339: Property 'outdoor90Cents' does not exist on type 'TrainerProfile'.
+app/trainer/set-rates.tsx(70,38): error TS2339: Property 'virtual30Cents' does not exist on type 'TrainerProfile'.
+app/trainer/set-rates.tsx(71,38): error TS2339: Property 'virtual60Cents' does not exist on type 'TrainerProfile'.
+app/trainer/set-rates.tsx(72,38): error TS2339: Property 'virtual90Cents' does not exist on type 'TrainerProfile'.
+app/trainer/set-rates.tsx(73,37): error TS2339: Property 'inHome30Cents' does not exist on type 'TrainerProfile'.
+app/trainer/set-rates.tsx(74,37): error TS2339: Property 'inHome60Cents' does not exist on type 'TrainerProfile'.
+app/trainer/set-rates.tsx(75,37): error TS2339: Property 'inHome90Cents' does not exist on type 'TrainerProfile'.
+app/trainer/set-rates.tsx(96,9): error TS2353: Object literal may only specify known properties, and 'outdoor30Cents' does not exist in type '{ offersInPerson?: boolean | undefined; offersVirtual?: boolean | undefined; offersInHome?: boolean | undefined; outdoorRateCents?: number | undefined; virtualRateCents?: number | undefined; inHomeRateCents?: number | undefined; }'.
 app/trainer/trainee-profile.tsx(218,9): error TS2769: No overload matches this call.
   Overload 1 of 2, '(props: LinearGradientProps): LinearGradient', gave the following error.
     Type 'string[]' is not assignable to type 'readonly [ColorValue, ColorValue, ...ColorValue[]]'.
@@ -217,7 +255,6 @@ app/trainer/trainee-profile.tsx(218,9): error TS2769: No overload matches this c
     Type 'string[]' is not assignable to type 'readonly [ColorValue, ColorValue, ...ColorValue[]]'.
       Source provides no match for required element at position 0 in target.
 app/trainer/trainee-profile.tsx(582,29): error TS2339: Property 'surface' does not exist on type '{ primary: string; primaryLight: string; primaryDark: string; orange: string; orangeLight: string; orangeHot: string; orangeGlow: string; secondary: string; secondaryDark: string; teal: string; ... 33 more ...; cardBorder: string; }'.
-app/trainer/verification.tsx(360,17): error TS2339: Property 'info' does not exist on type '{ success: (message: string) => void; warning: (message: string) => void; error: (message: string) => void; }'.
 src/components/AthleticButton.tsx(37,43): error TS2345: Argument of type '{ paddingVertical: number; paddingHorizontal: number; }' is not assignable to parameter of type '{ borderRadius: number; borderWidth: number; justifyContent: "center"; alignItems: "center"; shadowColor: string; shadowOffset: { width: number; height: number; }; shadowOpacity: number; shadowRadius: number; elevation: number; }'.
   Type '{ paddingVertical: number; paddingHorizontal: number; }' is missing the following properties from type '{ borderRadius: number; borderWidth: number; justifyContent: "center"; alignItems: "center"; shadowColor: string; shadowOffset: { width: number; height: number; }; shadowOpacity: number; shadowRadius: number; elevation: number; }': borderRadius, borderWidth, justifyContent, alignItems, and 5 more.
 src/components/AthleticButton.tsx(38,44): error TS2345: Argument of type '{ paddingVertical: number; paddingHorizontal: number; }' is not assignable to parameter of type '{ borderRadius: number; borderWidth: number; justifyContent: "center"; alignItems: "center"; shadowColor: string; shadowOffset: { width: number; height: number; }; shadowOpacity: number; shadowRadius: number; elevation: number; }'.
@@ -267,80 +304,86 @@ src/components/TrainingModeDialog.tsx(39,13): error TS2769: No overload matches 
   Overload 2 of 2, '(props: LinearGradientProps, context: any): LinearGradient', gave the following error.
     Type 'string[]' is not assignable to type 'readonly [ColorValue, ColorValue, ...ColorValue[]]'.
       Source provides no match for required element at position 0 in target.
-src/components/admin/VerificationsTab.tsx(35,5): error TS2322: Type 'number' is not assignable to type 'Timeout'.
-src/components/admin/VerificationsTab.tsx(39,13): error TS2339: Property 'info' does not exist on type '{ success: (message: string) => void; warning: (message: string) => void; error: (message: string) => void; }'.
-src/components/admin/VerificationsTab.tsx(496,27): error TS2339: Property 'info' does not exist on type '{ success: (message: string) => void; warning: (message: string) => void; error: (message: string) => void; }'.
+src/components/admin/VerificationsTab.tsx(48,5): error TS2322: Type 'number' is not assignable to type 'Timeout'.
 src/contexts/NotificationContext.tsx(10,35): error TS2322: Type 'Promise<{ shouldShowAlert: true; shouldPlaySound: true; shouldSetBadge: true; }>' is not assignable to type 'Promise<NotificationBehavior>'.
   Type '{ shouldShowAlert: true; shouldPlaySound: true; shouldSetBadge: true; }' is missing the following properties from type 'NotificationBehavior': shouldShowBanner, shouldShowList
 src/contexts/NotificationContext.tsx(46,32): error TS2554: Expected 1 arguments, but got 0.
 src/contexts/NotificationContext.tsx(47,28): error TS2554: Expected 1 arguments, but got 0. and address the 100+ warnings.
     -   **Why to solve this issue and what will be achieved with this?** Improves code quality and long-term maintainability.
     -   **Should Test frontend/backend/both after fix:** Frontend.
-    -   **Is recurring issue?** N
+    -   **Is recurring issue?** Y
 
 **Known issue recurrence from previous fork**
 -   **Issue recurrence in previous fork:** App Instability & Crashing.
 -   **Recurrence count:** High.
--   **Status:** IN PROGRESS (A fix has been implemented but awaits user verification).
+-   **Status:** IN PROGRESS. Fixes have been implemented for three distinct crashes, but are pending user verification on a **new build**.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Expo EAS Build:** The build process is now understood to be separate from the local environment, requiring configuration to be handled carefully. The build is now stable.
--   **React  Cleanup:** The core of the current bug revolves around ensuring that functions returned from  (cleanup functions) are valid and handle potentially null/undefined objects gracefully, especially when dealing with external subscriptions like Expo Notifications.
--   **Sentry Integration:** The configuration has been adjusted to disable the problematic build-time source map upload while keeping the essential runtime crash reporting active.
+-   **Expo EAS Builds:** The user has been testing old builds. It is critical to guide them to create and install a new build to see any of the implemented fixes.
+-   **React Native  API:** A crash was caused by a conflict between JS-driven and native-driven animations on the same component. The fix involved stopping one animation before starting another.
+-   ** Cleanup:** Crashes were caused by improper cleanup of subscriptions and timers, especially when components unmount or the app is backgrounded.
+-   **Stripe Connect:** The bank connection error () points to an attempt to create a duplicate Express account for a user who likely already has one. The logic needs to handle this gracefully.
+
+**key DB schema**
+-   **users (profile sub-document):** A new field  is being added to replace the simple .
+-   **sessions:** New fields are being added to support the outdoor location flow: , ,  (e.g., 'pending_trainer', 'confirmed').
 
 **changes in tech stack**
--   None.
+-   The  package was removed from use, but the agent did not remove it from . This should be cleaned up.
 
 **All files of reference**
--    (Main file for the crash fix)
--    (Modified for the crash fix)
--    (Modified for the crash fix)
--    (Modified for the crash fix)
--    (Modified to fix the build)
--    (Modified to fix the build)
--    (Modified to fix the build)
+-    (In-progress feature)
+-    (In-progress feature)
+-    (In-progress feature)
+-    (New UI design)
+-    (Crash fix)
+-    (Crash fix)
+-    (Crash fix and feature add)
+-    (UI fix)
+-    (In-progress feature)
+-    (In-progress feature)
 
 **Areas that need refactoring**:
--   The 100+ TypeScript strict-mode warnings remain as technical debt.
-
-**key api endpoints**
--   N/A
+-   The  component is undergoing a major refactor and is in an incomplete state.
+-   The  package should be uninstalled with yarn remove v1.22.22
+info Visit https://yarnpkg.com/en/docs/cli/remove for documentation about this command. to clean up dependencies.
 
 **Critical Info for New Agent**
--   **The build is fixed. The deployment blocker is resolved.** Do not attempt to fix the Sentry build configuration further unless a new build error appears.
--   **Your immediate and only priority is to verify the crash fix.** The agent has just implemented a comprehensive fix for the  crash.
--   **Action Plan:**
-    1.  Start by clearly informing the user that the build is fixed and a potential fix for the crash has been implemented.
-    2.  Instruct the user to trigger a new deployment.
-    3.  Once the app is installed, guide them to test the exact scenarios that previously led to crashes (logging out, restarting the app).
-    4.  Confirm with the user whether the crash still occurs. Only after the user confirms the app is stable should you move on to other tasks like verifying the new app icon.
+-   **THE USER IS TESTING OLD BUILDS.** Your absolute first priority is to guide the user to create a **NEW** EAS build and install it. The multiple crash reports they've sent for  and animation issues are for problems that are already fixed in the codebase but not in their deployed app. Do not debug these old crashes.
+-   **A large list of tasks was started simultaneously.** The codebase is in a delicate state with several major features (, ) half-implemented. You must systematically complete these tasks.
+-   Do not start new tasks from the user's list until the current in-progress ones are completed and verified.
+-   Create a clear plan to tackle the remaining issues and get user approval before proceeding. Prioritize stability (verifying crash fixes) and completing in-progress work before starting new features.
 
 **documents and test reports created in this job**
--   
+-    (updated by the previous agent)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Provided a Sentry crash report for the  crash. (Status: In Progress, agent has implemented a fix).
-2.  **User:**  - Encouraged the agent to continue debugging the crash. (Status: Completed).
-3.  **User:** Provided build logs showing the build succeeded after the agent's second fix. (Status: RESOLVED, agent confirmed success and proceeded to the next step).
-4.  **User:**  - Provided new build logs after the agent's first attempted fix. (Status: RESOLVED, agent analyzed these logs and found the root cause).
-5.  **User:**  - Approved the agent's initial plan to fix the build. (Status: Completed).
+1.  **User:** Provided a new crash report for the  issue. (Status: Addressed, but user was on an old build).
+2.  **User:** Provided a very long list of 15+ bug fixes and feature requests. (Status: In Progress).
+3.  **User:** Replied no preference and no, I’d rather fix everything first to agent's priority questions, and attached a screenshot for the desired UI. (Status: Acknowledged).
+4.  **User:** Continue - User urged the agent to continue working on the flexible pricing feature. (Status: Acknowledged).
+5.  **User:** Fix the design work before I deploy - User requested the UI changes from their screenshot be implemented. (Status: In Progress).
+6.  **User:** On - Clarified that the design request was for the trainee home screen. (Status: Acknowledged).
+7.  **User:** Fix the still pending - User urged the agent to continue working on the remaining tasks. (Status: Acknowledged).
+8.  **PENDING HUMAN MESSAGES**: The user's last message Fix the still pending implies they want the agent to continue working through the large list of items.
 
 **Project Health Check:**
--   **Mocked:** The project is now deployable, but its stability is unconfirmed pending user testing of the new crash fix.
+-   **Broken:** The application is in a heavily modified and unstable state. Multiple core features are half-implemented, and none of the recent crash fixes or feature work has been verified by the user in a new build.
 
 **3rd Party Integrations**
--   **Sentry:** Integrated for runtime crash reporting. Build-time source map upload is now **disabled** to ensure successful builds. Version: .
+-   **Sentry:** For crash reporting.
 -   **Expo / Expo Router:** Core framework.
--   **react-native-maps:** Used for map features.
+-   **react-native-maps:** Used for the trainer map display.
+-   **Stripe:** Used for payments and trainer bank account connections (Stripe Connect).
 
 **Testing status**
 -   Testing agent used after significant changes: NO
 -   Troubleshoot agent used after agent stuck in loop: NO
 -   Test files created: None.
--   Known regressions: None. The previous build regression has been fixed.
+-   Known regressions: None identified, but the app is unstable due to the sheer volume of in-progress changes.
 
 **Credentials to test flow:**
 | Role | Email | Password |
@@ -350,4 +393,9 @@ src/contexts/NotificationContext.tsx(47,28): error TS2554: Expected 1 arguments,
 | Trainer |  |  |
 
 **What agent forgot to execute**
--   The agent has been systematic and has not forgotten any steps. The next logical step, user verification of the implemented crash fix, is correctly identified and pending.</analysis>
+-   The agent did not uninstall the  package after removing its usage from the code. This should be done via yarn remove v1.22.22
+[1/2] Removing module @react-native-community/slider...
+[2/2] Regenerating lockfile and installing missing dependencies...
+success Uninstalled packages.
+Done in 4.34s..
+-   The agent started work on a very large number of tasks in parallel without a clear, user-approved, prioritized plan. This has left the codebase in a complex state that will be difficult to debug and test. The next agent should focus on completing one task at a time.</analysis>

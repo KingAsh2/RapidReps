@@ -36,9 +36,16 @@ export default function SetRatesScreen() {
   const [offersInPerson, setOffersInPerson] = useState(true);
   const [offersVirtual, setOffersVirtual] = useState(false);
   const [offersInHome, setOffersInHome] = useState(false);
-  const [outdoorRate, setOutdoorRate] = useState('40');
-  const [virtualRate, setVirtualRate] = useState('30');
-  const [inHomeRate, setInHomeRate] = useState('60');
+  // Per-duration pricing
+  const [outdoor30, setOutdoor30] = useState('25');
+  const [outdoor60, setOutdoor60] = useState('45');
+  const [outdoor90, setOutdoor90] = useState('60');
+  const [virtual30, setVirtual30] = useState('20');
+  const [virtual60, setVirtual60] = useState('35');
+  const [virtual90, setVirtual90] = useState('50');
+  const [inHome30, setInHome30] = useState('35');
+  const [inHome60, setInHome60] = useState('60');
+  const [inHome90, setInHome90] = useState('85');
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -53,9 +60,19 @@ export default function SetRatesScreen() {
         setOffersInPerson(profile.offersInPerson ?? true);
         setOffersVirtual(profile.offersVirtual ?? false);
         setOffersInHome(profile.offersInHome ?? false);
-        setOutdoorRate(String((profile.outdoorRateCents || 4000) / 100));
-        setVirtualRate(String((profile.virtualRateCents || 3000) / 100));
-        setInHomeRate(String((profile.inHomeRateCents || 6000) / 100));
+        // Load per-duration rates if available, otherwise calculate from hourly
+        const hourlyOutdoor = (profile.outdoorRateCents || 4000) / 100;
+        const hourlyVirtual = (profile.virtualRateCents || 3000) / 100;
+        const hourlyInHome = (profile.inHomeRateCents || 6000) / 100;
+        setOutdoor30(String((profile.outdoor30Cents || hourlyOutdoor * 50) / 100));
+        setOutdoor60(String((profile.outdoor60Cents || hourlyOutdoor * 100) / 100));
+        setOutdoor90(String((profile.outdoor90Cents || hourlyOutdoor * 140) / 100));
+        setVirtual30(String((profile.virtual30Cents || hourlyVirtual * 50) / 100));
+        setVirtual60(String((profile.virtual60Cents || hourlyVirtual * 100) / 100));
+        setVirtual90(String((profile.virtual90Cents || hourlyVirtual * 140) / 100));
+        setInHome30(String((profile.inHome30Cents || hourlyInHome * 50) / 100));
+        setInHome60(String((profile.inHome60Cents || hourlyInHome * 100) / 100));
+        setInHome90(String((profile.inHome90Cents || hourlyInHome * 140) / 100));
       }
     } catch (e) {
       // Use defaults
@@ -71,9 +88,20 @@ export default function SetRatesScreen() {
         offersInPerson,
         offersVirtual,
         offersInHome,
-        outdoorRateCents: Math.round(parseFloat(outdoorRate) * 100),
-        virtualRateCents: Math.round(parseFloat(virtualRate) * 100),
-        inHomeRateCents: Math.round(parseFloat(inHomeRate) * 100),
+        // Legacy hourly rates (use 60min rate for backward compatibility)
+        outdoorRateCents: Math.round(parseFloat(outdoor60) * 100),
+        virtualRateCents: Math.round(parseFloat(virtual60) * 100),
+        inHomeRateCents: Math.round(parseFloat(inHome60) * 100),
+        // Per-duration rates
+        outdoor30Cents: Math.round(parseFloat(outdoor30) * 100),
+        outdoor60Cents: Math.round(parseFloat(outdoor60) * 100),
+        outdoor90Cents: Math.round(parseFloat(outdoor90) * 100),
+        virtual30Cents: Math.round(parseFloat(virtual30) * 100),
+        virtual60Cents: Math.round(parseFloat(virtual60) * 100),
+        virtual90Cents: Math.round(parseFloat(virtual90) * 100),
+        inHome30Cents: Math.round(parseFloat(inHome30) * 100),
+        inHome60Cents: Math.round(parseFloat(inHome60) * 100),
+        inHome90Cents: Math.round(parseFloat(inHome90) * 100),
       });
       showAlert({ title: 'Success', message: 'Your rates have been updated!', type: 'success' });
       router.back();
@@ -85,8 +113,8 @@ export default function SetRatesScreen() {
   };
 
   const calcEarnings = (rate: string) => {
-    const hourly = parseFloat(rate) || 0;
-    return (hourly * 0.80).toFixed(2);
+    const amount = parseFloat(rate) || 0;
+    return (amount * 0.80).toFixed(0);
   };
 
   if (loading) {
@@ -128,36 +156,32 @@ export default function SetRatesScreen() {
                 />
               </View>
               {offersInPerson && (
-                <>
-                  <View style={styles.rateInputRow}>
-                    <Text style={styles.dollarSign}>$</Text>
-                    <TextInput
-                      style={styles.rateInput}
-                      value={outdoorRate}
-                      onChangeText={setOutdoorRate}
-                      keyboardType="numeric"
-                      data-testid="outdoor-rate-input"
-                    />
-                    <Text style={styles.perHour}>/hr</Text>
-                    <View style={styles.earningsTag}>
-                      <Text style={styles.earningsText}>You earn ${calcEarnings(outdoorRate)}/hr</Text>
+                <View style={styles.durationBreakdown}>
+                  <View style={styles.durationItemEditable}>
+                    <Text style={styles.durationLabel}>30 min</Text>
+                    <View style={styles.durationInputRow}>
+                      <Text style={styles.durationDollar}>$</Text>
+                      <TextInput style={styles.durationInput} value={outdoor30} onChangeText={setOutdoor30} keyboardType="numeric" />
                     </View>
+                    <Text style={styles.earningsSmall}>earn ${calcEarnings(outdoor30)}</Text>
                   </View>
-                  <View style={styles.durationBreakdown}>
-                    <View style={styles.durationItem}>
-                      <Text style={styles.durationLabel}>30 min</Text>
-                      <Text style={styles.durationPrice}>${((parseFloat(outdoorRate) || 0) / 2).toFixed(0)}</Text>
+                  <View style={styles.durationItemEditable}>
+                    <Text style={styles.durationLabel}>60 min</Text>
+                    <View style={styles.durationInputRow}>
+                      <Text style={styles.durationDollar}>$</Text>
+                      <TextInput style={styles.durationInput} value={outdoor60} onChangeText={setOutdoor60} keyboardType="numeric" />
                     </View>
-                    <View style={styles.durationItem}>
-                      <Text style={styles.durationLabel}>60 min</Text>
-                      <Text style={styles.durationPrice}>${(parseFloat(outdoorRate) || 0).toFixed(0)}</Text>
-                    </View>
-                    <View style={styles.durationItem}>
-                      <Text style={styles.durationLabel}>90 min</Text>
-                      <Text style={styles.durationPrice}>${((parseFloat(outdoorRate) || 0) * 1.5).toFixed(0)}</Text>
-                    </View>
+                    <Text style={styles.earningsSmall}>earn ${calcEarnings(outdoor60)}</Text>
                   </View>
-                </>
+                  <View style={styles.durationItemEditable}>
+                    <Text style={styles.durationLabel}>90 min</Text>
+                    <View style={styles.durationInputRow}>
+                      <Text style={styles.durationDollar}>$</Text>
+                      <TextInput style={styles.durationInput} value={outdoor90} onChangeText={setOutdoor90} keyboardType="numeric" />
+                    </View>
+                    <Text style={styles.earningsSmall}>earn ${calcEarnings(outdoor90)}</Text>
+                  </View>
+                </View>
               )}
             </View>
 
@@ -176,36 +200,32 @@ export default function SetRatesScreen() {
                 />
               </View>
               {offersVirtual && (
-                <>
-                  <View style={styles.rateInputRow}>
-                    <Text style={styles.dollarSign}>$</Text>
-                    <TextInput
-                      style={styles.rateInput}
-                      value={virtualRate}
-                      onChangeText={setVirtualRate}
-                      keyboardType="numeric"
-                      data-testid="virtual-rate-input"
-                    />
-                    <Text style={styles.perHour}>/hr</Text>
-                    <View style={styles.earningsTag}>
-                      <Text style={styles.earningsText}>You earn ${calcEarnings(virtualRate)}/hr</Text>
+                <View style={styles.durationBreakdown}>
+                  <View style={styles.durationItemEditable}>
+                    <Text style={styles.durationLabel}>30 min</Text>
+                    <View style={styles.durationInputRow}>
+                      <Text style={styles.durationDollar}>$</Text>
+                      <TextInput style={styles.durationInput} value={virtual30} onChangeText={setVirtual30} keyboardType="numeric" />
                     </View>
+                    <Text style={styles.earningsSmall}>earn ${calcEarnings(virtual30)}</Text>
                   </View>
-                  <View style={styles.durationBreakdown}>
-                    <View style={styles.durationItem}>
-                      <Text style={styles.durationLabel}>30 min</Text>
-                      <Text style={styles.durationPrice}>${((parseFloat(virtualRate) || 0) / 2).toFixed(0)}</Text>
+                  <View style={styles.durationItemEditable}>
+                    <Text style={styles.durationLabel}>60 min</Text>
+                    <View style={styles.durationInputRow}>
+                      <Text style={styles.durationDollar}>$</Text>
+                      <TextInput style={styles.durationInput} value={virtual60} onChangeText={setVirtual60} keyboardType="numeric" />
                     </View>
-                    <View style={styles.durationItem}>
-                      <Text style={styles.durationLabel}>60 min</Text>
-                      <Text style={styles.durationPrice}>${(parseFloat(virtualRate) || 0).toFixed(0)}</Text>
-                    </View>
-                    <View style={styles.durationItem}>
-                      <Text style={styles.durationLabel}>90 min</Text>
-                      <Text style={styles.durationPrice}>${((parseFloat(virtualRate) || 0) * 1.5).toFixed(0)}</Text>
-                    </View>
+                    <Text style={styles.earningsSmall}>earn ${calcEarnings(virtual60)}</Text>
                   </View>
-                </>
+                  <View style={styles.durationItemEditable}>
+                    <Text style={styles.durationLabel}>90 min</Text>
+                    <View style={styles.durationInputRow}>
+                      <Text style={styles.durationDollar}>$</Text>
+                      <TextInput style={styles.durationInput} value={virtual90} onChangeText={setVirtual90} keyboardType="numeric" />
+                    </View>
+                    <Text style={styles.earningsSmall}>earn ${calcEarnings(virtual90)}</Text>
+                  </View>
+                </View>
               )}
             </View>
 
@@ -224,36 +244,32 @@ export default function SetRatesScreen() {
                 />
               </View>
               {offersInHome && (
-                <>
-                  <View style={styles.rateInputRow}>
-                    <Text style={styles.dollarSign}>$</Text>
-                    <TextInput
-                      style={styles.rateInput}
-                      value={inHomeRate}
-                      onChangeText={setInHomeRate}
-                      keyboardType="numeric"
-                      data-testid="inhome-rate-input"
-                    />
-                    <Text style={styles.perHour}>/hr</Text>
-                    <View style={styles.earningsTag}>
-                      <Text style={styles.earningsText}>You earn ${calcEarnings(inHomeRate)}/hr</Text>
+                <View style={styles.durationBreakdown}>
+                  <View style={styles.durationItemEditable}>
+                    <Text style={styles.durationLabel}>30 min</Text>
+                    <View style={styles.durationInputRow}>
+                      <Text style={styles.durationDollar}>$</Text>
+                      <TextInput style={styles.durationInput} value={inHome30} onChangeText={setInHome30} keyboardType="numeric" />
                     </View>
+                    <Text style={styles.earningsSmall}>earn ${calcEarnings(inHome30)}</Text>
                   </View>
-                  <View style={styles.durationBreakdown}>
-                    <View style={styles.durationItem}>
-                      <Text style={styles.durationLabel}>30 min</Text>
-                      <Text style={styles.durationPrice}>${((parseFloat(inHomeRate) || 0) / 2).toFixed(0)}</Text>
+                  <View style={styles.durationItemEditable}>
+                    <Text style={styles.durationLabel}>60 min</Text>
+                    <View style={styles.durationInputRow}>
+                      <Text style={styles.durationDollar}>$</Text>
+                      <TextInput style={styles.durationInput} value={inHome60} onChangeText={setInHome60} keyboardType="numeric" />
                     </View>
-                    <View style={styles.durationItem}>
-                      <Text style={styles.durationLabel}>60 min</Text>
-                      <Text style={styles.durationPrice}>${(parseFloat(inHomeRate) || 0).toFixed(0)}</Text>
-                    </View>
-                    <View style={styles.durationItem}>
-                      <Text style={styles.durationLabel}>90 min</Text>
-                      <Text style={styles.durationPrice}>${((parseFloat(inHomeRate) || 0) * 1.5).toFixed(0)}</Text>
-                    </View>
+                    <Text style={styles.earningsSmall}>earn ${calcEarnings(inHome60)}</Text>
                   </View>
-                </>
+                  <View style={styles.durationItemEditable}>
+                    <Text style={styles.durationLabel}>90 min</Text>
+                    <View style={styles.durationInputRow}>
+                      <Text style={styles.durationDollar}>$</Text>
+                      <TextInput style={styles.durationInput} value={inHome90} onChangeText={setInHome90} keyboardType="numeric" />
+                    </View>
+                    <Text style={styles.earningsSmall}>earn ${calcEarnings(inHome90)}</Text>
+                  </View>
+                </View>
               )}
             </View>
 
@@ -343,6 +359,37 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '800',
     color: COLORS.white,
+  },
+  durationItemEditable: {
+    alignItems: 'center',
+    flex: 1,
+    paddingHorizontal: 4,
+  },
+  durationInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  durationDollar: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.orange,
+  },
+  durationInput: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: COLORS.white,
+    textAlign: 'center',
+    minWidth: 50,
+    borderBottomWidth: 2,
+    borderBottomColor: 'rgba(255,255,255,0.3)',
+    paddingVertical: 2,
+  },
+  earningsSmall: {
+    fontSize: 10,
+    color: COLORS.success,
+    fontWeight: '600',
+    marginTop: 4,
   },
   infoCard: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 10,
