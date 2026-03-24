@@ -8,13 +8,17 @@ import {
   ActivityIndicator,
   Linking,
   Image,
+  TextInput,
+  Modal,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { traineeAPI } from '../../src/services/api';
+import { traineeAPI, sessionsAPI } from '../../src/services/api';
 import { SessionStatus } from '../../src/types';
+import { toast } from '../../src/utils/toast';
+import { haptic } from '../../src/utils/haptics';
 
 const COLORS = {
   teal: '#1a2a5e',
@@ -35,6 +39,9 @@ export default function SessionDetailScreen() {
   const { sessionId } = useLocalSearchParams();
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [counterProposal, setCounterProposal] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     loadSession();
@@ -49,6 +56,57 @@ export default function SessionDetailScreen() {
       console.error('Error loading session:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAgreeLocation = async () => {
+    setSubmitting(true);
+    try {
+      await sessionsAPI.agreeToLocation(session.id, true);
+      haptic.success();
+      toast.success('Location confirmed!');
+      loadSession();
+    } catch (error: any) {
+      toast.error(error?.response?.data?.detail || 'Failed to confirm location');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleProposeCounter = async () => {
+    if (!counterProposal.trim()) {
+      toast.error('Please enter a location');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await sessionsAPI.agreeToLocation(session.id, false, counterProposal.trim());
+      haptic.success();
+      toast.success('Counter-proposal sent!');
+      setShowLocationModal(false);
+      setCounterProposal('');
+      loadSession();
+    } catch (error: any) {
+      toast.error(error?.response?.data?.detail || 'Failed to send proposal');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleConfirmArrival = async () => {
+    setSubmitting(true);
+    try {
+      const result = await sessionsAPI.confirmArrival(session.id, 'trainee');
+      haptic.success();
+      toast.success(result.message);
+      if (result.bothArrived) {
+        toast.info('Both arrived! Session can begin.');
+      }
+      loadSession();
+    } catch (error: any) {
+      toast.error(error?.response?.data?.detail || 'Failed to confirm arrival');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -194,13 +252,99 @@ export default function SessionDetailScreen() {
               <Ionicons name="location" size={20} color={COLORS.orange} />
               <Text style={styles.infoText}>{session.locationType || 'Not specified'}</Text>
             </View>
-            {session.address && (
+            {(session.locationNameOrAddress || session.address) && (
               <View style={styles.infoRow}>
                 <Ionicons name="navigate" size={20} color={COLORS.gray} />
-                <Text style={styles.infoTextSub}>{session.address}</Text>
+                <Text style={styles.infoTextSub}>{session.locationNameOrAddress || session.address}</Text>
+              </View>
+            )}
+            
+            {/* Trainer's Location Proposal */}
+            {session.outdoorLocationTrainerProposal && !session.outdoorLocationAgreed && session.sessionType === 'outdoor' && (
+              <View style={styles.proposalCard}>
+                <View style={styles.proposalHeader}>
+                  <Ionicons name="location" size={18} color={COLORS.orange} />
+                  <Text style={styles.proposalTitle}>Trainer Proposed Location</Text>
+                </View>
+                <Text style={styles.proposalLocation}>{session.outdoorLocationTrainerProposal}</Text>
+                <View style={styles.proposalButtons}>
+                  <TouchableOpacity
+                    style={[styles.proposalBtn, styles.proposalBtnAccept]}
+                    onPress={handleAgreeLocation}
+                    disabled={submitting}
+                    data-testid="accept-location-btn"
+                  >
+                    {submitting ? (
+                      <ActivityIndicator size="small" color={COLORS.white} />
+                    ) : (
+                      <>
+                        <Ionicons name="checkmark" size={18} color={COLORS.white} />
+                        <Text style={styles.proposalBtnText}>Accept</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.proposalBtn, styles.proposalBtnCounter]}
+                    onPress={() => setShowLocationModal(true)}
+                    disabled={submitting}
+                    data-testid="counter-location-btn"
+                  >
+                    <Ionicons name="create" size={18} color={COLORS.teal} />
+                    <Text style={[styles.proposalBtnText, { color: COLORS.teal }]}>Suggest Different</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+            
+            {/* Location Agreed Badge */}
+            {session.outdoorLocationAgreed && (
+              <View style={styles.agreedBadge}>
+                <Ionicons name="checkmark-circle" size={18} color={COLORS.success} />
+                <Text style={styles.agreedText}>Location Confirmed</Text>
               </View>
             )}
           </View>
+
+          {/* Arrival Confirmation */}
+          {(session.status === SessionStatus.CONFIRMED || session.status === 'en_route') && !session.traineeArrivedConfirmed && (
+            <TouchableOpacity
+              style={styles.arrivalCard}
+              onPress={handleConfirmArrival}
+              disabled={submitting}
+              data-testid="confirm-arrival-btn"
+            >
+              <LinearGradient colors={[COLORS.teal, COLORS.tealLight]} style={styles.arrivalGradient}>
+                {submitting ? (
+                  <ActivityIndicator size="small" color={COLORS.white} />
+                ) : (
+                  <>
+                    <Ionicons name="location" size={24} color={COLORS.white} />
+                    <View style={styles.arrivalContent}>
+                      <Text style={styles.arrivalTitle}>Tap When You Arrive</Text>
+                      <Text style={styles.arrivalSubtitle}>Let your trainer know you are here</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={24} color={COLORS.white} />
+                  </>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
+          
+          {/* Arrival Status */}
+          {session.traineeArrivedConfirmed && (
+            <View style={styles.arrivalStatus}>
+              <Ionicons name="checkmark-circle" size={20} color={COLORS.success} />
+              <Text style={styles.arrivalStatusText}>You have confirmed arrival</Text>
+              {session.trainerArrivedConfirmed ? (
+                <View style={styles.bothArrivedBadge}>
+                  <Ionicons name="people" size={16} color={COLORS.white} />
+                  <Text style={styles.bothArrivedText}>Both Ready!</Text>
+                </View>
+              ) : (
+                <Text style={styles.waitingText}>Waiting for trainer...</Text>
+              )}
+            </View>
+          )}
 
           {/* Payment */}
           <View style={styles.card}>
@@ -242,6 +386,42 @@ export default function SessionDetailScreen() {
           <View style={{ height: 40 }} />
         </ScrollView>
       </SafeAreaView>
+
+      {/* Counter-Proposal Modal */}
+      <Modal visible={showLocationModal} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Suggest a Different Location</Text>
+              <TouchableOpacity onPress={() => setShowLocationModal(false)} data-testid="close-location-modal">
+                <Ionicons name="close" size={24} color={COLORS.gray} />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.modalSubtitle}>Enter your preferred meeting spot:</Text>
+            <TextInput
+              style={styles.locationInput}
+              placeholder="e.g., Central Park near 72nd St entrance"
+              placeholderTextColor={COLORS.gray}
+              value={counterProposal}
+              onChangeText={setCounterProposal}
+              multiline
+              data-testid="counter-proposal-input"
+            />
+            <TouchableOpacity
+              style={[styles.modalBtn, !counterProposal.trim() && styles.modalBtnDisabled]}
+              onPress={handleProposeCounter}
+              disabled={submitting || !counterProposal.trim()}
+              data-testid="submit-counter-proposal-btn"
+            >
+              {submitting ? (
+                <ActivityIndicator size="small" color={COLORS.white} />
+              ) : (
+                <Text style={styles.modalBtnText}>Send Proposal</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -385,4 +565,181 @@ const styles = StyleSheet.create({
   },
   safetyPinDigitText: { fontSize: 20, fontWeight: '800', color: COLORS.white },
   safetyPinNote: { fontSize: 12, color: 'rgba(255,255,255,0.8)' },
+  // Location proposal styles
+  proposalCard: {
+    backgroundColor: COLORS.grayLight,
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 16,
+  },
+  proposalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  proposalTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.orange,
+  },
+  proposalLocation: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.navy,
+    marginBottom: 12,
+  },
+  proposalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  proposalBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 10,
+    gap: 6,
+  },
+  proposalBtnAccept: {
+    backgroundColor: COLORS.success,
+  },
+  proposalBtnCounter: {
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.teal,
+  },
+  proposalBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.white,
+  },
+  agreedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: 'rgba(0, 214, 143, 0.1)',
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+  },
+  agreedText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.success,
+  },
+  // Arrival confirmation styles
+  arrivalCard: {
+    marginBottom: 16,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  arrivalGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 20,
+    gap: 16,
+  },
+  arrivalContent: {
+    flex: 1,
+  },
+  arrivalTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.white,
+  },
+  arrivalSubtitle: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 2,
+  },
+  arrivalStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+  },
+  arrivalStatusText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.success,
+  },
+  waitingText: {
+    fontSize: 13,
+    color: COLORS.gray,
+    fontStyle: 'italic',
+  },
+  bothArrivedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: COLORS.success,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  bothArrivedText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.white,
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: COLORS.white,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: COLORS.navy,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: COLORS.gray,
+    marginBottom: 12,
+  },
+  locationInput: {
+    backgroundColor: COLORS.grayLight,
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    color: COLORS.navy,
+    minHeight: 80,
+    textAlignVertical: 'top',
+    marginBottom: 16,
+  },
+  modalBtn: {
+    backgroundColor: COLORS.teal,
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  modalBtnDisabled: {
+    opacity: 0.5,
+  },
+  modalBtnText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.white,
+  },
 });

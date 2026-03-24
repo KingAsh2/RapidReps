@@ -379,6 +379,20 @@ export const trainerAPI = {
     const response = await api.get('/trainer/connect/dashboard');
     return response.data;
   },
+
+  // Propose outdoor location for a session
+  proposeLocation: async (sessionId: string, proposedLocation: string): Promise<any> => {
+    const response = await api.post(`/sessions/${sessionId}/propose-location`, {
+      proposedLocation,
+    });
+    return response.data;
+  },
+
+  // Confirm arrival at session location
+  confirmArrival: async (sessionId: string): Promise<any> => {
+    const response = await api.post(`/sessions/${sessionId}/trainer-arrived`);
+    return response.data;
+  },
 };
 
 // Trainee Profile API
@@ -493,6 +507,54 @@ export const traineeAPI = {
 
   getSavedTrainers: async (): Promise<any> => {
     const response = await api.get('/trainee/saved-trainers');
+    return response.data;
+  },
+
+  // Outdoor location agreement - Trainee responds to trainer's location proposal
+  agreeToLocation: async (sessionId: string, agreed: boolean, counterProposal?: string): Promise<any> => {
+    const response = await api.post(`/sessions/${sessionId}/agree-location`, {
+      agreed,
+      counterProposal,
+    });
+    return response.data;
+  },
+
+  // Confirm arrival at session location
+  confirmArrival: async (sessionId: string): Promise<any> => {
+    const response = await api.post(`/sessions/${sessionId}/trainee-arrived`);
+    return response.data;
+  },
+};
+
+// Sessions API - for shared session operations
+export const sessionsAPI = {
+  // Get session by ID
+  getSession: async (sessionId: string): Promise<any> => {
+    const response = await api.get(`/sessions/${sessionId}`);
+    return response.data;
+  },
+
+  // Propose outdoor location (trainer)
+  proposeLocation: async (sessionId: string, proposedLocation: string): Promise<any> => {
+    const response = await api.post(`/sessions/${sessionId}/propose-location`, {
+      proposedLocation,
+    });
+    return response.data;
+  },
+
+  // Agree to location (trainee)
+  agreeToLocation: async (sessionId: string, agreed: boolean, counterProposal?: string): Promise<any> => {
+    const response = await api.post(`/sessions/${sessionId}/agree-location`, {
+      agreed,
+      counterProposal,
+    });
+    return response.data;
+  },
+
+  // Confirm arrival
+  confirmArrival: async (sessionId: string, role: 'trainer' | 'trainee'): Promise<any> => {
+    const endpoint = role === 'trainer' ? 'trainer-arrived' : 'trainee-arrived';
+    const response = await api.post(`/sessions/${sessionId}/${endpoint}`);
     return response.data;
   },
 };

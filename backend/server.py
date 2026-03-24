@@ -2962,6 +2962,105 @@ async def confirm_trainer_gps(
     }
 
 
+@api_router.post("/sessions/{session_id}/trainer-arrived")
+async def trainer_confirm_arrival(
+    session_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Trainer confirms they have arrived at session location."""
+    try:
+        oid = ObjectId(session_id)
+    except Exception:
+        raise HTTPException(400, "Invalid session ID")
+    
+    session = await db.sessions.find_one({'_id': oid})
+    if not session:
+        raise HTTPException(404, "Session not found")
+    
+    user_id = str(current_user['_id'])
+    if session.get('trainerId') != user_id:
+        raise HTTPException(403, "Only the trainer can confirm arrival")
+    
+    if session.get('status') not in [SessionStatus.CONFIRMED, SessionStatus.EN_ROUTE]:
+        raise HTTPException(400, "Session must be confirmed or en-route to confirm arrival")
+    
+    await db.sessions.update_one(
+        {'_id': oid},
+        {'$set': {
+            'trainerArrivedConfirmed': True,
+            'trainerArrivedAt': datetime.utcnow(),
+            'status': SessionStatus.EN_ROUTE,
+            'updatedAt': datetime.utcnow(),
+        }}
+    )
+    
+    # Notify trainee
+    trainee_id = session.get('traineeId')
+    if trainee_id:
+        asyncio.create_task(create_and_send_notification(
+            trainee_id,
+            "Trainer Has Arrived",
+            "Your trainer has arrived and is waiting for you!",
+            "trainer_arrived",
+            {"sessionId": session_id}
+        ))
+    
+    return {"success": True, "message": "Arrival confirmed! Trainee has been notified."}
+
+
+@api_router.post("/sessions/{session_id}/trainee-arrived")
+async def trainee_confirm_arrival(
+    session_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Trainee confirms they have arrived at session location."""
+    try:
+        oid = ObjectId(session_id)
+    except Exception:
+        raise HTTPException(400, "Invalid session ID")
+    
+    session = await db.sessions.find_one({'_id': oid})
+    if not session:
+        raise HTTPException(404, "Session not found")
+    
+    user_id = str(current_user['_id'])
+    if session.get('traineeId') != user_id:
+        raise HTTPException(403, "Only the trainee can confirm their arrival")
+    
+    if session.get('status') not in [SessionStatus.CONFIRMED, SessionStatus.EN_ROUTE]:
+        raise HTTPException(400, "Session must be confirmed or en-route to confirm arrival")
+    
+    await db.sessions.update_one(
+        {'_id': oid},
+        {'$set': {
+            'traineeArrivedConfirmed': True,
+            'traineeArrivedAt': datetime.utcnow(),
+            'updatedAt': datetime.utcnow(),
+        }}
+    )
+    
+    # Notify trainer
+    trainer_id = session.get('trainerId')
+    if trainer_id:
+        asyncio.create_task(create_and_send_notification(
+            trainer_id,
+            "Trainee Has Arrived",
+            "Your trainee has arrived and is ready!",
+            "trainee_arrived",
+            {"sessionId": session_id}
+        ))
+    
+    # Check if both have arrived - can start session
+    updated_session = await db.sessions.find_one({'_id': oid})
+    both_arrived = updated_session.get('trainerArrivedConfirmed') and updated_session.get('traineeArrivedConfirmed')
+    
+    return {
+        "success": True,
+        "message": "Arrival confirmed! Trainer has been notified.",
+        "bothArrived": both_arrived,
+    }
+
+
 # ─────────────────────────────────────────────────────────────
 # POST-SESSION SUMMARY — Auto-generated after session completion
 # ─────────────────────────────────────────────────────────────

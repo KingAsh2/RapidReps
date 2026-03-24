@@ -529,24 +529,36 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
               </TouchableOpacity>
             </View>
             {videoUrl && (
-              <Video
-                ref={videoRef}
-                source={{ uri: videoUrl }}
-                style={{ width: '100%', height: 300, borderRadius: 12 }}
-                useNativeControls
-                resizeMode={ResizeMode.CONTAIN}
-                shouldPlay
-                isLooping={false}
-                onPlaybackStatusUpdate={(status) => {
-                  if (status.isLoaded && status.positionMillis >= 15000) {
-                    videoRef.current?.stopAsync();
-                    toast.info('Video preview limited to 15 seconds');
-                  }
-                }}
-              />
+              <View style={{ width: '100%', height: 300, borderRadius: 12, overflow: 'hidden', backgroundColor: '#1a1a1a' }}>
+                <Video
+                  ref={videoRef}
+                  source={{ uri: videoUrl }}
+                  style={{ width: '100%', height: '100%' }}
+                  useNativeControls
+                  resizeMode={ResizeMode.CONTAIN}
+                  shouldPlay
+                  isLooping={false}
+                  onError={(error) => {
+                    console.error('Video playback error:', error);
+                    toast.error('Video playback failed. The file may be corrupted or use an unsupported format.');
+                  }}
+                  onLoad={() => {
+                    console.log('Video loaded successfully');
+                  }}
+                  onPlaybackStatusUpdate={(status) => {
+                    if (status.isLoaded && status.positionMillis >= 15000) {
+                      videoRef.current?.stopAsync();
+                      toast.info('Video preview limited to 15 seconds');
+                    }
+                  }}
+                />
+              </View>
             )}
             <Text style={{ color: '#999', fontSize: 12, textAlign: 'center', padding: 8 }}>
               Preview auto-stops after 15 seconds
+            </Text>
+            <Text style={{ color: '#666', fontSize: 10, textAlign: 'center', paddingBottom: 8 }}>
+              If video doesn't display, the file may need re-encoding (MP4/H.264 recommended)
             </Text>
           </View>
         </View>
