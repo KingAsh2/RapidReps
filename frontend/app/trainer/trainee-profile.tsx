@@ -229,6 +229,9 @@ export default function TraineeProfileScreen() {
   };
 
   const handleNavigate = () => {
+    // Use trainee's home address if available, otherwise use session location
+    const address = session?.traineeHomeAddress || session?.locationNameOrAddress || '';
+    
     // Open en-route screen with GPS tracking instead of raw maps link
     router.push({
       pathname: '/trainer/en-route',
@@ -236,7 +239,7 @@ export default function TraineeProfileScreen() {
         sessionId,
         traineeName,
         traineeId,
-        traineeAddress: session?.locationNameOrAddress || '',
+        traineeAddress: address,
         traineeLat: session?.traineeLatitude?.toString() || '',
         traineeLng: session?.traineeLongitude?.toString() || '',
         sessionType: session?.sessionType || 'outdoor',

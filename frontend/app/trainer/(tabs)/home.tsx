@@ -84,15 +84,27 @@ export default function TrainerHomeScreen() {
 
   // Poll for new session requests periodically
   useEffect(() => {
-    // Poll every 30 seconds for new requests when trainer is available
+    // Poll every 15 seconds for new requests when trainer is available
     const pollInterval = setInterval(() => {
       if (isAvailable) {
-        trainerAPI.getSessions().then(setSessions).catch(() => {});
+        trainerAPI.getSessions().then((newSessions) => {
+          // Check for new requests
+          const currentRequests = sessions.filter(s => s.status === 'requested');
+          const newRequests = newSessions.filter((s: any) => s.status === 'requested');
+          
+          // If there are more requests than before, show a notification
+          if (newRequests.length > currentRequests.length) {
+            toast.info(`New session request received!`);
+            haptic.notification('success');
+          }
+          
+          setSessions(newSessions);
+        }).catch(() => {});
       }
-    }, 30000);
+    }, 15000);
 
     return () => clearInterval(pollInterval);
-  }, [isAvailable]);
+  }, [isAvailable, sessions]);
 
   useEffect(() => {
     loadData();

@@ -70,7 +70,14 @@ export default function ConnectBankScreen() {
         setTimeout(checkStatus, 3000);
       }
     } catch (err: any) {
-      toast.error(err?.response?.data?.detail || 'Failed to start bank setup');
+      const errorMsg = err?.response?.data?.detail || 'Failed to start bank setup';
+      
+      // Provide more helpful message for duplicate account errors
+      if (errorMsg.includes('already exist') || errorMsg.includes('contact support')) {
+        toast.error('It looks like a Stripe account already exists for your email. Please contact support for assistance.');
+      } else {
+        toast.error(errorMsg);
+      }
     } finally {
       setLoading(false);
     }

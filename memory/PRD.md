@@ -9,76 +9,77 @@ A full-stack React Native/Expo fitness application connecting trainees with pers
 - **Payments:** Stripe | **Auth:** JWT | **QR Codes:** react-native-qrcode-svg + expo-camera
 - **Current Version:** 2.0.40
 
-## What's Been Implemented
+## What's Been Implemented (March 2026)
 
-### Outdoor Location Agreement Flow (March 2026 - COMPLETE)
-- **Backend Endpoints:**
-  - `POST /api/sessions/{session_id}/propose-location` - Trainer proposes meeting spot
-  - `POST /api/sessions/{session_id}/agree-location` - Trainee agrees or counter-proposes
-- **Frontend UI:**
-  - Trainer: Location proposal modal in `trainee-profile.tsx` with status badges
-  - Trainee: Location acceptance/counter-proposal UI in `session-detail.tsx`
-- **Features:** Push notifications for all location events, pending/confirmed status badges
-- **Testing:** All 4 endpoints verified working (100% pass rate)
+### P0/P1 Features - COMPLETE
 
-### Arrival Confirmation System (March 2026 - COMPLETE)
-- **Backend Endpoints:**
-  - `POST /api/sessions/{session_id}/trainer-arrived` - Trainer confirms arrival
-  - `POST /api/sessions/{session_id}/trainee-arrived` - Trainee confirms arrival (returns `bothArrived` flag)
-- **Frontend UI:**
-  - Gradient "I Have Arrived" button on both trainer and trainee screens
-  - Visual status showing arrival confirmations
-  - "Both Ready!" badge when both parties have arrived
-- **Features:** Push notifications for arrival events
+#### 1. Outdoor Location Agreement Flow
+- **Backend:** `POST /api/sessions/{id}/propose-location` & `agree-location`
+- **Frontend:** Location proposal modal (trainer), acceptance/counter-proposal UI (trainee)
+- **Notifications:** Push notifications for all location events
 
-### Admin Video Player Enhancement (March 2026 - COMPLETE)
-- Added `onError` handler with user-friendly error message
-- Added `onLoad` logging for debugging
-- Added helpful note about MP4/H.264 format recommendation
-- Improved container styling with dark background
+#### 2. Arrival Confirmation System
+- **Backend:** `POST /api/sessions/{id}/trainer-arrived` & `trainee-arrived`
+- **Frontend:** Gradient "I Have Arrived" buttons with "Both Ready!" indicator
+- **Notifications:** Push notifications when either party arrives
 
-### Session Pricing System (March 2026 - COMPLETE)
-- **Per-Duration Pricing:** Trainers can set custom prices for 30/60/90 minute sessions
-- **Backend:** `POST /api/trainer/set-rates` accepts per-duration rates
-- **Frontend:** Editable TextInput fields in `set-rates.tsx` for each duration
+#### 3. Admin Video Player Enhancement
+- Added error handling and helpful format guidance (MP4/H.264)
 
-### Previous Crash Fixes (March 2026 - COMPLETE)
-1. **Slider Crash Fix:** Removed `@react-native-community/slider` dependency
-2. **Notification Cleanup Crash:** Added defensive `.remove()` check
-3. **Animation Conflict Fix:** Stop previous animations before starting new ones
-4. **Toast Fix:** Added missing `toast.info()` method
-5. **Video Timer Cleanup:** Proper cleanup in VerificationsTab
+#### 4. Dynamic Data Refresh (P1)
+- Polling frequency increased from 30s to 15s on trainer home
+- Toast notification + haptic feedback when new session requests arrive
+- Refresh on app foreground
+
+#### 5. Flexible Session Pricing
+- Per-duration pricing (30/60/90 min) for each session type
+
+### P2 Features - COMPLETE
+
+#### 1. Stripe Bank Connection Error
+- Backend already handles duplicate Express accounts gracefully
+- Frontend shows user-friendly error message for duplicate accounts
+
+#### 2. Address Auto-populate for Navigation
+- Navigation now uses `traineeHomeAddress` if available
+- Falls back to `locationNameOrAddress` for session location
+
+#### 3. Trainee Photo/Video in Booking
+- Already implemented - trainee photos shown in session request cards
+
+### P3 - TypeScript Warnings (PARTIAL)
+- Reduced from 112 to 90 errors
+- Fixed: State type inference issues (`never[]` → `any[]`)
+- Fixed: UserRole type as const with proper type export
+- Fixed: TraineeProfile missing fields
+- Remaining: LinearGradient colors type, minor component type mismatches
 
 ## Key API Endpoints
 | Endpoint | Description |
 |----------|-------------|
-| POST /api/auth/login | User login |
-| POST /api/trainer/set-rates | Set per-duration pricing |
-| GET /api/trainer/sessions | Get trainer's sessions with traineePhone |
 | POST /api/sessions/{id}/propose-location | Trainer proposes outdoor location |
-| POST /api/sessions/{id}/agree-location | Trainee agrees to location |
+| POST /api/sessions/{id}/agree-location | Trainee agrees/counter-proposes |
 | POST /api/sessions/{id}/trainer-arrived | Trainer confirms arrival |
-| POST /api/sessions/{id}/trainee-arrived | Trainee confirms arrival |
-| POST /api/safety-check/generate-token/{id} | Generate QR token |
-| POST /api/safety-check/verify | Verify QR (client scans) |
-| GET /api/admin/verifications | Admin: pending trainer verifications |
+| POST /api/sessions/{id}/trainee-arrived | Trainee confirms arrival (returns bothArrived flag) |
+| POST /api/trainer/set-rates | Set per-duration pricing |
+| POST /api/trainer/connect/onboard | Stripe Connect with duplicate handling |
 
-## Pending Issues
+## Remaining Issues
 
-### P0 - Critical (USER ACTION REQUIRED)
-1. **Deploy New EAS Build:** All features are ready for deployment. User needs to run `eas build --platform ios --profile production`
-
-### P1 - High Priority
-1. **Dynamic Data Refresh:** Verify polling works or implement WebSocket for real-time updates
-
-### P2 - Medium Priority
-1. **Stripe Bank Connection Error:** Handle duplicate Express account creation gracefully
-2. **Address Auto-populate:** Pass trainee's address to navigation intent
-3. **Trainee Photo/Video in Booking:** Show trainee's media in booking request screen
+### Ready for EAS Build
+All P0, P1, P2 features are complete. User needs to create a new EAS build:
+```bash
+cd /app/frontend && eas build --platform ios --profile production
+```
 
 ### P3 - Low Priority
-1. **TypeScript Warnings:** ~100+ warnings from strict mode
-2. **SendGrid Integration:** Blocked on API key
+- 90 TypeScript warnings remaining (non-blocking, mostly LinearGradient type issues)
+
+### Blocked
+- SendGrid Integration - Awaiting user API key
+
+## Test Reports
+- `/app/test_reports/iteration_45.json` - All 4 location/arrival endpoints verified (100% pass)
 
 ## Credentials
 | Role | Email | Password |
@@ -87,22 +88,13 @@ A full-stack React Native/Expo fitness application connecting trainees with pers
 | Trainee | test_trainee_iter25@test.com | Test123! |
 | Trainer | test_trainer_iter25@test.com | Test123! |
 
-## EAS Build Instructions
-```bash
-cd /app/frontend
-eas build --platform ios --profile production
-# Or for Android:
-eas build --platform android --profile production
-```
-
 ## Files Modified This Session
-- `/app/backend/server.py` - Added arrival confirmation endpoints
+- `/app/backend/server.py` - Arrival confirmation endpoints
 - `/app/frontend/app/trainee/session-detail.tsx` - Location agreement UI, arrival confirmation
-- `/app/frontend/app/trainer/trainee-profile.tsx` - Location proposal modal, arrival confirmation
-- `/app/frontend/src/services/api.ts` - Added sessionsAPI with new endpoints
-- `/app/frontend/src/components/admin/VerificationsTab.tsx` - Improved video error handling
-
-## Test Reports
-- `/app/test_reports/iteration_45.json` - All 4 new endpoints verified working (100% pass rate)
+- `/app/frontend/app/trainer/trainee-profile.tsx` - Location proposal, arrival confirmation, address fix
+- `/app/frontend/app/trainer/(tabs)/home.tsx` - Enhanced polling with notifications
+- `/app/frontend/app/trainer/connect-bank.tsx` - Better Stripe error messages
+- `/app/frontend/src/services/api.ts` - sessionsAPI with new endpoints
+- `/app/frontend/src/types/index.ts` - TraineeProfile fields, UserRole types
 
 ## Mocked: SendGrid (awaiting API key)

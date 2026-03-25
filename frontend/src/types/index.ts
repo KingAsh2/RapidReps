@@ -55,12 +55,19 @@ export interface TraineeProfile {
   id: string;
   userId: string;
   avatarUrl?: string;
+  profilePhoto?: string;
   fitnessGoals?: string;
+  experienceLevel?: string;
   currentFitnessLevel: string;
   preferredTrainingStyles: string[];
   injuriesOrLimitations?: string;
   homeGymOrZipCode?: string;
+  homeZipCode?: string;
   homeAddress?: string;
+  homeStreet?: string;
+  homeCity?: string;
+  homeState?: string;
+  locationAddress?: string;
   prefersInPerson: boolean;
   prefersVirtual: boolean;
   typicalAvailability?: any;
@@ -97,7 +104,9 @@ export const UserRole = {
   TRAINER: 'trainer',
   TRAINEE: 'trainee',
   ADMIN: 'admin',
-};
+} as const;
+
+export type UserRoleType = typeof UserRole[keyof typeof UserRole];
 
 export const FitnessLevel = {
   BEGINNER: 'beginner',

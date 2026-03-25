@@ -58,7 +58,7 @@ export default function SignupScreen() {
     confirmPassword: '',
     fullName: '',
     phone: '',
-    roles: [] as UserRole[],
+    roles: [] as string[],
     referralCode: '',
   });
 
