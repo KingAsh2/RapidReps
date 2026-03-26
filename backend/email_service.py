@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY', '')
 FROM_EMAIL = os.environ.get('FROM_EMAIL', 'noreply@rapidreps.com')
 APP_NAME = 'RapidReps'
+APP_URL = os.environ.get('APP_URL', 'https://rapidreps.com')
 
 # ── helpers ────────────────────────────────────────────────────────────────────
 
@@ -74,7 +75,7 @@ def _wrap(body_html: str) -> str:
 
 # 1. Password Reset
 def send_password_reset_email(to_email: str, reset_token: str, user_name: str) -> bool:
-    reset_link = f"https://rapidreps.com/reset-password?token={reset_token}"
+    reset_link = f"{APP_URL}/reset-password?token={reset_token}"
     html = _wrap(f"""
         <h2 style="color:#1a2a5e;margin:0 0 12px;">Reset Your Password</h2>
         <p style="color:#4a5568;line-height:1.6;">Hi {user_name},</p>
@@ -91,7 +92,7 @@ def send_password_reset_email(to_email: str, reset_token: str, user_name: str) -
 def send_welcome_email(to_email: str, user_name: str, verification_token: Optional[str] = None) -> bool:
     verify_section = ""
     if verification_token:
-        verify_link = f"https://rapidreps.com/verify-email?token={verification_token}"
+        verify_link = f"{APP_URL}/verify-email?token={verification_token}"
         verify_section = f"""
         <div style="text-align:center;margin:24px 0;">
           <a href="{verify_link}" style="display:inline-block;background:#1FB8B4;color:#fff;padding:14px 36px;border-radius:10px;font-weight:700;text-decoration:none;font-size:16px;">Verify Email</a>

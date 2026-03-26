@@ -7,52 +7,57 @@ A full-stack React Native/Expo fitness application connecting trainees with pers
 - **Frontend:** React Native / Expo (v54) with Expo Router
 - **Backend:** FastAPI (Python) + MongoDB
 - **Payments:** Stripe | **Auth:** JWT | **QR Codes:** react-native-qrcode-svg + expo-camera
-- **Current Version:** 2.0.40
+- **Current Version:** 3.0.7
 
-## What's Been Implemented (March 2026)
+## Build Fix Applied (March 2026)
+
+### Root Cause
+The iOS build was failing during `pod install` with:
+```
+[Reanimated] Your installed version of Worklets (0.7.4) is not compatible with installed version of Reanimated (4.3.0). Please install Worklets 0.8.x or newer.
+```
+
+The yarn.lock file was resolving to incompatible newer versions despite package.json having correct pinned versions.
+
+### Fix Applied
+1. **Regenerated yarn.lock** - Removed stale lockfiles and regenerated to respect pinned versions:
+   - `react-native-reanimated`: 4.1.1 (was resolving to 4.3.0)
+   - `react-native-worklets`: 0.5.1 (was resolving to 0.7.4)
+   - `react-native-gesture-handler`: 2.28.0 (was resolving to 2.30.0)
+
+2. **Fixed hardcoded URLs** in `email_service.py`:
+   - Added `APP_URL` environment variable
+   - Password reset and email verification links now use `APP_URL` instead of hardcoded `https://rapidreps.com`
+
+### Files Modified
+- `/app/frontend/yarn.lock` - Regenerated with correct versions
+- `/app/frontend/package-lock.json` - Removed (was causing conflicts)
+- `/app/backend/email_service.py` - Added APP_URL env var, fixed hardcoded URLs
+
+## What's Been Implemented
 
 ### P0/P1 Features - COMPLETE
 
 #### 1. Outdoor Location Agreement Flow
 - **Backend:** `POST /api/sessions/{id}/propose-location` & `agree-location`
 - **Frontend:** Location proposal modal (trainer), acceptance/counter-proposal UI (trainee)
-- **Notifications:** Push notifications for all location events
 
 #### 2. Arrival Confirmation System
 - **Backend:** `POST /api/sessions/{id}/trainer-arrived` & `trainee-arrived`
-- **Frontend:** Gradient "I Have Arrived" buttons with "Both Ready!" indicator
-- **Notifications:** Push notifications when either party arrives
+- **Frontend:** "I Have Arrived" buttons with "Both Ready!" indicator
 
-#### 3. Admin Video Player Enhancement
-- Added error handling and helpful format guidance (MP4/H.264)
+#### 3. Dynamic Data Refresh
+- Polling every 15s with toast notification for new requests
 
-#### 4. Dynamic Data Refresh (P1)
-- Polling frequency increased from 30s to 15s on trainer home
-- Toast notification + haptic feedback when new session requests arrive
-- Refresh on app foreground
-
-#### 5. Flexible Session Pricing
+#### 4. Flexible Session Pricing
 - Per-duration pricing (30/60/90 min) for each session type
 
-### P2 Features - COMPLETE
-
-#### 1. Stripe Bank Connection Error
-- Backend already handles duplicate Express accounts gracefully
-- Frontend shows user-friendly error message for duplicate accounts
-
-#### 2. Address Auto-populate for Navigation
-- Navigation now uses `traineeHomeAddress` if available
-- Falls back to `locationNameOrAddress` for session location
-
-#### 3. Trainee Photo/Video in Booking
-- Already implemented - trainee photos shown in session request cards
-
-### P3 - TypeScript Warnings (PARTIAL)
-- Reduced from 112 to 90 errors
-- Fixed: State type inference issues (`never[]` → `any[]`)
-- Fixed: UserRole type as const with proper type export
-- Fixed: TraineeProfile missing fields
-- Remaining: LinearGradient colors type, minor component type mismatches
+### Crash Fixes Applied
+1. Slider component removed (was crashing)
+2. Notification cleanup race condition fixed
+3. Animation conflict resolved
+4. Toast.info() method added
+5. Video timer cleanup added
 
 ## Key API Endpoints
 | Endpoint | Description |
@@ -60,26 +65,8 @@ A full-stack React Native/Expo fitness application connecting trainees with pers
 | POST /api/sessions/{id}/propose-location | Trainer proposes outdoor location |
 | POST /api/sessions/{id}/agree-location | Trainee agrees/counter-proposes |
 | POST /api/sessions/{id}/trainer-arrived | Trainer confirms arrival |
-| POST /api/sessions/{id}/trainee-arrived | Trainee confirms arrival (returns bothArrived flag) |
+| POST /api/sessions/{id}/trainee-arrived | Trainee confirms arrival |
 | POST /api/trainer/set-rates | Set per-duration pricing |
-| POST /api/trainer/connect/onboard | Stripe Connect with duplicate handling |
-
-## Remaining Issues
-
-### Ready for EAS Build
-All P0, P1, P2 features are complete. User needs to create a new EAS build:
-```bash
-cd /app/frontend && eas build --platform ios --profile production
-```
-
-### P3 - Low Priority
-- 90 TypeScript warnings remaining (non-blocking, mostly LinearGradient type issues)
-
-### Blocked
-- SendGrid Integration - Awaiting user API key
-
-## Test Reports
-- `/app/test_reports/iteration_45.json` - All 4 location/arrival endpoints verified (100% pass)
 
 ## Credentials
 | Role | Email | Password |
@@ -88,13 +75,11 @@ cd /app/frontend && eas build --platform ios --profile production
 | Trainee | test_trainee_iter25@test.com | Test123! |
 | Trainer | test_trainer_iter25@test.com | Test123! |
 
-## Files Modified This Session
-- `/app/backend/server.py` - Arrival confirmation endpoints
-- `/app/frontend/app/trainee/session-detail.tsx` - Location agreement UI, arrival confirmation
-- `/app/frontend/app/trainer/trainee-profile.tsx` - Location proposal, arrival confirmation, address fix
-- `/app/frontend/app/trainer/(tabs)/home.tsx` - Enhanced polling with notifications
-- `/app/frontend/app/trainer/connect-bank.tsx` - Better Stripe error messages
-- `/app/frontend/src/services/api.ts` - sessionsAPI with new endpoints
-- `/app/frontend/src/types/index.ts` - TraineeProfile fields, UserRole types
+## Test Reports
+- `/app/test_reports/iteration_45.json` - All 4 location/arrival endpoints verified (100% pass)
+
+## Remaining Work
+- SendGrid Integration (blocked on API key)
+- 90 TypeScript warnings (non-critical)
 
 ## Mocked: SendGrid (awaiting API key)
