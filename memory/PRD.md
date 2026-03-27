@@ -9,29 +9,26 @@ A full-stack React Native/Expo fitness application connecting trainees with pers
 - **Payments:** Stripe | **Auth:** JWT | **QR Codes:** react-native-qrcode-svg + expo-camera
 - **Current Version:** 3.0.7
 
-## Recent Changes
+## Completed Features
 
-### Uber-Like UI Components (March 2026 - NEW)
-Created reusable components for Uber-style UX:
+### Uber-Like UI Components (March 2026 - INTEGRATED)
+All three Uber-style components are now fully integrated into the application:
 
-1. **SessionTimeline Component** (`/src/components/SessionTimeline.tsx`)
-   - Visual timeline: Requested → Confirmed → En Route → Arrived → In Progress → Completed
+1. **SessionTimeline** (`/src/components/SessionTimeline.tsx`)
+   - Integrated into `trainer-en-route.tsx` (full mode with ETA)
+   - Integrated into `session-detail.tsx` (compact mode)
+   - Visual timeline: Requested > Confirmed > En Route > Arrived > In Progress > Completed
    - Animated step indicators with current status highlighting
-   - ETA badge display when trainer is en route
-   - Compact mode for inline display
 
-2. **QuickActions Component** (`/src/components/QuickActions.tsx`)
+2. **QuickActions** (`/src/components/QuickActions.tsx`)
+   - Integrated into `trainer-en-route.tsx`
    - Floating action buttons: Call, Message, Cancel
-   - Gradient styling matching app theme
-   - Haptic feedback on interactions
-   - FloatingQuickActions variant for map overlay
+   - Gradient styling matching app theme, haptic feedback
 
-3. **TrainerBottomSheet Component** (`/src/components/TrainerBottomSheet.tsx`)
-   - Swipe-up bottom sheet for trainer selection
-   - Collapsed state shows selected trainer
-   - Expanded state shows full trainer list
-   - Selection highlighting and "Book Now" button
-   - ETA badges and pricing display
+3. **TrainerBottomSheet** (`/src/components/TrainerBottomSheet.tsx`)
+   - Integrated into `trainee/(tabs)/home.tsx` as overlay
+   - Swipe-up bottom sheet for Uber-like trainer selection
+   - Collapsed/expanded states, ETA badges, pricing display
 
 ### Build Fix (March 2026)
 - Fixed yarn.lock version conflicts:
@@ -57,49 +54,17 @@ Created reusable components for Uber-style UX:
 | POST /api/sessions/{id}/trainer-arrived | Trainer confirms arrival |
 | POST /api/sessions/{id}/trainee-arrived | Trainee confirms arrival |
 
-## Files Created This Session
-- `/app/frontend/src/components/SessionTimeline.tsx` - Activity timeline
-- `/app/frontend/src/components/QuickActions.tsx` - Floating action buttons
-- `/app/frontend/src/components/TrainerBottomSheet.tsx` - Trainer selection sheet
+## Integration Map
+| Screen | Components Used |
+|--------|----------------|
+| `trainee/(tabs)/home.tsx` | TrainerBottomSheet |
+| `trainee/trainer-en-route.tsx` | SessionTimeline, QuickActions |
+| `trainee/session-detail.tsx` | SessionTimeline (compact) |
 
-## Integration Notes
-The new Uber-like components are created and ready for integration:
-
-### To integrate SessionTimeline:
-```tsx
-import { SessionTimeline } from '../src/components/SessionTimeline';
-<SessionTimeline currentStatus="en_route" eta="5 min" />
-```
-
-### To integrate QuickActions:
-```tsx
-import { QuickActions, FloatingQuickActions } from '../src/components/QuickActions';
-<FloatingQuickActions 
-  sessionId={session.id}
-  otherPartyName={trainerName}
-  otherPartyPhone={trainerPhone}
-  otherPartyId={trainerId}
-  role="trainee"
-/>
-```
-
-### To integrate TrainerBottomSheet:
-```tsx
-import TrainerBottomSheet from '../src/components/TrainerBottomSheet';
-<TrainerBottomSheet
-  trainers={nearbyTrainers}
-  selectedTrainerId={selectedId}
-  onSelectTrainer={(t) => setSelectedId(t.id)}
-  onBookTrainer={(t) => handleBook(t)}
-  isVisible={true}
-/>
-```
-
-## Remaining Integration Work
-- [ ] Add SessionTimeline to session-detail.tsx screens
-- [ ] Add FloatingQuickActions to trainer-en-route.tsx
-- [ ] Replace trainer list with TrainerBottomSheet on trainee home
-- [ ] Add auto-arrival detection notification
+## Remaining / Blocked Work
+- [ ] EAS iOS Build: Apple Distribution Certificate expired - user must run `eas credentials`
+- [ ] SendGrid email integration (blocked - needs user API key)
+- [ ] Resolve remaining TypeScript warnings (~90, mostly non-critical LinearGradient color types)
 
 ## Credentials
 | Role | Email | Password |
@@ -110,5 +75,6 @@ import TrainerBottomSheet from '../src/components/TrainerBottomSheet';
 
 ## Test Reports
 - `/app/test_reports/iteration_45.json` - Location/arrival endpoints verified
+- `/app/test_reports/iteration_46.json` - All 7 backend APIs verified (100% pass rate, 18/18 tests)
 
-## Mocked: SendGrid (awaiting API key)
+## MOCKED: SendGrid (awaiting API key)
