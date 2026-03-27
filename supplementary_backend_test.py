@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 import uuid
 
 # Configuration
-BASE_URL = "https://crash-fixes.preview.emergentagent.com/api"
+BASE_URL = "https://rapidreps-uber-ux.preview.emergentagent.com/api"
 HEADERS = {"Content-Type": "application/json"}
 
 class SupplementaryTester:

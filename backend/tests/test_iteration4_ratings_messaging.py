@@ -18,7 +18,7 @@ import os
 import uuid
 from datetime import datetime
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://crash-fixes.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://rapidreps-uber-ux.preview.emergentagent.com').rstrip('/')
 
 # Test credentials
 TRAINER1_EMAIL = "trainer1@test.com"
