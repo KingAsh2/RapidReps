@@ -19,6 +19,7 @@ import { traineeAPI, sessionsAPI } from '../../src/services/api';
 import { SessionStatus } from '../../src/types';
 import { toast } from '../../src/utils/toast';
 import { haptic } from '../../src/utils/haptics';
+import { SessionTimeline, SessionTimelineStatus } from '../../src/components/SessionTimeline';
 
 const COLORS = {
   teal: '#1a2a5e',
@@ -168,6 +169,19 @@ export default function SessionDetailScreen() {
   const statusConfig = getStatusConfig(session.status);
   const sessionDate = new Date(session.sessionDateTimeStart);
 
+  // Map session status to timeline status
+  const getTimelineStatus = (): SessionTimelineStatus => {
+    const s = session.status;
+    if (s === 'requested' || s === 'pending') return 'requested';
+    if (s === 'confirmed') return 'confirmed';
+    if (s === 'en_route') return 'en_route';
+    if (s === 'arrived') return 'arrived';
+    if (s === 'in_progress') return 'in_progress';
+    if (s === 'completed') return 'completed';
+    if (s === 'cancelled' || s === 'declined') return 'cancelled';
+    return 'requested';
+  };
+
   return (
     <View style={styles.container}>
       <LinearGradient colors={[COLORS.navy, COLORS.tealLight]} style={StyleSheet.absoluteFill} />
@@ -183,12 +197,17 @@ export default function SessionDetailScreen() {
         </View>
 
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-          {/* Status Card */}
+          {/* Status Card with Timeline */}
           <View style={styles.card}>
             <View style={[styles.statusBadge, { backgroundColor: statusConfig.color }]}>
               <Ionicons name={statusConfig.icon as any} size={18} color={COLORS.white} />
               <Text style={styles.statusText}>{statusConfig.text}</Text>
             </View>
+            {session.status !== 'cancelled' && session.status !== 'declined' && (
+              <View style={{ marginTop: 16 }} data-testid="session-timeline">
+                <SessionTimeline currentStatus={getTimelineStatus()} compact />
+              </View>
+            )}
           </View>
 
           {/* Trainer Info */}

@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Animated,
   Dimensions,
-  Modal,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,6 +13,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { sessionTrackingAPI } from '../../src/services/api';
 import { useAlert } from '../../src/contexts/AlertContext';
+import { SessionTimeline, SessionTimelineStatus } from '../../src/components/SessionTimeline';
+import { QuickActions } from '../../src/components/QuickActions';
 
 const { width } = Dimensions.get('window');
 
@@ -48,32 +49,13 @@ export default function TrainerEnRouteScreen() {
   const [sessionStatus, setSessionStatus] = useState<string>('');
 
   const pollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
-  const dotAnim1 = useRef(new Animated.Value(0)).current;
-  const dotAnim2 = useRef(new Animated.Value(0)).current;
-  const dotAnim3 = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const progressAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }).start();
-    startDotAnimation();
     startPolling();
     return () => { if (pollInterval.current) clearInterval(pollInterval.current); };
   }, []);
-
-  const startDotAnimation = () => {
-    const animate = (anim: Animated.Value, delay: number) =>
-      Animated.loop(
-        Animated.sequence([
-          Animated.delay(delay),
-          Animated.timing(anim, { toValue: 1, duration: 500, useNativeDriver: true }),
-          Animated.timing(anim, { toValue: 0.3, duration: 500, useNativeDriver: true }),
-        ])
-      );
-    animate(dotAnim1, 0).start();
-    animate(dotAnim2, 200).start();
-    animate(dotAnim3, 400).start();
-  };
 
   const startPolling = () => {
     const poll = async () => {
@@ -100,8 +82,7 @@ export default function TrainerEnRouteScreen() {
           setEta(`${etaMins} min away`);
 
           // Animate progress (0=far, 1=arrived)
-          const progressVal = Math.min(1, Math.max(0, 1 - (dist / 5))); // 5 miles = 0%, 0 = 100%
-          Animated.timing(progressAnim, { toValue: progressVal, duration: 500, useNativeDriver: false }).start();
+          const progressVal = Math.min(1, Math.max(0, 1 - (dist / 5)));
 
           if (dist < 0.05) {
             setStatus('arrived');
@@ -130,13 +111,6 @@ export default function TrainerEnRouteScreen() {
     pollInterval.current = setInterval(poll, 5000);
   };
 
-  const handleMessage = () => {
-    router.push({
-      pathname: '/messages/chat',
-      params: { userId: trainerId, userName: trainerName },
-    });
-  };
-
   const getStatusConfig = () => {
     switch (status) {
       case 'waiting': return { icon: 'hourglass', label: 'Waiting', color: COLORS.gray, bg: 'rgba(136,146,176,0.15)' };
@@ -148,10 +122,17 @@ export default function TrainerEnRouteScreen() {
 
   const statusConfig = getStatusConfig();
 
-  const progressWidth = progressAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0%', '100%'],
-  });
+  // Map internal status to SessionTimeline status
+  const getTimelineStatus = (): SessionTimelineStatus => {
+    if (sessionStatus === 'in_progress') return 'in_progress';
+    switch (status) {
+      case 'waiting': return 'confirmed';
+      case 'en_route': return 'en_route';
+      case 'nearby': return 'en_route';
+      case 'arrived': return 'arrived';
+      default: return 'confirmed';
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -186,21 +167,11 @@ export default function TrainerEnRouteScreen() {
             </View>
           </View>
 
-          {/* Progress Track */}
-          <View style={styles.progressTrack}>
-            <View style={styles.progressBg}>
-              <Animated.View style={[styles.progressFill, { width: progressWidth }]} />
-            </View>
-            <View style={styles.progressLabels}>
-              <Text style={styles.progressLabel}>Started</Text>
-              <View style={styles.dotRow}>
-                <Animated.View style={[styles.trackDot, { opacity: dotAnim1 }]} />
-                <Animated.View style={[styles.trackDot, { opacity: dotAnim2 }]} />
-                <Animated.View style={[styles.trackDot, { opacity: dotAnim3 }]} />
-              </View>
-              <Text style={styles.progressLabel}>You</Text>
-            </View>
-          </View>
+          {/* Session Timeline */}
+          <SessionTimeline
+            currentStatus={getTimelineStatus()}
+            eta={status === 'en_route' || status === 'nearby' ? eta : undefined}
+          />
 
           {/* Distance */}
           {distanceMiles != null && (
@@ -232,11 +203,14 @@ export default function TrainerEnRouteScreen() {
           </View>
         </View>
 
-        {/* Message Button */}
-        <TouchableOpacity onPress={handleMessage} style={styles.messageBtn} data-testid="message-trainer-btn">
-          <Ionicons name="chatbubble" size={20} color={COLORS.white} />
-          <Text style={styles.messageBtnText}>Message {trainerName || 'Trainer'}</Text>
-        </TouchableOpacity>
+        {/* Quick Actions */}
+        <QuickActions
+          sessionId={sessionId}
+          otherPartyName={trainerName || 'Trainer'}
+          otherPartyId={trainerId}
+          role="trainee"
+          showCancel={false}
+        />
       </Animated.View>
     </SafeAreaView>
   );

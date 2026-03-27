@@ -37,6 +37,7 @@ import { QuickBookSection } from '../../../src/components/trainee-home/QuickBook
 import { FavoriteAvailability } from '../../../src/components/trainee-home/FavoriteAvailability';
 import { TrainerCard } from '../../../src/components/trainee-home/TrainerCard';
 import { haptic } from '../../../src/utils/haptics';
+import TrainerBottomSheet from '../../../src/components/TrainerBottomSheet';
 
 const { width, height } = Dimensions.get('window');
 
@@ -94,6 +95,7 @@ export default function TraineeHomeScreen() {
   const [travelProximity, setTravelProximity] = useState(10);
   const [showProximityPicker, setShowProximityPicker] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [selectedTrainerId, setSelectedTrainerId] = useState<string | undefined>(undefined);
 
   // Convenience features state
   const [recentTrainers, setRecentTrainers] = useState<any[]>([]);
@@ -392,6 +394,24 @@ export default function TraineeHomeScreen() {
 
   const displayedTrainers = getFilteredAndSortedTrainers();
   const pendingSessions = sessions.filter((s: any) => s.status === 'requested');
+
+  // Map trainers to bottom sheet format
+  const bottomSheetTrainers = displayedTrainers.map((t: any) => ({
+    id: t.id,
+    name: t.fullName || t.name || 'Trainer',
+    photo: t.avatarUrl || t.profilePhoto,
+    rating: t.averageRating || 0,
+    reviewCount: t.reviewCount || 0,
+    distance: t.distance ?? undefined,
+    eta: t.distance ? `${Math.max(1, Math.round(t.distance * 3))} min` : undefined,
+    price: t.ratePerMinuteCents ? Math.round((t.ratePerMinuteCents * 60) / 100) : undefined,
+    specialty: (t.trainingStyles || [])[0],
+    isAvailable: t.isAvailable,
+  }));
+
+  const handleBottomSheetBook = (trainer: any) => {
+    router.push(`/trainee/trainer-detail?trainerId=${trainer.id}`);
+  };
 
   const initiateVideoCall = async (trainer: any) => {
     const trainerPhone = trainer.userId;
@@ -828,6 +848,17 @@ export default function TraineeHomeScreen() {
             }}
           />
         </SafeAreaView>
+
+        {/* Uber-like Trainer Bottom Sheet */}
+        {bottomSheetTrainers.length > 0 && (
+          <TrainerBottomSheet
+            trainers={bottomSheetTrainers}
+            selectedTrainerId={selectedTrainerId}
+            onSelectTrainer={(trainer) => setSelectedTrainerId(trainer.id)}
+            onBookTrainer={handleBottomSheetBook}
+            isVisible={bottomSheetTrainers.length > 0}
+          />
+        )}
 
         {/* Virtual Training Dialog */}
         <Modal
