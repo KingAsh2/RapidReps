@@ -6,7 +6,8 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   ImageBackground,
-  Linking,
+  TextInput,
+  KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,7 +16,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { trainerAPI } from '../../src/services/api';
 import { toast } from '../../src/utils/toast';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 const backgroundImage = require('../../assets/images/bg-swimming.png');
 
 const COLORS = {
@@ -27,70 +31,57 @@ const COLORS = {
   gray: '#5a6785',
   success: '#00C853',
   error: '#FF4757',
+  zellePurple: '#6D1ED4',
 };
 
 export default function ConnectBankScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
-  const [status, setStatus] = useState<{ connected: boolean; onboarded: boolean }>({
-    connected: false,
-    onboarded: false,
-  });
+  const [zelleEmail, setZelleEmail] = useState('');
+  const [zellePhone, setZellePhone] = useState('');
+  const [hasInfo, setHasInfo] = useState(false);
 
   useEffect(() => {
-    checkStatus();
+    loadZelleInfo();
   }, []);
 
-  const checkStatus = async () => {
+  const loadZelleInfo = async () => {
     setChecking(true);
     try {
-      const res = await trainerAPI.connectStatus();
-      setStatus(res);
-      if (res.onboarded) {
-        toast.success('Bank account already connected!');
-      }
+      const token = await AsyncStorage.getItem('auth_token');
+      const res = await axios.get(`${API_URL}/api/trainer/zelle-info`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setZelleEmail(res.data.zelleEmail || '');
+      setZellePhone(res.data.zellePhone || '');
+      setHasInfo(res.data.hasZelleInfo || false);
     } catch {
-      // Not connected yet
+      // Not set up yet
     } finally {
       setChecking(false);
     }
   };
 
-  const handleConnect = async () => {
+  const handleSave = async () => {
+    if (!zelleEmail && !zellePhone) {
+      toast.error('Please enter your Zelle email or phone number');
+      return;
+    }
     setLoading(true);
     try {
-      const res = await trainerAPI.connectOnboard();
-      if (res.alreadyOnboarded) {
-        toast.success(res.message || 'Already connected!');
-        setStatus({ connected: true, onboarded: true });
-      } else if (res.url) {
-        await Linking.openURL(res.url);
-        // Poll for status after user returns
-        setTimeout(checkStatus, 3000);
-      }
+      const token = await AsyncStorage.getItem('auth_token');
+      await axios.post(
+        `${API_URL}/api/trainer/zelle-info`,
+        { zelleEmail, zellePhone },
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+      );
+      setHasInfo(true);
+      toast.success('Zelle info saved!');
     } catch (err: any) {
-      const errorMsg = err?.response?.data?.detail || 'Failed to start bank setup';
-      
-      // Provide more helpful message for duplicate account errors
-      if (errorMsg.includes('already exist') || errorMsg.includes('contact support')) {
-        toast.error('It looks like a Stripe account already exists for your email. Please contact support for assistance.');
-      } else {
-        toast.error(errorMsg);
-      }
+      toast.error(err?.response?.data?.detail || 'Failed to save Zelle info');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleViewDashboard = async () => {
-    try {
-      const res = await trainerAPI.connectDashboard();
-      if (res.url) {
-        await Linking.openURL(res.url);
-      }
-    } catch (err: any) {
-      toast.error(err?.response?.data?.detail || 'Failed to open dashboard');
     }
   };
 
@@ -100,7 +91,7 @@ export default function ConnectBankScreen() {
         <LinearGradient colors={['rgba(247, 147, 30, 0.85)', 'rgba(247, 147, 30, 0.75)', 'rgba(255, 165, 38, 0.7)']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} />
         <View style={styles.centerContent}>
           <ActivityIndicator size="large" color={COLORS.teal} />
-          <Text style={styles.checkingText}>Checking bank status...</Text>
+          <Text style={styles.checkingText}>Loading Zelle info...</Text>
         </View>
       </ImageBackground>
     );
@@ -110,108 +101,114 @@ export default function ConnectBankScreen() {
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
       <LinearGradient colors={['rgba(247, 147, 30, 0.85)', 'rgba(247, 147, 30, 0.75)', 'rgba(255, 165, 38, 0.7)']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} />
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} data-testid="connect-bank-back-btn">
-            <Ionicons name="arrow-back" size={24} color={COLORS.white} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Bank Account</Text>
-          <View style={{ width: 40 }} />
-        </View>
-
-        <View style={styles.content}>
-          {/* Icon */}
-          <View style={styles.iconContainer}>
-            <LinearGradient
-              colors={status.onboarded ? [COLORS.success, '#00A844'] : [COLORS.teal, COLORS.tealDark]}
-              style={styles.iconGradient}
-            >
-              <Ionicons
-                name={status.onboarded ? 'checkmark-circle' : 'wallet'}
-                size={48}
-                color={COLORS.white}
-              />
-            </LinearGradient>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} data-testid="connect-bank-back-btn">
+              <Ionicons name="arrow-back" size={24} color={COLORS.white} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Zelle Setup</Text>
+            <View style={{ width: 40 }} />
           </View>
 
-          {/* Title */}
-          <Text style={styles.title}>
-            {status.onboarded ? 'Bank Account Connected' : 'Connect Your Bank Account'}
-          </Text>
-          <Text style={styles.subtitle}>
-            {status.onboarded
-              ? 'Your bank account is linked and ready to receive payouts. You can manage your account through the Stripe dashboard.'
-              : 'Link your bank account to receive payouts for completed training sessions. This is required before you can start accepting sessions.'}
-          </Text>
+          <View style={styles.content}>
+            {/* Icon */}
+            <View style={styles.iconContainer}>
+              <LinearGradient
+                colors={hasInfo ? [COLORS.success, '#00A844'] : [COLORS.zellePurple, '#8B3FF5']}
+                style={styles.iconGradient}
+              >
+                <Ionicons
+                  name={hasInfo ? 'checkmark-circle' : 'cash'}
+                  size={48}
+                  color={COLORS.white}
+                />
+              </LinearGradient>
+            </View>
 
-          {/* Info Cards */}
-          {!status.onboarded && (
+            {/* Title */}
+            <Text style={styles.title}>
+              {hasInfo ? 'Zelle Account Connected' : 'Set Up Zelle Payments'}
+            </Text>
+            <Text style={styles.subtitle}>
+              {hasInfo
+                ? 'Your Zelle info is saved. RapidReps admin will send payouts directly to your Zelle account.'
+                : 'Enter your Zelle email or phone number to receive payouts for completed training sessions.'}
+            </Text>
+
+            {/* Form */}
+            <View style={styles.formCard}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Zelle Email</Text>
+                <TextInput
+                  style={styles.input}
+                  value={zelleEmail}
+                  onChangeText={setZelleEmail}
+                  placeholder="your@email.com"
+                  placeholderTextColor="#999"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  data-testid="zelle-email-input"
+                />
+              </View>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Zelle Phone Number</Text>
+                <TextInput
+                  style={styles.input}
+                  value={zellePhone}
+                  onChangeText={setZellePhone}
+                  placeholder="(555) 555-5555"
+                  placeholderTextColor="#999"
+                  keyboardType="phone-pad"
+                  data-testid="zelle-phone-input"
+                />
+              </View>
+            </View>
+
+            {/* Info Cards */}
             <View style={styles.infoCards}>
               <View style={styles.infoCard}>
-                <Ionicons name="shield-checkmark" size={22} color={COLORS.teal} />
+                <Ionicons name="shield-checkmark" size={22} color={COLORS.zellePurple} />
                 <View style={styles.infoCardContent}>
-                  <Text style={styles.infoCardTitle}>Secure & Private</Text>
-                  <Text style={styles.infoCardText}>Powered by Stripe. Your banking details are never stored on our servers.</Text>
+                  <Text style={styles.infoCardTitle}>Direct Payments</Text>
+                  <Text style={styles.infoCardText}>Admin sends payouts directly to your Zelle account. No intermediaries.</Text>
                 </View>
               </View>
               <View style={styles.infoCard}>
                 <Ionicons name="cash" size={22} color={COLORS.success} />
                 <View style={styles.infoCardContent}>
-                  <Text style={styles.infoCardTitle}>Get Paid Fast</Text>
-                  <Text style={styles.infoCardText}>Payouts are processed by RapidReps admin. Minimum payout: $35.</Text>
-                </View>
-              </View>
-              <View style={styles.infoCard}>
-                <Ionicons name="card" size={22} color={COLORS.orange} />
-                <View style={styles.infoCardContent}>
                   <Text style={styles.infoCardTitle}>You Keep 80%</Text>
-                  <Text style={styles.infoCardText}>Earn 80% of every session. RapidReps takes 20% as a platform fee.</Text>
+                  <Text style={styles.infoCardText}>Earn 80% of every session. Minimum payout: $35.</Text>
                 </View>
               </View>
             </View>
-          )}
 
-          {/* Action Buttons */}
-          {status.onboarded ? (
-            <View style={styles.buttonGroup}>
-              <TouchableOpacity onPress={handleViewDashboard} style={styles.primaryBtn} data-testid="view-stripe-dashboard-btn">
-                <LinearGradient colors={[COLORS.teal, COLORS.tealDark]} style={styles.btnGradient}>
-                  <Ionicons name="open-outline" size={20} color={COLORS.white} />
-                  <Text style={styles.btnText}>View Stripe Dashboard</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => router.back()} style={styles.secondaryBtn} data-testid="done-btn">
-                <Text style={styles.secondaryBtnText}>Done</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
+            {/* Save Button */}
             <TouchableOpacity
-              onPress={handleConnect}
+              onPress={handleSave}
               disabled={loading}
               style={styles.primaryBtn}
-              data-testid="connect-bank-btn"
+              data-testid="save-zelle-btn"
             >
-              <LinearGradient colors={[COLORS.success, '#00A844']} style={styles.btnGradient}>
+              <LinearGradient colors={[COLORS.zellePurple, '#8B3FF5']} style={styles.btnGradient}>
                 {loading ? (
                   <ActivityIndicator size="small" color={COLORS.white} />
                 ) : (
                   <>
-                    <Ionicons name="link" size={20} color={COLORS.white} />
-                    <Text style={styles.btnText}>Connect Bank Account</Text>
+                    <Ionicons name={hasInfo ? 'refresh' : 'save'} size={20} color={COLORS.white} />
+                    <Text style={styles.btnText}>{hasInfo ? 'Update Zelle Info' : 'Save Zelle Info'}</Text>
                   </>
                 )}
               </LinearGradient>
             </TouchableOpacity>
-          )}
 
-          {/* Refresh status link */}
-          {!status.onboarded && status.connected && (
-            <TouchableOpacity onPress={checkStatus} style={styles.refreshLink} data-testid="refresh-status-btn">
-              <Ionicons name="refresh" size={16} color={COLORS.teal} />
-              <Text style={styles.refreshText}>Refresh Status</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+            {hasInfo && (
+              <TouchableOpacity onPress={() => router.back()} style={styles.secondaryBtn} data-testid="done-btn">
+                <Text style={styles.secondaryBtnText}>Done</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </ImageBackground>
   );
@@ -221,7 +218,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   safeArea: { flex: 1 },
   centerContent: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },
-  checkingText: { color: COLORS.gray, fontSize: 14 },
+  checkingText: { color: '#5a6785', fontSize: 14 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -231,25 +228,36 @@ const styles = StyleSheet.create({
   },
   backBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
   headerTitle: { fontSize: 20, fontWeight: '800', color: COLORS.white },
-  content: { flex: 1, paddingHorizontal: 24, alignItems: 'center', paddingTop: 30 },
-  iconContainer: { marginBottom: 24 },
+  content: { flex: 1, paddingHorizontal: 24, alignItems: 'center', paddingTop: 20 },
+  iconContainer: { marginBottom: 20 },
   iconGradient: { width: 96, height: 96, borderRadius: 48, justifyContent: 'center', alignItems: 'center' },
-  title: { fontSize: 24, fontWeight: '900', color: COLORS.white, textAlign: 'center', marginBottom: 12 },
-  subtitle: { fontSize: 15, color: 'rgba(255,255,255,0.7)', textAlign: 'center', lineHeight: 22, marginBottom: 30, paddingHorizontal: 10 },
-  infoCards: { width: '100%', gap: 12, marginBottom: 30 },
+  title: { fontSize: 22, fontWeight: '900', color: COLORS.white, textAlign: 'center', marginBottom: 10 },
+  subtitle: { fontSize: 14, color: 'rgba(255,255,255,0.7)', textAlign: 'center', lineHeight: 20, marginBottom: 24, paddingHorizontal: 10 },
+  formCard: { width: '100%', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 16, padding: 20, gap: 16, marginBottom: 20 },
+  inputGroup: { gap: 6 },
+  inputLabel: { fontSize: 13, fontWeight: '700', color: COLORS.white },
+  input: {
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+    color: COLORS.navy,
+    fontWeight: '600',
+  },
+  infoCards: { width: '100%', gap: 10, marginBottom: 24 },
   infoCard: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderRadius: 14,
-    padding: 16,
-    gap: 14,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 12,
+    padding: 14,
+    gap: 12,
     alignItems: 'flex-start',
   },
   infoCardContent: { flex: 1 },
-  infoCardTitle: { fontSize: 14, fontWeight: '700', color: COLORS.white, marginBottom: 3 },
-  infoCardText: { fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 18 },
-  buttonGroup: { width: '100%', gap: 12 },
-  primaryBtn: { width: '100%', borderRadius: 14, overflow: 'hidden' },
+  infoCardTitle: { fontSize: 13, fontWeight: '700', color: COLORS.white, marginBottom: 2 },
+  infoCardText: { fontSize: 12, color: 'rgba(255,255,255,0.6)', lineHeight: 17 },
+  primaryBtn: { width: '100%', borderRadius: 14, overflow: 'hidden', marginBottom: 10 },
   btnGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, gap: 10 },
   btnText: { fontSize: 16, fontWeight: '800', color: COLORS.white },
   secondaryBtn: {
@@ -261,6 +269,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   secondaryBtnText: { fontSize: 16, fontWeight: '700', color: COLORS.white },
-  refreshLink: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 20, paddingVertical: 8 },
-  refreshText: { fontSize: 14, fontWeight: '600', color: COLORS.teal },
 });

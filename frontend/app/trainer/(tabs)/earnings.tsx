@@ -180,11 +180,11 @@ export default function TrainerEarningsScreen() {
               </View>
             </LinearGradient>
 
-            {/* Bank Account / Payout Button */}
+            {/* Zelle Account Status / Setup */}
             {connectStatus.onboarded ? (
               <View style={styles.connectedBanner}>
                 <Ionicons name="checkmark-circle" size={18} color={COLORS.success} />
-                <Text style={styles.connectedText}>Bank account connected</Text>
+                <Text style={styles.connectedText}>Zelle account connected</Text>
                 <TouchableOpacity onPress={() => router.push('/trainer/connect-bank')} data-testid="manage-bank-btn">
                   <Text style={[styles.connectedText, { color: COLORS.teal, fontWeight: '700' }]}>Manage</Text>
                 </TouchableOpacity>
@@ -196,11 +196,11 @@ export default function TrainerEarningsScreen() {
                 data-testid="connect-bank-btn"
               >
                 <LinearGradient
-                  colors={[COLORS.success, '#00A844']}
+                  colors={['#6D1ED4', '#8B3FF5']}
                   style={styles.payoutButtonGradient}
                 >
-                  <Ionicons name="link" size={20} color={COLORS.white} />
-                  <Text style={styles.payoutButtonText}>Connect Bank Account</Text>
+                  <Ionicons name="cash" size={20} color={COLORS.white} />
+                  <Text style={styles.payoutButtonText}>Set Up Zelle Account</Text>
                 </LinearGradient>
               </TouchableOpacity>
             )}

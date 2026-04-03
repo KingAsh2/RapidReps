@@ -88,27 +88,13 @@ export default function ConfirmBookingScreen() {
       const token = await AsyncStorage.getItem('auth_token');
       const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 
-      // Step 1: Create payment intent on backend
-      const paymentRes = await axios.post(
-        `${API_URL}/api/payments/create-payment-intent?amount_cents=${totalCents}&description=${encodeURIComponent(getSessionLabel(sessionType))}`,
-        {},
-        { headers }
-      );
-
-      // Payment intent created on backend - proceed with booking
-      // Note: Native Stripe SDK removed due to Apple Pay entitlement issues
-      // Future: Implement Stripe Checkout redirect for payments
+      // Session booking goes through - Zelle payment tracked separately
       setPaymentStep('success');
       setShowBookingModal(true);
     } catch (err: any) {
-      const msg = err?.response?.data?.detail || 'Payment processing failed. Please try again.';
-      if (msg.includes('Invalid API Key')) {
-        setPaymentStep('success');
-        setShowBookingModal(true);
-      } else {
-        setPaymentStep('review');
-        toast.error(msg);
-      }
+      const msg = err?.response?.data?.detail || 'Booking failed. Please try again.';
+      setPaymentStep('review');
+      toast.error(msg);
     } finally {
       setIsProcessing(false);
     }
@@ -198,19 +184,19 @@ export default function ConfirmBookingScreen() {
             </View>
           </View>
 
-          {/* Payment Method */}
+          {/* Payment Method - Zelle */}
           <View style={styles.card}>
             <View style={styles.paymentHeader}>
-              <Ionicons name="card" size={20} color={COLORS.navy} />
-              <Text style={styles.paymentTitle}>Payment Method</Text>
+              <Ionicons name="cash" size={20} color={COLORS.navy} />
+              <Text style={styles.paymentTitle}>Payment via Zelle</Text>
             </View>
             <View style={styles.stripeRow}>
-              <View style={styles.stripeBadge}>
-                <Ionicons name="logo-usd" size={16} color={COLORS.white} />
+              <View style={[styles.stripeBadge, { backgroundColor: '#6D1ED4' }]}>
+                <Ionicons name="send" size={16} color={COLORS.white} />
               </View>
               <View style={styles.stripeInfo}>
-                <Text style={styles.stripeText}>Powered by Stripe</Text>
-                <Text style={styles.stripeSubtext}>Secure payment processing</Text>
+                <Text style={styles.stripeText}>Pay via Zelle</Text>
+                <Text style={styles.stripeSubtext}>Send payment after booking confirmation</Text>
               </View>
               <Ionicons name="shield-checkmark" size={20} color={COLORS.success} />
             </View>
@@ -228,7 +214,7 @@ export default function ConfirmBookingScreen() {
             </View>
             <View style={styles.policyRow}>
               <Ionicons name="lock-closed-outline" size={16} color={COLORS.teal} />
-              <Text style={styles.policyText}>Your payment info is encrypted end-to-end</Text>
+              <Text style={styles.policyText}>Zelle payments are sent directly to RapidReps</Text>
             </View>
           </View>
 
@@ -251,13 +237,13 @@ export default function ConfirmBookingScreen() {
                 </>
               ) : (
                 <>
-                  <Ionicons name="lock-closed" size={20} color={COLORS.white} />
-                  <Text style={styles.confirmBtnText}>Pay ${(totalCents / 100).toFixed(2)}</Text>
+                  <Ionicons name="checkmark-circle" size={20} color={COLORS.white} />
+                  <Text style={styles.confirmBtnText}>Confirm Booking - ${(totalCents / 100).toFixed(2)}</Text>
                 </>
               )}
             </LinearGradient>
           </TouchableOpacity>
-          <Text style={styles.secureNote}>Secure payment via Stripe</Text>
+          <Text style={styles.secureNote}>Pay via Zelle after confirmation</Text>
         </View>
       </SafeAreaView>
     </ImageBackground>

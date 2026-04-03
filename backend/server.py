@@ -4302,7 +4302,7 @@ async def get_payout_requests(current_user: dict = Depends(get_current_user)):
 
 
 # ============================================================================
-# STRIPE CONNECT (Trainer Bank Onboarding & Payouts)
+# ZELLE PAYMENT SYSTEM (Replaces Stripe Connect)
 # ============================================================================
 
 # require_admin dependency (used by admin endpoints below)
@@ -4314,179 +4314,219 @@ async def require_admin(current_user: dict = Depends(get_current_user)):
 
 PAYOUT_MINIMUM_CENTS = 3500  # $35.00
 
-@api_router.post("/trainer/connect/onboard")
-async def trainer_connect_onboard(
-    request: Request,
+# --- Platform Zelle Settings (Admin-configurable) ---
+
+@api_router.get("/settings/zelle")
+async def get_zelle_settings():
+    """Get platform Zelle payment info (public - trainee needs to see this)."""
+    settings = await db.app_settings.find_one({"key": "zelle_config"}, {"_id": 0, "key": 0})
+    if not settings:
+        return {"zelleEmail": "", "zellePhone": ""}
+    return {"zelleEmail": settings.get("zelleEmail", ""), "zellePhone": settings.get("zellePhone", "")}
+
+
+class ZelleSettingsUpdate(BaseModel):
+    zelleEmail: Optional[str] = None
+    zellePhone: Optional[str] = None
+
+
+@api_router.put("/admin/settings/zelle")
+async def update_zelle_settings(
+    req: ZelleSettingsUpdate,
+    admin_user: dict = Depends(require_admin)
+):
+    """Admin: Update platform Zelle payment info."""
+    update_fields = {"updatedAt": datetime.utcnow()}
+    if req.zelleEmail is not None:
+        update_fields["zelleEmail"] = req.zelleEmail
+    if req.zellePhone is not None:
+        update_fields["zellePhone"] = req.zellePhone
+    await db.app_settings.update_one(
+        {"key": "zelle_config"},
+        {"$set": update_fields},
+        upsert=True
+    )
+    return {"success": True, "message": "Zelle settings updated"}
+
+
+# --- Trainee Zelle Payment Flow ---
+
+class ZelleMarkSentRequest(BaseModel):
+    sessionId: str
+    senderName: Optional[str] = None
+    notes: Optional[str] = None
+
+
+@api_router.post("/payments/zelle/mark-sent")
+async def zelle_mark_payment_sent(
+    req: ZelleMarkSentRequest,
     current_user: dict = Depends(get_current_user)
 ):
-    """Create or retrieve a Stripe Connect Express account and return onboarding link."""
+    """Trainee marks that they have sent Zelle payment for a session."""
     user_id = str(current_user['_id'])
-    
-    # Check if trainer already has a Stripe Connect account
-    existing_account_id = current_user.get('stripeConnectAccountId')
-    
-    if existing_account_id:
-        # Check if onboarding is already complete
-        try:
-            account = stripe.Account.retrieve(existing_account_id)
-            if account.charges_enabled and account.payouts_enabled:
-                return {"alreadyOnboarded": True, "message": "Your bank account is already connected."}
-        except stripe.error.StripeError:
-            # Account may be invalid, create a new one
-            existing_account_id = None
-    
-    if not existing_account_id:
-        try:
-            account = stripe.Account.create(
-                type="express",
-                country="US",
-                email=current_user.get('email'),
-                capabilities={
-                    "transfers": {"requested": True},
-                },
-                business_type="individual",
-                metadata={
-                    "rapidreps_user_id": user_id,
-                    "trainer_name": current_user.get('fullName', ''),
-                },
-            )
-            existing_account_id = account.id
-            await db.users.update_one(
-                {'_id': current_user['_id']},
-                {'$set': {
-                    'stripeConnectAccountId': account.id,
-                    'stripeConnectOnboarded': False,
-                }}
-            )
-        except stripe.error.StripeError as e:
-            error_msg = str(e)
-            logger = logging.getLogger(__name__)
-            logger.error(f"Stripe Connect account creation error: {error_msg}")
-            
-            # Handle duplicate account creation error - find existing account
-            if 'already' in error_msg.lower() or 'duplicate' in error_msg.lower() or 'only create' in error_msg.lower() or 'one express' in error_msg.lower():
-                # Try to find existing account by email in Stripe
-                try:
-                    accounts = stripe.Account.list(limit=100)
-                    for acct in accounts.auto_paging_iter():
-                        if acct.get('email') == current_user.get('email'):
-                            existing_account_id = acct.id
-                            await db.users.update_one(
-                                {'_id': current_user['_id']},
-                                {'$set': {
-                                    'stripeConnectAccountId': acct.id,
-                                    'stripeConnectOnboarded': acct.charges_enabled and acct.payouts_enabled,
-                                }}
-                            )
-                            logger.info(f"Found existing Stripe account {acct.id} for user {current_user.get('email')}")
-                            break
-                except Exception as search_err:
-                    logger.error(f"Failed to search existing Stripe accounts: {search_err}")
-                
-                if not existing_account_id:
-                    # Provide a more helpful error message
-                    raise HTTPException(
-                        status_code=400, 
-                        detail="A Stripe account may already exist for this email. Please contact support or try using a different email address."
-                    )
-            else:
-                raise HTTPException(status_code=400, detail=f"Failed to create Stripe account: {error_msg}")
-    
-    # Create onboarding link - use HTTPS for live mode
-    host_url = str(request.base_url).rstrip('/')
-    if host_url.startswith('http://'):
-        host_url = host_url.replace('http://', 'https://', 1)
-    logger = logging.getLogger(__name__)
-    try:
-        account_link = stripe.AccountLink.create(
-            account=existing_account_id,
-            refresh_url=f"{host_url}/api/trainer/connect/refresh?account_id={existing_account_id}",
-            return_url=f"{host_url}/api/trainer/connect/return?account_id={existing_account_id}",
-            type="account_onboarding",
-        )
-        logger.info(f"Stripe onboarding link created for account {existing_account_id}: {account_link.url[:80]}...")
-        return {"url": account_link.url, "accountId": existing_account_id}
-    except stripe.error.StripeError as e:
-        logger.error(f"Stripe Connect onboarding link failed for {existing_account_id}: {str(e)}")
-        raise HTTPException(status_code=400, detail=f"Failed to create onboarding link: {str(e)}")
+    session = await db.sessions.find_one({"_id": ObjectId(req.sessionId)})
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    if session.get('traineeId') != user_id:
+        raise HTTPException(status_code=403, detail="Not your session")
+
+    await db.sessions.update_one(
+        {"_id": ObjectId(req.sessionId)},
+        {"$set": {
+            "zellePaymentStatus": "sent",
+            "zellePaymentSentAt": datetime.utcnow(),
+            "zellePaymentSenderName": req.senderName or current_user.get('fullName', ''),
+            "zellePaymentNotes": sanitize_text(req.notes) if req.notes else None,
+        }}
+    )
+
+    # Notify admin
+    admins = await db.users.find({"isAdmin": True}).to_list(10)
+    for admin in admins:
+        asyncio.create_task(create_and_send_notification(
+            str(admin['_id']),
+            "Zelle Payment Received",
+            f"{current_user.get('fullName', 'A trainee')} marked Zelle payment as sent for session.",
+            "payment",
+            {"sessionId": req.sessionId}
+        ))
+
+    return {"success": True, "message": "Payment marked as sent. Admin will verify shortly."}
 
 
-@api_router.get("/trainer/connect/refresh")
-async def trainer_connect_refresh(request: Request, account_id: str):
-    """Handle Stripe Connect onboarding refresh (user needs to restart onboarding)."""
-    from fastapi.responses import HTMLResponse
-    return HTMLResponse(content="""
-        <html><body style="font-family:system-ui;text-align:center;padding:60px;">
-        <h2>Onboarding session expired</h2>
-        <p>Please go back to the RapidReps app and tap "Connect Bank Account" again.</p>
-        </body></html>
-    """)
+@api_router.post("/admin/payments/verify-zelle/{session_id}")
+async def admin_verify_zelle_payment(
+    session_id: str,
+    admin_user: dict = Depends(require_admin)
+):
+    """Admin verifies that Zelle payment was received. Session becomes confirmed."""
+    session = await db.sessions.find_one({"_id": ObjectId(session_id)})
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    update_doc = {
+        "zellePaymentStatus": "verified",
+        "zellePaymentVerifiedAt": datetime.utcnow(),
+        "zellePaymentVerifiedBy": str(admin_user['_id']),
+        "paymentMethod": "zelle",
+    }
+    # If session is still in requested/payment_pending status, confirm it
+    if session.get('status') in ['requested', 'payment_pending', 'pending']:
+        update_doc['status'] = 'confirmed'
+
+    await db.sessions.update_one({"_id": ObjectId(session_id)}, {"$set": update_doc})
+
+    # Record transaction
+    amount = session.get('priceCents', 0) or session.get('totalCents', 0)
+    if amount:
+        payout_info = calculate_session_payout(amount, session.get('sessionType', 'outdoor'))
+        await db.transactions.insert_one({
+            'userId': session.get('traineeId', ''),
+            'sessionId': session_id,
+            'transactionType': TransactionType.SESSION_PAYMENT,
+            'amountCents': amount,
+            'trainerPayoutCents': payout_info['trainer_payout_cents'],
+            'platformFeeCents': payout_info['platform_fee_cents'],
+            'status': PaymentStatus.COMPLETED,
+            'paymentMethod': 'zelle',
+            'description': f"Zelle payment for {session.get('sessionType', 'training')} session",
+            'createdAt': datetime.utcnow(),
+        })
+
+    # Notify trainee
+    asyncio.create_task(create_and_send_notification(
+        session.get('traineeId', ''),
+        "Payment Verified!",
+        "Your Zelle payment has been verified. Your session is confirmed!",
+        "payment",
+        {"sessionId": session_id}
+    ))
+
+    # Notify trainer
+    if session.get('trainerId'):
+        asyncio.create_task(create_and_send_notification(
+            session['trainerId'],
+            "Session Confirmed!",
+            "Payment verified. The session is ready to begin.",
+            "session_confirmed",
+            {"sessionId": session_id}
+        ))
+
+    return {"success": True, "message": "Payment verified. Session confirmed.", "newStatus": update_doc.get('status', session.get('status'))}
 
 
-@api_router.get("/trainer/connect/return")
-async def trainer_connect_return(request: Request, account_id: str):
-    """Handle Stripe Connect onboarding return (user completed or exited onboarding)."""
-    try:
-        account = stripe.Account.retrieve(account_id)
-        if account.charges_enabled and account.payouts_enabled:
-            await db.users.update_one(
-                {'stripeConnectAccountId': account_id},
-                {'$set': {'stripeConnectOnboarded': True}}
-            )
-            status_msg = "Your bank account has been successfully connected!"
-        else:
-            status_msg = "Your onboarding is not yet complete. Please go back to the app and try again."
-    except stripe.error.StripeError:
-        status_msg = "Could not verify your account status. Please return to the app."
-    
-    from fastapi.responses import HTMLResponse
-    return HTMLResponse(content=f"""
-        <html><body style="font-family:system-ui;text-align:center;padding:60px;">
-        <h2>Bank Account Setup</h2>
-        <p>{status_msg}</p>
-        <p>You can close this window and return to the RapidReps app.</p>
-        </body></html>
-    """)
+@api_router.get("/admin/payments/pending-zelle")
+async def admin_get_pending_zelle_payments(admin_user: dict = Depends(require_admin)):
+    """Admin: Get all sessions with pending Zelle payments to verify."""
+    sessions = await db.sessions.find(
+        {"zellePaymentStatus": "sent"},
+        {"_id": 1, "traineeId": 1, "trainerId": 1, "sessionType": 1, "priceCents": 1,
+         "totalCents": 1, "zellePaymentSentAt": 1, "zellePaymentSenderName": 1,
+         "zellePaymentNotes": 1, "status": 1, "createdAt": 1}
+    ).sort("zellePaymentSentAt", -1).to_list(100)
 
+    results = []
+    for s in sessions:
+        trainee = await db.users.find_one({"_id": ObjectId(s['traineeId'])}, {"fullName": 1, "email": 1}) if s.get('traineeId') else None
+        results.append({
+            "sessionId": str(s['_id']),
+            "traineeName": trainee.get('fullName', 'Unknown') if trainee else 'Unknown',
+            "traineeEmail": trainee.get('email', '') if trainee else '',
+            "sessionType": s.get('sessionType', ''),
+            "amountCents": s.get('totalCents') or s.get('priceCents', 0),
+            "senderName": s.get('zellePaymentSenderName', ''),
+            "sentAt": s.get('zellePaymentSentAt', s.get('createdAt', '')),
+            "notes": s.get('zellePaymentNotes', ''),
+            "sessionStatus": s.get('status', ''),
+        })
+    return {"pendingPayments": results, "count": len(results)}
+
+
+# --- Trainer Zelle Info ---
+
+class TrainerZelleInfoUpdate(BaseModel):
+    zelleEmail: Optional[str] = None
+    zellePhone: Optional[str] = None
+
+
+@api_router.post("/trainer/zelle-info")
+async def save_trainer_zelle_info(
+    req: TrainerZelleInfoUpdate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Trainer saves their Zelle contact info for receiving payouts."""
+    update_fields = {"zelleInfoUpdatedAt": datetime.utcnow()}
+    if req.zelleEmail is not None:
+        update_fields["zelleEmail"] = req.zelleEmail
+    if req.zellePhone is not None:
+        update_fields["zellePhone"] = req.zellePhone
+    await db.users.update_one({"_id": current_user['_id']}, {"$set": update_fields})
+    return {"success": True, "message": "Zelle info saved"}
+
+
+@api_router.get("/trainer/zelle-info")
+async def get_trainer_zelle_info(current_user: dict = Depends(get_current_user)):
+    """Trainer gets their saved Zelle info."""
+    return {
+        "zelleEmail": current_user.get("zelleEmail", ""),
+        "zellePhone": current_user.get("zellePhone", ""),
+        "hasZelleInfo": bool(current_user.get("zelleEmail") or current_user.get("zellePhone")),
+    }
+
+
+# --- Trainer Zelle Connect Status (compatibility endpoint) ---
 
 @api_router.get("/trainer/connect/status")
 async def trainer_connect_status(current_user: dict = Depends(get_current_user)):
-    """Check if trainer's Stripe Connect account is set up and active."""
-    account_id = current_user.get('stripeConnectAccountId')
-    if not account_id:
-        return {"connected": False, "onboarded": False, "accountId": None}
-    
-    try:
-        account = stripe.Account.retrieve(account_id)
-        onboarded = bool(account.charges_enabled and account.payouts_enabled)
-        if onboarded and not current_user.get('stripeConnectOnboarded'):
-            await db.users.update_one(
-                {'_id': current_user['_id']},
-                {'$set': {'stripeConnectOnboarded': True}}
-            )
-        return {
-            "connected": True,
-            "onboarded": onboarded,
-            "accountId": account_id,
-            "chargesEnabled": account.charges_enabled,
-            "payoutsEnabled": account.payouts_enabled,
-        }
-    except stripe.error.StripeError as e:
-        return {"connected": False, "onboarded": False, "error": str(e)}
-
-
-@api_router.get("/trainer/connect/dashboard")
-async def trainer_connect_dashboard(current_user: dict = Depends(get_current_user)):
-    """Get a link to the trainer's Stripe Express dashboard."""
-    account_id = current_user.get('stripeConnectAccountId')
-    if not account_id:
-        raise HTTPException(status_code=400, detail="No Stripe Connect account found. Please complete bank onboarding first.")
-    
-    try:
-        login_link = stripe.Account.create_login_link(account_id)
-        return {"url": login_link.url}
-    except stripe.error.StripeError as e:
-        raise HTTPException(status_code=400, detail=f"Failed to create dashboard link: {str(e)}")
+    """Check if trainer has Zelle info set up (replaces Stripe Connect status)."""
+    has_zelle = bool(current_user.get("zelleEmail") or current_user.get("zellePhone"))
+    return {
+        "connected": has_zelle,
+        "onboarded": has_zelle,
+        "paymentMethod": "zelle",
+        "zelleEmail": current_user.get("zelleEmail", ""),
+        "zellePhone": current_user.get("zellePhone", ""),
+    }
 
 
 # --- Admin: Stripe Connect Payouts ---
@@ -4499,11 +4539,11 @@ class AdminPayoutRequest(BaseModel):
 
 @api_router.get("/admin/payouts/pending")
 async def admin_get_pending_payouts(admin_user: dict = Depends(require_admin)):
-    """Get list of trainers eligible for payout ($35+ pending balance with connected Stripe)."""
-    # Get all trainers with Stripe Connect accounts
+    """Get list of trainers eligible for payout ($35+ pending balance with Zelle info)."""
+    # Get all trainers with Zelle info set up
     trainers = await db.users.find(
-        {'roles': 'trainer', 'stripeConnectOnboarded': True},
-        {'fullName': 1, 'email': 1, 'profilePhoto': 1, 'stripeConnectAccountId': 1}
+        {'roles': 'trainer', '$or': [{'zelleEmail': {'$exists': True, '$ne': ''}}, {'zellePhone': {'$exists': True, '$ne': ''}}]},
+        {'fullName': 1, 'email': 1, 'profilePhoto': 1, 'zelleEmail': 1, 'zellePhone': 1}
     ).to_list(500)
     
     results = []
@@ -4530,7 +4570,8 @@ async def admin_get_pending_payouts(admin_user: dict = Depends(require_admin)):
             'trainerName': trainer.get('fullName', 'Unknown'),
             'trainerEmail': trainer.get('email', ''),
             'profilePhoto': trainer.get('profilePhoto'),
-            'stripeAccountId': trainer.get('stripeConnectAccountId'),
+            'zelleEmail': trainer.get('zelleEmail', ''),
+            'zellePhone': trainer.get('zellePhone', ''),
             'pendingBalanceCents': pending,
             'totalEarningsCents': total_earnings,
             'totalPaidOutCents': total_paid,
@@ -4553,14 +4594,13 @@ async def admin_pay_trainer(
     req: AdminPayoutRequest,
     admin_user: dict = Depends(require_admin)
 ):
-    """Transfer funds to a single trainer via Stripe Connect."""
+    """Admin marks a trainer as paid via Zelle (manual payment tracking)."""
     trainer = await db.users.find_one({'_id': ObjectId(req.trainerId)})
     if not trainer:
         raise HTTPException(status_code=404, detail="Trainer not found")
     
-    account_id = trainer.get('stripeConnectAccountId')
-    if not account_id or not trainer.get('stripeConnectOnboarded'):
-        raise HTTPException(status_code=400, detail="Trainer has not completed Stripe bank onboarding")
+    if not trainer.get('zelleEmail') and not trainer.get('zellePhone'):
+        raise HTTPException(status_code=400, detail="Trainer has not set up Zelle info")
     
     # Calculate pending balance
     completed = await db.sessions.find(
@@ -4585,29 +4625,14 @@ async def admin_pay_trainer(
     if payout_amount < PAYOUT_MINIMUM_CENTS:
         raise HTTPException(status_code=400, detail=f"Minimum payout is ${PAYOUT_MINIMUM_CENTS/100:.2f}")
     
-    # Create Stripe Transfer
-    try:
-        transfer = stripe.Transfer.create(
-            amount=payout_amount,
-            currency="usd",
-            destination=account_id,
-            metadata={
-                "trainer_id": req.trainerId,
-                "trainer_name": trainer.get('fullName', ''),
-                "admin_id": str(admin_user['_id']),
-            },
-            description=f"RapidReps payout to {trainer.get('fullName', 'Trainer')}",
-        )
-    except stripe.error.StripeError as e:
-        raise HTTPException(status_code=400, detail=f"Stripe transfer failed: {str(e)}")
-    
-    # Record payout in DB
+    # Record payout in DB (admin sends via Zelle manually)
     payout_doc = {
         'trainerId': req.trainerId,
         'trainerName': trainer.get('fullName', ''),
         'amountCents': payout_amount,
-        'stripeTransferId': transfer.id,
-        'stripeAccountId': account_id,
+        'paymentMethod': 'zelle',
+        'zelleEmail': trainer.get('zelleEmail', ''),
+        'zellePhone': trainer.get('zellePhone', ''),
         'status': 'completed',
         'notes': req.notes,
         'processedBy': str(admin_user['_id']),
@@ -4615,21 +4640,26 @@ async def admin_pay_trainer(
     }
     await db.trainer_payouts.insert_one(payout_doc)
     
+    # Update any pending payout requests
+    await db.payout_requests.update_many(
+        {'trainerId': req.trainerId, 'status': 'pending'},
+        {'$set': {'status': 'completed', 'updatedAt': datetime.utcnow()}}
+    )
+    
     # Send notification to trainer
     asyncio.create_task(create_and_send_notification(
         req.trainerId,
-        "Payout Received!",
-        f"${payout_amount/100:.2f} has been transferred to your bank account.",
+        "Payout Sent!",
+        f"${payout_amount/100:.2f} has been sent to your Zelle account.",
         "payout",
         {"amount": str(payout_amount)}
     ))
     
     return {
         'success': True,
-        'transferId': transfer.id,
         'amountCents': payout_amount,
         'trainerName': trainer.get('fullName', ''),
-        'message': f"${payout_amount/100:.2f} transferred to {trainer.get('fullName', 'Trainer')}",
+        'message': f"${payout_amount/100:.2f} marked as paid to {trainer.get('fullName', 'Trainer')} via Zelle",
     }
 
 
@@ -4637,22 +4667,18 @@ async def admin_pay_trainer(
 async def admin_pay_all_trainers(
     admin_user: dict = Depends(require_admin)
 ):
-    """Batch transfer funds to all eligible trainers ($35+ pending) via Stripe Connect."""
-    # Get all eligible trainers
+    """Batch mark all eligible trainers as paid via Zelle."""
+    # Get all eligible trainers with Zelle info
     trainers = await db.users.find(
-        {'roles': 'trainer', 'stripeConnectOnboarded': True},
-        {'fullName': 1, 'stripeConnectAccountId': 1}
+        {'roles': 'trainer', '$or': [{'zelleEmail': {'$exists': True, '$ne': ''}}, {'zellePhone': {'$exists': True, '$ne': ''}}]},
+        {'fullName': 1, 'zelleEmail': 1, 'zellePhone': 1}
     ).to_list(500)
     
     results = []
     total_paid = 0
-    errors = []
     
     for trainer in trainers:
         trainer_id = str(trainer['_id'])
-        account_id = trainer.get('stripeConnectAccountId')
-        if not account_id:
-            continue
         
         # Calculate pending balance
         completed = await db.sessions.find(
@@ -4671,64 +4697,42 @@ async def admin_pay_all_trainers(
         if pending < PAYOUT_MINIMUM_CENTS:
             continue
         
-        # Create transfer
-        try:
-            transfer = stripe.Transfer.create(
-                amount=pending,
-                currency="usd",
-                destination=account_id,
-                metadata={
-                    "trainer_id": trainer_id,
-                    "trainer_name": trainer.get('fullName', ''),
-                    "admin_id": str(admin_user['_id']),
-                    "batch": "true",
-                },
-                description=f"RapidReps batch payout to {trainer.get('fullName', 'Trainer')}",
-            )
-            
-            payout_doc = {
-                'trainerId': trainer_id,
-                'trainerName': trainer.get('fullName', ''),
-                'amountCents': pending,
-                'stripeTransferId': transfer.id,
-                'stripeAccountId': account_id,
-                'status': 'completed',
-                'notes': 'Batch payout',
-                'processedBy': str(admin_user['_id']),
-                'createdAt': datetime.utcnow(),
-            }
-            await db.trainer_payouts.insert_one(payout_doc)
-            
-            asyncio.create_task(create_and_send_notification(
-                trainer_id,
-                "Payout Received!",
-                f"${pending/100:.2f} has been transferred to your bank account.",
-                "payout",
-                {"amount": str(pending)}
-            ))
-            
-            results.append({
-                'trainerId': trainer_id,
-                'trainerName': trainer.get('fullName', ''),
-                'amountCents': pending,
-                'transferId': transfer.id,
-            })
-            total_paid += pending
-            
-        except stripe.error.StripeError as e:
-            errors.append({
-                'trainerId': trainer_id,
-                'trainerName': trainer.get('fullName', ''),
-                'error': str(e),
-            })
+        # Record payout
+        payout_doc = {
+            'trainerId': trainer_id,
+            'trainerName': trainer.get('fullName', ''),
+            'amountCents': pending,
+            'paymentMethod': 'zelle',
+            'zelleEmail': trainer.get('zelleEmail', ''),
+            'zellePhone': trainer.get('zellePhone', ''),
+            'status': 'completed',
+            'notes': 'Batch Zelle payout',
+            'processedBy': str(admin_user['_id']),
+            'createdAt': datetime.utcnow(),
+        }
+        await db.trainer_payouts.insert_one(payout_doc)
+        
+        asyncio.create_task(create_and_send_notification(
+            trainer_id,
+            "Payout Sent!",
+            f"${pending/100:.2f} has been sent to your Zelle account.",
+            "payout",
+            {"amount": str(pending)}
+        ))
+        
+        results.append({
+            'trainerId': trainer_id,
+            'trainerName': trainer.get('fullName', ''),
+            'amountCents': pending,
+        })
+        total_paid += pending
     
     return {
         'success': True,
         'paidCount': len(results),
         'totalPaidCents': total_paid,
         'payouts': results,
-        'errors': errors,
-        'message': f"Paid {len(results)} trainer(s) a total of ${total_paid/100:.2f}",
+        'message': f"Marked {len(results)} trainer(s) as paid - total ${total_paid/100:.2f} via Zelle",
     }
 
 
@@ -9336,3 +9340,12 @@ app.add_middleware(
 @app.on_event("startup")
 async def start_notification_scheduler():
     asyncio.create_task(notification_scheduler())
+    # Seed default Zelle settings if not present
+    existing = await db.app_settings.find_one({"key": "zelle_config"})
+    if not existing:
+        await db.app_settings.insert_one({
+            "key": "zelle_config",
+            "zelleEmail": "ashtonbundy1@gmail.com",
+            "zellePhone": "240-281-0462",
+            "updatedAt": datetime.utcnow(),
+        })

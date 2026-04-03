@@ -28,12 +28,12 @@ export const PayoutsTab = ({
     </View>
 
     <Text style={[s.sectionTitle, { fontSize: 13, marginBottom: 6, color: C.gray }]}>
-      Minimum payout: {formatCents(payoutsData?.payoutMinimumCents || 3500)}
+      Minimum payout: {formatCents(payoutsData?.payoutMinimumCents || 3500)} | Paid via Zelle
     </Text>
 
     {(payoutsData?.eligibleCount || 0) > 0 && (
       <TouchableOpacity
-        style={{ backgroundColor: C.success, borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 16 }}
+        style={{ backgroundColor: '#6D1ED4', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 16 }}
         onPress={onPayAll}
         disabled={payingAll}
         data-testid="pay-all-btn"
@@ -42,7 +42,7 @@ export const PayoutsTab = ({
           <ActivityIndicator size="small" color={C.white} />
         ) : (
           <Text style={{ color: C.white, fontWeight: '800', fontSize: 15 }}>
-            Pay All Eligible ({payoutsData?.eligibleCount}) - {formatCents(payoutsData?.totalPendingCents || 0)}
+            Mark All Paid via Zelle ({payoutsData?.eligibleCount}) - {formatCents(payoutsData?.totalPendingCents || 0)}
           </Text>
         )}
       </TouchableOpacity>
@@ -50,10 +50,18 @@ export const PayoutsTab = ({
 
     <Text style={s.sectionTitle}>Trainers</Text>
     {(payoutsData?.trainers || []).map((t: any) => (
-      <View key={t.trainerId} style={[s.userCard, { borderLeftWidth: 3, borderLeftColor: t.eligible ? C.success : C.gray }]} data-testid={`payout-trainer-${t.trainerId}`}>
+      <View key={t.trainerId} style={[s.userCard, { borderLeftWidth: 3, borderLeftColor: t.eligible ? '#6D1ED4' : C.gray }]} data-testid={`payout-trainer-${t.trainerId}`}>
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: 15, fontWeight: '700', color: C.navy }}>{t.trainerName}</Text>
           <Text style={{ fontSize: 13, color: C.gray }}>{t.trainerEmail}</Text>
+          {(t.zelleEmail || t.zellePhone) ? (
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
+              {t.zelleEmail ? <Text style={{ fontSize: 12, color: '#6D1ED4', fontWeight: '600' }}>Zelle: {t.zelleEmail}</Text> : null}
+              {t.zellePhone ? <Text style={{ fontSize: 12, color: '#6D1ED4', fontWeight: '600' }}>{t.zellePhone}</Text> : null}
+            </View>
+          ) : (
+            <Text style={{ fontSize: 12, color: C.error, marginTop: 4 }}>No Zelle info</Text>
+          )}
           <View style={{ flexDirection: 'row', gap: 14, marginTop: 6 }}>
             <Text style={{ fontSize: 13, color: C.gray }}>Earned: <Text style={{ fontWeight: '700', color: C.navy }}>{formatCents(t.totalEarningsCents)}</Text></Text>
             <Text style={{ fontSize: 13, color: C.gray }}>Paid: <Text style={{ fontWeight: '700', color: C.success }}>{formatCents(t.totalPaidOutCents)}</Text></Text>
@@ -62,7 +70,7 @@ export const PayoutsTab = ({
         </View>
         <TouchableOpacity
           style={{
-            backgroundColor: t.eligible ? C.success : '#ddd',
+            backgroundColor: t.eligible ? '#6D1ED4' : '#ddd',
             paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10,
             opacity: t.eligible ? 1 : 0.5,
           }}
@@ -74,14 +82,14 @@ export const PayoutsTab = ({
             <ActivityIndicator size="small" color={C.white} />
           ) : (
             <Text style={{ color: C.white, fontWeight: '700', fontSize: 13 }}>
-              {t.eligible ? 'Pay Now' : 'Below Min'}
+              {t.eligible ? 'Mark Paid' : 'Below Min'}
             </Text>
           )}
         </TouchableOpacity>
       </View>
     ))}
     {(payoutsData?.trainers || []).length === 0 && (
-      <Text style={{ textAlign: 'center', color: C.gray, marginTop: 20 }}>No trainers with Stripe Connect accounts yet.</Text>
+      <Text style={{ textAlign: 'center', color: C.gray, marginTop: 20 }}>No trainers with Zelle accounts yet.</Text>
     )}
 
     <Text style={[s.sectionTitle, { marginTop: 24 }]}>Payout History</Text>
@@ -93,10 +101,10 @@ export const PayoutsTab = ({
           <View style={{ flex: 1 }}>
             <Text style={{ fontSize: 14, fontWeight: '700', color: C.navy }}>{p.trainerName}</Text>
             <Text style={{ fontSize: 13, color: C.gray }}>
-              {new Date(p.createdAt).toLocaleDateString()} - {formatCents(p.amountCents)}
+              {new Date(p.createdAt).toLocaleDateString()} - {formatCents(p.amountCents)} via Zelle
             </Text>
-            {p.stripeTransferId && (
-              <Text style={{ fontSize: 13, color: C.gray }}>{p.stripeTransferId}</Text>
+            {p.zelleEmail && (
+              <Text style={{ fontSize: 12, color: '#6D1ED4' }}>To: {p.zelleEmail}</Text>
             )}
           </View>
           <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: p.status === 'completed' ? `${C.success}20` : `${C.orange}20` }}>
