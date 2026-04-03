@@ -16,6 +16,8 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { sessionTrackingAPI } from '../../src/services/api';
 import { useAlert } from '../../src/contexts/AlertContext';
+import { SessionTimeline, SessionTimelineStatus } from '../../src/components/SessionTimeline';
+import { QuickActions } from '../../src/components/QuickActions';
 
 const { width } = Dimensions.get('window');
 
@@ -194,6 +196,16 @@ export default function TrainerEnRouteScreen() {
 
   const stepInfo = getStepInfo();
 
+  // Map trainer en-route step to SessionTimeline status
+  const getTimelineStatus = (): SessionTimelineStatus => {
+    switch (step) {
+      case 'starting': return 'confirmed';
+      case 'navigating': return 'en_route';
+      case 'arriving': return 'en_route';
+      case 'arrived': return 'arrived';
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <LinearGradient colors={['rgba(247, 147, 30, 0.88)', 'rgba(247, 147, 30, 0.80)', 'rgba(255, 165, 38, 0.75)']} style={StyleSheet.absoluteFillObject} />
@@ -222,6 +234,14 @@ export default function TrainerEnRouteScreen() {
               <Text style={styles.liveText}>GPS SHARING</Text>
             </View>
           )}
+        </View>
+
+        {/* Session Timeline */}
+        <View style={styles.infoCard}>
+          <SessionTimeline
+            currentStatus={getTimelineStatus()}
+            eta={step === 'navigating' || step === 'arriving' ? eta : undefined}
+          />
         </View>
 
         {/* Info Card */}
@@ -267,24 +287,26 @@ export default function TrainerEnRouteScreen() {
           </LinearGradient>
         </TouchableOpacity>
 
-        <View style={styles.actionRow}>
-          <TouchableOpacity onPress={handleMessageTrainee} style={styles.secondaryBtn} data-testid="message-trainee-btn">
-            <Ionicons name="chatbubble" size={20} color={COLORS.teal} />
-            <Text style={styles.secondaryBtnText}>Message</Text>
-          </TouchableOpacity>
+        {/* Quick Actions */}
+        <QuickActions
+          sessionId={sessionId}
+          otherPartyName={traineeName || 'Trainee'}
+          otherPartyId={params.traineeId as string}
+          role="trainer"
+          showCancel={false}
+        />
 
-          <TouchableOpacity
-            onPress={handleArrived}
-            style={[styles.arrivedBtn, step === 'arrived' && styles.arrivedBtnDone]}
-            disabled={step === 'arrived'}
-            data-testid="arrived-btn"
-          >
-            <Ionicons name="checkmark-circle" size={20} color={COLORS.white} />
-            <Text style={styles.arrivedBtnText}>
-              {step === 'arrived' ? 'Arrived' : "I've Arrived"}
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          onPress={handleArrived}
+          style={[styles.arrivedBtn, step === 'arrived' && styles.arrivedBtnDone, { marginTop: 12, alignSelf: 'stretch' }]}
+          disabled={step === 'arrived'}
+          data-testid="arrived-btn"
+        >
+          <Ionicons name="checkmark-circle" size={20} color={COLORS.white} />
+          <Text style={styles.arrivedBtnText}>
+            {step === 'arrived' ? 'Arrived' : "I've Arrived"}
+          </Text>
+        </TouchableOpacity>
       </Animated.View>
 
       {/* Arrived Modal */}

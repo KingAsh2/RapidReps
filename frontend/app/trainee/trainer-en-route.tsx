@@ -15,6 +15,7 @@ import { sessionTrackingAPI } from '../../src/services/api';
 import { useAlert } from '../../src/contexts/AlertContext';
 import { SessionTimeline, SessionTimelineStatus } from '../../src/components/SessionTimeline';
 import { QuickActions } from '../../src/components/QuickActions';
+import { LiveTrainerMap } from '../../src/components/LiveTrainerMap';
 
 const { width } = Dimensions.get('window');
 
@@ -46,6 +47,8 @@ export default function TrainerEnRouteScreen() {
   const [distanceMiles, setDistanceMiles] = useState<number | null>(null);
   const [eta, setEta] = useState<string>('Waiting for trainer...');
   const [lastUpdate, setLastUpdate] = useState<string>('');
+  const [trainerLat, setTrainerLat] = useState<number | null>(null);
+  const [trainerLng, setTrainerLng] = useState<number | null>(null);
   const [sessionStatus, setSessionStatus] = useState<string>('');
 
   const pollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -96,6 +99,11 @@ export default function TrainerEnRouteScreen() {
         } else if (data.trainer) {
           setStatus('en_route');
           setEta('On the way');
+        }
+
+        if (data.trainer?.latitude) {
+          setTrainerLat(data.trainer.latitude);
+          setTrainerLng(data.trainer.longitude);
         }
 
         if (data.trainer?.timestamp) {
@@ -153,6 +161,16 @@ export default function TrainerEnRouteScreen() {
           <Ionicons name={statusConfig.icon as any} size={20} color={statusConfig.color} />
           <Text style={[styles.statusLabel, { color: statusConfig.color }]}>{statusConfig.label}</Text>
         </View>
+
+        {/* Live Trainer Map */}
+        <LiveTrainerMap
+          trainerLocation={trainerLat ? { latitude: trainerLat, longitude: trainerLng! } : null}
+          traineeLocation={null}
+          trainerName={trainerName || 'Trainer'}
+          eta={status === 'en_route' || status === 'nearby' ? eta : undefined}
+          distance={distanceMiles != null ? `${distanceMiles.toFixed(1)} mi` : undefined}
+          status={status}
+        />
 
         {/* Visual Tracker */}
         <View style={styles.trackerCard}>

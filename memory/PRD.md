@@ -1,70 +1,67 @@
 # RapidReps - Fitness Training App
 
 ## Original Problem Statement
-A full-stack React Native/Expo fitness application connecting trainees with personal trainers. Includes session booking, payments via Stripe, messaging, trainer verification, group sessions, streaks/gamification, and a mandatory in-person session verification system.
+A full-stack React Native/Expo fitness application connecting trainees with personal trainers. Includes session booking, Zelle payments, messaging, trainer verification, group sessions, streaks/gamification, and a mandatory in-person session verification system.
 
 ## Tech Stack
 - **Frontend:** React Native / Expo (v54) with Expo Router
 - **Backend:** FastAPI (Python) + MongoDB
-- **Payments:** Stripe | **Auth:** JWT | **QR Codes:** react-native-qrcode-svg + expo-camera
-- **Current Version:** 3.0.7
+- **Payments:** Zelle (manual verification) | **Auth:** JWT | **QR Codes:** react-native-qrcode-svg + expo-camera
+
+## Payment Model (Zelle)
+- **Trainee → RapidReps**: Trainee sends Zelle to platform's admin-configurable email/phone
+- **Admin verifies**: Admin confirms receipt, session auto-confirms
+- **RapidReps → Trainer**: Admin pays trainers to their Zelle accounts
+- **Fee split**: 75% trainer / 25% platform (unchanged from Stripe era)
+- **Default Zelle**: ashtonbundy1@gmail.com / 240-281-0462 (admin-configurable)
 
 ## Completed Features
 
-### Uber-Like UI Components (March 2026 - INTEGRATED)
-All three Uber-style components are now fully integrated into the application:
+### Zelle Payment System (April 2026)
+- **Platform Zelle Settings**: Admin-configurable email/phone for receiving payments
+- **Trainee Payment Flow**: View Zelle info → Send payment → Mark as sent → Admin verifies → Session confirmed
+- **Trainer Zelle Setup**: Trainers save their Zelle email/phone for payouts
+- **Admin Payment Verification**: Pending Zelle payments dashboard, one-click verify
+- **Admin Trainer Payouts**: Manual Zelle payout tracking, batch pay-all
+- **Stripe Connect fully replaced** with Zelle throughout all screens
 
-1. **SessionTimeline** (`/src/components/SessionTimeline.tsx`)
-   - Integrated into `trainer-en-route.tsx` (full mode with ETA)
-   - Integrated into `session-detail.tsx` (compact mode)
-   - Visual timeline: Requested > Confirmed > En Route > Arrived > In Progress > Completed
-   - Animated step indicators with current status highlighting
+### Uber-Like UI Components (April 2026 - COMPLETE)
+1. **SessionTimeline** - Visual step-by-step progress (trainee + trainer screens)
+2. **QuickActions** - Floating call/message/cancel buttons (trainee + trainer screens)
+3. **TrainerBottomSheet** - Swipe-up trainer selection overlay (trainee home)
+4. **LiveTrainerMap** - Real-time animated trainer position tracker (trainee tracking screen)
 
-2. **QuickActions** (`/src/components/QuickActions.tsx`)
-   - Integrated into `trainer-en-route.tsx`
-   - Floating action buttons: Call, Message, Cancel
-   - Gradient styling matching app theme, haptic feedback
-
-3. **TrainerBottomSheet** (`/src/components/TrainerBottomSheet.tsx`)
-   - Integrated into `trainee/(tabs)/home.tsx` as overlay
-   - Swipe-up bottom sheet for Uber-like trainer selection
-   - Collapsed/expanded states, ETA badges, pricing display
-
-### Build Fix (March 2026)
-- Fixed yarn.lock version conflicts:
-  - `react-native-reanimated`: 4.1.1
-  - `react-native-worklets`: 0.5.1
-  - `react-native-gesture-handler`: 2.28.0
-- Fixed hardcoded URLs in email_service.py
-
-### Previous Features - COMPLETE
-- Outdoor Location Agreement (propose/accept location)
-- Arrival Confirmation System (both parties)
-- Dynamic Data Refresh (15s polling)
-- Flexible Session Pricing (per-duration rates)
-- All crash fixes (Slider, notification, animation)
+### Integration Map
+| Screen | Components Used |
+|--------|----------------|
+| `trainee/(tabs)/home.tsx` | TrainerBottomSheet |
+| `trainee/trainer-en-route.tsx` | SessionTimeline, QuickActions, LiveTrainerMap |
+| `trainee/session-detail.tsx` | SessionTimeline (compact) |
+| `trainer/en-route.tsx` | SessionTimeline, QuickActions |
+| `trainee/payment.tsx` | Zelle payment instructions + mark-sent |
+| `trainee/confirm-booking.tsx` | Zelle payment badge |
+| `trainer/connect-bank.tsx` | Zelle setup form |
+| `trainer/(tabs)/earnings.tsx` | Zelle account status |
+| `admin/PayoutsTab.tsx` | Zelle payout tracking |
 
 ## Key API Endpoints
 | Endpoint | Description |
 |----------|-------------|
-| POST /api/sessions/{id}/gps-update | Real-time GPS tracking |
-| PUT /api/trainer/location | Update trainer location |
-| GET /api/trainer/my-location-status | Get trainer location status |
-| POST /api/sessions/{id}/propose-location | Propose outdoor location |
-| POST /api/sessions/{id}/trainer-arrived | Trainer confirms arrival |
-| POST /api/sessions/{id}/trainee-arrived | Trainee confirms arrival |
-
-## Integration Map
-| Screen | Components Used |
-|--------|----------------|
-| `trainee/(tabs)/home.tsx` | TrainerBottomSheet |
-| `trainee/trainer-en-route.tsx` | SessionTimeline, QuickActions |
-| `trainee/session-detail.tsx` | SessionTimeline (compact) |
+| GET /api/settings/zelle | Platform Zelle info (public) |
+| PUT /api/admin/settings/zelle | Admin updates Zelle settings |
+| POST /api/payments/zelle/mark-sent | Trainee marks payment sent |
+| POST /api/admin/payments/verify-zelle/{id} | Admin verifies → session confirmed |
+| GET /api/admin/payments/pending-zelle | Pending Zelle payments |
+| POST /api/trainer/zelle-info | Trainer saves Zelle info |
+| GET /api/trainer/zelle-info | Trainer gets Zelle info |
+| GET /api/trainer/connect/status | Zelle-based connect status |
+| GET /api/admin/payouts/pending | Trainer payout eligibility |
+| POST /api/admin/payouts/pay-trainer | Mark trainer paid via Zelle |
 
 ## Remaining / Blocked Work
-- [ ] EAS iOS Build: Apple Distribution Certificate expired - user must run `eas credentials`
-- [ ] SendGrid email integration (blocked - needs user API key)
-- [ ] Resolve remaining TypeScript warnings (~90, mostly non-critical LinearGradient color types)
+- [ ] EAS iOS Build: Apple Distribution Certificate expired
+- [ ] SendGrid email integration (needs user API key)
+- [ ] ~90 non-critical TypeScript warnings
 
 ## Credentials
 | Role | Email | Password |
@@ -74,7 +71,7 @@ All three Uber-style components are now fully integrated into the application:
 | Trainer | test_trainer_iter25@test.com | Test123! |
 
 ## Test Reports
-- `/app/test_reports/iteration_45.json` - Location/arrival endpoints verified
-- `/app/test_reports/iteration_46.json` - All 7 backend APIs verified (100% pass rate, 18/18 tests)
+- `/app/test_reports/iteration_46.json` - Uber components API test (18/18 pass)
+- `/app/test_reports/iteration_47.json` - Zelle payment system test (19/19 pass)
 
 ## MOCKED: SendGrid (awaiting API key)
