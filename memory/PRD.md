@@ -1,48 +1,47 @@
-# RapidReps - Fitness Training App
+# RapidReps - Fitness Training App PRD
 
 ## Original Problem Statement
-A full-stack React Native/Expo fitness application connecting trainees with personal trainers. Includes session booking, Zelle payments, messaging, trainer verification, group sessions, streaks/gamification, and a mandatory in-person session verification system.
+Full-stack React Native/Expo fitness app connecting trainees with personal trainers. Features: session booking, Zelle payments, messaging, trainer verification, group sessions, streaks/gamification, in-person session verification.
 
 ## Tech Stack
 - **Frontend:** React Native / Expo (v54) with Expo Router
 - **Backend:** FastAPI (Python) + MongoDB
-- **Payments:** Zelle (manual verification) | **Auth:** JWT | **QR Codes:** react-native-qrcode-svg + expo-camera
+- **Payments:** Zelle (manual verification) | **Auth:** JWT
 
 ## Payment Model (Zelle)
-- **Trainee → RapidReps**: Trainee sends Zelle to platform's admin-configurable email/phone
-- **Admin verifies**: Admin confirms receipt, session auto-confirms
-- **RapidReps → Trainer**: Admin pays trainers to their Zelle accounts
-- **Fee split**: 75% trainer / 25% platform (unchanged from Stripe era)
-- **Default Zelle**: ashtonbundy1@gmail.com / 240-281-0462 (admin-configurable)
+- Trainee → RapidReps: Sends Zelle to admin-configurable email/phone
+- Admin verifies payment → session auto-confirms
+- RapidReps → Trainer: Admin pays trainers to their Zelle accounts
+- Fee split: 75% trainer / 25% platform
+- Default Zelle: ashtonbundy1@gmail.com / 240-281-0462
 
-## Completed Features
+## Completed Features (This Session)
 
-### Zelle Payment System (April 2026)
-- **Platform Zelle Settings**: Admin-configurable email/phone for receiving payments
-- **Trainee Payment Flow**: View Zelle info → Send payment → Mark as sent → Admin verifies → Session confirmed
-- **Trainer Zelle Setup**: Trainers save their Zelle email/phone for payouts
-- **Admin Payment Verification**: Pending Zelle payments dashboard, one-click verify
-- **Admin Trainer Payouts**: Manual Zelle payout tracking, batch pay-all
-- **Stripe Connect fully replaced** with Zelle throughout all screens
+### Zelle Payment System
+- Platform Zelle settings (admin-configurable)
+- Trainee payment flow: View info → Send → Mark sent → Admin verify → Session confirmed
+- Trainer Zelle setup for payouts
+- Admin pending payments dashboard + verification
+- Admin trainer payouts (manual Zelle tracking, batch pay-all)
+- Outdoor session location verification required before payment
 
-### Uber-Like UI Components (April 2026 - COMPLETE)
-1. **SessionTimeline** - Visual step-by-step progress (trainee + trainer screens)
-2. **QuickActions** - Floating call/message/cancel buttons (trainee + trainer screens)
-3. **TrainerBottomSheet** - Swipe-up trainer selection overlay (trainee home)
-4. **LiveTrainerMap** - Real-time animated trainer position tracker (trainee tracking screen)
+### UI/UX Improvements
+- **Profile Photo Edit**: Trainer edit-profile now has ImagePicker for photo upload/change
+- **Group Sessions Visibility**: Changed orange gradient to navy for contrast
+- **Achievements Button**: Fixed text overflow with numberOfLines constraint
+- **Sessions Clickable**: All session cards navigate to session-detail on tap
+- **Distance Slider**: Replaced dropdown with draggable slider (1-30 miles) across trainee home + trainer edit-profile
+- **"Earn" Text Visibility**: Increased font size + green color contrast in set-rates
+- **508 Compliance**: Fixed low-contrast text colors (0.4→0.75 opacity) across earnings, profile, set-rates screens
+- **Trainer Gray Colors**: Improved gray from #5a6785 to #8a95b0 for group sessions
 
-### Integration Map
-| Screen | Components Used |
-|--------|----------------|
-| `trainee/(tabs)/home.tsx` | TrainerBottomSheet |
-| `trainee/trainer-en-route.tsx` | SessionTimeline, QuickActions, LiveTrainerMap |
-| `trainee/session-detail.tsx` | SessionTimeline (compact) |
-| `trainer/en-route.tsx` | SessionTimeline, QuickActions |
-| `trainee/payment.tsx` | Zelle payment instructions + mark-sent |
-| `trainee/confirm-booking.tsx` | Zelle payment badge |
-| `trainer/connect-bank.tsx` | Zelle setup form |
-| `trainer/(tabs)/earnings.tsx` | Zelle account status |
-| `admin/PayoutsTab.tsx` | Zelle payout tracking |
+### Onboarding Prompts
+- New trainers see Zelle setup banner on home screen
+- New trainees see address setup banner on home screen
+- GET /api/onboarding/status endpoint checks completion
+
+### Uber-Like Components (Previous Session)
+- SessionTimeline, QuickActions, TrainerBottomSheet, LiveTrainerMap integrated
 
 ## Key API Endpoints
 | Endpoint | Description |
@@ -50,17 +49,17 @@ A full-stack React Native/Expo fitness application connecting trainees with pers
 | GET /api/settings/zelle | Platform Zelle info (public) |
 | PUT /api/admin/settings/zelle | Admin updates Zelle settings |
 | POST /api/payments/zelle/mark-sent | Trainee marks payment sent |
-| POST /api/admin/payments/verify-zelle/{id} | Admin verifies → session confirmed |
+| POST /api/admin/payments/verify-zelle/{id} | Admin verifies payment |
 | GET /api/admin/payments/pending-zelle | Pending Zelle payments |
 | POST /api/trainer/zelle-info | Trainer saves Zelle info |
 | GET /api/trainer/zelle-info | Trainer gets Zelle info |
-| GET /api/trainer/connect/status | Zelle-based connect status |
+| GET /api/onboarding/status | Onboarding completion check |
 | GET /api/admin/payouts/pending | Trainer payout eligibility |
-| POST /api/admin/payouts/pay-trainer | Mark trainer paid via Zelle |
+| POST /api/admin/payouts/pay-trainer | Mark trainer paid |
 
-## Remaining / Blocked Work
-- [ ] EAS iOS Build: Apple Distribution Certificate expired
-- [ ] SendGrid email integration (needs user API key)
+## Remaining / Blocked
+- [ ] EAS iOS Build: Apple Certificate expired
+- [ ] SendGrid email integration (needs API key)
 - [ ] ~90 non-critical TypeScript warnings
 
 ## Credentials
@@ -71,7 +70,8 @@ A full-stack React Native/Expo fitness application connecting trainees with pers
 | Trainer | test_trainer_iter25@test.com | Test123! |
 
 ## Test Reports
-- `/app/test_reports/iteration_46.json` - Uber components API test (18/18 pass)
-- `/app/test_reports/iteration_47.json` - Zelle payment system test (19/19 pass)
+- iteration_46.json: Uber components (18/18 pass)
+- iteration_47.json: Zelle payment system (19/19 pass)
+- iteration_48.json: Onboarding + outdoor verification + profile photo (13/13 pass)
 
 ## MOCKED: SendGrid (awaiting API key)
