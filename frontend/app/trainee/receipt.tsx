@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   ScrollView,
   ImageBackground,
+  Image,
   Platform,
 } from 'react-native';
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
@@ -52,10 +53,19 @@ export default function ReceiptScreen() {
   const [loading, setLoading] = useState(true);
   const [receipt, setReceipt] = useState<any>(null);
   const [generating, setGenerating] = useState(false);
+  const [logoBase64, setLogoBase64] = useState<string>('');
 
   useEffect(() => {
     if (sessionId) loadReceipt();
+    loadLogo();
   }, [sessionId]);
+
+  const loadLogo = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/receipt-logo`);
+      setLogoBase64(res.data.logo || '');
+    } catch { /* fallback to text logo */ }
+  };
 
   const loadReceipt = async () => {
     setLoading(true);
@@ -76,7 +86,7 @@ export default function ReceiptScreen() {
     if (!receipt) return;
     setGenerating(true);
     try {
-      const html = buildReceiptHTML(receipt);
+      const html = buildReceiptHTML(receipt, logoBase64);
       const { uri } = await Print.printToFileAsync({ html, width: 612, height: 792 });
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: `Receipt ${receipt.receiptNumber}` });
@@ -139,9 +149,12 @@ export default function ReceiptScreen() {
             <View style={styles.receiptCard} data-testid="receipt-card">
               {/* Logo / Brand */}
               <View style={styles.brandSection}>
-                <View style={styles.logoMark}>
-                  <Ionicons name="fitness" size={28} color={COLORS.white} />
-                </View>
+                <Image
+                  source={require('../../assets/images/rapidreps-logo.png')}
+                  style={styles.logoImage}
+                  resizeMode="contain"
+                  data-testid="receipt-logo"
+                />
                 <Text style={styles.brandName}>RapidReps</Text>
                 <Text style={styles.brandSubtitle}>Payment Receipt</Text>
               </View>
@@ -262,8 +275,11 @@ export default function ReceiptScreen() {
   );
 }
 
-function buildReceiptHTML(receipt: any): string {
+function buildReceiptHTML(receipt: any, logoBase64: string = ''): string {
   const isPaid = receipt.paymentStatus === 'verified';
+  const logoImg = logoBase64
+    ? `<img src="data:image/png;base64,${logoBase64}" style="width:80px;height:80px;border-radius:14px;margin-bottom:10px;" />`
+    : `<div class="brand-icon">R</div>`;
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; color: #1a2a5e; background: #f8f9fc; padding: 40px; }
@@ -303,7 +319,7 @@ function buildReceiptHTML(receipt: any): string {
   </style></head><body>
   <div class="receipt">
     <div class="brand">
-      <div class="brand-icon">R</div>
+      ${logoImg}
       <div class="brand-name">RapidReps</div>
       <div class="brand-sub">Payment Receipt</div>
     </div>
@@ -360,7 +376,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   brandSection: { alignItems: 'center', marginBottom: 24 },
-  logoMark: { width: 56, height: 56, borderRadius: 14, backgroundColor: COLORS.orange, justifyContent: 'center', alignItems: 'center', marginBottom: 10 },
+  logoImage: { width: 80, height: 80, borderRadius: 16, marginBottom: 10 },
   brandName: { fontSize: 28, fontWeight: '900', color: COLORS.navy, letterSpacing: -0.5 },
   brandSubtitle: { fontSize: 14, color: '#8a95b0', marginTop: 4 },
 

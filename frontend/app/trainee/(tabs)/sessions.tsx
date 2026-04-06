@@ -520,6 +520,20 @@ export default function SessionsScreen() {
                         </View>
                       </TouchableOpacity>
                     )}
+
+                    {/* Download Receipt for verified Zelle payments */}
+                    {isCompleted && session.zellePaymentStatus === 'verified' && (
+                      <TouchableOpacity
+                        style={styles.receiptButton}
+                        onPress={() => router.push(`/trainee/receipt?sessionId=${session.id}`)}
+                        data-testid={`receipt-${session.id}`}
+                      >
+                        <View style={styles.receiptButtonInner}>
+                          <Ionicons name="document-text" size={16} color="#6D1ED4" />
+                          <Text style={styles.receiptButtonText}>Download Receipt</Text>
+                        </View>
+                      </TouchableOpacity>
+                    )}
                   </View>
                   </TouchableOpacity>
                 </Animated.View>
@@ -816,6 +830,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: COLORS.teal,
+  },
+  receiptButton: {
+    marginTop: 8,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#6D1ED4',
+    backgroundColor: '#F8F4FF',
+  },
+  receiptButtonInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+  },
+  receiptButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#6D1ED4',
   },
   trackButton: {
     borderRadius: 12,

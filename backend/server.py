@@ -605,6 +605,7 @@ class SessionResponse(BaseModel):
     traineePhoto: Optional[str] = None
     traineePhone: Optional[str] = None
     isGroupSession: bool = False
+    zellePaymentStatus: Optional[str] = None
 
 # Rating Models
 class RatingCreate(BaseModel):
@@ -4548,6 +4549,18 @@ async def get_onboarding_status(current_user: dict = Depends(get_current_user)):
 
 
 # --- Receipts / Invoices ---
+
+@api_router.get("/receipt-logo")
+async def get_receipt_logo():
+    """Return Base64-encoded logo for PDF receipts."""
+    logo_path = os.path.join(os.path.dirname(__file__), "logo_b64.txt")
+    try:
+        with open(logo_path, "r") as f:
+            logo_b64 = f.read().strip()
+        return {"logo": logo_b64}
+    except FileNotFoundError:
+        return {"logo": ""}
+
 
 @api_router.get("/receipts/session/{session_id}")
 async def get_session_receipt(

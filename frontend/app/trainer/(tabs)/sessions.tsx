@@ -14,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { useRouter } from 'expo-router';
 import { SessionCountdown } from '../../../src/components/SessionCountdown';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
@@ -35,6 +36,7 @@ const backgroundImage = require('../../../assets/images/bg-box-jumps.png');
 type TabFilter = 'upcoming' | 'completed' | 'cancelled';
 
 export default function TrainerSessionsScreen() {
+  const router = useRouter();
   const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -191,6 +193,18 @@ export default function TrainerSessionsScreen() {
                     durationMinutes={session.durationMinutes || 60}
                   />
                 )}
+
+                {/* Download Receipt for completed/verified sessions */}
+                {session.status === 'completed' && session.zellePaymentStatus === 'verified' && (
+                  <TouchableOpacity
+                    style={styles.receiptBtn}
+                    onPress={() => router.push(`/trainer/receipt?sessionId=${session.id}`)}
+                    data-testid={`receipt-btn-${idx}`}
+                  >
+                    <Ionicons name="document-text" size={16} color="#6D1ED4" />
+                    <Text style={styles.receiptBtnText}>Download Receipt</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             ))
           )}
@@ -233,4 +247,7 @@ const styles = StyleSheet.create({
   sessionDetails: { flexDirection: 'row', gap: 10, marginTop: 12 },
   detailChip: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(0,0,0,0.05)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
   detailChipText: { fontSize: 13, fontWeight: '600', color: COLORS.gray },
+
+  receiptBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#F8F4FF', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, marginTop: 12, alignSelf: 'flex-start' },
+  receiptBtnText: { fontSize: 13, fontWeight: '700', color: '#6D1ED4' },
 });
