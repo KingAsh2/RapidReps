@@ -1,4 +1,4 @@
-# RapidReps Test Credentials
+# Test Credentials
 
 | Role | Email | Password |
 |------|-------|----------|
