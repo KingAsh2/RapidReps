@@ -235,6 +235,14 @@ export default function SessionDetailScreen() {
                 <Ionicons name="call" size={20} color={COLORS.teal} />
                 <Text style={styles.actionButtonText}>Call</Text>
               </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: '#F8F4FF' }]}
+                onPress={() => router.push(`/trainee/receipt?sessionId=${sessionId}`)}
+                data-testid="view-receipt-btn"
+              >
+                <Ionicons name="receipt" size={20} color="#6D1ED4" />
+                <Text style={[styles.actionButtonText, { color: '#6D1ED4' }]}>Receipt</Text>
+              </TouchableOpacity>
             </View>
           </View>
 

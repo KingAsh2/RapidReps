@@ -4547,6 +4547,113 @@ async def get_onboarding_status(current_user: dict = Depends(get_current_user)):
     }
 
 
+# --- Receipts / Invoices ---
+
+@api_router.get("/receipts/session/{session_id}")
+async def get_session_receipt(
+    session_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Generate receipt data for a session. Accessible by trainee, trainer, or admin."""
+    session = await db.sessions.find_one({"_id": ObjectId(session_id)}, {"_id": 0})
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    user_id = str(current_user['_id'])
+    is_admin = current_user.get('isAdmin', False)
+    is_trainee = session.get('traineeId') == user_id
+    is_trainer = session.get('trainerId') == user_id
+
+    if not (is_admin or is_trainee or is_trainer):
+        raise HTTPException(status_code=403, detail="Not authorized to view this receipt")
+
+    # Fetch trainee and trainer info
+    trainee = await db.users.find_one({"_id": ObjectId(session['traineeId'])}, {"fullName": 1, "email": 1, "homeAddress": 1, "address": 1}) if session.get('traineeId') else None
+    trainer = await db.users.find_one({"_id": ObjectId(session['trainerId'])}, {"fullName": 1, "email": 1}) if session.get('trainerId') else None
+
+    # Get transaction if exists
+    transaction = await db.transactions.find_one(
+        {"sessionId": session_id, "transactionType": TransactionType.SESSION_PAYMENT},
+        {"_id": 0}
+    )
+
+    # Calculate amounts
+    total_cents = session.get('totalCents') or session.get('priceCents', 0)
+    payout_info = calculate_session_payout(total_cents, session.get('sessionType', 'outdoor'))
+
+    # Get Zelle payment info
+    zelle_status = session.get('zellePaymentStatus', 'pending')
+    zelle_verified_at = session.get('zellePaymentVerifiedAt')
+
+    # Generate receipt number
+    receipt_number = f"RR-{session_id[-8:].upper()}"
+
+    receipt = {
+        "receiptNumber": receipt_number,
+        "sessionId": session_id,
+        "date": (session.get('sessionDateTimeStart') or session.get('createdAt', datetime.utcnow())).isoformat() if isinstance(session.get('sessionDateTimeStart') or session.get('createdAt'), datetime) else str(session.get('sessionDateTimeStart') or session.get('createdAt', '')),
+        "sessionType": session.get('sessionType', 'outdoor'),
+        "sessionStatus": session.get('status', ''),
+        "durationMinutes": session.get('durationMinutes', 30),
+        "traineeName": trainee.get('fullName', 'N/A') if trainee else 'N/A',
+        "traineeEmail": trainee.get('email', '') if trainee else '',
+        "trainerName": trainer.get('fullName', 'N/A') if trainer else 'N/A',
+        "trainerEmail": trainer.get('email', '') if trainer else '',
+        "location": session.get('outdoorLocationProposal') or session.get('address') or (trainee.get('homeAddress') or trainee.get('address', '') if trainee else ''),
+        "totalCents": total_cents,
+        "trainerPayoutCents": payout_info['trainer_payout_cents'],
+        "platformFeeCents": payout_info['platform_fee_cents'],
+        "trainerPercent": payout_info['trainer_percent'],
+        "platformPercent": payout_info['platform_percent'],
+        "paymentMethod": "Zelle",
+        "paymentStatus": zelle_status,
+        "paymentVerifiedAt": zelle_verified_at.isoformat() if isinstance(zelle_verified_at, datetime) else str(zelle_verified_at or ''),
+        "createdAt": session.get('createdAt', datetime.utcnow()).isoformat() if isinstance(session.get('createdAt'), datetime) else str(session.get('createdAt', '')),
+        "isTrainee": is_trainee,
+        "isTrainer": is_trainer,
+        "isAdmin": is_admin,
+    }
+
+    return receipt
+
+
+@api_router.get("/admin/receipts")
+async def admin_get_all_receipts(
+    admin_user: dict = Depends(require_admin),
+    limit: int = 50,
+    offset: int = 0,
+):
+    """Admin: Get all receipts for verified Zelle payments."""
+    pipeline = [
+        {"$match": {"zellePaymentStatus": "verified"}},
+        {"$sort": {"zellePaymentVerifiedAt": -1}},
+        {"$skip": offset},
+        {"$limit": limit},
+    ]
+    sessions = await db.sessions.aggregate(pipeline).to_list(limit)
+
+    receipts = []
+    for s in sessions:
+        sid = str(s['_id'])
+        trainee = await db.users.find_one({"_id": ObjectId(s['traineeId'])}, {"fullName": 1, "email": 1}) if s.get('traineeId') else None
+        trainer = await db.users.find_one({"_id": ObjectId(s['trainerId'])}, {"fullName": 1}) if s.get('trainerId') else None
+        total = s.get('totalCents') or s.get('priceCents', 0)
+        receipts.append({
+            "receiptNumber": f"RR-{sid[-8:].upper()}",
+            "sessionId": sid,
+            "traineeName": trainee.get('fullName', 'N/A') if trainee else 'N/A',
+            "traineeEmail": trainee.get('email', '') if trainee else '',
+            "trainerName": trainer.get('fullName', 'N/A') if trainer else 'N/A',
+            "sessionType": s.get('sessionType', ''),
+            "totalCents": total,
+            "paymentVerifiedAt": s.get('zellePaymentVerifiedAt', s.get('createdAt', '')),
+            "status": s.get('status', ''),
+        })
+
+    total_count = await db.sessions.count_documents({"zellePaymentStatus": "verified"})
+    return {"receipts": receipts, "total": total_count}
+
+
 # --- Trainer Zelle Connect Status (compatibility endpoint) ---
 
 @api_router.get("/trainer/connect/status")
