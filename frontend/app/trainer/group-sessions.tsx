@@ -10,7 +10,7 @@ import { toast } from '../../src/utils/toast';
 
 const backgroundImage = require('../../assets/images/bg-group-gym.png');
 
-const COLORS = { orange: '#FF6A00', teal: '#1a2a5e', navy: '#1a2a5e', white: '#FFFFFF', gray: '#5a6785', success: '#00D26A', error: '#FF4757' };
+const COLORS = { orange: '#FF6A00', teal: '#1a2a5e', navy: '#1a2a5e', white: '#FFFFFF', gray: '#8a95b0', success: '#00D26A', error: '#FF4757' };
 
 export default function TrainerGroupSessionsScreen() {
   const router = useRouter();

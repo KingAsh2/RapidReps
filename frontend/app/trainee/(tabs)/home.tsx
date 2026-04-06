@@ -17,6 +17,7 @@ import {
   ImageBackground,
   FlatList,
 } from 'react-native';
+import Slider from '@react-native-community/slider';
 import { useRouter, Stack } from 'expo-router';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { useAlert } from '../../../src/contexts/AlertContext';
@@ -96,6 +97,7 @@ export default function TraineeHomeScreen() {
   const [showProximityPicker, setShowProximityPicker] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [selectedTrainerId, setSelectedTrainerId] = useState<string | undefined>(undefined);
+  const [needsAddress, setNeedsAddress] = useState(false);
 
   // Convenience features state
   const [recentTrainers, setRecentTrainers] = useState<any[]>([]);
@@ -191,6 +193,10 @@ export default function TraineeHomeScreen() {
       requestLocationPermission();
       loadTrainers();
       loadConvenienceData();
+      // Check if trainee needs to add address
+      if (!user.homeAddress && !user.address) {
+        setNeedsAddress(true);
+      }
     }
   }, [user]);
 
@@ -558,6 +564,24 @@ export default function TraineeHomeScreen() {
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FFFFFF" />
             }
           >
+            {/* Address Setup Banner */}
+            {needsAddress && (
+              <TouchableOpacity
+                style={{ backgroundColor: '#1a2a5e', borderRadius: 14, padding: 16, marginHorizontal: 16, marginBottom: 12, flexDirection: 'row', alignItems: 'center', gap: 12 }}
+                onPress={() => router.push('/trainee/(tabs)/profile')}
+                data-testid="address-setup-banner"
+              >
+                <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center' }}>
+                  <Ionicons name="home" size={22} color="#FFFFFF" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 15, fontWeight: '800', color: '#FFFFFF' }}>Add Your Address</Text>
+                  <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>Set your home address for trainer navigation</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.6)" />
+              </TouchableOpacity>
+            )}
+
             {/* Hero Banner - Motivational Greeting */}
             <Animated.View
               style={[
@@ -734,7 +758,12 @@ export default function TraineeHomeScreen() {
                       <Ionicons name="chevron-forward" size={24} color="rgba(255,255,255,0.8)" />
                     </View>
                     {pendingSessions.slice(0, 2).map((session: any, index: number) => (
-                      <View key={session.id} style={styles.pendingItem}>
+                      <TouchableOpacity
+                        key={session.id}
+                        style={styles.pendingItem}
+                        onPress={() => router.push(`/trainee/session-detail?sessionId=${session.id}`)}
+                        data-testid={`pending-session-${session.id}`}
+                      >
                         <View style={styles.pendingItemRow}>
                           <Ionicons name="calendar" size={16} color="rgba(255,255,255,0.9)" />
                           <Text style={styles.pendingItemText}>
@@ -743,8 +772,8 @@ export default function TraineeHomeScreen() {
                           <Text style={styles.pendingItemDot}>•</Text>
                           <Text style={styles.pendingItemText}>{session.durationMinutes} min</Text>
                         </View>
-                        <Text style={styles.pendingStatus}>⏳ Awaiting trainer response</Text>
-                      </View>
+                        <Text style={styles.pendingStatus}>Tap for details</Text>
+                      </TouchableOpacity>
                     ))}
                   </LinearGradient>
                 </TouchableOpacity>
@@ -937,40 +966,42 @@ export default function TraineeHomeScreen() {
           >
             <View style={styles.proximityPickerContainer}>
               <View style={styles.proximityPickerHeader}>
-                <Text style={styles.proximityPickerTitle}>Travel Proximity (miles)</Text>
+                <Text style={styles.proximityPickerTitle}>Travel Proximity</Text>
                 <TouchableOpacity onPress={() => setShowProximityPicker(false)}>
                   <Ionicons name="close-circle" size={26} color="#5a6785" />
                 </TouchableOpacity>
               </View>
-              <FlatList
-                data={Array.from({ length: 35 }, (_, i) => i + 1)}
-                keyExtractor={(item) => item.toString()}
-                style={styles.proximityPickerList}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={[
-                      styles.proximityPickerItem,
-                      travelProximity === item && styles.proximityPickerItemSelected,
-                    ]}
-                    onPress={() => {
-                      setTravelProximity(item);
-                      setShowProximityPicker(false);
-                    }}
-                  >
-                    <Text
-                      style={[
-                        styles.proximityPickerItemText,
-                        travelProximity === item && styles.proximityPickerItemTextSelected,
-                      ]}
-                    >
-                      {item} {item === 1 ? 'mile' : 'miles'}
-                    </Text>
-                    {travelProximity === item && (
-                      <Ionicons name="checkmark-circle" size={22} color="#2a3a6e" />
-                    )}
-                  </TouchableOpacity>
-                )}
-              />
+              <View style={{ paddingHorizontal: 20, paddingVertical: 24 }}>
+                <Text style={{ fontSize: 48, fontWeight: '900', color: '#1a2a5e', textAlign: 'center', marginBottom: 8 }} data-testid="proximity-value">
+                  {travelProximity}
+                </Text>
+                <Text style={{ fontSize: 16, fontWeight: '600', color: '#5a6785', textAlign: 'center', marginBottom: 24 }}>
+                  {travelProximity === 1 ? 'mile' : 'miles'}
+                </Text>
+                <Slider
+                  style={{ width: '100%', height: 44 }}
+                  minimumValue={1}
+                  maximumValue={30}
+                  step={1}
+                  value={travelProximity}
+                  onValueChange={(val: number) => setTravelProximity(val)}
+                  minimumTrackTintColor="#FF6A00"
+                  maximumTrackTintColor="#E8ECF0"
+                  thumbTintColor="#FF6A00"
+                  data-testid="proximity-slider"
+                />
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
+                  <Text style={{ fontSize: 13, color: '#5a6785', fontWeight: '600' }}>1 mi</Text>
+                  <Text style={{ fontSize: 13, color: '#5a6785', fontWeight: '600' }}>30 mi</Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                style={{ backgroundColor: '#1a2a5e', borderRadius: 14, paddingVertical: 16, marginHorizontal: 20, marginBottom: 20, alignItems: 'center' }}
+                onPress={() => setShowProximityPicker(false)}
+                data-testid="proximity-done-btn"
+              >
+                <Text style={{ fontSize: 16, fontWeight: '800', color: '#fff' }}>Done</Text>
+              </TouchableOpacity>
             </View>
           </TouchableOpacity>
         </Modal>

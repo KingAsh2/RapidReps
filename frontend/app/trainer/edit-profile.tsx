@@ -14,6 +14,7 @@ import {
   Modal,
   FlatList,
   ImageBackground,
+  Image,
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { trainerAPI } from '../../src/services/api';
@@ -25,6 +26,8 @@ import { useAuth } from '../../src/contexts/AuthContext';
 import { useAlert } from '../../src/contexts/AlertContext';
 import * as Location from 'expo-location';
 import { toast } from '../../src/utils/toast';
+import Slider from '@react-native-community/slider';
+import * as ImagePicker from 'expo-image-picker';
 
 const backgroundImage = require('../../assets/images/bg-box-jumps-orange.jpg');
 
@@ -70,6 +73,7 @@ export default function EditTrainerProfileScreen() {
     offersVirtual: false,
     sessionDurations: [30, 45, 60],
     travelRadiusMiles: '10',
+    profilePhoto: '',
     cancellationPolicy: 'Free cancellation before 24 hours',
     latitude: null as number | null,
     longitude: null as number | null,
@@ -121,6 +125,7 @@ export default function EditTrainerProfileScreen() {
           offersVirtual: data.offersVirtual ?? false,
           sessionDurations: data.sessionDurationsOffered || [30, 45, 60],
           travelRadiusMiles: data.travelRadiusMiles?.toString() || '10',
+          profilePhoto: data.profilePhoto || data.avatarUrl || '',
           cancellationPolicy: data.cancellationPolicy || 'Free cancellation before 24 hours',
           latitude: data.latitude || null,
           longitude: data.longitude || null,
@@ -228,6 +233,7 @@ export default function EditTrainerProfileScreen() {
         offersVirtual: formData.offersVirtual,
         sessionDurationsOffered: formData.sessionDurations,
         travelRadiusMiles: parseInt(formData.travelRadiusMiles) || 10,
+        profilePhoto: formData.profilePhoto || undefined,
         cancellationPolicy: formData.cancellationPolicy,
         latitude: formData.latitude,
         longitude: formData.longitude,
@@ -260,6 +266,24 @@ export default function EditTrainerProfileScreen() {
     inputRange: [0, 1],
     outputRange: [-30, 0],
   });
+
+  const pickImage = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissionResult.granted) {
+      toast.error('Camera roll permission needed');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+      base64: true,
+    });
+    if (!result.canceled && result.assets[0].base64) {
+      setFormData({ ...formData, profilePhoto: `data:image/jpeg;base64,${result.assets[0].base64}` });
+    }
+  };
 
   if (loading) {
     return (
@@ -313,6 +337,20 @@ export default function EditTrainerProfileScreen() {
               contentContainerStyle={styles.scrollContent}
               showsVerticalScrollIndicator={false}
             >
+              {/* Profile Photo */}
+              <TouchableOpacity onPress={pickImage} style={{ alignSelf: 'center', marginBottom: 16 }} data-testid="edit-photo-btn">
+                <View style={{ width: 100, height: 100, borderRadius: 50, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center', borderWidth: 3, borderColor: 'rgba(255,255,255,0.4)' }}>
+                  {formData.profilePhoto ? (
+                    <Image source={{ uri: formData.profilePhoto }} style={{ width: 96, height: 96, borderRadius: 48 }} />
+                  ) : (
+                    <Ionicons name="camera" size={36} color={COLORS.white} />
+                  )}
+                </View>
+                <View style={{ position: 'absolute', bottom: 0, right: 0, backgroundColor: COLORS.orange, width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: COLORS.white }}>
+                  <Ionicons name="pencil" size={16} color={COLORS.white} />
+                </View>
+              </TouchableOpacity>
+
               {/* Bio Card */}
               <Animated.View
                 style={[
@@ -616,46 +654,44 @@ export default function EditTrainerProfileScreen() {
           activeOpacity={1}
           onPress={() => setShowRadiusPicker(false)}
         >
-          <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: 400 }}>
+          <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 16, borderBottomWidth: 1, borderBottomColor: '#eee' }}>
-              <Text style={{ fontSize: 17, fontWeight: '700', color: COLORS.navy }}>Travel Radius (miles)</Text>
+              <Text style={{ fontSize: 17, fontWeight: '700', color: COLORS.navy }}>Travel Radius</Text>
               <TouchableOpacity onPress={() => setShowRadiusPicker(false)}>
                 <Ionicons name="close-circle" size={26} color={COLORS.gray} />
               </TouchableOpacity>
             </View>
-            <FlatList
-              data={RADIUS_OPTIONS}
-              keyExtractor={(item) => item.toString()}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={{
-                    paddingVertical: 14,
-                    paddingHorizontal: 20,
-                    backgroundColor: formData.travelRadiusMiles === item.toString() ? 'rgba(31,184,180,0.1)' : '#fff',
-                    borderBottomWidth: 0.5,
-                    borderBottomColor: '#f0f0f0',
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                  }}
-                  onPress={() => {
-                    setFormData({ ...formData, travelRadiusMiles: item.toString() });
-                    setShowRadiusPicker(false);
-                  }}
-                >
-                  <Text style={{
-                    fontSize: 16,
-                    color: formData.travelRadiusMiles === item.toString() ? COLORS.teal : COLORS.navy,
-                    fontWeight: formData.travelRadiusMiles === item.toString() ? '700' : '400',
-                  }}>
-                    {item} {item === 1 ? 'mile' : 'miles'}
-                  </Text>
-                  {formData.travelRadiusMiles === item.toString() && (
-                    <Ionicons name="checkmark-circle" size={22} color={COLORS.teal} />
-                  )}
-                </TouchableOpacity>
-              )}
-            />
+            <View style={{ paddingHorizontal: 20, paddingVertical: 24 }}>
+              <Text style={{ fontSize: 48, fontWeight: '900', color: COLORS.navy, textAlign: 'center', marginBottom: 8 }} data-testid="radius-value">
+                {formData.travelRadiusMiles}
+              </Text>
+              <Text style={{ fontSize: 16, fontWeight: '600', color: COLORS.gray, textAlign: 'center', marginBottom: 24 }}>
+                {parseInt(formData.travelRadiusMiles) === 1 ? 'mile' : 'miles'}
+              </Text>
+              <Slider
+                style={{ width: '100%', height: 44 }}
+                minimumValue={1}
+                maximumValue={30}
+                step={1}
+                value={parseInt(formData.travelRadiusMiles) || 10}
+                onValueChange={(val: number) => setFormData({ ...formData, travelRadiusMiles: val.toString() })}
+                minimumTrackTintColor="#FF6A00"
+                maximumTrackTintColor="#E8ECF0"
+                thumbTintColor="#FF6A00"
+                data-testid="radius-slider"
+              />
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
+                <Text style={{ fontSize: 13, color: COLORS.gray, fontWeight: '600' }}>1 mi</Text>
+                <Text style={{ fontSize: 13, color: COLORS.gray, fontWeight: '600' }}>30 mi</Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              style={{ backgroundColor: COLORS.navy, borderRadius: 14, paddingVertical: 16, marginHorizontal: 20, marginBottom: 20, alignItems: 'center' }}
+              onPress={() => setShowRadiusPicker(false)}
+              data-testid="radius-done-btn"
+            >
+              <Text style={{ fontSize: 16, fontWeight: '800', color: '#fff' }}>Done</Text>
+            </TouchableOpacity>
           </View>
         </TouchableOpacity>
       </Modal>

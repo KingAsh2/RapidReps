@@ -936,7 +936,7 @@ const styles = StyleSheet.create({
   addressHint: {
     fontSize: 13,
     fontWeight: '500',
-    color: 'rgba(255,255,255,0.5)',
+    color: 'rgba(255,255,255,0.75)',
     marginBottom: 8,
     fontStyle: 'italic',
   },
@@ -996,6 +996,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: COLORS.white,
+    numberOfLines: 1,
   },
   // Buttons
   saveButton: {

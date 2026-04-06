@@ -4370,6 +4370,11 @@ async def zelle_mark_payment_sent(
     if session.get('traineeId') != user_id:
         raise HTTPException(status_code=403, detail="Not your session")
 
+    # Outdoor sessions require both parties to verify location before payment
+    if session.get('sessionType') == 'outdoor':
+        if session.get('outdoorLocationStatus') != 'agreed':
+            raise HTTPException(status_code=400, detail="Both trainer and trainee must verify/agree on the outdoor location before payment can be sent.")
+
     await db.sessions.update_one(
         {"_id": ObjectId(req.sessionId)},
         {"$set": {
@@ -4511,6 +4516,34 @@ async def get_trainer_zelle_info(current_user: dict = Depends(get_current_user))
         "zelleEmail": current_user.get("zelleEmail", ""),
         "zellePhone": current_user.get("zellePhone", ""),
         "hasZelleInfo": bool(current_user.get("zelleEmail") or current_user.get("zellePhone")),
+    }
+
+
+# --- Onboarding Status Check ---
+
+@api_router.get("/onboarding/status")
+async def get_onboarding_status(current_user: dict = Depends(get_current_user)):
+    """Check if user has completed required onboarding steps."""
+    roles = current_user.get('roles', [])
+    user_id = str(current_user['_id'])
+    
+    needs = []
+    
+    if 'trainer' in roles:
+        # Trainer needs Zelle info
+        has_zelle = bool(current_user.get('zelleEmail') or current_user.get('zellePhone'))
+        if not has_zelle:
+            needs.append({'step': 'zelle_setup', 'label': 'Set up Zelle to receive payouts', 'route': '/trainer/connect-bank'})
+    
+    if 'trainee' in roles:
+        # Trainee needs home address
+        has_address = bool(current_user.get('homeAddress') or current_user.get('address'))
+        if not has_address:
+            needs.append({'step': 'address', 'label': 'Add your home address', 'route': '/trainee/edit-address'})
+    
+    return {
+        'complete': len(needs) == 0,
+        'pendingSteps': needs,
     }
 
 

@@ -375,6 +375,11 @@ export const trainerAPI = {
     return response.data;
   },
 
+  getZelleInfo: async (): Promise<{ zelleEmail: string; zellePhone: string; hasZelleInfo: boolean }> => {
+    const response = await api.get('/trainer/zelle-info');
+    return response.data;
+  },
+
   connectDashboard: async (): Promise<{ url: string }> => {
     const response = await api.get('/trainer/connect/dashboard');
     return response.data;

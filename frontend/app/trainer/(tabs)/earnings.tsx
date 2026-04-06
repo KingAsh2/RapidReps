@@ -392,7 +392,7 @@ const styles = StyleSheet.create({
   summaryCard: { flex: 1, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
   summaryLabel: { fontSize: 13, color: 'rgba(255,255,255,0.8)', fontWeight: '600' },
   summaryValue: { fontSize: 24, fontWeight: '900', color: COLORS.white, marginTop: 4 },
-  summarySubtext: { fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 4 },
+  summarySubtext: { fontSize: 13, color: 'rgba(255,255,255,0.75)', marginTop: 4 },
   changeBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, marginTop: 6 },
   changeText: { fontSize: 13, fontWeight: '700' },
 
@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
   chartBarWrapper: { alignItems: 'center', flex: 1 },
   chartBarValue: { fontSize: 13, color: COLORS.white, fontWeight: '700', marginBottom: 4, height: 14 },
   chartBar: { width: 28, borderRadius: 6, minHeight: 4 },
-  chartBarLabel: { fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 6, fontWeight: '600' },
+  chartBarLabel: { fontSize: 13, color: 'rgba(255,255,255,0.75)', marginTop: 6, fontWeight: '600' },
 
   // Section
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, marginTop: 4 },
@@ -415,19 +415,19 @@ const styles = StyleSheet.create({
   sessionIconBg: { width: 40, height: 40, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
   sessionInfo: { flex: 1 },
   sessionName: { fontSize: 14, fontWeight: '700', color: COLORS.white },
-  sessionMeta: { fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
+  sessionMeta: { fontSize: 13, color: 'rgba(255,255,255,0.75)', marginTop: 2 },
   sessionEarning: { fontSize: 16, fontWeight: '800', color: COLORS.success },
 
   // Empty
   emptyBox: { alignItems: 'center', paddingVertical: 30, gap: 8 },
-  emptyText: { fontSize: 13, color: 'rgba(255,255,255,0.4)' },
+  emptyText: { fontSize: 13, color: 'rgba(255,255,255,0.75)' },
 
   // Payout History
   payoutHistoryCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 12, padding: 14, marginBottom: 8, gap: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
   payoutStatusDot: { width: 10, height: 10, borderRadius: 5 },
   payoutHistoryInfo: { flex: 1 },
   payoutHistoryAmount: { fontSize: 15, fontWeight: '700', color: COLORS.white },
-  payoutHistoryMeta: { fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
+  payoutHistoryMeta: { fontSize: 13, color: 'rgba(255,255,255,0.75)', marginTop: 2 },
 
   // Info Card
   infoCard: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 14, padding: 16, gap: 12, marginTop: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },

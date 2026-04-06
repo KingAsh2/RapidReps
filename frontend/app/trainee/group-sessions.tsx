@@ -9,7 +9,7 @@ import { useAuth } from '../../src/contexts/AuthContext';
 import { haptic } from '../../src/utils/haptics';
 import { goBack } from '../../src/utils/navigation';
 
-const COLORS = { orange: '#FF6A00', teal: '#1a2a5e', navy: '#1a2a5e', white: '#FFFFFF', gray: '#5a6785', success: '#00D26A' };
+const COLORS = { orange: '#FF6A00', teal: '#1a2a5e', navy: '#1a2a5e', white: '#FFFFFF', gray: '#8a95b0', success: '#00D26A' };
 
 export default function GroupSessionsScreen() {
   const router = useRouter();
@@ -79,7 +79,7 @@ export default function GroupSessionsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <LinearGradient colors={['rgba(255, 127, 0, 0.95)', 'rgba(255, 106, 0, 0.92)']} style={StyleSheet.absoluteFillObject} />
+      <LinearGradient colors={['rgba(26, 42, 94, 0.95)', 'rgba(26, 42, 94, 0.90)']} style={StyleSheet.absoluteFillObject} />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => goBack('/trainee/(tabs)/home')} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color={COLORS.white} />
@@ -110,18 +110,18 @@ const styles = StyleSheet.create({
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
   headerTitle: { fontSize: 18, fontWeight: '700', color: '#fff' },
   list: { paddingHorizontal: 16, paddingBottom: 32 },
-  card: { backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 16, padding: 16, marginBottom: 12 },
+  card: { backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 16, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)' },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  tagBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(0,207,193,0.2)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
-  tagText: { fontSize: 13, fontWeight: '700', color: COLORS.teal },
-  price: { fontSize: 16, fontWeight: '800', color: COLORS.orange },
+  tagBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(0,210,106,0.2)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
+  tagText: { fontSize: 13, fontWeight: '700', color: '#00D26A' },
+  price: { fontSize: 16, fontWeight: '800', color: '#FFB347' },
   title: { fontSize: 18, fontWeight: '800', color: '#fff', marginBottom: 4 },
-  desc: { fontSize: 13, color: COLORS.gray, marginBottom: 12, lineHeight: 18 },
+  desc: { fontSize: 13, color: '#b0bbd0', marginBottom: 12, lineHeight: 18 },
   metaRow: { flexDirection: 'row', gap: 16, marginBottom: 12 },
   metaItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  metaText: { fontSize: 13, color: COLORS.gray },
+  metaText: { fontSize: 13, color: '#b0bbd0' },
   cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  trainerName: { fontSize: 13, color: COLORS.gray },
+  trainerName: { fontSize: 13, color: '#b0bbd0' },
   joinBtn: { backgroundColor: COLORS.teal, borderRadius: 10, paddingHorizontal: 16, paddingVertical: 8 },
   joinBtnText: { fontSize: 13, fontWeight: '700', color: '#fff' },
   joinedBadge: { backgroundColor: 'rgba(0,210,106,0.2)', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6 },

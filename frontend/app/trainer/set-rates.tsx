@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   },
   durationLabel: {
     fontSize: 12,
-    color: 'rgba(255,255,255,0.5)',
+    color: 'rgba(255,255,255,0.75)',
     marginBottom: 4,
     fontWeight: '600',
   },
@@ -386,9 +386,9 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   earningsSmall: {
-    fontSize: 10,
-    color: COLORS.success,
-    fontWeight: '600',
+    fontSize: 12,
+    color: '#00E676',
+    fontWeight: '700',
     marginTop: 4,
   },
   infoCard: {

@@ -376,6 +376,11 @@ export default function SessionsScreen() {
                     },
                   ]}
                 >
+                  <TouchableOpacity
+                    activeOpacity={0.85}
+                    onPress={() => router.push(`/trainee/session-detail?sessionId=${session.id}`)}
+                    data-testid={`session-card-${session.id}`}
+                  >
                   <View style={styles.sessionGradient}>
                     {/* Status Badge */}
                     <View style={[
@@ -516,6 +521,7 @@ export default function SessionsScreen() {
                       </TouchableOpacity>
                     )}
                   </View>
+                  </TouchableOpacity>
                 </Animated.View>
               );
             })

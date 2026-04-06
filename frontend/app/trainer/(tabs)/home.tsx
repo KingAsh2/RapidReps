@@ -71,6 +71,7 @@ export default function TrainerHomeScreen() {
   const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [locationPermission, setLocationPermission] = useState<boolean | null>(null);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [needsZelleSetup, setNeedsZelleSetup] = useState(false);
 
   // Location tracking interval ref
   const locationIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -298,6 +299,12 @@ export default function TrainerHomeScreen() {
           });
         }
       }
+      
+      // Check Zelle setup
+      try {
+        const zelleInfo = await trainerAPI.getZelleInfo();
+        setNeedsZelleSetup(!zelleInfo.hasZelleInfo);
+      } catch { setNeedsZelleSetup(true); }
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -524,6 +531,24 @@ export default function TrainerHomeScreen() {
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.white} />
             }
           >
+            {/* Zelle Setup Banner */}
+            {needsZelleSetup && (
+              <TouchableOpacity
+                style={{ backgroundColor: '#6D1ED4', borderRadius: 14, padding: 16, marginHorizontal: 16, marginBottom: 12, flexDirection: 'row', alignItems: 'center', gap: 12 }}
+                onPress={() => router.push('/trainer/connect-bank')}
+                data-testid="zelle-setup-banner"
+              >
+                <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' }}>
+                  <Ionicons name="cash" size={22} color={COLORS.white} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 15, fontWeight: '800', color: COLORS.white }}>Set Up Zelle Payments</Text>
+                  <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>Add your Zelle info to receive payouts</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.6)" />
+              </TouchableOpacity>
+            )}
+
             {/* Hero Banner */}
             <Animated.View
               style={[
