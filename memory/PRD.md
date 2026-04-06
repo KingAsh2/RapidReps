@@ -15,7 +15,13 @@ Full-stack React Native/Expo fitness app connecting trainees with personal train
 - Fee split: 75% trainer / 25% platform
 - Default Zelle: ashtonbundy1@gmail.com / 240-281-0462
 
-## Completed Features (This Session)
+## Completed Features
+
+### Admin Zelle Settings Tab
+- New "Zelle" tab in admin dashboard
+- View/edit platform Zelle email and phone
+- Pending Zelle payments list with one-click "Verify" button (with confirmation alert)
+- Auto-refreshes data on tab load
 
 ### Zelle Payment System
 - Platform Zelle settings (admin-configurable)
@@ -26,36 +32,17 @@ Full-stack React Native/Expo fitness app connecting trainees with personal train
 - Outdoor session location verification required before payment
 
 ### UI/UX Improvements
-- **Profile Photo Edit**: Trainer edit-profile now has ImagePicker for photo upload/change
-- **Group Sessions Visibility**: Changed orange gradient to navy for contrast
-- **Achievements Button**: Fixed text overflow with numberOfLines constraint
-- **Sessions Clickable**: All session cards navigate to session-detail on tap
-- **Distance Slider**: Replaced dropdown with draggable slider (1-30 miles) across trainee home + trainer edit-profile
-- **"Earn" Text Visibility**: Increased font size + green color contrast in set-rates
-- **508 Compliance**: Fixed low-contrast text colors (0.4→0.75 opacity) across earnings, profile, set-rates screens
-- **Trainer Gray Colors**: Improved gray from #5a6785 to #8a95b0 for group sessions
+- Profile Photo Edit: Trainer edit-profile with ImagePicker
+- Group Sessions Visibility: Navy gradient (fixed orange-on-orange)
+- Achievements Button: Fixed text overflow
+- Sessions Clickable: Navigate to session-detail on tap
+- Distance Slider: 1-30 miles (replaced dropdown) across all screens
+- "Earn" Text: Improved font size and green color
+- 508 Compliance: Fixed low-contrast text across all screens
+- Onboarding Prompts: Trainer → Zelle setup banner; Trainee → Address banner
 
-### Onboarding Prompts
-- New trainers see Zelle setup banner on home screen
-- New trainees see address setup banner on home screen
-- GET /api/onboarding/status endpoint checks completion
-
-### Uber-Like Components (Previous Session)
-- SessionTimeline, QuickActions, TrainerBottomSheet, LiveTrainerMap integrated
-
-## Key API Endpoints
-| Endpoint | Description |
-|----------|-------------|
-| GET /api/settings/zelle | Platform Zelle info (public) |
-| PUT /api/admin/settings/zelle | Admin updates Zelle settings |
-| POST /api/payments/zelle/mark-sent | Trainee marks payment sent |
-| POST /api/admin/payments/verify-zelle/{id} | Admin verifies payment |
-| GET /api/admin/payments/pending-zelle | Pending Zelle payments |
-| POST /api/trainer/zelle-info | Trainer saves Zelle info |
-| GET /api/trainer/zelle-info | Trainer gets Zelle info |
-| GET /api/onboarding/status | Onboarding completion check |
-| GET /api/admin/payouts/pending | Trainer payout eligibility |
-| POST /api/admin/payouts/pay-trainer | Mark trainer paid |
+### Uber-Like Components
+- SessionTimeline, QuickActions, TrainerBottomSheet, LiveTrainerMap
 
 ## Remaining / Blocked
 - [ ] EAS iOS Build: Apple Certificate expired
@@ -70,8 +57,8 @@ Full-stack React Native/Expo fitness app connecting trainees with personal train
 | Trainer | test_trainer_iter25@test.com | Test123! |
 
 ## Test Reports
-- iteration_46.json: Uber components (18/18 pass)
-- iteration_47.json: Zelle payment system (19/19 pass)
-- iteration_48.json: Onboarding + outdoor verification + profile photo (13/13 pass)
+- iteration_46: Uber components (18/18 pass)
+- iteration_47: Zelle payment system (19/19 pass)
+- iteration_48: Onboarding + outdoor verification (13/13 pass)
 
 ## MOCKED: SendGrid (awaiting API key)

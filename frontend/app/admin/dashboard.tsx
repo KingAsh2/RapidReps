@@ -31,8 +31,9 @@ import { PaymentsTab } from '../../src/components/admin/PaymentsTab';
 import { PayoutsTab } from '../../src/components/admin/PayoutsTab';
 import { ProfileTab } from '../../src/components/admin/ProfileTab';
 import { SafetyTab } from '../../src/components/admin/SafetyTab';
+import { ZelleTab } from '../../src/components/admin/ZelleTab';
 
-type Tab = 'overview' | 'users' | 'verifications' | 'sessions' | 'payments' | 'payouts' | 'safety' | 'profile';
+type Tab = 'overview' | 'users' | 'verifications' | 'sessions' | 'payments' | 'payouts' | 'zelle' | 'safety' | 'profile';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -57,6 +58,10 @@ export default function AdminDashboard() {
   const [payingTrainerId, setPayingTrainerId] = useState<string | null>(null);
   const [payingAll, setPayingAll] = useState(false);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [zelleSettings, setZelleSettings] = useState({ zelleEmail: '', zellePhone: '' });
+  const [pendingZellePayments, setPendingZellePayments] = useState<any[]>([]);
+  const [savingZelle, setSavingZelle] = useState(false);
+  const [verifyingZelleId, setVerifyingZelleId] = useState<string | null>(null);
 
   // Filters
   const [userSearch, setUserSearch] = useState('');
@@ -167,6 +172,40 @@ export default function AdminDashboard() {
       setPayoutsData(pendingRes.data);
       setPayoutsHistory(historyRes.data?.payouts || []);
     } catch (err: any) { console.error('Payouts error:', err?.response?.data || err.message); }
+  };
+
+  const fetchZelleData = async () => {
+    try {
+      const headers = await getAuthHeader();
+      const [settingsRes, pendingRes] = await Promise.all([
+        api.get('/settings/zelle'),
+        api.get('/admin/payments/pending-zelle', { headers }),
+      ]);
+      setZelleSettings(settingsRes.data);
+      setPendingZellePayments(pendingRes.data.pendingPayments || []);
+    } catch (err: any) { console.error('Zelle error:', err?.response?.data || err.message); }
+  };
+
+  const handleUpdateZelleSettings = async (email: string, phone: string) => {
+    setSavingZelle(true);
+    try {
+      const headers = await getAuthHeader();
+      await api.put('/admin/settings/zelle', { zelleEmail: email, zellePhone: phone }, { headers });
+      setZelleSettings({ zelleEmail: email, zellePhone: phone });
+      toast.success('Zelle settings updated!');
+    } catch (err: any) { toast.error(err?.response?.data?.detail || 'Failed to update'); }
+    finally { setSavingZelle(false); }
+  };
+
+  const handleVerifyZellePayment = async (sessionId: string) => {
+    setVerifyingZelleId(sessionId);
+    try {
+      const headers = await getAuthHeader();
+      await api.post(`/admin/payments/verify-zelle/${sessionId}`, {}, { headers });
+      toast.success('Payment verified! Session confirmed.');
+      fetchZelleData();
+    } catch (err: any) { toast.error(err?.response?.data?.detail || 'Verification failed'); }
+    finally { setVerifyingZelleId(null); }
   };
 
   // --- Action Handlers ---
@@ -337,6 +376,7 @@ export default function AdminDashboard() {
       else if (tab === 'sessions') await fetchSessions();
       else if (tab === 'payments') await fetchTransactions();
       else if (tab === 'payouts') await fetchPayouts();
+      else if (tab === 'zelle') await fetchZelleData();
       else if (tab === 'profile') await fetchAdminProfile();
     } finally {
       setLoading(false);
@@ -355,6 +395,7 @@ export default function AdminDashboard() {
     { id: 'sessions', icon: 'calendar', label: 'Sessions' },
     { id: 'payments', icon: 'card', label: 'Payments' },
     { id: 'payouts', icon: 'wallet', label: 'Payouts' },
+    { id: 'zelle', icon: 'send', label: 'Zelle' },
     { id: 'safety', icon: 'shield-half', label: 'Safety' },
     { id: 'profile', icon: 'person-circle', label: 'Profile' },
   ];
@@ -579,6 +620,16 @@ export default function AdminDashboard() {
               />
             )}
             {activeTab === 'safety' && <SafetyTab />}
+            {activeTab === 'zelle' && (
+              <ZelleTab
+                zelleSettings={zelleSettings}
+                pendingPayments={pendingZellePayments}
+                onUpdateSettings={handleUpdateZelleSettings}
+                onVerifyPayment={handleVerifyZellePayment}
+                verifyingId={verifyingZelleId}
+                saving={savingZelle}
+              />
+            )}
             {activeTab === 'profile' && <ProfileTab adminUser={adminUser} onEditProfile={() => setProfileModalVisible(true)} onChangePassword={() => setPasswordModalVisible(true)} />}
           </>
         )}
