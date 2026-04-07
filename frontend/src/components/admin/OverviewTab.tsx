@@ -6,19 +6,61 @@ import { C, s, formatCents, StatCard, DonutChart, MiniBarChart } from './AdminSh
 interface Props {
   dashboard: any;
   leaderboard: any[];
+  earningsSummary: any;
   setActiveTab: (tab: string) => void;
 }
 
-export const OverviewTab = ({ dashboard, leaderboard, setActiveTab }: Props) => {
+export const OverviewTab = ({ dashboard, leaderboard, earningsSummary, setActiveTab }: Props) => {
   const [selectedTimeframe, setSelectedTimeframe] = useState<'today' | 'week' | 'month'>('month');
+  const [earningsPeriod, setEarningsPeriod] = useState<'week' | 'month' | '6months'>('week');
 
   if (!dashboard) return null;
 
   const platformPct = dashboard.totalRevenueCents > 0 ? (dashboard.platformRevenueCents / dashboard.totalRevenueCents) * 100 : 25;
   const trainerPct = 100 - platformPct;
   const pendingCount = dashboard.pendingVerifications || 0;
-  const weeklyData = [3, 5, 2, 7, 4, 6, 3];
-  const weekLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+  // Real earnings chart data
+  const getChartData = () => {
+    if (!earningsSummary) return { data: [0, 0, 0, 0, 0, 0, 0], labels: ['M', 'T', 'W', 'T', 'F', 'S', 'S'], platformData: [] };
+    if (earningsPeriod === 'week') {
+      const daily = earningsSummary.dailyBreakdown || [];
+      return {
+        data: daily.map((d: any) => d.revenueCents / 100),
+        labels: daily.map((d: any) => d.day),
+        platformData: daily.map((d: any) => d.platformCents / 100),
+        sessions: daily.map((d: any) => d.sessions),
+      };
+    }
+    if (earningsPeriod === 'month') {
+      const weekly = earningsSummary.weeklyBreakdown || [];
+      return {
+        data: weekly.map((w: any) => w.revenueCents / 100),
+        labels: weekly.map((w: any) => w.week?.replace('Week ', 'W')),
+        platformData: weekly.map((w: any) => w.platformCents / 100),
+        sessions: weekly.map((w: any) => w.sessions),
+      };
+    }
+    // 6months
+    const monthly = earningsSummary.monthlyBreakdown || [];
+    return {
+      data: monthly.map((m: any) => m.revenueCents / 100),
+      labels: monthly.map((m: any) => m.month),
+      platformData: monthly.map((m: any) => m.platformCents / 100),
+      sessions: monthly.map((m: any) => m.sessions),
+    };
+  };
+
+  const chartInfo = getChartData();
+  const maxBarVal = Math.max(1, ...chartInfo.data);
+
+  // Earnings summary stats
+  const weekRevenue = earningsSummary?.weekRevenueCents || 0;
+  const lastWeekRevenue = earningsSummary?.lastWeekRevenueCents || 0;
+  const monthRevenue = earningsSummary?.monthRevenueCents || 0;
+  const lastMonthRevenue = earningsSummary?.lastMonthRevenueCents || 0;
+  const weekChange = lastWeekRevenue > 0 ? Math.round(((weekRevenue - lastWeekRevenue) / lastWeekRevenue) * 100) : 0;
+  const monthChange = lastMonthRevenue > 0 ? Math.round(((monthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100) : 0;
 
   const TimeframePills = () => {
     const options: { key: 'today' | 'week' | 'month'; label: string }[] = [
@@ -126,17 +168,103 @@ export const OverviewTab = ({ dashboard, leaderboard, setActiveTab }: Props) => 
         </View>
       </View>
 
-      <Text style={s.sectionTitle}>Weekly Activity</Text>
+      {/* Earnings Trend Chart */}
+      <Text style={s.sectionTitle}>Earnings Trend</Text>
       <View style={s.chartCard}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 14 }}>
-          <Text style={s.chartCardTitle}>Sessions This Week</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-            <Ionicons name="trending-up" size={14} color={C.success} />
-            <Text style={{ fontSize: 13, fontWeight: '700', color: C.success }}>+15%</Text>
-          </View>
+        {/* Period toggle pills */}
+        <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }} data-testid="earnings-period-toggle">
+          {(['week', 'month', '6months'] as const).map((p) => (
+            <TouchableOpacity
+              key={p}
+              onPress={() => setEarningsPeriod(p)}
+              style={{
+                paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20,
+                backgroundColor: earningsPeriod === p ? C.teal : '#F0F1F5',
+              }}
+              data-testid={`earnings-period-${p}`}
+            >
+              <Text style={{
+                fontSize: 12, fontWeight: '700',
+                color: earningsPeriod === p ? '#fff' : C.gray,
+              }}>
+                {p === 'week' ? 'This Week' : p === 'month' ? 'This Month' : '6 Months'}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
-        <View style={{ alignItems: 'center' }}>
-          <MiniBarChart data={weeklyData} barColors={[C.teal, C.orange]} height={80} labels={weekLabels} />
+
+        {/* Summary row */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 14 }}>
+          <View>
+            <Text style={{ fontSize: 12, color: C.gray, fontWeight: '600' }}>
+              {earningsPeriod === 'week' ? 'Weekly Revenue' : earningsPeriod === 'month' ? 'Monthly Revenue' : '6-Month Revenue'}
+            </Text>
+            <Text style={{ fontSize: 22, fontWeight: '900', color: C.navy, marginTop: 2 }} data-testid="earnings-total">
+              {formatCents(
+                earningsPeriod === 'week' ? weekRevenue :
+                earningsPeriod === 'month' ? monthRevenue :
+                (earningsSummary?.totalRevenueCents || 0)
+              )}
+            </Text>
+          </View>
+          {earningsPeriod !== '6months' && (
+            <View style={{
+              flexDirection: 'row', alignItems: 'center', gap: 4,
+              backgroundColor: (earningsPeriod === 'week' ? weekChange : monthChange) >= 0 ? `${C.success}15` : '#FF475715',
+              paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, alignSelf: 'flex-start',
+            }}>
+              <Ionicons
+                name={(earningsPeriod === 'week' ? weekChange : monthChange) >= 0 ? 'trending-up' : 'trending-down'}
+                size={14}
+                color={(earningsPeriod === 'week' ? weekChange : monthChange) >= 0 ? C.success : '#FF4757'}
+              />
+              <Text style={{
+                fontSize: 13, fontWeight: '700',
+                color: (earningsPeriod === 'week' ? weekChange : monthChange) >= 0 ? C.success : '#FF4757',
+              }}>
+                {(earningsPeriod === 'week' ? weekChange : monthChange) >= 0 ? '+' : ''}
+                {earningsPeriod === 'week' ? weekChange : monthChange}% vs last
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {/* Bar chart */}
+        <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', height: 120, paddingTop: 10 }}>
+          {chartInfo.data.map((val: number, idx: number) => {
+            const barH = maxBarVal > 0 ? Math.max(4, (val / maxBarVal) * 100) : 4;
+            return (
+              <View key={idx} style={{ alignItems: 'center', flex: 1 }}>
+                {val > 0 && (
+                  <Text style={{ fontSize: 9, fontWeight: '700', color: C.navy, marginBottom: 3 }}>
+                    ${val.toFixed(0)}
+                  </Text>
+                )}
+                <View style={{
+                  width: '60%', height: barH, borderRadius: 4,
+                  backgroundColor: val > 0 ? C.teal : '#E8ECF0',
+                }} />
+                <Text style={{ fontSize: 10, color: C.gray, marginTop: 4, fontWeight: '600' }}>
+                  {chartInfo.labels[idx]}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+
+        {/* Platform cut row */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#F0F1F5' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: C.success }} />
+            <Text style={{ fontSize: 12, color: C.gray, fontWeight: '600' }}>Platform Revenue (20%)</Text>
+          </View>
+          <Text style={{ fontSize: 13, fontWeight: '800', color: C.success }} data-testid="platform-revenue-summary">
+            {formatCents(
+              earningsPeriod === 'week' ? Math.round(weekRevenue * 0.20) :
+              earningsPeriod === 'month' ? Math.round(monthRevenue * 0.20) :
+              (earningsSummary?.platformRevenueCents || 0)
+            )}
+          </Text>
         </View>
       </View>
 

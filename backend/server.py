@@ -6976,6 +6976,119 @@ async def admin_top_trainers(days: int = 7, limit: int = 5, admin_user: dict = D
     return {"leaderboard": leaderboard, "periodDays": days}
 
 
+@api_router.get("/admin/earnings-summary")
+async def admin_earnings_summary(admin_user: dict = Depends(require_admin)):
+    """Admin: Get platform-wide earnings summary with daily/weekly/monthly breakdowns."""
+    now = datetime.utcnow()
+
+    # All verified Zelle sessions
+    verified_sessions = await db.sessions.find(
+        {"zellePaymentStatus": "verified"},
+        {"totalCents": 1, "priceCents": 1, "createdAt": 1, "zellePaymentVerifiedAt": 1, "sessionType": 1}
+    ).sort("zellePaymentVerifiedAt", -1).to_list(2000)
+
+    # Calculate totals
+    def get_cents(s):
+        return s.get("totalCents") or s.get("priceCents", 0)
+
+    total_revenue = sum(get_cents(s) for s in verified_sessions)
+    platform_cut = int(total_revenue * 0.20)
+    trainer_cut = total_revenue - platform_cut
+
+    # This month
+    month_start = datetime(now.year, now.month, 1)
+    month_sessions = [s for s in verified_sessions if (s.get("zellePaymentVerifiedAt") or s.get("createdAt", now)) >= month_start]
+    month_revenue = sum(get_cents(s) for s in month_sessions)
+
+    # Last month
+    if now.month == 1:
+        last_month_start = datetime(now.year - 1, 12, 1)
+    else:
+        last_month_start = datetime(now.year, now.month - 1, 1)
+    last_month_sessions = [s for s in verified_sessions if last_month_start <= (s.get("zellePaymentVerifiedAt") or s.get("createdAt", now)) < month_start]
+    last_month_revenue = sum(get_cents(s) for s in last_month_sessions)
+
+    # This week (Mon start)
+    week_start = now - timedelta(days=now.weekday())
+    week_start = datetime(week_start.year, week_start.month, week_start.day)
+    week_sessions = [s for s in verified_sessions if (s.get("zellePaymentVerifiedAt") or s.get("createdAt", now)) >= week_start]
+    week_revenue = sum(get_cents(s) for s in week_sessions)
+
+    # Last week
+    last_week_start = week_start - timedelta(days=7)
+    last_week_sessions = [s for s in verified_sessions if last_week_start <= (s.get("zellePaymentVerifiedAt") or s.get("createdAt", now)) < week_start]
+    last_week_revenue = sum(get_cents(s) for s in last_week_sessions)
+
+    # Daily breakdown (current week Mon-Sun)
+    daily_breakdown = []
+    for i in range(7):
+        day_start = week_start + timedelta(days=i)
+        day_end = day_start + timedelta(days=1)
+        day_sessions = [s for s in verified_sessions if day_start <= (s.get("zellePaymentVerifiedAt") or s.get("createdAt", now)) < day_end]
+        daily_breakdown.append({
+            "day": day_start.strftime("%a"),
+            "date": day_start.strftime("%m/%d"),
+            "revenueCents": sum(get_cents(s) for s in day_sessions),
+            "sessions": len(day_sessions),
+            "platformCents": int(sum(get_cents(s) for s in day_sessions) * 0.20),
+        })
+
+    # Weekly breakdown (current month, up to 5 weeks)
+    weekly_breakdown = []
+    cur_week = month_start
+    wn = 1
+    while cur_week < now and wn <= 5:
+        cur_week_end = min(cur_week + timedelta(days=7), now)
+        w_sessions = [s for s in verified_sessions if cur_week <= (s.get("zellePaymentVerifiedAt") or s.get("createdAt", now)) < cur_week_end]
+        weekly_breakdown.append({
+            "week": f"Week {wn}",
+            "startDate": cur_week.strftime("%m/%d"),
+            "revenueCents": sum(get_cents(s) for s in w_sessions),
+            "sessions": len(w_sessions),
+            "platformCents": int(sum(get_cents(s) for s in w_sessions) * 0.20),
+        })
+        cur_week = cur_week_end
+        wn += 1
+
+    # Monthly breakdown (last 6 months)
+    monthly_breakdown = []
+    for m_offset in range(5, -1, -1):
+        m_year = now.year
+        m_month = now.month - m_offset
+        while m_month <= 0:
+            m_month += 12
+            m_year -= 1
+        m_start = datetime(m_year, m_month, 1)
+        if m_month == 12:
+            m_end = datetime(m_year + 1, 1, 1)
+        else:
+            m_end = datetime(m_year, m_month + 1, 1)
+        m_sessions = [s for s in verified_sessions if m_start <= (s.get("zellePaymentVerifiedAt") or s.get("createdAt", now)) < m_end]
+        monthly_breakdown.append({
+            "month": m_start.strftime("%b"),
+            "year": m_year,
+            "revenueCents": sum(get_cents(s) for s in m_sessions),
+            "sessions": len(m_sessions),
+            "platformCents": int(sum(get_cents(s) for s in m_sessions) * 0.20),
+        })
+
+    return {
+        "totalRevenueCents": total_revenue,
+        "platformRevenueCents": platform_cut,
+        "trainerPayoutsCents": trainer_cut,
+        "totalSessions": len(verified_sessions),
+        "weekRevenueCents": week_revenue,
+        "lastWeekRevenueCents": last_week_revenue,
+        "monthRevenueCents": month_revenue,
+        "lastMonthRevenueCents": last_month_revenue,
+        "weekSessions": len(week_sessions),
+        "monthSessions": len(month_sessions),
+        "dailyBreakdown": daily_breakdown,
+        "weeklyBreakdown": weekly_breakdown,
+        "monthlyBreakdown": monthly_breakdown,
+    }
+
+
 @api_router.get("/admin/users")
 async def admin_get_users(
     skip: int = 0,

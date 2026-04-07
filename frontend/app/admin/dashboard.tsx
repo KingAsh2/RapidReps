@@ -58,6 +58,7 @@ export default function AdminDashboard() {
   const [payingTrainerId, setPayingTrainerId] = useState<string | null>(null);
   const [payingAll, setPayingAll] = useState(false);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [earningsSummary, setEarningsSummary] = useState<any>(null);
   const [zelleSettings, setZelleSettings] = useState({ zelleEmail: '', zellePhone: '' });
   const [pendingZellePayments, setPendingZellePayments] = useState<any[]>([]);
   const [savingZelle, setSavingZelle] = useState(false);
@@ -102,6 +103,14 @@ export default function AdminDashboard() {
       const res = await api.get('/admin/top-trainers?days=7&limit=5', { headers });
       setLeaderboard(res.data.leaderboard || []);
     } catch (err: any) { console.error('Leaderboard error:', err?.response?.data || err.message); }
+  };
+
+  const fetchEarningsSummary = async () => {
+    try {
+      const headers = await getAuthHeader();
+      const res = await api.get('/admin/earnings-summary', { headers });
+      setEarningsSummary(res.data);
+    } catch (err: any) { console.error('Earnings summary error:', err?.response?.data || err.message); }
   };
 
   const fetchUsers = async (page = 0, search = userSearch, role = userRoleFilter) => {
@@ -370,7 +379,7 @@ export default function AdminDashboard() {
   const loadTab = useCallback(async (tab: Tab) => {
     setLoading(true);
     try {
-      if (tab === 'overview') { await fetchDashboard(); await fetchLeaderboard(); }
+      if (tab === 'overview') { await fetchDashboard(); await fetchLeaderboard(); await fetchEarningsSummary(); }
       else if (tab === 'users') await fetchUsers();
       else if (tab === 'verifications') await fetchVerifications();
       else if (tab === 'sessions') await fetchSessions();
@@ -584,7 +593,7 @@ export default function AdminDashboard() {
           <View style={s.loadingBox}><ActivityIndicator size="large" color={C.teal} /><Text style={s.loadingText}>Loading...</Text></View>
         ) : (
           <>
-            {activeTab === 'overview' && <OverviewTab dashboard={dashboard} leaderboard={leaderboard} setActiveTab={setActiveTab} />}
+            {activeTab === 'overview' && <OverviewTab dashboard={dashboard} leaderboard={leaderboard} earningsSummary={earningsSummary} setActiveTab={setActiveTab} />}
             {activeTab === 'users' && (
               <UsersTab
                 users={users} usersTotal={usersTotal} usersPage={usersPage}
