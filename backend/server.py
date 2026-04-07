@@ -4443,19 +4443,19 @@ async def admin_verify_zelle_payment(
     asyncio.create_task(create_and_send_notification(
         session.get('traineeId', ''),
         "Payment Verified!",
-        "Your Zelle payment has been verified. Your session is confirmed!",
+        "Your Zelle payment has been verified and your session is confirmed! Your receipt is ready to download.",
         "payment",
-        {"sessionId": session_id}
+        {"sessionId": session_id, "action": "view_receipt"}
     ))
 
     # Notify trainer
     if session.get('trainerId'):
         asyncio.create_task(create_and_send_notification(
             session['trainerId'],
-            "Session Confirmed!",
-            "Payment verified. The session is ready to begin.",
+            "Session Confirmed - Receipt Ready!",
+            "Payment verified and session confirmed. Your earnings receipt is ready to download.",
             "session_confirmed",
-            {"sessionId": session_id}
+            {"sessionId": session_id, "action": "view_receipt"}
         ))
 
     return {"success": True, "message": "Payment verified. Session confirmed.", "newStatus": update_doc.get('status', session.get('status'))}

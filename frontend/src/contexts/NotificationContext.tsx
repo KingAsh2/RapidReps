@@ -4,6 +4,7 @@ import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { useAuth } from './AuthContext';
 import { notificationsAPI, chatAPI } from '../services/api';
+import { router } from 'expo-router';
 
 // Configure how notifications appear when the app is in the foreground
 Notifications.setNotificationHandler({
@@ -172,6 +173,15 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       if (__DEV__) console.log('Notification tapped:', data);
       refreshNotifications();
       refreshMessageCount();
+
+      // Deep-link to receipt screen when tapping payment verification notifications
+      if (data?.action === 'view_receipt' && data?.sessionId) {
+        const roles = user?.roles || [];
+        const path = roles.includes('trainer')
+          ? `/trainer/receipt?sessionId=${data.sessionId}`
+          : `/trainee/receipt?sessionId=${data.sessionId}`;
+        try { router.push(path as any); } catch {}
+      }
     });
 
     // Poll for unread messages every 30 seconds
