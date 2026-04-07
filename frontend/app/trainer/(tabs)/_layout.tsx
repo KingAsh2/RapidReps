@@ -60,6 +60,16 @@ export default function TrainerTabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="receipts"
+        options={{
+          title: 'Receipts',
+          tabBarAccessibilityLabel: 'Payment receipts tab',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="receipt" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="messages"
         options={{
           title: 'Messages',

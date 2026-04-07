@@ -78,6 +78,22 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="receipts"
+        options={{
+          title: 'Receipts',
+          tabBarAccessibilityLabel: 'Payment receipts tab',
+          tabBarIcon: ({ color, focused }) => (
+            <View style={focused ? styles.activeIconContainer : null}>
+              <Ionicons 
+                name={focused ? "receipt" : "receipt-outline"} 
+                size={24} 
+                color={color} 
+              />
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="messages"
         options={{
           title: 'Messages',

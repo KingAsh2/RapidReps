@@ -4667,6 +4667,83 @@ async def admin_get_all_receipts(
     return {"receipts": receipts, "total": total_count}
 
 
+@api_router.get("/trainee/receipts")
+async def get_trainee_receipts(
+    current_user: dict = Depends(get_current_user),
+    limit: int = 50,
+    offset: int = 0,
+):
+    """Trainee: Get all their receipts (verified Zelle payments)."""
+    user_id = str(current_user['_id'])
+    query = {"traineeId": user_id, "zellePaymentStatus": "verified"}
+    pipeline = [
+        {"$match": query},
+        {"$sort": {"zellePaymentVerifiedAt": -1}},
+        {"$skip": offset},
+        {"$limit": limit},
+    ]
+    sessions = await db.sessions.aggregate(pipeline).to_list(limit)
+
+    receipts = []
+    for s in sessions:
+        sid = str(s['_id'])
+        trainer = await db.users.find_one({"_id": ObjectId(s['trainerId'])}, {"fullName": 1}) if s.get('trainerId') else None
+        total = s.get('totalCents') or s.get('priceCents', 0)
+        payout = calculate_session_payout(total, s.get('sessionType', 'outdoor'))
+        receipts.append({
+            "receiptNumber": f"RR-{sid[-8:].upper()}",
+            "sessionId": sid,
+            "trainerName": trainer.get('fullName', 'N/A') if trainer else 'N/A',
+            "sessionType": s.get('sessionType', ''),
+            "durationMinutes": s.get('durationMinutes', 30),
+            "totalCents": total,
+            "date": (s.get('sessionDateTimeStart') or s.get('createdAt', '')),
+            "paymentVerifiedAt": s.get('zellePaymentVerifiedAt', ''),
+        })
+
+    total_count = await db.sessions.count_documents(query)
+    return {"receipts": receipts, "total": total_count}
+
+
+@api_router.get("/trainer/receipts")
+async def get_trainer_receipts(
+    current_user: dict = Depends(get_current_user),
+    limit: int = 50,
+    offset: int = 0,
+):
+    """Trainer: Get all their receipts (verified Zelle payments)."""
+    user_id = str(current_user['_id'])
+    query = {"trainerId": user_id, "zellePaymentStatus": "verified"}
+    pipeline = [
+        {"$match": query},
+        {"$sort": {"zellePaymentVerifiedAt": -1}},
+        {"$skip": offset},
+        {"$limit": limit},
+    ]
+    sessions = await db.sessions.aggregate(pipeline).to_list(limit)
+
+    receipts = []
+    for s in sessions:
+        sid = str(s['_id'])
+        trainee = await db.users.find_one({"_id": ObjectId(s['traineeId'])}, {"fullName": 1}) if s.get('traineeId') else None
+        total = s.get('totalCents') or s.get('priceCents', 0)
+        payout = calculate_session_payout(total, s.get('sessionType', 'outdoor'))
+        receipts.append({
+            "receiptNumber": f"RR-{sid[-8:].upper()}",
+            "sessionId": sid,
+            "traineeName": trainee.get('fullName', 'N/A') if trainee else 'N/A',
+            "sessionType": s.get('sessionType', ''),
+            "durationMinutes": s.get('durationMinutes', 30),
+            "totalCents": total,
+            "trainerPayoutCents": payout['trainer_payout_cents'],
+            "date": (s.get('sessionDateTimeStart') or s.get('createdAt', '')),
+            "paymentVerifiedAt": s.get('zellePaymentVerifiedAt', ''),
+        })
+
+    total_count = await db.sessions.count_documents(query)
+    return {"receipts": receipts, "total": total_count}
+
+
 # --- Trainer Zelle Connect Status (compatibility endpoint) ---
 
 @api_router.get("/trainer/connect/status")
