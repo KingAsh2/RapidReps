@@ -14,13 +14,17 @@ React Native/Expo + FastAPI + MongoDB | Payments: Zelle | Auth: JWT
 - "Download Receipt" buttons in Sessions tabs after admin Zelle approval
 
 ## Earnings Dashboard (Complete)
-- **Trainer Earnings Tab**: Daily/weekly bar chart, period toggles, pending balance, Zelle connect status, recent sessions, payout requests
-- **Admin Dashboard Earnings Trend**: Real-time revenue charts replacing hardcoded data
-  - `GET /api/admin/earnings-summary` - Platform-wide earnings with daily (7 days), weekly (current month), monthly (6 months) breakdowns
-  - Period toggles: This Week / This Month / 6 Months
-  - Revenue total with % change vs last period
-  - Platform revenue (20%) breakdown per period
-  - Bar charts driven by real verified Zelle payment data
+- **Trainer Earnings Tab**: Daily/weekly bar chart, period toggles, pending balance, Zelle connect status
+- **Admin Dashboard Earnings Trend**: Real-time revenue charts (daily/weekly/6-month)
+  - `GET /api/admin/earnings-summary` - Platform-wide earnings breakdowns
+  - Period toggles, % change vs last period, platform revenue (20%) per period
+
+## Push Notifications (Complete)
+- Trainee: "Payment Verified!" with receipt download prompt
+- Trainer: "Session Confirmed - Receipt Ready!" with earnings receipt prompt
+- Deep-link navigation: tapping notification opens receipt screen directly
+- Notification data includes `action: 'view_receipt'` and `sessionId`
+- Expo Push API (fire-and-forget), push token registration via NotificationContext
 
 ## Admin Dashboard Tabs
 Overview (with earnings charts) | Users | Verifications | Sessions | Payments | Payouts | Zelle | Safety | Profile
