@@ -3,26 +3,46 @@
 ## Tech Stack
 React Native/Expo + FastAPI + MongoDB | Payments: Zelle | Auth: JWT
 
+## User Profiles (Complete)
+### Gallery
+- Both trainers and trainees have a photo/video gallery on their profiles
+- Gallery items: `{url, type: 'photo'|'video', caption?}`
+- Endpoints: `PUT /api/trainer-profiles/{userId}/gallery`, `PUT /api/trainee-profiles/{userId}/gallery`
+- ProfileGallery component with image grid, fullscreen viewer, video overlay indicator
+
+### Social Media Links
+- Both profiles support: Instagram, TikTok, YouTube, X/Twitter, Website
+- Endpoints: `PUT /api/trainer-profiles/{userId}/social-links`, `PUT /api/trainee-profiles/{userId}/social-links`
+- SocialLinksDisplay component with branded icons and direct links
+- Trainer edit-profile has inline social links input fields
+
+### Clickable Avatars (All Screens)
+- Trainee session-detail → tapping trainer avatar opens trainer-detail
+- Messages list (both roles) → tapping avatar opens other user's profile
+- Chat screen → tapping header name/photo opens profile (role-aware routing)
+- Leaderboard → podium and list entries tappable → trainer-detail
+- Trainer home session cards → already navigated to trainee-profile
+- Nearby Trainers (web) → horizontal card list with profile navigation
+
 ## Receipt/Invoice System (Complete)
-- Receipt-logo, receipts/session/{id}, admin/receipts, trainee/receipts, trainer/receipts endpoints
-- Receipts tab in both trainee and trainer bottom nav
-- PDF download via expo-print with custom RapidReps Base64 logo
-- "Download Receipt" buttons in Sessions tabs after admin Zelle approval
+- Receipt endpoints, PDF download via expo-print with RapidReps logo
+- Receipts tab in both trainee/trainer bottom nav
+- Download Receipt buttons in Sessions tabs after admin Zelle approval
 
 ## Earnings Dashboard (Complete)
-- Trainer "Funds" tab (renamed from Earnings): Daily/weekly chart, period toggles, pending balance
-- Admin Dashboard: Real-time earnings trend charts (daily/weekly/6-month) via admin/earnings-summary
+- Trainer "Funds" tab (renamed from Earnings)
+- Admin real-time earnings trend charts (daily/weekly/6-month)
 
 ## Push Notifications (Complete)
-- Trainee + Trainer notified on Zelle verification with deep-link to receipt screen
+- Zelle verification → trainee + trainer notified with receipt deep-link
 
 ## UI/UX Fixes Applied
-- Travel Radius: Inline slider (1-30 mi) replacing dropdown/modal on trainer edit-profile
-- Achievements button: numberOfLines={1} + adjustsFontSizeToFit preventing text wrap
-- Group Sessions: Changed from orange gradient to navy gradient (fixes orange-on-orange)
-- "Earnings" tab renamed to "Funds"
-- Admin Overview: Filters out "Unknown Trainer" entries from leaderboard
-- Nearby Trainers: Web version shows clickable horizontal trainer cards linking to trainer-detail
+- Travel Radius: Inline slider replacing dropdown/modal
+- Achievements button: numberOfLines={1} + adjustsFontSizeToFit
+- Group Sessions: Navy gradient (fixes orange-on-orange)
+- Earnings renamed to Funds
+- Admin Overview: Filters out Unknown Trainers
+- Nearby Trainers web: clickable horizontal trainer cards
 
 ## Credentials
 | Role | Email | Password |
