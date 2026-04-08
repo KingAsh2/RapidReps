@@ -394,13 +394,30 @@ export default function EditTrainerProfileScreen() {
                     </View>
                     <View style={styles.inputGroup}>
                       <Text style={styles.inputLabel}>Travel Radius</Text>
-                      <TouchableOpacity 
-                        style={styles.radiusSelector}
-                        onPress={() => setShowRadiusPicker(true)}
-                      >
-                        <Text style={styles.radiusSelectorValue}>{formData.travelRadiusMiles} mi</Text>
-                        <Ionicons name="chevron-down" size={18} color={COLORS.gray} />
-                      </TouchableOpacity>
+                      <View style={styles.sliderContainer}>
+                        <View style={styles.sliderValueRow}>
+                          <Ionicons name="location" size={16} color={COLORS.orange} />
+                          <Text style={styles.sliderValueText}>
+                            {formData.travelRadiusMiles} {parseInt(formData.travelRadiusMiles) === 1 ? 'mile' : 'miles'}
+                          </Text>
+                        </View>
+                        <Slider
+                          style={{ width: '100%', height: 40 }}
+                          minimumValue={1}
+                          maximumValue={30}
+                          step={1}
+                          value={parseInt(formData.travelRadiusMiles) || 10}
+                          onValueChange={(val: number) => setFormData({ ...formData, travelRadiusMiles: val.toString() })}
+                          minimumTrackTintColor={COLORS.orange}
+                          maximumTrackTintColor="rgba(26,42,94,0.2)"
+                          thumbTintColor={COLORS.orange}
+                          data-testid="radius-slider-inline"
+                        />
+                        <View style={styles.sliderLabelsRow}>
+                          <Text style={styles.sliderLabel}>1 mi</Text>
+                          <Text style={styles.sliderLabel}>30 mi</Text>
+                        </View>
+                      </View>
                     </View>
                   </View>
                 </LinearGradient>
@@ -646,55 +663,6 @@ export default function EditTrainerProfileScreen() {
           </KeyboardAvoidingView>
         </SafeAreaView>
       </ImageBackground>
-
-      {/* Travel Radius Picker Modal */}
-      <Modal visible={showRadiusPicker} transparent animationType="slide">
-        <TouchableOpacity
-          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}
-          activeOpacity={1}
-          onPress={() => setShowRadiusPicker(false)}
-        >
-          <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20 }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 16, borderBottomWidth: 1, borderBottomColor: '#eee' }}>
-              <Text style={{ fontSize: 17, fontWeight: '700', color: COLORS.navy }}>Travel Radius</Text>
-              <TouchableOpacity onPress={() => setShowRadiusPicker(false)}>
-                <Ionicons name="close-circle" size={26} color={COLORS.gray} />
-              </TouchableOpacity>
-            </View>
-            <View style={{ paddingHorizontal: 20, paddingVertical: 24 }}>
-              <Text style={{ fontSize: 48, fontWeight: '900', color: COLORS.navy, textAlign: 'center', marginBottom: 8 }} data-testid="radius-value">
-                {formData.travelRadiusMiles}
-              </Text>
-              <Text style={{ fontSize: 16, fontWeight: '600', color: COLORS.gray, textAlign: 'center', marginBottom: 24 }}>
-                {parseInt(formData.travelRadiusMiles) === 1 ? 'mile' : 'miles'}
-              </Text>
-              <Slider
-                style={{ width: '100%', height: 44 }}
-                minimumValue={1}
-                maximumValue={30}
-                step={1}
-                value={parseInt(formData.travelRadiusMiles) || 10}
-                onValueChange={(val: number) => setFormData({ ...formData, travelRadiusMiles: val.toString() })}
-                minimumTrackTintColor="#FF6A00"
-                maximumTrackTintColor="#E8ECF0"
-                thumbTintColor="#FF6A00"
-                data-testid="radius-slider"
-              />
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
-                <Text style={{ fontSize: 13, color: COLORS.gray, fontWeight: '600' }}>1 mi</Text>
-                <Text style={{ fontSize: 13, color: COLORS.gray, fontWeight: '600' }}>30 mi</Text>
-              </View>
-            </View>
-            <TouchableOpacity
-              style={{ backgroundColor: COLORS.navy, borderRadius: 14, paddingVertical: 16, marginHorizontal: 20, marginBottom: 20, alignItems: 'center' }}
-              onPress={() => setShowRadiusPicker(false)}
-              data-testid="radius-done-btn"
-            >
-              <Text style={{ fontSize: 16, fontWeight: '800', color: '#fff' }}>Done</Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </Modal>
     </>
   );
 }
@@ -822,6 +790,33 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: COLORS.teal,
+  },
+  sliderContainer: {
+    backgroundColor: COLORS.grayLight,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  sliderValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  sliderValueText: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: COLORS.teal,
+  },
+  sliderLabelsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: -2,
+  },
+  sliderLabel: {
+    fontSize: 12,
+    color: COLORS.gray,
+    fontWeight: '600',
   },
   chipsContainer: {
     flexDirection: 'row',

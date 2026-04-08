@@ -84,8 +84,8 @@ export default function TrainerTabsLayout() {
       <Tabs.Screen
         name="earnings"
         options={{
-          title: 'Earnings',
-          tabBarAccessibilityLabel: 'Earnings tab',
+          title: 'Funds',
+          tabBarAccessibilityLabel: 'Funds tab',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="wallet" size={size} color={color} />
           ),

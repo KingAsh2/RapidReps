@@ -736,7 +736,7 @@ export default function TrainerHomeScreen() {
                   <View style={styles.quickActionIcon}>
                     <Ionicons name="construct" size={28} color={COLORS.white} />
                   </View>
-                  <Text style={[styles.quickActionText, { color: COLORS.white }]}>My Tools</Text>
+                  <Text style={[styles.quickActionText, { color: COLORS.white }]} numberOfLines={1} adjustsFontSizeToFit>My Tools</Text>
                 </LinearGradient>
               </TouchableOpacity>
               <TouchableOpacity 
@@ -751,7 +751,7 @@ export default function TrainerHomeScreen() {
                   <View style={styles.quickActionIcon}>
                     <Ionicons name="people" size={28} color={COLORS.white} />
                   </View>
-                  <Text style={[styles.quickActionText, { color: COLORS.white }]}>Group Sessions</Text>
+                  <Text style={[styles.quickActionText, { color: COLORS.white }]} numberOfLines={1} adjustsFontSizeToFit>Group Sessions</Text>
                 </LinearGradient>
               </TouchableOpacity>
               <TouchableOpacity 
@@ -766,7 +766,7 @@ export default function TrainerHomeScreen() {
                   <View style={styles.quickActionIcon}>
                     <Ionicons name="trophy" size={28} color={COLORS.white} />
                   </View>
-                  <Text style={[styles.quickActionText, { color: COLORS.white }]}>Achievements</Text>
+                  <Text style={[styles.quickActionText, { color: COLORS.white }]} numberOfLines={1} adjustsFontSizeToFit>Achievements</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </View>
@@ -1254,18 +1254,17 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   quickActionGradient: {
-    padding: 18,
+    padding: 14,
     alignItems: 'center',
   },
   quickActionIcon: {
-    marginBottom: 8,
+    marginBottom: 6,
   },
   quickActionText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
     color: COLORS.navy,
     textAlign: 'center',
-    numberOfLines: 1,
   },
   // Section
   section: {

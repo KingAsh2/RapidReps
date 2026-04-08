@@ -6973,6 +6973,9 @@ async def admin_top_trainers(days: int = 7, limit: int = 5, admin_user: dict = D
                 "tier": calculate_trainer_tier(f.get("totalReviews", 0), f.get("averageRating", 0), False),
             })
 
+    # Filter out trainers with no real name ("Unknown Trainer")
+    leaderboard = [t for t in leaderboard if t["fullName"] and t["fullName"] != "Unknown Trainer"]
+
     return {"leaderboard": leaderboard, "periodDays": days}
 
 

@@ -156,7 +156,7 @@ export default function TrainerGroupSessionsScreen() {
   return (
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-      <LinearGradient colors={['rgba(247, 147, 30, 0.88)', 'rgba(247, 147, 30, 0.80)', 'rgba(255, 165, 38, 0.75)']} style={StyleSheet.absoluteFillObject} />
+      <LinearGradient colors={['rgba(26, 42, 94, 0.95)', 'rgba(26, 42, 94, 0.90)']} style={StyleSheet.absoluteFillObject} />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color={COLORS.white} />
@@ -264,20 +264,20 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 18, fontWeight: '700', color: '#fff' },
   addBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,207,193,0.3)', alignItems: 'center', justifyContent: 'center' },
   tabRow: { flexDirection: 'row', paddingHorizontal: 16, marginBottom: 12, gap: 8 },
-  tabBtn: { flex: 1, paddingVertical: 10, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.05)', alignItems: 'center' },
-  tabActive: { backgroundColor: 'rgba(0,207,193,0.15)' },
-  tabText: { fontSize: 14, fontWeight: '600', color: COLORS.gray },
-  tabTextActive: { color: COLORS.teal },
+  tabBtn: { flex: 1, paddingVertical: 10, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center' },
+  tabActive: { backgroundColor: 'rgba(255,106,0,0.2)' },
+  tabText: { fontSize: 14, fontWeight: '600', color: 'rgba(255,255,255,0.5)' },
+  tabTextActive: { color: '#fff' },
   list: { paddingHorizontal: 16, paddingBottom: 32 },
-  card: { backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 14, padding: 16, marginBottom: 10 },
+  card: { backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 14, padding: 16, marginBottom: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
   cardRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 10 },
   cardTitle: { fontSize: 16, fontWeight: '800', color: '#fff', marginBottom: 4 },
-  cardDesc: { fontSize: 13, color: COLORS.gray, lineHeight: 18 },
-  participantBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(0,207,193,0.15)', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4 },
-  participantText: { fontSize: 13, fontWeight: '700', color: COLORS.teal },
+  cardDesc: { fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 18 },
+  participantBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(255,106,0,0.15)', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4 },
+  participantText: { fontSize: 13, fontWeight: '700', color: COLORS.orange },
   metaRow: { flexDirection: 'row', gap: 16, marginBottom: 12 },
   metaItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  metaText: { fontSize: 13, color: COLORS.gray },
+  metaText: { fontSize: 13, color: 'rgba(255,255,255,0.55)' },
   actionBtn: { backgroundColor: COLORS.orange, borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
   actionBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
   empty: { alignItems: 'center', marginTop: 80 },
