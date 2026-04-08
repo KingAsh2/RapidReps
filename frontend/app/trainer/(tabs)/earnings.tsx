@@ -142,7 +142,7 @@ export default function TrainerEarningsScreen() {
           {/* Header */}
           <View style={styles.header}>
             <View>
-              <Text style={styles.headerTitle}>Earnings</Text>
+              <Text style={styles.headerTitle}>Funds</Text>
               <Text style={styles.headerSubtitle}>Your financial overview</Text>
             </View>
           </View>

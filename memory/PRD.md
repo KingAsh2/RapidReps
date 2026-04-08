@@ -4,30 +4,25 @@
 React Native/Expo + FastAPI + MongoDB | Payments: Zelle | Auth: JWT
 
 ## Receipt/Invoice System (Complete)
-- `GET /api/receipt-logo` - Base64-encoded RapidReps logo for PDFs
-- `GET /api/receipts/session/{id}` - Full receipt data for any authorized role
-- `GET /api/admin/receipts` - Admin: all verified receipts
-- `GET /api/trainee/receipts` - Trainee: their verified receipt history
-- `GET /api/trainer/receipts` - Trainer: their receipt history with earnings
-- Trainee + Trainer: "Receipts" tab in bottom nav showing all verified Zelle payments
-- PDF download via expo-print with custom RapidReps logo (Base64 embedded)
+- Receipt-logo, receipts/session/{id}, admin/receipts, trainee/receipts, trainer/receipts endpoints
+- Receipts tab in both trainee and trainer bottom nav
+- PDF download via expo-print with custom RapidReps Base64 logo
 - "Download Receipt" buttons in Sessions tabs after admin Zelle approval
 
 ## Earnings Dashboard (Complete)
-- **Trainer Earnings Tab**: Daily/weekly bar chart, period toggles, pending balance, Zelle connect status
-- **Admin Dashboard Earnings Trend**: Real-time revenue charts (daily/weekly/6-month)
-  - `GET /api/admin/earnings-summary` - Platform-wide earnings breakdowns
-  - Period toggles, % change vs last period, platform revenue (20%) per period
+- Trainer "Funds" tab (renamed from Earnings): Daily/weekly chart, period toggles, pending balance
+- Admin Dashboard: Real-time earnings trend charts (daily/weekly/6-month) via admin/earnings-summary
 
 ## Push Notifications (Complete)
-- Trainee: "Payment Verified!" with receipt download prompt
-- Trainer: "Session Confirmed - Receipt Ready!" with earnings receipt prompt
-- Deep-link navigation: tapping notification opens receipt screen directly
-- Notification data includes `action: 'view_receipt'` and `sessionId`
-- Expo Push API (fire-and-forget), push token registration via NotificationContext
+- Trainee + Trainer notified on Zelle verification with deep-link to receipt screen
 
-## Admin Dashboard Tabs
-Overview (with earnings charts) | Users | Verifications | Sessions | Payments | Payouts | Zelle | Safety | Profile
+## UI/UX Fixes Applied
+- Travel Radius: Inline slider (1-30 mi) replacing dropdown/modal on trainer edit-profile
+- Achievements button: numberOfLines={1} + adjustsFontSizeToFit preventing text wrap
+- Group Sessions: Changed from orange gradient to navy gradient (fixes orange-on-orange)
+- "Earnings" tab renamed to "Funds"
+- Admin Overview: Filters out "Unknown Trainer" entries from leaderboard
+- Nearby Trainers: Web version shows clickable horizontal trainer cards linking to trainer-detail
 
 ## Credentials
 | Role | Email | Password |
@@ -40,6 +35,4 @@ Overview (with earnings charts) | Users | Verifications | Sessions | Payments | 
 - [ ] EAS iOS Build: Apple Certificate expired (user must run `eas credentials`)
 - [ ] SendGrid email integration (needs user API key)
 - [ ] ~90 non-critical TypeScript warnings
-- [ ] Refactor server.py (9,700+ lines) into modular route files
-
-## MOCKED: SendGrid (awaiting API key)
+- [ ] Refactor server.py (9,800+ lines) into modular route files
