@@ -20,6 +20,7 @@ import { trainerAPI, safetyAPI } from '../../src/services/api';
 import { useAlert } from '../../src/contexts/AlertContext';
 import { toast } from '../../src/utils/toast';
 import { haptic } from '../../src/utils/haptics';
+import { ProfileGallery, SocialLinksDisplay } from '../../src/components/ProfileSections';
 
 export default function TraineeProfileScreen() {
   const router = useRouter();
@@ -476,6 +477,12 @@ export default function TraineeProfileScreen() {
             )}
           </View>
         )}
+
+        {/* Gallery & Social Links */}
+        <View style={{ paddingHorizontal: 20, paddingBottom: 20 }}>
+          <ProfileGallery gallery={traineeData?.gallery || []} />
+          <SocialLinksDisplay socialLinks={traineeData?.socialLinks || {}} />
+        </View>
       </ScrollView>
 
       {/* Location Proposal Modal */}

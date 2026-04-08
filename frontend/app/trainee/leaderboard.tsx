@@ -168,6 +168,7 @@ export default function LeaderboardScreen() {
                       ]}
                       data-testid={`podium-rank-${realRank}`}
                     >
+                      <TouchableOpacity onPress={() => router.push(`/trainee/trainer-detail?trainerId=${entry.userId}`)} activeOpacity={0.7}>
                       <View style={[s.podiumAvatar, { borderColor: medalColor }]}>
                         {entry.avatar ? (
                           <Image source={{ uri: entry.avatar }} style={s.podiumAvatarImg} />
@@ -182,6 +183,7 @@ export default function LeaderboardScreen() {
                       </View>
                       <Text style={s.podiumName} numberOfLines={1}>{entry.fullName}</Text>
                       <Text style={s.podiumPoints}>{entry.consistencyPoints} pts</Text>
+                      </TouchableOpacity>
                       <View style={[s.podiumBar, { height, backgroundColor: `${medalColor}40` }]}>
                         <LinearGradient colors={[medalColor, `${medalColor}80`]} style={[s.podiumBarFill, { height }]}>
                           <Ionicons name={getStreakIcon(entry.streakLevel)} size={18} color={C.white} />
@@ -219,7 +221,13 @@ export default function LeaderboardScreen() {
         {/* Rest of Leaderboard */}
         <Animated.View style={{ opacity: listAnim, transform: [{ translateY: listAnim.interpolate({ inputRange: [0, 1], outputRange: [30, 0] }) }] }}>
           {rest.map((entry) => (
-            <View key={entry.userId} style={s.listItem} data-testid={`leaderboard-rank-${entry.rank}`}>
+            <TouchableOpacity
+              key={entry.userId}
+              style={s.listItem}
+              onPress={() => router.push(`/trainee/trainer-detail?trainerId=${entry.userId}`)}
+              activeOpacity={0.7}
+              data-testid={`leaderboard-rank-${entry.rank}`}
+            >
               <Text style={s.listRank}>#{entry.rank}</Text>
               <View style={s.listAvatar}>
                 {entry.avatar ? (
@@ -240,7 +248,7 @@ export default function LeaderboardScreen() {
                 <Ionicons name={getStreakIcon(entry.streakLevel)} size={14} color={getStreakColor(entry.streakLevel)} />
                 <Text style={s.listPointsText}>{entry.consistencyPoints}</Text>
               </View>
-            </View>
+            </TouchableOpacity>
           ))}
         </Animated.View>
 

@@ -132,16 +132,21 @@ export default function MessagesTab() {
         activeOpacity={0.8}
       >
         <View style={styles.conversationCard}>
-          {otherUser.avatarUrl ? (
-            <Image source={{ uri: otherUser.avatarUrl }} style={styles.avatar} />
-          ) : (
-            <LinearGradient
-              colors={[COLORS.teal, COLORS.tealLight]}
-              style={styles.avatarPlaceholder}
-            >
-              <Ionicons name="person" size={24} color={COLORS.white} />
-            </LinearGradient>
-          )}
+          <TouchableOpacity
+            onPress={() => router.push(`/trainee/trainer-detail?trainerId=${otherUser.id}`)}
+            data-testid={`msg-avatar-${otherUser.id}`}
+          >
+            {otherUser.avatarUrl ? (
+              <Image source={{ uri: otherUser.avatarUrl }} style={styles.avatar} />
+            ) : (
+              <LinearGradient
+                colors={[COLORS.teal, COLORS.tealLight]}
+                style={styles.avatarPlaceholder}
+              >
+                <Ionicons name="person" size={24} color={COLORS.white} />
+              </LinearGradient>
+            )}
+          </TouchableOpacity>
           
           <View style={styles.conversationContent}>
             <View style={styles.conversationHeader}>

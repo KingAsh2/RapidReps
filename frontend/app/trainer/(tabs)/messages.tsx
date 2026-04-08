@@ -92,13 +92,18 @@ export default function TrainerMessagesTab() {
         data-testid={`trainer-conv-${item.id}`}
       >
         <View style={styles.conversationCard}>
-          {otherUser.avatarUrl ? (
-            <Image source={{ uri: otherUser.avatarUrl }} style={styles.avatar} />
-          ) : (
-            <LinearGradient colors={[COLORS.teal, COLORS.tealLight]} style={styles.avatarPlaceholder}>
-              <Ionicons name="person" size={24} color={COLORS.white} />
-            </LinearGradient>
-          )}
+          <TouchableOpacity
+            onPress={() => router.push({ pathname: '/trainer/trainee-profile', params: { traineeId: otherUser.id } })}
+            data-testid={`trainer-msg-avatar-${otherUser.id}`}
+          >
+            {otherUser.avatarUrl ? (
+              <Image source={{ uri: otherUser.avatarUrl }} style={styles.avatar} />
+            ) : (
+              <LinearGradient colors={[COLORS.teal, COLORS.tealLight]} style={styles.avatarPlaceholder}>
+                <Ionicons name="person" size={24} color={COLORS.white} />
+              </LinearGradient>
+            )}
+          </TouchableOpacity>
           <View style={styles.conversationContent}>
             <View style={styles.conversationHeader}>
               <Text style={styles.userName}>{otherUser.fullName}</Text>

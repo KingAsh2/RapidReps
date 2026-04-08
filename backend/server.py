@@ -477,6 +477,8 @@ class TrainerProfileResponse(BaseModel):
     fitnessCertUploaded: bool = False
     introVideoUrl: Optional[str] = None
     introVideoUploaded: bool = False
+    gallery: List[dict] = []  # [{url: str, type: 'photo'|'video', caption?: str}]
+    socialLinks: Optional[dict] = None  # {instagram?, tiktok?, youtube?, twitter?, website?}
     # NEW: Can trainer go live?
     canGoLive: bool = False
     availability: Optional[dict] = None
@@ -538,6 +540,8 @@ class TraineeProfileResponse(BaseModel):
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     locationAddress: Optional[str] = None
+    gallery: List[dict] = []  # [{url: str, type: 'photo'|'video', caption?: str}]
+    socialLinks: Optional[dict] = None  # {instagram?, tiktok?, youtube?, twitter?, website?}
     createdAt: datetime
 
 # Session Models
@@ -2284,6 +2288,27 @@ async def search_trainers(
     
     return [TrainerProfileResponse(**serialize_doc(t)) for t in filtered_trainers]
 
+
+@api_router.put("/trainer-profiles/{user_id}/gallery")
+async def update_trainer_gallery(user_id: str, body: dict, current_user: dict = Depends(get_current_user)):
+    """Update trainer gallery (photos/videos)."""
+    if str(current_user['_id']) != user_id:
+        raise HTTPException(403, "Can only update your own gallery")
+    gallery = body.get('gallery', [])
+    await db.trainer_profiles.update_one({'userId': user_id}, {'$set': {'gallery': gallery, 'updatedAt': datetime.utcnow()}})
+    return {"success": True, "gallery": gallery}
+
+
+@api_router.put("/trainer-profiles/{user_id}/social-links")
+async def update_trainer_social_links(user_id: str, body: dict, current_user: dict = Depends(get_current_user)):
+    """Update trainer social media links."""
+    if str(current_user['_id']) != user_id:
+        raise HTTPException(403, "Can only update your own social links")
+    social_links = body.get('socialLinks', {})
+    await db.trainer_profiles.update_one({'userId': user_id}, {'$set': {'socialLinks': social_links, 'updatedAt': datetime.utcnow()}})
+    return {"success": True, "socialLinks": social_links}
+
+
 # ============================================================================
 # TRAINEE PROFILE ROUTES
 # ============================================================================
@@ -2321,6 +2346,27 @@ async def get_trainee_profile(user_id: str):
         raise HTTPException(status_code=404, detail="Trainee profile not found")
     
     return TraineeProfileResponse(**serialize_doc(profile))
+
+
+@api_router.put("/trainee-profiles/{user_id}/gallery")
+async def update_trainee_gallery(user_id: str, body: dict, current_user: dict = Depends(get_current_user)):
+    """Update trainee gallery (photos/videos)."""
+    if str(current_user['_id']) != user_id:
+        raise HTTPException(403, "Can only update your own gallery")
+    gallery = body.get('gallery', [])
+    await db.trainee_profiles.update_one({'userId': user_id}, {'$set': {'gallery': gallery}})
+    return {"success": True, "gallery": gallery}
+
+
+@api_router.put("/trainee-profiles/{user_id}/social-links")
+async def update_trainee_social_links(user_id: str, body: dict, current_user: dict = Depends(get_current_user)):
+    """Update trainee social media links."""
+    if str(current_user['_id']) != user_id:
+        raise HTTPException(403, "Can only update your own social links")
+    social_links = body.get('socialLinks', {})
+    await db.trainee_profiles.update_one({'userId': user_id}, {'$set': {'socialLinks': social_links}})
+    return {"success": True, "socialLinks": social_links}
+
 
 @api_router.get("/trainers/nearby-trainees")
 async def get_nearby_trainees(current_user: dict = Depends(get_current_user)):

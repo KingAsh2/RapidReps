@@ -23,6 +23,7 @@ import { useAlert } from '../../src/contexts/AlertContext';
 import { Video, ResizeMode } from 'expo-av';
 import { toast } from '../../src/utils/toast';
 import { haptic } from '../../src/utils/haptics';
+import { ProfileGallery, SocialLinksDisplay } from '../../src/components/ProfileSections';
 
 const { width } = Dimensions.get('window');
 
@@ -837,6 +838,12 @@ export default function TrainerDetailScreen() {
               </LinearGradient>
             </Animated.View>
           )}
+
+          {/* Gallery & Social Links */}
+          <View style={{ paddingHorizontal: 20 }}>
+            <ProfileGallery gallery={(trainer as any)?.gallery || []} />
+            <SocialLinksDisplay socialLinks={(trainer as any)?.socialLinks || {}} />
+          </View>
 
           {/* Block Option */}
           <TouchableOpacity onPress={handleBlockTrainer} style={styles.blockButton}>

@@ -213,7 +213,11 @@ export default function SessionDetailScreen() {
           {/* Trainer Info */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Trainer</Text>
-            <View style={styles.trainerRow}>
+            <TouchableOpacity
+              style={styles.trainerRow}
+              onPress={() => session.trainerId && router.push(`/trainee/trainer-detail?trainerId=${session.trainerId}`)}
+              data-testid="session-trainer-profile-link"
+            >
               {session.trainerPhoto ? (
                 <Image source={{ uri: session.trainerPhoto }} style={styles.trainerPhoto} />
               ) : (
@@ -225,7 +229,8 @@ export default function SessionDetailScreen() {
                 <Text style={styles.trainerName}>{session.trainerName || 'Trainer'}</Text>
                 <Text style={styles.trainerSpecialty}>{session.trainerSpecialty || 'Personal Trainer'}</Text>
               </View>
-            </View>
+              <Ionicons name="chevron-forward" size={18} color={COLORS.gray} />
+            </TouchableOpacity>
             <View style={styles.actionButtons}>
               <TouchableOpacity style={styles.actionButton} onPress={handleMessage}>
                 <Ionicons name="chatbubble" size={20} color={COLORS.teal} />

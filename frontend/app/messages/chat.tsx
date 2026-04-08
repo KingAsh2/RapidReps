@@ -181,18 +181,31 @@ export default function ChatScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color={COLORS.white} />
           </TouchableOpacity>
-          {/* Profile Photo */}
-          {userPhoto ? (
-            <Image source={{ uri: userPhoto as string }} style={styles.headerPhoto} />
-          ) : (
-            <View style={styles.headerPhotoPlaceholder}>
-              <Ionicons name="person" size={20} color={COLORS.white} />
+          {/* Profile Photo - tappable */}
+          <TouchableOpacity
+            onPress={() => {
+              const roles = user?.roles || [];
+              if (roles.includes('trainer')) {
+                router.push({ pathname: '/trainer/trainee-profile', params: { traineeId: userId as string } });
+              } else {
+                router.push(`/trainee/trainer-detail?trainerId=${userId}`);
+              }
+            }}
+            style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}
+            data-testid="chat-profile-link"
+          >
+            {userPhoto ? (
+              <Image source={{ uri: userPhoto as string }} style={styles.headerPhoto} />
+            ) : (
+              <View style={styles.headerPhotoPlaceholder}>
+                <Ionicons name="person" size={20} color={COLORS.white} />
+              </View>
+            )}
+            <View style={styles.headerInfo}>
+              <Text style={styles.headerTitle}>{userName}</Text>
+              <Text style={styles.headerStatus}>Online</Text>
             </View>
-          )}
-          <View style={styles.headerInfo}>
-            <Text style={styles.headerTitle}>{userName}</Text>
-            <Text style={styles.headerStatus}>Online</Text>
-          </View>
+          </TouchableOpacity>
           <View style={{ width: 44 }} />
         </Animated.View>
 
