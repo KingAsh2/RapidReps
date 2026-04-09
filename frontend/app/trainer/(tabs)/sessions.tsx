@@ -225,9 +225,9 @@ const styles = StyleSheet.create({
 
   filterBar: { flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 12, gap: 8 },
   filterTab: { flex: 1, paddingVertical: 12, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', overflow: 'hidden' },
-  filterTabActive: { backgroundColor: COLORS.white, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.15, shadowRadius: 6, elevation: 4 },
-  filterTabText: { fontSize: 13, fontWeight: '700', color: 'rgba(255,255,255,0.8)' },
-  filterTabTextActive: { color: COLORS.navy },
+  filterTabActive: { backgroundColor: COLORS.orange, shadowColor: COLORS.orange, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.3, shadowRadius: 6, elevation: 4 },
+  filterTabText: { fontSize: 13, fontWeight: '700', color: 'rgba(255,255,255,0.5)' },
+  filterTabTextActive: { color: COLORS.white },
 
   content: { flex: 1, paddingHorizontal: 16 },
   loadingBox: { paddingTop: 60, alignItems: 'center' },

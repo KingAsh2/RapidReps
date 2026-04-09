@@ -244,7 +244,7 @@ export default function SessionsScreen() {
             style={[styles.tab, activeTab === 'upcoming' && styles.tabActive]}
           >
             <LinearGradient
-              colors={activeTab === 'upcoming' ? [COLORS.white, COLORS.offWhite] : ['transparent', 'transparent']}
+              colors={activeTab === 'upcoming' ? [COLORS.orange, '#FF8C33'] : ['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.04)']}
               style={styles.tabGradient}
             >
               <Ionicons 
@@ -270,7 +270,7 @@ export default function SessionsScreen() {
             style={[styles.tab, activeTab === 'pending' && styles.tabActive]}
           >
             <LinearGradient
-              colors={activeTab === 'pending' ? [COLORS.white, COLORS.offWhite] : ['transparent', 'transparent']}
+              colors={activeTab === 'pending' ? [COLORS.orange, '#FF8C33'] : ['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.04)']}
               style={styles.tabGradient}
             >
               <Ionicons 
