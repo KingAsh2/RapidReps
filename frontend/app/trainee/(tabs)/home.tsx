@@ -28,6 +28,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
+import { ProfilePreviewCard } from '../../../src/components/ProfilePreviewCard';
 import { useNotifications } from '../../../src/contexts/NotificationContext';
 import TrainingModeDialog from '../../../src/components/TrainingModeDialog';
 import TrainerFilters from '../../../src/components/TrainerFilters';
@@ -97,6 +98,8 @@ export default function TraineeHomeScreen() {
   const [showProximityPicker, setShowProximityPicker] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [selectedTrainerId, setSelectedTrainerId] = useState<string | undefined>(undefined);
+  const [previewUser, setPreviewUser] = useState<any>(null);
+  const [showPreview, setShowPreview] = useState(false);
   const [needsAddress, setNeedsAddress] = useState(false);
 
   // Convenience features state
@@ -884,6 +887,20 @@ export default function TraineeHomeScreen() {
                     trainer={trainer}
                     cardAnim={cardAnims[index] || new Animated.Value(1)}
                     onViewProfile={(id) => router.push(`/trainee/trainer-detail?trainerId=${id}`)}
+                    onAvatarLongPress={(t) => {
+                      setPreviewUser({
+                        id: t.userId,
+                        fullName: t.fullName,
+                        avatarUrl: t.avatarUrl,
+                        role: 'trainer',
+                        specialties: t.specialties || t.trainingStyles,
+                        averageRating: t.averageRating,
+                        totalSessionsCompleted: t.totalSessionsCompleted,
+                        bio: t.bio,
+                        isAvailable: t.isAvailable,
+                      });
+                      setShowPreview(true);
+                    }}
                   />
                 ))
               )}
@@ -1057,6 +1074,19 @@ export default function TraineeHomeScreen() {
             </View>
           </TouchableOpacity>
         </Modal>
+
+        {/* Profile Preview Card */}
+        <ProfilePreviewCard
+          visible={showPreview}
+          user={previewUser}
+          onClose={() => setShowPreview(false)}
+          onViewProfile={() => {
+            setShowPreview(false);
+            if (previewUser?.id) {
+              router.push(`/trainee/trainer-detail?trainerId=${previewUser.id}`);
+            }
+          }}
+        />
       </ImageBackground>
     </>
   );

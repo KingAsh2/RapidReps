@@ -366,7 +366,7 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                     {verificationDetail.steps?.map((step: any) => {
                       const stepApproved = verificationDetail.profile?.[`${step.id}Approved`];
                       return (
-                        <View key={step.id} style={{ paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' }}>
+                        <View key={step.id} style={{ paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)' }}>
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                             <View style={{
                               width: 36, height: 36, borderRadius: 18,

@@ -132,7 +132,17 @@ export default function MessagesScreen() {
         activeOpacity={0.8}
       >
         <View style={styles.conversationCard}>
-          <View style={{ position: 'relative' }}>
+          <TouchableOpacity 
+            style={{ position: 'relative' }}
+            onPress={() => {
+              // Navigate to profile based on role
+              const route = user?.roles?.includes('trainer') 
+                ? `/trainer/trainee-profile?traineeId=${otherUser.id}`
+                : `/trainee/trainer-detail?trainerId=${otherUser.id}`;
+              router.push(route);
+            }}
+            data-testid={`message-avatar-${otherUser.id}`}
+          >
             {otherUser.avatarUrl ? (
               <Image source={{ uri: otherUser.avatarUrl }} style={styles.avatar} />
             ) : (
@@ -145,7 +155,7 @@ export default function MessagesScreen() {
             )}
             {/* Active indicator */}
             <View style={{ position: 'absolute', bottom: 1, right: 1, width: 12, height: 12, borderRadius: 6, backgroundColor: '#00D68F', borderWidth: 2, borderColor: '#141929' }} />
-          </View>
+          </TouchableOpacity>
           
           <View style={styles.conversationContent}>
             <View style={styles.conversationHeader}>

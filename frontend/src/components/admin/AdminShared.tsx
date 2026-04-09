@@ -16,19 +16,19 @@ import Svg, { Circle, G, Rect, Text as SvgText, Defs, LinearGradient as SvgLinea
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
 export const C = {
-  orange: '#FF7F00',
-  teal: '#1a2a5e',
-  navy: '#0f1b3d',
-  navyLight: '#1a2a5e',
+  orange: '#FF6A00',
+  teal: '#FF6A00',
+  navy: '#0A0E1A',
+  navyLight: '#141929',
   white: '#FFFFFF',
-  gray: '#5a6785',
-  grayLight: '#F5F6F8',
-  grayDark: '#2d3748',
-  success: '#00C853',
+  gray: '#8a95b0',
+  grayLight: 'rgba(255,255,255,0.06)',
+  grayDark: 'rgba(255,255,255,0.7)',
+  success: '#00D68F',
   error: '#FF4757',
   warning: '#FFB300',
-  bg: '#f0f2f5',
-  card: '#FFFFFF',
+  bg: '#0A0E1A',
+  card: '#141929',
 };
 
 export const PAGE_SIZE = 20;
@@ -86,7 +86,7 @@ export const DonutChart = ({ segments, size, strokeWidth, centerLabel, centerVal
   return (
     <View style={{ alignItems: 'center' }}>
       <Svg width={size} height={size}>
-        <Circle cx={size / 2} cy={size / 2} r={radius} stroke="#f0f2f5" strokeWidth={strokeWidth} fill="none" />
+        <Circle cx={size / 2} cy={size / 2} r={radius} stroke="rgba(255,255,255,0.08)" strokeWidth={strokeWidth} fill="none" />
         {segments.map((seg, i) => {
           const pct = total > 0 ? seg.value / total : 0;
           const dashLength = circumference * pct;
@@ -107,7 +107,7 @@ export const DonutChart = ({ segments, size, strokeWidth, centerLabel, centerVal
             />
           );
         })}
-        <SvgText x={size / 2} y={size / 2 - 6} textAnchor="middle" fontSize={10} fill={C.gray} fontWeight="600">{centerLabel}</SvgText>
+        <SvgText x={size / 2} y={size / 2 - 6} textAnchor="middle" fontSize={10} fill={'#8a95b0'} fontWeight="600">{centerLabel}</SvgText>
         <SvgText x={size / 2} y={size / 2 + 14} textAnchor="middle" fontSize={18} fill={'#0A0E1A'} fontWeight="900">{centerValue}</SvgText>
       </Svg>
     </View>
@@ -145,7 +145,7 @@ export const MiniBarChart = ({ data, barColors, height, labels }: {
         return (
           <G key={i}>
             <Rect x={x} y={y} width={barWidth} height={barH} rx={4} fill={barColors[colorIdx]} opacity={0.9} />
-            <SvgText x={x + barWidth / 2} y={height + 14} textAnchor="middle" fontSize={9} fill={C.gray} fontWeight="600">{labels[i] || ''}</SvgText>
+            <SvgText x={x + barWidth / 2} y={height + 14} textAnchor="middle" fontSize={9} fill={'#8a95b0'} fontWeight="600">{labels[i] || ''}</SvgText>
           </G>
         );
       })}
@@ -220,13 +220,13 @@ export const SearchBar = ({ value, onChangeText, onSubmit, placeholder }: { valu
 
 // --- Styles ---
 export const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: C.bg },
+  container: { flex: 1, backgroundColor: '#0A0E1A' },
   header: { paddingHorizontal: 20, paddingVertical: 16 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   headerTitle: { fontSize: 22, fontWeight: '800', color: C.white },
   headerSub: { fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 2 },
   logoutBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.12)', justifyContent: 'center', alignItems: 'center' },
-  tabBar: { backgroundColor: C.white, borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
+  tabBar: { backgroundColor: '#141929', borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)' },
   tabBarScroll: { paddingHorizontal: 8 },
   tab: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 11, gap: 5, borderBottomWidth: 2, borderBottomColor: 'transparent' },
   tabActive: { borderBottomColor: '#FF6A00' },
@@ -237,7 +237,7 @@ export const s = StyleSheet.create({
   loadingText: { color: C.gray, fontSize: 14 },
   sectionTitle: { fontSize: 16, fontWeight: '700', color: '#FFFFFF', marginBottom: 12, marginTop: 8 },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 20 },
-  statCard: { flex: 1, minWidth: '45%', backgroundColor: C.card, borderRadius: 14, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  statCard: { flex: 1, minWidth: '45%', backgroundColor: '#141929', borderRadius: 14, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
   statIconBg: { width: 40, height: 40, borderRadius: 10, justifyContent: 'center', alignItems: 'center', marginBottom: 10 },
   statValue: { fontSize: 22, fontWeight: '800', color: '#FFFFFF' },
   statLabel: { fontSize: 13, color: C.gray, marginTop: 4 },
@@ -245,7 +245,7 @@ export const s = StyleSheet.create({
   growthTag: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8 },
   growthText: { fontSize: 13, fontWeight: '700' },
   timeframePills: { flexDirection: 'row', gap: 8, marginBottom: 16 },
-  timeframePill: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: C.card, borderWidth: 1, borderColor: '#e2e8f0' },
+  timeframePill: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: '#141929', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
   timeframePillActive: { backgroundColor: '#FF6A00', borderColor: '#FF6A00' },
   timeframePillText: { fontSize: 13, fontWeight: '600', color: C.gray },
   timeframePillTextActive: { color: C.white },
@@ -253,7 +253,7 @@ export const s = StyleSheet.create({
   revenueBarSegment: { height: 8 },
   revenueBarLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 },
   revenueBarLabel: { fontSize: 13, fontWeight: '700' },
-  chartCard: { backgroundColor: C.card, borderRadius: 16, padding: 20, marginBottom: 20, shadowColor: '#0A0E1A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 12, elevation: 3 },
+  chartCard: { backgroundColor: '#141929', borderRadius: 16, padding: 20, marginBottom: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 6, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
   chartCardTitle: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
   chartRow: { flexDirection: 'row', alignItems: 'center', gap: 20 },
   chartLegend: { flex: 1, gap: 10 },
@@ -273,7 +273,7 @@ export const s = StyleSheet.create({
   verifyHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   verifyName: { fontSize: 16, fontWeight: '700', color: '#FFFFFF' },
   verifySub: { fontSize: 13, color: C.gray, marginTop: 2 },
-  pendingBadge: { backgroundColor: '#FFB30020', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  pendingBadge: { backgroundColor: 'rgba(255, 179, 0, 0.12)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
   pendingBadgeText: { fontSize: 13, fontWeight: '700', color: C.warning },
   verifyChecks: { gap: 6, marginBottom: 14 },
   checkRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
@@ -285,7 +285,7 @@ export const s = StyleSheet.create({
   sessionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 },
   statusDot: { width: 8, height: 8, borderRadius: 4 },
   statusText: { fontSize: 13, fontWeight: '700' },
-  sessionType: { fontSize: 13, color: C.gray, fontWeight: '500', backgroundColor: '#f0f2f5', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  sessionType: { fontSize: 13, color: C.gray, fontWeight: '500', backgroundColor: 'rgba(255,255,255,0.04)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
   sessionNames: { fontSize: 14, color: '#FFFFFF', lineHeight: 20 },
   sessionPrice: { fontSize: 16, fontWeight: '800', color: '#FFFFFF' },
   sessionDetails: { gap: 6 },
@@ -293,14 +293,14 @@ export const s = StyleSheet.create({
   detailText: { fontSize: 13, color: C.grayDark },
   transCard: { backgroundColor: C.card, borderRadius: 14, padding: 16, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
   transAmount: { fontSize: 16, fontWeight: '800' },
-  transBreakdown: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: '#f8f9fa', borderRadius: 8, padding: 8 },
+  transBreakdown: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: 8 },
   transBreakdownText: { fontSize: 13, color: C.gray, fontWeight: '500' },
   smallBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 6 },
   smallBtnText: { color: C.white, fontSize: 13, fontWeight: '700' },
   refundedTag: { marginTop: 8, backgroundColor: '#FFE0E0', alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 },
   refundedTagText: { fontSize: 13, fontWeight: '700', color: C.error },
   profileCard: { backgroundColor: C.card, borderRadius: 16, padding: 24, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.08, shadowRadius: 10, elevation: 3 },
-  profileAvatar: { width: 72, height: 72, borderRadius: 36, backgroundColor: '#E0F7F6', justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
+  profileAvatar: { width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(0, 214, 143, 0.12)', justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
   profileName: { fontSize: 20, fontWeight: '800', color: '#FFFFFF' },
   profileSub: { fontSize: 13, color: C.gray, marginTop: 4 },
   profileInfo: { width: '100%', gap: 8, marginTop: 12 },
@@ -314,24 +314,24 @@ export const s = StyleSheet.create({
   emptySub: { fontSize: 13, color: C.gray, textAlign: 'center' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalContent: { backgroundColor: C.white, borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '80%' },
-  modalTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
+  modalTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)' },
   modalTitle: { fontSize: 18, fontWeight: '700', color: '#FFFFFF' },
   modalBody: { paddingHorizontal: 20, paddingBottom: 30 },
-  modalSection: { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
+  modalSection: { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)' },
   modalSectionTitle: { fontSize: 14, fontWeight: '700', color: '#FF6A00', marginBottom: 8 },
   modalField: { fontSize: 13, color: C.grayDark, lineHeight: 22 },
-  messageInput: { borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 10, padding: 14, minHeight: 100, fontSize: 14, color: '#FFFFFF', textAlignVertical: 'top' },
-  textInput: { borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 10, padding: 12, fontSize: 14, color: '#FFFFFF', marginBottom: 12 },
+  messageInput: { borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', borderRadius: 10, padding: 14, minHeight: 100, fontSize: 14, color: '#FFFFFF', textAlignVertical: 'top' },
+  textInput: { borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', borderRadius: 10, padding: 12, fontSize: 14, color: '#FFFFFF', marginBottom: 12 },
   inputLabel: { fontSize: 13, fontWeight: '600', color: C.grayDark, marginBottom: 6 },
-  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: C.card, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 10, borderWidth: 1, borderColor: '#e2e8f0', gap: 8 },
+  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: C.card, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', gap: 8 },
   searchInput: { flex: 1, fontSize: 14, color: '#FFFFFF', paddingVertical: 2 },
-  filterPill: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16, backgroundColor: C.card, borderWidth: 1, borderColor: '#e2e8f0' },
+  filterPill: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16, backgroundColor: C.card, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
   filterPillActive: { backgroundColor: '#FF6A00', borderColor: '#FF6A00' },
   filterPillText: { fontSize: 13, fontWeight: '600', color: C.gray },
   filterPillTextActive: { color: C.white },
   paginationBar: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', paddingVertical: 16, gap: 16 },
-  pageBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: C.white, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#e2e8f0' },
+  pageBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: C.white, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
   pageBtnDisabled: { opacity: 0.4 },
   pageInfo: { fontSize: 13, fontWeight: '600', color: C.grayDark },
   attentionCard: { backgroundColor: C.card, borderRadius: 14, overflow: 'hidden', marginBottom: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
@@ -339,7 +339,7 @@ export const s = StyleSheet.create({
   attentionIconBg: { width: 32, height: 32, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
   attentionText: { flex: 1, fontSize: 13, color: C.grayDark },
   attentionCount: { fontWeight: '800', color: '#FFFFFF' },
-  attentionDivider: { height: 1, backgroundColor: '#f0f2f5', marginLeft: 60 },
+  attentionDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.04)', marginLeft: 60 },
   leaderRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: C.card, borderRadius: 14, padding: 14, marginBottom: 10, gap: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
   leaderRowFirst: { borderLeftWidth: 4, borderLeftColor: '#FFB300' },
   leaderRank: { width: 36, height: 36, borderRadius: 18, borderWidth: 2, justifyContent: 'center', alignItems: 'center' },

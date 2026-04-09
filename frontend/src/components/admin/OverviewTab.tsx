@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { C, s, formatCents, StatCard, DonutChart, MiniBarChart } from './AdminShared';
+import { AnimatedBarChart } from '../AnimatedBarChart';
 
 interface Props {
   dashboard: any;
@@ -179,7 +180,9 @@ export const OverviewTab = ({ dashboard, leaderboard, earningsSummary, setActive
               onPress={() => setEarningsPeriod(p)}
               style={{
                 paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20,
-                backgroundColor: earningsPeriod === p ? '#FF6A00' : '#F0F1F5',
+                backgroundColor: earningsPeriod === p ? '#FF6A00' : 'rgba(255,255,255,0.06)',
+                borderWidth: 1,
+                borderColor: earningsPeriod === p ? '#FF6A00' : 'rgba(255,255,255,0.08)',
               }}
               data-testid={`earnings-period-${p}`}
             >
@@ -229,28 +232,15 @@ export const OverviewTab = ({ dashboard, leaderboard, earningsSummary, setActive
           )}
         </View>
 
-        {/* Bar chart */}
-        <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', height: 120, paddingTop: 10 }}>
-          {chartInfo.data.map((val: number, idx: number) => {
-            const barH = maxBarVal > 0 ? Math.max(4, (val / maxBarVal) * 100) : 4;
-            return (
-              <View key={idx} style={{ alignItems: 'center', flex: 1 }}>
-                {val > 0 && (
-                  <Text style={{ fontSize: 9, fontWeight: '700', color: '#FFFFFF', marginBottom: 3 }}>
-                    ${val.toFixed(0)}
-                  </Text>
-                )}
-                <View style={{
-                  width: '60%', height: barH, borderRadius: 4,
-                  backgroundColor: val > 0 ? '#FF6A00' : '#E8ECF0',
-                }} />
-                <Text style={{ fontSize: 10, color: C.gray, marginTop: 4, fontWeight: '600' }}>
-                  {chartInfo.labels[idx]}
-                </Text>
-              </View>
-            );
-          })}
-        </View>
+        {/* Animated bar chart */}
+        <AnimatedBarChart
+          data={chartInfo.data.map((val: number, idx: number) => ({
+            label: chartInfo.labels[idx] || '',
+            value: val,
+            color: val > 0 ? '#FF6A00' : 'rgba(255,255,255,0.08)',
+          }))}
+          height={140}
+        />
 
         {/* Platform cut row */}
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#F0F1F5' }}>
@@ -279,7 +269,7 @@ export const OverviewTab = ({ dashboard, leaderboard, earningsSummary, setActive
       <Text style={s.sectionTitle}>Attention Needed</Text>
       <View style={s.attentionCard}>
         <TouchableOpacity style={s.attentionRow} onPress={() => setActiveTab('verifications')} data-testid="attention-verifications">
-          <View style={[s.attentionIconBg, { backgroundColor: '#FFB30020' }]}>
+          <View style={[s.attentionIconBg, { backgroundColor: 'rgba(255, 179, 0, 0.12)' }]}>
             <Ionicons name="shield-checkmark" size={16} color={C.warning} />
           </View>
           <Text style={s.attentionText}><Text style={s.attentionCount}>{pendingCount}</Text> trainers pending verification</Text>

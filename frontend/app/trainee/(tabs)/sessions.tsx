@@ -406,8 +406,13 @@ export default function SessionsScreen() {
                       </Text>
                     </View>
 
-                    {/* Trainer Info */}
-                    <View style={styles.trainerRow}>
+                    {/* Trainer Info — Clickable to profile */}
+                    <TouchableOpacity 
+                      style={styles.trainerRow}
+                      onPress={() => router.push(`/trainee/trainer-detail?trainerId=${session.trainerId}`)}
+                      activeOpacity={0.7}
+                      data-testid={`session-trainer-${session.trainerId}`}
+                    >
                       {session.trainerPhoto ? (
                         <Image source={{ uri: session.trainerPhoto }} style={styles.trainerAvatar} />
                       ) : (
@@ -426,7 +431,7 @@ export default function SessionsScreen() {
                           {new Date(session.sessionDateTimeStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </Text>
                       </View>
-                    </View>
+                    </TouchableOpacity>
 
                     {/* Session Stats */}
                     <View style={styles.sessionStats}>

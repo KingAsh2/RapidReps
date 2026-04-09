@@ -249,17 +249,17 @@ export default function TrainerHomeScreen() {
         }, 400 + (index * 100));
       });
 
-      // Pulse animation for status
+      // Pulse animation for status — dramatic pulsing glow
       Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnim, {
-            toValue: 1.05,
-            duration: 1000,
+            toValue: 1.15,
+            duration: 800,
             useNativeDriver: true,
           }),
           Animated.timing(pulseAnim, {
-            toValue: 1,
-            duration: 1000,
+            toValue: 0.85,
+            duration: 800,
             useNativeDriver: true,
           }),
         ])
@@ -594,11 +594,27 @@ export default function TrainerHomeScreen() {
               ]}
             >
               <LinearGradient
-                colors={isAvailable ? [COLORS.success, COLORS.successDark] : [COLORS.gray, '#6a7a9a']}
+                colors={isAvailable ? [COLORS.success, COLORS.successDark] : ['#2a2a3e', '#1a1a2e']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.statusGradient}
               >
+                {/* Pulsing glow ring */}
+                {isAvailable && (
+                  <Animated.View style={{
+                    position: 'absolute',
+                    left: 12,
+                    width: 56,
+                    height: 56,
+                    borderRadius: 28,
+                    backgroundColor: 'rgba(0, 214, 143, 0.3)',
+                    transform: [{ scale: pulseAnim }],
+                    opacity: pulseAnim.interpolate({
+                      inputRange: [0.85, 1, 1.15],
+                      outputRange: [0.6, 0.3, 0],
+                    }),
+                  }} />
+                )}
                 <Animated.View style={[styles.statusIconContainer, { transform: [{ scale: isAvailable ? pulseAnim : 1 }] }]}>
                   <Ionicons 
                     name={isAvailable ? "radio-button-on" : "radio-button-off"} 
@@ -608,7 +624,7 @@ export default function TrainerHomeScreen() {
                 </Animated.View>
                 <View style={styles.statusContent}>
                   <Text style={styles.statusTitle}>
-                    {isAvailable ? '🟢 AVAILABLE NOW' : '🔴 UNAVAILABLE'}
+                    {isAvailable ? 'AVAILABLE NOW' : 'UNAVAILABLE'}
                   </Text>
                   <Text style={styles.statusSubtitle}>
                     {isAvailable 
@@ -622,9 +638,9 @@ export default function TrainerHomeScreen() {
                   <Switch
                     value={isAvailable}
                     onValueChange={handleToggleAvailability}
-                    trackColor={{ false: 'rgba(255,255,255,0.3)', true: 'rgba(255,255,255,0.4)' }}
+                    trackColor={{ false: 'rgba(255,255,255,0.2)', true: 'rgba(255,255,255,0.4)' }}
                     thumbColor={COLORS.white}
-                    ios_backgroundColor="rgba(255,255,255,0.3)"
+                    ios_backgroundColor="rgba(255,255,255,0.2)"
                   />
                 )}
               </LinearGradient>

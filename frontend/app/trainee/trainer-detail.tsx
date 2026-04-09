@@ -422,12 +422,27 @@ export default function TrainerDetailScreen() {
             ]}
           >
             <LinearGradient colors={['#141929', '#1A2035']} style={styles.profileGradient}>
+              {/* Hero Image Background */}
+              {trainer.avatarUrl && (
+                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 180, overflow: 'hidden' }}>
+                  <Image 
+                    source={{ uri: trainer.avatarUrl }} 
+                    style={{ width: '100%', height: 180, opacity: 0.25 }} 
+                    blurRadius={20}
+                  />
+                  <LinearGradient 
+                    colors={['transparent', '#141929']} 
+                    style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 100 }} 
+                  />
+                </View>
+              )}
+
               {/* Avatar */}
               <View style={styles.avatarSection}>
                 {trainer.avatarUrl ? (
                   <Image source={{ uri: trainer.avatarUrl }} style={styles.avatar} />
                 ) : (
-                  <LinearGradient colors={[COLORS.orange, COLORS.orangeLight]} style={styles.avatarPlaceholder}>
+                  <LinearGradient colors={['#FF6A00', '#FF9F1C']} style={styles.avatarPlaceholder}>
                     <Ionicons name="person" size={50} color={COLORS.white} />
                   </LinearGradient>
                 )}
@@ -435,6 +450,10 @@ export default function TrainerDetailScreen() {
                   <View style={styles.verifiedBadge}>
                     <Ionicons name="checkmark-circle" size={28} color={'#FF6A00'} />
                   </View>
+                )}
+                {/* Availability dot */}
+                {trainer.isAvailable && (
+                  <View style={{ position: 'absolute', top: 2, right: 2, width: 18, height: 18, borderRadius: 9, backgroundColor: '#00D68F', borderWidth: 3, borderColor: '#141929' }} />
                 )}
               </View>
 
@@ -453,20 +472,50 @@ export default function TrainerDetailScreen() {
                 <Text style={styles.bio}>{trainer.bio}</Text>
               )}
 
-              {/* Stats */}
+              {/* Stats — Social media style row */}
               <View style={styles.statsRow}>
                 <View style={styles.stat}>
                   <Text style={styles.statValue}>{trainer.experienceYears || 0}</Text>
-                  <Text style={styles.statLabel}>Years Exp</Text>
+                  <Text style={styles.statLabel}>Years</Text>
+                </View>
+                <View style={styles.statDivider} />
+                <View style={styles.stat}>
+                  <Text style={styles.statValue}>{trainer.totalSessionsCompleted || 0}</Text>
+                  <Text style={styles.statLabel}>Sessions</Text>
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.stat}>
                   <Text style={styles.statValue}>{trainer.travelRadiusMiles || 10}</Text>
-                  <Text style={styles.statLabel}>Mile Radius</Text>
+                  <Text style={styles.statLabel}>Mi Radius</Text>
+                </View>
+                <View style={styles.statDivider} />
+                <View style={styles.stat}>
+                  <Text style={styles.statValue}>{ratings.length}</Text>
+                  <Text style={styles.statLabel}>Reviews</Text>
                 </View>
               </View>
 
-              {/* Training Styles */}
+              {/* Quick Action Buttons — IG style */}
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 4, marginBottom: 16 }}>
+                <TouchableOpacity 
+                  onPress={handleMessage} 
+                  style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.08)', paddingVertical: 12, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}
+                  data-testid="quick-message-btn"
+                >
+                  <Ionicons name="chatbubble" size={16} color="#FF6A00" />
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#FFFFFF' }}>Message</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  onPress={handleToggleFavorite}
+                  style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: isFavorite ? 'rgba(255, 71, 87, 0.12)' : 'rgba(255,255,255,0.08)', paddingVertical: 12, borderRadius: 12, borderWidth: 1, borderColor: isFavorite ? 'rgba(255,71,87,0.2)' : 'rgba(255,255,255,0.1)' }}
+                  data-testid="quick-favorite-btn"
+                >
+                  <Ionicons name={isFavorite ? "heart" : "heart-outline"} size={16} color={isFavorite ? '#FF4757' : '#FFFFFF'} />
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#FFFFFF' }}>{isFavorite ? 'Saved' : 'Save'}</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Training Styles / Specialties */}
               {trainer.trainingStyles && trainer.trainingStyles.length > 0 && (
                 <View style={styles.tagsSection}>
                   <Text style={styles.sectionLabel}>SPECIALTIES</Text>
@@ -488,10 +537,10 @@ export default function TrainerDetailScreen() {
                 </View>
               )}
 
-              {/* Video Intro */}
+              {/* Video Content Section */}
               {(trainer as any).introVideoUrl && (
                 <View style={styles.videoSection} data-testid="trainer-video-intro">
-                  <Text style={styles.sectionLabel}>INTRO VIDEO</Text>
+                  <Text style={styles.sectionLabel}>VIDEO CONTENT</Text>
                   <View style={styles.videoContainer}>
                     <Video
                       source={{ uri: (trainer as any).introVideoUrl }}
@@ -850,8 +899,47 @@ export default function TrainerDetailScreen() {
             <Text style={styles.blockText}>Block this Trainer</Text>
           </TouchableOpacity>
 
-          <View style={{ height: 40 }} />
+          <View style={{ height: 100 }} />
         </ScrollView>
+
+        {/* Sticky Book Now Button */}
+        <View style={styles.stickyBookContainer}>
+          <LinearGradient
+            colors={['transparent', '#0A0E1A']}
+            style={styles.stickyBookGradient}
+          >
+            <View style={styles.stickyBookRow}>
+              <View>
+                <Text style={styles.stickyBookPrice}>
+                  ${((trainer.ratePerMinuteCents || 0) / 100).toFixed(2)}/min
+                </Text>
+                <Text style={styles.stickyBookSub}>
+                  {selectedDuration} min session
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={handleBookSession}
+                disabled={booking}
+                style={styles.stickyBookButton}
+                data-testid="sticky-book-now-btn"
+              >
+                <LinearGradient
+                  colors={booking ? ['#555', '#666'] : ['#FF6A00', '#FF9F1C']}
+                  style={styles.stickyBookButtonGradient}
+                >
+                  {booking ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <>
+                      <Ionicons name="flash" size={18} color="#fff" />
+                      <Text style={styles.stickyBookButtonText}>Book Now</Text>
+                    </>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </LinearGradient>
+        </View>
       </SafeAreaView>
 
       {/* Trainee's Home Consent Modal */}
@@ -1560,5 +1648,56 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: COLORS.white,
+  },
+  // Sticky Book Now Button
+  stickyBookContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100,
+  },
+  stickyBookGradient: {
+    paddingTop: 20,
+    paddingBottom: 30,
+    paddingHorizontal: 20,
+  },
+  stickyBookRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  stickyBookPrice: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  stickyBookSub: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.5)',
+    marginTop: 2,
+  },
+  stickyBookButton: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#FF6A00',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  stickyBookButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    gap: 8,
+  },
+  stickyBookButtonText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#FFFFFF',
   },
 });
