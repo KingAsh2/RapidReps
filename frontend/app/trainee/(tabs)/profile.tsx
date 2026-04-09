@@ -25,6 +25,7 @@ import { useSoundEffects } from '../../../src/contexts/SoundContext';
 import { traineeAPI, streaksAPI } from '../../../src/services/api';
 import * as ImagePicker from 'expo-image-picker';
 import { toast } from '../../../src/utils/toast';
+import { ProfileGallery, SocialLinksDisplay } from '../../../src/components/ProfileSections';
 
 const { width } = Dimensions.get('window');
 
@@ -769,6 +770,16 @@ export default function TraineeProfileScreen() {
                   thumbColor={COLORS.white}
                 />
               </View>
+            </View>
+
+            {/* Gallery (editable) */}
+            <View style={{ paddingHorizontal: 16 }}>
+              <ProfileGallery
+                gallery={profile?.gallery || []}
+                editable
+                onGalleryUpdated={(newGallery) => setProfile({ ...profile, gallery: newGallery })}
+              />
+              <SocialLinksDisplay socialLinks={profile?.socialLinks || {}} />
             </View>
 
             {/* Logout Button */}

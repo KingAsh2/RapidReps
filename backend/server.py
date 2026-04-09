@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, Request
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, Request, UploadFile, File, Query, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.responses import FileResponse
 from dotenv import load_dotenv
@@ -114,6 +114,9 @@ JWT_EXPIRATION_HOURS = 24
 security = HTTPBearer()
 
 # Create the main app
+from storage import init_storage, put_object, get_object, generate_upload_path, MIME_TYPES
+
+
 app = FastAPI(title="RapidReps API")
 
 # Rate limiter setup
@@ -2307,6 +2310,92 @@ async def update_trainer_social_links(user_id: str, body: dict, current_user: di
     social_links = body.get('socialLinks', {})
     await db.trainer_profiles.update_one({'userId': user_id}, {'$set': {'socialLinks': social_links, 'updatedAt': datetime.utcnow()}})
     return {"success": True, "socialLinks": social_links}
+
+
+MAX_IMAGE_SIZE = 10 * 1024 * 1024   # 10MB
+MAX_VIDEO_SIZE = 100 * 1024 * 1024  # 100MB
+ALLOWED_IMAGE_EXT = {"jpg", "jpeg", "png", "gif", "webp", "heic"}
+ALLOWED_VIDEO_EXT = {"mp4", "mov", "avi", "mkv"}
+
+
+@api_router.post("/gallery/upload")
+async def upload_gallery_file(
+    file: UploadFile = File(...),
+    caption: str = Query("", max_length=200),
+    current_user: dict = Depends(get_current_user),
+):
+    """Upload image or video to user's gallery. Saves to object storage and appends to profile gallery."""
+    user_id = str(current_user['_id'])
+    filename = file.filename or "file"
+    ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+
+    is_image = ext in ALLOWED_IMAGE_EXT
+    is_video = ext in ALLOWED_VIDEO_EXT
+    if not (is_image or is_video):
+        raise HTTPException(400, f"Unsupported file type: .{ext}. Allowed: {', '.join(ALLOWED_IMAGE_EXT | ALLOWED_VIDEO_EXT)}")
+
+    content = await file.read()
+    max_size = MAX_IMAGE_SIZE if is_image else MAX_VIDEO_SIZE
+    if len(content) > max_size:
+        raise HTTPException(400, f"File too large. Max {'10MB' if is_image else '100MB'}.")
+
+    content_type = MIME_TYPES.get(ext, file.content_type or "application/octet-stream")
+    path = generate_upload_path(user_id, ext)
+
+    try:
+        put_object(path, content, content_type)
+    except Exception as e:
+        raise HTTPException(500, f"Upload failed: {str(e)}")
+
+    media_type = "photo" if is_image else "video"
+    gallery_item = {"url": f"/api/files/{path}", "type": media_type, "storagePath": path}
+    if caption:
+        gallery_item["caption"] = caption
+
+    # Determine which profile collection to update
+    roles = current_user.get('roles', [])
+    if 'trainer' in roles:
+        await db.trainer_profiles.update_one(
+            {'userId': user_id},
+            {'$push': {'gallery': gallery_item}, '$set': {'updatedAt': datetime.utcnow()}}
+        )
+    else:
+        await db.trainee_profiles.update_one(
+            {'userId': user_id},
+            {'$push': {'gallery': gallery_item}}
+        )
+
+    return {"success": True, "item": gallery_item, "mediaType": media_type}
+
+
+@api_router.delete("/gallery/{item_index}")
+async def delete_gallery_item(
+    item_index: int,
+    current_user: dict = Depends(get_current_user),
+):
+    """Delete a gallery item by its index."""
+    user_id = str(current_user['_id'])
+    roles = current_user.get('roles', [])
+    collection = 'trainer_profiles' if 'trainer' in roles else 'trainee_profiles'
+    profile = await db[collection].find_one({'userId': user_id}, {'gallery': 1})
+    if not profile or 'gallery' not in profile:
+        raise HTTPException(404, "Gallery not found")
+    gallery = profile['gallery']
+    if item_index < 0 or item_index >= len(gallery):
+        raise HTTPException(400, "Invalid gallery index")
+    gallery.pop(item_index)
+    await db[collection].update_one({'userId': user_id}, {'$set': {'gallery': gallery}})
+    return {"success": True, "gallery": gallery}
+
+
+@api_router.get("/files/{path:path}")
+async def serve_file(path: str):
+    """Serve a file from object storage."""
+    try:
+        content, content_type = get_object(path)
+        return Response(content=content, media_type=content_type)
+    except Exception:
+        raise HTTPException(404, "File not found")
 
 
 # ============================================================================
@@ -9732,6 +9821,12 @@ app.add_middleware(
 @app.on_event("startup")
 async def start_notification_scheduler():
     asyncio.create_task(notification_scheduler())
+    # Initialize object storage
+    try:
+        init_storage()
+        logging.info("Object storage connected")
+    except Exception as e:
+        logging.warning(f"Object storage init deferred: {e}")
     # Seed default Zelle settings if not present
     existing = await db.app_settings.find_one({"key": "zelle_config"})
     if not existing:

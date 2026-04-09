@@ -24,6 +24,7 @@ import { streaksAPI } from '../../../src/services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { toast } from '../../../src/utils/toast';
+import { ProfileGallery, SocialLinksDisplay } from '../../../src/components/ProfileSections';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -279,6 +280,17 @@ export default function TrainerProfileScreen() {
               )}
             </>
           )}
+
+          {/* Gallery (editable) */}
+          <View style={{ paddingHorizontal: 16 }}>
+            <ProfileGallery
+              gallery={profile?.gallery || []}
+              editable
+              onGalleryUpdated={(newGallery) => setProfile({ ...profile, gallery: newGallery })}
+            />
+            <SocialLinksDisplay socialLinks={profile?.socialLinks || {}} />
+          </View>
+
           <View style={{ height: 100 }} />
         </ScrollView>
       </SafeAreaView>
