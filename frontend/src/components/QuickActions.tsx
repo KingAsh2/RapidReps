@@ -88,7 +88,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
         data-testid="quick-action-message"
       >
         <LinearGradient
-          colors={[COLORS.teal, '#00A5A5']}
+          colors={['#FF6A00', '#00A5A5']}
           style={styles.actionGradient}
         >
           <Ionicons name="chatbubble-ellipses" size={22} color={COLORS.white} />

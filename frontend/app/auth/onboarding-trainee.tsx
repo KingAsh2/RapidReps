@@ -419,7 +419,7 @@ export default function TraineeOnboardingScreen() {
                     <Ionicons
                       name="person"
                       size={20}
-                      color={formData.prefersInPerson ? COLORS.white : COLORS.navy}
+                      color={formData.prefersInPerson ? COLORS.white : COLORS.white}
                     />
                     <Text style={[styles.modeText, formData.prefersInPerson && styles.modeTextSelected]}>
                       In-Person
@@ -432,7 +432,7 @@ export default function TraineeOnboardingScreen() {
                     <Ionicons
                       name="videocam"
                       size={20}
-                      color={formData.prefersVirtual ? COLORS.white : COLORS.navy}
+                      color={formData.prefersVirtual ? COLORS.white : COLORS.white}
                     />
                     <Text style={[styles.modeText, formData.prefersVirtual && styles.modeTextSelected]}>
                       Virtual
@@ -686,7 +686,7 @@ const styles = StyleSheet.create({
   locationText: {
     fontSize: 15,
     fontWeight: '600',
-    color: COLORS.teal,
+    color: '#FFFFFF',
     marginBottom: 14,
   },
   locationPlaceholder: {
@@ -761,7 +761,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.06)',
   },
   experienceChipSelected: {
-    backgroundColor: COLORS.teal,
+    backgroundColor: '#0A0E1A',
   },
   experienceText: {
     fontSize: 14,
@@ -800,7 +800,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   styleChipSelected: {
-    backgroundColor: COLORS.teal,
+    backgroundColor: '#0A0E1A',
   },
   styleText: {
     fontSize: 13,
@@ -836,7 +836,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   modeChipSelected: {
-    backgroundColor: COLORS.teal,
+    backgroundColor: '#0A0E1A',
   },
   modeText: {
     fontSize: 15,
@@ -904,7 +904,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   modalButton: {
-    backgroundColor: COLORS.teal,
+    backgroundColor: '#0A0E1A',
     paddingHorizontal: 32,
     paddingVertical: 12,
     borderRadius: 12,

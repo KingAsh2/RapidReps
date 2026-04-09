@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
   etaBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.teal,
+    backgroundColor: '#FF6A00',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,

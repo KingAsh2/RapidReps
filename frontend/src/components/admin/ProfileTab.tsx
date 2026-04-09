@@ -15,7 +15,7 @@ export const ProfileTab = ({ adminUser, onEditProfile, onChangePassword }: Props
     {adminUser ? (
       <View style={s.profileCard}>
         <View style={s.profileAvatar}>
-          <Ionicons name="shield-checkmark" size={36} color={C.teal} />
+          <Ionicons name="shield-checkmark" size={36} color={'#FF6A00'} />
         </View>
         <Text style={s.profileName}>{adminUser.fullName}</Text>
         <Text style={s.profileSub}>{adminUser.email}</Text>
@@ -36,7 +36,7 @@ export const ProfileTab = ({ adminUser, onEditProfile, onChangePassword }: Props
           <Text style={s.editProfileBtnText}>Edit Profile</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[s.editProfileBtn, { backgroundColor: C.navy, marginTop: 10 }]}
+          style={[s.editProfileBtn, { backgroundColor: '#0A0E1A', marginTop: 10 }]}
           onPress={onChangePassword}
           data-testid="change-password-btn"
         >
@@ -45,7 +45,7 @@ export const ProfileTab = ({ adminUser, onEditProfile, onChangePassword }: Props
         </TouchableOpacity>
       </View>
     ) : (
-      <ActivityIndicator color={C.teal} />
+      <ActivityIndicator color={'#FF6A00'} />
     )}
   </View>
 );

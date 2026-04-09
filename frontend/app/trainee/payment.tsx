@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
   priceSub: { fontSize: 13, color: 'rgba(255,255,255,0.5)' },
   divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.06)', marginVertical: 12 },
   totalLabel: { fontSize: 18, fontWeight: '700', color: '#FFFFFF' },
-  totalValue: { fontSize: 24, fontWeight: '900', color: COLORS.teal },
+  totalValue: { fontSize: 24, fontWeight: '900', color: '#FFFFFF' },
   zelleInfoRow: {
     flexDirection: 'row',
     alignItems: 'center',

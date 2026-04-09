@@ -271,7 +271,7 @@ export default function TrainerOnboardingScreen() {
             ]}
           >
             <LinearGradient
-              colors={onboardingStatus?.canGoLive ? [COLORS.success, '#00A854'] : [COLORS.navy, '#2a3f7e']}
+              colors={onboardingStatus?.canGoLive ? [COLORS.success, '#00A854'] : [COLORS.white, '#2a3f7e']}
               style={styles.statusGradient}
             >
               <View style={styles.statusIconContainer}>
@@ -322,7 +322,7 @@ export default function TrainerOnboardingScreen() {
                 <Ionicons
                   name={pricingLimits.trainerTier === 'elite' ? 'diamond' : pricingLimits.trainerTier === 'pro' ? 'star' : 'fitness'}
                   size={24}
-                  color={pricingLimits.trainerTier === 'elite' ? COLORS.gold : pricingLimits.trainerTier === 'pro' ? COLORS.teal : COLORS.orange}
+                  color={pricingLimits.trainerTier === 'elite' ? COLORS.gold : pricingLimits.trainerTier === 'pro' ? '#FF6A00' : COLORS.orange}
                 />
                 <Text style={styles.tierTitle}>
                   {pricingLimits.trainerTier.toUpperCase()} TRAINER

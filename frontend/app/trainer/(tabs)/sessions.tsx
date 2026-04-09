@@ -75,7 +75,7 @@ export default function TrainerSessionsScreen() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed': return COLORS.success;
-      case 'confirmed': return COLORS.teal;
+      case 'confirmed': return '#FF6A00';
       case 'pending': return COLORS.warning;
       case 'in_progress': return COLORS.orange;
       default: return COLORS.error;
@@ -125,7 +125,7 @@ export default function TrainerSessionsScreen() {
         >
           {loading ? (
             <View style={styles.loadingBox}>
-              <ActivityIndicator size="large" color={COLORS.teal} />
+              <ActivityIndicator size="large" color={'#FF6A00'} />
             </View>
           ) : filteredSessions.length === 0 ? (
             <View style={styles.emptyState}>

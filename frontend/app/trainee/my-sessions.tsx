@@ -106,7 +106,7 @@ export default function MySessionsScreen() {
       case SessionStatus.CONFIRMED:
         return { color: COLORS.success, text: 'Confirmed', icon: 'checkmark-circle' };
       case SessionStatus.COMPLETED:
-        return { color: COLORS.teal, text: 'Completed', icon: 'trophy' };
+        return { color: '#FFFFFF', text: 'Completed', icon: 'trophy' };
       case SessionStatus.DECLINED:
         return { color: COLORS.error, text: 'Declined', icon: 'close-circle' };
       case SessionStatus.CANCELLED:
@@ -122,7 +122,7 @@ export default function MySessionsScreen() {
     return (
       <View style={styles.loadingContainer}>
         <LinearGradient
-          colors={[COLORS.navy, COLORS.navyLight, COLORS.teal]}
+          colors={['#0A0E1A', '#0D1117', '#141929']}
           style={StyleSheet.absoluteFill}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
@@ -136,7 +136,7 @@ export default function MySessionsScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={[COLORS.navy, COLORS.navyLight, COLORS.teal]}
+        colors={['#0A0E1A', '#0D1117', '#141929']}
         style={StyleSheet.absoluteFill}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
@@ -169,7 +169,7 @@ export default function MySessionsScreen() {
               <Ionicons 
                 name="calendar" 
                 size={18} 
-                color={activeTab === 'upcoming' ? COLORS.navy : COLORS.white} 
+                color={activeTab === 'upcoming' ? '#FF6A00' : 'rgba(255,255,255,0.5)'} 
               />
               <Text style={[
                 styles.tabText,
@@ -186,7 +186,7 @@ export default function MySessionsScreen() {
               <Ionicons 
                 name="time" 
                 size={18} 
-                color={activeTab === 'past' ? COLORS.navy : COLORS.white} 
+                color={activeTab === 'past' ? '#FF6A00' : 'rgba(255,255,255,0.5)'} 
               />
               <Text style={[
                 styles.tabText,
@@ -205,7 +205,7 @@ export default function MySessionsScreen() {
             <RefreshControl 
               refreshing={refreshing} 
               onRefresh={onRefresh} 
-              colors={[COLORS.teal]}
+              colors={['#FF6A00']}
               tintColor={COLORS.white}
             />
           }
@@ -525,7 +525,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   dateBox: {
-    backgroundColor: COLORS.navy,
+    backgroundColor: '#0A0E1A',
     borderRadius: 12,
     padding: 12,
     alignItems: 'center',
@@ -595,7 +595,7 @@ const styles = StyleSheet.create({
   priceValue: {
     fontSize: 20,
     fontWeight: '900',
-    color: COLORS.teal,
+    color: '#FFFFFF',
   },
   discountBadge: {
     flexDirection: 'row',

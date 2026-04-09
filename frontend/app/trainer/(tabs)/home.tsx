@@ -560,7 +560,7 @@ export default function TrainerHomeScreen() {
               ]}
             >
               <LinearGradient
-                colors={['rgba(26, 42, 94, 0.95)', 'rgba(26, 42, 94, 0.85)']}
+                colors={['rgba(20, 25, 41, 0.95)', 'rgba(20, 25, 41, 0.85)']}
                 style={styles.heroGradient}
               >
                 <View style={styles.heroGlow} />
@@ -649,7 +649,7 @@ export default function TrainerHomeScreen() {
                 >
                   <View style={styles.earningsHeader}>
                     <View style={styles.earningsIconBg}>
-                      <Ionicons name="wallet" size={24} color={COLORS.teal} />
+                      <Ionicons name="wallet" size={24} color={'#FF6A00'} />
                     </View>
                     <Text style={styles.earningsLabel}>TOTAL EARNINGS</Text>
                   </View>
@@ -700,7 +700,7 @@ export default function TrainerHomeScreen() {
                   style={styles.quickActionGradient}
                 >
                   <View style={styles.quickActionIcon}>
-                    <Ionicons name="shield-checkmark" size={28} color={COLORS.teal} />
+                    <Ionicons name="shield-checkmark" size={28} color={'#FF6A00'} />
                   </View>
                   <Text style={styles.quickActionText}>Verification</Text>
                 </LinearGradient>
@@ -850,8 +850,8 @@ export default function TrainerHomeScreen() {
                             <Text style={styles.sessionStatText}>{session.locationType}</Text>
                           </View>
                           <View style={styles.sessionStat}>
-                            <Ionicons name="cash" size={16} color={COLORS.teal} />
-                            <Text style={[styles.sessionStatText, { color: COLORS.teal, fontWeight: '700' }]}>
+                            <Ionicons name="cash" size={16} color={'#FF6A00'} />
+                            <Text style={[styles.sessionStatText, { color: '#FFFFFF', fontWeight: '700' }]}>
                               ${(session.trainerEarningsCents / 100).toFixed(2)}
                             </Text>
                           </View>
@@ -944,8 +944,8 @@ export default function TrainerHomeScreen() {
                           <Text style={styles.sessionStatText}>{session.locationType}</Text>
                         </View>
                         <View style={styles.sessionStat}>
-                          <Ionicons name="cash" size={16} color={COLORS.teal} />
-                          <Text style={[styles.sessionStatText, { color: COLORS.teal, fontWeight: '700' }]}>
+                          <Ionicons name="cash" size={16} color={'#FF6A00'} />
+                          <Text style={[styles.sessionStatText, { color: '#FFFFFF', fontWeight: '700' }]}>
                             ${(session.trainerEarningsCents / 100).toFixed(2)}
                           </Text>
                         </View>
@@ -1180,7 +1180,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderRadius: 20,
     overflow: 'hidden',
-    shadowColor: COLORS.teal,
+    shadowColor: '#FF6A00',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
@@ -1456,7 +1456,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   confirmedBadge: {
-    backgroundColor: COLORS.teal,
+    backgroundColor: '#0A0E1A',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 10,
@@ -1543,7 +1543,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: COLORS.teal,
+    backgroundColor: '#0A0E1A',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 12,

@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
   container: {
     marginHorizontal: -20,
     marginBottom: 16,
-    backgroundColor: COLORS.navy,
+    backgroundColor: '#0A0E1A',
     overflow: 'hidden',
   },
   header: {
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     backgroundColor: COLORS.success,
     borderWidth: 2,
-    borderColor: COLORS.navy,
+    borderColor: '#FF6A00',
   },
   trainerName: {
     fontSize: 13,

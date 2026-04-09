@@ -133,7 +133,7 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
         <TouchableOpacity
           style={{
             flex: 1, paddingVertical: 12, borderRadius: 12, alignItems: 'center',
-            backgroundColor: !showApproved ? C.teal : '#f0f0f0',
+            backgroundColor: !showApproved ? '#FF6A00' : '#f0f0f0',
           }}
           onPress={() => setShowApproved(false)}
         >
@@ -159,7 +159,7 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
         <>
           <Text style={s.sectionTitle}>Approved Trainers</Text>
           {loadingApproved ? (
-            <ActivityIndicator size="large" color={C.teal} style={{ marginVertical: 20 }} />
+            <ActivityIndicator size="large" color={'#FF6A00'} style={{ marginVertical: 20 }} />
           ) : approvedTrainers.length === 0 ? (
             <View style={s.emptyState}>
               <Ionicons name="people-circle" size={48} color={C.gray} />
@@ -183,8 +183,8 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                   </View>
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
-                  <Ionicons name="document-text-outline" size={16} color={C.teal} />
-                  <Text style={{ fontSize: 13, fontWeight: '600', color: C.teal }}>View Documents</Text>
+                  <Ionicons name="document-text-outline" size={16} color={'#FF6A00'} />
+                  <Text style={{ fontSize: 13, fontWeight: '600', color: '#FF6A00' }}>View Documents</Text>
                 </View>
               </TouchableOpacity>
             ))
@@ -234,8 +234,8 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                 ))}
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
-                <Ionicons name="eye-outline" size={16} color={C.teal} />
-                <Text style={{ fontSize: 13, fontWeight: '600', color: C.teal }}>Tap to review & take action</Text>
+                <Ionicons name="eye-outline" size={16} color={'#FF6A00'} />
+                <Text style={{ fontSize: 13, fontWeight: '600', color: '#FF6A00' }}>Tap to review & take action</Text>
               </View>
             </TouchableOpacity>
           );
@@ -257,7 +257,7 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
               </View>
 
               {verificationDetailLoading ? (
-                <ActivityIndicator size="large" color={C.teal} style={{ marginVertical: 40 }} />
+                <ActivityIndicator size="large" color={'#FF6A00'} style={{ marginVertical: 40 }} />
               ) : verificationDetail ? (
                 <>
                   <View style={s.modalSection}>
@@ -286,32 +286,32 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                       {verificationDetail.profile.bio && (
                         <View style={{ marginBottom: 10 }}>
                           <Text style={{ fontSize: 12, fontWeight: '600', color: C.gray, marginBottom: 4 }}>Bio</Text>
-                          <Text style={{ fontSize: 14, color: C.navy, lineHeight: 20 }}>{verificationDetail.profile.bio}</Text>
+                          <Text style={{ fontSize: 14, color: '#FFFFFF', lineHeight: 20 }}>{verificationDetail.profile.bio}</Text>
                         </View>
                       )}
                       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
                         {verificationDetail.profile.experienceYears > 0 && (
                           <View style={{ minWidth: '45%' }}>
                             <Text style={{ fontSize: 12, fontWeight: '600', color: C.gray }}>Experience</Text>
-                            <Text style={{ fontSize: 14, color: C.navy, fontWeight: '600' }}>{verificationDetail.profile.experienceYears} years</Text>
+                            <Text style={{ fontSize: 14, color: '#FFFFFF', fontWeight: '600' }}>{verificationDetail.profile.experienceYears} years</Text>
                           </View>
                         )}
                         {verificationDetail.profile.trainingStyles?.length > 0 && (
                           <View style={{ minWidth: '45%' }}>
                             <Text style={{ fontSize: 12, fontWeight: '600', color: C.gray }}>Training Styles</Text>
-                            <Text style={{ fontSize: 14, color: C.navy, fontWeight: '600' }}>{verificationDetail.profile.trainingStyles.join(', ')}</Text>
+                            <Text style={{ fontSize: 14, color: '#FFFFFF', fontWeight: '600' }}>{verificationDetail.profile.trainingStyles.join(', ')}</Text>
                           </View>
                         )}
                         {verificationDetail.profile.certifications?.length > 0 && (
                           <View style={{ width: '100%', marginTop: 4 }}>
                             <Text style={{ fontSize: 12, fontWeight: '600', color: C.gray }}>Listed Certifications</Text>
-                            <Text style={{ fontSize: 14, color: C.navy, fontWeight: '600' }}>{verificationDetail.profile.certifications.join(', ')}</Text>
+                            <Text style={{ fontSize: 14, color: '#FFFFFF', fontWeight: '600' }}>{verificationDetail.profile.certifications.join(', ')}</Text>
                           </View>
                         )}
                         {verificationDetail.profile.locationAddress && (
                           <View style={{ width: '100%', marginTop: 4 }}>
                             <Text style={{ fontSize: 12, fontWeight: '600', color: C.gray }}>Location</Text>
-                            <Text style={{ fontSize: 14, color: C.navy, fontWeight: '600' }}>{verificationDetail.profile.locationAddress}</Text>
+                            <Text style={{ fontSize: 14, color: '#FFFFFF', fontWeight: '600' }}>{verificationDetail.profile.locationAddress}</Text>
                           </View>
                         )}
                       </View>
@@ -326,25 +326,25 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                         {verificationDetail.backgroundInfo.fullName && (
                           <View>
                             <Text style={{ fontSize: 12, fontWeight: '600', color: C.gray }}>Full Legal Name</Text>
-                            <Text style={{ fontSize: 14, color: C.navy, fontWeight: '600' }}>{verificationDetail.backgroundInfo.fullName}</Text>
+                            <Text style={{ fontSize: 14, color: '#FFFFFF', fontWeight: '600' }}>{verificationDetail.backgroundInfo.fullName}</Text>
                           </View>
                         )}
                         {verificationDetail.backgroundInfo.dob && (
                           <View>
                             <Text style={{ fontSize: 12, fontWeight: '600', color: C.gray }}>Date of Birth</Text>
-                            <Text style={{ fontSize: 14, color: C.navy, fontWeight: '600' }}>{verificationDetail.backgroundInfo.dob}</Text>
+                            <Text style={{ fontSize: 14, color: '#FFFFFF', fontWeight: '600' }}>{verificationDetail.backgroundInfo.dob}</Text>
                           </View>
                         )}
                         {verificationDetail.backgroundInfo.address && (
                           <View>
                             <Text style={{ fontSize: 12, fontWeight: '600', color: C.gray }}>Address</Text>
-                            <Text style={{ fontSize: 14, color: C.navy, fontWeight: '600' }}>{verificationDetail.backgroundInfo.address}</Text>
+                            <Text style={{ fontSize: 14, color: '#FFFFFF', fontWeight: '600' }}>{verificationDetail.backgroundInfo.address}</Text>
                           </View>
                         )}
                         {verificationDetail.backgroundInfo.submittedAt && (
                           <View>
                             <Text style={{ fontSize: 12, fontWeight: '600', color: C.gray }}>Submitted</Text>
-                            <Text style={{ fontSize: 14, color: C.navy }}>{new Date(verificationDetail.backgroundInfo.submittedAt).toLocaleDateString()}</Text>
+                            <Text style={{ fontSize: 14, color: '#FFFFFF' }}>{new Date(verificationDetail.backgroundInfo.submittedAt).toLocaleDateString()}</Text>
                           </View>
                         )}
                       </View>
@@ -380,7 +380,7 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                               />
                             </View>
                             <View style={{ flex: 1 }}>
-                              <Text style={{ fontSize: 14, fontWeight: '700', color: C.navy }}>{step.label}</Text>
+                              <Text style={{ fontSize: 14, fontWeight: '700', color: '#FFFFFF' }}>{step.label}</Text>
                               <Text style={{ fontSize: 13, color: stepApproved ? C.success : step.submitted ? C.warning : C.error, fontWeight: '600' }}>
                                 {stepApproved ? 'Approved' : step.submitted ? 'Under Review' : 'Not submitted'}
                               </Text>
@@ -404,8 +404,8 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                                     style={{ backgroundColor: '#E8F0FE', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }}
                                     data-testid={`view-doc-${step.id}`}
                                   >
-                                    <Ionicons name="eye" size={14} color={C.teal} />
-                                    <Text style={{ fontSize: 13, fontWeight: '600', color: C.teal }}>View</Text>
+                                    <Ionicons name="eye" size={14} color={'#FF6A00'} />
+                                    <Text style={{ fontSize: 13, fontWeight: '600', color: '#FF6A00' }}>View</Text>
                                   </TouchableOpacity>
                                 )
                               ) : (
@@ -464,7 +464,7 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                       <TextInput
                         style={{
                           borderWidth: 1, borderColor: C.error, borderRadius: 10, padding: 14,
-                          minHeight: 100, fontSize: 14, color: C.navy, textAlignVertical: 'top',
+                          minHeight: 100, fontSize: 14, color: '#FFFFFF', textAlignVertical: 'top',
                           backgroundColor: '#fff',
                         }}
                         value={rejectReason}

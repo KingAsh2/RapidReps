@@ -137,7 +137,7 @@ export default function TrainerProfileScreen() {
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadProfile(); }} tintColor={COLORS.white} />}
         >
           {loading ? (
-            <View style={styles.loadingBox}><ActivityIndicator size="large" color={COLORS.teal} /></View>
+            <View style={styles.loadingBox}><ActivityIndicator size="large" color={'#FF6A00'} /></View>
           ) : (
             <>
               {/* Avatar + Name */}
@@ -222,7 +222,7 @@ export default function TrainerProfileScreen() {
               <Text style={styles.sectionTitle}>Quick Actions</Text>
 
               <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/trainer/verification')} data-testid="go-verification">
-                <Ionicons name="shield-checkmark" size={20} color={COLORS.teal} />
+                <Ionicons name="shield-checkmark" size={20} color={'#FF6A00'} />
                 <Text style={styles.menuItemText}>Verification Status</Text>
                 <Ionicons name="chevron-forward" size={18} color={COLORS.gray} />
               </TouchableOpacity>
@@ -246,7 +246,7 @@ export default function TrainerProfileScreen() {
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/change-password')} data-testid="go-change-password">
-                <Ionicons name="lock-closed" size={20} color={COLORS.teal} />
+                <Ionicons name="lock-closed" size={20} color={'#FF6A00'} />
                 <Text style={styles.menuItemText}>Change Password</Text>
                 <Ionicons name="chevron-forward" size={18} color={COLORS.gray} />
               </TouchableOpacity>

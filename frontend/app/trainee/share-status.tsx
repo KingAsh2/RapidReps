@@ -203,7 +203,7 @@ I'll let you know when I'm done. Track my session in the RapidReps app.
 
             {/* Safety Info */}
             <View style={styles.safetyBanner}>
-              <Ionicons name="shield-checkmark" size={24} color={COLORS.teal} />
+              <Ionicons name="shield-checkmark" size={24} color={'#FF6A00'} />
               <View style={styles.safetyTextContainer}>
                 <Text style={styles.safetyTitle}>Train Safely</Text>
                 <Text style={styles.safetyText}>
@@ -322,7 +322,7 @@ I'll let you know when I'm done. Track my session in the RapidReps app.
             disabled={selectedContacts.length === 0}
           >
             <LinearGradient
-              colors={selectedContacts.length > 0 ? [COLORS.teal, '#2a3a6e'] : [COLORS.gray, COLORS.gray]}
+              colors={selectedContacts.length > 0 ? ['#FF6A00', '#FF9F1C'] : [COLORS.gray, COLORS.gray]}
               style={styles.shareButtonGradient}
             >
               <Ionicons name="share-social" size={24} color={COLORS.white} />
@@ -472,7 +472,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: COLORS.teal,
+    backgroundColor: '#0A0E1A',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
@@ -533,7 +533,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 14,
     borderRadius: 12,
-    backgroundColor: COLORS.teal,
+    backgroundColor: '#0A0E1A',
     alignItems: 'center',
   },
   saveButtonText: {

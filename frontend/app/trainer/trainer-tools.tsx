@@ -63,7 +63,7 @@ export default function TrainerToolsScreen() {
       data-testid={`client-${item.traineeId}`}
     >
       <View style={styles.clientAvatar}>
-        <Ionicons name="person" size={24} color={COLORS.teal} />
+        <Ionicons name="person" size={24} color={'#FF6A00'} />
       </View>
       <View style={{ flex: 1, marginLeft: 12 }}>
         <Text style={styles.clientName}>{item.fullName}</Text>
@@ -120,7 +120,7 @@ export default function TrainerToolsScreen() {
       <View style={styles.tabRow}>
         {tabs.map(t => (
           <TouchableOpacity key={t.key} onPress={() => setTab(t.key)} style={[styles.tabBtn, tab === t.key && styles.tabActive]}>
-            <Ionicons name={t.icon as any} size={18} color={tab === t.key ? COLORS.teal : COLORS.gray} />
+            <Ionicons name={t.icon as any} size={18} color={tab === t.key ? '#FF6A00' : COLORS.gray} />
             <Text style={[styles.tabText, tab === t.key && styles.tabTextActive]}>{t.label}</Text>
           </TouchableOpacity>
         ))}
@@ -131,7 +131,7 @@ export default function TrainerToolsScreen() {
         renderItem={tab === 'clients' ? renderClient : tab === 'plans' ? renderPlan : renderNote}
         keyExtractor={item => item.id || item.traineeId}
         contentContainerStyle={styles.list}
-        refreshControl={<RefreshControl refreshing={loading} onRefresh={loadData} tintColor={COLORS.teal} />}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={loadData} tintColor={'#FF6A00'} />}
         ListEmptyComponent={
           <View style={styles.empty}>
             <Ionicons name="file-tray-outline" size={48} color={COLORS.gray} />
@@ -159,7 +159,7 @@ export default function TrainerToolsScreen() {
                 <Text style={styles.modalCancelText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={handleAddNote} style={styles.modalSave} data-testid="save-note-btn">
-                <LinearGradient colors={[COLORS.teal, '#2a3a6e']} style={styles.modalSaveGrad}>
+                <LinearGradient colors={['#FF6A00', '#FF9F1C']} style={styles.modalSaveGrad}>
                   <Text style={styles.modalSaveText}>Save</Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
   tabBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.05)' },
   tabActive: { backgroundColor: 'rgba(0,207,193,0.15)' },
   tabText: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.5)' },
-  tabTextActive: { color: COLORS.teal },
+  tabTextActive: { color: '#FFFFFF' },
   list: { paddingHorizontal: 16, paddingBottom: 32 },
   clientCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 14, padding: 14, marginBottom: 8 },
   clientAvatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(0,207,193,0.15)', alignItems: 'center', justifyContent: 'center' },
@@ -190,14 +190,14 @@ const styles = StyleSheet.create({
   planCard: { backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 14, padding: 16, marginBottom: 8 },
   planTitle: { fontSize: 16, fontWeight: '700', color: '#fff', marginBottom: 4 },
   planDesc: { fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 8 },
-  planMeta: { fontSize: 13, color: COLORS.teal, fontWeight: '600' },
+  planMeta: { fontSize: 13, color: '#FFFFFF', fontWeight: '600' },
   noteCard: { backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 14, padding: 16, marginBottom: 8 },
   noteText: { fontSize: 14, color: '#e0e0e0', lineHeight: 20, marginBottom: 8 },
   noteFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   noteDate: { fontSize: 13, color: 'rgba(255,255,255,0.5)' },
   tagRow: { flexDirection: 'row', gap: 4 },
   tag: { backgroundColor: 'rgba(0,207,193,0.15)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
-  tagLabel: { fontSize: 13, color: COLORS.teal, fontWeight: '600' },
+  tagLabel: { fontSize: 13, color: '#FFFFFF', fontWeight: '600' },
   empty: { alignItems: 'center', marginTop: 80 },
   emptyText: { fontSize: 14, color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginTop: 12, paddingHorizontal: 32 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },

@@ -237,7 +237,7 @@ export default function RecurringSessionScreen() {
             <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.2)', marginVertical: 8 }} />
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
               <Text style={[styles.summaryText, { fontWeight: '800', color: COLORS.white }]}>Total</Text>
-              <Text style={[styles.summaryText, { fontWeight: '800', color: COLORS.orange }]}>${totalWithFee.toFixed(2)}</Text>
+              <Text style={[styles.summaryText, { fontWeight: '800', color: '#FF6A00' }]}>${totalWithFee.toFixed(2)}</Text>
             </View>
             <Text style={styles.summaryNote}>
               {selectedDays.map(d => DAYS[d].slice(0, 3)).join(', ')} at {selectedTime.replace(':00', '')}:00 | {sessionsPerWeek}x/week | {duration} min each
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12,
     backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',
   },
-  toggleBtnActive: { backgroundColor: COLORS.teal, borderColor: COLORS.teal },
+  toggleBtnActive: { backgroundColor: '#0A0E1A', borderColor: '#FF6A00' },
   toggleText: { fontSize: 13, fontWeight: '700', color: 'rgba(255,255,255,0.6)' },
   toggleTextActive: { color: COLORS.white },
   summaryCard: {

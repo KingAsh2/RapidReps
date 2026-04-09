@@ -118,9 +118,9 @@ export default function SessionDetailScreen() {
       case SessionStatus.CONFIRMED:
         return { color: COLORS.success, text: 'Confirmed', icon: 'checkmark-circle' };
       case SessionStatus.IN_PROGRESS:
-        return { color: COLORS.orange, text: 'In Progress', icon: 'play-circle' };
+        return { color: '#FF6A00', text: 'In Progress', icon: 'play-circle' };
       case SessionStatus.COMPLETED:
-        return { color: COLORS.teal, text: 'Completed', icon: 'checkmark-done' };
+        return { color: '#FFFFFF', text: 'Completed', icon: 'checkmark-done' };
       case SessionStatus.CANCELLED:
         return { color: COLORS.error, text: 'Cancelled', icon: 'close-circle' };
       default:
@@ -142,7 +142,7 @@ export default function SessionDetailScreen() {
 
   if (loading) {
     return (
-      <LinearGradient colors={[COLORS.navy, COLORS.tealLight]} style={styles.loadingContainer}>
+      <LinearGradient colors={['#0A0E1A', '#141929']} style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={COLORS.white} />
         <Text style={styles.loadingText}>Loading session...</Text>
       </LinearGradient>
@@ -152,7 +152,7 @@ export default function SessionDetailScreen() {
   if (!session) {
     return (
       <View style={styles.container}>
-        <LinearGradient colors={[COLORS.navy, COLORS.tealLight]} style={StyleSheet.absoluteFill} />
+        <LinearGradient colors={['#0A0E1A', '#141929']} style={StyleSheet.absoluteFill} />
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.header}>
             <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -184,7 +184,7 @@ export default function SessionDetailScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={[COLORS.navy, COLORS.tealLight]} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={['#0A0E1A', '#141929']} style={StyleSheet.absoluteFill} />
       
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         {/* Header */}
@@ -233,11 +233,11 @@ export default function SessionDetailScreen() {
             </TouchableOpacity>
             <View style={styles.actionButtons}>
               <TouchableOpacity style={styles.actionButton} onPress={handleMessage}>
-                <Ionicons name="chatbubble" size={20} color={COLORS.teal} />
+                <Ionicons name="chatbubble" size={20} color={'#FF6A00'} />
                 <Text style={styles.actionButtonText}>Message</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.actionButton} onPress={handleCall}>
-                <Ionicons name="call" size={20} color={COLORS.teal} />
+                <Ionicons name="call" size={20} color={'#FF6A00'} />
                 <Text style={styles.actionButtonText}>Call</Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -321,8 +321,8 @@ export default function SessionDetailScreen() {
                     disabled={submitting}
                     data-testid="counter-location-btn"
                   >
-                    <Ionicons name="create" size={18} color={COLORS.teal} />
-                    <Text style={[styles.proposalBtnText, { color: COLORS.teal }]}>Suggest Different</Text>
+                    <Ionicons name="create" size={18} color={'#FF6A00'} />
+                    <Text style={[styles.proposalBtnText, { color: '#FFFFFF' }]}>Suggest Different</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -553,7 +553,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     gap: 8,
   },
-  actionButtonText: { fontSize: 14, fontWeight: '600', color: COLORS.teal },
+  actionButtonText: { fontSize: 14, fontWeight: '600', color: '#FFFFFF' },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -613,7 +613,7 @@ const styles = StyleSheet.create({
   proposalTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.orange,
+    color: '#FF6A00',
   },
   proposalLocation: {
     fontSize: 16,
@@ -640,7 +640,7 @@ const styles = StyleSheet.create({
   proposalBtnCounter: {
     backgroundColor: '#141929',
     borderWidth: 1,
-    borderColor: COLORS.teal,
+    borderColor: '#FF6A00',
   },
   proposalBtnText: {
     fontSize: 14,
@@ -761,7 +761,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   modalBtn: {
-    backgroundColor: COLORS.teal,
+    backgroundColor: '#0A0E1A',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',

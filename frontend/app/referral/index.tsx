@@ -67,14 +67,14 @@ export default function ReferralScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.teal} />
+        <ActivityIndicator size="large" color={'#FF6A00'} />
       </View>
     );
   }
 
   return (
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
-      <LinearGradient colors={['rgba(10, 15, 30, 0.85)', 'rgba(26, 42, 94, 0.85)']} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={['rgba(10, 15, 30, 0.85)', 'rgba(20, 25, 41, 0.85)']} style={StyleSheet.absoluteFill} />
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton} data-testid="referral-back-button">
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
   codeCard: { backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 20, padding: 24, marginBottom: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
   codeLabel: { fontSize: 13, fontWeight: '700', color: 'rgba(255,255,255,0.5)', letterSpacing: 2, marginBottom: 12 },
   codeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
-  codeText: { fontSize: 28, fontWeight: '900', color: COLORS.orange, letterSpacing: 3 },
+  codeText: { fontSize: 28, fontWeight: '900', color: '#FF6A00', letterSpacing: 3 },
   copyButton: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 10 },
   copyText: { fontSize: 13, fontWeight: '600', color: COLORS.white },
   shareButton: { borderRadius: 14, overflow: 'hidden' },
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
   howSection: { marginBottom: 24 },
   sectionTitle: { fontSize: 18, fontWeight: '800', color: COLORS.white, marginBottom: 16 },
   step: { flexDirection: 'row', alignItems: 'flex-start', gap: 14, marginBottom: 16 },
-  stepNumber: { width: 32, height: 32, borderRadius: 16, backgroundColor: COLORS.teal, justifyContent: 'center', alignItems: 'center' },
+  stepNumber: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#0A0E1A', justifyContent: 'center', alignItems: 'center' },
   stepNumberText: { fontSize: 14, fontWeight: '800', color: COLORS.white },
   stepContent: { flex: 1 },
   stepTitle: { fontSize: 15, fontWeight: '700', color: COLORS.white, marginBottom: 2 },

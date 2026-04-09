@@ -61,14 +61,14 @@ export const PricingDisplay: React.FC<PricingDisplayProps> = ({
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
           >
-            <Ionicons name="diamond" size={12} color={COLORS.navy} />
+            <Ionicons name="diamond" size={12} color={'#FFFFFF'} />
             <Text style={[styles.tierText, { color: '#FFFFFF' }]}>ELITE</Text>
           </LinearGradient>
         );
       case 'pro':
         return (
           <LinearGradient
-            colors={[COLORS.teal, COLORS.tealLight]}
+            colors={['#FF6A00', '#FF6A00'Light]}
             style={styles.tierBadge}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
@@ -161,7 +161,7 @@ export const TrainerTierBadge: React.FC<TrainerTierBadgeProps> = ({
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
       >
-        <Ionicons name="diamond" size={s.iconSize} color={COLORS.navy} />
+        <Ionicons name="diamond" size={s.iconSize} color={'#FFFFFF'} />
         <Text style={[styles.tierTextLarge, { fontSize: s.fontSize, color: '#FFFFFF' }]}>
           ELITE TRAINER
         </Text>
@@ -172,7 +172,7 @@ export const TrainerTierBadge: React.FC<TrainerTierBadgeProps> = ({
   if (tier === 'pro') {
     return (
       <LinearGradient
-        colors={[COLORS.teal, COLORS.tealLight]}
+        colors={['#FF6A00', '#FF6A00'Light]}
         style={[styles.tierBadgeLarge, { paddingHorizontal: s.padding * 2, paddingVertical: s.padding }]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}

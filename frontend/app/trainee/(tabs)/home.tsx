@@ -1343,7 +1343,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     gap: 10,
     borderWidth: 1,
-    borderColor: 'rgba(26, 42, 94, 0.15)',
+    borderColor: 'rgba(20, 25, 41, 0.15)',
   },
   searchInput: {
     flex: 1,
@@ -1759,7 +1759,7 @@ const styles = StyleSheet.create({
   virtualTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#2a3a6e',
+    backgroundColor: '#141929',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 12,
@@ -2040,7 +2040,7 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     backgroundColor: '#00D68F',
     borderWidth: 2,
-    borderColor: 'rgba(26, 42, 94, 0.95)',
+    borderColor: 'rgba(20, 25, 41, 0.95)',
   },
   nearbyTrainerName: {
     fontSize: 14,

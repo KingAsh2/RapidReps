@@ -230,7 +230,7 @@ export default function ChatScreen() {
               ListEmptyComponent={
                 <View style={styles.emptyContainer}>
                   <View style={styles.emptyIconBg}>
-                    <Ionicons name="chatbubble" size={40} color={COLORS.teal} />
+                    <Ionicons name="chatbubble" size={40} color={'#FF6A00'} />
                   </View>
                   <Text style={styles.emptyText}>Start the conversation!</Text>
                   <Text style={styles.emptySubtext}>Send a message to {userName}</Text>

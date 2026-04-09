@@ -88,7 +88,7 @@ export default function ChangePasswordScreen() {
             {/* Lock icon */}
             <View style={styles.iconContainer}>
               <View style={styles.iconCircle}>
-                <Ionicons name="lock-closed" size={36} color={COLORS.teal} />
+                <Ionicons name="lock-closed" size={36} color={'#FF6A00'} />
               </View>
             </View>
 
@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
   inputIcon: { marginLeft: 14 },
   input: { flex: 1, color: COLORS.white, fontSize: 15, paddingHorizontal: 10, height: '100%' },
   eyeBtn: { padding: 14 },
-  submitBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: COLORS.teal, height: 52, borderRadius: 12, marginTop: 24 },
+  submitBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#0A0E1A', height: 52, borderRadius: 12, marginTop: 24 },
   submitBtnDisabled: { opacity: 0.6 },
   submitText: { color: COLORS.white, fontSize: 16, fontWeight: '700' },
 });

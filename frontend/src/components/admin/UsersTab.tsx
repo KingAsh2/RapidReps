@@ -53,7 +53,7 @@ export const UsersTab = ({
             {user.avatarUrl ? (
               <Image source={{ uri: user.avatarUrl }} style={s.userAvatar} />
             ) : (
-              <View style={[s.listCardIcon, { backgroundColor: user.isAdmin ? C.error : user.roles?.includes('trainer') ? C.orange : C.teal }]}>
+              <View style={[s.listCardIcon, { backgroundColor: user.isAdmin ? C.error : user.roles?.includes('trainer') ? C.orange : '#FF6A00' }]}>
                 <Ionicons
                   name={user.isAdmin ? 'shield' : user.roles?.includes('trainer') ? 'fitness' : 'person'}
                   size={18} color={C.white}
@@ -65,15 +65,15 @@ export const UsersTab = ({
               <Text style={s.listCardSub}>{user.email}</Text>
               {(user.city || user.state) ? (
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                  <Ionicons name="location-outline" size={12} color={C.teal} />
-                  <Text style={[s.listCardSub, { color: C.teal, fontWeight: '600' }]}>{[user.city, user.state].filter(Boolean).join(', ')}</Text>
+                  <Ionicons name="location-outline" size={12} color={'#FF6A00'} />
+                  <Text style={[s.listCardSub, { color: '#FF6A00', fontWeight: '600' }]}>{[user.city, user.state].filter(Boolean).join(', ')}</Text>
                 </View>
               ) : null}
             </View>
           </TouchableOpacity>
           <View style={{ flexDirection: 'row', gap: 6 }}>
             <TouchableOpacity style={s.iconBtn} onPress={() => onMessageUser(user.id, user.fullName)} data-testid={`msg-user-${user.id}`}>
-              <Ionicons name="chatbubble" size={16} color={C.teal} />
+              <Ionicons name="chatbubble" size={16} color={'#FF6A00'} />
             </TouchableOpacity>
             {!user.isAdmin && (
               <TouchableOpacity style={[s.iconBtn, { borderColor: C.error }]} onPress={() => onRemoveUser(user.id, user.fullName)} data-testid={`remove-user-${user.id}`}>

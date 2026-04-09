@@ -234,7 +234,7 @@ export default function ScheduleTrainingScreen() {
                       display="spinner"
                       onChange={handleDateChange}
                       minimumDate={new Date()}
-                      textColor={COLORS.navy}
+                      textColor={'#FFFFFF'}
                     />
                     {Platform.OS === 'ios' && (
                       <TouchableOpacity 
@@ -344,7 +344,7 @@ export default function ScheduleTrainingScreen() {
           <View style={styles.bottomContainer}>
             <TouchableOpacity style={styles.confirmButton} onPress={handleConfirm}>
               <LinearGradient
-                colors={[COLORS.teal, '#2a3a6e']}
+                colors={['#FF6A00', '#FF9F1C']}
                 style={styles.confirmButtonGradient}
               >
                 <Text style={styles.confirmButtonText}>Continue to Book</Text>
@@ -416,7 +416,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   progressDotActive: {
-    backgroundColor: COLORS.teal,
+    backgroundColor: '#0A0E1A',
   },
   progressNumber: {
     fontSize: 13,
@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   progressLineActive: {
-    backgroundColor: COLORS.teal,
+    backgroundColor: '#0A0E1A',
   },
   content: {
     flex: 1,
@@ -471,7 +471,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   quickOptionSelected: {
-    backgroundColor: COLORS.teal,
+    backgroundColor: '#0A0E1A',
   },
   quickOptionIcon: {
     width: 48,
@@ -505,7 +505,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   dateConfirmButton: {
-    backgroundColor: COLORS.teal,
+    backgroundColor: '#0A0E1A',
     padding: 14,
     borderRadius: 12,
     alignItems: 'center',
@@ -541,7 +541,7 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   timeSlotSelected: {
-    backgroundColor: COLORS.teal,
+    backgroundColor: '#0A0E1A',
   },
   timeSlotText: {
     fontSize: 14,
@@ -572,7 +572,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   durationOptionSelected: {
-    backgroundColor: COLORS.teal,
+    backgroundColor: '#0A0E1A',
     borderWidth: 0,
   },
   durationOptionPopular: {

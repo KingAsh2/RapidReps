@@ -278,7 +278,7 @@ export default function TraineeProfileScreen() {
   if (loading) {
     return (
       <LinearGradient
-        colors={[COLORS.navy, COLORS.teal]}
+        colors={['#0A0E1A', '#141929']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.loadingContainer}
@@ -402,7 +402,7 @@ export default function TraineeProfileScreen() {
                       ? ['#FF6A00', '#FF9F1C']
                       : streakData.currentStreak >= 2
                         ? ['#FFB300', '#FFC107']
-                        : [COLORS.navy, COLORS.navyLight]
+                        : ['#0A0E1A', '#141929']
                   }
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
@@ -588,7 +588,7 @@ export default function TraineeProfileScreen() {
             >
               <View style={styles.sectionGradient}>
                 <View style={styles.sectionHeader}>
-                  <Ionicons name="settings" size={22} color={COLORS.teal} />
+                  <Ionicons name="settings" size={22} color={'#FF6A00'} />
                   <Text style={styles.sectionTitle}>Training Preferences</Text>
                 </View>
                 <View style={styles.preferenceRow}>
@@ -599,7 +599,7 @@ export default function TraineeProfileScreen() {
                       setFormData({ ...formData, prefersInPerson: value });
                       setIsEditing(true);
                     }}
-                    trackColor={{ false: COLORS.grayLight, true: COLORS.teal }}
+                    trackColor={{ false: COLORS.grayLight, true: '#FF6A00' }}
                     thumbColor={COLORS.white}
                   />
                 </View>
@@ -611,7 +611,7 @@ export default function TraineeProfileScreen() {
                       setFormData({ ...formData, prefersVirtual: value });
                       setIsEditing(true);
                     }}
-                    trackColor={{ false: COLORS.grayLight, true: COLORS.teal }}
+                    trackColor={{ false: COLORS.grayLight, true: '#FF6A00' }}
                     thumbColor={COLORS.white}
                   />
                 </View>
@@ -674,7 +674,7 @@ export default function TraineeProfileScreen() {
                   onPress={() => router.push('/trainee/(tabs)/saved')}
                 >
                   <View style={[styles.actionIconBg, { backgroundColor: 'rgba(31, 184, 180, 0.2)' }]}>
-                    <Ionicons name="heart" size={22} color={COLORS.teal} />
+                    <Ionicons name="heart" size={22} color={'#FF6A00'} />
                   </View>
                   <Text style={styles.actionText}>Saved Trainers</Text>
                   <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.5)" />
@@ -698,7 +698,7 @@ export default function TraineeProfileScreen() {
                   data-testid="change-password-link"
                 >
                   <View style={[styles.actionIconBg, { backgroundColor: 'rgba(31, 184, 180, 0.2)' }]}>
-                    <Ionicons name="lock-closed" size={22} color={COLORS.teal} />
+                    <Ionicons name="lock-closed" size={22} color={'#FF6A00'} />
                   </View>
                   <Text style={styles.actionText}>Change Password</Text>
                   <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.5)" />
@@ -747,7 +747,7 @@ export default function TraineeProfileScreen() {
                   colors={['#141929', '#1A2035']}
                   style={styles.editButtonGradient}
                 >
-                  <Ionicons name="pencil" size={18} color={COLORS.navy} />
+                  <Ionicons name="pencil" size={18} color={'#FFFFFF'} />
                   <Text style={styles.editButtonText}>Edit Profile</Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -757,7 +757,7 @@ export default function TraineeProfileScreen() {
             <View style={styles.soundToggleCard}>
               <View style={styles.soundToggleRow}>
                 <View style={styles.soundToggleIcon}>
-                  <Ionicons name={soundEnabled ? 'volume-high' : 'volume-mute'} size={20} color={COLORS.navy} />
+                  <Ionicons name={soundEnabled ? 'volume-high' : 'volume-mute'} size={20} color={'#FFFFFF'} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.soundToggleLabel}>Sound Effects</Text>
@@ -766,7 +766,7 @@ export default function TraineeProfileScreen() {
                 <Switch
                   value={soundEnabled}
                   onValueChange={setSoundEnabled}
-                  trackColor={{ false: '#ccc', true: COLORS.teal }}
+                  trackColor={{ false: '#ccc', true: '#FF6A00' }}
                   thumbColor={COLORS.white}
                 />
               </View>
@@ -858,7 +858,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 4,
     right: 4,
-    backgroundColor: COLORS.teal,
+    backgroundColor: '#0A0E1A',
     width: 32,
     height: 32,
     borderRadius: 16,

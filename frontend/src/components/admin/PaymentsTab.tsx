@@ -44,12 +44,12 @@ export const PaymentsTab = ({
       <View style={[s.transCard, { backgroundColor: '#FFF9F0', borderWidth: 1, borderColor: C.orange, marginBottom: 16 }]} data-testid="cancellation-policy-card">
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
           <Ionicons name="information-circle" size={20} color={C.orange} />
-          <Text style={[s.listCardTitle, { color: C.navy, fontWeight: '800' }]}>Cancellation Policy</Text>
+          <Text style={[s.listCardTitle, { color: '#FFFFFF', fontWeight: '800' }]}>Cancellation Policy</Text>
         </View>
-        <Text style={{ fontSize: 13, color: C.navy, lineHeight: 20, marginBottom: 4 }}>
+        <Text style={{ fontSize: 13, color: '#FFFFFF', lineHeight: 20, marginBottom: 4 }}>
           Virtual sessions: $15 cancellation fee | In-person: $20 cancellation fee
         </Text>
-        <Text style={{ fontSize: 13, color: C.navy, lineHeight: 20, marginBottom: 4 }}>
+        <Text style={{ fontSize: 13, color: '#FFFFFF', lineHeight: 20, marginBottom: 4 }}>
           Revenue split on cancellation fees: Platform keeps 20%, Trainer receives 80%
         </Text>
         <Text style={{ fontSize: 13, color: C.gray, lineHeight: 18, fontStyle: 'italic' }}>
@@ -86,7 +86,7 @@ export const PaymentsTab = ({
                 <Text style={s.listCardTitle}>{t.trainerName} / {t.traineeName}</Text>
                 <Text style={s.listCardSub}>{t.sessionType || 'Session'} | {t.status}</Text>
               </View>
-              <Text style={[s.transAmount, { color: t.refunded ? C.error : C.navy }]}>
+              <Text style={[s.transAmount, { color: t.refunded ? C.error : '#0A0E1A' }]}>
                 {t.refunded ? '-' : ''}{t.finalSessionPriceCents ? formatCents(t.finalSessionPriceCents) : '-'}
               </Text>
             </View>

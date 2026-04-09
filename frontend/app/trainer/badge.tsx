@@ -116,7 +116,7 @@ export default function TrainerBadge() {
   if (loading) {
     return (
       <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
-        <LinearGradient colors={['rgba(26, 42, 94, 0.96)', 'rgba(26, 42, 94, 0.92)']} style={StyleSheet.absoluteFill} />
+        <LinearGradient colors={['rgba(20, 25, 41, 0.96)', 'rgba(20, 25, 41, 0.92)']} style={StyleSheet.absoluteFill} />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={COLORS.orange} />
           <Text style={styles.loadingText}>Loading badge...</Text>
@@ -128,7 +128,7 @@ export default function TrainerBadge() {
   if (noSession) {
     return (
       <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
-        <LinearGradient colors={['rgba(26, 42, 94, 0.96)', 'rgba(26, 42, 94, 0.92)']} style={StyleSheet.absoluteFill} />
+        <LinearGradient colors={['rgba(20, 25, 41, 0.96)', 'rgba(20, 25, 41, 0.92)']} style={StyleSheet.absoluteFill} />
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backBtn}
@@ -158,7 +158,7 @@ export default function TrainerBadge() {
 
   return (
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
-      <LinearGradient colors={['rgba(26, 42, 94, 0.96)', 'rgba(26, 42, 94, 0.92)']} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={['rgba(20, 25, 41, 0.96)', 'rgba(20, 25, 41, 0.92)']} style={StyleSheet.absoluteFill} />
 
       {/* Header */}
       <View style={styles.header}>
@@ -207,7 +207,7 @@ export default function TrainerBadge() {
                 <Image source={{ uri: badgeData.trainerPhoto }} style={styles.profilePhoto} />
               ) : (
                 <View style={styles.profilePhotoPlaceholder}>
-                  <Ionicons name="person" size={40} color={COLORS.navy} />
+                  <Ionicons name="person" size={40} color={'#FFFFFF'} />
                 </View>
               )}
               <View style={styles.verifiedDot}>
@@ -292,7 +292,7 @@ export default function TrainerBadge() {
                     <QRCode
                       value={qrToken}
                       size={180}
-                      color={COLORS.navy}
+                      color={'#FFFFFF'}
                       backgroundColor={COLORS.white}
                     />
                   </View>
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
   badgeHeaderContent: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   badgeLogo: { width: 36, height: 36, borderRadius: 8 },
   badgeHeaderText: { flex: 1 },
-  badgeBrand: { fontSize: 11, fontWeight: '900', color: COLORS.orange, letterSpacing: 3 },
+  badgeBrand: { fontSize: 11, fontWeight: '900', color: '#FF6A00', letterSpacing: 3 },
   badgeTitle: { fontSize: 16, fontWeight: '800', color: COLORS.white, marginTop: 2, letterSpacing: 1 },
   badgeShield: {
     width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,127,0,0.15)',

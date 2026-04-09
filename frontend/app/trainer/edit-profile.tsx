@@ -130,8 +130,6 @@ export default function EditTrainerProfileScreen() {
           longitude: data.longitude || null,
           locationAddress: data.locationAddress || '',
           isAvailable: data.isAvailable ?? true,
-          profilePhotoUrl: data.avatarUrl || '',
-          introVideoUrl: data.introVideoUrl || '',
           socialLinks: data.socialLinks || {},
         });
       }
@@ -289,7 +287,7 @@ export default function EditTrainerProfileScreen() {
   if (loading) {
     return (
       <LinearGradient
-        colors={[COLORS.orange, COLORS.orangeLight, COLORS.teal]}
+        colors={[COLORS.orange, COLORS.orangeLight, '#FF6A00']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.loadingContainer}
@@ -441,7 +439,7 @@ export default function EditTrainerProfileScreen() {
               >
                 <LinearGradient colors={['#141929', '#1A2035']} style={styles.cardGradient}>
                   <View style={styles.cardHeader}>
-                    <Ionicons name="fitness" size={22} color={COLORS.teal} />
+                    <Ionicons name="fitness" size={22} color={'#FF6A00'} />
                     <Text style={styles.cardTitle}>Training Styles</Text>
                   </View>
                   <View style={styles.chipsContainer}>
@@ -517,7 +515,7 @@ export default function EditTrainerProfileScreen() {
                     <Switch
                       value={formData.offersInPerson}
                       onValueChange={(value) => setFormData({ ...formData, offersInPerson: value })}
-                      trackColor={{ false: COLORS.grayLight, true: COLORS.teal }}
+                      trackColor={{ false: COLORS.grayLight, true: '#FF6A00' }}
                       thumbColor={COLORS.white}
                     />
                   </View>
@@ -526,7 +524,7 @@ export default function EditTrainerProfileScreen() {
                     <Switch
                       value={formData.offersVirtual}
                       onValueChange={(value) => setFormData({ ...formData, offersVirtual: value })}
-                      trackColor={{ false: COLORS.grayLight, true: COLORS.teal }}
+                      trackColor={{ false: COLORS.grayLight, true: '#FF6A00' }}
                       thumbColor={COLORS.white}
                     />
                   </View>
@@ -608,7 +606,7 @@ export default function EditTrainerProfileScreen() {
               >
                 <LinearGradient colors={['#141929', '#1A2035']} style={styles.cardGradient}>
                   <View style={styles.cardHeader}>
-                    <Ionicons name="image" size={22} color={COLORS.teal} />
+                    <Ionicons name="image" size={22} color={'#FF6A00'} />
                     <Text style={styles.cardTitle}>Media</Text>
                   </View>
                   <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 12 }}>
@@ -802,7 +800,7 @@ const styles = StyleSheet.create({
   radiusSelectorValue: {
     fontSize: 16,
     fontWeight: '700',
-    color: COLORS.teal,
+    color: '#FFFFFF',
   },
   sliderContainer: {
     backgroundColor: 'rgba(255,255,255,0.06)',
@@ -819,7 +817,7 @@ const styles = StyleSheet.create({
   sliderValueText: {
     fontSize: 18,
     fontWeight: '800',
-    color: COLORS.teal,
+    color: '#FFFFFF',
   },
   sliderLabelsRow: {
     flexDirection: 'row',
@@ -843,7 +841,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.06)',
   },
   chipSelected: {
-    backgroundColor: COLORS.teal,
+    backgroundColor: '#0A0E1A',
   },
   chipText: {
     fontSize: 13,
@@ -892,7 +890,7 @@ const styles = StyleSheet.create({
   locationText: {
     fontSize: 15,
     fontWeight: '600',
-    color: COLORS.teal,
+    color: '#FFFFFF',
     marginBottom: 12,
   },
   locationButton: {
@@ -934,42 +932,16 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: COLORS.white,
   },
-});
-dden',
+  sectionCard: {
+    borderRadius: 16,
+    padding: 18,
     marginBottom: 14,
   },
-  locationButtonGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    gap: 8,
-  },
-  locationButtonText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: COLORS.white,
-  },
-  saveButton: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginTop: 8,
-    shadowColor: COLORS.orange,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  saveButtonGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 18,
-    gap: 10,
-  },
-  saveButtonText: {
-    fontSize: 17,
+  sectionTitle: {
+    fontSize: 16,
     fontWeight: '800',
-    color: COLORS.white,
+    color: '#FFFFFF',
+    marginBottom: 14,
   },
 });
+

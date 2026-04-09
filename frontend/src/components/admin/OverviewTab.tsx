@@ -91,13 +91,13 @@ export const OverviewTab = ({ dashboard, leaderboard, earningsSummary, setActive
       <Text style={s.sectionTitle}>Platform Stats</Text>
       <View style={s.statsGrid}>
         <TouchableOpacity onPress={() => setActiveTab('users')} data-testid="stat-total-users">
-          <StatCard icon="people" label="Total Users" value={dashboard.totalUsers} color={C.teal} subtitle="All-time" growth="+12%" />
+          <StatCard icon="people" label="Total Users" value={dashboard.totalUsers} color={'#FF6A00'} subtitle="All-time" growth="+12%" />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => setActiveTab('users')} data-testid="stat-trainers">
           <StatCard icon="fitness" label="Trainers" value={dashboard.totalTrainers} color={C.orange} subtitle="Approved trainers" growth="+3%" />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => setActiveTab('users')} data-testid="stat-trainees">
-          <StatCard icon="person" label="Trainees" value={dashboard.totalTrainees} color={C.navyLight} subtitle="Active clients" growth="+8%" />
+          <StatCard icon="person" label="Trainees" value={dashboard.totalTrainees} color={'#FF6A00'} subtitle="Active clients" growth="+8%" />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => setActiveTab('sessions')} data-testid="stat-sessions">
           <StatCard icon="calendar" label="Sessions" value={dashboard.totalSessions} color={C.success} subtitle="Booked in period" growth="+5%" />
@@ -110,7 +110,7 @@ export const OverviewTab = ({ dashboard, leaderboard, earningsSummary, setActive
           <DonutChart
             segments={[
               { value: dashboard.totalTrainers, color: C.orange, label: 'Trainers' },
-              { value: dashboard.totalTrainees, color: C.teal, label: 'Trainees' },
+              { value: dashboard.totalTrainees, color: '#FF6A00', label: 'Trainees' },
             ]}
             size={130} strokeWidth={18} centerLabel="Users" centerValue={String(dashboard.totalUsers)}
           />
@@ -121,13 +121,13 @@ export const OverviewTab = ({ dashboard, leaderboard, earningsSummary, setActive
               <Text style={s.legendValue}>{dashboard.totalTrainers}</Text>
             </View>
             <View style={s.legendItem}>
-              <View style={[s.legendDot, { backgroundColor: C.teal }]} />
+              <View style={[s.legendDot, { backgroundColor: '#FF6A00' }]} />
               <Text style={s.legendLabel}>Trainees</Text>
               <Text style={s.legendValue}>{dashboard.totalTrainees}</Text>
             </View>
             <View style={s.legendDivider} />
             <View style={s.legendItem}>
-              <View style={[s.legendDot, { backgroundColor: C.navy }]} />
+              <View style={[s.legendDot, { backgroundColor: '#0A0E1A' }]} />
               <Text style={s.legendLabel}>Total</Text>
               <Text style={[s.legendValue, { fontWeight: '900' }]}>{dashboard.totalUsers}</Text>
             </View>
@@ -179,7 +179,7 @@ export const OverviewTab = ({ dashboard, leaderboard, earningsSummary, setActive
               onPress={() => setEarningsPeriod(p)}
               style={{
                 paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20,
-                backgroundColor: earningsPeriod === p ? C.teal : '#F0F1F5',
+                backgroundColor: earningsPeriod === p ? '#FF6A00' : '#F0F1F5',
               }}
               data-testid={`earnings-period-${p}`}
             >
@@ -199,7 +199,7 @@ export const OverviewTab = ({ dashboard, leaderboard, earningsSummary, setActive
             <Text style={{ fontSize: 12, color: C.gray, fontWeight: '600' }}>
               {earningsPeriod === 'week' ? 'Weekly Revenue' : earningsPeriod === 'month' ? 'Monthly Revenue' : '6-Month Revenue'}
             </Text>
-            <Text style={{ fontSize: 22, fontWeight: '900', color: C.navy, marginTop: 2 }} data-testid="earnings-total">
+            <Text style={{ fontSize: 22, fontWeight: '900', color: '#FFFFFF', marginTop: 2 }} data-testid="earnings-total">
               {formatCents(
                 earningsPeriod === 'week' ? weekRevenue :
                 earningsPeriod === 'month' ? monthRevenue :
@@ -236,13 +236,13 @@ export const OverviewTab = ({ dashboard, leaderboard, earningsSummary, setActive
             return (
               <View key={idx} style={{ alignItems: 'center', flex: 1 }}>
                 {val > 0 && (
-                  <Text style={{ fontSize: 9, fontWeight: '700', color: C.navy, marginBottom: 3 }}>
+                  <Text style={{ fontSize: 9, fontWeight: '700', color: '#FFFFFF', marginBottom: 3 }}>
                     ${val.toFixed(0)}
                   </Text>
                 )}
                 <View style={{
                   width: '60%', height: barH, borderRadius: 4,
-                  backgroundColor: val > 0 ? C.teal : '#E8ECF0',
+                  backgroundColor: val > 0 ? '#FF6A00' : '#E8ECF0',
                 }} />
                 <Text style={{ fontSize: 10, color: C.gray, marginTop: 4, fontWeight: '600' }}>
                   {chartInfo.labels[idx]}
@@ -337,10 +337,10 @@ export const OverviewTab = ({ dashboard, leaderboard, earningsSummary, setActive
       <Text style={s.sectionTitle}>Top Trainers This Week</Text>
       {leaderboard.length > 0 ? (
         leaderboard.map((trainer: any, index: number) => {
-          const rankColors = ['#FFB300', '#A0A0A0', '#CD7F32', C.teal, C.navyLight];
+          const rankColors = ['#FFB300', '#A0A0A0', '#CD7F32', '#FF6A00', '#0A0E1A'Light];
           const rankColor = rankColors[index] || C.gray;
           const tierLabel = trainer.tier === 'elite' ? 'Elite' : trainer.tier === 'pro' ? 'Pro' : 'Rising';
-          const tierColor = trainer.tier === 'elite' ? C.orange : trainer.tier === 'pro' ? C.teal : C.gray;
+          const tierColor = trainer.tier === 'elite' ? C.orange : trainer.tier === 'pro' ? '#FF6A00' : C.gray;
           return (
             <View key={trainer.trainerId} style={[s.leaderRow, index === 0 && s.leaderRowFirst]}>
               <View style={[s.leaderRank, { backgroundColor: `${rankColor}20`, borderColor: rankColor }]}>

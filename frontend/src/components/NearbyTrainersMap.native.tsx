@@ -205,7 +205,7 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
         </MapView>
 
         <TouchableOpacity style={styles.recenterBtn} onPress={centerOnUser}>
-          <Ionicons name="locate" size={22} color={COLORS.navy} />
+          <Ionicons name="locate" size={22} color={'#FFFFFF'} />
         </TouchableOpacity>
 
         {selectedTrainer && (
@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderRadius: 0,
     overflow: 'visible',
-    backgroundColor: COLORS.navy,
+    backgroundColor: '#0A0E1A',
   },
   loadingBox: {
     height: MAP_HEIGHT,
@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: COLORS.teal,
+    backgroundColor: '#FF6A00',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 3,
@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
   etaBadge: {
     position: 'absolute',
     bottom: -4,
-    backgroundColor: COLORS.navy,
+    backgroundColor: '#0A0E1A',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 8,

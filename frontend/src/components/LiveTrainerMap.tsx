@@ -140,7 +140,7 @@ export const LiveTrainerMap = ({
         )}
         {distance && (
           <View style={styles.infoItem}>
-            <Ionicons name="speedometer" size={14} color={COLORS.teal} />
+            <Ionicons name="speedometer" size={14} color={'#FF6A00'} />
             <Text style={styles.infoText}>{distance}</Text>
           </View>
         )}
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: COLORS.teal,
+    backgroundColor: '#FF6A00',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,

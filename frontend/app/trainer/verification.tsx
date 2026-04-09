@@ -97,7 +97,7 @@ const ScanningOverlay = ({ visible, onComplete }: { visible: boolean; onComplete
     <Modal visible={visible} transparent animationType="fade">
       <View style={scanStyles.overlay}>
         <LinearGradient
-          colors={['rgba(26, 42, 94, 0.95)', 'rgba(42, 58, 110, 0.95)']}
+          colors={['rgba(20, 25, 41, 0.95)', 'rgba(42, 58, 110, 0.95)']}
           style={StyleSheet.absoluteFill}
         />
         <View style={scanStyles.content}>
@@ -308,7 +308,7 @@ export default function TrainerVerificationScreen() {
       case 'rejected':
         return { name: 'close-circle', color: COLORS.error };
       case 'uploading':
-        return { name: 'cloud-upload', color: COLORS.teal };
+        return { name: 'cloud-upload', color: '#FFFFFF' };
       default:
         return { name: 'ellipse-outline', color: 'rgba(255,255,255,0.5)' };
     }
@@ -551,7 +551,7 @@ export default function TrainerVerificationScreen() {
             {/* Progress Card */}
             <View style={styles.progressCard}>
               <View style={styles.progressHeader}>
-                <Ionicons name="shield-checkmark" size={32} color={COLORS.teal} />
+                <Ionicons name="shield-checkmark" size={32} color={'#FF6A00'} />
                 <View style={styles.progressTextContainer}>
                   <Text style={styles.progressTitle}>Verification Progress</Text>
                   <Text style={styles.progressSubtitle}>
@@ -568,7 +568,7 @@ export default function TrainerVerificationScreen() {
               </View>
 
               <View style={styles.infoBox}>
-                <Ionicons name="information-circle" size={20} color={COLORS.teal} />
+                <Ionicons name="information-circle" size={20} color={'#FF6A00'} />
                 <Text style={styles.infoText}>
                   Complete all required steps to start accepting clients. Verification typically takes 1-3 business days.
                 </Text>
@@ -641,7 +641,7 @@ export default function TrainerVerificationScreen() {
                             data-testid={`upload-btn-${step.id}`}
                           >
                             <LinearGradient
-                              colors={[COLORS.teal, '#2a3a6e']}
+                              colors={['#FF6A00', '#FF9F1C']}
                               style={styles.uploadButtonGradient}
                             >
                               <Ionicons
@@ -673,7 +673,7 @@ export default function TrainerVerificationScreen() {
 
                       {status === 'uploading' && (
                         <View style={styles.uploadingContainer}>
-                          <ActivityIndicator size="small" color={COLORS.teal} />
+                          <ActivityIndicator size="small" color={'#FF6A00'} />
                           <Text style={styles.uploadingText}>Uploading...</Text>
                         </View>
                       )}
@@ -695,7 +695,7 @@ export default function TrainerVerificationScreen() {
             {/* Trust & Safety */}
             <View style={styles.trustCard}>
               <View style={styles.trustHeader}>
-                <Ionicons name="lock-closed" size={24} color={COLORS.teal} />
+                <Ionicons name="lock-closed" size={24} color={'#FF6A00'} />
                 <Text style={styles.trustTitle}>Trust & Safety</Text>
               </View>
               <Text style={styles.trustText}>
@@ -894,8 +894,8 @@ const styles = StyleSheet.create({
   progressSubtitle: { fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
   progressBarContainer: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
   progressBarBg: { flex: 1, height: 8, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 4, overflow: 'hidden' },
-  progressBarFill: { height: '100%', backgroundColor: COLORS.teal, borderRadius: 4 },
-  progressPercent: { fontSize: 14, fontWeight: '700', color: COLORS.teal, width: 45 },
+  progressBarFill: { height: '100%', backgroundColor: '#0A0E1A', borderRadius: 4 },
+  progressPercent: { fontSize: 14, fontWeight: '700', color: '#FFFFFF', width: 45 },
   infoBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -934,7 +934,7 @@ const styles = StyleSheet.create({
   uploadButtonGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, gap: 8 },
   uploadButtonText: { fontSize: 15, fontWeight: '700', color: COLORS.white },
   uploadingContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 14 },
-  uploadingText: { fontSize: 14, color: COLORS.teal, fontWeight: '600' },
+  uploadingText: { fontSize: 14, color: '#FFFFFF', fontWeight: '600' },
   rejectedInfo: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -959,7 +959,7 @@ const styles = StyleSheet.create({
   holdButtonDisabled: { opacity: 0.5 },
   holdButtonPressed: { transform: [{ scale: 0.98 }] },
   holdButtonInner: {
-    backgroundColor: COLORS.navy,
+    backgroundColor: '#0A0E1A',
     borderRadius: 16,
     overflow: 'hidden',
     position: 'relative',

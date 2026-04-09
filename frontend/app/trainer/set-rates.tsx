@@ -120,7 +120,7 @@ export default function SetRatesScreen() {
   if (loading) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator size="large" color={COLORS.teal} />
+        <ActivityIndicator size="large" color={'#FF6A00'} />
       </View>
     );
   }
@@ -151,7 +151,7 @@ export default function SetRatesScreen() {
                 <Switch
                   value={offersInPerson}
                   onValueChange={setOffersInPerson}
-                  trackColor={{ false: '#555', true: COLORS.teal }}
+                  trackColor={{ false: '#555', true: '#FF6A00' }}
                   thumbColor={COLORS.white}
                 />
               </View>
@@ -189,13 +189,13 @@ export default function SetRatesScreen() {
             <View style={styles.rateCard}>
               <View style={styles.rateHeader}>
                 <View style={styles.rateIconRow}>
-                  <Ionicons name="videocam" size={24} color={COLORS.teal} />
+                  <Ionicons name="videocam" size={24} color={'#FF6A00'} />
                   <Text style={styles.rateLabel}>Virtual</Text>
                 </View>
                 <Switch
                   value={offersVirtual}
                   onValueChange={setOffersVirtual}
-                  trackColor={{ false: '#555', true: COLORS.teal }}
+                  trackColor={{ false: '#555', true: '#FF6A00' }}
                   thumbColor={COLORS.white}
                 />
               </View>
@@ -239,7 +239,7 @@ export default function SetRatesScreen() {
                 <Switch
                   value={offersInHome}
                   onValueChange={setOffersInHome}
-                  trackColor={{ false: '#555', true: COLORS.teal }}
+                  trackColor={{ false: '#555', true: '#FF6A00' }}
                   thumbColor={COLORS.white}
                 />
               </View>
@@ -275,7 +275,7 @@ export default function SetRatesScreen() {
 
             {/* Pricing Info */}
             <View style={styles.infoCard}>
-              <Ionicons name="information-circle" size={20} color={COLORS.teal} />
+              <Ionicons name="information-circle" size={20} color={'#FF6A00'} />
               <Text style={styles.infoText}>
                 You receive 80% of the session rate. RapidReps retains 20% + a $2 service fee per session.
               </Text>
@@ -287,7 +287,7 @@ export default function SetRatesScreen() {
               disabled={saving}
               data-testid="save-rates-btn"
             >
-              <LinearGradient colors={[COLORS.teal, COLORS.tealDark]} style={styles.saveGradient}>
+              <LinearGradient colors={['#FF6A00', '#FF6A00'Dark]} style={styles.saveGradient}>
                 {saving ? (
                   <ActivityIndicator color={COLORS.white} />
                 ) : (
@@ -325,10 +325,10 @@ const styles = StyleSheet.create({
   rateInputRow: {
     flexDirection: 'row', alignItems: 'center', marginTop: 14, gap: 6,
   },
-  dollarSign: { fontSize: 24, fontWeight: '800', color: COLORS.orange },
+  dollarSign: { fontSize: 24, fontWeight: '800', color: '#FF6A00' },
   rateInput: {
     fontSize: 28, fontWeight: '800', color: COLORS.white,
-    borderBottomWidth: 2, borderBottomColor: COLORS.teal,
+    borderBottomWidth: 2, borderBottomColor: '#FF6A00',
     paddingVertical: 4, paddingHorizontal: 4, minWidth: 70, textAlign: 'center',
   },
   perHour: { fontSize: 14, color: 'rgba(255,255,255,0.6)', marginLeft: 2 },
@@ -373,7 +373,7 @@ const styles = StyleSheet.create({
   durationDollar: {
     fontSize: 16,
     fontWeight: '700',
-    color: COLORS.orange,
+    color: '#FF6A00',
   },
   durationInput: {
     fontSize: 20,

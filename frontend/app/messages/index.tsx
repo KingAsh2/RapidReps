@@ -132,16 +132,20 @@ export default function MessagesScreen() {
         activeOpacity={0.8}
       >
         <View style={styles.conversationCard}>
-          {otherUser.avatarUrl ? (
-            <Image source={{ uri: otherUser.avatarUrl }} style={styles.avatar} />
-          ) : (
-            <LinearGradient
-              colors={['#0A0E1A', '#141929']}
-              style={styles.avatarPlaceholder}
-            >
-              <Ionicons name="person" size={24} color={COLORS.white} />
-            </LinearGradient>
-          )}
+          <View style={{ position: 'relative' }}>
+            {otherUser.avatarUrl ? (
+              <Image source={{ uri: otherUser.avatarUrl }} style={styles.avatar} />
+            ) : (
+              <LinearGradient
+                colors={['#0A0E1A', '#141929']}
+                style={styles.avatarPlaceholder}
+              >
+                <Ionicons name="person" size={24} color={COLORS.white} />
+              </LinearGradient>
+            )}
+            {/* Active indicator */}
+            <View style={{ position: 'absolute', bottom: 1, right: 1, width: 12, height: 12, borderRadius: 6, backgroundColor: '#00D68F', borderWidth: 2, borderColor: '#141929' }} />
+          </View>
           
           <View style={styles.conversationContent}>
             <View style={styles.conversationHeader}>

@@ -28,7 +28,7 @@ export const ZelleTab = ({
             <Ionicons name="send" size={20} color={C.white} />
           </View>
           <View>
-            <Text style={{ fontSize: 16, fontWeight: '800', color: C.navy }}>Zelle Payment Info</Text>
+            <Text style={{ fontSize: 16, fontWeight: '800', color: '#FFFFFF' }}>Zelle Payment Info</Text>
             <Text style={{ fontSize: 12, color: C.gray }}>Trainees will see this when making payments</Text>
           </View>
         </View>
@@ -80,7 +80,7 @@ export const ZelleTab = ({
       {pendingPayments.length === 0 ? (
         <View style={[s.statCard, { alignItems: 'center', paddingVertical: 30 }]}>
           <Ionicons name="checkmark-circle" size={40} color={C.success} />
-          <Text style={{ fontSize: 15, fontWeight: '700', color: C.navy, marginTop: 10 }}>All caught up!</Text>
+          <Text style={{ fontSize: 15, fontWeight: '700', color: '#FFFFFF', marginTop: 10 }}>All caught up!</Text>
           <Text style={{ fontSize: 13, color: C.gray, marginTop: 4 }}>No pending Zelle payments to verify.</Text>
         </View>
       ) : (
@@ -92,14 +92,14 @@ export const ZelleTab = ({
           >
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                <Text style={{ fontSize: 15, fontWeight: '700', color: C.navy }}>{p.traineeName}</Text>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: '#FFFFFF' }}>{p.traineeName}</Text>
                 <View style={{ backgroundColor: `${C.orange}20`, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 }}>
                   <Text style={{ fontSize: 11, fontWeight: '700', color: C.orange }}>{p.sessionType?.toUpperCase()}</Text>
                 </View>
               </View>
               <Text style={{ fontSize: 13, color: C.gray }}>{p.traineeEmail}</Text>
               <View style={{ flexDirection: 'row', gap: 12, marginTop: 6 }}>
-                <Text style={{ fontSize: 14, fontWeight: '800', color: C.navy }}>{formatCents(p.amountCents)}</Text>
+                <Text style={{ fontSize: 14, fontWeight: '800', color: '#FFFFFF' }}>{formatCents(p.amountCents)}</Text>
                 {p.senderName ? <Text style={{ fontSize: 13, color: '#6D1ED4', fontWeight: '600' }}>From: {p.senderName}</Text> : null}
               </View>
               {p.notes ? (

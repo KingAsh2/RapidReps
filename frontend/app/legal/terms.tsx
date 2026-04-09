@@ -24,7 +24,7 @@ export default function TermsScreen() {
   return (
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
       <LinearGradient
-        colors={['rgba(26, 42, 94, 0.9)', 'rgba(42, 58, 110, 0.88)', 'rgba(26, 42, 94, 0.9)']}
+        colors={['rgba(20, 25, 41, 0.9)', 'rgba(42, 58, 110, 0.88)', 'rgba(20, 25, 41, 0.9)']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}

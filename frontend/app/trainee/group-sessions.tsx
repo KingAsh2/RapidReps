@@ -50,15 +50,15 @@ export default function GroupSessionsScreen() {
       <Text style={styles.desc}>{item.description}</Text>
       <View style={styles.metaRow}>
         <View style={styles.metaItem}>
-          <Ionicons name="calendar" size={14} color={COLORS.teal} />
+          <Ionicons name="calendar" size={14} color={'#FF6A00'} />
           <Text style={styles.metaText}>{new Date(item.dateTime).toLocaleDateString()}</Text>
         </View>
         <View style={styles.metaItem}>
-          <Ionicons name="time" size={14} color={COLORS.teal} />
+          <Ionicons name="time" size={14} color={'#FF6A00'} />
           <Text style={styles.metaText}>{item.durationMinutes} min</Text>
         </View>
         <View style={styles.metaItem}>
-          <Ionicons name="location" size={14} color={COLORS.teal} />
+          <Ionicons name="location" size={14} color={'#FF6A00'} />
           <Text style={styles.metaText}>{item.location || item.sessionType}</Text>
         </View>
       </View>
@@ -79,7 +79,7 @@ export default function GroupSessionsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <LinearGradient colors={['rgba(26, 42, 94, 0.95)', 'rgba(26, 42, 94, 0.90)']} style={StyleSheet.absoluteFillObject} />
+      <LinearGradient colors={['rgba(20, 25, 41, 0.95)', 'rgba(20, 25, 41, 0.90)']} style={StyleSheet.absoluteFillObject} />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => goBack('/trainee/(tabs)/home')} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color={COLORS.white} />
@@ -92,7 +92,7 @@ export default function GroupSessionsScreen() {
         renderItem={renderSession}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.list}
-        refreshControl={<RefreshControl refreshing={loading} onRefresh={load} tintColor={COLORS.teal} />}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={load} tintColor={'#FF6A00'} />}
         ListEmptyComponent={
           <View style={styles.empty}>
             <Ionicons name="people" size={48} color={COLORS.gray} />
@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
   metaText: { fontSize: 13, color: '#b0bbd0' },
   cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   trainerName: { fontSize: 13, color: '#b0bbd0' },
-  joinBtn: { backgroundColor: COLORS.teal, borderRadius: 10, paddingHorizontal: 16, paddingVertical: 8 },
+  joinBtn: { backgroundColor: '#0A0E1A', borderRadius: 10, paddingHorizontal: 16, paddingVertical: 8 },
   joinBtnText: { fontSize: 13, fontWeight: '700', color: '#fff' },
   joinedBadge: { backgroundColor: 'rgba(0,210,106,0.2)', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6 },
   joinedText: { fontSize: 13, fontWeight: '700', color: COLORS.success },

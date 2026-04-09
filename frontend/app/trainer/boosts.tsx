@@ -158,7 +158,7 @@ export default function BoostsScreen() {
                   <Text style={styles.boostDuration}>{option.duration} of visibility</Text>
                 </View>
                 <View style={styles.boostPriceBox}>
-                  <Text style={[styles.boostPrice, selectedBoost === option.id && { color: COLORS.teal }]}>${option.price}</Text>
+                  <Text style={[styles.boostPrice, selectedBoost === option.id && { color: '#FFFFFF' }]}>${option.price}</Text>
                 </View>
               </View>
               {selectedBoost === option.id && (
@@ -179,7 +179,7 @@ export default function BoostsScreen() {
               { icon: 'trending-up', text: 'Priority in nearby trainer results' },
             ].map((b, idx) => (
               <View key={idx} style={styles.benefitRow}>
-                <Ionicons name={b.icon as any} size={18} color={COLORS.teal} />
+                <Ionicons name={b.icon as any} size={18} color={'#FF6A00'} />
                 <Text style={styles.benefitText}>{b.text}</Text>
               </View>
             ))}
@@ -187,7 +187,7 @@ export default function BoostsScreen() {
 
           {/* Revenue note */}
           <View style={styles.noteCard}>
-            <Ionicons name="information-circle" size={18} color={COLORS.teal} />
+            <Ionicons name="information-circle" size={18} color={'#FF6A00'} />
             <Text style={styles.noteText}>
               100% of boost revenue goes to the platform to maintain and improve services for all trainers.
             </Text>
@@ -204,7 +204,7 @@ export default function BoostsScreen() {
             disabled={purchasing}
             data-testid="purchase-boost-btn"
           >
-            <LinearGradient colors={[COLORS.teal, '#2a3a6e']} style={styles.purchaseBtnGradient}>
+            <LinearGradient colors={['#FF6A00', '#FF9F1C']} style={styles.purchaseBtnGradient}>
               {purchasing ? (
                 <ActivityIndicator size="small" color={COLORS.white} />
               ) : (
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
   benefitRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   benefitText: { fontSize: 14, color: COLORS.white, flex: 1 },
 
-  noteCard: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: `${COLORS.teal}15`, borderRadius: 12, padding: 14, marginTop: 12 },
+  noteCard: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: `${'#FF6A00'}15`, borderRadius: 12, padding: 14, marginTop: 12 },
   noteText: { fontSize: 13, color: 'rgba(255,255,255,0.7)', flex: 1, lineHeight: 18 },
 
   bottomBar: { paddingHorizontal: 16, paddingBottom: 24, paddingTop: 8 },

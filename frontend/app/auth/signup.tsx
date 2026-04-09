@@ -443,7 +443,7 @@ export default function SignupScreen() {
                         <Ionicons 
                           name="search" 
                           size={28} 
-                          color={formData.roles.includes(UserRole.TRAINEE) ? COLORS.teal : COLORS.navy} 
+                          color={formData.roles.includes(UserRole.TRAINEE) ? '#FF6A00' : COLORS.white} 
                         />
                       </View>
                       <View style={styles.roleTextContainer}>
@@ -497,7 +497,7 @@ export default function SignupScreen() {
                         <Ionicons 
                           name="flash" 
                           size={28} 
-                          color={formData.roles.includes(UserRole.TRAINER) ? COLORS.orangeHot : COLORS.navy} 
+                          color={formData.roles.includes(UserRole.TRAINER) ? COLORS.orangeHot : COLORS.white} 
                         />
                       </View>
                       <View style={styles.roleTextContainer}>
@@ -899,7 +899,7 @@ const styles = StyleSheet.create({
   },
   referralHint: {
     fontSize: 13,
-    color: COLORS.orangeLight,
+    color: '#FF6A00'Light,
     marginTop: 6,
     marginLeft: 4,
     fontWeight: '500',

@@ -76,7 +76,7 @@ export default function VerifyTrainer() {
   if (!permission?.granted) {
     return (
       <View style={styles.container}>
-        <LinearGradient colors={['rgba(26, 42, 94, 0.96)', 'rgba(26, 42, 94, 0.92)']} style={StyleSheet.absoluteFill} />
+        <LinearGradient colors={['rgba(20, 25, 41, 0.96)', 'rgba(20, 25, 41, 0.92)']} style={StyleSheet.absoluteFill} />
         <View style={styles.permissionContainer}>
           <Ionicons name="camera-outline" size={64} color={COLORS.orange} />
           <Text style={styles.permissionTitle}>Camera Access Required</Text>
@@ -108,7 +108,7 @@ export default function VerifyTrainer() {
             onPress={() => router.back()}
             data-testid="verify-success-back-btn"
           >
-            <Ionicons name="close" size={22} color={COLORS.navy} />
+            <Ionicons name="close" size={22} color={'#FFFFFF'} />
           </TouchableOpacity>
         </View>
         <Animated.View style={[styles.successContent, { opacity: fadeIn, transform: [{ scale: scaleAnim }] }]}>
@@ -129,7 +129,7 @@ export default function VerifyTrainer() {
               <Image source={{ uri: result.trainerPhoto }} style={styles.trainerCardPhoto} />
             ) : (
               <View style={[styles.trainerCardPhoto, styles.trainerCardPhotoPlaceholder]}>
-                <Ionicons name="person" size={28} color={COLORS.navy} />
+                <Ionicons name="person" size={28} color={'#FFFFFF'} />
               </View>
             )}
             <Text style={styles.trainerCardName}>{result.trainerName}</Text>
@@ -197,7 +197,7 @@ export default function VerifyTrainer() {
 
             <View style={styles.secondaryRow}>
               <TouchableOpacity style={styles.secondaryBtn} data-testid="verify-share-btn">
-                <Ionicons name="share-outline" size={18} color={COLORS.navy} />
+                <Ionicons name="share-outline" size={18} color={'#FFFFFF'} />
                 <Text style={styles.secondaryBtnText}>Share My Session</Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -225,7 +225,7 @@ export default function VerifyTrainer() {
             onPress={() => router.back()}
             data-testid="verify-error-back-btn"
           >
-            <Ionicons name="close" size={22} color={COLORS.navy} />
+            <Ionicons name="close" size={22} color={'#FFFFFF'} />
           </TouchableOpacity>
         </View>
         <Animated.View style={[styles.errorContent, { transform: [{ scale: scaleAnim }] }]}>
@@ -260,7 +260,7 @@ export default function VerifyTrainer() {
               onPress={() => router.push('/trainee/report-issue')}
               data-testid="verify-support-btn"
             >
-              <Ionicons name="chatbubble-ellipses-outline" size={18} color={COLORS.navy} />
+              <Ionicons name="chatbubble-ellipses-outline" size={18} color={'#FFFFFF'} />
               <Text style={styles.supportBtnText}>Contact Support</Text>
             </TouchableOpacity>
           </View>
@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
   scanBadgeText: { fontSize: 14, fontWeight: '700', color: COLORS.white },
   scanInstructions: { fontSize: 14, color: 'rgba(255,255,255,0.8)', textAlign: 'center' },
   verifyingRow: { marginTop: 4 },
-  verifyingText: { fontSize: 14, fontWeight: '700', color: COLORS.orange },
+  verifyingText: { fontSize: 14, fontWeight: '700', color: '#FF6A00' },
 
   // Result Header
   resultHeader: {

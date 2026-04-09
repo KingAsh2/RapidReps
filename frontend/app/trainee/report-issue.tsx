@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 12, padding: 14,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
   },
-  typeCardActive: { backgroundColor: COLORS.navy, borderColor: COLORS.orange },
+  typeCardActive: { backgroundColor: '#0A0E1A', borderColor: COLORS.orange },
   typeLabel: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.5)', flex: 1 },
   typeLabelActive: { color: COLORS.white },
   textArea: {

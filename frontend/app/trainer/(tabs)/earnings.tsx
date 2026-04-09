@@ -154,7 +154,7 @@ export default function TrainerEarningsScreen() {
           >
             {/* Hero Card - Pending Balance */}
             <LinearGradient
-              colors={[COLORS.teal, COLORS.tealDark]}
+              colors={['#FF6A00', '#FF6A00'Dark]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.heroCard}
@@ -162,7 +162,7 @@ export default function TrainerEarningsScreen() {
               <View style={styles.heroTop}>
                 <Text style={styles.heroLabel}>Available Balance</Text>
                 <View style={styles.heroIconBg}>
-                  <Ionicons name="wallet" size={20} color={COLORS.teal} />
+                  <Ionicons name="wallet" size={20} color={'#FF6A00'} />
                 </View>
               </View>
               <Text style={styles.heroAmount}>{cents(data?.pendingBalanceCents || 0)}</Text>
@@ -186,7 +186,7 @@ export default function TrainerEarningsScreen() {
                 <Ionicons name="checkmark-circle" size={18} color={COLORS.success} />
                 <Text style={styles.connectedText}>Zelle account connected</Text>
                 <TouchableOpacity onPress={() => router.push('/trainer/connect-bank')} data-testid="manage-bank-btn">
-                  <Text style={[styles.connectedText, { color: COLORS.teal, fontWeight: '700' }]}>Manage</Text>
+                  <Text style={[styles.connectedText, { color: '#FFFFFF', fontWeight: '700' }]}>Manage</Text>
                 </TouchableOpacity>
               </View>
             ) : (
@@ -263,7 +263,7 @@ export default function TrainerEarningsScreen() {
                           styles.chartBar,
                           {
                             height: barHeight,
-                            backgroundColor: item.earningsCents > 0 ? COLORS.teal : 'rgba(255,255,255,0.15)',
+                            backgroundColor: item.earningsCents > 0 ? '#FF6A00' : 'rgba(255,255,255,0.15)',
                           },
                         ]}
                       />

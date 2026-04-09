@@ -146,7 +146,7 @@ export default function InstantMatchScreen() {
 
         {status === 'matched' && (
           <TouchableOpacity onPress={handleGoToSession} style={styles.goBtn} data-testid="go-to-session-btn">
-            <LinearGradient colors={[COLORS.navy, '#2a3a6e']} style={styles.goBtnGrad}>
+            <LinearGradient colors={['#0A0E1A', '#141929']} style={styles.goBtnGrad}>
               <Text style={styles.goBtnText}>Go to Session</Text>
               <Ionicons name="arrow-forward" size={20} color={COLORS.white} />
             </LinearGradient>
@@ -177,16 +177,16 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 18, fontWeight: '700', color: '#fff' },
   content: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
   searchCircleWrap: { marginBottom: 32 },
-  outerRing: { width: 180, height: 180, borderRadius: 90, borderWidth: 3, borderColor: COLORS.teal, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,207,193,0.05)' },
+  outerRing: { width: 180, height: 180, borderRadius: 90, borderWidth: 3, borderColor: '#FF6A00', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,207,193,0.05)' },
   innerRing: { width: 140, height: 140, borderRadius: 70, borderWidth: 2, borderColor: 'rgba(0,207,193,0.3)', borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center' },
-  searchIcon: { width: 100, height: 100, borderRadius: 50, backgroundColor: COLORS.teal, alignItems: 'center', justifyContent: 'center' },
+  searchIcon: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#0A0E1A', alignItems: 'center', justifyContent: 'center' },
   statusText: { fontSize: 20, fontWeight: '700', color: '#fff', textAlign: 'center', marginBottom: 8 },
   subText: { fontSize: 14, color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginBottom: 24 },
   goBtn: { width: '100%', borderRadius: 14, overflow: 'hidden', marginTop: 16 },
   goBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 16 },
   goBtnText: { fontSize: 17, fontWeight: '700', color: '#fff' },
-  retryBtn: { marginTop: 16, borderWidth: 1, borderColor: COLORS.teal, borderRadius: 14, paddingVertical: 14, paddingHorizontal: 32 },
-  retryText: { fontSize: 16, fontWeight: '600', color: COLORS.teal },
+  retryBtn: { marginTop: 16, borderWidth: 1, borderColor: '#FF6A00', borderRadius: 14, paddingVertical: 14, paddingHorizontal: 32 },
+  retryText: { fontSize: 16, fontWeight: '600', color: '#FFFFFF' },
   cancelBtn: { marginTop: 24, paddingVertical: 12 },
   cancelText: { fontSize: 15, color: 'rgba(255,255,255,0.5)', fontWeight: '600' },
 });

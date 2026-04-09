@@ -61,7 +61,7 @@ export default function UserProgressScreen() {
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={loading} onRefresh={load} tintColor={COLORS.teal} />}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={load} tintColor={'#FF6A00'} />}
       >
         {/* Streak Card */}
         <LinearGradient colors={streakColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.streakCard}>
@@ -81,7 +81,7 @@ export default function UserProgressScreen() {
         {/* Stats Grid */}
         <View style={styles.statsGrid}>
           <View style={styles.statCard}>
-            <Ionicons name="barbell" size={24} color={COLORS.teal} />
+            <Ionicons name="barbell" size={24} color={'#FF6A00'} />
             <Text style={styles.statVal}>{progress?.totalSessions || 0}</Text>
             <Text style={styles.statLabel}>Sessions</Text>
           </View>
@@ -128,7 +128,7 @@ export default function UserProgressScreen() {
           ) : (
             history.map((s: any, i: number) => (
               <View key={s.id || i} style={styles.historyItem} data-testid={`history-item-${i}`}>
-                <View style={[styles.historyDot, { backgroundColor: s.sessionType === 'virtual' ? COLORS.teal : COLORS.orange }]} />
+                <View style={[styles.historyDot, { backgroundColor: s.sessionType === 'virtual' ? '#FF6A00' : COLORS.orange }]} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.historyType}>{(s.sessionType || 'workout').toUpperCase()}</Text>
                   <Text style={styles.historyMeta}>
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
   statVal: { fontSize: 28, fontWeight: '800', color: '#fff', marginTop: 6 },
   statLabel: { fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: '600', marginTop: 2 },
   section: { marginTop: 8, marginBottom: 16 },
-  sectionTitle: { fontSize: 15, fontWeight: '700', color: COLORS.teal, marginBottom: 12, letterSpacing: 0.5 },
+  sectionTitle: { fontSize: 15, fontWeight: '700', color: '#FFFFFF', marginBottom: 12, letterSpacing: 0.5 },
   badgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   badge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8 },
   badgeName: { fontSize: 13, color: '#e0e0e0', fontWeight: '600' },

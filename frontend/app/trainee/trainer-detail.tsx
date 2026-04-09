@@ -433,7 +433,7 @@ export default function TrainerDetailScreen() {
                 )}
                 {trainer.isVerified && (
                   <View style={styles.verifiedBadge}>
-                    <Ionicons name="checkmark-circle" size={28} color={COLORS.teal} />
+                    <Ionicons name="checkmark-circle" size={28} color={'#FF6A00'} />
                   </View>
                 )}
               </View>
@@ -627,7 +627,7 @@ export default function TrainerDetailScreen() {
               {/* Safety PIN Notice for In-Home */}
               {selectedSessionType === 'in_home' && (
                 <View style={styles.safetyNotice}>
-                  <Ionicons name="shield-checkmark" size={18} color={COLORS.teal} />
+                  <Ionicons name="shield-checkmark" size={18} color={'#FF6A00'} />
                   <Text style={styles.safetyNoticeText}>
                     You'll receive a 4-digit safety PIN to verify your trainer
                   </Text>
@@ -748,7 +748,7 @@ export default function TrainerDetailScreen() {
               })}
             >
               <View style={[styles.quickActionIconBg, { backgroundColor: 'rgba(31, 184, 180, 0.1)' }]}>
-                <Ionicons name="calendar" size={24} color={COLORS.teal} />
+                <Ionicons name="calendar" size={24} color={'#FF6A00'} />
               </View>
               <View style={styles.quickActionContent}>
                 <Text style={styles.quickActionTitle}>Schedule Ahead</Text>
@@ -864,7 +864,7 @@ export default function TrainerDetailScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.consentModal}>
             <View style={styles.consentIconContainer}>
-              <Ionicons name="shield-checkmark" size={48} color={COLORS.teal} />
+              <Ionicons name="shield-checkmark" size={48} color={'#FF6A00'} />
             </View>
             <Text style={styles.consentTitle}>Home Session Safety</Text>
             
@@ -879,12 +879,12 @@ export default function TrainerDetailScreen() {
             </View>
             
             <View style={styles.consentItem}>
-              <Ionicons name="time" size={22} color={COLORS.teal} />
+              <Ionicons name="time" size={22} color={'#FF6A00'} />
               <Text style={styles.consentText}>Trainer's time at your location is tracked and monitored for safety</Text>
             </View>
             
             <View style={styles.consentItem}>
-              <Ionicons name="call" size={22} color={COLORS.navy} />
+              <Ionicons name="call" size={22} color={'#FFFFFF'} />
               <Text style={styles.consentText}>Emergency support available 24/7 during your session</Text>
             </View>
 
@@ -898,7 +898,7 @@ export default function TrainerDetailScreen() {
               data-testid="at-home-lets-go-btn"
             >
               <LinearGradient
-                colors={[COLORS.teal, '#2a3a6e']}
+                colors={['#FF6A00', '#FF9F1C']}
                 style={styles.consentAgreeGradient}
               >
                 <Text style={styles.consentAgreeText}>Let's Go</Text>
@@ -1118,7 +1118,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   tag: {
-    backgroundColor: COLORS.teal,
+    backgroundColor: '#0A0E1A',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
@@ -1132,7 +1132,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: COLORS.teal,
+    backgroundColor: '#0A0E1A',
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
@@ -1530,7 +1530,7 @@ const styles = StyleSheet.create({
     height: 180,
     borderRadius: 14,
     overflow: 'hidden',
-    backgroundColor: COLORS.navy,
+    backgroundColor: '#0A0E1A',
   },
   videoPlayer: {
     width: '100%',

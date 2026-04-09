@@ -35,8 +35,8 @@ const backgroundImage = require('../../assets/images/bg-spin-class.png');
 
 const BENEFITS = [
   { icon: 'pricetag', text: 'Discounted session rates', color: COLORS.success },
-  { icon: 'flash', text: '1 free profile Boost per month', color: COLORS.orange },
-  { icon: 'headset', text: 'Priority customer support', color: COLORS.teal },
+  { icon: 'flash', text: '1 free profile Boost per month', color: '#FF6A00' },
+  { icon: 'headset', text: 'Priority customer support', color: '#FFFFFF' },
   { icon: 'star', text: 'Early access to elite trainers', color: COLORS.gold },
   { icon: 'ribbon', text: 'Exclusive member badge', color: '#9C27B0' },
 ];
@@ -100,15 +100,15 @@ export default function MembershipScreen() {
   if (loading) {
     return (
       <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
-        <LinearGradient colors={['rgba(26, 42, 94, 0.95)', 'rgba(26, 42, 94, 0.9)']} style={StyleSheet.absoluteFill} />
-        <View style={styles.loadingBox}><ActivityIndicator size="large" color={COLORS.teal} /></View>
+        <LinearGradient colors={['rgba(20, 25, 41, 0.95)', 'rgba(20, 25, 41, 0.9)']} style={StyleSheet.absoluteFill} />
+        <View style={styles.loadingBox}><ActivityIndicator size="large" color={'#FF6A00'} /></View>
       </ImageBackground>
     );
   }
 
   return (
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
-      <LinearGradient colors={['rgba(26, 42, 94, 0.95)', 'rgba(26, 42, 94, 0.9)']} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={['rgba(20, 25, 41, 0.95)', 'rgba(20, 25, 41, 0.9)']} style={StyleSheet.absoluteFill} />
 
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.header}>
@@ -196,10 +196,10 @@ export default function MembershipScreen() {
             >
               <LinearGradient colors={[COLORS.gold, '#FFA000']} style={styles.subscribeBtnGradient}>
                 {subscribing ? (
-                  <ActivityIndicator size="small" color={COLORS.navy} />
+                  <ActivityIndicator size="small" color={'#FFFFFF'} />
                 ) : (
                   <>
-                    <Ionicons name="diamond" size={20} color={COLORS.navy} />
+                    <Ionicons name="diamond" size={20} color={'#FFFFFF'} />
                     <Text style={styles.subscribeBtnText}>Subscribe for $19.99/month</Text>
                   </>
                 )}

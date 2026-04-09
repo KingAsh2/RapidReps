@@ -122,8 +122,8 @@ export default function TrainerEnRouteScreen() {
   const getStatusConfig = () => {
     switch (status) {
       case 'waiting': return { icon: 'hourglass', label: 'Waiting', color: 'rgba(255,255,255,0.5)', bg: 'rgba(136,146,176,0.15)' };
-      case 'en_route': return { icon: 'car-sport', label: 'On The Way', color: COLORS.teal, bg: 'rgba(0,207,193,0.15)' };
-      case 'nearby': return { icon: 'location', label: 'Nearby', color: COLORS.orangeLight, bg: 'rgba(255,159,28,0.15)' };
+      case 'en_route': return { icon: 'car-sport', label: 'On The Way', color: '#FFFFFF', bg: 'rgba(0,207,193,0.15)' };
+      case 'nearby': return { icon: 'location', label: 'Nearby', color: '#FF6A00'Light, bg: 'rgba(255,159,28,0.15)' };
       case 'arrived': return { icon: 'checkmark-circle', label: 'Arrived', color: COLORS.success, bg: 'rgba(0,210,106,0.15)' };
     }
   };
@@ -144,7 +144,7 @@ export default function TrainerEnRouteScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <LinearGradient colors={[COLORS.navy, '#0f1d42']} style={StyleSheet.absoluteFillObject} />
+      <LinearGradient colors={['#0A0E1A', '#141929']} style={StyleSheet.absoluteFillObject} />
 
       {/* Header */}
       <View style={styles.header}>
@@ -176,7 +176,7 @@ export default function TrainerEnRouteScreen() {
         <View style={styles.trackerCard}>
           {/* Trainer avatar */}
           <View style={styles.trackerRow}>
-            <View style={[styles.avatarCircle, { backgroundColor: COLORS.teal }]}>
+            <View style={[styles.avatarCircle, { backgroundColor: '#0A0E1A' }]}>
               <Ionicons name="fitness" size={28} color={COLORS.white} />
             </View>
             <View style={styles.trackerInfo}>
@@ -194,7 +194,7 @@ export default function TrainerEnRouteScreen() {
           {/* Distance */}
           {distanceMiles != null && (
             <View style={styles.distanceRow}>
-              <Ionicons name="navigate" size={16} color={COLORS.teal} />
+              <Ionicons name="navigate" size={16} color={'#FF6A00'} />
               <Text style={styles.distanceText}>{distanceMiles.toFixed(1)} miles away</Text>
             </View>
           )}
@@ -208,15 +208,15 @@ export default function TrainerEnRouteScreen() {
         <View style={styles.tipsCard}>
           <Text style={styles.tipsTitle}>While you wait</Text>
           <View style={styles.tipRow}>
-            <Ionicons name="water" size={18} color={COLORS.teal} />
+            <Ionicons name="water" size={18} color={'#FF6A00'} />
             <Text style={styles.tipText}>Stay hydrated</Text>
           </View>
           <View style={styles.tipRow}>
-            <Ionicons name="body" size={18} color={COLORS.teal} />
+            <Ionicons name="body" size={18} color={'#FF6A00'} />
             <Text style={styles.tipText}>Do some light stretches</Text>
           </View>
           <View style={styles.tipRow}>
-            <Ionicons name="musical-notes" size={18} color={COLORS.teal} />
+            <Ionicons name="musical-notes" size={18} color={'#FF6A00'} />
             <Text style={styles.tipText}>Queue up your workout playlist</Text>
           </View>
         </View>
@@ -247,14 +247,14 @@ const styles = StyleSheet.create({
   avatarCircle: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
   trackerInfo: { marginLeft: 16, flex: 1 },
   trainerNameText: { fontSize: 20, fontWeight: '800', color: COLORS.white },
-  etaText: { fontSize: 15, color: COLORS.teal, fontWeight: '600', marginTop: 2 },
+  etaText: { fontSize: 15, color: '#FFFFFF', fontWeight: '600', marginTop: 2 },
   progressTrack: { marginBottom: 16 },
   progressBg: { height: 6, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 3, overflow: 'hidden' },
-  progressFill: { height: '100%', backgroundColor: COLORS.teal, borderRadius: 3 },
+  progressFill: { height: '100%', backgroundColor: '#0A0E1A', borderRadius: 3 },
   progressLabels: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
   progressLabel: { fontSize: 13, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 0.5 },
   dotRow: { flexDirection: 'row', gap: 6 },
-  trackDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: COLORS.teal },
+  trackDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#0A0E1A' },
   distanceRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
   distanceText: { fontSize: 14, color: COLORS.white, marginLeft: 8, fontWeight: '600' },
   lastUpdateText: { fontSize: 13, color: 'rgba(255,255,255,0.5)' },
@@ -262,6 +262,6 @@ const styles = StyleSheet.create({
   tipsTitle: { fontSize: 14, fontWeight: '700', color: COLORS.white, marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 },
   tipRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 6 },
   tipText: { fontSize: 14, color: 'rgba(255,255,255,0.5)', marginLeft: 12 },
-  messageBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.teal, borderRadius: 14, paddingVertical: 16 },
+  messageBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0A0E1A', borderRadius: 14, paddingVertical: 16 },
   messageBtnText: { fontSize: 16, fontWeight: '700', color: COLORS.white, marginLeft: 10 },
 });

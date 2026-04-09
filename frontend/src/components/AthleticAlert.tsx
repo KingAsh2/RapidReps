@@ -134,13 +134,13 @@ export default function AthleticAlert({
       case 'success':
         return {
           icon: 'checkmark-circle' as const,
-          gradientColors: [COLORS.teal, COLORS.tealLight] as [string, string],
+          gradientColors: ['#FF6A00', '#FF6A00'Light] as [string, string],
           iconColor: COLORS.white,
         };
       default: // info
         return {
           icon: 'information-circle' as const,
-          gradientColors: [COLORS.navy, COLORS.navyLight] as [string, string],
+          gradientColors: ['#0A0E1A', '#141929'] as [string, string],
           iconColor: COLORS.white,
         };
     }
@@ -175,7 +175,7 @@ export default function AthleticAlert({
     // Default - white button
     return {
       colors: [COLORS.white, '#F5F5F5'] as [string, string],
-      textColor: COLORS.navy,
+      textColor: '#0A0E1A',
     };
   };
 

@@ -213,7 +213,7 @@ export const SafetyPinEntry: React.FC<SafetyPinEntryProps> = ({
 
       {/* Safety Info */}
       <View style={styles.safetyInfo}>
-        <Ionicons name="shield-checkmark" size={20} color={COLORS.teal} />
+        <Ionicons name="shield-checkmark" size={20} color={'#FF6A00'} />
         <Text style={styles.safetyText}>
           The PIN ensures both trainer and client safety
         </Text>

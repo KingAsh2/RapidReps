@@ -54,7 +54,7 @@ export default function FeedScreen() {
   const renderPost = ({ item }: { item: any }) => (
     <View style={styles.postCard} data-testid={`feed-post-${item.id}`}>
       <View style={styles.postHeader}>
-        <View style={[styles.postIconCircle, { backgroundColor: item.postType === 'streak_milestone' ? COLORS.orange : COLORS.teal }]}>
+        <View style={[styles.postIconCircle, { backgroundColor: item.postType === 'streak_milestone' ? COLORS.orange : '#FF6A00' }]}>
           <Ionicons name={(POST_ICONS[item.postType] || 'chatbubble') as any} size={18} color={COLORS.white} />
         </View>
         <View style={{ flex: 1, marginLeft: 12 }}>
@@ -66,7 +66,7 @@ export default function FeedScreen() {
       <View style={styles.postActions}>
         <TouchableOpacity onPress={() => handleLike(item.id)} style={styles.likeBtn} data-testid={`like-btn-${item.id}`}>
           <Ionicons name={item.isLiked ? 'heart' : 'heart-outline'} size={20} color={item.isLiked ? COLORS.orange : COLORS.gray} />
-          <Text style={[styles.likeCount, item.isLiked && { color: COLORS.orange }]}>{item.likeCount || 0}</Text>
+          <Text style={[styles.likeCount, item.isLiked && { color: '#FF6A00' }]}>{item.likeCount || 0}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -75,7 +75,7 @@ export default function FeedScreen() {
   return (
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-      <LinearGradient colors={['rgba(26, 42, 94, 0.92)', 'rgba(15, 29, 66, 0.90)']} style={StyleSheet.absoluteFillObject} />
+      <LinearGradient colors={['rgba(20, 25, 41, 0.92)', 'rgba(15, 29, 66, 0.90)']} style={StyleSheet.absoluteFillObject} />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => goBack('/trainee/(tabs)/home')} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color={COLORS.white} />
@@ -88,7 +88,7 @@ export default function FeedScreen() {
         renderItem={renderPost}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.list}
-        refreshControl={<RefreshControl refreshing={loading} onRefresh={() => loadFeed(1)} tintColor={COLORS.teal} />}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={() => loadFeed(1)} tintColor={'#FF6A00'} />}
         onEndReached={() => hasMore && loadFeed(page + 1)}
         onEndReachedThreshold={0.5}
         ListEmptyComponent={

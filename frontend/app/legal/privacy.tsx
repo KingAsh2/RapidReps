@@ -22,7 +22,7 @@ export default function PrivacyScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={[COLORS.navy, '#2a3a6e', COLORS.teal]}
+        colors={['#0A0E1A', '#0D1117', '#141929']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}

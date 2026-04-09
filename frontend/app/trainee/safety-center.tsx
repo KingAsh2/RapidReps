@@ -61,7 +61,7 @@ export default function SafetyCenterScreen() {
 
         <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
           {/* Hero Banner */}
-          <LinearGradient colors={[COLORS.navy, COLORS.navyLight]} style={styles.heroBanner}>
+          <LinearGradient colors={['#0A0E1A', '#141929']} style={styles.heroBanner}>
             <Ionicons name="shield-checkmark" size={48} color={COLORS.orange} />
             <Text style={styles.heroTitle}>Your Safety Matters</Text>
             <Text style={styles.heroSub}>RapidReps is committed to providing a safe training environment for everyone.</Text>
@@ -94,7 +94,7 @@ export default function SafetyCenterScreen() {
           {SAFETY_TIPS.map((tip, idx) => (
             <View key={idx} style={styles.tipCard} data-testid={`safety-tip-${idx}`}>
               <View style={styles.tipIcon}>
-                <Ionicons name={tip.icon as any} size={22} color={COLORS.navy} />
+                <Ionicons name={tip.icon as any} size={22} color={'#FFFFFF'} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.tipTitle}>{tip.title}</Text>

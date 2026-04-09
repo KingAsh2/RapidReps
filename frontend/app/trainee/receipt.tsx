@@ -257,7 +257,7 @@ export default function ReceiptScreen() {
 
             {/* Action Buttons */}
             <TouchableOpacity onPress={generatePDF} disabled={generating} style={styles.pdfBtn} data-testid="download-pdf-btn">
-              <LinearGradient colors={[COLORS.navy, '#2a3a7e']} style={styles.pdfBtnGradient}>
+              <LinearGradient colors={['#0A0E1A', '#141929']} style={styles.pdfBtnGradient}>
                 {generating ? (
                   <ActivityIndicator size="small" color={COLORS.white} />
                 ) : (
@@ -417,7 +417,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   totalLabel: { fontSize: 16, fontWeight: '800', color: '#FFFFFF' },
-  totalValue: { fontSize: 24, fontWeight: '900', color: COLORS.orange },
+  totalValue: { fontSize: 24, fontWeight: '900', color: '#FF6A00' },
 
   paymentMethodBox: {
     flexDirection: 'row',

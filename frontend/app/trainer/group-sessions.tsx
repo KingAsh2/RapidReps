@@ -117,7 +117,7 @@ export default function TrainerGroupSessionsScreen() {
           <Text style={styles.cardDesc}>{item.description}</Text>
         </View>
         <View style={styles.participantBadge}>
-          <Ionicons name="people" size={14} color={COLORS.teal} />
+          <Ionicons name="people" size={14} color={'#FF6A00'} />
           <Text style={styles.participantText}>{item.participantCount}/{item.capacity}</Text>
         </View>
       </View>
@@ -137,7 +137,7 @@ export default function TrainerGroupSessionsScreen() {
       </View>
       {item.status === 'upcoming' && item.trainerId === user?.id && (
         <View style={{ flexDirection: 'row', gap: 8 }}>
-          <TouchableOpacity onPress={() => openEdit(item)} style={[styles.actionBtn, { flex: 1, backgroundColor: COLORS.teal }]} data-testid={`edit-group-${item.id}`}>
+          <TouchableOpacity onPress={() => openEdit(item)} style={[styles.actionBtn, { flex: 1, backgroundColor: '#0A0E1A' }]} data-testid={`edit-group-${item.id}`}>
             <Text style={styles.actionBtnText}>Edit</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => handleStart(item.id)} style={[styles.actionBtn, { flex: 1 }]} data-testid={`start-group-${item.id}`}>
@@ -156,7 +156,7 @@ export default function TrainerGroupSessionsScreen() {
   return (
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-      <LinearGradient colors={['rgba(26, 42, 94, 0.95)', 'rgba(26, 42, 94, 0.90)']} style={StyleSheet.absoluteFillObject} />
+      <LinearGradient colors={['rgba(20, 25, 41, 0.95)', 'rgba(20, 25, 41, 0.90)']} style={StyleSheet.absoluteFillObject} />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color={COLORS.white} />
@@ -181,7 +181,7 @@ export default function TrainerGroupSessionsScreen() {
         renderItem={renderSession}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.list}
-        refreshControl={<RefreshControl refreshing={loading} onRefresh={load} tintColor={COLORS.teal} />}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={load} tintColor={'#FF6A00'} />}
         ListEmptyComponent={
           <View style={styles.empty}>
             <Ionicons name="people" size={48} color={COLORS.gray} />
@@ -219,7 +219,7 @@ export default function TrainerGroupSessionsScreen() {
                   <Text style={styles.cancelBtnText}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={handleCreate} style={styles.createBtn} disabled={creating} data-testid="submit-create-group">
-                  <LinearGradient colors={[COLORS.teal, '#2a3a6e']} style={styles.createBtnGrad}>
+                  <LinearGradient colors={['#FF6A00', '#FF9F1C']} style={styles.createBtnGrad}>
                     <Text style={styles.createBtnText}>{creating ? 'Creating...' : 'Create'}</Text>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
   cardTitle: { fontSize: 16, fontWeight: '800', color: '#fff', marginBottom: 4 },
   cardDesc: { fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 18 },
   participantBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(255,106,0,0.15)', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4 },
-  participantText: { fontSize: 13, fontWeight: '700', color: COLORS.orange },
+  participantText: { fontSize: 13, fontWeight: '700', color: '#FF6A00' },
   metaRow: { flexDirection: 'row', gap: 16, marginBottom: 12 },
   metaItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   metaText: { fontSize: 13, color: 'rgba(255,255,255,0.55)' },

@@ -439,8 +439,8 @@ export default function SessionsScreen() {
                         <Text style={styles.sessionStatText}>{session.locationType}</Text>
                       </View>
                       <View style={styles.sessionStat}>
-                        <Ionicons name="cash-outline" size={16} color={COLORS.teal} />
-                        <Text style={[styles.sessionStatText, { color: COLORS.teal, fontWeight: '700' }]}>
+                        <Ionicons name="cash-outline" size={16} color={'#FF6A00'} />
+                        <Text style={[styles.sessionStatText, { color: '#FFFFFF', fontWeight: '700' }]}>
                           ${(session.finalSessionPriceCents / 100).toFixed(2)}
                         </Text>
                       </View>
@@ -515,7 +515,7 @@ export default function SessionsScreen() {
                         data-testid={`rebook-${session.id}`}
                       >
                         <View style={styles.rebookButtonInner}>
-                          <Ionicons name="refresh" size={16} color={COLORS.teal} />
+                          <Ionicons name="refresh" size={16} color={'#FF6A00'} />
                           <Text style={styles.rebookButtonText}>Book Again</Text>
                         </View>
                       </TouchableOpacity>
@@ -633,7 +633,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.orange,
   },
   tabBadgeActive: {
-    backgroundColor: COLORS.teal,
+    backgroundColor: '#0A0E1A',
   },
   tabBadgeText: {
     fontSize: 13,
@@ -721,7 +721,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.orange,
   },
   statusUpcoming: {
-    backgroundColor: COLORS.teal,
+    backgroundColor: '#0A0E1A',
   },
   statusCompleted: {
     backgroundColor: COLORS.success,
@@ -819,7 +819,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: COLORS.teal,
+    borderColor: '#FF6A00',
   },
   rebookButtonInner: {
     flexDirection: 'row',
@@ -831,7 +831,7 @@ const styles = StyleSheet.create({
   rebookButtonText: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.teal,
+    color: '#FFFFFF',
   },
   receiptButton: {
     marginTop: 8,

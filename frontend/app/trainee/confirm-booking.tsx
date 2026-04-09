@@ -124,7 +124,7 @@ export default function ConfirmBookingScreen() {
                 <Ionicons
                   name={sessionType === 'virtual' ? 'videocam' : sessionType === 'outdoor' ? 'sunny' : 'home'}
                   size={18}
-                  color={COLORS.teal}
+                  color={'#FF6A00'}
                 />
                 <Text style={styles.sessionTypeText}>{getSessionLabel(sessionType)}</Text>
               </View>
@@ -187,7 +187,7 @@ export default function ConfirmBookingScreen() {
           {/* Payment Method - Zelle */}
           <View style={styles.card}>
             <View style={styles.paymentHeader}>
-              <Ionicons name="cash" size={20} color={COLORS.navy} />
+              <Ionicons name="cash" size={20} color={'#FFFFFF'} />
               <Text style={styles.paymentTitle}>Payment via Zelle</Text>
             </View>
             <View style={styles.stripeRow}>
@@ -205,15 +205,15 @@ export default function ConfirmBookingScreen() {
           {/* Policies */}
           <View style={styles.policyCard}>
             <View style={styles.policyRow}>
-              <Ionicons name="time-outline" size={16} color={COLORS.teal} />
+              <Ionicons name="time-outline" size={16} color={'#FF6A00'} />
               <Text style={styles.policyText}>Free cancellation up to 24 hours before session</Text>
             </View>
             <View style={styles.policyRow}>
-              <Ionicons name="shield-checkmark-outline" size={16} color={COLORS.teal} />
+              <Ionicons name="shield-checkmark-outline" size={16} color={'#FF6A00'} />
               <Text style={styles.policyText}>All trainers are background-checked and verified</Text>
             </View>
             <View style={styles.policyRow}>
-              <Ionicons name="lock-closed-outline" size={16} color={COLORS.teal} />
+              <Ionicons name="lock-closed-outline" size={16} color={'#FF6A00'} />
               <Text style={styles.policyText}>Zelle payments are sent directly to RapidReps</Text>
             </View>
           </View>
@@ -229,7 +229,7 @@ export default function ConfirmBookingScreen() {
             disabled={isProcessing}
             data-testid="confirm-pay-btn"
           >
-            <LinearGradient colors={[COLORS.teal, '#2a3a6e']} style={styles.confirmBtnGradient}>
+            <LinearGradient colors={['#FF6A00', '#FF9F1C']} style={styles.confirmBtnGradient}>
               {isProcessing ? (
                 <>
                   <ActivityIndicator size="small" color={COLORS.white} />
@@ -268,7 +268,7 @@ export default function ConfirmBookingScreen() {
               style={bookingModalStyles.btn}
               data-testid="booking-modal-view-sessions-btn"
             >
-              <LinearGradient colors={[COLORS.teal, '#2a3a6e']} style={bookingModalStyles.btnGradient}>
+              <LinearGradient colors={['#FF6A00', '#FF9F1C']} style={bookingModalStyles.btnGradient}>
                 <Text style={bookingModalStyles.btnText}>View My Sessions</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -312,8 +312,8 @@ const styles = StyleSheet.create({
 
   card: { backgroundColor: '#141929', borderRadius: 18, padding: 20, marginBottom: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.08, shadowRadius: 10, elevation: 4 },
   cardHeader: { marginBottom: 16 },
-  sessionTypeBadge: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: `${COLORS.teal}12`, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, alignSelf: 'flex-start' },
-  sessionTypeText: { fontSize: 14, fontWeight: '700', color: COLORS.teal },
+  sessionTypeBadge: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(255,106,0,0.07)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, alignSelf: 'flex-start' },
+  sessionTypeText: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
 
   detailGrid: { gap: 14 },
   detailItem: { flexDirection: 'row', alignItems: 'center', gap: 12 },
@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
   priceDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.06)', marginVertical: 12 },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   totalLabel: { fontSize: 18, fontWeight: '700', color: '#FFFFFF' },
-  totalValue: { fontSize: 24, fontWeight: '900', color: COLORS.teal },
+  totalValue: { fontSize: 24, fontWeight: '900', color: '#FFFFFF' },
 
   paymentHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
   paymentTitle: { fontSize: 15, fontWeight: '700', color: '#FFFFFF' },

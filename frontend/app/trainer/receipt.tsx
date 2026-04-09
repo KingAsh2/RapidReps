@@ -245,7 +245,7 @@ export default function TrainerReceiptScreen() {
             </View>
 
             <TouchableOpacity onPress={generatePDF} disabled={generating} style={styles.pdfBtn} data-testid="trainer-download-pdf-btn">
-              <LinearGradient colors={[COLORS.navy, '#2a3a7e']} style={styles.pdfBtnGradient}>
+              <LinearGradient colors={['#0A0E1A', '#141929']} style={styles.pdfBtnGradient}>
                 {generating ? (
                   <ActivityIndicator size="small" color={COLORS.white} />
                 ) : (

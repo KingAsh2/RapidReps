@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: COLORS.teal,
+    backgroundColor: '#0A0E1A',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -445,7 +445,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.5)',
   },
   stepNumberActive: {
-    color: COLORS.teal,
+    color: '#FFFFFF',
   },
   stepLine: {
     width: 80,
@@ -562,7 +562,7 @@ const styles = StyleSheet.create({
   refreshText: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.teal,
+    color: '#FFFFFF',
   },
   // Success Card
   successCard: {

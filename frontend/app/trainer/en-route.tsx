@@ -188,8 +188,8 @@ export default function TrainerEnRouteScreen() {
   const getStepInfo = () => {
     switch (step) {
       case 'starting': return { icon: 'location', text: 'Preparing route...', color: 'rgba(255,255,255,0.5)' };
-      case 'navigating': return { icon: 'navigate', text: 'En Route', color: COLORS.teal };
-      case 'arriving': return { icon: 'flag', text: 'Almost There!', color: COLORS.orangeLight };
+      case 'navigating': return { icon: 'navigate', text: 'En Route', color: '#FFFFFF' };
+      case 'arriving': return { icon: 'flag', text: 'Almost There!', color: '#FF6A00'Light };
       case 'arrived': return { icon: 'checkmark-circle', text: 'Arrived', color: COLORS.success };
     }
   };
@@ -252,7 +252,7 @@ export default function TrainerEnRouteScreen() {
 
           <View style={styles.statsRow}>
             <View style={styles.stat}>
-              <Ionicons name="speedometer" size={20} color={COLORS.teal} />
+              <Ionicons name="speedometer" size={20} color={'#FF6A00'} />
               <Text style={styles.statValue}>
                 {distanceMiles != null ? `${distanceMiles.toFixed(1)} mi` : '-- mi'}
               </Text>
@@ -346,8 +346,8 @@ const styles = StyleSheet.create({
   statusIconCircle: { width: 100, height: 100, borderRadius: 50, alignItems: 'center', justifyContent: 'center' },
   statusText: { fontSize: 22, fontWeight: '800', marginTop: 16, letterSpacing: 1 },
   liveBadge: { flexDirection: 'row', alignItems: 'center', marginTop: 8, backgroundColor: 'rgba(0,207,193,0.15)', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 },
-  liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: COLORS.teal, marginRight: 6 },
-  liveText: { fontSize: 13, fontWeight: '700', color: COLORS.teal, letterSpacing: 1 },
+  liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#0A0E1A', marginRight: 6 },
+  liveText: { fontSize: 13, fontWeight: '700', color: '#FFFFFF', letterSpacing: 1 },
   infoCard: { backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 16, padding: 20, marginBottom: 16 },
   cardLabel: { fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1 },
   cardValue: { fontSize: 22, fontWeight: '800', color: COLORS.white, marginTop: 4 },
@@ -359,13 +359,13 @@ const styles = StyleSheet.create({
   statDivider: { width: 1, height: 40, backgroundColor: 'rgba(255,255,255,0.1)' },
   alertCard: { backgroundColor: 'rgba(255,159,28,0.12)', borderRadius: 12, padding: 12, marginBottom: 16 },
   alertRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 4 },
-  alertText: { fontSize: 13, color: COLORS.orangeLight, marginLeft: 8, flex: 1 },
+  alertText: { fontSize: 13, color: '#FF6A00'Light, marginLeft: 8, flex: 1 },
   navButton: { marginBottom: 12, borderRadius: 14, overflow: 'hidden' },
   navButtonGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16 },
   navButtonText: { fontSize: 17, fontWeight: '700', color: COLORS.white, marginLeft: 10 },
   actionRow: { flexDirection: 'row', gap: 12 },
   secondaryBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 14, paddingVertical: 14, borderWidth: 1, borderColor: 'rgba(0,207,193,0.3)' },
-  secondaryBtnText: { fontSize: 15, fontWeight: '600', color: COLORS.teal, marginLeft: 8 },
+  secondaryBtnText: { fontSize: 15, fontWeight: '600', color: '#FFFFFF', marginLeft: 8 },
   arrivedBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.orange, borderRadius: 14, paddingVertical: 14 },
   arrivedBtnDone: { backgroundColor: COLORS.success },
   arrivedBtnText: { fontSize: 15, fontWeight: '700', color: COLORS.white, marginLeft: 8 },

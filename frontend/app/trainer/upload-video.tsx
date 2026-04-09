@@ -507,7 +507,7 @@ const styles = StyleSheet.create({
   uploadButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: COLORS.teal,
+    color: '#FFFFFF',
   },
   // Preview Section
   previewSection: {
@@ -519,7 +519,7 @@ const styles = StyleSheet.create({
     maxHeight: height * 0.5,
     borderRadius: 20,
     overflow: 'hidden',
-    backgroundColor: COLORS.navy,
+    backgroundColor: '#0A0E1A',
     marginBottom: 16,
   },
   video: {

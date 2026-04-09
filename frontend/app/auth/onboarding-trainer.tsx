@@ -634,7 +634,7 @@ export default function TrainerOnboardingScreen() {
                   style={{
                     paddingVertical: 14,
                     paddingHorizontal: 20,
-                    backgroundColor: formData.travelRadiusMiles === item ? 'rgba(31,184,180,0.1)' : '#fff',
+                    backgroundColor: formData.travelRadiusMiles === item ? 'rgba(255,106,0,0.12)' : 'rgba(255,255,255,0.06)',
                     borderBottomWidth: 0.5,
                     borderBottomColor: '#f0f0f0',
                     flexDirection: 'row',

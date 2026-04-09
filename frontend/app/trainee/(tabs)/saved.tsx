@@ -173,7 +173,7 @@ export default function SavedTrainersScreen() {
           {/* Verified Badge */}
           {trainer.isVerified && (
             <View style={styles.thumbnailVerified}>
-              <Ionicons name="checkmark-circle" size={14} color={COLORS.teal} />
+              <Ionicons name="checkmark-circle" size={14} color={'#FF6A00'} />
             </View>
           )}
           
@@ -435,7 +435,7 @@ const styles = StyleSheet.create({
   },
   cardAccent: {
     height: 4,
-    backgroundColor: COLORS.teal,
+    backgroundColor: '#0A0E1A',
   },
   cardContent: {
     flexDirection: 'row',
@@ -508,7 +508,7 @@ const styles = StyleSheet.create({
   priceText: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.teal,
+    color: '#FFFFFF',
   },
   distanceText: {
     fontSize: 13,

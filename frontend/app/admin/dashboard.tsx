@@ -417,7 +417,7 @@ export default function AdminDashboard() {
           <View style={s.modalHeader}>
             <Text style={s.modalTitle}>User Details</Text>
             <TouchableOpacity onPress={() => setUserDetailVisible(false)} data-testid="close-user-modal">
-              <Ionicons name="close" size={24} color={C.navy} />
+              <Ionicons name="close" size={24} color={'#0A0E1A'} />
             </TouchableOpacity>
           </View>
           {selectedUser && (
@@ -462,7 +462,7 @@ export default function AdminDashboard() {
               )}
               <View style={{ flexDirection: 'row', gap: 10, marginTop: 16, marginBottom: 30 }}>
                 <TouchableOpacity
-                  style={[s.actionBtn, { backgroundColor: C.teal, flex: 1 }]}
+                  style={[s.actionBtn, { backgroundColor: '#FF6A00', flex: 1 }]}
                   onPress={() => { setUserDetailVisible(false); handleOpenMessage(selectedUser.user?.id, selectedUser.user?.fullName); }}
                   data-testid="modal-message-btn"
                 >
@@ -495,7 +495,7 @@ export default function AdminDashboard() {
           <View style={s.modalHeader}>
             <Text style={s.modalTitle}>Message {messageRecipient?.name}</Text>
             <TouchableOpacity onPress={() => setMessageModalVisible(false)} data-testid="close-message-modal">
-              <Ionicons name="close" size={24} color={C.navy} />
+              <Ionicons name="close" size={24} color={'#0A0E1A'} />
             </TouchableOpacity>
           </View>
           <View style={{ padding: 20 }}>
@@ -509,7 +509,7 @@ export default function AdminDashboard() {
               data-testid="message-input"
             />
             <TouchableOpacity
-              style={[s.actionBtn, { backgroundColor: C.teal, justifyContent: 'center', marginTop: 12 }]}
+              style={[s.actionBtn, { backgroundColor: '#FF6A00', justifyContent: 'center', marginTop: 12 }]}
               onPress={handleSendMessage}
               data-testid="send-message-btn"
             >
@@ -530,7 +530,7 @@ export default function AdminDashboard() {
           <View style={s.modalHeader}>
             <Text style={s.modalTitle}>Edit Profile</Text>
             <TouchableOpacity onPress={() => setProfileModalVisible(false)} data-testid="close-profile-modal">
-              <Ionicons name="close" size={24} color={C.navy} />
+              <Ionicons name="close" size={24} color={'#0A0E1A'} />
             </TouchableOpacity>
           </View>
           <View style={{ padding: 20 }}>
@@ -541,7 +541,7 @@ export default function AdminDashboard() {
             <Text style={s.inputLabel}>Phone</Text>
             <TextInput style={s.textInput} value={profilePhone} onChangeText={setProfilePhone} keyboardType="phone-pad" data-testid="profile-phone-input" />
             <TouchableOpacity
-              style={[s.actionBtn, { backgroundColor: C.teal, justifyContent: 'center', marginTop: 16 }]}
+              style={[s.actionBtn, { backgroundColor: '#FF6A00', justifyContent: 'center', marginTop: 16 }]}
               onPress={handleUpdateProfile}
               data-testid="save-profile-btn"
             >
@@ -556,7 +556,7 @@ export default function AdminDashboard() {
 
   return (
     <SafeAreaView style={s.container} edges={['top']}>
-      <LinearGradient colors={[C.navy, '#1e3470']} style={s.header}>
+      <LinearGradient colors={['#0A0E1A', '#141929']} style={s.header}>
         <View style={s.headerRow}>
           <View>
             <Text style={s.headerTitle}>Admin Panel</Text>
@@ -577,7 +577,7 @@ export default function AdminDashboard() {
               onPress={() => setActiveTab(tab.id)}
               data-testid={`admin-tab-${tab.id}`}
             >
-              <Ionicons name={tab.icon as any} size={17} color={activeTab === tab.id ? C.teal : C.gray} />
+              <Ionicons name={tab.icon as any} size={17} color={activeTab === tab.id ? '#FF6A00' : C.gray} />
               <Text style={[s.tabText, activeTab === tab.id && s.tabTextActive]}>{tab.label}</Text>
             </TouchableOpacity>
           ))}
@@ -586,11 +586,11 @@ export default function AdminDashboard() {
 
       <ScrollView
         style={s.content}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.teal} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={'#FF6A00'} />}
         showsVerticalScrollIndicator={false}
       >
         {loading ? (
-          <View style={s.loadingBox}><ActivityIndicator size="large" color={C.teal} /><Text style={s.loadingText}>Loading...</Text></View>
+          <View style={s.loadingBox}><ActivityIndicator size="large" color={'#FF6A00'} /><Text style={s.loadingText}>Loading...</Text></View>
         ) : (
           <>
             {activeTab === 'overview' && <OverviewTab dashboard={dashboard} leaderboard={leaderboard} earningsSummary={earningsSummary} setActiveTab={setActiveTab} />}
@@ -655,7 +655,7 @@ export default function AdminDashboard() {
             <View style={s.modalHeader}>
               <Text style={s.modalTitle}>Change Password</Text>
               <TouchableOpacity onPress={() => setPasswordModalVisible(false)} data-testid="close-password-modal">
-                <Ionicons name="close" size={24} color={C.navy} />
+                <Ionicons name="close" size={24} color={'#0A0E1A'} />
               </TouchableOpacity>
             </View>
             <View style={{ padding: 20 }}>
@@ -687,7 +687,7 @@ export default function AdminDashboard() {
                 data-testid="confirm-password-input"
               />
               <TouchableOpacity
-                style={[s.actionBtn, { backgroundColor: C.teal, justifyContent: 'center', marginTop: 16 }]}
+                style={[s.actionBtn, { backgroundColor: '#FF6A00', justifyContent: 'center', marginTop: 16 }]}
                 onPress={handleChangePassword}
                 data-testid="save-password-btn"
               >

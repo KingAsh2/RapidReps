@@ -90,7 +90,7 @@ export default function ConnectBankScreen() {
       <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
         <LinearGradient colors={['rgba(10, 14, 26, 0.92)', 'rgba(17, 24, 39, 0.88)']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} />
         <View style={styles.centerContent}>
-          <ActivityIndicator size="large" color={COLORS.teal} />
+          <ActivityIndicator size="large" color={'#FF6A00'} />
           <Text style={styles.checkingText}>Loading Zelle info...</Text>
         </View>
       </ImageBackground>
