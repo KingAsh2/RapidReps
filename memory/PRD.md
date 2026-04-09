@@ -1,48 +1,43 @@
 # RapidReps PRD
 
 ## Tech Stack
-React Native/Expo + FastAPI + MongoDB | Payments: Zelle | Auth: JWT
+React Native/Expo + FastAPI + MongoDB + Emergent Object Storage | Payments: Zelle | Auth: JWT
 
 ## User Profiles (Complete)
-### Gallery
-- Both trainers and trainees have a photo/video gallery on their profiles
-- Gallery items: `{url, type: 'photo'|'video', caption?}`
-- Endpoints: `PUT /api/trainer-profiles/{userId}/gallery`, `PUT /api/trainee-profiles/{userId}/gallery`
-- ProfileGallery component with image grid, fullscreen viewer, video overlay indicator
+### Gallery — Real Image & Video Upload
+- **Upload**: `POST /api/gallery/upload` (multipart form-data) — accepts images (jpg/jpeg/png/gif/webp/heic, 10MB max) and videos (mp4/mov/avi/mkv, 100MB max)
+- **Serve**: `GET /api/files/{path}` — serves files from Emergent object storage with correct content-type
+- **Delete**: `DELETE /api/gallery/{index}` — removes gallery item by index
+- **Storage**: Emergent integrations object storage (persistent cloud storage)
+- **Frontend**: expo-image-picker — Take Photo, Photo from Library, Video from Library
+- **Gallery UI**: Grid thumbnails, fullscreen viewer with swipe, video play overlay, delete from viewer
+- **Both roles**: Trainer and Trainee profiles have editable galleries on self-profile tab
+- **Public view**: Gallery + social links visible on trainer-detail and trainee-profile pages
 
 ### Social Media Links
-- Both profiles support: Instagram, TikTok, YouTube, X/Twitter, Website
-- Endpoints: `PUT /api/trainer-profiles/{userId}/social-links`, `PUT /api/trainee-profiles/{userId}/social-links`
-- SocialLinksDisplay component with branded icons and direct links
-- Trainer edit-profile has inline social links input fields
+- Both profiles: Instagram, TikTok, YouTube, X/Twitter, Website
+- CRUD via `PUT /api/{role}-profiles/{userId}/social-links`
+- Trainer edit-profile has inline input fields for all 5 platforms
+- SocialLinksDisplay component with branded icons linking to platforms
 
 ### Clickable Avatars (All Screens)
-- Trainee session-detail → tapping trainer avatar opens trainer-detail
-- Messages list (both roles) → tapping avatar opens other user's profile
-- Chat screen → tapping header name/photo opens profile (role-aware routing)
-- Leaderboard → podium and list entries tappable → trainer-detail
-- Trainer home session cards → already navigated to trainee-profile
-- Nearby Trainers (web) → horizontal card list with profile navigation
+- Trainee session-detail → trainer avatar opens trainer-detail
+- Messages list (both roles) → avatar opens other user's profile
+- Chat screen → header name/photo opens profile (role-aware)
+- Leaderboard → podium + list entries → trainer-detail
+- Trainer home session cards → trainee-profile
+- Nearby Trainers (web) → horizontal card list → trainer-detail
 
 ## Receipt/Invoice System (Complete)
-- Receipt endpoints, PDF download via expo-print with RapidReps logo
+- PDF download via expo-print with RapidReps logo
 - Receipts tab in both trainee/trainer bottom nav
-- Download Receipt buttons in Sessions tabs after admin Zelle approval
+- Download Receipt buttons after admin Zelle approval
 
 ## Earnings Dashboard (Complete)
-- Trainer "Funds" tab (renamed from Earnings)
-- Admin real-time earnings trend charts (daily/weekly/6-month)
+- Trainer "Funds" tab | Admin real-time earnings trend charts
 
 ## Push Notifications (Complete)
-- Zelle verification → trainee + trainer notified with receipt deep-link
-
-## UI/UX Fixes Applied
-- Travel Radius: Inline slider replacing dropdown/modal
-- Achievements button: numberOfLines={1} + adjustsFontSizeToFit
-- Group Sessions: Navy gradient (fixes orange-on-orange)
-- Earnings renamed to Funds
-- Admin Overview: Filters out Unknown Trainers
-- Nearby Trainers web: clickable horizontal trainer cards
+- Zelle verification → both users notified with receipt deep-link
 
 ## Credentials
 | Role | Email | Password |
@@ -55,4 +50,4 @@ React Native/Expo + FastAPI + MongoDB | Payments: Zelle | Auth: JWT
 - [ ] EAS iOS Build: Apple Certificate expired (user must run `eas credentials`)
 - [ ] SendGrid email integration (needs user API key)
 - [ ] ~90 non-critical TypeScript warnings
-- [ ] Refactor server.py (9,800+ lines) into modular route files
+- [ ] Refactor server.py (9,900+ lines) into modular route files
