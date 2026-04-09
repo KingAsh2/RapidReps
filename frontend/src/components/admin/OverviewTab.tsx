@@ -327,7 +327,7 @@ export const OverviewTab = ({ dashboard, leaderboard, earningsSummary, setActive
       <Text style={s.sectionTitle}>Top Trainers This Week</Text>
       {leaderboard.length > 0 ? (
         leaderboard.map((trainer: any, index: number) => {
-          const rankColors = ['#FFB300', '#A0A0A0', '#CD7F32', '#FF6A00', '#0A0E1A'Light];
+          const rankColors = ['#FFB300', '#A0A0A0', '#CD7F32', '#FF6A00', '#1A2035'];
           const rankColor = rankColors[index] || C.gray;
           const tierLabel = trainer.tier === 'elite' ? 'Elite' : trainer.tier === 'pro' ? 'Pro' : 'Rising';
           const tierColor = trainer.tier === 'elite' ? C.orange : trainer.tier === 'pro' ? '#FF6A00' : C.gray;

@@ -287,7 +287,7 @@ export default function SetRatesScreen() {
               disabled={saving}
               data-testid="save-rates-btn"
             >
-              <LinearGradient colors={['#FF6A00', '#FF6A00'Dark]} style={styles.saveGradient}>
+              <LinearGradient colors={['#FF6A00', '#CC5500']} style={styles.saveGradient}>
                 {saving ? (
                   <ActivityIndicator color={COLORS.white} />
                 ) : (

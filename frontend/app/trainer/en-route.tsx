@@ -189,7 +189,7 @@ export default function TrainerEnRouteScreen() {
     switch (step) {
       case 'starting': return { icon: 'location', text: 'Preparing route...', color: 'rgba(255,255,255,0.5)' };
       case 'navigating': return { icon: 'navigate', text: 'En Route', color: '#FFFFFF' };
-      case 'arriving': return { icon: 'flag', text: 'Almost There!', color: '#FF6A00'Light };
+      case 'arriving': return { icon: 'flag', text: 'Almost There!', color: '#FF8533' };
       case 'arrived': return { icon: 'checkmark-circle', text: 'Arrived', color: COLORS.success };
     }
   };
@@ -359,7 +359,7 @@ const styles = StyleSheet.create({
   statDivider: { width: 1, height: 40, backgroundColor: 'rgba(255,255,255,0.1)' },
   alertCard: { backgroundColor: 'rgba(255,159,28,0.12)', borderRadius: 12, padding: 12, marginBottom: 16 },
   alertRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 4 },
-  alertText: { fontSize: 13, color: '#FF6A00'Light, marginLeft: 8, flex: 1 },
+  alertText: { fontSize: 13, color: '#FF8533', marginLeft: 8, flex: 1 },
   navButton: { marginBottom: 12, borderRadius: 14, overflow: 'hidden' },
   navButtonGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16 },
   navButtonText: { fontSize: 17, fontWeight: '700', color: COLORS.white, marginLeft: 10 },

@@ -134,7 +134,7 @@ export default function AthleticAlert({
       case 'success':
         return {
           icon: 'checkmark-circle' as const,
-          gradientColors: ['#FF6A00', '#FF6A00'Light] as [string, string],
+          gradientColors: ['#FF6A00', '#FF8533'] as [string, string],
           iconColor: COLORS.white,
         };
       default: // info

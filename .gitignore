@@ -80,3 +80,8 @@ android-sdk/
 
 # Note: .env files are NOT ignored - they're needed for deployment
 # The deployment system auto-updates URLs in .env files
+
+
+# Memory/credentials files
+test_credentials.md
+memory/test_credentials.md

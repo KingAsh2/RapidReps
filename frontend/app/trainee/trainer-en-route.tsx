@@ -123,7 +123,7 @@ export default function TrainerEnRouteScreen() {
     switch (status) {
       case 'waiting': return { icon: 'hourglass', label: 'Waiting', color: 'rgba(255,255,255,0.5)', bg: 'rgba(136,146,176,0.15)' };
       case 'en_route': return { icon: 'car-sport', label: 'On The Way', color: '#FFFFFF', bg: 'rgba(0,207,193,0.15)' };
-      case 'nearby': return { icon: 'location', label: 'Nearby', color: '#FF6A00'Light, bg: 'rgba(255,159,28,0.15)' };
+      case 'nearby': return { icon: 'location', label: 'Nearby', color: '#FF8533', bg: 'rgba(255,159,28,0.15)' };
       case 'arrived': return { icon: 'checkmark-circle', label: 'Arrived', color: COLORS.success, bg: 'rgba(0,210,106,0.15)' };
     }
   };

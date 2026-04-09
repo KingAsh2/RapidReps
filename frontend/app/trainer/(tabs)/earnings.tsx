@@ -154,7 +154,7 @@ export default function TrainerEarningsScreen() {
           >
             {/* Hero Card - Pending Balance */}
             <LinearGradient
-              colors={['#FF6A00', '#FF6A00'Dark]}
+              colors={['#FF6A00', '#CC5500']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.heroCard}

@@ -899,7 +899,7 @@ const styles = StyleSheet.create({
   },
   referralHint: {
     fontSize: 13,
-    color: '#FF6A00'Light,
+    color: '#FF8533',
     marginTop: 6,
     marginLeft: 4,
     fontWeight: '500',

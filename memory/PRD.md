@@ -50,7 +50,18 @@ RapidReps is a fitness training marketplace app (React Native/Expo + FastAPI + M
 - `/app/frontend/src/components/AnimatedBarChart.tsx`
 - `/app/frontend/src/theme.ts` (shared design tokens)
 
+### Deployment Fixes (April 2026)
+- Fixed 10 corrupted color strings across 7 files (bulk sed replacement had appended `Light`/`Dark` to hex codes)
+- Files fixed: `signup.tsx`, `trainer-en-route.tsx`, `en-route.tsx`, `PricingDisplay.tsx`, `AthleticAlert.tsx`, `earnings.tsx`, `set-rates.tsx`, `OverviewTab.tsx`
+- Added `test_credentials.md` to `.gitignore` (deployment security requirement)
+- Verified clean build via `npx expo export --platform web` — 0 errors
+
 ## Prioritized Backlog
+
+### P0 — Deployment
+- ✅ All build-blocking syntax errors resolved
+- ✅ `.gitignore` updated with `test_credentials.md`
+- EAS iOS build still blocked on Apple Distribution Certificate (user action needed: `eas credentials`)
 
 ### P1 — Medium Priority
 - SendGrid email integration (needs user API key)
@@ -58,7 +69,7 @@ RapidReps is a fitness training marketplace app (React Native/Expo + FastAPI + M
 - Refactor `server.py` (9,750+ lines) into modular route files
 
 ### P2 — Nice to Have
-- EAS iOS build (blocked on Apple certificate)
+- "Trainer Stories" feature (ephemeral workout clips, IG Stories-style)
 - Card hover/press feedback animations (scale down on press)
 - Entrance animations for session cards on sessions tab
 - Dark theme for edge-case screens (legal, onboarding flows)

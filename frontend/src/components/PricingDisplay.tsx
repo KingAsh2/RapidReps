@@ -68,7 +68,7 @@ export const PricingDisplay: React.FC<PricingDisplayProps> = ({
       case 'pro':
         return (
           <LinearGradient
-            colors={['#FF6A00', '#FF6A00'Light]}
+            colors={['#FF6A00', '#FF8533']}
             style={styles.tierBadge}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
@@ -172,7 +172,7 @@ export const TrainerTierBadge: React.FC<TrainerTierBadgeProps> = ({
   if (tier === 'pro') {
     return (
       <LinearGradient
-        colors={['#FF6A00', '#FF6A00'Light]}
+        colors={['#FF6A00', '#FF8533']}
         style={[styles.tierBadgeLarge, { paddingHorizontal: s.padding * 2, paddingVertical: s.padding }]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
