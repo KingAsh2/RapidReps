@@ -357,7 +357,7 @@ export default function TrainerDetailScreen() {
   if (loading) {
     return (
       <LinearGradient
-        colors={[COLORS.teal, COLORS.tealLight, COLORS.orange]}
+        colors={['#0A0E1A', '#141929', '#FF6A00']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.loadingContainer}
@@ -370,7 +370,7 @@ export default function TrainerDetailScreen() {
 
   if (!trainer) {
     return (
-      <LinearGradient colors={[COLORS.teal, COLORS.orange]} style={styles.loadingContainer}>
+      <LinearGradient colors={['#0A0E1A', '#FF6A00']} style={styles.loadingContainer}>
         <Ionicons name="alert-circle" size={64} color={COLORS.white} />
         <Text style={styles.loadingText}>Trainer not found</Text>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
@@ -383,7 +383,7 @@ export default function TrainerDetailScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={[COLORS.teal, COLORS.tealLight]}
+        colors={['#0A0E1A', '#141929']}
         style={styles.headerGradient}
       />
 
@@ -421,7 +421,7 @@ export default function TrainerDetailScreen() {
               },
             ]}
           >
-            <LinearGradient colors={[COLORS.white, COLORS.offWhite]} style={styles.profileGradient}>
+            <LinearGradient colors={['#141929', '#1A2035']} style={styles.profileGradient}>
               {/* Avatar */}
               <View style={styles.avatarSection}>
                 {trainer.avatarUrl ? (
@@ -526,7 +526,7 @@ export default function TrainerDetailScreen() {
               },
             ]}
           >
-            <LinearGradient colors={[COLORS.white, COLORS.offWhite]} style={styles.bookingGradient}>
+            <LinearGradient colors={['#141929', '#1A2035']} style={styles.bookingGradient}>
               <Text style={styles.bookingTitle}>Book a Session</Text>
 
               {/* Session Type Selection - NEW PRD */}
@@ -811,7 +811,7 @@ export default function TrainerDetailScreen() {
                 },
               ]}
             >
-              <LinearGradient colors={[COLORS.white, COLORS.offWhite]} style={styles.reviewsGradient}>
+              <LinearGradient colors={['#141929', '#1A2035']} style={styles.reviewsGradient}>
                 <Text style={styles.reviewsTitle}>Reviews ({ratings.length})</Text>
                 {ratings.slice(0, 3).map((review, i) => (
                   <View key={i} style={styles.reviewItem}>
@@ -922,7 +922,7 @@ export default function TrainerDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.grayLight,
+    backgroundColor: '#0A0E1A',
   },
   headerGradient: {
     position: 'absolute',
@@ -968,9 +968,11 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(255,255,255,0.08)',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   headerActions: {
     flexDirection: 'row',
@@ -980,9 +982,11 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(255,255,255,0.08)',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   scrollView: {
     flex: 1,
@@ -998,9 +1002,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   profileGradient: {
     padding: 24,
@@ -1014,8 +1020,8 @@ const styles = StyleSheet.create({
     width: 110,
     height: 110,
     borderRadius: 55,
-    borderWidth: 4,
-    borderColor: COLORS.white,
+    borderWidth: 3,
+    borderColor: 'rgba(255,106,0,0.3)',
   },
   avatarPlaceholder: {
     width: 110,
@@ -1023,21 +1029,21 @@ const styles = StyleSheet.create({
     borderRadius: 55,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 4,
-    borderColor: COLORS.white,
+    borderWidth: 3,
+    borderColor: 'rgba(255,106,0,0.3)',
   },
   verifiedBadge: {
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: COLORS.white,
+    backgroundColor: '#0A0E1A',
     borderRadius: 14,
     padding: 2,
   },
   trainerName: {
     fontSize: 26,
     fontWeight: '900',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginBottom: 8,
   },
   ratingRow: {
@@ -1049,17 +1055,17 @@ const styles = StyleSheet.create({
   ratingText: {
     fontSize: 18,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   reviewCount: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
   },
   bio: {
     fontSize: 15,
     fontWeight: '500',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.6)',
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 20,
@@ -1067,11 +1073,13 @@ const styles = StyleSheet.create({
   statsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.grayLight,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 16,
     padding: 16,
     marginBottom: 20,
     width: '100%',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   stat: {
     flex: 1,
@@ -1080,18 +1088,18 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 20,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
   },
   statDivider: {
     width: 1,
     height: 36,
-    backgroundColor: '#D0D4D8',
+    backgroundColor: 'rgba(255,255,255,0.1)',
   },
   tagsSection: {
     width: '100%',
@@ -1100,7 +1108,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 13,
     fontWeight: '800',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.4)',
     letterSpacing: 1,
     marginBottom: 10,
   },
@@ -1141,9 +1149,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   bookingGradient: {
     padding: 20,
@@ -1151,7 +1161,7 @@ const styles = StyleSheet.create({
   bookingTitle: {
     fontSize: 20,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginBottom: 16,
   },
   // Session Type Selection (NEW)
@@ -1167,20 +1177,25 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 8,
     borderRadius: 12,
-    backgroundColor: '#FFF5EB',
+    backgroundColor: 'rgba(255,106,0,0.08)',
     borderWidth: 2,
-    borderColor: COLORS.orange,
+    borderColor: 'rgba(255,106,0,0.2)',
     alignItems: 'center',
     gap: 4,
   },
   sessionTypeChipSelected: {
-    backgroundColor: COLORS.orange,
-    borderColor: COLORS.orange,
+    backgroundColor: '#FF6A00',
+    borderColor: '#FF6A00',
+    shadowColor: '#FF6A00',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 6,
   },
   sessionTypeText: {
     fontSize: 13,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   sessionTypeTextSelected: {
     color: COLORS.white,
@@ -1188,7 +1203,7 @@ const styles = StyleSheet.create({
   sessionTypePrice: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
   },
   sessionTypePriceSelected: {
     color: 'rgba(255,255,255,0.85)',
@@ -1198,17 +1213,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#E8FFF5',
+    backgroundColor: 'rgba(0, 214, 143, 0.08)',
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 10,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 214, 143, 0.15)',
   },
   safetyNoticeText: {
     flex: 1,
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.navy,
+    color: 'rgba(255,255,255,0.7)',
     lineHeight: 16,
   },
   durationRow: {
@@ -1220,17 +1237,25 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     borderRadius: 12,
-    backgroundColor: COLORS.grayLight,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     alignItems: 'center',
     gap: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   durationChipSelected: {
-    backgroundColor: COLORS.teal,
+    backgroundColor: '#FF6A00',
+    borderColor: '#FF6A00',
+    shadowColor: '#FF6A00',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   durationText: {
     fontSize: 15,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   durationTextSelected: {
     color: COLORS.white,
@@ -1238,17 +1263,19 @@ const styles = StyleSheet.create({
   durationPrice: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
   },
   durationPriceSelected: {
     color: 'rgba(255,255,255,0.85)',
   },
   // Price Summary (NEW)
   priceSummary: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: 'rgba(255,255,255,0.04)',
     borderRadius: 12,
     padding: 14,
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
   },
   priceRow: {
     flexDirection: 'row',
@@ -1259,32 +1286,32 @@ const styles = StyleSheet.create({
   priceLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
   },
   priceValue: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   priceDivider: {
     height: 1,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: 'rgba(255,255,255,0.08)',
     marginVertical: 8,
   },
   priceTotalLabel: {
     fontSize: 16,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   priceTotalValue: {
     fontSize: 24,
     fontWeight: '900',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   platformFeeNote: {
     fontSize: 13,
     fontWeight: '500',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     textAlign: 'center',
     marginTop: 8,
   },
@@ -1299,7 +1326,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 13,
     fontWeight: '500',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.4)',
     lineHeight: 16,
   },
   bookButtonWrapper: {
@@ -1331,15 +1358,17 @@ const styles = StyleSheet.create({
   },
   // Quick Actions Card
   quickActionsCard: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderRadius: 18,
     marginBottom: 16,
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   quickActionButton: {
     flexDirection: 'row',
@@ -1360,16 +1389,16 @@ const styles = StyleSheet.create({
   quickActionTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginBottom: 2,
   },
   quickActionSubtitle: {
     fontSize: 13,
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
   },
   quickActionDivider: {
     height: 1,
-    backgroundColor: COLORS.grayLight,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     marginHorizontal: 16,
   },
   // Reviews
@@ -1379,9 +1408,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   reviewsGradient: {
     padding: 20,
@@ -1389,13 +1420,13 @@ const styles = StyleSheet.create({
   reviewsTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginBottom: 16,
   },
   reviewItem: {
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.grayLight,
+    borderBottomColor: 'rgba(255,255,255,0.06)',
   },
   reviewHeader: {
     flexDirection: 'row',
@@ -1410,12 +1441,12 @@ const styles = StyleSheet.create({
   reviewDate: {
     fontSize: 13,
     fontWeight: '500',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.4)',
   },
   reviewText: {
     fontSize: 14,
     fontWeight: '500',
-    color: COLORS.navy,
+    color: 'rgba(255,255,255,0.7)',
     lineHeight: 20,
   },
   blockButton: {
@@ -1437,7 +1468,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   consentModal: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderRadius: 24,
     padding: 24,
     width: '100%',
@@ -1450,7 +1481,7 @@ const styles = StyleSheet.create({
   consentTitle: {
     fontSize: 22,
     fontWeight: '900',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     textAlign: 'center',
     marginBottom: 20,
   },
@@ -1465,7 +1496,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     fontWeight: '500',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.6)',
     lineHeight: 22,
   },
   consentAgreeButton: {
@@ -1489,7 +1520,7 @@ const styles = StyleSheet.create({
   consentCancelText: {
     fontSize: 16,
     fontWeight: '600',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
   },
   // Video Intro Styles
   videoSection: {

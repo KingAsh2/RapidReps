@@ -370,7 +370,7 @@ export default function UploadVideoScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.offWhite,
+    backgroundColor: '#1A2035',
   },
   headerGradient: {
     position: 'absolute',
@@ -432,21 +432,21 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginBottom: 12,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 15,
     fontWeight: '500',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 24,
     paddingHorizontal: 20,
   },
   requirementsList: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderRadius: 16,
     padding: 20,
     marginBottom: 32,
@@ -466,7 +466,7 @@ const styles = StyleSheet.create({
   requirementText: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   buttonRow: {
     width: '100%',
@@ -502,7 +502,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: COLORS.orange,
     borderRadius: 16,
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
   },
   uploadButtonText: {
     fontSize: 16,
@@ -574,7 +574,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 16,
     paddingHorizontal: 24,
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderWidth: 2,
     borderColor: COLORS.error,
     borderRadius: 16,

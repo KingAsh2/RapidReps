@@ -224,15 +224,15 @@ const styles = StyleSheet.create({
 
   heroCard: { borderRadius: 22, padding: 28, alignItems: 'center', marginBottom: 20 },
   heroBadge: { width: 56, height: 56, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.3)', justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
-  heroTitle: { fontSize: 26, fontWeight: '900', color: COLORS.navy },
+  heroTitle: { fontSize: 26, fontWeight: '900', color: '#FFFFFF' },
   heroSubtitle: { fontSize: 14, color: 'rgba(26,42,94,0.7)', marginTop: 4 },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: 16 },
-  priceAmount: { fontSize: 42, fontWeight: '900', color: COLORS.navy },
+  priceAmount: { fontSize: 42, fontWeight: '900', color: '#FFFFFF' },
   priceFrequency: { fontSize: 16, fontWeight: '600', color: 'rgba(26,42,94,0.6)', marginLeft: 4 },
 
   activeCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: `${COLORS.success}15`, borderRadius: 14, padding: 16, marginBottom: 20, borderWidth: 1, borderColor: `${COLORS.success}30` },
   activeTitle: { fontSize: 16, fontWeight: '700', color: COLORS.success },
-  activeSubtitle: { fontSize: 13, color: COLORS.gray, marginTop: 2 },
+  activeSubtitle: { fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
 
   sectionTitle: { fontSize: 18, fontWeight: '700', color: COLORS.white, marginBottom: 14 },
   benefitRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 12 },
@@ -247,6 +247,6 @@ const styles = StyleSheet.create({
   bottomBar: { paddingHorizontal: 16, paddingBottom: 24, paddingTop: 8 },
   subscribeBtn: { borderRadius: 16, overflow: 'hidden' },
   subscribeBtnGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 18, gap: 10 },
-  subscribeBtnText: { fontSize: 17, fontWeight: '800', color: COLORS.navy },
-  cancelNote: { fontSize: 13, color: COLORS.gray, textAlign: 'center', marginTop: 8 },
+  subscribeBtnText: { fontSize: 17, fontWeight: '800', color: '#FFFFFF' },
+  cancelNote: { fontSize: 13, color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginTop: 8 },
 });

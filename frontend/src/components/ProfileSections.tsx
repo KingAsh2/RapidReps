@@ -228,7 +228,7 @@ const SOCIAL_PLATFORMS = [
   { key: 'tiktok', icon: 'logo-tiktok', color: '#000000', prefix: 'https://tiktok.com/@' },
   { key: 'youtube', icon: 'logo-youtube', color: '#FF0000', prefix: 'https://youtube.com/@' },
   { key: 'twitter', icon: 'logo-twitter', color: '#1DA1F2', prefix: 'https://x.com/' },
-  { key: 'website', icon: 'globe-outline', color: COLORS.navy, prefix: '' },
+  { key: 'website', icon: 'globe-outline', color: '#FFFFFF', prefix: '' },
 ];
 
 interface SocialLinksProps {
@@ -276,14 +276,14 @@ const styles = StyleSheet.create({
   container: { marginTop: 20, paddingTop: 20, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)' },
   header: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14, paddingHorizontal: 4 },
   title: { fontSize: 16, fontWeight: '800', color: COLORS.white, flex: 1 },
-  count: { fontSize: 13, fontWeight: '700', color: COLORS.gray },
+  count: { fontSize: 13, fontWeight: '700', color: 'rgba(255,255,255,0.5)' },
   addBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: COLORS.orange, justifyContent: 'center', alignItems: 'center' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
   thumb: { width: THUMB_SIZE, height: THUMB_SIZE, borderRadius: 10, overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.05)' },
   thumbImg: { width: '100%', height: '100%' },
   playOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.35)', justifyContent: 'center', alignItems: 'center' },
   emptyState: { alignItems: 'center', paddingVertical: 24, gap: 8 },
-  emptyText: { fontSize: 13, color: COLORS.gray },
+  emptyText: { fontSize: 13, color: 'rgba(255,255,255,0.5)' },
   viewer: { flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center' },
   viewerTopBar: { position: 'absolute', top: 50, left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, zIndex: 10 },
   viewerClose: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center' },

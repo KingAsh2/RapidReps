@@ -39,12 +39,12 @@ export const QuickBookSection = ({ recentTrainers, onTrainerPress }: Props) => (
 
 const styles = StyleSheet.create({
   container: { marginBottom: 16 },
-  label: { fontSize: 18, fontWeight: '800', color: '#1a2a5e', marginBottom: 4 },
-  hint: { fontSize: 13, fontWeight: '600', color: '#5a6a8a', marginBottom: 14 },
+  label: { fontSize: 18, fontWeight: '800', color: '#FFFFFF', marginBottom: 4 },
+  hint: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.5)', marginBottom: 14 },
   card: { alignItems: 'center', width: 84, gap: 6 },
   photo: { width: 64, height: 64, borderRadius: 32, borderWidth: 3, borderColor: '#FF7F00' },
-  name: { fontSize: 13, fontWeight: '700', color: '#1a2a5e', textAlign: 'center' },
-  meta: { fontSize: 13, fontWeight: '600', color: '#5a6a8a' },
+  name: { fontSize: 13, fontWeight: '700', color: '#FFFFFF', textAlign: 'center' },
+  meta: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.5)' },
   liveDot: {
     position: 'absolute', top: 0, right: 8,
     width: 14, height: 14, borderRadius: 7,

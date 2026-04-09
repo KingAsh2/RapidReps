@@ -136,7 +136,7 @@ export default function MessagesScreen() {
             <Image source={{ uri: otherUser.avatarUrl }} style={styles.avatar} />
           ) : (
             <LinearGradient
-              colors={[COLORS.teal, COLORS.tealLight]}
+              colors={['#0A0E1A', '#141929']}
               style={styles.avatarPlaceholder}
             >
               <Ionicons name="person" size={24} color={COLORS.white} />
@@ -179,7 +179,7 @@ export default function MessagesScreen() {
     return (
       <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
         <LinearGradient
-          colors={['rgba(247, 147, 30, 0.85)', 'rgba(247, 147, 30, 0.75)', 'rgba(255, 165, 38, 0.7)']}
+          colors={['rgba(10, 14, 26, 0.92)', 'rgba(17, 24, 39, 0.88)']}
           style={styles.loadingContainer}
         >
           <ActivityIndicator size="large" color={COLORS.white} />
@@ -193,7 +193,7 @@ export default function MessagesScreen() {
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
       {/* Orange overlay */}
       <LinearGradient
-        colors={['rgba(247, 147, 30, 0.85)', 'rgba(247, 147, 30, 0.75)', 'rgba(255, 165, 38, 0.7)']}
+        colors={['rgba(10, 14, 26, 0.92)', 'rgba(17, 24, 39, 0.88)']}
         style={StyleSheet.absoluteFill}
       />
 
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
   conversationCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderRadius: 16,
     padding: 16,
     shadowColor: '#000',
@@ -357,11 +357,11 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 16,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   time: {
     fontSize: 13,
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     fontWeight: '500',
   },
   messagePreview: {
@@ -372,12 +372,12 @@ const styles = StyleSheet.create({
   previewText: {
     flex: 1,
     fontSize: 14,
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     marginRight: 8,
   },
   unreadText: {
     fontWeight: '600',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   unreadBadge: {
     backgroundColor: COLORS.orange,
@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
     marginTop: 40,
     borderRadius: 20,
     overflow: 'hidden',
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
@@ -420,12 +420,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginBottom: 8,
   },
   emptySubtext: {
     fontSize: 14,
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     textAlign: 'center',
     lineHeight: 20,
   },

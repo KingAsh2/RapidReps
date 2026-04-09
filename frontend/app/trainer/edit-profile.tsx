@@ -79,8 +79,6 @@ export default function EditTrainerProfileScreen() {
     longitude: null as number | null,
     locationAddress: '',
     isAvailable: true,
-    profilePhotoUrl: '',
-    introVideoUrl: '',
     socialLinks: {} as Record<string, string>,
   });
 
@@ -307,7 +305,7 @@ export default function EditTrainerProfileScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
         <LinearGradient
-          colors={['rgba(247, 147, 30, 0.85)', 'rgba(247, 147, 30, 0.75)', 'rgba(255, 165, 38, 0.7)']}
+          colors={['rgba(10, 14, 26, 0.92)', 'rgba(17, 24, 39, 0.88)']}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
           style={StyleSheet.absoluteFill}
@@ -369,7 +367,7 @@ export default function EditTrainerProfileScreen() {
                   },
                 ]}
               >
-                <LinearGradient colors={[COLORS.white, COLORS.offWhite]} style={styles.cardGradient}>
+                <LinearGradient colors={['#141929', '#1A2035']} style={styles.cardGradient}>
                   <View style={styles.cardHeader}>
                     <Ionicons name="person-circle" size={22} color={COLORS.orange} />
                     <Text style={styles.cardTitle}>About You</Text>
@@ -441,7 +439,7 @@ export default function EditTrainerProfileScreen() {
                   },
                 ]}
               >
-                <LinearGradient colors={[COLORS.white, COLORS.offWhite]} style={styles.cardGradient}>
+                <LinearGradient colors={['#141929', '#1A2035']} style={styles.cardGradient}>
                   <View style={styles.cardHeader}>
                     <Ionicons name="fitness" size={22} color={COLORS.teal} />
                     <Text style={styles.cardTitle}>Training Styles</Text>
@@ -485,7 +483,7 @@ export default function EditTrainerProfileScreen() {
                   },
                 ]}
               >
-                <LinearGradient colors={[COLORS.white, COLORS.offWhite]} style={styles.cardGradient}>
+                <LinearGradient colors={['#141929', '#1A2035']} style={styles.cardGradient}>
                   <View style={styles.cardHeader}>
                     <Ionicons name="time" size={22} color={COLORS.orange} />
                     <Text style={styles.cardTitle}>Session Options</Text>
@@ -550,7 +548,7 @@ export default function EditTrainerProfileScreen() {
                   },
                 ]}
               >
-                <LinearGradient colors={[COLORS.white, COLORS.offWhite]} style={styles.cardGradient}>
+                <LinearGradient colors={['#141929', '#1A2035']} style={styles.cardGradient}>
                   <View style={styles.cardHeader}>
                     <Ionicons name="location" size={22} color={COLORS.error} />
                     <Text style={styles.cardTitle}>Location</Text>
@@ -566,7 +564,7 @@ export default function EditTrainerProfileScreen() {
                     disabled={gettingLocation}
                   >
                     <LinearGradient
-                      colors={[COLORS.teal, COLORS.tealLight]}
+                      colors={['#0A0E1A', '#141929']}
                       style={styles.locationButtonGradient}
                     >
                       {gettingLocation ? (
@@ -593,7 +591,7 @@ export default function EditTrainerProfileScreen() {
                 </LinearGradient>
               </Animated.View>
 
-              {/* Profile Photo & Intro Video */}
+              {/* Media Upload Section — file-based only */}
               <Animated.View
                 style={[
                   styles.card,
@@ -608,35 +606,14 @@ export default function EditTrainerProfileScreen() {
                   },
                 ]}
               >
-                <LinearGradient colors={[COLORS.white, COLORS.offWhite]} style={styles.cardGradient}>
+                <LinearGradient colors={['#141929', '#1A2035']} style={styles.cardGradient}>
                   <View style={styles.cardHeader}>
                     <Ionicons name="image" size={22} color={COLORS.teal} />
                     <Text style={styles.cardTitle}>Media</Text>
                   </View>
-
-                  <Text style={styles.inputLabel}>Profile Photo URL</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={formData.profilePhotoUrl}
-                    onChangeText={(text) => setFormData({ ...formData, profilePhotoUrl: text })}
-                    placeholder="https://example.com/photo.jpg"
-                    placeholderTextColor={COLORS.gray}
-                    autoCapitalize="none"
-                    keyboardType="url"
-                    data-testid="profile-photo-url-input"
-                  />
-
-                  <Text style={styles.inputLabel}>Intro Video URL</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={formData.introVideoUrl}
-                    onChangeText={(text) => setFormData({ ...formData, introVideoUrl: text })}
-                    placeholder="https://example.com/video.mp4"
-                    placeholderTextColor={COLORS.gray}
-                    autoCapitalize="none"
-                    keyboardType="url"
-                    data-testid="intro-video-url-input"
-                  />
+                  <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 12 }}>
+                    Tap your profile photo above to change it. Add more photos and videos to your gallery from your Profile tab.
+                  </Text>
                 </LinearGradient>
               </Animated.View>
 
@@ -773,15 +750,15 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 17,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   textArea: {
-    backgroundColor: COLORS.grayLight,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 14,
     padding: 14,
     fontSize: 15,
     fontWeight: '500',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     minHeight: 100,
     textAlignVertical: 'top',
     marginBottom: 14,
@@ -796,26 +773,26 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 13,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginBottom: 8,
     marginTop: 8,
   },
   subLabel: {
     fontSize: 13,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginBottom: 10,
   },
   input: {
-    backgroundColor: COLORS.grayLight,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 12,
     padding: 14,
     fontSize: 15,
     fontWeight: '500',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   radiusSelector: {
-    backgroundColor: COLORS.grayLight,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 12,
     padding: 14,
     flexDirection: 'row',
@@ -828,7 +805,7 @@ const styles = StyleSheet.create({
     color: COLORS.teal,
   },
   sliderContainer: {
-    backgroundColor: COLORS.grayLight,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 14,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -851,7 +828,7 @@ const styles = StyleSheet.create({
   },
   sliderLabel: {
     fontSize: 12,
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     fontWeight: '600',
   },
   chipsContainer: {
@@ -863,7 +840,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: COLORS.grayLight,
+    backgroundColor: 'rgba(255,255,255,0.06)',
   },
   chipSelected: {
     backgroundColor: COLORS.teal,
@@ -871,7 +848,7 @@ const styles = StyleSheet.create({
   chipText: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   chipTextSelected: {
     color: COLORS.white,
@@ -885,7 +862,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     borderRadius: 12,
-    backgroundColor: COLORS.grayLight,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     alignItems: 'center',
   },
   durationChipSelected: {
@@ -894,7 +871,7 @@ const styles = StyleSheet.create({
   durationText: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   durationTextSelected: {
     color: COLORS.white,
@@ -910,7 +887,7 @@ const styles = StyleSheet.create({
   switchLabel: {
     fontSize: 15,
     fontWeight: '600',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   locationText: {
     fontSize: 15,
@@ -921,6 +898,44 @@ const styles = StyleSheet.create({
   locationButton: {
     borderRadius: 12,
     overflow: 'hidden',
+    marginBottom: 14,
+  },
+  locationButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    gap: 8,
+  },
+  locationButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: COLORS.white,
+  },
+  saveButton: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginTop: 8,
+    shadowColor: COLORS.orange,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  saveButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 18,
+    gap: 10,
+  },
+  saveButtonText: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: COLORS.white,
+  },
+});
+dden',
     marginBottom: 14,
   },
   locationButtonGradient: {

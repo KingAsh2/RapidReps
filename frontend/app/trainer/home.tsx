@@ -468,20 +468,20 @@ export default function TrainerHomeScreen() {
 
           {/* Dropdown Menu */}
           {menuVisible && (
-            <View style={{ position: 'absolute', top: 100, right: 20, backgroundColor: '#fff', borderRadius: 16, paddingVertical: 8, width: 220, zIndex: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 12, elevation: 10 }}>
+            <View style={{ position: 'absolute', top: 100, right: 20, backgroundColor: '#141929', borderRadius: 16, paddingVertical: 8, width: 220, zIndex: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 12, elevation: 10 }}>
               <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 18, gap: 14 }} onPress={() => { setMenuVisible(false); router.push('/notifications'); }} data-testid="menu-notifications">
                 <Ionicons name="notifications" size={22} color={COLORS.orange} />
-                <Text style={{ fontSize: 15, fontWeight: '700', color: COLORS.navy }}>Notifications</Text>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: '#FFFFFF' }}>Notifications</Text>
               </TouchableOpacity>
               <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 18, gap: 14 }} onPress={() => { setMenuVisible(false); router.push('/messages'); }} data-testid="menu-messages">
                 <Ionicons name="chatbubbles" size={22} color={COLORS.teal} />
-                <Text style={{ fontSize: 15, fontWeight: '700', color: COLORS.navy }}>Messages</Text>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: '#FFFFFF' }}>Messages</Text>
               </TouchableOpacity>
               <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 18, gap: 14 }} onPress={() => { setMenuVisible(false); router.push('/trainer/achievements'); }} data-testid="menu-achievements">
                 <Ionicons name="trophy" size={22} color={COLORS.yellow} />
-                <Text style={{ fontSize: 15, fontWeight: '700', color: COLORS.navy }}>Achievements</Text>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: '#FFFFFF' }}>Achievements</Text>
               </TouchableOpacity>
-              <View style={{ height: 1, backgroundColor: '#E8ECF0', marginHorizontal: 18 }} />
+              <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.08)', marginHorizontal: 18 }} />
               <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 18, gap: 14 }} onPress={() => { setMenuVisible(false); handleLogout(); }} data-testid="menu-logout">
                 <Ionicons name="log-out-outline" size={22} color={COLORS.error} />
                 <Text style={{ fontSize: 15, fontWeight: '700', color: COLORS.error }}>Log Out</Text>
@@ -639,7 +639,7 @@ export default function TrainerHomeScreen() {
                 ]}
               >
                 <LinearGradient
-                  colors={[COLORS.teal, COLORS.tealLight]}
+                  colors={['#0A0E1A', '#141929']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.earningsGradient}
@@ -679,7 +679,7 @@ export default function TrainerHomeScreen() {
                 onPress={() => router.push('/trainer/edit-profile')}
               >
                 <LinearGradient
-                  colors={[COLORS.white, COLORS.offWhite]}
+                  colors={['#141929', '#1A2035']}
                   style={styles.quickActionGradient}
                 >
                   <View style={styles.quickActionIcon}>
@@ -693,7 +693,7 @@ export default function TrainerHomeScreen() {
                 onPress={() => router.push('/trainer/verification')}
               >
                 <LinearGradient
-                  colors={[COLORS.white, COLORS.offWhite]}
+                  colors={['#141929', '#1A2035']}
                   style={styles.quickActionGradient}
                 >
                   <View style={styles.quickActionIcon}>
@@ -743,7 +743,7 @@ export default function TrainerHomeScreen() {
                       })}
                     >
                       <LinearGradient
-                        colors={[COLORS.white, COLORS.offWhite]}
+                        colors={['#141929', '#1A2035']}
                         style={styles.sessionCardGradient}
                       >
                         <View style={styles.sessionHeader}>
@@ -851,7 +851,7 @@ export default function TrainerHomeScreen() {
                 upcomingSessions.map((session, index) => (
                   <View key={session.id} style={styles.upcomingCard}>
                     <LinearGradient
-                      colors={[COLORS.white, COLORS.offWhite]}
+                      colors={['#141929', '#1A2035']}
                       style={styles.upcomingGradient}
                     >
                       <View style={styles.upcomingHeader}>
@@ -901,7 +901,7 @@ export default function TrainerHomeScreen() {
                 {nearbyTrainees.slice(0, 3).map((trainee, index) => (
                   <View key={index} style={styles.traineeCard}>
                     <LinearGradient
-                      colors={[COLORS.white, COLORS.offWhite]}
+                      colors={['#141929', '#1A2035']}
                       style={styles.traineeCardGradient}
                     >
                       <View style={styles.traineeCardRow}>
@@ -909,7 +909,7 @@ export default function TrainerHomeScreen() {
                           <Image source={{ uri: trainee.profilePhoto }} style={styles.traineeCardAvatar} />
                         ) : (
                           <LinearGradient
-                            colors={[COLORS.teal, COLORS.tealLight]}
+                            colors={['#0A0E1A', '#141929']}
                             style={styles.traineeCardAvatarPlaceholder}
                           >
                             <Ionicons name="person" size={24} color={COLORS.white} />
@@ -980,7 +980,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(247, 147, 30, 0.75)',
+    backgroundColor: 'rgba(10, 14, 26, 0.85)',
   },
   safeArea: {
     flex: 1,
@@ -1043,7 +1043,7 @@ const styles = StyleSheet.create({
     width: 150,
     height: 150,
     borderRadius: 75,
-    backgroundColor: 'rgba(247, 147, 30, 0.3)',
+    backgroundColor: 'rgba(255, 106, 0, 0.15)',
   },
   heroTitle: {
     fontSize: 26,
@@ -1122,7 +1122,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -1189,7 +1189,7 @@ const styles = StyleSheet.create({
   quickActionText: {
     fontSize: 13,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   // Section
   section: {
@@ -1263,13 +1263,13 @@ const styles = StyleSheet.create({
   traineeName: {
     fontSize: 16,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginBottom: 2,
   },
   sessionDateTime: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
   },
   pendingBadge: {
     backgroundColor: COLORS.orangeHot,
@@ -1296,7 +1296,7 @@ const styles = StyleSheet.create({
   sessionStatText: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
   },
   tapHint: {
     flexDirection: 'row',
@@ -1304,14 +1304,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     paddingVertical: 8,
-    backgroundColor: 'rgba(247, 147, 30, 0.1)',
+    backgroundColor: 'rgba(255, 106, 0, 0.08)',
     borderRadius: 8,
     marginBottom: 14,
   },
   tapHintText: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   actionButtons: {
     flexDirection: 'row',
@@ -1370,12 +1370,12 @@ const styles = StyleSheet.create({
   upcomingDate: {
     fontSize: 16,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   upcomingTime: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     marginTop: 2,
   },
   confirmedBadge: {
@@ -1407,14 +1407,14 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginTop: 12,
     marginBottom: 4,
   },
   emptySubtitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
   },
   // Trainee Card
   traineeCard: {
@@ -1454,12 +1454,12 @@ const styles = StyleSheet.create({
   traineeCardName: {
     fontSize: 15,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   traineeCardGoal: {
     fontSize: 13,
     fontWeight: '500',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     marginTop: 2,
   },
   distanceBadge: {

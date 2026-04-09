@@ -247,7 +247,7 @@ export default function TraineeOnboardingScreen() {
                 <Image source={{ uri: formData.profilePhoto }} style={styles.photo} />
               ) : (
                 <LinearGradient
-                  colors={[COLORS.teal, COLORS.tealLight]}
+                  colors={['#0A0E1A', '#141929']}
                   style={styles.photoPlaceholder}
                 >
                   <Ionicons name="camera" size={40} color={COLORS.white} />
@@ -261,7 +261,7 @@ export default function TraineeOnboardingScreen() {
 
             {/* Location */}
             <View style={styles.locationCard}>
-              <LinearGradient colors={[COLORS.white, COLORS.offWhite]} style={styles.locationGradient}>
+              <LinearGradient colors={['#141929', '#1A2035']} style={styles.locationGradient}>
                 <View style={styles.locationHeader}>
                   <Ionicons name="location" size={24} color={COLORS.orange} />
                   <Text style={styles.locationTitle}>Your Location</Text>
@@ -277,7 +277,7 @@ export default function TraineeOnboardingScreen() {
                   disabled={locationLoading}
                 >
                   <LinearGradient
-                    colors={[COLORS.teal, COLORS.tealLight]}
+                    colors={['#0A0E1A', '#141929']}
                     style={styles.locationButtonGradient}
                   >
                     {locationLoading ? (
@@ -305,7 +305,7 @@ export default function TraineeOnboardingScreen() {
 
             {/* Goals */}
             <View style={styles.inputCard}>
-              <LinearGradient colors={[COLORS.white, COLORS.offWhite]} style={styles.inputCardGradient}>
+              <LinearGradient colors={['#141929', '#1A2035']} style={styles.inputCardGradient}>
                 <Text style={styles.inputLabel}>What are your fitness goals?</Text>
                 <TextInput
                   style={styles.textArea}
@@ -321,7 +321,7 @@ export default function TraineeOnboardingScreen() {
 
             {/* Experience Level */}
             <View style={styles.inputCard}>
-              <LinearGradient colors={[COLORS.white, COLORS.offWhite]} style={styles.inputCardGradient}>
+              <LinearGradient colors={['#141929', '#1A2035']} style={styles.inputCardGradient}>
                 <Text style={styles.inputLabel}>Experience Level</Text>
                 <View style={styles.experienceRow}>
                   {experienceLevels.map((level) => (
@@ -349,7 +349,7 @@ export default function TraineeOnboardingScreen() {
 
             {/* Injuries */}
             <View style={styles.inputCard}>
-              <LinearGradient colors={[COLORS.white, COLORS.offWhite]} style={styles.inputCardGradient}>
+              <LinearGradient colors={['#141929', '#1A2035']} style={styles.inputCardGradient}>
                 <Text style={styles.inputLabel}>Any injuries or limitations?</Text>
                 <TextInput
                   style={styles.input}
@@ -370,7 +370,7 @@ export default function TraineeOnboardingScreen() {
             <Text style={styles.stepSubtitle}>What types of training interest you?</Text>
 
             <View style={styles.stylesCard}>
-              <LinearGradient colors={[COLORS.white, COLORS.offWhite]} style={styles.stylesGradient}>
+              <LinearGradient colors={['#141929', '#1A2035']} style={styles.stylesGradient}>
                 <View style={styles.stylesGrid}>
                   {TrainingStyles.map((style) => (
                     <TouchableOpacity
@@ -409,7 +409,7 @@ export default function TraineeOnboardingScreen() {
 
             {/* Training Mode */}
             <View style={styles.inputCard}>
-              <LinearGradient colors={[COLORS.white, COLORS.offWhite]} style={styles.inputCardGradient}>
+              <LinearGradient colors={['#141929', '#1A2035']} style={styles.inputCardGradient}>
                 <Text style={styles.inputLabel}>Training Mode</Text>
                 <View style={styles.modeRow}>
                   <TouchableOpacity
@@ -449,7 +449,7 @@ export default function TraineeOnboardingScreen() {
   return (
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
       <LinearGradient
-        colors={['rgba(247, 147, 30, 0.92)', 'rgba(255, 106, 0, 0.88)', 'rgba(31, 184, 180, 0.85)']}
+        colors={['rgba(10, 14, 26, 0.95)', 'rgba(17, 24, 39, 0.90)']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
@@ -532,7 +532,7 @@ export default function TraineeOnboardingScreen() {
           onPress={() => setShowStyleInfo(null)}
         >
           <View style={styles.modalContent}>
-            <LinearGradient colors={[COLORS.white, COLORS.offWhite]} style={styles.modalGradient}>
+            <LinearGradient colors={['#141929', '#1A2035']} style={styles.modalGradient}>
               <Text style={styles.modalTitle}>{showStyleInfo}</Text>
               <Text style={styles.modalDescription}>
                 {showStyleInfo ? TrainingStyleDescriptions[showStyleInfo] || 'No description available.' : ''}
@@ -590,7 +590,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderRadius: 3,
   },
   keyboardView: {
@@ -681,7 +681,7 @@ const styles = StyleSheet.create({
   locationTitle: {
     fontSize: 17,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   locationText: {
     fontSize: 15,
@@ -692,7 +692,7 @@ const styles = StyleSheet.create({
   locationPlaceholder: {
     fontSize: 14,
     fontWeight: '500',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     marginBottom: 14,
   },
   locationButton: {
@@ -728,24 +728,24 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginBottom: 10,
   },
   input: {
-    backgroundColor: COLORS.grayLight,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 12,
     padding: 14,
     fontSize: 15,
     fontWeight: '500',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   textArea: {
-    backgroundColor: COLORS.grayLight,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 12,
     padding: 14,
     fontSize: 15,
     fontWeight: '500',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     minHeight: 80,
     textAlignVertical: 'top',
   },
@@ -758,7 +758,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 12,
-    backgroundColor: COLORS.grayLight,
+    backgroundColor: 'rgba(255,255,255,0.06)',
   },
   experienceChipSelected: {
     backgroundColor: COLORS.teal,
@@ -766,7 +766,7 @@ const styles = StyleSheet.create({
   experienceText: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   experienceTextSelected: {
     color: COLORS.white,
@@ -796,7 +796,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: COLORS.grayLight,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     gap: 6,
   },
   styleChipSelected: {
@@ -805,7 +805,7 @@ const styles = StyleSheet.create({
   styleText: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   styleTextSelected: {
     color: COLORS.white,
@@ -816,7 +816,7 @@ const styles = StyleSheet.create({
   helperText: {
     fontSize: 13,
     fontWeight: '500',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     textAlign: 'center',
     marginTop: 14,
   },
@@ -832,7 +832,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 16,
     borderRadius: 14,
-    backgroundColor: COLORS.grayLight,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     gap: 8,
   },
   modeChipSelected: {
@@ -841,7 +841,7 @@ const styles = StyleSheet.create({
   modeText: {
     fontSize: 15,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   modeTextSelected: {
     color: COLORS.white,
@@ -892,13 +892,13 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginBottom: 12,
   },
   modalDescription: {
     fontSize: 15,
     fontWeight: '500',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 20,

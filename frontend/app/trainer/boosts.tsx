@@ -154,7 +154,7 @@ export default function BoostsScreen() {
                   <Ionicons name={option.icon as any} size={24} color={selectedBoost === option.id ? COLORS.orange : COLORS.gray} />
                 </View>
                 <View style={styles.boostInfo}>
-                  <Text style={[styles.boostLabel, selectedBoost === option.id && { color: COLORS.navy }]}>{option.label}</Text>
+                  <Text style={[styles.boostLabel, selectedBoost === option.id && { color: '#FFFFFF' }]}>{option.label}</Text>
                   <Text style={styles.boostDuration}>{option.duration} of visibility</Text>
                 </View>
                 <View style={styles.boostPriceBox}>
@@ -231,26 +231,26 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 18, fontWeight: '800', color: COLORS.white, textShadowColor: 'rgba(0,0,0,0.3)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 },
   content: { flex: 1, paddingHorizontal: 16 },
 
-  heroCard: { backgroundColor: COLORS.white, borderRadius: 20, padding: 24, alignItems: 'center', marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.1, shadowRadius: 10, elevation: 4 },
-  heroTitle: { fontSize: 22, fontWeight: '900', color: COLORS.navy, marginTop: 12 },
-  heroSubtitle: { fontSize: 14, color: COLORS.gray, textAlign: 'center', marginTop: 8, lineHeight: 20 },
+  heroCard: { backgroundColor: '#141929', borderRadius: 20, padding: 24, alignItems: 'center', marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.1, shadowRadius: 10, elevation: 4 },
+  heroTitle: { fontSize: 22, fontWeight: '900', color: '#FFFFFF', marginTop: 12 },
+  heroSubtitle: { fontSize: 14, color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginTop: 8, lineHeight: 20 },
 
   activeBanner: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: `${COLORS.orange}15`, borderRadius: 12, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: `${COLORS.orange}30` },
-  activeBannerText: { fontSize: 14, fontWeight: '700', color: COLORS.navy },
+  activeBannerText: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
 
   sectionTitle: { fontSize: 17, fontWeight: '700', color: COLORS.white, marginBottom: 12, marginTop: 8 },
 
-  boostCard: { backgroundColor: COLORS.white, borderRadius: 16, padding: 18, marginBottom: 10, borderWidth: 2, borderColor: 'transparent', position: 'relative', overflow: 'hidden' },
+  boostCard: { backgroundColor: '#141929', borderRadius: 16, padding: 18, marginBottom: 10, borderWidth: 2, borderColor: 'transparent', position: 'relative', overflow: 'hidden' },
   boostCardSelected: { borderColor: COLORS.orange },
   popularBadge: { position: 'absolute', top: 0, right: 0, backgroundColor: COLORS.orange, paddingHorizontal: 10, paddingVertical: 4, borderBottomLeftRadius: 10 },
   popularText: { fontSize: 13, fontWeight: '800', color: COLORS.white, letterSpacing: 0.5 },
   boostRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  boostIconBg: { width: 48, height: 48, borderRadius: 12, backgroundColor: COLORS.grayLight, justifyContent: 'center', alignItems: 'center' },
+  boostIconBg: { width: 48, height: 48, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.06)', justifyContent: 'center', alignItems: 'center' },
   boostInfo: { flex: 1 },
-  boostLabel: { fontSize: 16, fontWeight: '700', color: COLORS.gray },
-  boostDuration: { fontSize: 13, color: COLORS.gray, marginTop: 2 },
+  boostLabel: { fontSize: 16, fontWeight: '700', color: 'rgba(255,255,255,0.5)' },
+  boostDuration: { fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
   boostPriceBox: {},
-  boostPrice: { fontSize: 20, fontWeight: '900', color: COLORS.gray },
+  boostPrice: { fontSize: 20, fontWeight: '900', color: 'rgba(255,255,255,0.5)' },
   selectedIndicator: { position: 'absolute', top: 14, left: 14 },
 
   benefitsCard: { backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 14, padding: 16, gap: 12 },

@@ -112,7 +112,7 @@ export default function MySessionsScreen() {
       case SessionStatus.CANCELLED:
         return { color: COLORS.error, text: 'Cancelled', icon: 'close-circle' };
       default:
-        return { color: COLORS.gray, text: status, icon: 'help-circle' };
+        return { color: 'rgba(255,255,255,0.5)', text: status, icon: 'help-circle' };
     }
   };
 
@@ -435,7 +435,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   tabButtonActive: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
   },
   tabText: {
     fontSize: 14,
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
   tabTextActive: {
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   scrollView: {
     flex: 1,
@@ -550,7 +550,7 @@ const styles = StyleSheet.create({
   sessionTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginBottom: 8,
   },
   timeRow: {
@@ -562,12 +562,12 @@ const styles = StyleSheet.create({
   timeText: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
   },
   durationText: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
   },
   locationRow: {
     flexDirection: 'row',
@@ -577,7 +577,7 @@ const styles = StyleSheet.create({
   locationText: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
   },
   priceSection: {
     flexDirection: 'row',
@@ -590,7 +590,7 @@ const styles = StyleSheet.create({
   priceLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
   },
   priceValue: {
     fontSize: 20,

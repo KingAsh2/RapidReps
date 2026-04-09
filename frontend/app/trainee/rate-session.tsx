@@ -188,7 +188,7 @@ export default function RateSessionScreen() {
                 },
               ]}
             >
-              <LinearGradient colors={[COLORS.white, COLORS.offWhite]} style={styles.cardGradient}>
+              <LinearGradient colors={['#141929', '#1A2035']} style={styles.cardGradient}>
                 <Text style={styles.title}>How was your workout?</Text>
                 <Text style={styles.subtitle}>Your feedback helps trainers improve</Text>
 
@@ -324,14 +324,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontWeight: '900',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     textAlign: 'center',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     textAlign: 'center',
     marginBottom: 32,
   },
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   ratingLabel: {
     fontSize: 22,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   reviewSection: {
     marginBottom: 24,
@@ -359,16 +359,16 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginBottom: 10,
   },
   textArea: {
-    backgroundColor: COLORS.grayLight,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 16,
     padding: 16,
     fontSize: 15,
     fontWeight: '500',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     minHeight: 120,
     textAlignVertical: 'top',
   },

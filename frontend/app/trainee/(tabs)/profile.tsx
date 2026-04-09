@@ -297,7 +297,7 @@ export default function TraineeProfileScreen() {
     >
       {/* Orange overlay for consistency */}
       <LinearGradient
-        colors={['rgba(247, 147, 30, 0.85)', 'rgba(247, 147, 30, 0.75)', 'rgba(255, 165, 38, 0.7)']}
+        colors={['rgba(10, 14, 26, 0.92)', 'rgba(17, 24, 39, 0.88)']}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={StyleSheet.absoluteFill}
@@ -725,7 +725,7 @@ export default function TraineeProfileScreen() {
                 disabled={saving}
               >
                 <LinearGradient
-                  colors={[COLORS.teal, COLORS.tealLight]}
+                  colors={['#0A0E1A', '#141929']}
                   style={styles.saveButtonGradient}
                 >
                   {saving ? (
@@ -744,7 +744,7 @@ export default function TraineeProfileScreen() {
                 onPress={() => setIsEditing(true)}
               >
                 <LinearGradient
-                  colors={[COLORS.white, COLORS.offWhite]}
+                  colors={['#141929', '#1A2035']}
                   style={styles.editButtonGradient}
                 >
                   <Ionicons name="pencil" size={18} color={COLORS.navy} />
@@ -1047,7 +1047,7 @@ const styles = StyleSheet.create({
   editButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   logoutButton: {
     flexDirection: 'row',
@@ -1080,15 +1080,17 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
   },
   soundToggleCard: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderRadius: 16,
     padding: 16,
     marginBottom: 14,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
-    elevation: 2,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   soundToggleRow: {
     flexDirection: 'row',
@@ -1106,12 +1108,12 @@ const styles = StyleSheet.create({
   soundToggleLabel: {
     fontSize: 15,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   soundToggleSub: {
     fontSize: 13,
     fontWeight: '500',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     marginTop: 2,
   },
   // Streak Card
@@ -1175,7 +1177,7 @@ const styles = StyleSheet.create({
   },
   streakProgressFill: {
     height: '100%',
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderRadius: 3,
   },
   streakProgressText: {
@@ -1191,7 +1193,7 @@ const styles = StyleSheet.create({
   statePickerLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginBottom: 8,
   },
   stateScroll: {
@@ -1201,17 +1203,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
-    backgroundColor: COLORS.grayLight,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     marginRight: 6,
     marginBottom: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   stateChipSelected: {
-    backgroundColor: COLORS.teal,
+    backgroundColor: '#FF6A00',
+    borderColor: '#FF6A00',
   },
   stateChipText: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.navy,
+    color: 'rgba(255,255,255,0.5)',
   },
   stateChipTextSelected: {
     color: COLORS.white,

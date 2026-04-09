@@ -112,7 +112,7 @@ export default function ReferralScreen() {
               </TouchableOpacity>
             </View>
             <TouchableOpacity onPress={handleShare} style={styles.shareButton} data-testid="referral-share-button">
-              <LinearGradient colors={[COLORS.teal, COLORS.tealLight]} style={styles.shareButtonGradient}>
+              <LinearGradient colors={['#0A0E1A', '#141929']} style={styles.shareButtonGradient}>
                 <Ionicons name="share-social" size={20} color={COLORS.white} />
                 <Text style={styles.shareButtonText}>Share with Friends</Text>
               </LinearGradient>
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
   heroSubtitle: { fontSize: 15, color: 'rgba(255,255,255,0.7)', textAlign: 'center', lineHeight: 22, paddingHorizontal: 20 },
 
   codeCard: { backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 20, padding: 24, marginBottom: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
-  codeLabel: { fontSize: 13, fontWeight: '700', color: COLORS.gray, letterSpacing: 2, marginBottom: 12 },
+  codeLabel: { fontSize: 13, fontWeight: '700', color: 'rgba(255,255,255,0.5)', letterSpacing: 2, marginBottom: 12 },
   codeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
   codeText: { fontSize: 28, fontWeight: '900', color: COLORS.orange, letterSpacing: 3 },
   copyButton: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 10 },
@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 24 },
   statCard: { flex: 1, minWidth: '45%', backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 16, padding: 16, alignItems: 'center' },
   statValue: { fontSize: 24, fontWeight: '800', color: COLORS.white, marginBottom: 4 },
-  statLabel: { fontSize: 13, fontWeight: '600', color: COLORS.gray },
+  statLabel: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.5)' },
 
   howSection: { marginBottom: 24 },
   sectionTitle: { fontSize: 18, fontWeight: '800', color: COLORS.white, marginBottom: 16 },

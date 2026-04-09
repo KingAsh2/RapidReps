@@ -4,14 +4,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import { useNotifications } from '../../../src/contexts/NotificationContext';
 
-// Brand Colors
+// Brand Colors — Premium Dark
 const BRAND = {
-  orange: '#FF7F00',
-  teal: '#1a2a5e',
-  navy: '#1a2a5e',
+  accent: '#FF6A00',
+  navy: '#0A0E1A',
   white: '#FFFFFF',
-  gray: '#5a6785',
-  grayLight: '#F5F6F8',
+  gray: 'rgba(255,255,255,0.4)',
+  tabBg: '#0D1117',
 };
 
 export default function TabLayout() {
@@ -21,19 +20,20 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: BRAND.orange,
+        tabBarActiveTintColor: BRAND.accent,
         tabBarInactiveTintColor: BRAND.gray,
         tabBarStyle: {
-          backgroundColor: BRAND.white,
-          borderTopWidth: 0,
+          backgroundColor: BRAND.tabBg,
+          borderTopWidth: 1,
+          borderTopColor: 'rgba(255,255,255,0.06)',
           height: Platform.OS === 'ios' ? 88 : 70,
           paddingBottom: Platform.OS === 'ios' ? 28 : 10,
           paddingTop: 10,
-          shadowColor: '#000',
+          shadowColor: '#FF6A00',
           shadowOffset: { width: 0, height: -4 },
           shadowOpacity: 0.08,
-          shadowRadius: 12,
-          elevation: 10,
+          shadowRadius: 16,
+          elevation: 12,
         },
         tabBarLabelStyle: {
           fontSize: 13,
@@ -99,7 +99,7 @@ export default function TabLayout() {
           title: 'Messages',
           tabBarAccessibilityLabel: 'Messages tab',
           tabBarBadge: unreadMessageCount > 0 ? unreadMessageCount : undefined,
-          tabBarBadgeStyle: { backgroundColor: BRAND.orange, fontSize: 13, fontWeight: '700' },
+          tabBarBadgeStyle: { backgroundColor: BRAND.accent, fontSize: 13, fontWeight: '700' },
           tabBarIcon: ({ color, focused }) => (
             <View style={focused ? styles.activeIconContainer : null}>
               <Ionicons 
@@ -149,7 +149,7 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   activeIconContainer: {
-    backgroundColor: 'rgba(255, 127, 0, 0.1)',
+    backgroundColor: 'rgba(255, 106, 0, 0.12)',
     borderRadius: 12,
     padding: 4,
   },

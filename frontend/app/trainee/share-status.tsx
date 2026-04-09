@@ -164,7 +164,7 @@ I'll let you know when I'm done. Track my session in the RapidReps app.
   return (
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
       <LinearGradient
-        colors={['rgba(247, 147, 30, 0.9)', 'rgba(247, 147, 30, 0.85)', 'rgba(255, 165, 38, 0.8)']}
+        colors={['rgba(10, 14, 26, 0.93)', 'rgba(17, 24, 39, 0.90)']}
         style={StyleSheet.absoluteFill}
       />
 
@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   sessionCard: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
@@ -388,7 +388,7 @@ const styles = StyleSheet.create({
   sessionTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   sessionDetail: {
     flexDirection: 'row',
@@ -398,13 +398,13 @@ const styles = StyleSheet.create({
   },
   sessionText: {
     fontSize: 14,
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     flex: 1,
   },
   safetyBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#141929',
     borderRadius: 12,
     padding: 16,
     marginBottom: 24,
@@ -418,12 +418,12 @@ const styles = StyleSheet.create({
   safetyTitle: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#1a2a5e',
+    color: '#FFFFFF',
     marginBottom: 4,
   },
   safetyText: {
     fontSize: 15,
-    color: '#1a2a5e',
+    color: '#FFFFFF',
     lineHeight: 20,
     fontWeight: '600',
   },
@@ -492,7 +492,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   addContactForm: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderRadius: 16,
     padding: 20,
     marginBottom: 24,
@@ -500,15 +500,15 @@ const styles = StyleSheet.create({
   formTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginBottom: 16,
   },
   input: {
-    backgroundColor: COLORS.grayLight,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginBottom: 12,
   },
   formButtons: {
@@ -527,7 +527,7 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
   },
   saveButton: {
     flex: 1,
@@ -550,7 +550,7 @@ const styles = StyleSheet.create({
   infoTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginBottom: 16,
   },
   infoItem: {
@@ -561,7 +561,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 14,
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
   },
   bottomContainer: {
     padding: 16,

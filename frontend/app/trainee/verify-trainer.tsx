@@ -101,7 +101,7 @@ export default function VerifyTrainer() {
   // Success Screen
   if (result) {
     return (
-      <View style={[styles.container, { backgroundColor: COLORS.white }]}>
+      <View style={[styles.container, { backgroundColor: '#141929' }]}>
         <View style={styles.resultHeader}>
           <TouchableOpacity
             style={[styles.backBtn, { backgroundColor: 'rgba(0,0,0,0.05)' }]}
@@ -218,7 +218,7 @@ export default function VerifyTrainer() {
   // Error Screen
   if (error) {
     return (
-      <View style={[styles.container, { backgroundColor: COLORS.white }]}>
+      <View style={[styles.container, { backgroundColor: '#141929' }]}>
         <View style={styles.resultHeader}>
           <TouchableOpacity
             style={[styles.backBtn, { backgroundColor: 'rgba(0,0,0,0.05)' }]}
@@ -395,20 +395,20 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3, shadowRadius: 12, elevation: 8,
   },
   successHeadline: {
-    fontSize: 22, fontWeight: '900', color: COLORS.navy, textAlign: 'center', marginBottom: 24,
+    fontSize: 22, fontWeight: '900', color: '#FFFFFF', textAlign: 'center', marginBottom: 24,
   },
 
   // Trainer Card
   trainerCard: {
     alignItems: 'center', backgroundColor: '#FAFBFC', borderRadius: 20,
     padding: 20, width: '100%', marginBottom: 20,
-    borderWidth: 1, borderColor: '#E8ECF0',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
   },
   trainerCardPhoto: { width: 64, height: 64, borderRadius: 32, marginBottom: 8, borderWidth: 2, borderColor: COLORS.orange },
   trainerCardPhotoPlaceholder: { backgroundColor: '#F0F2F5', justifyContent: 'center', alignItems: 'center' },
-  trainerCardName: { fontSize: 18, fontWeight: '800', color: COLORS.navy },
+  trainerCardName: { fontSize: 18, fontWeight: '800', color: '#FFFFFF' },
   trainerCardRating: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
-  trainerCardRatingText: { fontSize: 14, fontWeight: '700', color: COLORS.gray },
+  trainerCardRatingText: { fontSize: 14, fontWeight: '700', color: 'rgba(255,255,255,0.5)' },
   trainerBadges: { gap: 6, marginTop: 12, alignItems: 'center' },
   tBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
@@ -419,13 +419,13 @@ const styles = StyleSheet.create({
   // Session Details
   sessionDetails: {
     width: '100%', backgroundColor: '#FAFBFC', borderRadius: 16,
-    padding: 16, marginBottom: 24, borderWidth: 1, borderColor: '#E8ECF0',
+    padding: 16, marginBottom: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
   },
   detailRow: {
     flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8,
   },
-  detailLabel: { fontSize: 14, fontWeight: '600', color: COLORS.gray },
-  detailValue: { fontSize: 14, fontWeight: '700', color: COLORS.navy },
+  detailLabel: { fontSize: 14, fontWeight: '600', color: 'rgba(255,255,255,0.5)' },
+  detailValue: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
   readyRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 },
   readyDot: { width: 10, height: 10, borderRadius: 5 },
   readyText: { fontSize: 14, fontWeight: '700', color: COLORS.success },
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
     backgroundColor: '#F0F2F5', paddingVertical: 14, borderRadius: 14,
   },
-  secondaryBtnText: { fontSize: 14, fontWeight: '700', color: COLORS.navy },
+  secondaryBtnText: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
 
   // Error
   errorContent: { flex: 1, alignItems: 'center', paddingHorizontal: 24, paddingTop: 40 },
@@ -454,14 +454,14 @@ const styles = StyleSheet.create({
     shadowColor: COLORS.error, shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3, shadowRadius: 12, elevation: 8,
   },
-  errorTitle: { fontSize: 22, fontWeight: '900', color: COLORS.navy, textAlign: 'center', marginBottom: 8 },
-  errorMessage: { fontSize: 14, color: COLORS.gray, textAlign: 'center', marginBottom: 24, lineHeight: 22 },
+  errorTitle: { fontSize: 22, fontWeight: '900', color: '#FFFFFF', textAlign: 'center', marginBottom: 8 },
+  errorMessage: { fontSize: 14, color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginBottom: 24, lineHeight: 22 },
   errorReasons: {
     width: '100%', backgroundColor: '#FFF3F0', borderRadius: 16, padding: 16, marginBottom: 24,
     borderWidth: 1, borderColor: 'rgba(255,71,87,0.2)',
   },
-  errorReasonTitle: { fontSize: 14, fontWeight: '700', color: COLORS.navy, marginBottom: 8 },
-  errorReason: { fontSize: 13, color: COLORS.gray, lineHeight: 22 },
+  errorReasonTitle: { fontSize: 14, fontWeight: '700', color: '#FFFFFF', marginBottom: 8 },
+  errorReason: { fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 22 },
   errorActions: { width: '100%', gap: 12 },
   retryBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
@@ -472,5 +472,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     backgroundColor: '#F0F2F5', paddingVertical: 14, borderRadius: 14,
   },
-  supportBtnText: { fontSize: 14, fontWeight: '700', color: COLORS.navy },
+  supportBtnText: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
 });

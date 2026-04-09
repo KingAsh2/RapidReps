@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
     marginHorizontal: -20,
     marginBottom: 16,
     borderRadius: 0,
-    overflow: 'hidden',
+    overflow: 'visible',
     backgroundColor: COLORS.navy,
   },
   loadingBox: {
@@ -356,6 +356,7 @@ const styles = StyleSheet.create({
   mapWrapper: {
     height: MAP_HEIGHT,
     position: 'relative',
+    overflow: 'visible',
   },
   mapGlow: {
     position: 'absolute',
@@ -515,7 +516,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -529,7 +530,7 @@ const styles = StyleSheet.create({
     bottom: 16,
     left: 16,
     right: 16,
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderRadius: 20,
     padding: 16,
     paddingTop: 8,
@@ -538,6 +539,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 8,
+    zIndex: 999,
   },
   cardRow: {
     flexDirection: 'row',
@@ -574,7 +576,7 @@ const styles = StyleSheet.create({
   cardName: {
     fontSize: 15,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginBottom: 3,
   },
   cardMeta: {
@@ -589,11 +591,11 @@ const styles = StyleSheet.create({
   },
   cardDistance: {
     fontSize: 13,
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
   },
   cardEta: {
     fontSize: 13,
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
   },
   viewBtn: {
     borderRadius: 10,
@@ -623,17 +625,17 @@ const styles = StyleSheet.create({
   },
   priceLabel: {
     fontSize: 11,
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     fontWeight: '500',
   },
   priceValue: {
     fontSize: 22,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   priceUnit: {
     fontSize: 11,
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     fontWeight: '500',
   },
   etaRow: {
@@ -651,7 +653,7 @@ const styles = StyleSheet.create({
   },
   etaText: {
     fontSize: 13,
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     fontWeight: '500',
   },
   bookBtn: {

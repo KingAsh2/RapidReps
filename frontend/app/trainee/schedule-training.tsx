@@ -144,7 +144,7 @@ export default function ScheduleTrainingScreen() {
   return (
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
       <LinearGradient
-        colors={['rgba(247, 147, 30, 0.9)', 'rgba(247, 147, 30, 0.85)', 'rgba(255, 165, 38, 0.8)']}
+        colors={['rgba(10, 14, 26, 0.93)', 'rgba(17, 24, 39, 0.90)']}
         style={StyleSheet.absoluteFill}
       />
 
@@ -460,7 +460,7 @@ const styles = StyleSheet.create({
   },
   quickOption: {
     width: '46%',
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderRadius: 16,
     padding: 20,
     alignItems: 'center',
@@ -488,7 +488,7 @@ const styles = StyleSheet.create({
   quickOptionLabel: {
     fontSize: 16,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginBottom: 4,
   },
   quickOptionLabelSelected: {
@@ -496,10 +496,10 @@ const styles = StyleSheet.create({
   },
   quickOptionSublabel: {
     fontSize: 13,
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
   },
   datePickerContainer: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderRadius: 16,
     padding: 16,
     marginTop: 20,
@@ -532,7 +532,7 @@ const styles = StyleSheet.create({
   timeSlot: {
     paddingHorizontal: 18,
     paddingVertical: 12,
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderRadius: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -546,7 +546,7 @@ const styles = StyleSheet.create({
   timeSlotText: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   timeSlotTextSelected: {
     color: COLORS.white,
@@ -560,7 +560,7 @@ const styles = StyleSheet.create({
   },
   durationOption: {
     width: '46%',
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderRadius: 16,
     padding: 20,
     alignItems: 'center',
@@ -596,7 +596,7 @@ const styles = StyleSheet.create({
   durationLabel: {
     fontSize: 20,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginBottom: 4,
   },
   durationLabelSelected: {
@@ -605,10 +605,10 @@ const styles = StyleSheet.create({
   durationPrice: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
   },
   summaryCard: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderRadius: 16,
     padding: 20,
     marginBottom: 20,
@@ -616,7 +616,7 @@ const styles = StyleSheet.create({
   summaryTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginBottom: 16,
   },
   summaryRow: {
@@ -627,7 +627,7 @@ const styles = StyleSheet.create({
   },
   summaryText: {
     fontSize: 14,
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
   },
   bottomContainer: {
     padding: 16,

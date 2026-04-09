@@ -127,7 +127,7 @@ export default function SetRatesScreen() {
 
   return (
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
-      <LinearGradient colors={['rgba(247, 147, 30, 0.88)', 'rgba(247, 147, 30, 0.80)', 'rgba(255, 165, 38, 0.75)']} style={StyleSheet.absoluteFillObject} />
+      <LinearGradient colors={['rgba(10, 14, 26, 0.92)', 'rgba(17, 24, 39, 0.88)']} style={StyleSheet.absoluteFillObject} />
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => goBack('/trainer/(tabs)/home')} style={styles.backBtn} data-testid="rates-back-btn">

@@ -124,7 +124,7 @@ export default function SessionDetailScreen() {
       case SessionStatus.CANCELLED:
         return { color: COLORS.error, text: 'Cancelled', icon: 'close-circle' };
       default:
-        return { color: COLORS.gray, text: status, icon: 'help-circle' };
+        return { color: 'rgba(255,255,255,0.5)', text: status, icon: 'help-circle' };
     }
   };
 
@@ -345,7 +345,7 @@ export default function SessionDetailScreen() {
               disabled={submitting}
               data-testid="confirm-arrival-btn"
             >
-              <LinearGradient colors={[COLORS.teal, COLORS.tealLight]} style={styles.arrivalGradient}>
+              <LinearGradient colors={['#0A0E1A', '#141929']} style={styles.arrivalGradient}>
                 {submitting ? (
                   <ActivityIndicator size="small" color={COLORS.white} />
                 ) : (
@@ -487,7 +487,7 @@ const styles = StyleSheet.create({
   scrollView: { flex: 1 },
   scrollContent: { padding: 20 },
   card: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
@@ -500,7 +500,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     marginBottom: 12,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -534,21 +534,21 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: COLORS.grayLight,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   trainerInfo: { flex: 1 },
-  trainerName: { fontSize: 18, fontWeight: '700', color: COLORS.navy },
-  trainerSpecialty: { fontSize: 14, color: COLORS.gray, marginTop: 2 },
+  trainerName: { fontSize: 18, fontWeight: '700', color: '#FFFFFF' },
+  trainerSpecialty: { fontSize: 14, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
   actionButtons: { flexDirection: 'row', gap: 12 },
   actionButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.grayLight,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     paddingVertical: 12,
     borderRadius: 12,
     gap: 8,
@@ -560,15 +560,15 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     gap: 12,
   },
-  infoText: { fontSize: 16, fontWeight: '600', color: COLORS.navy, flex: 1 },
-  infoTextSub: { fontSize: 14, color: COLORS.gray, flex: 1 },
+  infoText: { fontSize: 16, fontWeight: '600', color: '#FFFFFF', flex: 1 },
+  infoTextSub: { fontSize: 14, color: 'rgba(255,255,255,0.5)', flex: 1 },
   priceRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  priceLabel: { fontSize: 16, fontWeight: '500', color: COLORS.gray },
-  priceValue: { fontSize: 24, fontWeight: '800', color: COLORS.navy },
+  priceLabel: { fontSize: 16, fontWeight: '500', color: 'rgba(255,255,255,0.5)' },
+  priceValue: { fontSize: 24, fontWeight: '800', color: '#FFFFFF' },
   discountRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -599,7 +599,7 @@ const styles = StyleSheet.create({
   safetyPinNote: { fontSize: 12, color: 'rgba(255,255,255,0.8)' },
   // Location proposal styles
   proposalCard: {
-    backgroundColor: COLORS.grayLight,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 12,
     padding: 16,
     marginTop: 16,
@@ -618,7 +618,7 @@ const styles = StyleSheet.create({
   proposalLocation: {
     fontSize: 16,
     fontWeight: '600',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginBottom: 12,
   },
   proposalButtons: {
@@ -638,7 +638,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.success,
   },
   proposalBtnCounter: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderWidth: 1,
     borderColor: COLORS.teal,
   },
@@ -693,7 +693,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexWrap: 'wrap',
     gap: 8,
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
@@ -705,7 +705,7 @@ const styles = StyleSheet.create({
   },
   waitingText: {
     fontSize: 13,
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     fontStyle: 'italic',
   },
   bothArrivedBadge: {
@@ -729,7 +729,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
@@ -743,19 +743,19 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   modalSubtitle: {
     fontSize: 14,
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     marginBottom: 12,
   },
   locationInput: {
-    backgroundColor: COLORS.grayLight,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
-    color: COLORS.navy,
+    color: '#FFFFFF',
     minHeight: 80,
     textAlignVertical: 'top',
     marginBottom: 16,

@@ -187,7 +187,7 @@ export default function TrainerEnRouteScreen() {
 
   const getStepInfo = () => {
     switch (step) {
-      case 'starting': return { icon: 'location', text: 'Preparing route...', color: COLORS.gray };
+      case 'starting': return { icon: 'location', text: 'Preparing route...', color: 'rgba(255,255,255,0.5)' };
       case 'navigating': return { icon: 'navigate', text: 'En Route', color: COLORS.teal };
       case 'arriving': return { icon: 'flag', text: 'Almost There!', color: COLORS.orangeLight };
       case 'arrived': return { icon: 'checkmark-circle', text: 'Arrived', color: COLORS.success };
@@ -208,7 +208,7 @@ export default function TrainerEnRouteScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <LinearGradient colors={['rgba(247, 147, 30, 0.88)', 'rgba(247, 147, 30, 0.80)', 'rgba(255, 165, 38, 0.75)']} style={StyleSheet.absoluteFillObject} />
+      <LinearGradient colors={['rgba(10, 14, 26, 0.92)', 'rgba(17, 24, 39, 0.88)']} style={StyleSheet.absoluteFillObject} />
 
       {/* Header */}
       <View style={styles.header}>
@@ -281,7 +281,7 @@ export default function TrainerEnRouteScreen() {
 
         {/* Action Buttons */}
         <TouchableOpacity onPress={openNavigation} style={styles.navButton} data-testid="open-navigation-btn">
-          <LinearGradient colors={[COLORS.teal, COLORS.tealLight]} style={styles.navButtonGradient}>
+          <LinearGradient colors={['#0A0E1A', '#141929']} style={styles.navButtonGradient}>
             <Ionicons name="navigate" size={24} color={COLORS.white} />
             <Text style={styles.navButtonText}>Open Maps</Text>
           </LinearGradient>
@@ -349,13 +349,13 @@ const styles = StyleSheet.create({
   liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: COLORS.teal, marginRight: 6 },
   liveText: { fontSize: 13, fontWeight: '700', color: COLORS.teal, letterSpacing: 1 },
   infoCard: { backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 16, padding: 20, marginBottom: 16 },
-  cardLabel: { fontSize: 13, color: COLORS.gray, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1 },
+  cardLabel: { fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1 },
   cardValue: { fontSize: 22, fontWeight: '800', color: COLORS.white, marginTop: 4 },
-  cardAddress: { fontSize: 14, color: COLORS.gray, marginTop: 4 },
+  cardAddress: { fontSize: 14, color: 'rgba(255,255,255,0.5)', marginTop: 4 },
   statsRow: { flexDirection: 'row', alignItems: 'center', marginTop: 20 },
   stat: { flex: 1, alignItems: 'center' },
   statValue: { fontSize: 20, fontWeight: '800', color: COLORS.white, marginTop: 4 },
-  statLabel: { fontSize: 13, color: COLORS.gray, marginTop: 2, textTransform: 'uppercase' },
+  statLabel: { fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2, textTransform: 'uppercase' },
   statDivider: { width: 1, height: 40, backgroundColor: 'rgba(255,255,255,0.1)' },
   alertCard: { backgroundColor: 'rgba(255,159,28,0.12)', borderRadius: 12, padding: 12, marginBottom: 16 },
   alertRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 4 },
@@ -370,13 +370,13 @@ const styles = StyleSheet.create({
   arrivedBtnDone: { backgroundColor: COLORS.success },
   arrivedBtnText: { fontSize: 15, fontWeight: '700', color: COLORS.white, marginLeft: 8 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center' },
-  modalContent: { width: width - 48, backgroundColor: COLORS.white, borderRadius: 24, padding: 32, alignItems: 'center' },
+  modalContent: { width: width - 48, backgroundColor: '#141929', borderRadius: 24, padding: 32, alignItems: 'center' },
   modalIconCircle: { marginBottom: 16 },
-  modalTitle: { fontSize: 24, fontWeight: '800', color: COLORS.navy, marginBottom: 8 },
-  modalSubtitle: { fontSize: 15, color: COLORS.gray, textAlign: 'center', marginBottom: 24, lineHeight: 22 },
+  modalTitle: { fontSize: 24, fontWeight: '800', color: '#FFFFFF', marginBottom: 8 },
+  modalSubtitle: { fontSize: 15, color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginBottom: 24, lineHeight: 22 },
   modalPrimaryBtn: { width: '100%', borderRadius: 14, overflow: 'hidden', marginBottom: 12 },
   modalBtnGradient: { paddingVertical: 16, alignItems: 'center' },
   modalBtnText: { fontSize: 17, fontWeight: '700', color: COLORS.white },
   modalSecondaryBtn: { paddingVertical: 12 },
-  modalSecondaryText: { fontSize: 15, color: COLORS.gray, fontWeight: '600' },
+  modalSecondaryText: { fontSize: 15, color: 'rgba(255,255,255,0.5)', fontWeight: '600' },
 });

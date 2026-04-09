@@ -133,8 +133,8 @@ export default function PaymentScreen() {
                 <Ionicons name="send" size={20} color={COLORS.white} />
               </View>
               <View>
-                <Text style={{ fontSize: 16, fontWeight: '800', color: COLORS.navy }}>Send via Zelle</Text>
-                <Text style={{ fontSize: 12, color: COLORS.gray }}>Open your banking app & send to:</Text>
+                <Text style={{ fontSize: 16, fontWeight: '800', color: '#FFFFFF' }}>Send via Zelle</Text>
+                <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>Open your banking app & send to:</Text>
               </View>
             </View>
 
@@ -163,10 +163,10 @@ export default function PaymentScreen() {
             ) : null}
 
             <View style={{ backgroundColor: `${COLORS.zellePurple}10`, borderRadius: 10, padding: 12, marginTop: 12 }}>
-              <Text style={{ fontSize: 13, color: COLORS.navy, fontWeight: '600' }}>
+              <Text style={{ fontSize: 13, color: '#FFFFFF', fontWeight: '600' }}>
                 Amount: ${(priceCents / 100).toFixed(2)}
               </Text>
-              <Text style={{ fontSize: 12, color: COLORS.gray, marginTop: 4 }}>
+              <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 4 }}>
                 Include your name in the Zelle memo for faster verification.
               </Text>
             </View>
@@ -213,14 +213,14 @@ const styles = StyleSheet.create({
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
   headerTitle: { fontSize: 18, fontWeight: '800', color: COLORS.white },
   content: { flex: 1, paddingHorizontal: 16 },
-  card: { backgroundColor: COLORS.white, borderRadius: 18, padding: 20, marginBottom: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.08, shadowRadius: 10, elevation: 4 },
-  priceTitle: { fontSize: 16, fontWeight: '700', color: COLORS.navy, marginBottom: 14 },
+  card: { backgroundColor: '#141929', borderRadius: 18, padding: 20, marginBottom: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.08, shadowRadius: 10, elevation: 4 },
+  priceTitle: { fontSize: 16, fontWeight: '700', color: '#FFFFFF', marginBottom: 14 },
   priceRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  priceLabel: { fontSize: 14, fontWeight: '600', color: COLORS.navy },
-  priceValue: { fontSize: 14, fontWeight: '700', color: COLORS.navy },
-  priceSub: { fontSize: 13, color: COLORS.gray },
-  divider: { height: 1, backgroundColor: COLORS.grayLight, marginVertical: 12 },
-  totalLabel: { fontSize: 18, fontWeight: '700', color: COLORS.navy },
+  priceLabel: { fontSize: 14, fontWeight: '600', color: '#FFFFFF' },
+  priceValue: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
+  priceSub: { fontSize: 13, color: 'rgba(255,255,255,0.5)' },
+  divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.06)', marginVertical: 12 },
+  totalLabel: { fontSize: 18, fontWeight: '700', color: '#FFFFFF' },
   totalValue: { fontSize: 24, fontWeight: '900', color: COLORS.teal },
   zelleInfoRow: {
     flexDirection: 'row',
@@ -231,11 +231,11 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 8,
   },
-  zelleInfoText: { flex: 1, fontSize: 15, fontWeight: '700', color: COLORS.navy },
+  zelleInfoText: { flex: 1, fontSize: 15, fontWeight: '700', color: '#FFFFFF' },
   bottomBar: { paddingHorizontal: 16, paddingBottom: 24, paddingTop: 8 },
   payBtn: { borderRadius: 16, overflow: 'hidden' },
   payBtnGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 18, gap: 10 },
   payBtnText: { fontSize: 18, fontWeight: '800', color: COLORS.white },
   sentBanner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 18, borderRadius: 16, gap: 10 },
-  secureNote: { fontSize: 13, color: COLORS.gray, textAlign: 'center', marginTop: 8 },
+  secureNote: { fontSize: 13, color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginTop: 8 },
 });

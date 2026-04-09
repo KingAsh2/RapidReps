@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
 
   // Badge Card
   badgeCard: {
-    backgroundColor: COLORS.white, borderRadius: 24, overflow: 'hidden',
+    backgroundColor: '#141929', borderRadius: 24, overflow: 'hidden',
     shadowColor: '#000', shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.25, shadowRadius: 16, elevation: 10,
     borderWidth: 2, borderColor: 'rgba(255,127,0,0.3)',
@@ -409,9 +409,9 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.success, justifyContent: 'center', alignItems: 'center',
     borderWidth: 2, borderColor: COLORS.white,
   },
-  trainerName: { fontSize: 22, fontWeight: '800', color: COLORS.navy, textAlign: 'center' },
+  trainerName: { fontSize: 22, fontWeight: '800', color: '#FFFFFF', textAlign: 'center' },
   ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
-  ratingText: { fontSize: 14, fontWeight: '700', color: COLORS.gray },
+  ratingText: { fontSize: 14, fontWeight: '700', color: 'rgba(255,255,255,0.5)' },
 
   // Verification Badges
   verificationBadges: { gap: 6, marginTop: 16, alignItems: 'center' },
@@ -422,27 +422,27 @@ const styles = StyleSheet.create({
   verBadgeText: { fontSize: 13, fontWeight: '600', color: '#2E7D32' },
 
   // Divider
-  divider: { height: 1, backgroundColor: '#E8ECF0', marginHorizontal: 20 },
+  divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.08)', marginHorizontal: 20 },
 
   // Session Card
   sessionCard: { padding: 20 },
-  sessionCardTitle: { fontSize: 14, fontWeight: '800', color: COLORS.navy, marginBottom: 12, letterSpacing: 0.5 },
+  sessionCardTitle: { fontSize: 14, fontWeight: '800', color: '#FFFFFF', marginBottom: 12, letterSpacing: 0.5 },
   sessionRow: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingVertical: 8,
   },
-  sessionLabel: { fontSize: 14, fontWeight: '600', color: COLORS.gray },
-  sessionValue: { fontSize: 14, fontWeight: '700', color: COLORS.navy },
+  sessionLabel: { fontSize: 14, fontWeight: '600', color: 'rgba(255,255,255,0.5)' },
+  sessionValue: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 },
   statusDot: { width: 10, height: 10, borderRadius: 5 },
   statusLabel: { fontSize: 14, fontWeight: '700' },
 
   // QR Section
   qrSection: { alignItems: 'center', paddingVertical: 24, paddingHorizontal: 20 },
-  qrTitle: { fontSize: 16, fontWeight: '800', color: COLORS.navy, marginBottom: 16, letterSpacing: 0.5 },
+  qrTitle: { fontSize: 16, fontWeight: '800', color: '#FFFFFF', marginBottom: 16, letterSpacing: 0.5 },
   qrWrapper: { marginBottom: 12 },
   qrCodeContainer: {
-    padding: 16, backgroundColor: COLORS.white, borderRadius: 16,
+    padding: 16, backgroundColor: '#141929', borderRadius: 16,
     borderWidth: 2, borderColor: COLORS.orange,
     shadowColor: COLORS.orange, shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2, shadowRadius: 12, elevation: 6,
@@ -452,8 +452,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   countdownRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 8 },
-  countdownText: { fontSize: 13, fontWeight: '700', color: COLORS.gray },
-  qrSubtext: { fontSize: 13, color: COLORS.gray, textAlign: 'center', marginBottom: 16 },
+  countdownText: { fontSize: 13, fontWeight: '700', color: 'rgba(255,255,255,0.5)' },
+  qrSubtext: { fontSize: 13, color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginBottom: 16 },
   refreshBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     backgroundColor: COLORS.orange, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 14,
@@ -464,14 +464,14 @@ const styles = StyleSheet.create({
   verifiedSection: { alignItems: 'center', paddingVertical: 24 },
   verifiedIcon: { marginBottom: 8 },
   verifiedTitle: { fontSize: 20, fontWeight: '800', color: COLORS.success },
-  verifiedSubtext: { fontSize: 14, color: COLORS.gray, marginTop: 4 },
+  verifiedSubtext: { fontSize: 14, color: 'rgba(255,255,255,0.5)', marginTop: 4 },
 
   // Footer
   badgeFooter: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     paddingVertical: 16, backgroundColor: '#FAFBFC', borderTopWidth: 1, borderTopColor: '#E8ECF0',
   },
-  footerText: { fontSize: 13, fontWeight: '700', color: COLORS.navy },
+  footerText: { fontSize: 13, fontWeight: '700', color: '#FFFFFF' },
 
   // Empty State
   emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40, gap: 12 },

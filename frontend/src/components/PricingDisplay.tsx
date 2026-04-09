@@ -62,7 +62,7 @@ export const PricingDisplay: React.FC<PricingDisplayProps> = ({
             end={{ x: 1, y: 0 }}
           >
             <Ionicons name="diamond" size={12} color={COLORS.navy} />
-            <Text style={[styles.tierText, { color: COLORS.navy }]}>ELITE</Text>
+            <Text style={[styles.tierText, { color: '#FFFFFF' }]}>ELITE</Text>
           </LinearGradient>
         );
       case 'pro':
@@ -162,7 +162,7 @@ export const TrainerTierBadge: React.FC<TrainerTierBadgeProps> = ({
         end={{ x: 1, y: 0 }}
       >
         <Ionicons name="diamond" size={s.iconSize} color={COLORS.navy} />
-        <Text style={[styles.tierTextLarge, { fontSize: s.fontSize, color: COLORS.navy }]}>
+        <Text style={[styles.tierTextLarge, { fontSize: s.fontSize, color: '#FFFFFF' }]}>
           ELITE TRAINER
         </Text>
       </LinearGradient>
@@ -215,7 +215,7 @@ export const VerifiedBadge: React.FC<VerifiedBadgeProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderRadius: 16,
     padding: 16,
     shadowColor: '#000',
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
   sessionTypeText: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   tierBadge: {
     flexDirection: 'row',
@@ -269,13 +269,13 @@ const styles = StyleSheet.create({
   priceMain: {
     fontSize: 48,
     fontWeight: '900',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     lineHeight: 56,
   },
   priceCents: {
     fontSize: 20,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginTop: 4,
   },
   breakdown: {
@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
   breakdownValue: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   divider: {
     height: 1,
@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
   },
   totalLabel: {
     fontWeight: '700',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   totalValue: {
     fontWeight: '800',

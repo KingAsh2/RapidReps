@@ -51,14 +51,14 @@ export const FavoriteAvailability = ({ trainers, onTrainerPress }: Props) => (
 
 const styles = StyleSheet.create({
   container: { marginBottom: 16 },
-  label: { fontSize: 16, fontWeight: '800', color: '#1a2a5e', marginBottom: 12 },
+  label: { fontSize: 16, fontWeight: '800', color: '#FFFFFF', marginBottom: 12 },
   card: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     backgroundColor: '#fff', borderRadius: 14, padding: 14, marginBottom: 8,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 3,
   },
   photo: { width: 42, height: 42, borderRadius: 21 },
-  name: { fontSize: 14, fontWeight: '700', color: '#1a2a5e' },
+  name: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
   liveBadge: { backgroundColor: '#FF4757', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
   liveBadgeText: { fontSize: 13, fontWeight: '800', color: '#fff', letterSpacing: 0.5 },
 });

@@ -94,7 +94,7 @@ export default function TrainerSessionsScreen() {
 
   return (
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
-      <LinearGradient colors={['rgba(247, 147, 30, 0.88)', 'rgba(247, 147, 30, 0.80)', 'rgba(255, 165, 38, 0.75)']} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={['rgba(10, 14, 26, 0.92)', 'rgba(17, 24, 39, 0.88)']} style={StyleSheet.absoluteFill} />
 
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.header}>
@@ -224,9 +224,9 @@ const styles = StyleSheet.create({
   headerSubtitle: { fontSize: 14, fontWeight: '600', color: 'rgba(255,255,255,0.9)', marginTop: 4 },
 
   filterBar: { flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 12, gap: 8 },
-  filterTab: { flex: 1, paddingVertical: 12, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', overflow: 'hidden' },
-  filterTabActive: { backgroundColor: COLORS.orange, shadowColor: COLORS.orange, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.3, shadowRadius: 6, elevation: 4 },
-  filterTabText: { fontSize: 13, fontWeight: '700', color: 'rgba(255,255,255,0.5)' },
+  filterTab: { flex: 1, paddingVertical: 12, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.06)', alignItems: 'center', overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' },
+  filterTabActive: { backgroundColor: '#FF6A00', shadowColor: '#FF6A00', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.35, shadowRadius: 8, elevation: 6, borderColor: 'rgba(255,106,0,0.3)' },
+  filterTabText: { fontSize: 13, fontWeight: '700', color: 'rgba(255,255,255,0.4)' },
   filterTabTextActive: { color: COLORS.white },
 
   content: { flex: 1, paddingHorizontal: 16 },
@@ -235,19 +235,19 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: 20, fontWeight: '800', color: COLORS.white },
   emptySubtitle: { fontSize: 14, fontWeight: '600', color: 'rgba(255,255,255,0.7)', textAlign: 'center', lineHeight: 20 },
 
-  sessionCard: { backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: 18, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: 'rgba(0,0,0,0.08)', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3 },
+  sessionCard: { backgroundColor: 'rgba(20, 25, 41, 0.95)', borderRadius: 18, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 8 },
   sessionHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   sessionIconBg: { width: 42, height: 42, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   sessionInfo: { flex: 1 },
-  sessionType: { fontSize: 15, fontWeight: '700', color: COLORS.navy },
-  sessionDate: { fontSize: 13, color: COLORS.gray, marginTop: 2 },
+  sessionType: { fontSize: 15, fontWeight: '700', color: '#FFFFFF' },
+  sessionDate: { fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
   statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
   statusText: { fontSize: 13, fontWeight: '700' },
 
   sessionDetails: { flexDirection: 'row', gap: 10, marginTop: 12 },
-  detailChip: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(0,0,0,0.05)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
-  detailChipText: { fontSize: 13, fontWeight: '600', color: COLORS.gray },
+  detailChip: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(255,255,255,0.06)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
+  detailChipText: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.5)' },
 
-  receiptBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#F8F4FF', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, marginTop: 12, alignSelf: 'flex-start' },
+  receiptBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(109, 30, 212, 0.12)', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, marginTop: 12, alignSelf: 'flex-start', borderWidth: 1, borderColor: 'rgba(109, 30, 212, 0.2)' },
   receiptBtnText: { fontSize: 13, fontWeight: '700', color: '#6D1ED4' },
 });

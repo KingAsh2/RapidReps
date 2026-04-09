@@ -5,11 +5,11 @@ import { Platform, View, Text, StyleSheet } from 'react-native';
 import { useNotifications } from '../../../src/contexts/NotificationContext';
 
 const COLORS = {
-  orange: '#FF7F00',
-  teal: '#1a2a5e',
-  navy: '#1a2a5e',
+  accent: '#FF6A00',
+  navy: '#0A0E1A',
   white: '#FFFFFF',
-  gray: '#5a6785',
+  gray: 'rgba(255,255,255,0.4)',
+  tabBg: '#0D1117',
 };
 
 export default function TrainerTabsLayout() {
@@ -20,18 +20,19 @@ export default function TrainerTabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: COLORS.white,
-          borderTopWidth: 0,
-          elevation: 20,
-          shadowColor: '#000',
+          backgroundColor: COLORS.tabBg,
+          borderTopWidth: 1,
+          borderTopColor: 'rgba(255,255,255,0.06)',
+          elevation: 12,
+          shadowColor: '#FF6A00',
           shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.1,
-          shadowRadius: 12,
+          shadowOpacity: 0.08,
+          shadowRadius: 16,
           height: Platform.OS === 'ios' ? 88 : 70,
           paddingBottom: Platform.OS === 'ios' ? 28 : 10,
           paddingTop: 10,
         },
-        tabBarActiveTintColor: COLORS.orange,
+        tabBarActiveTintColor: COLORS.accent,
         tabBarInactiveTintColor: COLORS.gray,
         tabBarLabelStyle: {
           fontSize: 13,
@@ -75,7 +76,7 @@ export default function TrainerTabsLayout() {
           title: 'Messages',
           tabBarAccessibilityLabel: 'Messages tab',
           tabBarBadge: unreadMessageCount > 0 ? unreadMessageCount : undefined,
-          tabBarBadgeStyle: { backgroundColor: COLORS.orange, fontSize: 13, fontWeight: '700' },
+          tabBarBadgeStyle: { backgroundColor: COLORS.accent, fontSize: 13, fontWeight: '700' },
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="chatbubbles" size={size} color={color} />
           ),

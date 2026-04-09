@@ -106,7 +106,7 @@ export default function TrainerToolsScreen() {
   return (
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-      <LinearGradient colors={['rgba(247, 147, 30, 0.88)', 'rgba(247, 147, 30, 0.80)', 'rgba(255, 165, 38, 0.75)']} style={StyleSheet.absoluteFillObject} />
+      <LinearGradient colors={['rgba(10, 14, 26, 0.92)', 'rgba(17, 24, 39, 0.88)']} style={StyleSheet.absoluteFillObject} />
 
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
@@ -180,33 +180,33 @@ const styles = StyleSheet.create({
   tabRow: { flexDirection: 'row', paddingHorizontal: 16, marginBottom: 12, gap: 8 },
   tabBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.05)' },
   tabActive: { backgroundColor: 'rgba(0,207,193,0.15)' },
-  tabText: { fontSize: 13, fontWeight: '600', color: COLORS.gray },
+  tabText: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.5)' },
   tabTextActive: { color: COLORS.teal },
   list: { paddingHorizontal: 16, paddingBottom: 32 },
   clientCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 14, padding: 14, marginBottom: 8 },
   clientAvatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(0,207,193,0.15)', alignItems: 'center', justifyContent: 'center' },
   clientName: { fontSize: 15, fontWeight: '700', color: '#fff' },
-  clientMeta: { fontSize: 13, color: COLORS.gray, marginTop: 2 },
+  clientMeta: { fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
   planCard: { backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 14, padding: 16, marginBottom: 8 },
   planTitle: { fontSize: 16, fontWeight: '700', color: '#fff', marginBottom: 4 },
-  planDesc: { fontSize: 13, color: COLORS.gray, marginBottom: 8 },
+  planDesc: { fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 8 },
   planMeta: { fontSize: 13, color: COLORS.teal, fontWeight: '600' },
   noteCard: { backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 14, padding: 16, marginBottom: 8 },
   noteText: { fontSize: 14, color: '#e0e0e0', lineHeight: 20, marginBottom: 8 },
   noteFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  noteDate: { fontSize: 13, color: COLORS.gray },
+  noteDate: { fontSize: 13, color: 'rgba(255,255,255,0.5)' },
   tagRow: { flexDirection: 'row', gap: 4 },
   tag: { backgroundColor: 'rgba(0,207,193,0.15)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
   tagLabel: { fontSize: 13, color: COLORS.teal, fontWeight: '600' },
   empty: { alignItems: 'center', marginTop: 80 },
-  emptyText: { fontSize: 14, color: COLORS.gray, textAlign: 'center', marginTop: 12, paddingHorizontal: 32 },
+  emptyText: { fontSize: 14, color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginTop: 12, paddingHorizontal: 32 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
-  modalContent: { backgroundColor: COLORS.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24 },
-  modalTitle: { fontSize: 18, fontWeight: '800', color: COLORS.navy, marginBottom: 16 },
-  modalInput: { borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 12, padding: 12, fontSize: 14, minHeight: 100, textAlignVertical: 'top', marginBottom: 16, color: COLORS.navy },
+  modalContent: { backgroundColor: '#141929', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24 },
+  modalTitle: { fontSize: 18, fontWeight: '800', color: '#FFFFFF', marginBottom: 16 },
+  modalInput: { borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 12, padding: 12, fontSize: 14, minHeight: 100, textAlignVertical: 'top', marginBottom: 16, color: '#FFFFFF' },
   modalBtnRow: { flexDirection: 'row', gap: 12 },
   modalCancel: { flex: 1, borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
-  modalCancelText: { fontSize: 15, fontWeight: '600', color: COLORS.gray },
+  modalCancelText: { fontSize: 15, fontWeight: '600', color: 'rgba(255,255,255,0.5)' },
   modalSave: { flex: 1, borderRadius: 12, overflow: 'hidden' },
   modalSaveGrad: { paddingVertical: 14, alignItems: 'center' },
   modalSaveText: { fontSize: 15, fontWeight: '700', color: '#fff' },

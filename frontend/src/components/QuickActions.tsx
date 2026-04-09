@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
     gap: 24,
     paddingVertical: 16,
     paddingHorizontal: 20,
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderRadius: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -155,10 +155,10 @@ const styles = StyleSheet.create({
   actionLabel: {
     fontSize: 12,
     fontWeight: '600',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   disabledLabel: {
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
   },
   cancelLabel: {
     color: COLORS.error,

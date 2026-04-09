@@ -321,7 +321,7 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                   {/* Background Check Info - from PII submission */}
                   {verificationDetail.backgroundInfo && (
                     <View style={[s.modalSection, { backgroundColor: '#FFF8E8', borderRadius: 12, padding: 14, borderLeftWidth: 4, borderLeftColor: '#F7931E' }]}>
-                      <Text style={[s.modalSectionTitle, { color: '#1a2a5e' }]}>Background Check Info</Text>
+                      <Text style={[s.modalSectionTitle, { color: '#FFFFFF' }]}>Background Check Info</Text>
                       <View style={{ gap: 8 }}>
                         {verificationDetail.backgroundInfo.fullName && (
                           <View>

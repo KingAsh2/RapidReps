@@ -44,7 +44,7 @@ export default function PrivacyScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.card}>
-            <LinearGradient colors={[COLORS.white, COLORS.offWhite]} style={styles.cardGradient}>
+            <LinearGradient colors={['#141929', '#1A2035']} style={styles.cardGradient}>
               <Text style={styles.updated}>Last updated: {new Date().toLocaleDateString()}</Text>
 
               <Section title="1. Data we collect">
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
   updated: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     marginBottom: 20,
   },
   section: {
@@ -151,13 +151,13 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginBottom: 8,
   },
   body: {
     fontSize: 14,
     fontWeight: '500',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     lineHeight: 22,
   },
 });

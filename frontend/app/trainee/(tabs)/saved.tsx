@@ -161,7 +161,7 @@ export default function SavedTrainersScreen() {
             <Image source={{ uri: trainer.profilePhoto }} style={styles.thumbnailAvatar} />
           ) : (
             <LinearGradient
-              colors={[COLORS.teal, COLORS.tealLight]}
+              colors={['#0A0E1A', '#141929']}
               style={styles.thumbnailAvatarPlaceholder}
             >
               <Text style={styles.thumbnailInitials}>
@@ -205,7 +205,7 @@ export default function SavedTrainersScreen() {
     return (
       <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
         <LinearGradient
-          colors={['rgba(247, 147, 30, 0.85)', 'rgba(247, 147, 30, 0.75)', 'rgba(255, 165, 38, 0.7)']}
+          colors={['rgba(10, 14, 26, 0.92)', 'rgba(17, 24, 39, 0.88)']}
           style={styles.loadingContainer}
         >
           <ActivityIndicator size="large" color={COLORS.white} />
@@ -219,7 +219,7 @@ export default function SavedTrainersScreen() {
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
       {/* Orange overlay */}
       <LinearGradient
-        colors={['rgba(247, 147, 30, 0.85)', 'rgba(247, 147, 30, 0.75)', 'rgba(255, 165, 38, 0.7)']}
+        colors={['rgba(10, 14, 26, 0.92)', 'rgba(17, 24, 39, 0.88)']}
         style={StyleSheet.absoluteFill}
       />
 
@@ -277,7 +277,7 @@ export default function SavedTrainersScreen() {
                 onPress={() => router.push('/trainee/(tabs)/home')}
               >
                 <LinearGradient
-                  colors={[COLORS.teal, COLORS.tealLight]}
+                  colors={['#0A0E1A', '#141929']}
                   style={styles.exploreButtonGradient}
                 >
                   <Ionicons name="search" size={20} color={COLORS.white} />
@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
   thumbnailName: {
     fontSize: 11,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     textAlign: 'center',
     marginBottom: 2,
   },
@@ -418,13 +418,13 @@ const styles = StyleSheet.create({
   thumbnailRatingText: {
     fontSize: 10,
     fontWeight: '600',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
   },
   trainersList: {
     gap: 16,
   },
   trainerCard: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderRadius: 20,
     overflow: 'hidden',
     shadowColor: '#1a2a5e',
@@ -473,7 +473,7 @@ const styles = StyleSheet.create({
   trainerName: {
     fontSize: 18,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   verifiedBadge: {
     backgroundColor: 'rgba(31, 184, 180, 0.1)',
@@ -493,16 +493,16 @@ const styles = StyleSheet.create({
   metaText: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   metaSubtext: {
     fontSize: 13,
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
   },
   metaDivider: {
     width: 1,
     height: 14,
-    backgroundColor: COLORS.grayLight,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     marginHorizontal: 10,
   },
   priceText: {
@@ -513,7 +513,7 @@ const styles = StyleSheet.create({
   distanceText: {
     fontSize: 13,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   specialtiesRow: {
     flexDirection: 'row',
@@ -529,7 +529,7 @@ const styles = StyleSheet.create({
   specialtyText: {
     fontSize: 13,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   heartButton: {
     width: 44,
@@ -563,7 +563,7 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
   emptyCard: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderRadius: 24,
     padding: 40,
     marginTop: 40,
@@ -586,12 +586,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 22,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginBottom: 10,
   },
   emptySubtext: {
     fontSize: 14,
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 24,

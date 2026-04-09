@@ -332,7 +332,7 @@ export default function StartSessionScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.offWhite,
+    backgroundColor: '#1A2035',
   },
   headerGradient: {
     position: 'absolute',
@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
   clientCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderRadius: 16,
     padding: 16,
     marginBottom: 20,
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#FFF5EB',
+    backgroundColor: 'rgba(255, 106, 0, 0.08)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
   clientName: {
     fontSize: 18,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginBottom: 6,
   },
   sessionTypeBadge: {
@@ -429,9 +429,9 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderWidth: 2,
-    borderColor: COLORS.grayLight,
+    borderColor: 'rgba(255,255,255,0.08)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -442,7 +442,7 @@ const styles = StyleSheet.create({
   stepNumber: {
     fontSize: 14,
     fontWeight: '800',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
   },
   stepNumberActive: {
     color: COLORS.teal,
@@ -450,7 +450,7 @@ const styles = StyleSheet.create({
   stepLine: {
     width: 80,
     height: 3,
-    backgroundColor: COLORS.grayLight,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     marginHorizontal: 8,
   },
   stepLineCompleted: {
@@ -463,15 +463,15 @@ const styles = StyleSheet.create({
   stepLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
   },
   stepLabelActive: {
-    color: COLORS.navy,
+    color: '#FFFFFF',
     fontWeight: '700',
   },
   // Step Card
   stepCard: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderRadius: 20,
     padding: 24,
     alignItems: 'center',
@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#FFF5EB',
+    backgroundColor: 'rgba(255, 106, 0, 0.08)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
@@ -493,14 +493,14 @@ const styles = StyleSheet.create({
   stepTitle: {
     fontSize: 20,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginBottom: 8,
     textAlign: 'center',
   },
   stepDescription: {
     fontSize: 14,
     fontWeight: '500',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: 20,
@@ -526,7 +526,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#E8FFF5',
+    backgroundColor: 'rgba(0, 214, 143, 0.08)',
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 12,
@@ -597,7 +597,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     paddingHorizontal: 24,
     paddingVertical: 14,
     borderRadius: 16,

@@ -269,7 +269,7 @@ export const ClientSafetyPin: React.FC<ClientSafetyPinProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderRadius: 24,
     padding: 24,
     alignItems: 'center',
@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginBottom: 8,
   },
   subtitle: {
@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
   pinInput: {
     fontSize: 28,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     textAlign: 'center',
     width: '100%',
     height: '100%',
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
   },
   safetyText: {
     fontSize: 13,
-    color: COLORS.navy,
+    color: '#FFFFFF',
     flex: 1,
   },
   cancelButton: {

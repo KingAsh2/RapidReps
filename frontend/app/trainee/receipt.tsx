@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 20, fontWeight: '800', color: COLORS.white },
 
   receiptCard: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderRadius: 20,
     padding: 24,
     shadowColor: '#000',
@@ -377,46 +377,46 @@ const styles = StyleSheet.create({
   },
   brandSection: { alignItems: 'center', marginBottom: 24 },
   logoImage: { width: 80, height: 80, borderRadius: 16, marginBottom: 10 },
-  brandName: { fontSize: 28, fontWeight: '900', color: COLORS.navy, letterSpacing: -0.5 },
+  brandName: { fontSize: 28, fontWeight: '900', color: '#FFFFFF', letterSpacing: -0.5 },
   brandSubtitle: { fontSize: 14, color: '#8a95b0', marginTop: 4 },
 
   receiptMeta: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 },
   metaCol: {},
   metaLabel: { fontSize: 11, color: '#8a95b0', textTransform: 'uppercase', letterSpacing: 1 },
-  metaValue: { fontSize: 15, fontWeight: '700', color: COLORS.navy, marginTop: 4 },
+  metaValue: { fontSize: 15, fontWeight: '700', color: '#FFFFFF', marginTop: 4 },
 
   statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingHorizontal: 16, paddingVertical: 6, borderRadius: 20 },
   statusText: { fontSize: 13, fontWeight: '800', letterSpacing: 1 },
 
-  divider: { height: 1, backgroundColor: '#E8ECF0', marginVertical: 20 },
+  divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.08)', marginVertical: 20 },
 
   sectionLabel: { fontSize: 11, fontWeight: '700', color: '#8a95b0', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 12 },
 
   detailRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
-  detailText: { fontSize: 14, color: COLORS.navy, fontWeight: '500' },
+  detailText: { fontSize: 14, color: '#FFFFFF', fontWeight: '500' },
 
   partyRow: { flexDirection: 'row', gap: 20 },
   partyCol: { flex: 1 },
   partyLabel: { fontSize: 11, color: '#8a95b0', textTransform: 'uppercase' },
-  partyName: { fontSize: 15, fontWeight: '700', color: COLORS.navy, marginTop: 4 },
+  partyName: { fontSize: 15, fontWeight: '700', color: '#FFFFFF', marginTop: 4 },
   partyEmail: { fontSize: 13, color: '#8a95b0' },
 
   lineItem: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  lineLabel: { fontSize: 14, color: COLORS.navy, fontWeight: '600' },
+  lineLabel: { fontSize: 14, color: '#FFFFFF', fontWeight: '600' },
   lineSubLabel: { fontSize: 13, color: '#8a95b0' },
-  lineValue: { fontSize: 14, color: COLORS.navy, fontWeight: '600' },
+  lineValue: { fontSize: 14, color: '#FFFFFF', fontWeight: '600' },
   lineSubValue: { fontSize: 13, color: '#8a95b0' },
 
   totalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: COLORS.grayLight,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 10,
     padding: 14,
     marginTop: 12,
   },
-  totalLabel: { fontSize: 16, fontWeight: '800', color: COLORS.navy },
+  totalLabel: { fontSize: 16, fontWeight: '800', color: '#FFFFFF' },
   totalValue: { fontSize: 24, fontWeight: '900', color: COLORS.orange },
 
   paymentMethodBox: {
@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
   paymentMethodSub: { fontSize: 12, color: '#8a95b0', marginTop: 2 },
 
   footer: { alignItems: 'center', marginTop: 24, paddingTop: 20, borderTopWidth: 1, borderTopColor: '#E8ECF0' },
-  footerText: { fontSize: 14, fontWeight: '600', color: COLORS.navy },
+  footerText: { fontSize: 14, fontWeight: '600', color: '#FFFFFF' },
   footerNote: { fontSize: 12, color: '#8a95b0', marginTop: 6, textAlign: 'center' },
 
   pdfBtn: { borderRadius: 16, overflow: 'hidden', marginTop: 16 },

@@ -232,7 +232,7 @@ export default function TrainerGroupSessionsScreen() {
       {/* Edit Modal */}
       <Modal visible={!!editingSession} transparent animationType="slide">
         <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <View style={{ backgroundColor: '#1a2a5e', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24 }}>
+          <View style={{ backgroundColor: '#0A0E1A', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24 }}>
             <Text style={{ fontSize: 20, fontWeight: '800', color: '#fff', marginBottom: 16 }}>Edit Session</Text>
             <TextInput style={styles.input} placeholder="Title" placeholderTextColor="#888" value={editTitle} onChangeText={setEditTitle} data-testid="edit-title" />
             <TextInput style={[styles.input, { minHeight: 60 }]} placeholder="Description" placeholderTextColor="#888" multiline value={editDescription} onChangeText={setEditDescription} data-testid="edit-desc" />
@@ -281,16 +281,16 @@ const styles = StyleSheet.create({
   actionBtn: { backgroundColor: COLORS.orange, borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
   actionBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
   empty: { alignItems: 'center', marginTop: 80 },
-  emptyText: { fontSize: 14, color: COLORS.gray, textAlign: 'center', marginTop: 12, paddingHorizontal: 32 },
+  emptyText: { fontSize: 14, color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginTop: 12, paddingHorizontal: 32 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
-  modalContent: { backgroundColor: COLORS.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: '80%' },
-  modalTitle: { fontSize: 20, fontWeight: '800', color: COLORS.navy, marginBottom: 20 },
-  inputLabel: { fontSize: 13, fontWeight: '600', color: COLORS.navy, marginBottom: 6 },
-  input: { borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 10, padding: 12, fontSize: 14, marginBottom: 14, color: COLORS.navy },
+  modalContent: { backgroundColor: '#141929', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: '80%' },
+  modalTitle: { fontSize: 20, fontWeight: '800', color: '#FFFFFF', marginBottom: 20 },
+  inputLabel: { fontSize: 13, fontWeight: '600', color: '#FFFFFF', marginBottom: 6 },
+  input: { borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 10, padding: 12, fontSize: 14, marginBottom: 14, color: '#FFFFFF' },
   formRow: { flexDirection: 'row', gap: 10 },
   modalBtnRow: { flexDirection: 'row', gap: 12, marginTop: 8 },
   cancelBtn: { flex: 1, borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
-  cancelBtnText: { fontSize: 15, fontWeight: '600', color: COLORS.gray },
+  cancelBtnText: { fontSize: 15, fontWeight: '600', color: 'rgba(255,255,255,0.5)' },
   createBtn: { flex: 1, borderRadius: 12, overflow: 'hidden' },
   createBtnGrad: { paddingVertical: 14, alignItems: 'center' },
   createBtnText: { fontSize: 15, fontWeight: '700', color: '#fff' },

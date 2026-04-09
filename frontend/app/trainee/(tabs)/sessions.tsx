@@ -187,7 +187,7 @@ export default function SessionsScreen() {
   if (loading) {
     return (
       <LinearGradient
-        colors={[COLORS.teal, COLORS.tealLight, COLORS.orange]}
+        colors={['#0A0E1A', '#141929', '#FF6A00']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.loadingContainer}
@@ -204,9 +204,9 @@ export default function SessionsScreen() {
       style={styles.container}
       resizeMode="cover"
     >
-      {/* Orange overlay for consistency */}
+      {/* Premium dark overlay */}
       <LinearGradient
-        colors={['rgba(247, 147, 30, 0.85)', 'rgba(247, 147, 30, 0.75)', 'rgba(255, 165, 38, 0.7)']}
+        colors={['rgba(10, 14, 26, 0.92)', 'rgba(17, 24, 39, 0.88)']}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={StyleSheet.absoluteFill}
@@ -244,13 +244,13 @@ export default function SessionsScreen() {
             style={[styles.tab, activeTab === 'upcoming' && styles.tabActive]}
           >
             <LinearGradient
-              colors={activeTab === 'upcoming' ? [COLORS.orange, '#FF8C33'] : ['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.04)']}
+              colors={activeTab === 'upcoming' ? ['#FF6A00', '#FF9F1C'] : ['rgba(255,255,255,0.06)', 'rgba(255,255,255,0.02)']}
               style={styles.tabGradient}
             >
               <Ionicons 
                 name="calendar" 
                 size={18} 
-                color={activeTab === 'upcoming' ? COLORS.teal : 'rgba(255,255,255,0.7)'} 
+                color={activeTab === 'upcoming' ? '#FFFFFF' : 'rgba(255,255,255,0.5)'} 
               />
               <Text style={[styles.tabText, activeTab === 'upcoming' && styles.tabTextActive]}>
                 Upcoming
@@ -270,13 +270,13 @@ export default function SessionsScreen() {
             style={[styles.tab, activeTab === 'pending' && styles.tabActive]}
           >
             <LinearGradient
-              colors={activeTab === 'pending' ? [COLORS.orange, '#FF8C33'] : ['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.04)']}
+              colors={activeTab === 'pending' ? ['#FF6A00', '#FF9F1C'] : ['rgba(255,255,255,0.06)', 'rgba(255,255,255,0.02)']}
               style={styles.tabGradient}
             >
               <Ionicons 
                 name="time" 
                 size={18} 
-                color={activeTab === 'pending' ? COLORS.orange : 'rgba(255,255,255,0.7)'} 
+                color={activeTab === 'pending' ? '#FFFFFF' : 'rgba(255,255,255,0.5)'} 
               />
               <Text style={[styles.tabText, activeTab === 'pending' && styles.tabTextActive]}>
                 Pending
@@ -296,13 +296,13 @@ export default function SessionsScreen() {
             style={[styles.tab, activeTab === 'past' && styles.tabActive]}
           >
             <LinearGradient
-              colors={activeTab === 'past' ? [COLORS.white, COLORS.offWhite] : ['transparent', 'transparent']}
+              colors={activeTab === 'past' ? ['rgba(255,255,255,0.12)', 'rgba(255,255,255,0.06)'] : ['rgba(255,255,255,0.06)', 'rgba(255,255,255,0.02)']}
               style={styles.tabGradient}
             >
               <Ionicons 
                 name="checkmark-done" 
                 size={18} 
-                color={activeTab === 'past' ? COLORS.gray : 'rgba(255,255,255,0.7)'} 
+                color={activeTab === 'past' ? '#FFFFFF' : 'rgba(255,255,255,0.5)'} 
               />
               <Text style={[styles.tabText, activeTab === 'past' && styles.tabTextActive]}>
                 History
@@ -412,7 +412,7 @@ export default function SessionsScreen() {
                         <Image source={{ uri: session.trainerPhoto }} style={styles.trainerAvatar} />
                       ) : (
                         <LinearGradient
-                          colors={[COLORS.teal, COLORS.tealLight]}
+                          colors={['#0A0E1A', '#141929']}
                           style={styles.trainerAvatarPlaceholder}
                         >
                           <Ionicons name="person" size={22} color={COLORS.white} />
@@ -470,7 +470,7 @@ export default function SessionsScreen() {
                         data-testid="track-trainer-btn"
                       >
                         <LinearGradient
-                          colors={[COLORS.teal, COLORS.tealLight]}
+                          colors={['#0A0E1A', '#141929']}
                           style={styles.trackButtonGradient}
                         >
                           <Ionicons name="navigate" size={18} color={COLORS.white} />
@@ -597,11 +597,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   tabActive: {
-    shadowColor: '#000',
+    shadowColor: '#FF6A00',
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 4,
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,106,0,0.3)',
   },
   tabGradient: {
     flexDirection: 'row',
@@ -617,7 +619,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.8)',
   },
   tabTextActive: {
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   tabBadge: {
     backgroundColor: 'rgba(255,255,255,0.3)',
@@ -687,19 +689,19 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: COLORS.white,
   },
-  // Session Card - Glass style
+  // Session Card - Dark glass style
   sessionCard: {
     marginBottom: 14,
     borderRadius: 18,
     overflow: 'hidden',
-    backgroundColor: 'rgba(255,255,255,0.92)',
+    backgroundColor: 'rgba(20, 25, 41, 0.95)',
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.08)',
+    borderColor: 'rgba(255,255,255,0.08)',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
   },
   sessionGradient: {
     padding: 18,
@@ -758,13 +760,13 @@ const styles = StyleSheet.create({
   trainerName: {
     fontSize: 17,
     fontWeight: '800',
-    color: '#1a2a5e',
+    color: '#FFFFFF',
     marginBottom: 4,
   },
   sessionDate: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#6B7B9E',
+    color: 'rgba(255,255,255,0.5)',
   },
   sessionStats: {
     flexDirection: 'row',
@@ -779,7 +781,7 @@ const styles = StyleSheet.create({
   sessionStatText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#6B7B9E',
+    color: 'rgba(255,255,255,0.5)',
   },
   cancelButton: {
     flexDirection: 'row',
@@ -836,7 +838,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 2,
     borderColor: '#6D1ED4',
-    backgroundColor: '#F8F4FF',
+    backgroundColor: 'rgba(109, 30, 212, 0.1)',
   },
   receiptButtonInner: {
     flexDirection: 'row',

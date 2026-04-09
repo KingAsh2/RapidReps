@@ -103,7 +103,7 @@ export default function ConfirmBookingScreen() {
   return (
     <><ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
       <LinearGradient
-        colors={['rgba(247, 147, 30, 0.92)', 'rgba(247, 147, 30, 0.88)', 'rgba(255, 165, 38, 0.82)']}
+        colors={['rgba(10, 14, 26, 0.95)', 'rgba(17, 24, 39, 0.92)']}
         style={StyleSheet.absoluteFill}
       />
 
@@ -291,15 +291,15 @@ export default function ConfirmBookingScreen() {
 const bookingModalW = Dimensions.get('window').width - 48;
 const bookingModalStyles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center' },
-  content: { width: bookingModalW, backgroundColor: COLORS.white, borderRadius: 24, padding: 32, alignItems: 'center' },
+  content: { width: bookingModalW, backgroundColor: '#141929', borderRadius: 24, padding: 32, alignItems: 'center' },
   iconCircle: { marginBottom: 16 },
-  title: { fontSize: 24, fontWeight: '800', color: COLORS.navy, marginBottom: 8 },
-  subtitle: { fontSize: 14, color: COLORS.gray, textAlign: 'center', lineHeight: 22, marginBottom: 24 },
+  title: { fontSize: 24, fontWeight: '800', color: '#FFFFFF', marginBottom: 8 },
+  subtitle: { fontSize: 14, color: 'rgba(255,255,255,0.5)', textAlign: 'center', lineHeight: 22, marginBottom: 24 },
   btn: { width: '100%', borderRadius: 14, overflow: 'hidden', marginBottom: 12 },
   btnGradient: { paddingVertical: 16, alignItems: 'center' },
   btnText: { fontSize: 17, fontWeight: '700', color: COLORS.white },
   secondaryBtn: { paddingVertical: 12 },
-  secondaryText: { fontSize: 15, color: COLORS.gray, fontWeight: '600' },
+  secondaryText: { fontSize: 15, color: 'rgba(255,255,255,0.5)', fontWeight: '600' },
 });
 
 const styles = StyleSheet.create({
@@ -310,42 +310,42 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 18, fontWeight: '800', color: COLORS.white, textShadowColor: 'rgba(0,0,0,0.3)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 },
   content: { flex: 1, paddingHorizontal: 16 },
 
-  card: { backgroundColor: COLORS.white, borderRadius: 18, padding: 20, marginBottom: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.08, shadowRadius: 10, elevation: 4 },
+  card: { backgroundColor: '#141929', borderRadius: 18, padding: 20, marginBottom: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.08, shadowRadius: 10, elevation: 4 },
   cardHeader: { marginBottom: 16 },
   sessionTypeBadge: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: `${COLORS.teal}12`, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, alignSelf: 'flex-start' },
   sessionTypeText: { fontSize: 14, fontWeight: '700', color: COLORS.teal },
 
   detailGrid: { gap: 14 },
   detailItem: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  detailLabel: { fontSize: 13, color: COLORS.gray },
-  detailValue: { fontSize: 15, fontWeight: '700', color: COLORS.navy },
+  detailLabel: { fontSize: 13, color: 'rgba(255,255,255,0.5)' },
+  detailValue: { fontSize: 15, fontWeight: '700', color: '#FFFFFF' },
 
-  priceTitle: { fontSize: 16, fontWeight: '700', color: COLORS.navy, marginBottom: 14 },
+  priceTitle: { fontSize: 16, fontWeight: '700', color: '#FFFFFF', marginBottom: 14 },
   priceRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  priceLabel: { fontSize: 14, color: COLORS.navy, fontWeight: '600' },
-  priceValue: { fontSize: 14, fontWeight: '700', color: COLORS.navy },
-  priceSublabel: { fontSize: 13, color: COLORS.gray },
-  priceDivider: { height: 1, backgroundColor: COLORS.grayLight, marginVertical: 12 },
+  priceLabel: { fontSize: 14, color: '#FFFFFF', fontWeight: '600' },
+  priceValue: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
+  priceSublabel: { fontSize: 13, color: 'rgba(255,255,255,0.5)' },
+  priceDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.06)', marginVertical: 12 },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  totalLabel: { fontSize: 18, fontWeight: '700', color: COLORS.navy },
+  totalLabel: { fontSize: 18, fontWeight: '700', color: '#FFFFFF' },
   totalValue: { fontSize: 24, fontWeight: '900', color: COLORS.teal },
 
   paymentHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
-  paymentTitle: { fontSize: 15, fontWeight: '700', color: COLORS.navy },
-  stripeRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: COLORS.grayLight, borderRadius: 12, padding: 14 },
+  paymentTitle: { fontSize: 15, fontWeight: '700', color: '#FFFFFF' },
+  stripeRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 12, padding: 14 },
   stripeBadge: { width: 36, height: 36, borderRadius: 8, backgroundColor: '#635BFF', justifyContent: 'center', alignItems: 'center' },
   stripeInfo: { flex: 1 },
-  stripeText: { fontSize: 14, fontWeight: '700', color: COLORS.navy },
-  stripeSubtext: { fontSize: 13, color: COLORS.gray, marginTop: 1 },
+  stripeText: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
+  stripeSubtext: { fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 1 },
 
   policyCard: { backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 14, padding: 16, gap: 10, marginBottom: 14 },
   policyRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  policyText: { fontSize: 13, color: COLORS.gray, flex: 1 },
+  policyText: { fontSize: 13, color: 'rgba(255,255,255,0.5)', flex: 1 },
 
   bottomBar: { paddingHorizontal: 16, paddingBottom: 24, paddingTop: 8 },
   confirmBtn: { borderRadius: 16, overflow: 'hidden' },
   confirmBtnDisabled: { opacity: 0.7 },
   confirmBtnGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 18, gap: 10 },
   confirmBtnText: { fontSize: 18, fontWeight: '800', color: COLORS.white },
-  secureNote: { fontSize: 13, color: COLORS.gray, textAlign: 'center', marginTop: 8 },
+  secureNote: { fontSize: 13, color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginTop: 8 },
 });

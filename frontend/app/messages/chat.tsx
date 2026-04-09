@@ -130,7 +130,7 @@ export default function ChatScreen() {
           </LinearGradient>
         ) : (
           <LinearGradient
-            colors={[COLORS.teal, COLORS.tealLight]}
+            colors={['#0A0E1A', '#141929']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={[styles.messageBubble, styles.theirMessageBubble]}
@@ -146,7 +146,7 @@ export default function ChatScreen() {
   if (loading) {
     return (
       <LinearGradient
-        colors={[COLORS.teal, COLORS.tealLight, COLORS.orange]}
+        colors={['#0A0E1A', '#141929', '#FF6A00']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.loadingContainer}
@@ -161,7 +161,7 @@ export default function ChatScreen() {
     <View style={styles.container}>
       {/* Gradient header area */}
       <LinearGradient
-        colors={[COLORS.teal, COLORS.tealLight]}
+        colors={['#0A0E1A', '#141929']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.headerGradient}
@@ -242,7 +242,7 @@ export default function ChatScreen() {
           {/* Input Area */}
           <View style={styles.inputWrapper}>
             <LinearGradient
-              colors={[COLORS.white, COLORS.offWhite]}
+              colors={['#141929', '#1A2035']}
               style={styles.inputContainer}
             >
               <TextInput
@@ -283,7 +283,7 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
   },
   headerGradient: {
     position: 'absolute',
@@ -382,12 +382,12 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   emptySubtext: {
     fontSize: 14,
     fontWeight: '500',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     marginTop: 4,
   },
   messageContainer: {
@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
     lineHeight: 21,
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   myMessageTime: {
     fontSize: 13,
@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
   theirMessageTime: {
     fontSize: 13,
     fontWeight: '500',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     alignSelf: 'flex-start',
     marginTop: 6,
   },
@@ -445,7 +445,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     paddingBottom: Platform.OS === 'ios' ? 24 : 12,
-    backgroundColor: COLORS.offWhite,
+    backgroundColor: '#1A2035',
     borderTopWidth: 1,
     borderTopColor: COLORS.grayLight,
   },
@@ -466,7 +466,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     fontWeight: '500',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     maxHeight: 100,
     paddingVertical: 10,
   },

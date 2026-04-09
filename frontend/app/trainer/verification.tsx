@@ -310,7 +310,7 @@ export default function TrainerVerificationScreen() {
       case 'uploading':
         return { name: 'cloud-upload', color: COLORS.teal };
       default:
-        return { name: 'ellipse-outline', color: COLORS.gray };
+        return { name: 'ellipse-outline', color: 'rgba(255,255,255,0.5)' };
     }
   };
 
@@ -532,7 +532,7 @@ export default function TrainerVerificationScreen() {
     
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
       <LinearGradient
-        colors={['rgba(247, 147, 30, 0.9)', 'rgba(247, 147, 30, 0.85)', 'rgba(255, 165, 38, 0.8)']}
+        colors={['rgba(10, 14, 26, 0.93)', 'rgba(17, 24, 39, 0.90)']}
         style={StyleSheet.absoluteFill}
       />
 
@@ -665,7 +665,7 @@ export default function TrainerVerificationScreen() {
                               onPress={() => handleMarkNotCertified(step.id)}
                               data-testid={`not-certified-btn-${step.id}`}
                             >
-                              <Text style={{ color: COLORS.gray, fontWeight: '700', fontSize: 14 }}>Not Certified</Text>
+                              <Text style={{ color: 'rgba(255,255,255,0.5)', fontWeight: '700', fontSize: 14 }}>Not Certified</Text>
                             </TouchableOpacity>
                           )}
                         </>
@@ -770,7 +770,7 @@ export default function TrainerVerificationScreen() {
               Provide your information below. Our admin team will run a background check via TruthFinder.
             </Text>
             <TextInput
-              style={{ backgroundColor: '#F5F6F8', borderRadius: 12, padding: 14, fontSize: 15, marginBottom: 10, color: '#1a2a5e' }}
+              style={{ backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 12, padding: 14, fontSize: 15, marginBottom: 10, color: '#FFFFFF' }}
               placeholder="Full Legal Name *"
               placeholderTextColor="#5a6785"
               value={piiData.fullName}
@@ -778,7 +778,7 @@ export default function TrainerVerificationScreen() {
               data-testid="pii-fullname"
             />
             <TextInput
-              style={{ backgroundColor: '#F5F6F8', borderRadius: 12, padding: 14, fontSize: 15, marginBottom: 10, color: '#1a2a5e' }}
+              style={{ backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 12, padding: 14, fontSize: 15, marginBottom: 10, color: '#FFFFFF' }}
               placeholder="Date of Birth (MM/DD/YYYY) *"
               placeholderTextColor="#5a6785"
               value={piiData.dob}
@@ -786,7 +786,7 @@ export default function TrainerVerificationScreen() {
               data-testid="pii-dob"
             />
             <TextInput
-              style={{ backgroundColor: '#F5F6F8', borderRadius: 12, padding: 14, fontSize: 15, marginBottom: 10, color: '#1a2a5e' }}
+              style={{ backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 12, padding: 14, fontSize: 15, marginBottom: 10, color: '#FFFFFF' }}
               placeholder="SSN (optional)"
               placeholderTextColor="#5a6785"
               value={piiData.ssn}
@@ -795,7 +795,7 @@ export default function TrainerVerificationScreen() {
               data-testid="pii-ssn"
             />
             <TextInput
-              style={{ backgroundColor: '#F5F6F8', borderRadius: 12, padding: 14, fontSize: 15, marginBottom: 16, color: '#1a2a5e' }}
+              style={{ backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 12, padding: 14, fontSize: 15, marginBottom: 16, color: '#FFFFFF' }}
               placeholder="Current Address *"
               placeholderTextColor="#5a6785"
               value={piiData.address}
@@ -803,12 +803,12 @@ export default function TrainerVerificationScreen() {
               data-testid="pii-address"
             />
             <TouchableOpacity onPress={handleSubmitPII} style={modalStyles.btn} data-testid="pii-submit-btn">
-              <LinearGradient colors={[COLORS.teal, COLORS.tealLight]} style={modalStyles.btnGradient}>
+              <LinearGradient colors={['#0A0E1A', '#141929']} style={modalStyles.btnGradient}>
                 <Text style={modalStyles.btnText}>Submit Information</Text>
               </LinearGradient>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setShowPIIModal(false)} style={{ marginTop: 12, alignItems: 'center' }}>
-              <Text style={{ color: COLORS.gray, fontWeight: '600', fontSize: 15 }}>Cancel</Text>
+              <Text style={{ color: 'rgba(255,255,255,0.5)', fontWeight: '600', fontSize: 15 }}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -834,7 +834,7 @@ export default function TrainerVerificationScreen() {
               style={modalStyles.btn}
               data-testid="verification-modal-ok-btn"
             >
-              <LinearGradient colors={[COLORS.teal, COLORS.tealLight]} style={modalStyles.btnGradient}>
+              <LinearGradient colors={['#0A0E1A', '#141929']} style={modalStyles.btnGradient}>
                 <Text style={modalStyles.btnText}>Got it</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -848,10 +848,10 @@ export default function TrainerVerificationScreen() {
 const modalW = Dimensions.get('window').width - 48;
 const modalStyles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center' },
-  content: { width: modalW, backgroundColor: COLORS.white, borderRadius: 24, padding: 32, alignItems: 'center' },
+  content: { width: modalW, backgroundColor: '#141929', borderRadius: 24, padding: 32, alignItems: 'center' },
   iconCircle: { marginBottom: 16 },
-  title: { fontSize: 22, fontWeight: '800', color: COLORS.navy || '#1a2a5e', marginBottom: 8 },
-  subtitle: { fontSize: 14, color: COLORS.gray, textAlign: 'center', lineHeight: 22, marginBottom: 24 },
+  title: { fontSize: 22, fontWeight: '800', color: '#FFFFFF' || '#1a2a5e', marginBottom: 8 },
+  subtitle: { fontSize: 14, color: 'rgba(255,255,255,0.5)', textAlign: 'center', lineHeight: 22, marginBottom: 24 },
   btn: { width: '100%', borderRadius: 14, overflow: 'hidden' },
   btnGradient: { paddingVertical: 16, alignItems: 'center' },
   btnText: { fontSize: 16, fontWeight: '700', color: COLORS.white },
@@ -878,7 +878,7 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 18, fontWeight: '800', color: COLORS.white },
   content: { flex: 1, paddingHorizontal: 16 },
   progressCard: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderRadius: 20,
     padding: 20,
     marginBottom: 24,
@@ -890,10 +890,10 @@ const styles = StyleSheet.create({
   },
   progressHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 16, gap: 14 },
   progressTextContainer: { flex: 1 },
-  progressTitle: { fontSize: 18, fontWeight: '800', color: COLORS.navy },
-  progressSubtitle: { fontSize: 13, color: COLORS.gray, marginTop: 2 },
+  progressTitle: { fontSize: 18, fontWeight: '800', color: '#FFFFFF' },
+  progressSubtitle: { fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
   progressBarContainer: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
-  progressBarBg: { flex: 1, height: 8, backgroundColor: COLORS.grayLight, borderRadius: 4, overflow: 'hidden' },
+  progressBarBg: { flex: 1, height: 8, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 4, overflow: 'hidden' },
   progressBarFill: { height: '100%', backgroundColor: COLORS.teal, borderRadius: 4 },
   progressPercent: { fontSize: 14, fontWeight: '700', color: COLORS.teal, width: 45 },
   infoBox: {
@@ -904,10 +904,10 @@ const styles = StyleSheet.create({
     padding: 12,
     gap: 10,
   },
-  infoText: { flex: 1, fontSize: 13, color: COLORS.gray, lineHeight: 18 },
+  infoText: { flex: 1, fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 18 },
   sectionTitle: { fontSize: 16, fontWeight: '700', color: COLORS.white, marginBottom: 16 },
   stepCard: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderRadius: 16,
     marginBottom: 12,
     overflow: 'hidden',
@@ -923,13 +923,13 @@ const styles = StyleSheet.create({
   stepIconContainer: { width: 48, height: 48, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   stepContent: { flex: 1 },
   stepTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
-  stepTitle: { fontSize: 15, fontWeight: '700', color: COLORS.navy },
+  stepTitle: { fontSize: 15, fontWeight: '700', color: '#FFFFFF' },
   requiredBadge: { backgroundColor: COLORS.error, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
   requiredText: { fontSize: 13, fontWeight: '700', color: COLORS.white, letterSpacing: 0.5 },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   statusText: { fontSize: 13, fontWeight: '600' },
   stepExpanded: { padding: 16, paddingTop: 0, borderTopWidth: 1, borderTopColor: COLORS.grayLight },
-  stepDescription: { fontSize: 13, color: COLORS.gray, lineHeight: 20, marginBottom: 16, marginTop: 12 },
+  stepDescription: { fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 20, marginBottom: 16, marginTop: 12 },
   uploadButton: { borderRadius: 12, overflow: 'hidden' },
   uploadButtonGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, gap: 8 },
   uploadButtonText: { fontSize: 15, fontWeight: '700', color: COLORS.white },
@@ -947,8 +947,8 @@ const styles = StyleSheet.create({
   rejectedText: { flex: 1, fontSize: 13, color: COLORS.error },
   trustCard: { backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: 16, padding: 20, marginTop: 8 },
   trustHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
-  trustTitle: { fontSize: 16, fontWeight: '700', color: COLORS.navy },
-  trustText: { fontSize: 13, color: COLORS.gray, lineHeight: 20, marginBottom: 16 },
+  trustTitle: { fontSize: 16, fontWeight: '700', color: '#FFFFFF' },
+  trustText: { fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 20, marginBottom: 16 },
   trustBadges: { flexDirection: 'row', gap: 16 },
   trustBadge: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   trustBadgeText: { fontSize: 13, fontWeight: '600', color: COLORS.success },

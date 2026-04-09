@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: EXPANDED_HEIGHT,
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     shadowColor: '#000',
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
   handle: {
     width: 40,
     height: 4,
-    backgroundColor: COLORS.grayLight,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 2,
   },
   header: {
@@ -274,11 +274,11 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   headerSubtitle: {
     fontSize: 13,
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     marginTop: 2,
   },
   selectedPreview: {
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
   trainerCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.offWhite,
+    backgroundColor: '#1A2035',
     borderRadius: 16,
     padding: 12,
     marginBottom: 12,
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: COLORS.grayLight,
+    backgroundColor: 'rgba(255,255,255,0.06)',
   },
   trainerInfo: {
     flex: 1,
@@ -311,7 +311,7 @@ const styles = StyleSheet.create({
   trainerName: {
     fontSize: 16,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   ratingRow: {
     flexDirection: 'row',
@@ -321,17 +321,17 @@ const styles = StyleSheet.create({
   ratingText: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginLeft: 4,
   },
   reviewCount: {
     fontSize: 12,
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     marginLeft: 2,
   },
   specialty: {
     fontSize: 12,
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     marginTop: 2,
   },
   trainerMeta: {
@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
   },
   distance: {
     fontSize: 12,
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     marginTop: 4,
   },
   price: {

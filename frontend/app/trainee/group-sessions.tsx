@@ -129,5 +129,5 @@ const styles = StyleSheet.create({
   fullBadge: { backgroundColor: 'rgba(255,71,87,0.2)', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6 },
   fullText: { fontSize: 13, fontWeight: '700', color: '#FF4757' },
   empty: { alignItems: 'center', marginTop: 80 },
-  emptyText: { fontSize: 14, color: COLORS.gray, textAlign: 'center', marginTop: 12, paddingHorizontal: 32 },
+  emptyText: { fontSize: 14, color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginTop: 12, paddingHorizontal: 32 },
 });

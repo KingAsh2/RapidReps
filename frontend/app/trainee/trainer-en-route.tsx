@@ -121,7 +121,7 @@ export default function TrainerEnRouteScreen() {
 
   const getStatusConfig = () => {
     switch (status) {
-      case 'waiting': return { icon: 'hourglass', label: 'Waiting', color: COLORS.gray, bg: 'rgba(136,146,176,0.15)' };
+      case 'waiting': return { icon: 'hourglass', label: 'Waiting', color: 'rgba(255,255,255,0.5)', bg: 'rgba(136,146,176,0.15)' };
       case 'en_route': return { icon: 'car-sport', label: 'On The Way', color: COLORS.teal, bg: 'rgba(0,207,193,0.15)' };
       case 'nearby': return { icon: 'location', label: 'Nearby', color: COLORS.orangeLight, bg: 'rgba(255,159,28,0.15)' };
       case 'arrived': return { icon: 'checkmark-circle', label: 'Arrived', color: COLORS.success, bg: 'rgba(0,210,106,0.15)' };
@@ -252,16 +252,16 @@ const styles = StyleSheet.create({
   progressBg: { height: 6, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 3, overflow: 'hidden' },
   progressFill: { height: '100%', backgroundColor: COLORS.teal, borderRadius: 3 },
   progressLabels: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
-  progressLabel: { fontSize: 13, color: COLORS.gray, textTransform: 'uppercase', letterSpacing: 0.5 },
+  progressLabel: { fontSize: 13, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 0.5 },
   dotRow: { flexDirection: 'row', gap: 6 },
   trackDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: COLORS.teal },
   distanceRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
   distanceText: { fontSize: 14, color: COLORS.white, marginLeft: 8, fontWeight: '600' },
-  lastUpdateText: { fontSize: 13, color: COLORS.gray },
+  lastUpdateText: { fontSize: 13, color: 'rgba(255,255,255,0.5)' },
   tipsCard: { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 16, padding: 20, marginBottom: 16 },
   tipsTitle: { fontSize: 14, fontWeight: '700', color: COLORS.white, marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 },
   tipRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 6 },
-  tipText: { fontSize: 14, color: COLORS.gray, marginLeft: 12 },
+  tipText: { fontSize: 14, color: 'rgba(255,255,255,0.5)', marginLeft: 12 },
   messageBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.teal, borderRadius: 14, paddingVertical: 16 },
   messageBtnText: { fontSize: 16, fontWeight: '700', color: COLORS.white, marginLeft: 10 },
 });

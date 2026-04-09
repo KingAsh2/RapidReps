@@ -88,7 +88,7 @@ export default function ConnectBankScreen() {
   if (checking) {
     return (
       <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
-        <LinearGradient colors={['rgba(247, 147, 30, 0.85)', 'rgba(247, 147, 30, 0.75)', 'rgba(255, 165, 38, 0.7)']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} />
+        <LinearGradient colors={['rgba(10, 14, 26, 0.92)', 'rgba(17, 24, 39, 0.88)']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} />
         <View style={styles.centerContent}>
           <ActivityIndicator size="large" color={COLORS.teal} />
           <Text style={styles.checkingText}>Loading Zelle info...</Text>
@@ -99,7 +99,7 @@ export default function ConnectBankScreen() {
 
   return (
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
-      <LinearGradient colors={['rgba(247, 147, 30, 0.85)', 'rgba(247, 147, 30, 0.75)', 'rgba(255, 165, 38, 0.7)']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={['rgba(10, 14, 26, 0.92)', 'rgba(17, 24, 39, 0.88)']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} />
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           {/* Header */}
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    color: COLORS.navy,
+    color: '#FFFFFF',
     fontWeight: '600',
   },
   infoCards: { width: '100%', gap: 10, marginBottom: 24 },

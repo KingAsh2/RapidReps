@@ -464,7 +464,7 @@ export default function TraineeHomeScreen() {
   if (loading) {
     return (
       <LinearGradient
-        colors={['#1a2a5e', '#F7931E']}
+        colors={['#0A0E1A', '#141929', '#FF6A00']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.loadingContainer}
@@ -498,9 +498,9 @@ export default function TraineeHomeScreen() {
         style={styles.container}
         resizeMode="cover"
       >
-        {/* Very subtle overlay for text readability - allows image to show */}
+        {/* Premium dark overlay */}
         <LinearGradient
-          colors={['rgba(247, 147, 30, 0.85)', 'rgba(247, 147, 30, 0.75)', 'rgba(255, 165, 38, 0.7)']}
+          colors={['rgba(10, 14, 26, 0.92)', 'rgba(17, 24, 39, 0.88)']}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
           style={styles.fullGradient}
@@ -530,28 +530,28 @@ export default function TraineeHomeScreen() {
 
           {/* Dropdown Menu */}
           {menuVisible && (
-            <View style={{ position: 'absolute', top: 100, right: 20, backgroundColor: '#fff', borderRadius: 16, paddingVertical: 8, width: 220, zIndex: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 12, elevation: 10 }}>
+            <View style={{ position: 'absolute', top: 100, right: 20, backgroundColor: '#141929', borderRadius: 16, paddingVertical: 8, width: 220, zIndex: 999, shadowColor: '#FF6A00', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 16, elevation: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' }}>
               <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 18, gap: 14 }} onPress={() => { setMenuVisible(false); router.push('/notifications'); }} data-testid="trainee-menu-notifications">
-                <Ionicons name="notifications" size={22} color="#FF7F00" />
-                <Text style={{ fontSize: 15, fontWeight: '700', color: '#1a2a5e' }}>Notifications</Text>
+                <Ionicons name="notifications" size={22} color="#FF6A00" />
+                <Text style={{ fontSize: 15, fontWeight: '700', color: '#FFFFFF' }}>Notifications</Text>
                 {unreadCount > 0 && <View style={{ backgroundColor: '#FF3B30', borderRadius: 10, paddingHorizontal: 6, paddingVertical: 2 }}><Text style={{ color: '#fff', fontSize: 13, fontWeight: '800' }}>{unreadCount}</Text></View>}
               </TouchableOpacity>
               <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 18, gap: 14 }} onPress={() => { setMenuVisible(false); router.push('/trainee/(tabs)/profile'); }} data-testid="trainee-menu-profile">
-                <Ionicons name="person-circle" size={22} color="#1a2a5e" />
-                <Text style={{ fontSize: 15, fontWeight: '700', color: '#1a2a5e' }}>My Profile</Text>
+                <Ionicons name="person-circle" size={22} color="#8a95b0" />
+                <Text style={{ fontSize: 15, fontWeight: '700', color: '#FFFFFF' }}>My Profile</Text>
               </TouchableOpacity>
               <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 18, gap: 14 }} onPress={() => { setMenuVisible(false); router.push('/trainee/(tabs)/saved'); }} data-testid="trainee-menu-saved">
                 <Ionicons name="heart" size={22} color="#FF3B30" />
-                <Text style={{ fontSize: 15, fontWeight: '700', color: '#1a2a5e' }}>Saved Trainers</Text>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: '#FFFFFF' }}>Saved Trainers</Text>
               </TouchableOpacity>
               <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 18, gap: 14 }} onPress={() => { setMenuVisible(false); router.push('/trainee/verify-trainer'); }} data-testid="trainee-menu-verify">
-                <Ionicons name="shield-checkmark" size={22} color="#FF7F00" />
-                <Text style={{ fontSize: 15, fontWeight: '700', color: '#1a2a5e' }}>Verify Trainer</Text>
+                <Ionicons name="shield-checkmark" size={22} color="#00D68F" />
+                <Text style={{ fontSize: 15, fontWeight: '700', color: '#FFFFFF' }}>Verify Trainer</Text>
               </TouchableOpacity>
-              <View style={{ height: 1, backgroundColor: '#E8ECF0', marginHorizontal: 18 }} />
+              <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.08)', marginHorizontal: 18 }} />
               <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 18, gap: 14 }} onPress={() => { setMenuVisible(false); handleLogout(); }} data-testid="trainee-menu-logout">
-                <Ionicons name="log-out-outline" size={22} color="#FF3B30" />
-                <Text style={{ fontSize: 15, fontWeight: '700', color: '#FF3B30' }}>Log Out</Text>
+                <Ionicons name="log-out-outline" size={22} color="#FF4757" />
+                <Text style={{ fontSize: 15, fontWeight: '700', color: '#FF4757' }}>Log Out</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -567,7 +567,7 @@ export default function TraineeHomeScreen() {
             {/* Address Setup Banner */}
             {needsAddress && (
               <TouchableOpacity
-                style={{ backgroundColor: '#1a2a5e', borderRadius: 14, padding: 16, marginHorizontal: 16, marginBottom: 12, flexDirection: 'row', alignItems: 'center', gap: 12 }}
+                style={{ backgroundColor: '#0A0E1A', borderRadius: 14, padding: 16, marginHorizontal: 16, marginBottom: 12, flexDirection: 'row', alignItems: 'center', gap: 12 }}
                 onPress={() => router.push('/trainee/(tabs)/profile')}
                 data-testid="address-setup-banner"
               >
@@ -593,7 +593,7 @@ export default function TraineeHomeScreen() {
               ]}
             >
               <LinearGradient
-                colors={['rgba(26, 42, 94, 0.95)', 'rgba(26, 42, 94, 0.85)']}
+                colors={['rgba(255, 106, 0, 0.15)', 'rgba(20, 25, 41, 0.95)']}
                 style={styles.heroGradient}
               >
                 <View style={styles.heroGlow} />
@@ -789,27 +789,79 @@ export default function TraineeHomeScreen() {
                 onPress={() => setShowProximityPicker(true)}
               >
                 <View style={styles.proximityHeader}>
-                  <Ionicons name="navigate-outline" size={18} color="#2a3a6e" />
+                  <Ionicons name="navigate-outline" size={18} color="#FF6A00" />
                   <Text style={styles.proximityLabel}>Travel to Trainer Proximity</Text>
                 </View>
                 <View style={styles.proximityDropdown}>
                   <Text style={styles.proximityDropdownText}>{travelProximity} miles</Text>
-                  <Ionicons name="chevron-down" size={18} color="#2a3a6e" />
+                  <Ionicons name="chevron-down" size={18} color="#FF6A00" />
                 </View>
               </TouchableOpacity>
 
+              {/* Top Trainers Near You */}
+              {displayedTrainers.filter((t: any) => (t.averageRating || 0) >= 4.5).length > 0 && (
+                <>
+                  <View style={styles.sectionHeader}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <Ionicons name="trophy" size={18} color="#FFD700" />
+                      <Text style={styles.sectionTitle}>TOP TRAINERS NEAR YOU</Text>
+                    </View>
+                    <Text style={styles.trainerCount}>{displayedTrainers.filter((t: any) => (t.averageRating || 0) >= 4.5).length}</Text>
+                  </View>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16, marginHorizontal: -20, paddingHorizontal: 20 }}>
+                    {displayedTrainers.filter((t: any) => (t.averageRating || 0) >= 4.5).slice(0, 5).map((trainer, index) => (
+                      <TouchableOpacity 
+                        key={trainer.id}
+                        style={{ width: 160, marginRight: 12, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 16, padding: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', alignItems: 'center' }}
+                        onPress={() => router.push(`/trainee/trainer-detail?trainerId=${trainer.id}`)}
+                        data-testid={`top-trainer-${trainer.id}`}
+                      >
+                        {trainer.avatarUrl ? (
+                          <Image source={{ uri: trainer.avatarUrl }} style={{ width: 64, height: 64, borderRadius: 32, marginBottom: 8, borderWidth: 2, borderColor: 'rgba(255,106,0,0.3)' }} />
+                        ) : (
+                          <View style={{ width: 64, height: 64, borderRadius: 32, marginBottom: 8, backgroundColor: 'rgba(255,106,0,0.12)', justifyContent: 'center', alignItems: 'center' }}>
+                            <Ionicons name="person" size={28} color="#FF6A00" />
+                          </View>
+                        )}
+                        <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff', textAlign: 'center' }} numberOfLines={1}>{trainer.fullName || 'Trainer'}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
+                          <Ionicons name="star" size={14} color="#FFD700" />
+                          <Text style={{ fontSize: 13, fontWeight: '700', color: '#FFD700' }}>{(trainer.averageRating || 0).toFixed(1)}</Text>
+                        </View>
+                        {trainer.distance != null && (
+                          <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>{trainer.distance.toFixed(1)} mi away</Text>
+                        )}
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </>
+              )}
+
+              {/* New Trainers */}
+              {displayedTrainers.filter((t: any) => (t.totalSessionsCompleted || 0) < 5).length > 0 && (
+                <>
+                  <View style={styles.sectionHeader}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <Ionicons name="sparkles" size={18} color="#00D68F" />
+                      <Text style={styles.sectionTitle}>NEW TRAINERS</Text>
+                    </View>
+                    <Text style={styles.trainerCount}>{displayedTrainers.filter((t: any) => (t.totalSessionsCompleted || 0) < 5).length}</Text>
+                  </View>
+                </>
+              )}
+
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>AVAILABLE TRAINERS</Text>
+                <Text style={styles.sectionTitle}>ALL AVAILABLE TRAINERS</Text>
                 <Text style={styles.trainerCount}>{displayedTrainers.length} ready</Text>
               </View>
               
               {displayedTrainers.length === 0 ? (
                 <View style={styles.emptyCard}>
                   <LinearGradient
-                    colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.9)']}
+                    colors={['#141929', '#1A2035']}
                     style={styles.emptyGradient}
                   >
-                    <Ionicons name="fitness-outline" size={64} color="#2a3a6e" />
+                    <Ionicons name="fitness-outline" size={64} color="#FF6A00" />
                     <Text style={styles.emptyTitle}>No trainers nearby</Text>
                     <Text style={styles.emptySubtitle}>Try virtual training instead!</Text>
                     <TouchableOpacity 
@@ -817,7 +869,7 @@ export default function TraineeHomeScreen() {
                       onPress={() => setShowTrainingModeDialog(true)}
                     >
                       <LinearGradient
-                        colors={['#2a3a6e', '#1a2a5e']}
+                        colors={['#FF6A00', '#FF9F1C']}
                         style={styles.emptyButtonGradient}
                       >
                         <Text style={styles.emptyButtonText}>Find Virtual Trainers</Text>
@@ -972,7 +1024,7 @@ export default function TraineeHomeScreen() {
                 </TouchableOpacity>
               </View>
               <View style={{ paddingHorizontal: 20, paddingVertical: 24 }}>
-                <Text style={{ fontSize: 48, fontWeight: '900', color: '#1a2a5e', textAlign: 'center', marginBottom: 8 }} data-testid="proximity-value">
+                <Text style={{ fontSize: 48, fontWeight: '900', color: '#FFFFFF', textAlign: 'center', marginBottom: 8 }} data-testid="proximity-value">
                   {travelProximity}
                 </Text>
                 <Text style={{ fontSize: 16, fontWeight: '600', color: '#5a6785', textAlign: 'center', marginBottom: 24 }}>
@@ -996,7 +1048,7 @@ export default function TraineeHomeScreen() {
                 </View>
               </View>
               <TouchableOpacity
-                style={{ backgroundColor: '#1a2a5e', borderRadius: 14, paddingVertical: 16, marginHorizontal: 20, marginBottom: 20, alignItems: 'center' }}
+                style={{ backgroundColor: '#0A0E1A', borderRadius: 14, paddingVertical: 16, marginHorizontal: 20, marginBottom: 20, alignItems: 'center' }}
                 onPress={() => setShowProximityPicker(false)}
                 data-testid="proximity-done-btn"
               >
@@ -1015,7 +1067,7 @@ export default function TraineeHomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a2a5e',
+    backgroundColor: '#0A0E1A',
   },
   heroBackgroundImage: {
     ...StyleSheet.absoluteFillObject,
@@ -1048,10 +1100,12 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(255,255,255,0.08)',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative' as const,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   notifBadge: {
     position: 'absolute' as const,
@@ -1112,6 +1166,9 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,106,0,0.15)',
+    borderRadius: 20,
   },
   heroGlow: {
     position: 'absolute',
@@ -1120,7 +1177,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: 'rgba(34, 193, 195, 0.25)',
+    backgroundColor: 'rgba(255,106,0,0.12)',
   },
   heroTitle: {
     fontSize: 26,
@@ -1149,7 +1206,7 @@ const styles = StyleSheet.create({
   heroLocationText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#2a3a6e',
+    color: 'rgba(255,255,255,0.6)',
   },
   // Urgent Banner - Polished with more spacing
   featureActionsGrid: {
@@ -1292,7 +1349,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     fontWeight: '500',
-    color: '#1a2a5e',
+    color: '#FFFFFF',
   },
   filterRow: {
     flexDirection: 'row',
@@ -1313,7 +1370,7 @@ const styles = StyleSheet.create({
   filterPillText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1a2a5e',
+    color: '#FFFFFF',
   },
   filterDot: {
     width: 8,
@@ -1334,12 +1391,12 @@ const styles = StyleSheet.create({
   sortPillText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1a2a5e',
+    color: '#FFFFFF',
     flex: 1,
   },
   sortDropdown: {
     marginTop: 12,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: 'rgba(255,255,255,0.04)',
     borderRadius: 14,
     overflow: 'hidden',
   },
@@ -1350,19 +1407,19 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     gap: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#E8ECF0',
+    borderBottomColor: 'rgba(255,255,255,0.08)',
   },
   sortOptionActive: {
-    backgroundColor: 'rgba(247, 147, 30, 0.1)',
+    backgroundColor: 'rgba(255, 106, 0, 0.08)',
   },
   sortOptionText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1a2a5e',
+    color: '#FFFFFF',
     flex: 1,
   },
   sortOptionTextActive: {
-    color: '#1a2a5e',
+    color: '#FFFFFF',
   },
   // Pending Card - Polished with border and more padding
   pendingCard: {
@@ -1375,7 +1432,7 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 6,
     borderWidth: 1,
-    borderColor: 'rgba(247, 147, 30, 0.3)',
+    borderColor: 'rgba(255, 106, 0, 0.15)',
   },
   pendingGradient: {
     paddingVertical: 20,
@@ -1390,7 +1447,7 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#141929',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -1488,7 +1545,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   proximityPickerContainer: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#141929',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: 400,
@@ -1499,12 +1556,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: 'rgba(255,255,255,0.08)',
   },
   proximityPickerTitle: {
     fontSize: 17,
     fontWeight: '700',
-    color: '#1a2a5e',
+    color: '#FFFFFF',
   },
   proximityPickerList: {
     maxHeight: 350,
@@ -1516,19 +1573,19 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 20,
     borderBottomWidth: 0.5,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: 'rgba(255,255,255,0.06)',
   },
   proximityPickerItemSelected: {
-    backgroundColor: 'rgba(42, 58, 110, 0.1)',
+    backgroundColor: 'rgba(255, 106, 0, 0.08)',
   },
   proximityPickerItemText: {
     fontSize: 16,
     fontWeight: '400',
-    color: '#1a2a5e',
+    color: '#FFFFFF',
   },
   proximityPickerItemTextSelected: {
     fontWeight: '700',
-    color: '#2a3a6e',
+    color: '#FF6A00',
   },
   proximityOption: {
     flexDirection: 'row',
@@ -1537,18 +1594,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F2F5',
+    borderBottomColor: 'rgba(255,255,255,0.06)',
   },
   proximityOptionActive: {
-    backgroundColor: 'rgba(34, 193, 195, 0.1)',
+    backgroundColor: 'rgba(255, 106, 0, 0.08)',
   },
   proximityOptionText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#4A5568',
+    color: 'rgba(255,255,255,0.5)',
   },
   proximityOptionTextActive: {
-    color: '#2a3a6e',
+    color: '#FF6A00',
     fontWeight: '800',
   },
   sectionHeader: {
@@ -1556,11 +1613,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
-    backgroundColor: 'rgba(0,0,0,0.2)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
     marginHorizontal: -20,
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
   },
   sectionTitle: {
     fontSize: 18,
@@ -1590,7 +1649,7 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#1a2a5e',
+    color: '#FFFFFF',
     marginTop: 16,
     marginBottom: 8,
   },
@@ -1651,7 +1710,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: -2,
     right: -2,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#141929',
     borderRadius: 10,
     padding: 2,
   },
@@ -1662,7 +1721,7 @@ const styles = StyleSheet.create({
   trainerName: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#1a2a5e',
+    color: '#FFFFFF',
     marginBottom: 6,
   },
   trainerStats: {
@@ -1673,7 +1732,7 @@ const styles = StyleSheet.create({
   statBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F0F4F8',
+    backgroundColor: 'rgba(255,255,255,0.06)',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -1682,12 +1741,12 @@ const styles = StyleSheet.create({
   statText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#1a2a5e',
+    color: '#FFFFFF',
   },
   trainerBio: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#5a6a8a',
+    color: 'rgba(255,255,255,0.5)',
     lineHeight: 20,
     marginBottom: 12,
   },
@@ -1713,15 +1772,17 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   styleTag: {
-    backgroundColor: '#FFF3E0',
+    backgroundColor: 'rgba(255,106,0,0.08)',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,106,0,0.12)',
   },
   styleTagText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#1a2a5e',
+    color: '#FFFFFF',
   },
   moreTag: {
     fontSize: 13,
@@ -1839,7 +1900,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 16,
     borderRadius: 14,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#141929',
     alignItems: 'center',
   },
   dialogButtonTextNo: {
@@ -1850,7 +1911,7 @@ const styles = StyleSheet.create({
   dialogButtonTextYes: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#1a2a5e',
+    color: '#FFFFFF',
   },
   dialogCloseButton: {
     position: 'absolute',
@@ -1861,9 +1922,11 @@ const styles = StyleSheet.create({
   nearbySection: {
     marginHorizontal: 16,
     marginBottom: 16,
-    backgroundColor: 'rgba(26, 42, 94, 0.95)',
+    backgroundColor: '#141929',
     borderRadius: 20,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   nearbySectionHeader: {
     flexDirection: 'row',
@@ -2004,7 +2067,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   nearbyPriceTag: {
-    backgroundColor: 'rgba(247, 147, 30, 0.2)',
+    backgroundColor: 'rgba(255, 106, 0, 0.12)',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 10,
@@ -2035,30 +2098,33 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     marginTop: -70,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   safetySectionGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
     gap: 14,
+    backgroundColor: '#141929',
   },
   safetySectionIcon: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: 'rgba(26,42,94,0.1)',
+    backgroundColor: 'rgba(255,106,0,0.12)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   safetySectionTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#1a2a5e',
+    color: '#FFFFFF',
     marginBottom: 2,
   },
   safetySectionSub: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#5a6a8a',
+    color: 'rgba(255,255,255,0.5)',
   },
 });

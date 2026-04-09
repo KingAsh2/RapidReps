@@ -504,7 +504,7 @@ export default function TrainerOnboardingScreen() {
   return (
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
       <LinearGradient
-        colors={['rgba(247, 147, 30, 0.92)', 'rgba(255, 106, 0, 0.88)']}
+        colors={['rgba(10, 14, 26, 0.95)', 'rgba(17, 24, 39, 0.90)']}
         style={StyleSheet.absoluteFill}
       />
       
@@ -619,7 +619,7 @@ export default function TrainerOnboardingScreen() {
           activeOpacity={1}
           onPress={() => setShowRadiusPicker(false)}
         >
-          <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: 400 }}>
+          <View style={{ backgroundColor: '#141929', borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: 400 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 16, borderBottomWidth: 1, borderBottomColor: '#eee' }}>
               <Text style={{ fontSize: 17, fontWeight: '700', color: Colors.text }}>Travel Radius (miles)</Text>
               <TouchableOpacity onPress={() => setShowRadiusPicker(false)}>
@@ -923,7 +923,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#141929',
     borderRadius: 24,
     padding: 28,
     width: '100%',
@@ -935,7 +935,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 24,
     fontWeight: '800',
-    color: '#1a2a5e',
+    color: '#FFFFFF',
     marginBottom: 8,
   },
   modalSubtitle: {
@@ -959,7 +959,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#1a2a5e',
+    backgroundColor: '#0A0E1A',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -970,7 +970,7 @@ const styles = StyleSheet.create({
   },
   modalStepText: {
     fontSize: 14,
-    color: '#1a2a5e',
+    color: '#FFFFFF',
     fontWeight: '600',
   },
   modalPrimaryBtn: {

@@ -99,7 +99,7 @@ export default function TrainerMessagesTab() {
             {otherUser.avatarUrl ? (
               <Image source={{ uri: otherUser.avatarUrl }} style={styles.avatar} />
             ) : (
-              <LinearGradient colors={[COLORS.teal, COLORS.tealLight]} style={styles.avatarPlaceholder}>
+              <LinearGradient colors={['#0A0E1A', '#141929']} style={styles.avatarPlaceholder}>
                 <Ionicons name="person" size={24} color={COLORS.white} />
               </LinearGradient>
             )}
@@ -183,21 +183,21 @@ const styles = StyleSheet.create({
   listContainer: { flex: 1, paddingHorizontal: 16 },
   listContent: { paddingBottom: 100 },
   conversationItem: { marginBottom: 12 },
-  conversationCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 16, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 3 },
+  conversationCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#141929', borderRadius: 16, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 3 },
   avatar: { width: 56, height: 56, borderRadius: 28, marginRight: 14 },
   avatarPlaceholder: { width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center', marginRight: 14 },
   conversationContent: { flex: 1 },
   conversationHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  userName: { fontSize: 16, fontWeight: '700', color: '#1a2a5e' },
+  userName: { fontSize: 16, fontWeight: '700', color: '#FFFFFF' },
   time: { fontSize: 13, color: '#5a6785', fontWeight: '500' },
   messagePreview: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   previewText: { flex: 1, fontSize: 14, color: '#5a6785', marginRight: 8 },
-  unreadText: { fontWeight: '600', color: '#1a2a5e' },
+  unreadText: { fontWeight: '600', color: '#FFFFFF' },
   unreadBadge: { backgroundColor: '#FF7F00', borderRadius: 12, minWidth: 24, height: 24, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 8 },
   unreadCount: { fontSize: 13, fontWeight: '700', color: '#fff' },
-  emptyCard: { marginTop: 40, borderRadius: 20, overflow: 'hidden', backgroundColor: '#fff', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 5 },
+  emptyCard: { marginTop: 40, borderRadius: 20, overflow: 'hidden', backgroundColor: '#141929', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 5 },
   emptyContent: { padding: 40, alignItems: 'center' },
   emptyIconBg: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,127,0,0.1)', justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
-  emptyTitle: { fontSize: 20, fontWeight: '800', color: '#1a2a5e', marginBottom: 8 },
+  emptyTitle: { fontSize: 20, fontWeight: '800', color: '#FFFFFF', marginBottom: 8 },
   emptySubtext: { fontSize: 14, color: '#5a6785', textAlign: 'center', lineHeight: 20 },
 });

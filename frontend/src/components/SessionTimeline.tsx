@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
   },
   stepLabel: {
     fontSize: 10,
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     marginTop: 6,
     textAlign: 'center',
   },

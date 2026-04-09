@@ -124,7 +124,7 @@ export default function TrainerEarningsScreen() {
   if (loading) {
     return (
       <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
-        <LinearGradient colors={['rgba(247, 147, 30, 0.85)', 'rgba(247, 147, 30, 0.75)', 'rgba(255, 165, 38, 0.7)']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} />
+        <LinearGradient colors={['rgba(10, 14, 26, 0.92)', 'rgba(17, 24, 39, 0.88)']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={COLORS.white} />
           <Text style={styles.loadingText}>Loading earnings...</Text>
@@ -135,7 +135,7 @@ export default function TrainerEarningsScreen() {
 
   return (
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
-      <LinearGradient colors={['rgba(247, 147, 30, 0.85)', 'rgba(247, 147, 30, 0.75)', 'rgba(255, 165, 38, 0.7)']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={['rgba(10, 14, 26, 0.92)', 'rgba(17, 24, 39, 0.88)']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} />
 
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
@@ -383,9 +383,9 @@ const styles = StyleSheet.create({
   // Period Toggle
   periodToggle: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 14, padding: 4, marginBottom: 16 },
   periodBtn: { flex: 1, paddingVertical: 12, borderRadius: 12, alignItems: 'center' },
-  periodBtnActive: { backgroundColor: COLORS.white },
+  periodBtnActive: { backgroundColor: '#141929' },
   periodBtnText: { fontSize: 14, fontWeight: '700', color: 'rgba(255,255,255,0.8)' },
-  periodBtnTextActive: { color: COLORS.navy },
+  periodBtnTextActive: { color: '#FFFFFF' },
 
   // Summary Row
   summaryRow: { flexDirection: 'row', gap: 12, marginBottom: 16 },

@@ -266,7 +266,7 @@ export default function SignupScreen() {
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
       {/* Orange overlay */}
       <LinearGradient
-        colors={['rgba(247, 147, 30, 0.85)', 'rgba(247, 147, 30, 0.75)', 'rgba(255, 165, 38, 0.7)']}
+        colors={['rgba(10, 14, 26, 0.92)', 'rgba(17, 24, 39, 0.88)']}
         style={StyleSheet.absoluteFill}
       />
 
@@ -425,8 +425,8 @@ export default function SignupScreen() {
                   <LinearGradient
                     colors={
                       formData.roles.includes(UserRole.TRAINEE)
-                        ? [COLORS.teal, COLORS.tealLight]
-                        : [COLORS.white, COLORS.offWhite]
+                        ? ['#0A0E1A', '#141929']
+                        : ['#141929', '#1A2035']
                     }
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
@@ -480,7 +480,7 @@ export default function SignupScreen() {
                     colors={
                       formData.roles.includes(UserRole.TRAINER)
                         ? [COLORS.orangeHot, COLORS.orange]
-                        : [COLORS.white, COLORS.offWhite]
+                        : ['#141929', '#1A2035']
                     }
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
@@ -701,15 +701,15 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginBottom: 8,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderWidth: 2,
-    borderColor: COLORS.grayLight,
+    borderColor: 'rgba(255,255,255,0.08)',
     borderRadius: 14,
     paddingHorizontal: 14,
   },
@@ -721,12 +721,12 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     fontSize: 16,
     fontWeight: '500',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   helperText: {
     fontSize: 13,
     fontWeight: '500',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     marginTop: 6,
     marginLeft: 4,
   },
@@ -766,7 +766,7 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: COLORS.grayLight,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
@@ -783,7 +783,7 @@ const styles = StyleSheet.create({
   roleCardTitle: {
     fontSize: 17,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginBottom: 4,
   },
   roleCardTitleSelected: {
@@ -792,7 +792,7 @@ const styles = StyleSheet.create({
   roleCardSubtitle: {
     fontSize: 13,
     fontWeight: '500',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     lineHeight: 18,
   },
   roleCardSubtitleSelected: {

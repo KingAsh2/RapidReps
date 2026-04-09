@@ -445,7 +445,7 @@ export default function TrainerOnboardingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.offWhite,
+    backgroundColor: '#1A2035',
   },
   loadingContainer: {
     flex: 1,
@@ -549,7 +549,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderRadius: 4,
   },
   progressText: {
@@ -559,7 +559,7 @@ const styles = StyleSheet.create({
   },
   // Tier Card
   tierCard: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderRadius: 16,
     padding: 20,
     marginBottom: 24,
@@ -578,20 +578,20 @@ const styles = StyleSheet.create({
   tierTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     letterSpacing: 0.5,
   },
   tierDescription: {
     fontSize: 13,
     fontWeight: '500',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     marginBottom: 16,
   },
   tierStats: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.offWhite,
+    backgroundColor: '#1A2035',
     borderRadius: 12,
     padding: 16,
   },
@@ -602,31 +602,31 @@ const styles = StyleSheet.create({
   tierStatValue: {
     fontSize: 24,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   tierStatLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     marginTop: 4,
   },
   tierStatDivider: {
     width: 1,
     height: 30,
-    backgroundColor: COLORS.grayLight,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     marginHorizontal: 16,
   },
   // Section Title
   sectionTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginBottom: 12,
     letterSpacing: 0.5,
   },
   // Step Card
   stepCard: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderRadius: 16,
     marginBottom: 12,
     shadowColor: '#000',
@@ -649,7 +649,7 @@ const styles = StyleSheet.create({
     marginRight: 14,
   },
   stepIconPending: {
-    backgroundColor: '#FFF5EB',
+    backgroundColor: 'rgba(255, 106, 0, 0.08)',
     borderWidth: 2,
     borderColor: COLORS.orange,
   },
@@ -667,7 +667,7 @@ const styles = StyleSheet.create({
   stepTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   stepTitleCompleted: {
     color: COLORS.success,
@@ -675,11 +675,11 @@ const styles = StyleSheet.create({
   stepDescription: {
     fontSize: 13,
     fontWeight: '500',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     marginTop: 2,
   },
   optionalBadge: {
-    backgroundColor: COLORS.grayLight,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
@@ -687,11 +687,11 @@ const styles = StyleSheet.create({
   optionalText: {
     fontSize: 13,
     fontWeight: '700',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
   },
   // Pricing Card
   pricingCard: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#141929',
     borderRadius: 16,
     padding: 20,
     marginTop: 12,
@@ -704,13 +704,13 @@ const styles = StyleSheet.create({
   pricingTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: '#FFFFFF',
     marginBottom: 4,
   },
   pricingSubtitle: {
     fontSize: 13,
     fontWeight: '500',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     marginBottom: 16,
   },
   pricingRow: {
@@ -722,21 +722,21 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     padding: 12,
-    backgroundColor: COLORS.offWhite,
+    backgroundColor: '#1A2035',
     borderRadius: 12,
     marginHorizontal: 4,
   },
   pricingLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
     marginTop: 6,
     marginBottom: 4,
   },
   pricingValue: {
     fontSize: 13,
     fontWeight: '800',
-    color: COLORS.navy,
+    color: '#FFFFFF',
   },
   feeInfo: {
     flexDirection: 'row',
@@ -747,6 +747,6 @@ const styles = StyleSheet.create({
   feeText: {
     fontSize: 13,
     fontWeight: '500',
-    color: COLORS.gray,
+    color: 'rgba(255,255,255,0.5)',
   },
 });

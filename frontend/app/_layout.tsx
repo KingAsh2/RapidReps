@@ -41,7 +41,7 @@ const toastConfig = {
         {...props}
         style={{ borderLeftColor: '#2ECC71', backgroundColor: '#FAFBFC', borderLeftWidth: 5, borderRadius: 10, marginHorizontal: 16 }}
         contentContainerStyle={{ paddingHorizontal: 14 }}
-        text1Style={{ fontSize: 14, fontWeight: '700', color: '#1a2a5e' }}
+        text1Style={{ fontSize: 14, fontWeight: '700', color: '#FFFFFF' }}
         text1NumberOfLines={2}
       />
     ) : null
@@ -52,7 +52,7 @@ const toastConfig = {
         {...props}
         style={{ borderLeftColor: '#F7931E', backgroundColor: '#FAFBFC', borderLeftWidth: 5, borderRadius: 10, marginHorizontal: 16 }}
         contentContainerStyle={{ paddingHorizontal: 14 }}
-        text1Style={{ fontSize: 14, fontWeight: '700', color: '#1a2a5e' }}
+        text1Style={{ fontSize: 14, fontWeight: '700', color: '#FFFFFF' }}
         text1NumberOfLines={2}
       />
     ) : null
@@ -63,7 +63,7 @@ const toastConfig = {
         {...props}
         style={{ borderLeftColor: '#FF4757', backgroundColor: '#FAFBFC', borderLeftWidth: 5, borderRadius: 10, marginHorizontal: 16 }}
         contentContainerStyle={{ paddingHorizontal: 14 }}
-        text1Style={{ fontSize: 14, fontWeight: '700', color: '#1a2a5e' }}
+        text1Style={{ fontSize: 14, fontWeight: '700', color: '#FFFFFF' }}
         text1NumberOfLines={2}
       />
     ) : null
