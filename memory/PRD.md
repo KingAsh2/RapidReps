@@ -50,11 +50,25 @@ RapidReps is a fitness training marketplace app (React Native/Expo + FastAPI + M
 - `/app/frontend/src/components/AnimatedBarChart.tsx`
 - `/app/frontend/src/theme.ts` (shared design tokens)
 
-### Deployment Fixes (April 2026)
-- Fixed 10 corrupted color strings across 7 files (bulk sed replacement had appended `Light`/`Dark` to hex codes)
-- Files fixed: `signup.tsx`, `trainer-en-route.tsx`, `en-route.tsx`, `PricingDisplay.tsx`, `AthleticAlert.tsx`, `earnings.tsx`, `set-rates.tsx`, `OverviewTab.tsx`
-- Added `test_credentials.md` to `.gitignore` (deployment security requirement)
-- Verified clean build via `npx expo export --platform web` — 0 errors
+### Dark Theme Visibility Fixes (April 2026)
+- Fixed 10 corrupted color strings across 7 files (bulk sed replacement `Light`/`Dark` suffix)
+- Added `test_credentials.md` to `.gitignore`
+- Verified clean build via `npx expo export --platform web`
+
+### Comprehensive Dark Theme UI Audit (April 2026)
+- **Admin Panel**: Dark modal bg (#141929), dark text inputs (#1A2035) with white text, white donut chart center value, dark growth tags, dark dividers, dark pagination buttons
+- **Tab Bars**: Renamed "Messages" to "Chat" on both trainee and trainer bottom menus
+- **Signup Form**: Dark gradient form card (#0A0E1A→#141929), white input labels, dark referral input
+- **Onboarding-Trainer**: Dark glass inputs (rgba 10% white), white labels/chips/toggles/duration chips, dark back button borders, white text throughout
+- **Trust & Safety (Verification)**: Dark card bg (rgba 20,25,41,0.95), white title/text
+- **ID Verification**: "Please Hold Still" scanning text displays immediately on camera click (scan illusion)
+- **Safety Center**: Solid dark fallback bg (#0A0E1A)  
+- **Nearby Trainees**: Dark cards (#141929) with white text, clickable profiles (TouchableOpacity → router.push)
+- **Leaderboard**: Dark list items with white text, orange points
+- **Sessions Empty State**: Solid dark bg (#141929) instead of foggy rgba
+- **Trainer Onboarding**: Dark status card gradient, orange progress bar fill
+- **FavoriteAvailability**: Dark card backgrounds
+- **Admin Safety/Verifications Tabs**: Dark card and modal backgrounds
 
 ## Prioritized Backlog
 
