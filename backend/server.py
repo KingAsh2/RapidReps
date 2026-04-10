@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, Request, UploadFile, File, Query, Response
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, Request, UploadFile, File, Query, Response, Form
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.responses import FileResponse
 from dotenv import load_dotenv
@@ -2379,6 +2379,68 @@ async def search_music(q: str = Query(..., min_length=2), limit: int = Query(10,
             'collectionName': item.get('collectionName', ''),
         })
     return {"results": results}
+
+
+
+@api_router.post("/trainer-profiles/{user_id}/highlights")
+async def upload_highlight(user_id: str, file: UploadFile = File(...), caption: str = Form(""), current_user: dict = Depends(get_current_user)):
+    """Upload a highlight reel clip (short video or image)."""
+    if str(current_user['_id']) != user_id:
+        raise HTTPException(403, "Can only update your own highlights")
+    
+    content = await file.read()
+    if len(content) > 50 * 1024 * 1024:
+        raise HTTPException(400, "File too large (max 50MB)")
+    
+    ext = (file.filename or 'clip.mp4').split('.')[-1].lower()
+    is_video = ext in ('mp4', 'mov', 'avi', 'webm')
+    media_type = 'video' if is_video else 'photo'
+    
+    # Upload to object storage
+    from storage import object_storage
+    import uuid
+    storage_path = f"highlights/{user_id}/{uuid.uuid4().hex}.{ext}"
+    url = await object_storage.upload(content, storage_path, content_type=file.content_type or 'video/mp4')
+    
+    highlight = {
+        'url': url,
+        'storagePath': storage_path,
+        'type': media_type,
+        'caption': caption,
+        'createdAt': datetime.utcnow().isoformat(),
+    }
+    
+    await db.trainer_profiles.update_one(
+        {'userId': user_id},
+        {'$push': {'highlights': highlight}}
+    )
+    return {"success": True, "highlight": highlight}
+
+
+@api_router.delete("/trainer-profiles/{user_id}/highlights/{index}")
+async def delete_highlight(user_id: str, index: int, current_user: dict = Depends(get_current_user)):
+    """Delete a highlight by index."""
+    if str(current_user['_id']) != user_id:
+        raise HTTPException(403, "Can only update your own highlights")
+    
+    profile = await db.trainer_profiles.find_one({'userId': user_id})
+    if not profile:
+        raise HTTPException(404, "Profile not found")
+    
+    highlights = profile.get('highlights', [])
+    if index < 0 or index >= len(highlights):
+        raise HTTPException(400, "Invalid highlight index")
+    
+    highlights.pop(index)
+    await db.trainer_profiles.update_one({'userId': user_id}, {'$set': {'highlights': highlights}})
+    return {"success": True, "highlights": highlights}
+
+
+@api_router.get("/trainer-profiles/{user_id}/highlights")
+async def get_highlights(user_id: str):
+    """Get all highlights for a trainer."""
+    profile = await db.trainer_profiles.find_one({'userId': user_id}, {'highlights': 1})
+    return {"highlights": (profile or {}).get('highlights', [])}
 
 
 

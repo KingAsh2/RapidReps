@@ -513,6 +513,7 @@ export default function TraineeHomeScreen() {
           {/* Header with Logo and Actions */}
           <View style={styles.header}>
             <View style={styles.headerLogo}>
+              <Image source={require('../../../assets/images/rapidreps-logo.png')} style={{ width: 32, height: 32 }} resizeMode="contain" />
               <Text style={styles.logoText}>RapidReps</Text>
             </View>
             <View style={styles.headerActions}>

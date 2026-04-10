@@ -25,8 +25,10 @@ import { toast } from '../../src/utils/toast';
 import { haptic } from '../../src/utils/haptics';
 import { ProfileGallery, SocialLinksDisplay } from '../../src/components/ProfileSections';
 import { TrainerVibePlayer } from '../../src/components/TrainerVibePlayer';
+import { HighlightReel } from '../../src/components/HighlightReel';
 
 const { width, height: screenHeight } = Dimensions.get('window');
+const LOGO = require('../../assets/images/rapidreps-logo.png');
 
 // Brand colors
 const COLORS = {
@@ -54,6 +56,7 @@ export default function TrainerDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [trainer, setTrainer] = useState<TrainerProfile | null>(null);
   const [ratings, setRatings] = useState<any[]>([]);
+  const [highlights, setHighlights] = useState<any[]>([]);
   const [selectedDuration, setSelectedDuration] = useState<number>(60);
   const [booking, setBooking] = useState(false);
   const [showTraineeHomeConsent, setShowTraineeHomeConsent] = useState(false);
@@ -110,6 +113,12 @@ export default function TrainerDetailScreen() {
       ]);
       setTrainer(trainerData);
       setRatings(ratingsData);
+      // Load highlights
+      try {
+        const hlRes = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/trainer-profiles/${trainerId}/highlights`);
+        const hlData = await hlRes.json();
+        setHighlights(hlData.highlights || []);
+      } catch { /* no highlights */ }
       // Check if this trainer is in user's favorites
       if (user?.savedTrainers?.includes(trainerId as string)) {
         setIsFavorite(true);
@@ -556,6 +565,23 @@ export default function TrainerDetailScreen() {
             </View>
           </Animated.View>
 
+          {/* MEDIA SHOWCASE — Gallery + Highlights (immediately after hero) */}
+          <Animated.View style={{ opacity: contentAnim, transform: [{ translateY: contentTranslateY }] }}>
+            {/* Highlight Reel */}
+            {highlights.length > 0 && (
+              <View style={{ paddingLeft: 16, marginBottom: 4 }}>
+                <HighlightReel highlights={highlights} trainerName={trainer.fullName || 'Trainer'} />
+              </View>
+            )}
+
+            {/* Gallery — prominent, right after hero */}
+            {((trainer as any)?.gallery || []).length > 0 && (
+              <View style={{ paddingHorizontal: 20, marginBottom: 4 }}>
+                <ProfileGallery gallery={(trainer as any)?.gallery || []} />
+              </View>
+            )}
+          </Animated.View>
+
           {/* Profile Details Card */}
           <Animated.View
             style={[
@@ -940,10 +966,15 @@ export default function TrainerDetailScreen() {
             </Animated.View>
           )}
 
-          {/* Gallery & Social Links */}
+          {/* Social Links */}
           <View style={{ paddingHorizontal: 20 }}>
-            <ProfileGallery gallery={(trainer as any)?.gallery || []} />
             <SocialLinksDisplay socialLinks={(trainer as any)?.socialLinks || {}} />
+          </View>
+
+          {/* RapidReps logo watermark */}
+          <View style={styles.logoWatermark} data-testid="rapidreps-logo-watermark">
+            <Image source={LOGO} style={styles.logoImage} resizeMode="contain" />
+            <Text style={styles.logoText}>RAPIDREPS</Text>
           </View>
 
           {/* Block Option */}
@@ -1790,6 +1821,25 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: COLORS.error,
     textDecorationLine: 'underline',
+  },
+  // Logo watermark
+  logoWatermark: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 20,
+    opacity: 0.25,
+  },
+  logoImage: {
+    width: 28,
+    height: 28,
+  },
+  logoText: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: 3,
   },
   // Consent Modal Styles
   modalOverlay: {

@@ -11,8 +11,10 @@ import {
   Linking,
   ActivityIndicator,
   Alert,
+  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
@@ -151,9 +153,13 @@ export const ProfileGallery = ({ gallery, editable = false, onGalleryUpdated }: 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Ionicons name="images" size={18} color={COLORS.orange} />
-        <Text style={styles.title}>Gallery</Text>
-        <Text style={styles.count}>{gallery.length}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <LinearGradient colors={['#FF6A00', '#FF3D00']} style={{ width: 28, height: 28, borderRadius: 8, justifyContent: 'center', alignItems: 'center' }}>
+            <Ionicons name="images" size={14} color="#FFF" />
+          </LinearGradient>
+          <Text style={styles.title}>GALLERY</Text>
+          <Text style={styles.count}>{gallery.length}</Text>
+        </View>
         {editable && (
           <TouchableOpacity onPress={showAddMenu} style={styles.addBtn} disabled={uploading} data-testid="gallery-add-btn">
             {uploading ? <ActivityIndicator size="small" color={COLORS.white} /> : <Ionicons name="add" size={18} color={COLORS.white} />}
@@ -275,8 +281,8 @@ export const SocialLinksDisplay = ({ socialLinks }: SocialLinksProps) => {
 const styles = StyleSheet.create({
   container: { marginTop: 20, paddingTop: 20, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)' },
   header: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14, paddingHorizontal: 4 },
-  title: { fontSize: 16, fontWeight: '800', color: COLORS.white, flex: 1 },
-  count: { fontSize: 13, fontWeight: '700', color: 'rgba(255,255,255,0.5)' },
+  title: { fontSize: 13, fontWeight: '900', color: COLORS.white, letterSpacing: 1.5, flex: 1 },
+  count: { fontSize: 12, fontWeight: '700', color: 'rgba(255,255,255,0.4)' },
   addBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: COLORS.orange, justifyContent: 'center', alignItems: 'center' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
   thumb: { width: THUMB_SIZE, height: THUMB_SIZE, borderRadius: 10, overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.05)' },

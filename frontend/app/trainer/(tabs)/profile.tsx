@@ -309,6 +309,22 @@ export default function TrainerProfileScreen() {
               </View>
               <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.3)" />
             </TouchableOpacity>
+
+            {/* Highlight Reel Upload CTA */}
+            <TouchableOpacity
+              onPress={() => router.push('/trainer/highlight-upload')}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: 16, marginTop: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' }}
+              data-testid="trainer-highlight-upload-btn"
+            >
+              <LinearGradient colors={['#1A2035', '#141929']} style={{ width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,106,0,0.2)' }}>
+                <Ionicons name="film" size={22} color="#FF6A00" />
+              </LinearGradient>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 16, fontWeight: '800', color: '#FFF' }}>Highlight Reel</Text>
+                <Text style={{ fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.5)' }}>Upload video clips to showcase your style</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.3)" />
+            </TouchableOpacity>
           </View>
 
           <View style={{ height: 100 }} />
