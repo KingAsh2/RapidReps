@@ -90,6 +90,7 @@ export default function TraineeProfileScreen() {
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [proposedLocation, setProposedLocation] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [traineeData, setTraineeData] = useState<any>(null);
 
   useEffect(() => {
     if (sessionDetails) {
@@ -100,6 +101,24 @@ export default function TraineeProfileScreen() {
       }
     }
   }, [sessionDetails]);
+
+  useEffect(() => {
+    if (traineeId) {
+      const loadTraineeData = async () => {
+        try {
+          const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+          const res = await fetch(`${API_URL}/api/trainee-profiles/${traineeId}`);
+          if (res.ok) {
+            const data = await res.json();
+            setTraineeData(data);
+          }
+        } catch (e) {
+          console.error('Error loading trainee data:', e);
+        }
+      };
+      loadTraineeData();
+    }
+  }, [traineeId]);
 
   const reloadSession = async () => {
     try {

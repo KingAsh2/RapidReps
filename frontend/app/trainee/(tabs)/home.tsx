@@ -572,7 +572,7 @@ export default function TraineeHomeScreen() {
             {needsAddress && (
               <TouchableOpacity
                 style={{ backgroundColor: '#0A0E1A', borderRadius: 14, padding: 16, marginHorizontal: 16, marginBottom: 12, flexDirection: 'row', alignItems: 'center', gap: 12 }}
-                onPress={() => router.push('/trainee/(tabs)/profile')}
+                onPress={() => router.push('/trainee/(tabs)/profile?editAddress=true')}
                 data-testid="address-setup-banner"
               >
                 <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center' }}>

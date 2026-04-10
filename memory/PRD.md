@@ -14,7 +14,7 @@ RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoD
 /app/backend/
 ├── server.py              (~2700 lines - core: messaging, virtual sessions, location, notifications, scheduling)
 ├── models.py              (Pydantic models & enums)
-├── deps.py                (Shared dependencies, auth, helpers)
+├── deps.py                (Shared dependencies, auth, helpers, create_and_send_notification)
 ├── storage.py             (Object storage)
 ├── routes/
 │   ├── auth_routes.py     (Login, register, password reset)
@@ -37,24 +37,15 @@ RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoD
 - Cinematic page transitions (parallax, scale, opacity)
 - Oswald typography upgrade
 - Backend refactoring: server.py from ~10,000 → ~2,700 lines (Phase 1 + Phase 2)
-- Login screen revert to original design (bg-battle-ropes.png + rapidreps-logo.png)
+- Login screen revert to original design (bg-battle-ropes.png)
+- New RR dumbbell logo (replaced across all 8 files, pulsing animation preserved)
 
-## Phase 2 Route Extraction (Completed Apr 10, 2026)
-- Extracted Profile routes → `profile_routes.py` (845 lines)
-- Extracted Streak/Achievement routes → `streak_routes.py` (634 lines)
-- Extracted Payment/Earnings routes → `payment_routes.py` (1118 lines)
-- Moved `create_and_send_notification` to deps.py for cross-file access
-- All 33 regression tests passed (iteration_66)
-
-## Remaining in server.py (~2700 lines)
-- Safety/Moderation routes
-- Referral System routes
-- Chat/Messaging routes
-- Virtual session matching routes
-- Location/GPS routes
-- Notification routes + preferences
-- Weekly digest / scheduling
-- Background task scheduler
+## Bug Fixes (Apr 10, 2026)
+1. **Trainee Profile Crash**: `traineeData` undefined in `trainee-profile.tsx` → added state + API fetch
+2. **Highlight Upload Crash**: `object_storage` import missing → fixed to use `put_object`
+3. **Save Button Not Working**: `homeZipCode` missing from models + dark button → added field + orange gradient
+4. **Address Input Blocked**: Banner didn't trigger edit mode → added `?editAddress=true` param
+5. **Vibe Save Silent Failure**: Missing `res.ok` check → added error handling
 
 ## Known Issues
 - EAS iOS Build Failure (BLOCKED - user must regenerate Apple Distribution Certificate)
@@ -62,6 +53,7 @@ RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoD
 - 508 Accessibility Compliance (IN PROGRESS - incremental)
 
 ## Upcoming Tasks
+- 508 Accessibility Compliance (P2)
 - SendGrid Email Integration (P2, blocked on API key)
 - Auto-color detection from profile photo (P3)
 - Further server.py extraction: messaging, location, notifications (P3)

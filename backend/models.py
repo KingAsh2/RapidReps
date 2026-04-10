@@ -313,6 +313,7 @@ class TraineeProfileCreate(BaseModel):
     homeStreet: Optional[str] = None
     homeCity: Optional[str] = None
     homeState: Optional[str] = None
+    homeZipCode: Optional[str] = None
     prefersInPerson: bool = True
     prefersVirtual: bool = False
     isVirtualEnabled: bool = False
@@ -338,6 +339,7 @@ class TraineeProfileResponse(BaseModel):
     homeStreet: Optional[str] = None
     homeCity: Optional[str] = None
     homeState: Optional[str] = None
+    homeZipCode: Optional[str] = None
     prefersInPerson: bool = True
     prefersVirtual: bool = False
     isVirtualEnabled: bool = False

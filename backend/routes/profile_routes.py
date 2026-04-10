@@ -615,9 +615,13 @@ async def upload_highlight(user_id: str, file: UploadFile = File(...), caption: 
     is_video = ext in ('mp4', 'mov', 'avi', 'webm')
     media_type = 'video' if is_video else 'photo'
 
-    from storage import object_storage
-    storage_path = f"highlights/{user_id}/{uuid.uuid4().hex}.{ext}"
-    url = await object_storage.upload(content, storage_path, content_type=file.content_type or 'video/mp4')
+    storage_path = generate_upload_path(user_id, ext, folder="highlights")
+    content_type_str = MIME_TYPES.get(ext, file.content_type or 'application/octet-stream')
+    try:
+        put_object(storage_path, content, content_type_str)
+    except Exception as e:
+        raise HTTPException(500, f"Upload failed: {str(e)}")
+    url = f"/api/files/{storage_path}"
 
     highlight = {
         'url': url, 'storagePath': storage_path, 'type': media_type,

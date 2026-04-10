@@ -111,7 +111,7 @@ export default function TrainerVibeSetup() {
     setPlayingId(null);
     setSaving(true);
     try {
-      await fetch(`${API_URL}/api/trainer-profiles/${user?.id}/vibe`, {
+      const res = await fetch(`${API_URL}/api/trainer-profiles/${user?.id}/vibe`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
@@ -123,6 +123,7 @@ export default function TrainerVibeSetup() {
           vibeTrackId: track.trackId,
         }),
       });
+      if (!res.ok) throw new Error('Failed to save');
       setCurrentVibe(track);
       toast.success('Vibe saved!');
     } catch { toast.error('Failed to save vibe'); } finally { setSaving(false); }

@@ -15,7 +15,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -64,6 +64,7 @@ const US_STATES = [
 
 export default function TraineeProfileScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const { user, logout } = useAuth();
   const { showAlert } = useAlert();
   const { soundEnabled, setSoundEnabled, playTap } = useSoundEffects();
@@ -71,6 +72,13 @@ export default function TraineeProfileScreen() {
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
+
+  // Auto-trigger edit mode when coming from address banner
+  useEffect(() => {
+    if (params?.editAddress === 'true') {
+      setIsEditing(true);
+    }
+  }, [params?.editAddress]);
 
   // Animation refs
   const headerAnim = useRef(new Animated.Value(0)).current;
@@ -751,9 +759,10 @@ export default function TraineeProfileScreen() {
                 style={styles.saveButton}
                 onPress={handleSave}
                 disabled={saving}
+                data-testid="save-profile-btn"
               >
                 <LinearGradient
-                  colors={['#0A0E1A', '#141929']}
+                  colors={['#FF6A00', '#FF3D00']}
                   style={styles.saveButtonGradient}
                 >
                   {saving ? (
