@@ -1312,6 +1312,26 @@ async def update_trainee_personality_tag(user_id: str, body: dict = Body(...), c
     return {"success": True, "personalityTag": tag}
 
 
+VALID_ACCENT_COLORS = [
+    "#FF6A00", "#FF3D00", "#00D68F", "#6C5CE7", "#0984E3",
+    "#FDBB2D", "#E84393", "#00CEC9", "#D63031", "#A29BFE",
+]
+
+@api_router.put("/trainer-profiles/{user_id}/accent-color")
+async def update_trainer_accent_color(user_id: str, body: dict = Body(...), current_user: dict = Depends(get_current_user)):
+    """Update trainer's brand accent color."""
+    if str(current_user['_id']) != user_id:
+        raise HTTPException(403, "Can only update your own accent color")
+    color = body.get("accentColor")
+    if color and color not in VALID_ACCENT_COLORS:
+        raise HTTPException(400, f"Invalid accent color. Must be one of: {VALID_ACCENT_COLORS}")
+    await db.trainer_profiles.update_one(
+        {'userId': user_id},
+        {'$set': {'accentColor': color, 'updatedAt': datetime.utcnow()}}
+    )
+    return {"success": True, "accentColor": color}
+
+
 
 @api_router.get("/music/search")
 async def search_music(q: str = Query(..., min_length=2), limit: int = Query(10, le=25)):

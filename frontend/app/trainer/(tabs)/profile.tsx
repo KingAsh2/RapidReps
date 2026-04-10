@@ -26,6 +26,7 @@ import axios from 'axios';
 import { toast } from '../../../src/utils/toast';
 import { ProfileGallery, SocialLinksDisplay } from '../../../src/components/ProfileSections';
 import { PersonalityTagBadge, PersonalityTagSelector } from '../../../src/components/PersonalityTagBadge';
+import { AccentColorPicker } from '../../../src/components/AccentColorPicker';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -51,6 +52,7 @@ export default function TrainerProfileScreen() {
   const [streakData, setStreakData] = useState<any>(null);
   const streakPulseAnim = useRef(new Animated.Value(1)).current;
   const [showTagSelector, setShowTagSelector] = useState(false);
+  const [showColorPicker, setShowColorPicker] = useState(false);
   const heroScaleAnim = useRef(new Animated.Value(0.95)).current;
   const heroOpacityAnim = useRef(new Animated.Value(0)).current;
 
@@ -145,6 +147,22 @@ export default function TrainerProfileScreen() {
     } catch (e) {
       console.error('Tag update error:', e);
       toast.error('Failed to update personality tag');
+    }
+  };
+
+  const handleSelectAccentColor = async (color: string) => {
+    try {
+      const token = await AsyncStorage.getItem('auth_token');
+      await axios.put(`${API_URL}/api/trainer-profiles/${user?.id}/accent-color`,
+        { accentColor: color },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setProfile({ ...profile, accentColor: color });
+      setShowColorPicker(false);
+      toast.success('Brand color updated');
+    } catch (e) {
+      console.error('Color update error:', e);
+      toast.error('Failed to update brand color');
     }
   };
 
@@ -381,6 +399,24 @@ export default function TrainerProfileScreen() {
               </View>
               <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.3)" />
             </TouchableOpacity>
+
+            {/* Accent Color CTA */}
+            <TouchableOpacity
+              onPress={() => setShowColorPicker(true)}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: `${profile?.accentColor || '#FF6A00'}10`, borderRadius: 16, padding: 16, marginTop: 12, borderWidth: 1, borderColor: `${profile?.accentColor || '#FF6A00'}20` }}
+              data-testid="trainer-accent-color-btn"
+            >
+              <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: profile?.accentColor || '#FF6A00', justifyContent: 'center', alignItems: 'center' }}>
+                <Ionicons name="color-palette" size={22} color="#FFF" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 16, fontFamily: 'Oswald_700Bold', color: '#FFF', letterSpacing: 0.5 }}>BRAND COLOR</Text>
+                <Text style={{ fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.5)' }}>
+                  Tints your card glow, hero, and accents
+                </Text>
+              </View>
+              <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: profile?.accentColor || '#FF6A00', borderWidth: 2, borderColor: 'rgba(255,255,255,0.15)' }} />
+            </TouchableOpacity>
           </View>
 
           <View style={{ height: 100 }} />
@@ -393,6 +429,14 @@ export default function TrainerProfileScreen() {
         onClose={() => setShowTagSelector(false)}
         onSelect={handleSelectPersonalityTag}
         currentTag={profile?.personalityTag}
+      />
+
+      {/* Accent Color Picker Modal */}
+      <AccentColorPicker
+        visible={showColorPicker}
+        onClose={() => setShowColorPicker(false)}
+        onSelect={handleSelectAccentColor}
+        currentColor={profile?.accentColor}
       />
     </ImageBackground>
   );

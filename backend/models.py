@@ -240,6 +240,7 @@ class TrainerProfileCreate(BaseModel):
     vibeAppleMusicUrl: Optional[str] = None
     vibeTrackId: Optional[str] = None
     personalityTag: Optional[str] = None
+    accentColor: Optional[str] = None
 
 class TrainerProfileResponse(BaseModel):
     id: str
@@ -296,6 +297,7 @@ class TrainerProfileResponse(BaseModel):
     vibeAppleMusicUrl: Optional[str] = None
     vibeTrackId: Optional[str] = None
     personalityTag: Optional[str] = None
+    accentColor: Optional[str] = None
     createdAt: datetime
 
 class TraineeProfileCreate(BaseModel):

@@ -59,6 +59,7 @@ export const TrainerCard = ({ trainer, cardAnim, onViewProfile, onAvatarLongPres
 
   const hasVibe = !!trainer.vibeTrackTitle;
   const hasPersonalityTag = !!trainer.personalityTag;
+  const accent = trainer.accentColor || '#FF6A00';
 
   return (
     <Animated.View
@@ -103,7 +104,7 @@ export const TrainerCard = ({ trainer, cardAnim, onViewProfile, onAvatarLongPres
             ]}
           >
             <LinearGradient
-              colors={['transparent', 'rgba(255,106,0,0.3)', 'transparent']}
+              colors={['transparent', `${accent}40`, 'transparent']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={{ width: 120, height: '100%' }}
@@ -112,7 +113,7 @@ export const TrainerCard = ({ trainer, cardAnim, onViewProfile, onAvatarLongPres
 
           {/* Top accent line */}
           <LinearGradient
-            colors={['transparent', '#FF6A00', 'transparent']}
+            colors={['transparent', accent, 'transparent']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.topAccent}
@@ -230,7 +231,7 @@ export const TrainerCard = ({ trainer, cardAnim, onViewProfile, onAvatarLongPres
             data-testid={`view-profile-${trainer.userId}`}
           >
             <LinearGradient
-              colors={['#FF6A00', '#FF3D00']}
+              colors={[accent, `${accent}DD`]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.ctaGradient}

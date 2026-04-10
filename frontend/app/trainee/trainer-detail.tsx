@@ -409,6 +409,8 @@ export default function TrainerDetailScreen() {
     );
   }
 
+  const accent = (trainer as any).accentColor || '#FF6A00';
+
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -505,7 +507,7 @@ export default function TrainerDetailScreen() {
                 </View>
                 {trainer.isVerified && (
                   <View style={styles.heroVerifiedChip}>
-                    <Ionicons name="checkmark-circle" size={14} color="#FF6A00" />
+                    <Ionicons name="checkmark-circle" size={14} color={accent} />
                     <Text style={styles.heroVerifiedText}>VERIFIED</Text>
                   </View>
                 )}
@@ -560,7 +562,7 @@ export default function TrainerDetailScreen() {
                   accessibilityRole="button"
                   data-testid="hero-message-btn"
                 >
-                  <Ionicons name="chatbubble" size={18} color="#FF6A00" />
+                  <Ionicons name="chatbubble" size={18} color={accent} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={handleToggleFavorite}
@@ -569,7 +571,7 @@ export default function TrainerDetailScreen() {
                   accessibilityRole="button"
                   data-testid="hero-favorite-btn"
                 >
-                  <Ionicons name={isFavorite ? "heart" : "heart-outline"} size={18} color={isFavorite ? '#FF4757' : '#FF6A00'} />
+                  <Ionicons name={isFavorite ? "heart" : "heart-outline"} size={18} color={isFavorite ? '#FF4757' : accent} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => {
@@ -582,7 +584,7 @@ export default function TrainerDetailScreen() {
                   data-testid="hero-book-btn"
                 >
                   <LinearGradient
-                    colors={['#FF6A00', '#FF3D00']}
+                    colors={[accent, `${accent}DD`]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={styles.heroCTAPrimaryGradient}
@@ -784,7 +786,7 @@ export default function TrainerDetailScreen() {
               {/* Safety PIN Notice for In-Home */}
               {selectedSessionType === 'in_home' && (
                 <View style={styles.safetyNotice}>
-                  <Ionicons name="shield-checkmark" size={18} color={'#FF6A00'} />
+                  <Ionicons name="shield-checkmark" size={18} color={accent} />
                   <Text style={styles.safetyNoticeText}>
                     You'll receive a 4-digit safety PIN to verify your trainer
                   </Text>
@@ -1037,7 +1039,7 @@ export default function TrainerDetailScreen() {
                 data-testid="sticky-book-now-btn"
               >
                 <LinearGradient
-                  colors={booking ? ['#555', '#666'] : ['#FF6A00', '#FF9F1C']}
+                  colors={booking ? ['#555', '#666'] : [accent, `${accent}CC`]}
                   style={styles.stickyBookButtonGradient}
                 >
                   {booking ? (
@@ -1065,7 +1067,7 @@ export default function TrainerDetailScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.consentModal}>
             <View style={styles.consentIconContainer}>
-              <Ionicons name="shield-checkmark" size={48} color={'#FF6A00'} />
+              <Ionicons name="shield-checkmark" size={48} color={accent} />
             </View>
             <Text style={styles.consentTitle}>Home Session Safety</Text>
             
@@ -1099,7 +1101,7 @@ export default function TrainerDetailScreen() {
               data-testid="at-home-lets-go-btn"
             >
               <LinearGradient
-                colors={['#FF6A00', '#FF9F1C']}
+                colors={[accent, `${accent}CC`]}
                 style={styles.consentAgreeGradient}
               >
                 <Text style={styles.consentAgreeText}>Let's Go</Text>
