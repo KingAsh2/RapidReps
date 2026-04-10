@@ -26,6 +26,9 @@ import { traineeAPI, streaksAPI } from '../../../src/services/api';
 import * as ImagePicker from 'expo-image-picker';
 import { toast } from '../../../src/utils/toast';
 import { ProfileGallery, SocialLinksDisplay } from '../../../src/components/ProfileSections';
+import { PersonalityTagBadge, PersonalityTagSelector } from '../../../src/components/PersonalityTagBadge';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 const { width } = Dimensions.get('window');
 
@@ -92,9 +95,11 @@ export default function TraineeProfileScreen() {
     budgetMaxPerMinuteCents: 200,
   });
 
-  // Streak data
   const [streakData, setStreakData] = useState<any>(null);
   const streakPulseAnim = useRef(new Animated.Value(1)).current;
+  const [showTagSelector, setShowTagSelector] = useState(false);
+
+  const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
   useEffect(() => {
     loadProfile();
@@ -270,6 +275,22 @@ export default function TraineeProfileScreen() {
     });
   };
 
+  const handleSelectPersonalityTag = async (tag: string) => {
+    try {
+      const token = await AsyncStorage.getItem('auth_token');
+      await axios.put(`${API_URL}/api/trainee-profiles/${user?.id}/personality-tag`,
+        { personalityTag: tag || null },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setProfile({ ...profile, personalityTag: tag || null });
+      setShowTagSelector(false);
+      toast.success(tag ? `Vibe set to ${tag}` : 'Personality tag removed');
+    } catch (e) {
+      console.error('Tag update error:', e);
+      toast.error('Failed to update personality tag');
+    }
+  };
+
   const headerTranslateY = headerAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [-30, 0],
@@ -340,6 +361,13 @@ export default function TraineeProfileScreen() {
               </TouchableOpacity>
               <Text style={styles.userName}>{user?.fullName || 'Athlete'}</Text>
               <Text style={styles.userEmail}>{user?.email}</Text>
+
+              {/* Personality Tag Display */}
+              {profile?.personalityTag && (
+                <View style={{ marginTop: 10 }}>
+                  <PersonalityTagBadge tag={profile.personalityTag} onPress={() => setShowTagSelector(true)} />
+                </View>
+              )}
             </Animated.View>
 
             {/* Stats Card */}
@@ -774,6 +802,26 @@ export default function TraineeProfileScreen() {
 
             {/* Gallery (editable) */}
             <View style={{ paddingHorizontal: 16 }}>
+              {/* Personality Tag CTA */}
+              <TouchableOpacity
+                onPress={() => setShowTagSelector(true)}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(108,92,231,0.08)', borderRadius: 16, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: 'rgba(108,92,231,0.15)' }}
+                data-testid="trainee-personality-tag-btn"
+              >
+                <LinearGradient colors={['#6C5CE7', '#A29BFE']} style={{ width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center' }}>
+                  <Ionicons name="sparkles" size={22} color="#FFF" />
+                </LinearGradient>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 16, fontFamily: 'Oswald_700Bold', color: '#FFF', letterSpacing: 0.5 }}>
+                    {profile?.personalityTag || 'SET YOUR VIBE'}
+                  </Text>
+                  <Text style={{ fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.5)' }}>
+                    {profile?.personalityTag ? 'Tap to change your personality tag' : 'Choose a tag that defines your energy'}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.3)" />
+              </TouchableOpacity>
+
               <ProfileGallery
                 gallery={profile?.gallery || []}
                 editable
@@ -797,6 +845,14 @@ export default function TraineeProfileScreen() {
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
+
+      {/* Personality Tag Selector Modal */}
+      <PersonalityTagSelector
+        visible={showTagSelector}
+        onClose={() => setShowTagSelector(false)}
+        onSelect={handleSelectPersonalityTag}
+        currentTag={profile?.personalityTag}
+      />
     </ImageBackground>
   );
 }
@@ -868,10 +924,11 @@ const styles = StyleSheet.create({
     borderColor: COLORS.white,
   },
   userName: {
-    fontSize: 26,
-    fontWeight: '900',
+    fontSize: 28,
+    fontFamily: 'Oswald_700Bold',
     color: COLORS.white,
     marginBottom: 4,
+    letterSpacing: 1,
   },
   userEmail: {
     fontSize: 14,
@@ -900,15 +957,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statValue: {
-    fontSize: 20,
-    fontWeight: '900',
+    fontSize: 22,
+    fontFamily: 'Oswald_700Bold',
     color: COLORS.white,
     marginBottom: 4,
+    letterSpacing: 0.5,
   },
   statLabel: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 11,
+    fontFamily: 'Oswald_600SemiBold',
     color: 'rgba(255,255,255,0.85)',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
   },
   statDivider: {
     width: 1,
@@ -935,8 +995,9 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '800',
+    fontFamily: 'Oswald_700Bold',
     color: COLORS.white,
+    letterSpacing: 1,
   },
   sectionContent: {
     fontSize: 14,
@@ -1145,9 +1206,10 @@ const styles = StyleSheet.create({
   },
   streakTitle: {
     fontSize: 18,
-    fontWeight: '900',
+    fontFamily: 'Oswald_700Bold',
     color: COLORS.white,
     marginBottom: 2,
+    letterSpacing: 0.5,
   },
   streakSub: {
     fontSize: 13,
@@ -1161,10 +1223,10 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   streakBadgeText: {
-    fontSize: 13,
-    fontWeight: '800',
+    fontSize: 11,
+    fontFamily: 'Oswald_700Bold',
     color: COLORS.white,
-    letterSpacing: 0.5,
+    letterSpacing: 1,
   },
   streakProgress: {
     marginTop: 12,

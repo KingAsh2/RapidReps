@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, Animated, Dimensions }
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { TrainerVibePlayer } from '../TrainerVibePlayer';
+import { PersonalityTagBadge } from '../PersonalityTagBadge';
 
 const { width } = Dimensions.get('window');
 
@@ -57,6 +58,7 @@ export const TrainerCard = ({ trainer, cardAnim, onViewProfile, onAvatarLongPres
   });
 
   const hasVibe = !!trainer.vibeTrackTitle;
+  const hasPersonalityTag = !!trainer.personalityTag;
 
   return (
     <Animated.View
@@ -199,6 +201,9 @@ export const TrainerCard = ({ trainer, cardAnim, onViewProfile, onAvatarLongPres
 
           {/* Tags strip */}
           <View style={styles.tagStrip}>
+            {hasPersonalityTag && (
+              <PersonalityTagBadge tag={trainer.personalityTag} compact />
+            )}
             {trainer.isVirtualTrainingAvailable && (
               <View style={styles.virtualTag}>
                 <Ionicons name="videocam" size={11} color="#FF6A00" />
@@ -370,11 +375,12 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   name: {
-    fontSize: 19,
-    fontWeight: '900',
+    fontSize: 20,
+    fontFamily: 'Oswald_700Bold',
     color: '#FFFFFF',
     flex: 1,
-    letterSpacing: -0.3,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
   ratingRow: {
     flexDirection: 'row',
@@ -478,9 +484,9 @@ const styles = StyleSheet.create({
   },
   virtualTagText: {
     fontSize: 10,
-    fontWeight: '900',
+    fontFamily: 'Oswald_600SemiBold',
     color: '#FF6A00',
-    letterSpacing: 0.8,
+    letterSpacing: 1.2,
   },
   styleTag: {
     backgroundColor: 'rgba(255,255,255,0.04)',
@@ -514,9 +520,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   ctaText: {
-    fontSize: 13,
-    fontWeight: '900',
+    fontSize: 14,
+    fontFamily: 'Oswald_700Bold',
     color: '#FFFFFF',
-    letterSpacing: 1,
+    letterSpacing: 2,
   },
 });

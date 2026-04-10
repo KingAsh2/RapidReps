@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, Request, UploadFile, File, Query, Response, Form
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, Request, UploadFile, File, Query, Response, Form, Body
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.responses import FileResponse
 from dotenv import load_dotenv
@@ -448,6 +448,7 @@ class TrainerProfileCreate(BaseModel):
     vibePreviewUrl: Optional[str] = None       # 30-second preview clip URL
     vibeAppleMusicUrl: Optional[str] = None    # Deep link to Apple Music
     vibeTrackId: Optional[str] = None          # iTunes track ID
+    personalityTag: Optional[str] = None        # e.g. INTENSE, CHILL, BEAST MODE
 
 class TrainerProfileResponse(BaseModel):
     id: str
@@ -508,6 +509,7 @@ class TrainerProfileResponse(BaseModel):
     vibePreviewUrl: Optional[str] = None
     vibeAppleMusicUrl: Optional[str] = None
     vibeTrackId: Optional[str] = None
+    personalityTag: Optional[str] = None
     createdAt: datetime
 
 # Trainee Profile Models
@@ -533,6 +535,7 @@ class TraineeProfileCreate(BaseModel):
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     locationAddress: Optional[str] = None  # "City, State"
+    personalityTag: Optional[str] = None   # e.g. INTENSE, CHILL, BEAST MODE
 
 class TraineeProfileResponse(BaseModel):
     id: str
@@ -557,6 +560,7 @@ class TraineeProfileResponse(BaseModel):
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     locationAddress: Optional[str] = None
+    personalityTag: Optional[str] = None
     gallery: List[dict] = []  # [{url: str, type: 'photo'|'video', caption?: str}]
     socialLinks: Optional[dict] = None  # {instagram?, tiktok?, youtube?, twitter?, website?}
     createdAt: datetime
@@ -2357,6 +2361,41 @@ async def remove_trainer_vibe(user_id: str, current_user: dict = Depends(get_cur
     }
     await db.trainer_profiles.update_one({'userId': user_id}, {'$set': clear_data})
     return {"success": True}
+
+
+VALID_PERSONALITY_TAGS = [
+    "INTENSE", "CHILL", "BEAST MODE", "ZEN",
+    "HIGH ENERGY", "NO EXCUSES", "PATIENT", "COMPETITIVE"
+]
+
+@api_router.put("/trainer-profiles/{user_id}/personality-tag")
+async def update_trainer_personality_tag(user_id: str, body: dict = Body(...), current_user: dict = Depends(get_current_user)):
+    """Update trainer's personality tag."""
+    if str(current_user['_id']) != user_id:
+        raise HTTPException(403, "Can only update your own personality tag")
+    tag = body.get("personalityTag")
+    if tag and tag not in VALID_PERSONALITY_TAGS:
+        raise HTTPException(400, f"Invalid personality tag. Must be one of: {VALID_PERSONALITY_TAGS}")
+    await db.trainer_profiles.update_one(
+        {'userId': user_id},
+        {'$set': {'personalityTag': tag, 'updatedAt': datetime.utcnow()}}
+    )
+    return {"success": True, "personalityTag": tag}
+
+@api_router.put("/trainee-profiles/{user_id}/personality-tag")
+async def update_trainee_personality_tag(user_id: str, body: dict = Body(...), current_user: dict = Depends(get_current_user)):
+    """Update trainee's personality tag."""
+    if str(current_user['_id']) != user_id:
+        raise HTTPException(403, "Can only update your own personality tag")
+    tag = body.get("personalityTag")
+    if tag and tag not in VALID_PERSONALITY_TAGS:
+        raise HTTPException(400, f"Invalid personality tag. Must be one of: {VALID_PERSONALITY_TAGS}")
+    await db.trainee_profiles.update_one(
+        {'userId': user_id},
+        {'$set': {'personalityTag': tag, 'updatedAt': datetime.utcnow()}}
+    )
+    return {"success": True, "personalityTag": tag}
+
 
 
 @api_router.get("/music/search")

@@ -25,6 +25,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { toast } from '../../../src/utils/toast';
 import { ProfileGallery, SocialLinksDisplay } from '../../../src/components/ProfileSections';
+import { PersonalityTagBadge, PersonalityTagSelector } from '../../../src/components/PersonalityTagBadge';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -49,11 +50,23 @@ export default function TrainerProfileScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [streakData, setStreakData] = useState<any>(null);
   const streakPulseAnim = useRef(new Animated.Value(1)).current;
+  const [showTagSelector, setShowTagSelector] = useState(false);
+  const heroScaleAnim = useRef(new Animated.Value(0.95)).current;
+  const heroOpacityAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     loadProfile();
     loadStreaks();
   }, []);
+
+  useEffect(() => {
+    if (!loading) {
+      Animated.parallel([
+        Animated.spring(heroScaleAnim, { toValue: 1, friction: 8, tension: 40, useNativeDriver: true }),
+        Animated.timing(heroOpacityAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
+      ]).start();
+    }
+  }, [loading]);
 
   const loadProfile = async () => {
     try {
@@ -119,6 +132,22 @@ export default function TrainerProfileScreen() {
     }
   };
 
+  const handleSelectPersonalityTag = async (tag: string) => {
+    try {
+      const token = await AsyncStorage.getItem('auth_token');
+      await axios.put(`${API_URL}/api/trainer-profiles/${user?.id}/personality-tag`, 
+        { personalityTag: tag || null },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setProfile({ ...profile, personalityTag: tag || null });
+      setShowTagSelector(false);
+      toast.success(tag ? `Vibe set to ${tag}` : 'Personality tag removed');
+    } catch (e) {
+      console.error('Tag update error:', e);
+      toast.error('Failed to update personality tag');
+    }
+  };
+
   return (
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
       <LinearGradient colors={['rgba(10, 14, 26, 0.92)', 'rgba(17, 24, 39, 0.88)']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} />
@@ -141,7 +170,7 @@ export default function TrainerProfileScreen() {
           ) : (
             <>
               {/* Avatar + Name */}
-              <View style={styles.avatarSection}>
+              <Animated.View style={[styles.avatarSection, { opacity: heroOpacityAnim, transform: [{ scale: heroScaleAnim }] }]}>
                 <View style={styles.avatarContainer}>
                   {profile?.avatarUrl ? (
                     <Image source={{ uri: profile.avatarUrl }} style={styles.avatar} />
@@ -161,12 +190,19 @@ export default function TrainerProfileScreen() {
                   <Text style={styles.statusText}>{profile?.isAvailable ? 'Available' : 'Unavailable'}</Text>
                 </View>
 
+                {/* Personality Tag Display */}
+                {profile?.personalityTag && (
+                  <View style={{ marginTop: 12 }}>
+                    <PersonalityTagBadge tag={profile.personalityTag} onPress={() => setShowTagSelector(true)} />
+                  </View>
+                )}
+
                 {/* Share Profile Button */}
                 <TouchableOpacity onPress={handleShareProfile} style={styles.shareProfileBtn} data-testid="share-profile-btn">
                   <Ionicons name="share-social" size={18} color={COLORS.white} />
                   <Text style={styles.shareProfileBtnText}>Share Profile</Text>
                 </TouchableOpacity>
-              </View>
+              </Animated.View>
 
               {/* Stats */}
               <View style={styles.statsRow}>
@@ -325,11 +361,39 @@ export default function TrainerProfileScreen() {
               </View>
               <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.3)" />
             </TouchableOpacity>
+
+            {/* Personality Tag CTA */}
+            <TouchableOpacity
+              onPress={() => setShowTagSelector(true)}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(108,92,231,0.08)', borderRadius: 16, padding: 16, marginTop: 12, borderWidth: 1, borderColor: 'rgba(108,92,231,0.15)' }}
+              data-testid="trainer-personality-tag-btn"
+            >
+              <LinearGradient colors={['#6C5CE7', '#A29BFE']} style={{ width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center' }}>
+                <Ionicons name="sparkles" size={22} color="#FFF" />
+              </LinearGradient>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 16, fontFamily: 'Oswald_700Bold', color: '#FFF', letterSpacing: 0.5 }}>
+                  {profile?.personalityTag || 'SET YOUR VIBE'}
+                </Text>
+                <Text style={{ fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.5)' }}>
+                  {profile?.personalityTag ? 'Tap to change your personality tag' : 'Choose a tag that defines your energy'}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.3)" />
+            </TouchableOpacity>
           </View>
 
           <View style={{ height: 100 }} />
         </ScrollView>
       </SafeAreaView>
+
+      {/* Personality Tag Selector Modal */}
+      <PersonalityTagSelector
+        visible={showTagSelector}
+        onClose={() => setShowTagSelector(false)}
+        onSelect={handleSelectPersonalityTag}
+        currentTag={profile?.personalityTag}
+      />
     </ImageBackground>
   );
 }
@@ -338,7 +402,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   safeArea: { flex: 1 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 8, paddingBottom: 8 },
-  headerTitle: { fontSize: 28, fontWeight: '900', color: COLORS.white, textShadowColor: 'rgba(0,0,0,0.3)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 },
+  headerTitle: { fontSize: 28, fontFamily: 'Oswald_700Bold', color: COLORS.white, letterSpacing: 1, textShadowColor: 'rgba(0,0,0,0.3)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 },
   logoutBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.08)', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
   content: { flex: 1, paddingHorizontal: 16 },
   loadingBox: { paddingTop: 60, alignItems: 'center' },
@@ -348,7 +412,7 @@ const styles = StyleSheet.create({
   avatar: { width: 100, height: 100, borderRadius: 50, borderWidth: 4, borderColor: COLORS.white },
   avatarPlaceholder: { width: 100, height: 100, borderRadius: 50, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center', borderWidth: 4, borderColor: COLORS.white },
   verifiedBadge: { position: 'absolute', bottom: 2, right: 2, width: 26, height: 26, borderRadius: 13, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: COLORS.white },
-  name: { fontSize: 22, fontWeight: '800', color: COLORS.white, marginTop: 12 },
+  name: { fontSize: 24, fontFamily: 'Oswald_700Bold', color: COLORS.white, marginTop: 12, letterSpacing: 1 },
   email: { fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
   statusDot: { width: 8, height: 8, borderRadius: 4 },
@@ -378,10 +442,10 @@ const styles = StyleSheet.create({
 
   statsRow: { flexDirection: 'row', gap: 10, marginBottom: 20 },
   statCard: { flex: 1, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 14, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
-  statValue: { fontSize: 24, fontWeight: '900', color: COLORS.white },
-  statLabel: { fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 4 },
+  statValue: { fontSize: 26, fontFamily: 'Oswald_700Bold', color: COLORS.white, letterSpacing: 0.5 },
+  statLabel: { fontSize: 11, fontFamily: 'Oswald_600SemiBold', color: 'rgba(255,255,255,0.6)', marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' },
 
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: COLORS.white, marginBottom: 12 },
+  sectionTitle: { fontSize: 16, fontFamily: 'Oswald_700Bold', color: COLORS.white, marginBottom: 12, letterSpacing: 1 },
 
   menuItem: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 14, padding: 16, marginBottom: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
   menuItemText: { flex: 1, fontSize: 15, fontWeight: '600', color: COLORS.white },
@@ -399,6 +463,6 @@ const styles = StyleSheet.create({
   streakGradient: { padding: 16 },
   streakRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   streakFireBg: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.25)', justifyContent: 'center', alignItems: 'center' },
-  streakTitle: { fontSize: 17, fontWeight: '900', color: COLORS.white },
+  streakTitle: { fontSize: 18, fontFamily: 'Oswald_700Bold', color: COLORS.white, letterSpacing: 0.5 },
   streakSub: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.8)', marginTop: 2 },
 });

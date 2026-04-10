@@ -26,6 +26,7 @@ import { haptic } from '../../src/utils/haptics';
 import { ProfileGallery, SocialLinksDisplay } from '../../src/components/ProfileSections';
 import { TrainerVibePlayer } from '../../src/components/TrainerVibePlayer';
 import { HighlightReel } from '../../src/components/HighlightReel';
+import { PersonalityTagBadge } from '../../src/components/PersonalityTagBadge';
 
 const { width, height: screenHeight } = Dimensions.get('window');
 const LOGO = require('../../assets/images/rapidreps-logo.png');
@@ -498,6 +499,13 @@ export default function TrainerDetailScreen() {
                   </Text>
                 </View>
               </Animated.View>
+
+              {/* Personality Tag */}
+              {(trainer as any).personalityTag && (
+                <Animated.View style={{ transform: [{ translateY: statsSlideAnim }], opacity: headerAnim }}>
+                  <PersonalityTagBadge tag={(trainer as any).personalityTag} />
+                </Animated.View>
+              )}
 
               {/* Stats bar */}
               <Animated.View style={[styles.heroStatsBar, { transform: [{ translateY: statsSlideAnim }], opacity: headerAnim }]}>
@@ -1219,15 +1227,16 @@ const styles = StyleSheet.create({
   },
   heroAvailableText: {
     fontSize: 11,
-    fontWeight: '900',
+    fontFamily: 'Oswald_700Bold',
     color: '#00D68F',
-    letterSpacing: 1,
+    letterSpacing: 1.5,
   },
   heroName: {
-    fontSize: 34,
-    fontWeight: '900',
+    fontSize: 38,
+    fontFamily: 'Oswald_700Bold',
     color: '#FFFFFF',
-    letterSpacing: -1,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
     marginBottom: 4,
   },
   heroTagline: {
@@ -1277,9 +1286,9 @@ const styles = StyleSheet.create({
   },
   heroVerifiedText: {
     fontSize: 10,
-    fontWeight: '900',
+    fontFamily: 'Oswald_600SemiBold',
     color: '#FF6A00',
-    letterSpacing: 0.8,
+    letterSpacing: 1.5,
   },
   heroPriceChip: {
     backgroundColor: 'rgba(255,106,0,0.12)',
@@ -1321,9 +1330,9 @@ const styles = StyleSheet.create({
   },
   heroStatLabel: {
     fontSize: 9,
-    fontWeight: '800',
+    fontFamily: 'Oswald_600SemiBold',
     color: 'rgba(255,255,255,0.4)',
-    letterSpacing: 1,
+    letterSpacing: 1.5,
     marginTop: 2,
   },
   heroStatDivider: {
@@ -1360,10 +1369,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   heroCTAPrimaryText: {
-    fontSize: 14,
-    fontWeight: '900',
+    fontSize: 15,
+    fontFamily: 'Oswald_700Bold',
     color: '#FFFFFF',
-    letterSpacing: 1,
+    letterSpacing: 2,
   },
   // Profile Card
   profileCard: {
@@ -1475,10 +1484,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sectionLabel: {
-    fontSize: 13,
-    fontWeight: '800',
+    fontSize: 11,
+    fontFamily: 'Oswald_600SemiBold',
     color: 'rgba(255,255,255,0.4)',
-    letterSpacing: 1,
+    letterSpacing: 2,
     marginBottom: 10,
   },
   tagsRow: {
@@ -1528,9 +1537,10 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   bookingTitle: {
-    fontSize: 20,
-    fontWeight: '800',
+    fontSize: 22,
+    fontFamily: 'Oswald_700Bold',
     color: '#FFFFFF',
+    letterSpacing: 1,
     marginBottom: 16,
   },
   // Session Type Selection (NEW)
@@ -1673,9 +1683,10 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   priceTotalValue: {
-    fontSize: 24,
-    fontWeight: '900',
+    fontSize: 26,
+    fontFamily: 'Oswald_700Bold',
     color: '#FFFFFF',
+    letterSpacing: 0.5,
   },
   platformFeeNote: {
     fontSize: 13,
@@ -1787,9 +1798,10 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   reviewsTitle: {
-    fontSize: 18,
-    fontWeight: '800',
+    fontSize: 20,
+    fontFamily: 'Oswald_700Bold',
     color: '#FFFFFF',
+    letterSpacing: 1,
     marginBottom: 16,
   },
   reviewItem: {
@@ -1999,5 +2011,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
     color: '#FFFFFF',
+  },
+});
+'#FFFFFF',
   },
 });
