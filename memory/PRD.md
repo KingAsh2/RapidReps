@@ -55,7 +55,55 @@ RapidReps is a fitness training marketplace app (React Native/Expo + FastAPI + M
 - Added `test_credentials.md` to `.gitignore`
 - Verified clean build via `npx expo export --platform web`
 
-### Comprehensive Dark Theme UI Audit (April 2026)
+### Trainer Card & Profile Redesign + Trainer Vibe System (April 2026)
+
+**Backend:**
+- Added `PUT /api/trainer-profiles/{userId}/vibe` — save trainer anthem (title, artist, artwork, preview URL, Apple Music link)
+- Added `DELETE /api/trainer-profiles/{userId}/vibe` — clear trainer anthem
+- Added `GET /api/music/search?q=...&limit=N` — iTunes Search API proxy for song lookup
+- Extended `TrainerProfileCreate` and `TrainerProfileResponse` with vibe fields
+
+**Frontend — TrainerCard Redesign:**
+- Complete visual overhaul with dark gradient card (`#0F1526` → `#141D33`)
+- Animated shimmer overlay (3-second loop with orange gradient)
+- Press feedback (spring scale to 0.97 on tap)
+- Ambient glow orbs (subtle orange radials at corners)
+- Top accent line (gradient orange)
+- Vibe badge indicator (compact music note + track title when trainer has anthem)
+- Large rounded avatar with ring, verified badge, live dot
+- Price chip, distance chip, available chip with icons
+- Orange gradient "VIEW PROFILE" CTA button
+- Training style tags strip
+
+**Frontend — Trainer Profile Hero Redesign:**
+- Full-width hero image with cinematic multi-layer gradient overlay
+- Side vignette effect for depth
+- Orange accent glow orb at bottom
+- Staggered entrance animations (heroFadeAnim, heroScaleAnim, nameSlideAnim, statsSlideAnim, vibeSlideAnim, ctaSlideAnim)
+- Bold 34pt name with tagline
+- Rating chip (gold), Verified chip (orange), Price chip
+- Stats bar (Years, Sessions, Radius, Reviews) with dividers
+- Inline CTA row: Message, Favorite, BOOK SESSION (orange gradient)
+
+**Frontend — TrainerVibePlayer Component:**
+- Compact mode: inline badge with music note + track title
+- Full mode: artwork, play/pause with pulse animation, progress bar, mute/unmute, "Listen on Apple Music" CTA
+- Auto-plays 30-second preview on profile open (once per visit)
+- AsyncStorage-backed mute preference
+- Audio cleanup on unmount (prevents overlapping)
+
+**Frontend — Trainer Vibe Setup Screen:**
+- Search songs via iTunes proxy API
+- Preview tracks with expo-av Audio
+- Select/save anthem to profile
+- Remove anthem
+- Shows current vibe with artwork display
+
+**Frontend — Trainer Profile Tab:**
+- "Set Your Vibe" / "Your Vibe" button linking to vibe-setup screen
+- Displays current vibe title/artist if set
+
+
 - **Admin Panel**: Dark modal bg (#141929), dark text inputs (#1A2035) with white text, white donut chart center value, dark growth tags, dark dividers, dark pagination buttons
 - **Tab Bars**: Renamed "Messages" to "Chat" on both trainee and trainer bottom menus
 - **Signup Form**: Dark gradient form card (#0A0E1A→#141929), white input labels, dark referral input
