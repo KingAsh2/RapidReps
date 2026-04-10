@@ -39,7 +39,7 @@ const toastConfig = {
     props ? (
       <BaseToast
         {...props}
-        style={{ borderLeftColor: '#2ECC71', backgroundColor: '#FAFBFC', borderLeftWidth: 5, borderRadius: 10, marginHorizontal: 16 }}
+        style={{ borderLeftColor: '#2ECC71', backgroundColor: '#1A2035', borderLeftWidth: 5, borderRadius: 10, marginHorizontal: 16 }}
         contentContainerStyle={{ paddingHorizontal: 14 }}
         text1Style={{ fontSize: 14, fontWeight: '700', color: '#FFFFFF' }}
         text1NumberOfLines={2}
@@ -50,7 +50,7 @@ const toastConfig = {
     props ? (
       <BaseToast
         {...props}
-        style={{ borderLeftColor: '#F7931E', backgroundColor: '#FAFBFC', borderLeftWidth: 5, borderRadius: 10, marginHorizontal: 16 }}
+        style={{ borderLeftColor: '#F7931E', backgroundColor: '#1A2035', borderLeftWidth: 5, borderRadius: 10, marginHorizontal: 16 }}
         contentContainerStyle={{ paddingHorizontal: 14 }}
         text1Style={{ fontSize: 14, fontWeight: '700', color: '#FFFFFF' }}
         text1NumberOfLines={2}
@@ -61,7 +61,7 @@ const toastConfig = {
     props ? (
       <BaseToast
         {...props}
-        style={{ borderLeftColor: '#FF4757', backgroundColor: '#FAFBFC', borderLeftWidth: 5, borderRadius: 10, marginHorizontal: 16 }}
+        style={{ borderLeftColor: '#FF4757', backgroundColor: '#1A2035', borderLeftWidth: 5, borderRadius: 10, marginHorizontal: 16 }}
         contentContainerStyle={{ paddingHorizontal: 14 }}
         text1Style={{ fontSize: 14, fontWeight: '700', color: '#FFFFFF' }}
         text1NumberOfLines={2}

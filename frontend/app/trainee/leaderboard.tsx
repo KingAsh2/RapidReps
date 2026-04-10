@@ -302,7 +302,7 @@ const s = StyleSheet.create({
   myRankSub: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.8)', marginTop: 2 },
   // List
   listItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#141929', marginHorizontal: 16, marginTop: 8, borderRadius: 14, padding: 14, gap: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.15, shadowRadius: 4, elevation: 1, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
-  listRank: { fontSize: 14, fontWeight: '800', color: C.navy, width: 30, textAlign: 'center' },
+  listRank: { fontSize: 14, fontWeight: '800', color: '#FFFFFF', width: 30, textAlign: 'center' },
   listAvatar: { width: 40, height: 40, borderRadius: 20, overflow: 'hidden' },
   listAvatarImg: { width: '100%', height: '100%' },
   listAvatarFallback: { width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' },

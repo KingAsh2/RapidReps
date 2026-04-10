@@ -583,7 +583,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   profileCard: {
-    backgroundColor: Colors.white,
+    backgroundColor: '#141929',
     borderRadius: 20,
     borderWidth: 4,
     borderColor: Colors.navy,
@@ -607,14 +607,14 @@ const styles = StyleSheet.create({
     borderRadius: 60,
     borderWidth: 4,
     borderColor: Colors.navy,
-    backgroundColor: Colors.background,
+    backgroundColor: '#0F1526',
     justifyContent: 'center',
     alignItems: 'center',
   },
   traineeName: {
     fontSize: 24,
     fontWeight: '900',
-    color: Colors.navy,
+    color: '#FFFFFF',
     marginBottom: 8,
   },
   goalsContainer: {
@@ -624,7 +624,7 @@ const styles = StyleSheet.create({
   goalsLabel: {
     fontSize: 14,
     fontWeight: '700',
-    color: Colors.navy,
+    color: '#FFFFFF',
     marginBottom: 4,
   },
   goalsText: {
@@ -634,7 +634,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   detailsCard: {
-    backgroundColor: Colors.white,
+    backgroundColor: '#141929',
     borderRadius: 20,
     borderWidth: 4,
     borderColor: Colors.navy,
@@ -644,7 +644,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 18,
     fontWeight: '900',
-    color: Colors.navy,
+    color: '#FFFFFF',
     marginBottom: 16,
   },
   detailRow: {
@@ -661,13 +661,13 @@ const styles = StyleSheet.create({
   notesContainer: {
     marginTop: 12,
     padding: 12,
-    backgroundColor: Colors.background,
+    backgroundColor: '#0F1526',
     borderRadius: 12,
   },
   notesLabel: {
     fontSize: 14,
     fontWeight: '700',
-    color: Colors.navy,
+    color: '#FFFFFF',
     marginBottom: 4,
   },
   notesText: {
@@ -677,7 +677,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   actionsCard: {
-    backgroundColor: Colors.white,
+    backgroundColor: '#141929',
     borderRadius: 20,
     borderWidth: 4,
     borderColor: Colors.navy,
@@ -690,13 +690,13 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: 'rgba(255,255,255,0.08)',
   },
   actionButtonText: {
     flex: 1,
     fontSize: 16,
     fontWeight: '700',
-    color: Colors.navy,
+    color: '#FFFFFF',
   },
   bottomActions: {
     position: 'absolute',
@@ -706,7 +706,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 24,
     gap: 12,
-    backgroundColor: Colors.white,
+    backgroundColor: '#141929',
     borderTopWidth: 3,
     borderTopColor: Colors.navy,
   },
@@ -761,7 +761,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     marginTop: 10,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   actionText: {
     color: Colors.textPrimary,
@@ -852,7 +852,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexWrap: 'wrap',
     gap: 8,
-    backgroundColor: Colors.white,
+    backgroundColor: '#141929',
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
@@ -888,7 +888,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: Colors.white,
+    backgroundColor: '#141929',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
@@ -902,7 +902,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: Colors.navy,
+    color: '#FFFFFF',
   },
   modalSubtitle: {
     fontSize: 14,
@@ -919,7 +919,7 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   modalBtn: {
     backgroundColor: Colors.secondary,

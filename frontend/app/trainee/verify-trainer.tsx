@@ -400,7 +400,7 @@ const styles = StyleSheet.create({
 
   // Trainer Card
   trainerCard: {
-    alignItems: 'center', backgroundColor: '#FAFBFC', borderRadius: 20,
+    alignItems: 'center', backgroundColor: '#141929', borderRadius: 20,
     padding: 20, width: '100%', marginBottom: 20,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
   },
@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
 
   // Session Details
   sessionDetails: {
-    width: '100%', backgroundColor: '#FAFBFC', borderRadius: 16,
+    width: '100%', backgroundColor: '#141929', borderRadius: 16,
     padding: 16, marginBottom: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
   },
   detailRow: {

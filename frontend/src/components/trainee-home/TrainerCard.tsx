@@ -80,6 +80,8 @@ export const TrainerCard = ({ trainer, cardAnim, onViewProfile, onAvatarLongPres
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         onPress={() => onViewProfile(trainer.userId)}
+        accessibilityLabel={`View ${trainer.fullName || 'trainer'} profile. Rating ${trainer.averageRating?.toFixed(1) || '5.0'}. ${trainer.isAvailable ? 'Available now.' : ''}`}
+        accessibilityRole="button"
         data-testid={`trainer-card-${trainer.userId}`}
       >
         <LinearGradient
@@ -218,6 +220,8 @@ export const TrainerCard = ({ trainer, cardAnim, onViewProfile, onAvatarLongPres
             style={styles.ctaButton}
             onPress={() => onViewProfile(trainer.userId)}
             activeOpacity={0.85}
+            accessibilityLabel={`View profile of ${trainer.fullName || 'trainer'}`}
+            accessibilityRole="button"
             data-testid={`view-profile-${trainer.userId}`}
           >
             <LinearGradient

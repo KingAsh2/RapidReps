@@ -159,10 +159,10 @@ const styles = StyleSheet.create({
     color: Colors.white,
   },
   textSecondary: {
-    color: Colors.navy,
+    color: '#FFFFFF',
   },
   textOutline: {
-    color: Colors.navy,
+    color: '#FFFFFF',
   },
   textDanger: {
     color: Colors.white,

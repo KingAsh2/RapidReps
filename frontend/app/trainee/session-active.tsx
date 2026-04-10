@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
     width: 160,
     height: 160,
     borderRadius: 80,
-    backgroundColor: Colors.white,
+    backgroundColor: '#141929',
     borderWidth: 4,
     borderColor: Colors.navy,
     justifyContent: 'center',
@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.white,
+    backgroundColor: '#141929',
   },
   liveText: {
     fontSize: 14,
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   infoCard: {
-    backgroundColor: Colors.white,
+    backgroundColor: '#141929',
     borderRadius: 20,
     borderWidth: 4,
     borderColor: Colors.navy,
@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
   sessionTitle: {
     fontSize: 20,
     fontWeight: '900',
-    color: Colors.navy,
+    color: '#FFFFFF',
     textAlign: 'center',
     marginBottom: 8,
   },
@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
   progressBarContainer: {
     width: '100%',
     height: 12,
-    backgroundColor: Colors.background,
+    backgroundColor: '#0F1526',
     borderRadius: 6,
     borderWidth: 2,
     borderColor: Colors.navy,
@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
     color: Colors.white,
   },
   endButton: {
-    backgroundColor: Colors.white,
+    backgroundColor: '#141929',
     borderRadius: 16,
     borderWidth: 3,
     borderColor: Colors.danger,
@@ -492,7 +492,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   modalContent: {
-    backgroundColor: Colors.white,
+    backgroundColor: '#141929',
     borderRadius: 20,
     borderWidth: 4,
     borderColor: Colors.navy,
@@ -509,7 +509,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: '900',
-    color: Colors.navy,
+    color: '#FFFFFF',
     flex: 1,
     marginLeft: 12,
   },
@@ -527,7 +527,7 @@ const styles = StyleSheet.create({
   helpTipTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: Colors.navy,
+    color: '#FFFFFF',
     marginBottom: 4,
   },
   helpTipText: {

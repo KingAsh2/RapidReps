@@ -242,14 +242,14 @@ const styles = StyleSheet.create({
     width: 160,
     height: 160,
     borderRadius: 80,
-    backgroundColor: Colors.white,
+    backgroundColor: '#141929',
     borderWidth: 4,
     borderColor: Colors.navy,
     justifyContent: 'center',
     alignItems: 'center',
   },
   summaryCard: {
-    backgroundColor: Colors.white,
+    backgroundColor: '#141929',
     borderRadius: 20,
     borderWidth: 4,
     borderColor: Colors.navy,
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
   summaryTitle: {
     fontSize: 24,
     fontWeight: '900',
-    color: Colors.navy,
+    color: '#FFFFFF',
     textAlign: 'center',
     marginBottom: 8,
   },
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
   summaryText: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.navy,
+    color: '#FFFFFF',
   },
   sessionTypeBadge: {
     flexDirection: 'row',
@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   ratingCard: {
-    backgroundColor: Colors.white,
+    backgroundColor: '#141929',
     borderRadius: 20,
     borderWidth: 4,
     borderColor: Colors.navy,
@@ -311,7 +311,7 @@ const styles = StyleSheet.create({
   ratingTitle: {
     fontSize: 20,
     fontWeight: '900',
-    color: Colors.navy,
+    color: '#FFFFFF',
     textAlign: 'center',
     marginBottom: 8,
   },
@@ -344,11 +344,11 @@ const styles = StyleSheet.create({
   reviewLabel: {
     fontSize: 14,
     fontWeight: '700',
-    color: Colors.navy,
+    color: '#FFFFFF',
     marginBottom: 8,
   },
   reviewInputContainer: {
-    backgroundColor: Colors.background,
+    backgroundColor: '#0F1526',
     borderRadius: 12,
     borderWidth: 2,
     borderColor: Colors.navy,
@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
   reviewInput: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.navy,
+    color: '#FFFFFF',
     minHeight: 80,
   },
   submitButton: {
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
   bookAnotherButton: {
-    backgroundColor: Colors.white,
+    backgroundColor: '#141929',
     borderRadius: 16,
     borderWidth: 3,
     borderColor: Colors.navy,
@@ -404,6 +404,6 @@ const styles = StyleSheet.create({
   bookAnotherText: {
     fontSize: 16,
     fontWeight: '800',
-    color: Colors.navy,
+    color: '#FFFFFF',
   },
 });

@@ -592,13 +592,13 @@ export default function TrainerAchievementsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: '#0F1526',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.background,
+    backgroundColor: '#0F1526',
   },
   loadingText: {
     marginTop: 16,
@@ -671,7 +671,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 22,
     fontWeight: '900',
-    color: Colors.navy,
+    color: '#FFFFFF',
     marginBottom: 16,
     backgroundColor: 'rgba(15,27,61,0.06)',
     marginHorizontal: -16,
@@ -686,7 +686,7 @@ const styles = StyleSheet.create({
   },
   badgeCard: {
     width: (width - 48) / 2,
-    backgroundColor: Colors.white,
+    backgroundColor: '#141929',
     borderRadius: 16,
     borderWidth: 3,
     borderColor: Colors.navy,
@@ -711,7 +711,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: Colors.background,
+    backgroundColor: '#0F1526',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
@@ -739,13 +739,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: -4,
     right: -4,
-    backgroundColor: Colors.white,
+    backgroundColor: '#141929',
     borderRadius: 12,
   },
   badgeName: {
     fontSize: 14,
     fontWeight: '900',
-    color: Colors.navy,
+    color: '#FFFFFF',
     textAlign: 'center',
     marginBottom: 8,
   },
@@ -759,7 +759,7 @@ const styles = StyleSheet.create({
   progressBackground: {
     width: '100%',
     height: 8,
-    backgroundColor: Colors.background,
+    backgroundColor: '#0F1526',
     borderRadius: 4,
     overflow: 'hidden',
     marginBottom: 6,
@@ -964,6 +964,6 @@ const styles = StyleSheet.create({
   streakBannerStatLabel: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.7)', marginTop: 2 },
   streakBannerProgress: { marginTop: 12 },
   streakBannerProgressBg: { height: 6, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 3, overflow: 'hidden' },
-  streakBannerProgressFill: { height: '100%', backgroundColor: Colors.white, borderRadius: 3 },
+  streakBannerProgressFill: { height: '100%', backgroundColor: '#141929', borderRadius: 3 },
   streakBannerProgressText: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.8)', marginTop: 4, textAlign: 'center' },
 });

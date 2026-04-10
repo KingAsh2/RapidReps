@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
     color: Colors.white,
   },
   resetButton: {
-    backgroundColor: Colors.white,
+    backgroundColor: '#141929',
     borderRadius: 12,
     borderWidth: 3,
     borderColor: Colors.navy,
@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
   resetButtonText: {
     fontSize: 18,
     fontWeight: '900',
-    color: Colors.navy,
+    color: '#FFFFFF',
   },
   backLink: {
     alignItems: 'center',
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   backToLoginButton: {
-    backgroundColor: Colors.white,
+    backgroundColor: '#141929',
     borderRadius: 12,
     borderWidth: 3,
     borderColor: Colors.navy,
@@ -299,6 +299,6 @@ const styles = StyleSheet.create({
   backToLoginText: {
     fontSize: 18,
     fontWeight: '900',
-    color: Colors.navy,
+    color: '#FFFFFF',
   },
 });

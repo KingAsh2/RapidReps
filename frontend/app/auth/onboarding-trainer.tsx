@@ -710,7 +710,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   progressDotActive: {
-    backgroundColor: Colors.white,
+    backgroundColor: '#141929',
   },
   scrollView: {
     flex: 1,
@@ -789,7 +789,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: Colors.background,
+    backgroundColor: '#0F1526',
     borderWidth: 3,
     borderColor: Colors.navy,
     justifyContent: 'center',
@@ -810,8 +810,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: Colors.border,
-    backgroundColor: Colors.white,
+    borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: '#141929',
   },
   chipSelected: {
     backgroundColor: Colors.primary,
@@ -873,7 +873,7 @@ const styles = StyleSheet.create({
   durationChipText: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.navy,
+    color: '#FFFFFF',
   },
   durationChipTextSelected: {
     color: Colors.white,

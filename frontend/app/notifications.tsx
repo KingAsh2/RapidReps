@@ -121,18 +121,18 @@ export default function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1, backgroundColor: '#0F1526' },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 14,
-    backgroundColor: Colors.white,
+    backgroundColor: '#141929',
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: 'rgba(255,255,255,0.08)',
   },
-  headerTitle: { fontSize: 20, fontWeight: '700', color: Colors.navy },
+  headerTitle: { fontSize: 20, fontWeight: '700', color: '#FFFFFF' },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   markReadBtn: {},
   markRead: { fontSize: 13, fontWeight: '600', color: Colors.primary },
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
   notifCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.white,
+    backgroundColor: '#141929',
     borderRadius: 14,
     padding: 14,
     marginBottom: 10,
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   notifContent: { flex: 1 },
-  notifTitle: { fontSize: 15, fontWeight: '700', color: Colors.navy, marginBottom: 2 },
+  notifTitle: { fontSize: 15, fontWeight: '700', color: '#FFFFFF', marginBottom: 2 },
   notifBody: { fontSize: 13, color: Colors.textSecondary, lineHeight: 18 },
   notifTime: { fontSize: 13, color: Colors.textMuted, marginTop: 4 },
   unreadDot: {
@@ -168,6 +168,6 @@ const styles = StyleSheet.create({
   },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   emptyState: { alignItems: 'center', paddingTop: 80 },
-  emptyTitle: { fontSize: 18, fontWeight: '700', color: Colors.navy, marginTop: 16 },
+  emptyTitle: { fontSize: 18, fontWeight: '700', color: '#FFFFFF', marginTop: 16 },
   emptySubtext: { fontSize: 14, color: Colors.textMuted, textAlign: 'center', marginTop: 6, paddingHorizontal: 50 },
 });

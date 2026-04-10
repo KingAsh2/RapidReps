@@ -469,7 +469,7 @@ const styles = StyleSheet.create({
   // Footer
   badgeFooter: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    paddingVertical: 16, backgroundColor: '#FAFBFC', borderTopWidth: 1, borderTopColor: '#E8ECF0',
+    paddingVertical: 16, backgroundColor: '#141929', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)',
   },
   footerText: { fontSize: 13, fontWeight: '700', color: '#FFFFFF' },
 

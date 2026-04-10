@@ -157,7 +157,7 @@ export default function TrainerFilters({ filters, onFiltersChange, onClose }: Fi
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: '#0F1526',
   },
   header: {
     flexDirection: 'row',
@@ -165,12 +165,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 2,
-    borderBottomColor: Colors.border,
+    borderBottomColor: 'rgba(255,255,255,0.08)',
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: '900',
-    color: Colors.navy,
+    color: '#FFFFFF',
   },
   content: {
     flex: 1,
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: Colors.navy,
+    color: '#FFFFFF',
     marginBottom: 12,
   },
   ratingOptions: {
@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 2,
     borderColor: Colors.navy,
-    backgroundColor: Colors.white,
+    backgroundColor: '#141929',
   },
   ratingChipSelected: {
     backgroundColor: Colors.secondary,
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
   ratingChipText: {
     fontSize: 16,
     fontWeight: '700',
-    color: Colors.navy,
+    color: '#FFFFFF',
   },
   ratingChipTextSelected: {
     color: Colors.white,
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 2,
     borderColor: Colors.navy,
-    backgroundColor: Colors.white,
+    backgroundColor: '#141929',
     alignItems: 'center',
   },
   genderChipSelected: {
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
   genderChipText: {
     fontSize: 14,
     fontWeight: '700',
-    color: Colors.navy,
+    color: '#FFFFFF',
   },
   genderChipTextSelected: {
     color: Colors.white,
@@ -244,8 +244,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: Colors.border,
-    backgroundColor: Colors.white,
+    borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: '#141929',
   },
   specialtyChipSelected: {
     backgroundColor: Colors.neonBlue,
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 12,
     borderTopWidth: 2,
-    borderTopColor: Colors.border,
+    borderTopColor: 'rgba(255,255,255,0.08)',
   },
   clearButton: {
     flex: 1,
@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
   clearButtonText: {
     fontSize: 16,
     fontWeight: '800',
-    color: Colors.navy,
+    color: '#FFFFFF',
   },
   applyButton: {
     flex: 1,

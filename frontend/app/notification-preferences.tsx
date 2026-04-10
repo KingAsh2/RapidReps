@@ -160,18 +160,18 @@ export default function NotificationPreferencesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1, backgroundColor: '#0F1526' },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 14,
-    backgroundColor: Colors.white,
+    backgroundColor: '#141929',
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: 'rgba(255,255,255,0.08)',
   },
-  headerTitle: { fontSize: 18, fontWeight: '700', color: Colors.navy },
+  headerTitle: { fontSize: 18, fontWeight: '700', color: '#FFFFFF' },
   saveText: { fontSize: 15, fontWeight: '700', color: Colors.primary },
   scrollView: { flex: 1 },
   scrollContent: { padding: 20, paddingBottom: 60 },
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
   prefRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.white,
+    backgroundColor: '#141929',
     borderRadius: 12,
     padding: 14,
     marginBottom: 8,
@@ -197,13 +197,13 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: Colors.background,
+    backgroundColor: '#0F1526',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   prefText: { flex: 1 },
-  prefLabel: { fontSize: 15, fontWeight: '600', color: Colors.navy },
+  prefLabel: { fontSize: 15, fontWeight: '600', color: '#FFFFFF' },
   prefDesc: { fontSize: 13, color: Colors.textMuted, marginTop: 2 },
   disabledText: { color: Colors.grayLight },
 });

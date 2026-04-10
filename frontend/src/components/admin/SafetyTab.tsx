@@ -325,7 +325,7 @@ const st = StyleSheet.create({
   cardTitle: { fontSize: 14, fontWeight: '700', color: '#FFFFFF', flex: 1 },
   cardMeta: { fontSize: 12, color: C.gray, marginTop: 2 },
   cardGrid: { flexDirection: 'row', gap: 8, marginVertical: 8 },
-  gridItem: { flex: 1, backgroundColor: '#F5F6F8', borderRadius: 10, padding: 10, alignItems: 'center' },
+  gridItem: { flex: 1, backgroundColor: '#1A2035', borderRadius: 10, padding: 10, alignItems: 'center' },
   gridLabel: { fontSize: 11, fontWeight: '600', color: C.gray, marginBottom: 2 },
   gridValue: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
   statusDot: { width: 8, height: 8, borderRadius: 4 },

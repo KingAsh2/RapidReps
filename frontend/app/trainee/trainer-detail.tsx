@@ -532,6 +532,8 @@ export default function TrainerDetailScreen() {
                 <TouchableOpacity
                   onPress={handleMessage}
                   style={styles.heroCTASecondary}
+                  accessibilityLabel="Send message to trainer"
+                  accessibilityRole="button"
                   data-testid="hero-message-btn"
                 >
                   <Ionicons name="chatbubble" size={18} color="#FF6A00" />
@@ -539,6 +541,8 @@ export default function TrainerDetailScreen() {
                 <TouchableOpacity
                   onPress={handleToggleFavorite}
                   style={[styles.heroCTASecondary, isFavorite && { borderColor: 'rgba(255,71,87,0.3)', backgroundColor: 'rgba(255,71,87,0.08)' }]}
+                  accessibilityLabel={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                  accessibilityRole="button"
                   data-testid="hero-favorite-btn"
                 >
                   <Ionicons name={isFavorite ? "heart" : "heart-outline"} size={18} color={isFavorite ? '#FF4757' : '#FF6A00'} />
@@ -549,6 +553,8 @@ export default function TrainerDetailScreen() {
                     haptic('light');
                   }}
                   style={styles.heroCTAPrimary}
+                  accessibilityLabel="Book a session with this trainer"
+                  accessibilityRole="button"
                   data-testid="hero-book-btn"
                 >
                   <LinearGradient
