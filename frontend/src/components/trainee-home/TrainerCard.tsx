@@ -1,7 +1,10 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Animated } from 'react-native';
+import React, { useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Animated, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { TrainerVibePlayer } from '../TrainerVibePlayer';
+
+const { width } = Dimensions.get('window');
 
 interface Props {
   trainer: any;
@@ -10,174 +13,506 @@ interface Props {
   onAvatarLongPress?: (trainer: any) => void;
 }
 
-export const TrainerCard = ({ trainer, cardAnim, onViewProfile, onAvatarLongPress }: Props) => (
-  <Animated.View
-    style={[
-      styles.card,
-      {
-        opacity: cardAnim,
-        transform: [{
-          translateY: cardAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: [40, 0],
-          }),
-        }, {
-          scale: cardAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: [0.95, 1],
-          }),
-        }],
-      },
-    ]}
-  >
-    <LinearGradient colors={['#141929', '#1A2035']} style={styles.gradient}>
-      {/* Subtle glow orb */}
-      <View style={styles.glowOrb} />
-      
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.avatarContainer}
-          onPress={() => onViewProfile(trainer.userId)}
-          onLongPress={() => onAvatarLongPress?.(trainer)}
-          activeOpacity={0.7}
-          data-testid={`trainer-avatar-${trainer.userId}`}
-        >
-          {trainer.avatarUrl ? (
-            <Image source={{ uri: trainer.avatarUrl }} style={styles.avatar} />
-          ) : (
-            <LinearGradient colors={['#FF6A00', '#FF9F1C']} style={styles.avatarPlaceholder}>
-              <Ionicons name="person" size={28} color="#FFFFFF" />
-            </LinearGradient>
-          )}
-          {trainer.isVerified && (
-            <View style={styles.verifiedBadge}>
-              <Ionicons name="checkmark-circle" size={18} color="#00D68F" />
-            </View>
-          )}
-          {trainer.isAvailable && (
-            <View style={styles.activeDot} />
-          )}
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.info}
-          onPress={() => onViewProfile(trainer.userId)}
-          onLongPress={() => onAvatarLongPress?.(trainer)}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.name}>{trainer.fullName || 'Trainer'}</Text>
-          <View style={styles.stats}>
-            <View style={styles.statBadge}>
-              <Ionicons name="star" size={14} color="#FFD700" />
-              <Text style={styles.statText}>{trainer.averageRating?.toFixed(1) || '5.0'}</Text>
-            </View>
-            <View style={[styles.statBadge, { backgroundColor: 'rgba(255,106,0,0.12)', borderColor: 'rgba(255,106,0,0.2)' }]}>
-              <Ionicons name="cash" size={14} color="#FF6A00" />
-              <Text style={styles.statText}>${(trainer.ratePerMinuteCents / 100).toFixed(2)}/min</Text>
-            </View>
-            {trainer.distance !== null && (
-              <View style={styles.statBadge}>
-                <Ionicons name="location" size={14} color="#FF6A00" />
-                <Text style={styles.statText}>{trainer.distance.toFixed(1)} mi</Text>
-              </View>
-            )}
-          </View>
-        </TouchableOpacity>
-      </View>
+export const TrainerCard = ({ trainer, cardAnim, onViewProfile, onAvatarLongPress }: Props) => {
+  const shimmerAnim = useRef(new Animated.Value(0)).current;
+  const pressScale = useRef(new Animated.Value(1)).current;
+  const glowPulse = useRef(new Animated.Value(0)).current;
 
-      {/* Bio */}
-      {trainer.bio && (
-        <Text style={styles.bio} numberOfLines={2}>{trainer.bio}</Text>
-      )}
+  useEffect(() => {
+    // Subtle ambient shimmer
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(shimmerAnim, { toValue: 1, duration: 3000, useNativeDriver: true }),
+        Animated.timing(shimmerAnim, { toValue: 0, duration: 3000, useNativeDriver: true }),
+      ])
+    ).start();
 
-      {/* Tags */}
-      <View style={styles.tagRow}>
-        {trainer.isVirtualTrainingAvailable && (
-          <View style={styles.virtualTag}>
-            <Ionicons name="videocam" size={12} color="#FFFFFF" />
-            <Text style={styles.virtualTagText}>VIRTUAL</Text>
-          </View>
-        )}
-        {trainer.trainingStyles?.slice(0, 2).map((style: string, i: number) => (
-          <View key={i} style={styles.styleTag}>
-            <Text style={styles.styleTagText}>{style}</Text>
-          </View>
-        ))}
-        {trainer.trainingStyles?.length > 2 && (
-          <Text style={styles.moreTag}>+{trainer.trainingStyles.length - 2}</Text>
-        )}
-      </View>
+    // Green glow pulse for available trainers
+    if (trainer.isAvailable) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(glowPulse, { toValue: 1, duration: 1200, useNativeDriver: true }),
+          Animated.timing(glowPulse, { toValue: 0, duration: 1200, useNativeDriver: true }),
+        ])
+      ).start();
+    }
+  }, []);
 
-      {/* CTA */}
+  const handlePressIn = () => {
+    Animated.spring(pressScale, { toValue: 0.97, friction: 8, useNativeDriver: true }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(pressScale, { toValue: 1, friction: 5, tension: 80, useNativeDriver: true }).start();
+  };
+
+  const shimmerOpacity = shimmerAnim.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [0.03, 0.08, 0.03],
+  });
+
+  const shimmerTranslate = shimmerAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-width, width],
+  });
+
+  const hasVibe = !!trainer.vibeTrackTitle;
+
+  return (
+    <Animated.View
+      style={[
+        styles.card,
+        {
+          opacity: cardAnim,
+          transform: [{
+            translateY: cardAnim.interpolate({ inputRange: [0, 1], outputRange: [50, 0] }),
+          }, {
+            scale: Animated.multiply(
+              cardAnim.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1] }),
+              pressScale
+            ),
+          }],
+        },
+      ]}
+    >
       <TouchableOpacity
-        style={styles.viewProfileButton}
+        activeOpacity={1}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
         onPress={() => onViewProfile(trainer.userId)}
-        activeOpacity={0.8}
-        data-testid={`view-profile-${trainer.userId}`}
+        data-testid={`trainer-card-${trainer.userId}`}
       >
         <LinearGradient
-          colors={['#FF6A00', '#FF9F1C']}
+          colors={['#0F1526', '#141D33', '#0F1526']}
           start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.viewProfileGradient}
+          end={{ x: 1, y: 1 }}
+          style={styles.gradient}
         >
-          <Text style={styles.viewProfileText}>VIEW PROFILE & BOOK</Text>
-          <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+          {/* Animated shimmer overlay */}
+          <Animated.View
+            style={[
+              styles.shimmer,
+              {
+                opacity: shimmerOpacity,
+                transform: [{ translateX: shimmerTranslate }],
+              },
+            ]}
+          >
+            <LinearGradient
+              colors={['transparent', 'rgba(255,106,0,0.3)', 'transparent']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={{ width: 120, height: '100%' }}
+            />
+          </Animated.View>
+
+          {/* Top accent line */}
+          <LinearGradient
+            colors={['transparent', '#FF6A00', 'transparent']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.topAccent}
+          />
+
+          {/* Glow orbs */}
+          <View style={[styles.glowOrb, styles.glowOrbTopRight]} />
+          <View style={[styles.glowOrb, styles.glowOrbBottomLeft]} />
+
+          {/* Hero row: Large avatar + info */}
+          <View style={styles.heroRow}>
+            <TouchableOpacity
+              style={styles.avatarContainer}
+              onPress={() => onViewProfile(trainer.userId)}
+              onLongPress={() => onAvatarLongPress?.(trainer)}
+              activeOpacity={0.7}
+              data-testid={`trainer-avatar-${trainer.userId}`}
+            >
+              {trainer.avatarUrl ? (
+                <Image source={{ uri: trainer.avatarUrl }} style={styles.avatar} />
+              ) : (
+                <LinearGradient colors={['#FF6A00', '#FF3D00']} style={styles.avatarPlaceholder}>
+                  <Ionicons name="person" size={32} color="#FFFFFF" />
+                </LinearGradient>
+              )}
+              {/* Avatar glow ring */}
+              <View style={styles.avatarRing} />
+              {trainer.isVerified && (
+                <View style={styles.verifiedBadge}>
+                  <LinearGradient colors={['#FF6A00', '#FF9F1C']} style={styles.verifiedGradient}>
+                    <Ionicons name="checkmark" size={10} color="#FFF" />
+                  </LinearGradient>
+                </View>
+              )}
+              {trainer.isAvailable && (
+                <Animated.View style={[styles.liveDot, { opacity: glowPulse.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1] }) }]}>
+                  <View style={styles.liveDotInner} />
+                </Animated.View>
+              )}
+            </TouchableOpacity>
+
+            <View style={styles.info}>
+              <View style={styles.nameRow}>
+                <Text style={styles.name} numberOfLines={1}>{trainer.fullName || 'Trainer'}</Text>
+                {hasVibe && (
+                  <TrainerVibePlayer vibe={trainer} compact />
+                )}
+              </View>
+
+              {/* Star rating inline */}
+              <View style={styles.ratingRow}>
+                <Ionicons name="star" size={13} color="#FFD700" />
+                <Text style={styles.ratingText}>{trainer.averageRating?.toFixed(1) || '5.0'}</Text>
+                {trainer.totalSessionsCompleted > 0 && (
+                  <Text style={styles.sessionCount}>{trainer.totalSessionsCompleted} sessions</Text>
+                )}
+              </View>
+
+              {/* Price + distance */}
+              <View style={styles.metaRow}>
+                <View style={styles.priceChip}>
+                  <Text style={styles.priceText}>
+                    ${(trainer.ratePerMinuteCents / 100).toFixed(0)}<Text style={styles.priceUnit}>/min</Text>
+                  </Text>
+                </View>
+                {trainer.distance !== null && trainer.distance !== undefined && (
+                  <View style={styles.distanceChip}>
+                    <Ionicons name="navigate" size={11} color="rgba(255,255,255,0.5)" />
+                    <Text style={styles.distanceText}>{trainer.distance.toFixed(1)} mi</Text>
+                  </View>
+                )}
+                {trainer.isAvailable && (
+                  <View style={styles.availableChip}>
+                    <View style={styles.availableDot} />
+                    <Text style={styles.availableText}>Available</Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          </View>
+
+          {/* Bio */}
+          {trainer.bio && (
+            <Text style={styles.bio} numberOfLines={2}>{trainer.bio}</Text>
+          )}
+
+          {/* Tags strip */}
+          <View style={styles.tagStrip}>
+            {trainer.isVirtualTrainingAvailable && (
+              <View style={styles.virtualTag}>
+                <Ionicons name="videocam" size={11} color="#FF6A00" />
+                <Text style={styles.virtualTagText}>VIRTUAL</Text>
+              </View>
+            )}
+            {trainer.trainingStyles?.slice(0, 3).map((style: string, i: number) => (
+              <View key={i} style={styles.styleTag}>
+                <Text style={styles.styleTagText}>{style}</Text>
+              </View>
+            ))}
+            {(trainer.trainingStyles?.length || 0) > 3 && (
+              <Text style={styles.moreTag}>+{trainer.trainingStyles.length - 3}</Text>
+            )}
+          </View>
+
+          {/* CTA */}
+          <TouchableOpacity
+            style={styles.ctaButton}
+            onPress={() => onViewProfile(trainer.userId)}
+            activeOpacity={0.85}
+            data-testid={`view-profile-${trainer.userId}`}
+          >
+            <LinearGradient
+              colors={['#FF6A00', '#FF3D00']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.ctaGradient}
+            >
+              <Text style={styles.ctaText}>VIEW PROFILE</Text>
+              <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
+            </LinearGradient>
+          </TouchableOpacity>
         </LinearGradient>
       </TouchableOpacity>
-    </LinearGradient>
-  </Animated.View>
-);
+    </Animated.View>
+  );
+};
 
 const styles = StyleSheet.create({
   card: {
-    marginBottom: 16, borderRadius: 20, overflow: 'hidden',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 8,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    marginBottom: 20,
+    borderRadius: 22,
+    overflow: 'hidden',
+    shadowColor: '#FF6A00',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
+    elevation: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,106,0,0.08)',
   },
-  gradient: { padding: 18, position: 'relative', overflow: 'hidden' },
+  gradient: {
+    padding: 18,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  shimmer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1,
+  },
+  topAccent: {
+    position: 'absolute',
+    top: 0,
+    left: '20%',
+    right: '20%',
+    height: 1.5,
+    opacity: 0.4,
+  },
   glowOrb: {
-    position: 'absolute', top: -20, right: -20, width: 80, height: 80,
-    borderRadius: 40, backgroundColor: 'rgba(255, 106, 0, 0.06)',
+    position: 'absolute',
+    borderRadius: 50,
   },
-  header: { flexDirection: 'row', marginBottom: 12 },
-  avatarContainer: { position: 'relative', marginRight: 14 },
-  avatar: { width: 60, height: 60, borderRadius: 30, borderWidth: 2, borderColor: 'rgba(255,106,0,0.25)' },
-  avatarPlaceholder: { width: 60, height: 60, borderRadius: 30, justifyContent: 'center', alignItems: 'center' },
+  glowOrbTopRight: {
+    top: -30,
+    right: -30,
+    width: 100,
+    height: 100,
+    backgroundColor: 'rgba(255, 106, 0, 0.04)',
+  },
+  glowOrbBottomLeft: {
+    bottom: -20,
+    left: -20,
+    width: 80,
+    height: 80,
+    backgroundColor: 'rgba(255, 61, 0, 0.03)',
+  },
+  heroRow: {
+    flexDirection: 'row',
+    marginBottom: 12,
+    zIndex: 2,
+  },
+  avatarContainer: {
+    position: 'relative',
+    marginRight: 14,
+  },
+  avatar: {
+    width: 68,
+    height: 68,
+    borderRadius: 22,
+    borderWidth: 2,
+    borderColor: 'rgba(255,106,0,0.25)',
+  },
+  avatarPlaceholder: {
+    width: 68,
+    height: 68,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarRing: {
+    position: 'absolute',
+    top: -3,
+    left: -3,
+    right: -3,
+    bottom: -3,
+    borderRadius: 25,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,106,0,0.12)',
+  },
   verifiedBadge: {
-    position: 'absolute', bottom: -2, right: -2,
-    backgroundColor: '#141929', borderRadius: 10, padding: 1,
+    position: 'absolute',
+    bottom: -4,
+    right: -4,
+    borderRadius: 10,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#0F1526',
   },
-  activeDot: {
-    position: 'absolute', top: 0, right: 0, width: 14, height: 14,
-    borderRadius: 7, backgroundColor: '#00D68F', borderWidth: 2, borderColor: '#141929',
+  verifiedGradient: {
+    width: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  info: { flex: 1, justifyContent: 'center' },
-  name: { fontSize: 18, fontWeight: '800', color: '#FFFFFF', marginBottom: 6 },
-  stats: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  statBadge: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.06)', paddingHorizontal: 10, paddingVertical: 4,
-    borderRadius: 12, gap: 4, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+  liveDot: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: 'rgba(0,214,143,0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#0F1526',
   },
-  statText: { fontSize: 13, fontWeight: '700', color: '#FFFFFF' },
-  bio: { fontSize: 14, fontWeight: '500', color: 'rgba(255,255,255,0.5)', lineHeight: 20, marginBottom: 12 },
-  tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 },
+  liveDotInner: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#00D68F',
+  },
+  info: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  name: {
+    fontSize: 19,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    flex: 1,
+    letterSpacing: -0.3,
+  },
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 6,
+  },
+  ratingText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#FFD700',
+  },
+  sessionCount: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.35)',
+    marginLeft: 4,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  priceChip: {
+    backgroundColor: 'rgba(255,106,0,0.12)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,106,0,0.15)',
+  },
+  priceText: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: '#FF6A00',
+  },
+  priceUnit: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: 'rgba(255,106,0,0.7)',
+  },
+  distanceChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  distanceText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.5)',
+  },
+  availableChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+    backgroundColor: 'rgba(0,214,143,0.08)',
+  },
+  availableDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#00D68F',
+  },
+  availableText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#00D68F',
+  },
+  bio: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.45)',
+    lineHeight: 19,
+    marginBottom: 12,
+    zIndex: 2,
+  },
+  tagStrip: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 14,
+    zIndex: 2,
+  },
   virtualTag: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: 'rgba(255,106,0,0.15)', paddingHorizontal: 10, paddingVertical: 5,
-    borderRadius: 12, gap: 4, borderWidth: 1, borderColor: 'rgba(255,106,0,0.2)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,106,0,0.1)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255,106,0,0.12)',
   },
-  virtualTagText: { fontSize: 13, fontWeight: '800', color: '#FF6A00', letterSpacing: 0.5 },
+  virtualTagText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#FF6A00',
+    letterSpacing: 0.8,
+  },
   styleTag: {
-    backgroundColor: 'rgba(255,255,255,0.06)', paddingHorizontal: 10, paddingVertical: 5,
-    borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
   },
-  styleTagText: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.6)' },
-  moreTag: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.4)', alignSelf: 'center' },
-  viewProfileButton: { borderRadius: 14, overflow: 'hidden' },
-  viewProfileGradient: {
-    flexDirection: 'row', justifyContent: 'center', alignItems: 'center', paddingVertical: 14, gap: 8,
+  styleTagText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.5)',
   },
-  viewProfileText: { fontSize: 14, fontWeight: '800', color: '#FFFFFF', letterSpacing: 0.5 },
+  moreTag: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.3)',
+    alignSelf: 'center',
+  },
+  ctaButton: {
+    borderRadius: 14,
+    overflow: 'hidden',
+    zIndex: 2,
+  },
+  ctaGradient: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 13,
+    gap: 8,
+  },
+  ctaText: {
+    fontSize: 13,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: 1,
+  },
 });

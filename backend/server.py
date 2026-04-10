@@ -441,6 +441,13 @@ class TrainerProfileCreate(BaseModel):
     isAvailable: bool = True  # Toggle for visibility to trainees
     isVirtualTrainingAvailable: bool = False
     videoCallPreference: Optional[str] = "native"  # native, zoom, etc.
+    # Trainer Vibe (profile anthem)
+    vibeTrackTitle: Optional[str] = None
+    vibeArtistName: Optional[str] = None
+    vibeArtworkUrl: Optional[str] = None
+    vibePreviewUrl: Optional[str] = None       # 30-second preview clip URL
+    vibeAppleMusicUrl: Optional[str] = None    # Deep link to Apple Music
+    vibeTrackId: Optional[str] = None          # iTunes track ID
 
 class TrainerProfileResponse(BaseModel):
     id: str
@@ -494,6 +501,13 @@ class TrainerProfileResponse(BaseModel):
     distance: Optional[float] = None  # Distance from search location in miles
     matchType: Optional[str] = None  # 'in-person' or 'virtual'
     fullName: Optional[str] = None  # Trainer's full name from users collection
+    # Trainer Vibe
+    vibeTrackTitle: Optional[str] = None
+    vibeArtistName: Optional[str] = None
+    vibeArtworkUrl: Optional[str] = None
+    vibePreviewUrl: Optional[str] = None
+    vibeAppleMusicUrl: Optional[str] = None
+    vibeTrackId: Optional[str] = None
     createdAt: datetime
 
 # Trainee Profile Models
@@ -2310,6 +2324,62 @@ async def update_trainer_social_links(user_id: str, body: dict, current_user: di
     social_links = body.get('socialLinks', {})
     await db.trainer_profiles.update_one({'userId': user_id}, {'$set': {'socialLinks': social_links, 'updatedAt': datetime.utcnow()}})
     return {"success": True, "socialLinks": social_links}
+
+
+
+@api_router.put("/trainer-profiles/{user_id}/vibe")
+async def update_trainer_vibe(user_id: str, body: dict, current_user: dict = Depends(get_current_user)):
+    """Update trainer's profile vibe/anthem."""
+    if str(current_user['_id']) != user_id:
+        raise HTTPException(403, "Can only update your own vibe")
+    vibe_data = {
+        'vibeTrackTitle': body.get('vibeTrackTitle'),
+        'vibeArtistName': body.get('vibeArtistName'),
+        'vibeArtworkUrl': body.get('vibeArtworkUrl'),
+        'vibePreviewUrl': body.get('vibePreviewUrl'),
+        'vibeAppleMusicUrl': body.get('vibeAppleMusicUrl'),
+        'vibeTrackId': body.get('vibeTrackId'),
+        'updatedAt': datetime.utcnow(),
+    }
+    await db.trainer_profiles.update_one({'userId': user_id}, {'$set': vibe_data})
+    return {"success": True, **{k: v for k, v in vibe_data.items() if k != 'updatedAt'}}
+
+
+@api_router.delete("/trainer-profiles/{user_id}/vibe")
+async def remove_trainer_vibe(user_id: str, current_user: dict = Depends(get_current_user)):
+    """Remove trainer's profile vibe/anthem."""
+    if str(current_user['_id']) != user_id:
+        raise HTTPException(403, "Can only update your own vibe")
+    clear_data = {
+        'vibeTrackTitle': None, 'vibeArtistName': None, 'vibeArtworkUrl': None,
+        'vibePreviewUrl': None, 'vibeAppleMusicUrl': None, 'vibeTrackId': None,
+        'updatedAt': datetime.utcnow(),
+    }
+    await db.trainer_profiles.update_one({'userId': user_id}, {'$set': clear_data})
+    return {"success": True}
+
+
+@api_router.get("/music/search")
+async def search_music(q: str = Query(..., min_length=2), limit: int = Query(10, le=25)):
+    """Proxy iTunes Search API for song lookup."""
+    import aiohttp
+    url = f"https://itunes.apple.com/search?term={q}&media=music&entity=song&limit={limit}"
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as resp:
+            data = await resp.json(content_type=None)
+    results = []
+    for item in data.get('results', []):
+        results.append({
+            'trackId': str(item.get('trackId', '')),
+            'trackName': item.get('trackName', ''),
+            'artistName': item.get('artistName', ''),
+            'artworkUrl': (item.get('artworkUrl100', '') or '').replace('100x100', '600x600'),
+            'previewUrl': item.get('previewUrl', ''),
+            'trackViewUrl': item.get('trackViewUrl', ''),
+            'collectionName': item.get('collectionName', ''),
+        })
+    return {"results": results}
+
 
 
 MAX_IMAGE_SIZE = 10 * 1024 * 1024   # 10MB

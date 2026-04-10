@@ -289,6 +289,26 @@ export default function TrainerProfileScreen() {
               onGalleryUpdated={(newGallery) => setProfile({ ...profile, gallery: newGallery })}
             />
             <SocialLinksDisplay socialLinks={profile?.socialLinks || {}} />
+
+            {/* Trainer Vibe CTA */}
+            <TouchableOpacity
+              onPress={() => router.push('/trainer/vibe-setup')}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,106,0,0.08)', borderRadius: 16, padding: 16, marginTop: 16, borderWidth: 1, borderColor: 'rgba(255,106,0,0.15)' }}
+              data-testid="trainer-vibe-setup-btn"
+            >
+              <LinearGradient colors={['#FF6A00', '#FF3D00']} style={{ width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center' }}>
+                <Ionicons name="musical-notes" size={22} color="#FFF" />
+              </LinearGradient>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 16, fontWeight: '800', color: '#FFF' }}>
+                  {profile?.vibeTrackTitle ? 'Your Vibe' : 'Set Your Vibe'}
+                </Text>
+                <Text style={{ fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.5)' }}>
+                  {profile?.vibeTrackTitle ? `${profile.vibeTrackTitle} - ${profile.vibeArtistName}` : 'Choose a profile anthem'}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.3)" />
+            </TouchableOpacity>
           </View>
 
           <View style={{ height: 100 }} />

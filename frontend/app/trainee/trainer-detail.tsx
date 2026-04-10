@@ -24,8 +24,9 @@ import { Video, ResizeMode } from 'expo-av';
 import { toast } from '../../src/utils/toast';
 import { haptic } from '../../src/utils/haptics';
 import { ProfileGallery, SocialLinksDisplay } from '../../src/components/ProfileSections';
+import { TrainerVibePlayer } from '../../src/components/TrainerVibePlayer';
 
-const { width } = Dimensions.get('window');
+const { width, height: screenHeight } = Dimensions.get('window');
 
 // Brand colors
 const COLORS = {
@@ -58,9 +59,15 @@ export default function TrainerDetailScreen() {
   const [showTraineeHomeConsent, setShowTraineeHomeConsent] = useState(false);
   const [traineeHomeConsented, setTraineeHomeConsented] = useState(false);
 
-  // Animations
+  // Animations — cinematic entrance
+  const heroFadeAnim = useRef(new Animated.Value(0)).current;
+  const heroScaleAnim = useRef(new Animated.Value(1.1)).current;
   const headerAnim = useRef(new Animated.Value(0)).current;
   const contentAnim = useRef(new Animated.Value(0)).current;
+  const nameSlideAnim = useRef(new Animated.Value(30)).current;
+  const statsSlideAnim = useRef(new Animated.Value(40)).current;
+  const vibeSlideAnim = useRef(new Animated.Value(50)).current;
+  const ctaSlideAnim = useRef(new Animated.Value(60)).current;
   const pressProgress = useRef(new Animated.Value(0)).current;
   const pressTimer = useRef<NodeJS.Timeout | null>(null);
   const [isHolding, setIsHolding] = useState(false);
@@ -72,20 +79,26 @@ export default function TrainerDetailScreen() {
 
   useEffect(() => {
     if (!loading && trainer) {
-      Animated.timing(headerAnim, {
-        toValue: 1,
-        duration: 400,
-        useNativeDriver: true,
-      }).start();
+      // Cinematic layered entrance sequence
+      // 1. Hero image fades in + slight zoom-out
+      Animated.parallel([
+        Animated.timing(heroFadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
+        Animated.timing(heroScaleAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+      ]).start();
 
-      setTimeout(() => {
-        Animated.spring(contentAnim, {
-          toValue: 1,
-          friction: 8,
-          tension: 40,
-          useNativeDriver: true,
-        }).start();
-      }, 200);
+      // 2. Header content slides in
+      Animated.timing(headerAnim, { toValue: 1, duration: 500, delay: 200, useNativeDriver: true }).start();
+
+      // 3. Staggered slide-up sequence
+      Animated.stagger(100, [
+        Animated.spring(nameSlideAnim, { toValue: 0, friction: 10, tension: 60, useNativeDriver: true }),
+        Animated.spring(statsSlideAnim, { toValue: 0, friction: 10, tension: 60, useNativeDriver: true }),
+        Animated.spring(vibeSlideAnim, { toValue: 0, friction: 10, tension: 60, useNativeDriver: true }),
+        Animated.spring(ctaSlideAnim, { toValue: 0, friction: 10, tension: 60, useNativeDriver: true }),
+      ]).start();
+
+      // 4. Content body
+      Animated.spring(contentAnim, { toValue: 1, friction: 8, tension: 40, delay: 400, useNativeDriver: true }).start();
     }
   }, [loading, trainer]);
 
@@ -411,7 +424,139 @@ export default function TrainerDetailScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Profile Card */}
+          {/* CINEMATIC HERO SECTION */}
+          <Animated.View style={{ opacity: heroFadeAnim }}>
+            <Animated.View style={{ transform: [{ scale: heroScaleAnim }] }}>
+              <View style={styles.heroSection} data-testid="trainer-hero-section">
+                {/* Hero Image - Full width */}
+                {trainer.avatarUrl ? (
+                  <Image source={{ uri: trainer.avatarUrl }} style={styles.heroImage} />
+                ) : (
+                  <LinearGradient colors={['#1A1F38', '#0A0E1A']} style={styles.heroImage} />
+                )}
+                {/* Dramatic multi-layer gradient overlay */}
+                <LinearGradient
+                  colors={['transparent', 'rgba(10,14,26,0.3)', 'rgba(10,14,26,0.85)', '#0A0E1A']}
+                  locations={[0, 0.3, 0.65, 1]}
+                  style={StyleSheet.absoluteFill}
+                />
+                {/* Cinematic side vignette */}
+                <LinearGradient
+                  colors={['rgba(10,14,26,0.4)', 'transparent', 'rgba(10,14,26,0.4)']}
+                  start={{ x: 0, y: 0.5 }}
+                  end={{ x: 1, y: 0.5 }}
+                  style={StyleSheet.absoluteFill}
+                />
+                {/* Orange accent glow at bottom */}
+                <View style={styles.heroGlowOrb} />
+              </View>
+            </Animated.View>
+
+            {/* Hero Content - Overlaid at bottom of image */}
+            <View style={styles.heroContent}>
+              {/* Availability badge */}
+              {trainer.isAvailable && (
+                <View style={styles.heroAvailableBadge}>
+                  <View style={styles.heroAvailableDot} />
+                  <Text style={styles.heroAvailableText}>AVAILABLE NOW</Text>
+                </View>
+              )}
+
+              {/* Name with animated slide */}
+              <Animated.View style={{ transform: [{ translateY: nameSlideAnim }], opacity: headerAnim }}>
+                <Text style={styles.heroName} data-testid="trainer-hero-name">{trainer.fullName || 'Trainer'}</Text>
+                {trainer.bio && (
+                  <Text style={styles.heroTagline} numberOfLines={2}>{trainer.bio}</Text>
+                )}
+              </Animated.View>
+
+              {/* Rating + verified inline */}
+              <Animated.View style={[styles.heroRatingRow, { transform: [{ translateY: statsSlideAnim }], opacity: headerAnim }]}>
+                <View style={styles.heroRatingChip}>
+                  <Ionicons name="star" size={14} color="#FFD700" />
+                  <Text style={styles.heroRatingText}>{trainer.averageRating?.toFixed(1) || '5.0'}</Text>
+                  <Text style={styles.heroReviewCount}>({ratings.length})</Text>
+                </View>
+                {trainer.isVerified && (
+                  <View style={styles.heroVerifiedChip}>
+                    <Ionicons name="checkmark-circle" size={14} color="#FF6A00" />
+                    <Text style={styles.heroVerifiedText}>VERIFIED</Text>
+                  </View>
+                )}
+                <View style={styles.heroPriceChip}>
+                  <Text style={styles.heroPriceText}>
+                    ${((trainer.ratePerMinuteCents || 0) / 100).toFixed(0)}<Text style={styles.heroPriceUnit}>/min</Text>
+                  </Text>
+                </View>
+              </Animated.View>
+
+              {/* Stats bar */}
+              <Animated.View style={[styles.heroStatsBar, { transform: [{ translateY: statsSlideAnim }], opacity: headerAnim }]}>
+                <View style={styles.heroStat}>
+                  <Text style={styles.heroStatValue}>{trainer.experienceYears || 0}</Text>
+                  <Text style={styles.heroStatLabel}>YRS EXP</Text>
+                </View>
+                <View style={styles.heroStatDivider} />
+                <View style={styles.heroStat}>
+                  <Text style={styles.heroStatValue}>{trainer.totalSessionsCompleted || 0}</Text>
+                  <Text style={styles.heroStatLabel}>SESSIONS</Text>
+                </View>
+                <View style={styles.heroStatDivider} />
+                <View style={styles.heroStat}>
+                  <Text style={styles.heroStatValue}>{trainer.travelRadiusMiles || 10}</Text>
+                  <Text style={styles.heroStatLabel}>MI RADIUS</Text>
+                </View>
+                <View style={styles.heroStatDivider} />
+                <View style={styles.heroStat}>
+                  <Text style={styles.heroStatValue}>{ratings.length}</Text>
+                  <Text style={styles.heroStatLabel}>REVIEWS</Text>
+                </View>
+              </Animated.View>
+
+              {/* Trainer Vibe Player */}
+              <Animated.View style={{ transform: [{ translateY: vibeSlideAnim }], opacity: headerAnim }}>
+                <TrainerVibePlayer vibe={trainer as any} autoPlay={true} />
+              </Animated.View>
+
+              {/* CTA Row */}
+              <Animated.View style={[styles.heroCTARow, { transform: [{ translateY: ctaSlideAnim }], opacity: headerAnim }]}>
+                <TouchableOpacity
+                  onPress={handleMessage}
+                  style={styles.heroCTASecondary}
+                  data-testid="hero-message-btn"
+                >
+                  <Ionicons name="chatbubble" size={18} color="#FF6A00" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleToggleFavorite}
+                  style={[styles.heroCTASecondary, isFavorite && { borderColor: 'rgba(255,71,87,0.3)', backgroundColor: 'rgba(255,71,87,0.08)' }]}
+                  data-testid="hero-favorite-btn"
+                >
+                  <Ionicons name={isFavorite ? "heart" : "heart-outline"} size={18} color={isFavorite ? '#FF4757' : '#FF6A00'} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    // Scroll to booking section
+                    haptic('light');
+                  }}
+                  style={styles.heroCTAPrimary}
+                  data-testid="hero-book-btn"
+                >
+                  <LinearGradient
+                    colors={['#FF6A00', '#FF3D00']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.heroCTAPrimaryGradient}
+                  >
+                    <Ionicons name="flash" size={16} color="#FFF" />
+                    <Text style={styles.heroCTAPrimaryText}>BOOK SESSION</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </Animated.View>
+            </View>
+          </Animated.View>
+
+          {/* Profile Details Card */}
           <Animated.View
             style={[
               styles.profileCard,
@@ -422,99 +567,6 @@ export default function TrainerDetailScreen() {
             ]}
           >
             <LinearGradient colors={['#141929', '#1A2035']} style={styles.profileGradient}>
-              {/* Hero Image Background */}
-              {trainer.avatarUrl && (
-                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 180, overflow: 'hidden' }}>
-                  <Image 
-                    source={{ uri: trainer.avatarUrl }} 
-                    style={{ width: '100%', height: 180, opacity: 0.25 }} 
-                    blurRadius={20}
-                  />
-                  <LinearGradient 
-                    colors={['transparent', '#141929']} 
-                    style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 100 }} 
-                  />
-                </View>
-              )}
-
-              {/* Avatar */}
-              <View style={styles.avatarSection}>
-                {trainer.avatarUrl ? (
-                  <Image source={{ uri: trainer.avatarUrl }} style={styles.avatar} />
-                ) : (
-                  <LinearGradient colors={['#FF6A00', '#FF9F1C']} style={styles.avatarPlaceholder}>
-                    <Ionicons name="person" size={50} color={COLORS.white} />
-                  </LinearGradient>
-                )}
-                {trainer.isVerified && (
-                  <View style={styles.verifiedBadge}>
-                    <Ionicons name="checkmark-circle" size={28} color={'#FF6A00'} />
-                  </View>
-                )}
-                {/* Availability dot */}
-                {trainer.isAvailable && (
-                  <View style={{ position: 'absolute', top: 2, right: 2, width: 18, height: 18, borderRadius: 9, backgroundColor: '#00D68F', borderWidth: 3, borderColor: '#141929' }} />
-                )}
-              </View>
-
-              {/* Name & Rating */}
-              <Text style={styles.trainerName}>{trainer.fullName || 'Trainer'}</Text>
-              <View style={styles.ratingRow}>
-                <Ionicons name="star" size={18} color={COLORS.gold} />
-                <Text style={styles.ratingText}>
-                  {trainer.averageRating?.toFixed(1) || '5.0'}
-                </Text>
-                <Text style={styles.reviewCount}>({ratings.length} reviews)</Text>
-              </View>
-
-              {/* Bio */}
-              {trainer.bio && (
-                <Text style={styles.bio}>{trainer.bio}</Text>
-              )}
-
-              {/* Stats — Social media style row */}
-              <View style={styles.statsRow}>
-                <View style={styles.stat}>
-                  <Text style={styles.statValue}>{trainer.experienceYears || 0}</Text>
-                  <Text style={styles.statLabel}>Years</Text>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.stat}>
-                  <Text style={styles.statValue}>{trainer.totalSessionsCompleted || 0}</Text>
-                  <Text style={styles.statLabel}>Sessions</Text>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.stat}>
-                  <Text style={styles.statValue}>{trainer.travelRadiusMiles || 10}</Text>
-                  <Text style={styles.statLabel}>Mi Radius</Text>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.stat}>
-                  <Text style={styles.statValue}>{ratings.length}</Text>
-                  <Text style={styles.statLabel}>Reviews</Text>
-                </View>
-              </View>
-
-              {/* Quick Action Buttons — IG style */}
-              <View style={{ flexDirection: 'row', gap: 10, marginTop: 4, marginBottom: 16 }}>
-                <TouchableOpacity 
-                  onPress={handleMessage} 
-                  style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.08)', paddingVertical: 12, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}
-                  data-testid="quick-message-btn"
-                >
-                  <Ionicons name="chatbubble" size={16} color="#FF6A00" />
-                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#FFFFFF' }}>Message</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  onPress={handleToggleFavorite}
-                  style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: isFavorite ? 'rgba(255, 71, 87, 0.12)' : 'rgba(255,255,255,0.08)', paddingVertical: 12, borderRadius: 12, borderWidth: 1, borderColor: isFavorite ? 'rgba(255,71,87,0.2)' : 'rgba(255,255,255,0.1)' }}
-                  data-testid="quick-favorite-btn"
-                >
-                  <Ionicons name={isFavorite ? "heart" : "heart-outline"} size={16} color={isFavorite ? '#FF4757' : '#FFFFFF'} />
-                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#FFFFFF' }}>{isFavorite ? 'Saved' : 'Save'}</Text>
-                </TouchableOpacity>
-              </View>
-
               {/* Training Styles / Specialties */}
               {trainer.trainingStyles && trainer.trainingStyles.length > 0 && (
                 <View style={styles.tagsSection}>
@@ -1080,8 +1132,201 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
+    paddingTop: 0,
     paddingHorizontal: 20,
-    paddingTop: 10,
+  },
+  // Cinematic Hero Section
+  heroSection: {
+    width: width,
+    height: width * 1.1,
+    overflow: 'hidden',
+    marginLeft: -20,
+  },
+  heroImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  heroGlowOrb: {
+    position: 'absolute',
+    bottom: -40,
+    left: width / 2 - 80,
+    width: 160,
+    height: 80,
+    borderRadius: 80,
+    backgroundColor: 'rgba(255,106,0,0.08)',
+  },
+  heroContent: {
+    marginTop: -140,
+    paddingHorizontal: 4,
+    zIndex: 10,
+  },
+  heroAvailableBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(0,214,143,0.12)',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 20,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(0,214,143,0.2)',
+  },
+  heroAvailableDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: '#00D68F',
+  },
+  heroAvailableText: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: '#00D68F',
+    letterSpacing: 1,
+  },
+  heroName: {
+    fontSize: 34,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: -1,
+    marginBottom: 4,
+  },
+  heroTagline: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.55)',
+    lineHeight: 21,
+    marginBottom: 12,
+  },
+  heroRatingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 14,
+  },
+  heroRatingChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255,215,0,0.1)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,215,0,0.15)',
+  },
+  heroRatingText: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: '#FFD700',
+  },
+  heroReviewCount: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: 'rgba(255,215,0,0.6)',
+  },
+  heroVerifiedChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255,106,0,0.1)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,106,0,0.15)',
+  },
+  heroVerifiedText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#FF6A00',
+    letterSpacing: 0.8,
+  },
+  heroPriceChip: {
+    backgroundColor: 'rgba(255,106,0,0.12)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,106,0,0.15)',
+  },
+  heroPriceText: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: '#FF6A00',
+  },
+  heroPriceUnit: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: 'rgba(255,106,0,0.7)',
+  },
+  heroStatsBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+  },
+  heroStat: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  heroStatValue: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#FFFFFF',
+  },
+  heroStatLabel: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: 'rgba(255,255,255,0.4)',
+    letterSpacing: 1,
+    marginTop: 2,
+  },
+  heroStatDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    alignSelf: 'center',
+  },
+  heroCTARow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 20,
+  },
+  heroCTASecondary: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,106,0,0.15)',
+  },
+  heroCTAPrimary: {
+    flex: 1,
+    borderRadius: 14,
+    overflow: 'hidden',
+  },
+  heroCTAPrimaryGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    gap: 8,
+  },
+  heroCTAPrimaryText: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: 1,
   },
   // Profile Card
   profileCard: {
@@ -1097,8 +1342,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.08)',
   },
   profileGradient: {
-    padding: 24,
-    alignItems: 'center',
+    padding: 20,
   },
   avatarSection: {
     position: 'relative',
