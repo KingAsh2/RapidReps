@@ -318,7 +318,7 @@ export default function SignupScreen() {
               ]}
             >
               <LinearGradient
-                colors={[COLORS.offWhite, COLORS.white]}
+                colors={['#0A0E1A', '#141929']}
                 style={styles.formCardGradient}
               >
                 {/* Name Input */}
@@ -539,7 +539,7 @@ export default function SignupScreen() {
                 <TextInput
                   style={styles.referralInput}
                   placeholder="Have a referral code? (optional)"
-                  placeholderTextColor="rgba(0,0,0,0.5)"
+                  placeholderTextColor="rgba(255,255,255,0.4)"
                   value={formData.referralCode}
                   onChangeText={(text) => setFormData(prev => ({ ...prev, referralCode: text.toUpperCase() }))}
                   autoCapitalize="characters"
@@ -883,12 +883,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: 'rgba(255,255,255,0.35)',
+    backgroundColor: 'rgba(255,255,255,0.08)',
     borderRadius: 14,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.6)',
+    borderColor: 'rgba(255,255,255,0.15)',
   },
   referralInput: {
     flex: 1,

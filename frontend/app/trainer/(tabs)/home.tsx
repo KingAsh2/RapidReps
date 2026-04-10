@@ -983,7 +983,7 @@ export default function TrainerHomeScreen() {
                 </View>
                 <View style={styles.traineeThumbnailGrid}>
                   {nearbyTrainees.slice(0, 8).map((trainee, index) => (
-                    <View key={index} style={styles.traineeThumbnail}>
+                    <TouchableOpacity key={index} style={styles.traineeThumbnail} onPress={() => router.push(`/trainer/trainee-profile?userId=${trainee.userId || trainee.id}`)} data-testid={`nearby-trainee-${index}`}>
                       {trainee.profilePhoto ? (
                         <Image source={{ uri: trainee.profilePhoto }} style={styles.traineeThumbnailAvatar} />
                       ) : (
@@ -1001,7 +1001,7 @@ export default function TrainerHomeScreen() {
                         <Ionicons name="location" size={10} color={COLORS.orange} />
                         <Text style={styles.traineeThumbnailDistanceText}>{trainee.distance} mi</Text>
                       </View>
-                    </View>
+                    </TouchableOpacity>
                   ))}
                 </View>
               </View>
@@ -1579,12 +1579,14 @@ const styles = StyleSheet.create({
   traineeThumbnail: {
     width: (width - 40 - 30) / 4,
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.95)',
+    backgroundColor: 'rgba(20, 25, 41, 0.95)',
     borderRadius: 14,
     padding: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 3,
   },
@@ -1617,6 +1619,6 @@ const styles = StyleSheet.create({
   traineeThumbnailDistanceText: {
     fontSize: 10,
     fontWeight: '600',
-    color: 'rgba(255,255,255,0.5)',
+    color: 'rgba(255,255,255,0.7)',
   },
 });

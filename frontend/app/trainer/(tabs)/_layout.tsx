@@ -73,8 +73,8 @@ export default function TrainerTabsLayout() {
       <Tabs.Screen
         name="messages"
         options={{
-          title: 'Messages',
-          tabBarAccessibilityLabel: 'Messages tab',
+          title: 'Chat',
+          tabBarAccessibilityLabel: 'Chat tab',
           tabBarBadge: unreadMessageCount > 0 ? unreadMessageCount : undefined,
           tabBarBadgeStyle: { backgroundColor: COLORS.accent, fontSize: 13, fontWeight: '700' },
           tabBarIcon: ({ color, size }) => (

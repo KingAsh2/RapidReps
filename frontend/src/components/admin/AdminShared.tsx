@@ -58,7 +58,7 @@ export const StatCard = ({ icon, label, value, color, subtitle, growth }: { icon
         <Ionicons name={icon as any} size={22} color={color} />
       </View>
       {growth ? (
-        <View style={[s.growthTag, { backgroundColor: growth.startsWith('+') ? '#E8F5E9' : '#FFEBEE' }]}>
+        <View style={[s.growthTag, { backgroundColor: growth.startsWith('+') ? 'rgba(0,214,143,0.15)' : 'rgba(255,71,87,0.15)' }]}>
           <Ionicons name={growth.startsWith('+') ? 'trending-up' : 'trending-down'} size={10} color={growth.startsWith('+') ? C.success : C.error} />
           <Text style={[s.growthText, { color: growth.startsWith('+') ? C.success : C.error }]}>{growth}</Text>
         </View>
@@ -108,7 +108,7 @@ export const DonutChart = ({ segments, size, strokeWidth, centerLabel, centerVal
           );
         })}
         <SvgText x={size / 2} y={size / 2 - 6} textAnchor="middle" fontSize={10} fill={'#8a95b0'} fontWeight="600">{centerLabel}</SvgText>
-        <SvgText x={size / 2} y={size / 2 + 14} textAnchor="middle" fontSize={18} fill={'#0A0E1A'} fontWeight="900">{centerValue}</SvgText>
+        <SvgText x={size / 2} y={size / 2 + 14} textAnchor="middle" fontSize={18} fill={'#FFFFFF'} fontWeight="900">{centerValue}</SvgText>
       </Svg>
     </View>
   );
@@ -261,8 +261,8 @@ export const s = StyleSheet.create({
   legendDot: { width: 10, height: 10, borderRadius: 5 },
   legendLabel: { flex: 1, fontSize: 13, color: C.gray, fontWeight: '500' },
   legendValue: { fontSize: 13, fontWeight: '700', color: '#FFFFFF' },
-  legendDivider: { height: 1, backgroundColor: '#e2e8f0', marginVertical: 2 },
-  divider: { height: 1, backgroundColor: '#e2e8f0', marginVertical: 4 },
+  legendDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.08)', marginVertical: 2 },
+  divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.08)', marginVertical: 4 },
   listCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: C.card, borderRadius: 12, padding: 14, marginBottom: 8, gap: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 4, elevation: 1 },
   listCardIcon: { width: 38, height: 38, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
   userAvatar: { width: 38, height: 38, borderRadius: 19 },
@@ -297,7 +297,7 @@ export const s = StyleSheet.create({
   transBreakdownText: { fontSize: 13, color: C.gray, fontWeight: '500' },
   smallBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 6 },
   smallBtnText: { color: C.white, fontSize: 13, fontWeight: '700' },
-  refundedTag: { marginTop: 8, backgroundColor: '#FFE0E0', alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 },
+  refundedTag: { marginTop: 8, backgroundColor: 'rgba(255,71,87,0.15)', alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 },
   refundedTagText: { fontSize: 13, fontWeight: '700', color: C.error },
   profileCard: { backgroundColor: C.card, borderRadius: 16, padding: 24, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.08, shadowRadius: 10, elevation: 3 },
   profileAvatar: { width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(0, 214, 143, 0.12)', justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
@@ -313,7 +313,7 @@ export const s = StyleSheet.create({
   emptyTitle: { fontSize: 18, fontWeight: '700', color: '#FFFFFF' },
   emptySub: { fontSize: 13, color: C.gray, textAlign: 'center' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modalContent: { backgroundColor: C.white, borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '80%' },
+  modalContent: { backgroundColor: '#141929', borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '80%' },
   modalTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)' },
   modalTitle: { fontSize: 18, fontWeight: '700', color: '#FFFFFF' },
@@ -321,8 +321,8 @@ export const s = StyleSheet.create({
   modalSection: { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)' },
   modalSectionTitle: { fontSize: 14, fontWeight: '700', color: '#FF6A00', marginBottom: 8 },
   modalField: { fontSize: 13, color: C.grayDark, lineHeight: 22 },
-  messageInput: { borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', borderRadius: 10, padding: 14, minHeight: 100, fontSize: 14, color: '#FFFFFF', textAlignVertical: 'top' },
-  textInput: { borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', borderRadius: 10, padding: 12, fontSize: 14, color: '#FFFFFF', marginBottom: 12 },
+  messageInput: { borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', borderRadius: 10, padding: 14, minHeight: 100, fontSize: 14, color: '#FFFFFF', textAlignVertical: 'top', backgroundColor: '#1A2035' },
+  textInput: { borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', borderRadius: 10, padding: 12, fontSize: 14, color: '#FFFFFF', marginBottom: 12, backgroundColor: '#1A2035' },
   inputLabel: { fontSize: 13, fontWeight: '600', color: C.grayDark, marginBottom: 6 },
   searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: C.card, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', gap: 8 },
   searchInput: { flex: 1, fontSize: 14, color: '#FFFFFF', paddingVertical: 2 },
@@ -331,7 +331,7 @@ export const s = StyleSheet.create({
   filterPillText: { fontSize: 13, fontWeight: '600', color: C.gray },
   filterPillTextActive: { color: C.white },
   paginationBar: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', paddingVertical: 16, gap: 16 },
-  pageBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: C.white, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
+  pageBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#1A2035', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)' },
   pageBtnDisabled: { opacity: 0.4 },
   pageInfo: { fontSize: 13, fontWeight: '600', color: C.grayDark },
   attentionCard: { backgroundColor: C.card, borderRadius: 14, overflow: 'hidden', marginBottom: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },

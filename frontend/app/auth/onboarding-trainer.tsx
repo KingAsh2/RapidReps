@@ -721,7 +721,7 @@ const styles = StyleSheet.create({
   stepTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: Colors.navy,
+    color: '#FFFFFF',
     marginBottom: 24,
   },
   inputGroup: {
@@ -730,7 +730,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.navy,
+    color: '#FFFFFF',
     marginBottom: 8,
   },
   labelRow: {
@@ -740,14 +740,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   input: {
-    backgroundColor: Colors.background,
+    backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    color: Colors.navy,
+    color: '#FFFFFF',
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: 'rgba(255,255,255,0.2)',
   },
   textArea: {
     height: 100,
@@ -819,7 +819,7 @@ const styles = StyleSheet.create({
   },
   chipText: {
     fontSize: 14,
-    color: Colors.navy,
+    color: '#FFFFFF',
   },
   chipTextSelected: {
     color: Colors.white,
@@ -837,8 +837,8 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: Colors.border,
-    backgroundColor: Colors.white,
+    borderColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(255,255,255,0.08)',
     gap: 8,
   },
   toggleButtonActive: {
@@ -848,7 +848,7 @@ const styles = StyleSheet.create({
   toggleButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.navy,
+    color: '#FFFFFF',
   },
   toggleButtonTextActive: {
     color: Colors.white,
@@ -862,8 +862,8 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: Colors.border,
-    backgroundColor: Colors.white,
+    borderColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center',
   },
   durationChipSelected: {
@@ -884,7 +884,7 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     gap: 12,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: 'rgba(255,255,255,0.1)',
   },
   backButton: {
     flex: 1,
@@ -892,12 +892,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: Colors.navy,
+    borderColor: 'rgba(255,255,255,0.3)',
   },
   backButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.navy,
+    color: '#FFFFFF',
   },
   nextButton: {
     flex: 2,

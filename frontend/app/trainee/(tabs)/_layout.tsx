@@ -96,8 +96,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="messages"
         options={{
-          title: 'Messages',
-          tabBarAccessibilityLabel: 'Messages tab',
+          title: 'Chat',
+          tabBarAccessibilityLabel: 'Chat tab',
           tabBarBadge: unreadMessageCount > 0 ? unreadMessageCount : undefined,
           tabBarBadgeStyle: { backgroundColor: BRAND.accent, fontSize: 13, fontWeight: '700' },
           tabBarIcon: ({ color, focused }) => (

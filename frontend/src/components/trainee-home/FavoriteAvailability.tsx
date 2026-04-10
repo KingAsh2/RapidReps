@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
   label: { fontSize: 16, fontWeight: '800', color: '#FFFFFF', marginBottom: 12 },
   card: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: '#fff', borderRadius: 14, padding: 14, marginBottom: 8,
+    backgroundColor: '#141929', borderRadius: 14, padding: 14, marginBottom: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 3,
   },
   photo: { width: 42, height: 42, borderRadius: 21 },

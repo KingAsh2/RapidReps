@@ -124,8 +124,8 @@ const ScanningOverlay = ({ visible, onComplete }: { visible: boolean; onComplete
             <Ionicons name="id-card" size={60} color="rgba(255,255,255,0.3)" style={{ position: 'absolute' }} />
           </Animated.View>
           
-          <Text style={scanStyles.title}>Scanning ID...</Text>
-          <Text style={scanStyles.subtitle}>Please hold still while we verify your document</Text>
+          <Text style={scanStyles.title}>Please Hold Still</Text>
+          <Text style={scanStyles.subtitle}>We're scanning your ID for verification</Text>
           
           <View style={scanStyles.progressContainer}>
             <ActivityIndicator size="small" color={COLORS.orange} />
@@ -346,6 +346,9 @@ export default function TrainerVerificationScreen() {
       setVerificationStatus(prev => ({ ...prev, [stepId]: 'uploading' }));
 
       if (stepId === 'identity') {
+        // Show scanning overlay immediately for scan illusion
+        setShowScanningOverlay(true);
+        
         // #2: Scan ID with camera - request permission first
         const { status } = await ImagePicker.requestCameraPermissionsAsync();
         let result;
@@ -357,6 +360,7 @@ export default function TrainerVerificationScreen() {
           });
         } else {
           // Fallback to image library if camera permission denied
+          setShowScanningOverlay(false);
           toast.info('Camera access denied. Please select your ID from gallery.');
           result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -366,10 +370,11 @@ export default function TrainerVerificationScreen() {
         }
         if (result && !result.canceled && result.assets?.[0]) {
           const asset = result.assets[0];
-          // Show scanning animation
+          // Keep scanning animation going with the actual image
           setPendingIdUri(asset.uri);
-          setShowScanningOverlay(true);
+          // Scanning overlay is already visible
         } else {
+          setShowScanningOverlay(false);
           setVerificationStatus(prev => ({ ...prev, [stepId]: 'pending' }));
         }
       } else if (stepId === 'photo') {
@@ -945,7 +950,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   rejectedText: { flex: 1, fontSize: 13, color: COLORS.error },
-  trustCard: { backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: 16, padding: 20, marginTop: 8 },
+  trustCard: { backgroundColor: 'rgba(20, 25, 41, 0.95)', borderRadius: 16, padding: 20, marginTop: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
   trustHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
   trustTitle: { fontSize: 16, fontWeight: '700', color: '#FFFFFF' },
   trustText: { fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 20, marginBottom: 16 },

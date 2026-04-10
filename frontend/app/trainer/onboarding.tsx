@@ -271,7 +271,7 @@ export default function TrainerOnboardingScreen() {
             ]}
           >
             <LinearGradient
-              colors={onboardingStatus?.canGoLive ? [COLORS.success, '#00A854'] : [COLORS.white, '#2a3f7e']}
+              colors={onboardingStatus?.canGoLive ? [COLORS.success, '#00A854'] : ['#0A0E1A', '#141929']}
               style={styles.statusGradient}
             >
               <View style={styles.statusIconContainer}>
@@ -549,7 +549,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#141929',
+    backgroundColor: COLORS.orange,
     borderRadius: 4,
   },
   progressText: {

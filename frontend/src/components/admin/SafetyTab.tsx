@@ -317,7 +317,7 @@ const st = StyleSheet.create({
   sectionTitle: { fontSize: 16, fontWeight: '800', color: '#FFFFFF', marginBottom: 8 },
   subTitle: { fontSize: 14, fontWeight: '700', color: C.gray },
   card: {
-    backgroundColor: C.white, borderRadius: 14, padding: 14, marginBottom: 8,
+    backgroundColor: '#141929', borderRadius: 14, padding: 14, marginBottom: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
     shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06,
     shadowRadius: 4, elevation: 2,
   },
@@ -335,7 +335,7 @@ const st = StyleSheet.create({
   emptyText: { fontSize: 14, color: C.gray },
   // Modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', paddingHorizontal: 24 },
-  modalContent: { backgroundColor: C.white, borderRadius: 20, padding: 24 },
+  modalContent: { backgroundColor: '#141929', borderRadius: 20, padding: 24 },
   modalTitle: { fontSize: 18, fontWeight: '800', color: '#FFFFFF', marginBottom: 4 },
   modalSubtitle: { fontSize: 13, color: C.gray, marginBottom: 16 },
   input: {

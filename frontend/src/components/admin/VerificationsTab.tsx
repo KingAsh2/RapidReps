@@ -465,7 +465,7 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                         style={{
                           borderWidth: 1, borderColor: C.error, borderRadius: 10, padding: 14,
                           minHeight: 100, fontSize: 14, color: '#FFFFFF', textAlignVertical: 'top',
-                          backgroundColor: '#fff',
+                          backgroundColor: '#141929',
                         }}
                         value={rejectReason}
                         onChangeText={setRejectReason}
