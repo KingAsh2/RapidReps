@@ -35,7 +35,8 @@ const BRAND = {
 };
 
 // Same background as main screen
-const backgroundImage = require('../../assets/images/bg-battle-ropes.png');
+const backgroundImage = require('../../assets/images/fiery-bg.png');
+const rpLogo = require('../../assets/images/rp-logo-new.png');
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -189,9 +190,9 @@ export default function LoginScreen() {
 
   return (
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
-      {/* Orange gradient overlay — matching main screen exactly */}
+      {/* Dark gradient overlay — lets fiery background show through */}
       <LinearGradient
-        colors={['rgba(255, 127, 0, 0.92)', 'rgba(255, 127, 0, 0.88)', 'rgba(255, 165, 38, 0.85)']}
+        colors={['rgba(10, 14, 26, 0.55)', 'rgba(10, 14, 26, 0.35)', 'rgba(10, 14, 26, 0.50)']}
         style={StyleSheet.absoluteFill}
       />
 
@@ -227,7 +228,7 @@ export default function LoginScreen() {
             >
               <Animated.View style={[styles.logoBacking, { opacity: glowOpacity }]}>
                 <Image
-                  source={require('../../assets/rapidreps-logo.png')}
+                  source={rpLogo}
                   style={styles.logo}
                   resizeMode="contain"
                 />
@@ -367,7 +368,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: BRAND.orange,
+    backgroundColor: '#0A0E1A',
   },
   safeArea: {
     flex: 1,
@@ -397,16 +398,16 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   logoBacking: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: 'rgba(255, 106, 0, 0.10)',
     borderRadius: 100,
     padding: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#FFD700',
+    shadowColor: '#FF6A00',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowOpacity: 0.7,
+    shadowRadius: 30,
+    elevation: 15,
   },
   logo: {
     width: width * 0.38,
