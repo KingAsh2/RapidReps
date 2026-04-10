@@ -27,6 +27,18 @@ from models import (
     VALID_PERSONALITY_TAGS,
 )
 
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+# Rate limiter
+def get_real_ip(request):
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "127.0.0.1"
+
+limiter = Limiter(key_func=get_real_ip)
+
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
@@ -323,3 +335,11 @@ async def send_push_notification(user_id: str, title: str, body: str, data: dict
 async def send_push_to_many(user_ids: List[str], title: str, body: str, data: dict = None):
     for uid in user_ids:
         await send_push_notification(uid, title, body, data)
+
+
+async def require_admin(current_user: dict = Depends(get_current_user)):
+    """Dependency to ensure user is admin"""
+    from models import UserRole
+    if not current_user.get('isAdmin', False) and UserRole.ADMIN not in current_user.get('roles', []):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return current_user
