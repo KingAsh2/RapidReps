@@ -11,7 +11,7 @@ from datetime import datetime
 from typing import Dict, List, Optional
 
 # Configuration
-BASE_URL = "https://revert-check.preview.emergentagent.com/api"
+BASE_URL = "https://reps-qa-preview.preview.emergentagent.com/api"
 HEADERS = {"Content-Type": "application/json"}
 
 class ChatTestRunner:

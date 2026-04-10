@@ -26,7 +26,7 @@ from datetime import datetime, timedelta
 # Base URL from environment
 BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', '').rstrip('/') or os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 if not BASE_URL:
-    BASE_URL = "https://revert-check.preview.emergentagent.com"
+    BASE_URL = "https://reps-qa-preview.preview.emergentagent.com"
 
 # Test credentials
 ADMIN_EMAIL = "admin@rapidreps.com"

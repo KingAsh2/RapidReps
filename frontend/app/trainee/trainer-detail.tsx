@@ -575,8 +575,7 @@ export default function TrainerDetailScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => {
-                    // Scroll to booking section
-                    haptic('light');
+                    handleBookSession();
                   }}
                   style={styles.heroCTAPrimary}
                   accessibilityLabel="Book a session with this trainer"

@@ -14,7 +14,7 @@ import requests
 import os
 from datetime import datetime, timedelta
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://revert-check.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://reps-qa-preview.preview.emergentagent.com').rstrip('/')
 
 
 # =============================================================================

@@ -22,7 +22,7 @@ import os
 import uuid
 from datetime import datetime
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://revert-check.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://reps-qa-preview.preview.emergentagent.com')
 
 # Test prefix for cleanup
 TEST_PREFIX = f"TEST_ITER27_{datetime.utcnow().strftime('%H%M%S')}_"

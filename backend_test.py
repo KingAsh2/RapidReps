@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
 # Test Configuration
-BASE_URL = "https://revert-check.preview.emergentagent.com/api"
+BASE_URL = "https://reps-qa-preview.preview.emergentagent.com/api"
 TEST_TIMEOUT = 30
 
 # Test Credentials from review request

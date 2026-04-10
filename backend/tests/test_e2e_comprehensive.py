@@ -19,7 +19,7 @@ import time
 from datetime import datetime, timedelta
 
 # Get base URL from environment
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://revert-check.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://reps-qa-preview.preview.emergentagent.com').rstrip('/')
 
 # Test credentials
 TRAINER1_EMAIL = "trainer1@test.com"

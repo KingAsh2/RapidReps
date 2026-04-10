@@ -12,7 +12,7 @@ import os
 import random
 import string
 
-BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://revert-check.preview.emergentagent.com')
+BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://reps-qa-preview.preview.emergentagent.com')
 
 # Test credentials
 ADMIN_EMAIL = "admin@rapidreps.com"

@@ -817,7 +817,7 @@ export default function TraineeHomeScreen() {
                       <TouchableOpacity 
                         key={trainer.id}
                         style={{ width: 160, marginRight: 12, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 16, padding: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', alignItems: 'center' }}
-                        onPress={() => router.push(`/trainee/trainer-detail?trainerId=${trainer.id}`)}
+                        onPress={() => router.push(`/trainee/trainer-detail?trainerId=${trainer.userId || trainer.id}`)}
                         data-testid={`top-trainer-${trainer.id}`}
                       >
                         {trainer.avatarUrl ? (
