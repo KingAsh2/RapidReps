@@ -1,12 +1,7 @@
 # RapidReps PRD
 
 ## Original Problem Statement
-RapidReps fitness app (React Native/Expo + FastAPI). Full-featured fitness marketplace connecting trainers with trainees for in-person and virtual sessions. Recent focus: CapCut/IG aesthetic polish with bold typography, cinematic animations, personality tags, accent colors, and code architecture refactoring.
-
-## User Personas
-- **Trainees**: People looking for personal trainers, can book sessions, rate trainers, track streaks
-- **Trainers**: Fitness professionals offering services, managing bookings, showcasing personality
-- **Admins**: Platform managers overseeing operations
+RapidReps fitness app (React Native/Expo + FastAPI). Full-featured fitness marketplace connecting trainers with trainees for in-person and virtual sessions.
 
 ## Core Requirements
 1. User auth (signup/login/roles)
@@ -18,78 +13,59 @@ RapidReps fitness app (React Native/Expo + FastAPI). Full-featured fitness marke
 7. Leaderboard & referral system
 8. Apple Music "Vibe" integration (iTunes proxy)
 9. Highlight Reel video uploads
-10. Personality Tags (INTENSE, CHILL, BEAST MODE, ZEN, HIGH ENERGY, NO EXCUSES, PATIENT, COMPETITIVE)
-11. **Trainer Accent Color** (10 preset brand colors that tint card glows, hero sections, CTAs)
+10. Personality Tags (8 options with descriptions)
+11. Trainer Accent Color (10 preset brand colors)
 12. CapCut/IG aesthetic: Oswald bold typography, cinematic animations, premium dark theme
-
-## What's Been Implemented
-
-### Phase 1 - Core App (Previous Forks)
-- Full auth system (JWT-based), profiles CRUD, session booking, Stripe payments
-- Rating/review system, streak tracking, leaderboard, referral system
-- Premium dark theme with 40+ visibility fixes
-
-### Phase 2 - Trainer Personality (Previous Fork)
-- Apple Music Vibe integration, Highlight Reel, TrainerVibePlayer
-- Cinematic hero section, partial 508 compliance, Oswald font installed
-
-### Phase 3 - CapCut/IG Polish + Refactor (Apr 10 2026)
-- Personality Tag System (CRUD + badge + selector for both profiles)
-- Oswald Typography across all key screens
-- Cinematic page transitions (parallax, zoom, scale-spring)
-- Backend modularization: models.py + deps.py extracted from server.py
-
-### Phase 4 - Trainer Accent Color (Apr 10 2026)
-- **Backend**: `PUT /api/trainer-profiles/{userId}/accent-color` with 10 validated colors
-- **Frontend**: `AccentColorPicker` modal with live preview, color grid
-- **TrainerCard**: Dynamic shimmer, top accent line, CTA gradient using accent color
-- **trainer-detail**: Hero glow, verified icon, CTA buttons, booking section all use accent color
-- **Trainer Profile**: Brand Color CTA with swatch preview + picker modal
 
 ## Architecture
 ```
 /app
 ├── frontend/ (React Native/Expo)
 │   ├── app/
-│   │   ├── trainee/trainer-detail.tsx (Dynamic accent color throughout)
-│   │   ├── trainer/(tabs)/profile.tsx (AccentColorPicker + PersonalityTag)
-│   │   └── trainee/(tabs)/profile.tsx (PersonalityTag)
+│   │   ├── _layout.tsx (Oswald + SpaceMono fonts)
+│   │   ├── auth/login.tsx (Fiery nebula BG + new RP logo)
+│   │   ├── trainee/
+│   │   │   ├── (tabs)/profile.tsx (PersonalityTag + Oswald)
+│   │   │   ├── (tabs)/home.tsx (TrainerCard with accent+tag)
+│   │   │   └── trainer-detail.tsx (Cinematic hero + parallax + accent color)
+│   │   └── trainer/
+│   │       ├── (tabs)/profile.tsx (AccentColor + PersonalityTag + Oswald)
+│   │       ├── vibe-setup.tsx
+│   │       └── highlight-upload.tsx
 │   └── src/components/
-│       ├── AccentColorPicker.tsx (NEW - Color grid + preview modal)
-│       ├── PersonalityTagBadge.tsx (Badge + Selector)
+│       ├── AccentColorPicker.tsx (Color picker modal)
+│       ├── PersonalityTagBadge.tsx (Badge + Selector modal)
 │       ├── TrainerVibePlayer.tsx
 │       ├── HighlightReel.tsx
 │       └── trainee-home/TrainerCard.tsx (Dynamic accent color)
 └── backend/
-    ├── models.py (Pydantic models + constants - 603 lines)
-    ├── deps.py (Shared deps: db, auth, helpers - 325 lines)
-    ├── server.py (~8.9K lines)
+    ├── models.py (602 lines - All Pydantic models & constants)
+    ├── deps.py (345 lines - db, auth, helpers, push, limiter, require_admin)
+    ├── server.py (6,057 lines - profiles, ratings, streaks, payments, etc.)
     └── routes/
+        ├── __init__.py (Re-exports from deps/models)
+        ├── auth_routes.py (275 lines - signup, login, me, password reset)
+        ├── session_routes.py (1,551 lines - booking, confirm, cancel, GPS, etc.)
+        ├── admin_routes.py (1,154 lines - dashboard, users, verifications, payouts)
+        ├── feed.py, matching.py, progress.py, etc.
 ```
 
-## Key API Endpoints
-- PUT /api/trainer-profiles/{userId}/accent-color (NEW)
-- PUT /api/trainer-profiles/{userId}/personality-tag
-- PUT /api/trainee-profiles/{userId}/personality-tag
-- PUT /api/trainer-profiles/{userId}/vibe
-- POST /api/trainer-profiles/{userId}/highlights
-- GET /api/music/search (iTunes proxy)
-- Standard auth, session, payment, admin endpoints
+## Key API Endpoints (by module)
+**auth_routes.py**: /api/auth/signup, /api/auth/login, /api/auth/me, /api/auth/change-password, /api/auth/forgot-password, /api/auth/reset-password
+**session_routes.py**: /api/sessions/book, /api/sessions/{id}/confirm, /api/sessions/{id}/cancel, /api/sessions/{id}/verify-pin, etc.
+**admin_routes.py**: /api/admin/dashboard, /api/admin/users, /api/admin/top-trainers, /api/admin/earnings-summary, /api/admin/process-payout, /api/admin/refund
+**server.py**: Profiles, ratings, streaks, payments, memberships, boosts, notifications, virtual sessions, misc
 
 ## Prioritized Backlog
-
-### P1
-- Continue server.py route extraction (auth, admin, sessions into separate files)
 
 ### P2
 - Full 508 accessibility compliance
 - SendGrid email integration (requires user API key)
+- Further server.py extraction (profiles, streaks, payments into separate files)
 
 ### P3
 - EAS iOS Build fix (BLOCKED - user must run `eas credentials`)
 
 ## Test Reports
-- Iterations 58-61: All passed 100%
-- Iteration 62: 20/20 personality tag CRUD passed
-- Iteration 63: 18/18 backend refactoring regression passed
-- Iteration 64: 19/19 accent color CRUD + regression passed
+- Iterations 58-64: All passed 100%
+- Iteration 65: 21/21 route extraction regression tests passed 100% (testing agent also fixed missing calculate_trainer_tier import in admin_routes.py)
