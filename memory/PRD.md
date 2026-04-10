@@ -1,71 +1,74 @@
 # RapidReps PRD
 
 ## Original Problem Statement
-RapidReps fitness app (React Native/Expo + FastAPI). Full-featured fitness marketplace connecting trainers with trainees for in-person and virtual sessions.
-
-## Core Requirements
-1. User auth (signup/login/roles)
-2. Trainer/Trainee profiles with gallery, social links
-3. Session booking (in-person/virtual)
-4. Payments via Stripe
-5. Rating & review system
-6. Streak tracking & achievements
-7. Leaderboard & referral system
-8. Apple Music "Vibe" integration (iTunes proxy)
-9. Highlight Reel video uploads
-10. Personality Tags (8 options with descriptions)
-11. Trainer Accent Color (10 preset brand colors)
-12. CapCut/IG aesthetic: Oswald bold typography, cinematic animations, premium dark theme
+RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, Zelle payments, trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards.
 
 ## Architecture
+- **Frontend**: React Native (Expo) with Oswald typography, Premium Dark Theme
+- **Backend**: FastAPI with modular APIRouter architecture
+- **Database**: MongoDB
+- **Storage**: Emergent Object Storage
+
+## Backend Architecture (Modularized)
 ```
-/app
-├── frontend/ (React Native/Expo)
-│   ├── app/
-│   │   ├── _layout.tsx (Oswald + SpaceMono fonts)
-│   │   ├── auth/login.tsx (Fiery nebula BG + new RP logo)
-│   │   ├── trainee/
-│   │   │   ├── (tabs)/profile.tsx (PersonalityTag + Oswald)
-│   │   │   ├── (tabs)/home.tsx (TrainerCard with accent+tag)
-│   │   │   └── trainer-detail.tsx (Cinematic hero + parallax + accent color)
-│   │   └── trainer/
-│   │       ├── (tabs)/profile.tsx (AccentColor + PersonalityTag + Oswald)
-│   │       ├── vibe-setup.tsx
-│   │       └── highlight-upload.tsx
-│   └── src/components/
-│       ├── AccentColorPicker.tsx (Color picker modal)
-│       ├── PersonalityTagBadge.tsx (Badge + Selector modal)
-│       ├── TrainerVibePlayer.tsx
-│       ├── HighlightReel.tsx
-│       └── trainee-home/TrainerCard.tsx (Dynamic accent color)
-└── backend/
-    ├── models.py (602 lines - All Pydantic models & constants)
-    ├── deps.py (345 lines - db, auth, helpers, push, limiter, require_admin)
-    ├── server.py (6,057 lines - profiles, ratings, streaks, payments, etc.)
-    └── routes/
-        ├── __init__.py (Re-exports from deps/models)
-        ├── auth_routes.py (275 lines - signup, login, me, password reset)
-        ├── session_routes.py (1,551 lines - booking, confirm, cancel, GPS, etc.)
-        ├── admin_routes.py (1,154 lines - dashboard, users, verifications, payouts)
-        ├── feed.py, matching.py, progress.py, etc.
+/app/backend/
+├── server.py              (~2700 lines - core: messaging, virtual sessions, location, notifications, scheduling)
+├── models.py              (Pydantic models & enums)
+├── deps.py                (Shared dependencies, auth, helpers)
+├── storage.py             (Object storage)
+├── routes/
+│   ├── auth_routes.py     (Login, register, password reset)
+│   ├── session_routes.py  (Session CRUD, booking flow)
+│   ├── admin_routes.py    (Admin dashboard, user management)
+│   ├── profile_routes.py  (Trainer/trainee profiles, gallery, vibe, personality tags, verification, highlights)
+│   ├── streak_routes.py   (Achievements, badges, streaks, leaderboard)
+│   ├── payment_routes.py  (Ratings, earnings, payouts, Zelle, receipts, Stripe, memberships, boosts)
+│   ├── matching.py        (Trainer-trainee matching)
+│   ├── feed.py            (Social feed)
+│   ├── group_sessions.py  (Group sessions)
+│   ├── progress.py        (Progress tracking)
+│   ├── trainer_tools.py   (Trainer utilities)
+│   └── safety_check.py    (Safety features)
 ```
 
-## Key API Endpoints (by module)
-**auth_routes.py**: /api/auth/signup, /api/auth/login, /api/auth/me, /api/auth/change-password, /api/auth/forgot-password, /api/auth/reset-password
-**session_routes.py**: /api/sessions/book, /api/sessions/{id}/confirm, /api/sessions/{id}/cancel, /api/sessions/{id}/verify-pin, etc.
-**admin_routes.py**: /api/admin/dashboard, /api/admin/users, /api/admin/top-trainers, /api/admin/earnings-summary, /api/admin/process-payout, /api/admin/refund
-**server.py**: Profiles, ratings, streaks, payments, memberships, boosts, notifications, virtual sessions, misc
+## Completed Features
+- Trainer/Trainee personality tag system (CRUD + UI)
+- Trainer accent color system (dynamic tinting)
+- Cinematic page transitions (parallax, scale, opacity)
+- Oswald typography upgrade
+- Backend refactoring: server.py from ~10,000 → ~2,700 lines (Phase 1 + Phase 2)
+- Login screen revert to original design (bg-battle-ropes.png + rapidreps-logo.png)
 
-## Prioritized Backlog
+## Phase 2 Route Extraction (Completed Apr 10, 2026)
+- Extracted Profile routes → `profile_routes.py` (845 lines)
+- Extracted Streak/Achievement routes → `streak_routes.py` (634 lines)
+- Extracted Payment/Earnings routes → `payment_routes.py` (1118 lines)
+- Moved `create_and_send_notification` to deps.py for cross-file access
+- All 33 regression tests passed (iteration_66)
 
-### P2
-- Full 508 accessibility compliance
-- SendGrid email integration (requires user API key)
-- Further server.py extraction (profiles, streaks, payments into separate files)
+## Remaining in server.py (~2700 lines)
+- Safety/Moderation routes
+- Referral System routes
+- Chat/Messaging routes
+- Virtual session matching routes
+- Location/GPS routes
+- Notification routes + preferences
+- Weekly digest / scheduling
+- Background task scheduler
 
-### P3
-- EAS iOS Build fix (BLOCKED - user must run `eas credentials`)
+## Known Issues
+- EAS iOS Build Failure (BLOCKED - user must regenerate Apple Distribution Certificate)
+- SendGrid Email Integration (BLOCKED - needs user API key)
+- 508 Accessibility Compliance (IN PROGRESS - incremental)
 
-## Test Reports
-- Iterations 58-64: All passed 100%
-- Iteration 65: 21/21 route extraction regression tests passed 100% (testing agent also fixed missing calculate_trainer_tier import in admin_routes.py)
+## Upcoming Tasks
+- SendGrid Email Integration (P2, blocked on API key)
+- Auto-color detection from profile photo (P3)
+- Further server.py extraction: messaging, location, notifications (P3)
+
+## Test Credentials
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | admin@rapidreps.com | admin123 |
+| Trainee | test_trainee_iter25@test.com | Test123! |
+| Trainer | test_trainer_iter25@test.com | Test123! |
