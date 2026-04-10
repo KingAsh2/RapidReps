@@ -343,3 +343,24 @@ async def require_admin(current_user: dict = Depends(get_current_user)):
     if not current_user.get('isAdmin', False) and UserRole.ADMIN not in current_user.get('roles', []):
         raise HTTPException(status_code=403, detail="Admin access required")
     return current_user
+
+
+async def create_and_send_notification(user_id: str, title: str, body: str, notif_type: str, data: dict = None):
+    """Store notification in DB and send push — respects user notification preferences"""
+    prefs = await db.notification_preferences.find_one({'userId': user_id})
+    if prefs and not prefs.get(notif_type, True):
+        return
+
+    notif = {
+        'userId': user_id,
+        'title': title,
+        'body': body,
+        'type': notif_type,
+        'data': data or {},
+        'read': False,
+        'createdAt': datetime.utcnow()
+    }
+    await db.notifications.insert_one(notif)
+
+    if not prefs or prefs.get('pushEnabled', True):
+        asyncio.create_task(send_push_notification(user_id, title, body, data))

@@ -21,7 +21,7 @@ from datetime import datetime
 
 BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', '').rstrip('/')
 if not BASE_URL:
-    BASE_URL = "https://vibe-highlight-cards.preview.emergentagent.com"
+    BASE_URL = "https://revert-check.preview.emergentagent.com"
 
 
 # ============================================================================

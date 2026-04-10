@@ -12,7 +12,7 @@ from typing import Dict, Any, Optional
 import uuid
 
 # Backend URL
-BACKEND_URL = 'https://vibe-highlight-cards.preview.emergentagent.com'
+BACKEND_URL = 'https://revert-check.preview.emergentagent.com'
 API_BASE = f"{BACKEND_URL}/api"
 
 class VirtualSessionTester:
