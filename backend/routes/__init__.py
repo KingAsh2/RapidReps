@@ -1,55 +1,19 @@
-"""Shared database, auth, and utility references for route modules."""
-import os
-from motor.motor_asyncio import AsyncIOMotorClient
-from fastapi import Depends, HTTPException
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-import jwt
-from bson import ObjectId
-from datetime import datetime, timezone
-import math
+"""Shared route dependencies. All route files import from here."""
+from deps import db, get_current_user, serialize_doc, sanitize_text
+from deps import (
+    hash_password, verify_password, create_access_token, decode_token,
+    calculate_distance, generate_safety_pin, calculate_travel_fee,
+    get_session_minimum_price, get_cancellation_fee, calculate_trainer_tier,
+    check_trainer_can_go_live, calculate_session_payout, calculate_travel_fee_split,
+    calculate_cancellation_fee_detail, calculate_time_based_cancellation_penalty,
+    get_minimum_price, calculate_session_pricing,
+    send_push_notification, send_push_to_many,
+    VALID_PERSONALITY_TAGS, EXPO_PUSH_URL,
+)
+from models import *
 
-client = AsyncIOMotorClient(os.environ['MONGO_URL'])
-db = client[os.environ['DB_NAME']]
-security = HTTPBearer()
-JWT_SECRET = os.environ.get('JWT_SECRET', 'rapidreps-secret-key-change-in-production')
+# Re-export haversine for backward compatibility
+haversine_miles = calculate_distance
 
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    try:
-        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=["HS256"])
-        user_id = payload.get("user_id")
-        user = await db.users.find_one({"_id": ObjectId(user_id)})
-        if not user:
-            raise HTTPException(status_code=401, detail="User not found")
-        user["id"] = str(user["_id"])
-        del user["_id"]
-        return user
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired")
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid token")
-
-def serialize_doc(doc: dict) -> dict:
-    if doc is None:
-        return None
-    doc = dict(doc)
-    if "_id" in doc:
-        doc["id"] = str(doc["_id"])
-        del doc["_id"]
-    for key, value in doc.items():
-        if isinstance(value, ObjectId):
-            doc[key] = str(value)
-        elif isinstance(value, datetime):
-            doc[key] = value.isoformat()
-    return doc
-
-def haversine_miles(lat1, lon1, lat2, lon2):
-    R = 3958.8
-    dLat = math.radians(lat2 - lat1)
-    dLon = math.radians(lon2 - lon1)
-    a = math.sin(dLat/2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dLon/2)**2
-    return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
-
-async def send_push(user_id: str, title: str, body: str, data: dict = None):
-    """Lightweight push notification sender."""
-    from server import send_push_notification
-    await send_push_notification(user_id, title, body, data)
+# Re-export send_push alias used by existing route files
+send_push = send_push_notification

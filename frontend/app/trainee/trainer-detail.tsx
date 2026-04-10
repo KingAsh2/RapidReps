@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   ActivityIndicator,
   Pressable,
@@ -65,14 +64,17 @@ export default function TrainerDetailScreen() {
 
   // Animations — cinematic entrance
   const heroFadeAnim = useRef(new Animated.Value(0)).current;
-  const heroScaleAnim = useRef(new Animated.Value(1.1)).current;
+  const heroScaleAnim = useRef(new Animated.Value(1.2)).current;
+  const heroBlurAnim = useRef(new Animated.Value(1)).current;
   const headerAnim = useRef(new Animated.Value(0)).current;
   const contentAnim = useRef(new Animated.Value(0)).current;
   const nameSlideAnim = useRef(new Animated.Value(30)).current;
+  const nameScaleAnim = useRef(new Animated.Value(0.85)).current;
   const statsSlideAnim = useRef(new Animated.Value(40)).current;
   const vibeSlideAnim = useRef(new Animated.Value(50)).current;
   const ctaSlideAnim = useRef(new Animated.Value(60)).current;
   const pressProgress = useRef(new Animated.Value(0)).current;
+  const scrollY = useRef(new Animated.Value(0)).current;
   const pressTimer = useRef<NodeJS.Timeout | null>(null);
   const [isHolding, setIsHolding] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -83,26 +85,30 @@ export default function TrainerDetailScreen() {
 
   useEffect(() => {
     if (!loading && trainer) {
-      // Cinematic layered entrance sequence
-      // 1. Hero image fades in + slight zoom-out
+      // Cinematic layered entrance sequence (CapCut/IG inspired)
+      // 1. Hero image: dramatic zoom-out from 1.2x + fade in + blur-to-focus
       Animated.parallel([
-        Animated.timing(heroFadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
-        Animated.timing(heroScaleAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+        Animated.timing(heroFadeAnim, { toValue: 1, duration: 700, useNativeDriver: true }),
+        Animated.timing(heroScaleAnim, { toValue: 1, duration: 1000, useNativeDriver: true }),
+        Animated.timing(heroBlurAnim, { toValue: 0, duration: 800, useNativeDriver: true }),
       ]).start();
 
-      // 2. Header content slides in
-      Animated.timing(headerAnim, { toValue: 1, duration: 500, delay: 200, useNativeDriver: true }).start();
+      // 2. Header content + name scale entrance
+      Animated.timing(headerAnim, { toValue: 1, duration: 500, delay: 250, useNativeDriver: true }).start();
 
-      // 3. Staggered slide-up sequence
-      Animated.stagger(100, [
-        Animated.spring(nameSlideAnim, { toValue: 0, friction: 10, tension: 60, useNativeDriver: true }),
-        Animated.spring(statsSlideAnim, { toValue: 0, friction: 10, tension: 60, useNativeDriver: true }),
-        Animated.spring(vibeSlideAnim, { toValue: 0, friction: 10, tension: 60, useNativeDriver: true }),
-        Animated.spring(ctaSlideAnim, { toValue: 0, friction: 10, tension: 60, useNativeDriver: true }),
+      // 3. Name zooms in from 85% with spring bounce
+      Animated.spring(nameScaleAnim, { toValue: 1, friction: 6, tension: 80, delay: 300, useNativeDriver: true }).start();
+
+      // 4. Staggered slide-up sequence with tighter spring
+      Animated.stagger(80, [
+        Animated.spring(nameSlideAnim, { toValue: 0, friction: 8, tension: 70, useNativeDriver: true }),
+        Animated.spring(statsSlideAnim, { toValue: 0, friction: 8, tension: 70, useNativeDriver: true }),
+        Animated.spring(vibeSlideAnim, { toValue: 0, friction: 8, tension: 70, useNativeDriver: true }),
+        Animated.spring(ctaSlideAnim, { toValue: 0, friction: 8, tension: 70, useNativeDriver: true }),
       ]).start();
 
-      // 4. Content body
-      Animated.spring(contentAnim, { toValue: 1, friction: 8, tension: 40, delay: 400, useNativeDriver: true }).start();
+      // 5. Content body (below hero)
+      Animated.spring(contentAnim, { toValue: 1, friction: 8, tension: 40, delay: 500, useNativeDriver: true }).start();
     }
   }, [loading, trainer]);
 
@@ -429,18 +435,28 @@ export default function TrainerDetailScreen() {
           </View>
         </Animated.View>
 
-        <ScrollView
+        <Animated.ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          scrollEventThrottle={16}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: true }
+          )}
         >
           {/* CINEMATIC HERO SECTION */}
           <Animated.View style={{ opacity: heroFadeAnim }}>
-            <Animated.View style={{ transform: [{ scale: heroScaleAnim }] }}>
+            <Animated.View style={{
+              transform: [
+                { scale: heroScaleAnim },
+                { translateY: scrollY.interpolate({ inputRange: [-100, 0, 300], outputRange: [-50, 0, 80], extrapolate: 'clamp' }) },
+              ],
+            }}>
               <View style={styles.heroSection} data-testid="trainer-hero-section">
-                {/* Hero Image - Full width */}
+                {/* Hero Image - Full width with parallax */}
                 {trainer.avatarUrl ? (
-                  <Image source={{ uri: trainer.avatarUrl }} style={styles.heroImage} />
+                  <Image source={{ uri: trainer.avatarUrl }} style={styles.heroImage} blurRadius={heroBlurAnim.interpolate ? 0 : 0} />
                 ) : (
                   <LinearGradient colors={['#1A1F38', '#0A0E1A']} style={styles.heroImage} />
                 )}
@@ -472,8 +488,8 @@ export default function TrainerDetailScreen() {
                 </View>
               )}
 
-              {/* Name with animated slide */}
-              <Animated.View style={{ transform: [{ translateY: nameSlideAnim }], opacity: headerAnim }}>
+              {/* Name with animated slide + scale zoom */}
+              <Animated.View style={{ transform: [{ translateY: nameSlideAnim }, { scale: nameScaleAnim }], opacity: headerAnim }}>
                 <Text style={styles.heroName} data-testid="trainer-hero-name">{trainer.fullName || 'Trainer'}</Text>
                 {trainer.bio && (
                   <Text style={styles.heroTagline} numberOfLines={2}>{trainer.bio}</Text>
@@ -997,7 +1013,7 @@ export default function TrainerDetailScreen() {
           </TouchableOpacity>
 
           <View style={{ height: 100 }} />
-        </ScrollView>
+        </Animated.ScrollView>
 
         {/* Sticky Book Now Button */}
         <View style={styles.stickyBookContainer}>
