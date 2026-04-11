@@ -42,7 +42,9 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
   }, []);
 
   const handlePlayVideo = (url: string) => {
-    setVideoUrl(url);
+    const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
+    const fullUrl = url.startsWith('http') ? url : `${API_URL}${url}`;
+    setVideoUrl(fullUrl);
     setShowVideoModal(true);
     // Auto-stop after 15 seconds
     videoTimerRef.current = setTimeout(() => {
@@ -279,39 +281,39 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                     </View>
                   </View>
 
-                  {/* Profile Details Section - NEW */}
+                  {/* Profile Details Section */}
                   {verificationDetail.profile && (
-                    <View style={[s.modalSection, { backgroundColor: '#F8FAFC', borderRadius: 12, padding: 14 }]}>
+                    <View style={[s.modalSection, { backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 12, padding: 14 }]}>
                       <Text style={s.modalSectionTitle}>Profile Details</Text>
                       {verificationDetail.profile.bio && (
                         <View style={{ marginBottom: 10 }}>
                           <Text style={{ fontSize: 12, fontWeight: '600', color: C.gray, marginBottom: 4 }}>Bio</Text>
-                          <Text style={{ fontSize: 14, color: '#333', lineHeight: 20 }}>{verificationDetail.profile.bio}</Text>
+                          <Text style={{ fontSize: 14, color: '#FFFFFF', lineHeight: 20 }}>{verificationDetail.profile.bio}</Text>
                         </View>
                       )}
                       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
                         {verificationDetail.profile.experienceYears > 0 && (
                           <View style={{ minWidth: '45%' }}>
                             <Text style={{ fontSize: 12, fontWeight: '600', color: C.gray }}>Experience</Text>
-                            <Text style={{ fontSize: 14, color: '#333', fontWeight: '600' }}>{verificationDetail.profile.experienceYears} years</Text>
+                            <Text style={{ fontSize: 14, color: '#FFFFFF', fontWeight: '600' }}>{verificationDetail.profile.experienceYears} years</Text>
                           </View>
                         )}
                         {verificationDetail.profile.trainingStyles?.length > 0 && (
                           <View style={{ minWidth: '45%' }}>
                             <Text style={{ fontSize: 12, fontWeight: '600', color: C.gray }}>Training Styles</Text>
-                            <Text style={{ fontSize: 14, color: '#333', fontWeight: '600' }}>{verificationDetail.profile.trainingStyles.join(', ')}</Text>
+                            <Text style={{ fontSize: 14, color: '#FFFFFF', fontWeight: '600' }}>{verificationDetail.profile.trainingStyles.join(', ')}</Text>
                           </View>
                         )}
                         {verificationDetail.profile.certifications?.length > 0 && (
                           <View style={{ width: '100%', marginTop: 4 }}>
                             <Text style={{ fontSize: 12, fontWeight: '600', color: C.gray }}>Listed Certifications</Text>
-                            <Text style={{ fontSize: 14, color: '#333', fontWeight: '600' }}>{verificationDetail.profile.certifications.join(', ')}</Text>
+                            <Text style={{ fontSize: 14, color: '#FFFFFF', fontWeight: '600' }}>{verificationDetail.profile.certifications.join(', ')}</Text>
                           </View>
                         )}
                         {verificationDetail.profile.locationAddress && (
                           <View style={{ width: '100%', marginTop: 4 }}>
                             <Text style={{ fontSize: 12, fontWeight: '600', color: C.gray }}>Location</Text>
-                            <Text style={{ fontSize: 14, color: '#333', fontWeight: '600' }}>{verificationDetail.profile.locationAddress}</Text>
+                            <Text style={{ fontSize: 14, color: '#FFFFFF', fontWeight: '600' }}>{verificationDetail.profile.locationAddress}</Text>
                           </View>
                         )}
                       </View>
@@ -320,31 +322,31 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
 
                   {/* Background Check Info - from PII submission */}
                   {verificationDetail.backgroundInfo && (
-                    <View style={[s.modalSection, { backgroundColor: '#FFF8E8', borderRadius: 12, padding: 14, borderLeftWidth: 4, borderLeftColor: '#F7931E' }]}>
-                      <Text style={[s.modalSectionTitle, { color: '#333' }]}>Background Check Info</Text>
+                    <View style={[s.modalSection, { backgroundColor: 'rgba(247,147,30,0.08)', borderRadius: 12, padding: 14, borderLeftWidth: 4, borderLeftColor: '#F7931E' }]}>
+                      <Text style={[s.modalSectionTitle, { color: '#FF9F1C' }]}>Background Check Info</Text>
                       <View style={{ gap: 8 }}>
                         {verificationDetail.backgroundInfo.fullName && (
                           <View>
                             <Text style={{ fontSize: 12, fontWeight: '600', color: C.gray }}>Full Legal Name</Text>
-                            <Text style={{ fontSize: 14, color: '#333', fontWeight: '600' }}>{verificationDetail.backgroundInfo.fullName}</Text>
+                            <Text style={{ fontSize: 14, color: '#FFFFFF', fontWeight: '600' }}>{verificationDetail.backgroundInfo.fullName}</Text>
                           </View>
                         )}
                         {verificationDetail.backgroundInfo.dob && (
                           <View>
                             <Text style={{ fontSize: 12, fontWeight: '600', color: C.gray }}>Date of Birth</Text>
-                            <Text style={{ fontSize: 14, color: '#333', fontWeight: '600' }}>{verificationDetail.backgroundInfo.dob}</Text>
+                            <Text style={{ fontSize: 14, color: '#FFFFFF', fontWeight: '600' }}>{verificationDetail.backgroundInfo.dob}</Text>
                           </View>
                         )}
                         {verificationDetail.backgroundInfo.address && (
                           <View>
                             <Text style={{ fontSize: 12, fontWeight: '600', color: C.gray }}>Address</Text>
-                            <Text style={{ fontSize: 14, color: '#333', fontWeight: '600' }}>{verificationDetail.backgroundInfo.address}</Text>
+                            <Text style={{ fontSize: 14, color: '#FFFFFF', fontWeight: '600' }}>{verificationDetail.backgroundInfo.address}</Text>
                           </View>
                         )}
                         {verificationDetail.backgroundInfo.submittedAt && (
                           <View>
                             <Text style={{ fontSize: 12, fontWeight: '600', color: C.gray }}>Submitted</Text>
-                            <Text style={{ fontSize: 14, color: '#333' }}>{new Date(verificationDetail.backgroundInfo.submittedAt).toLocaleDateString()}</Text>
+                            <Text style={{ fontSize: 14, color: '#FFFFFF' }}>{new Date(verificationDetail.backgroundInfo.submittedAt).toLocaleDateString()}</Text>
                           </View>
                         )}
                       </View>
@@ -352,9 +354,9 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                   )}
 
                   {verificationDetail.rejectionReason && (
-                    <View style={[s.modalSection, { backgroundColor: '#FFF5F5', borderRadius: 12, padding: 14, borderLeftWidth: 4, borderLeftColor: C.error }]}>
+                    <View style={[s.modalSection, { backgroundColor: 'rgba(255,71,87,0.08)', borderRadius: 12, padding: 14, borderLeftWidth: 4, borderLeftColor: C.error }]}>
                       <Text style={[s.modalSectionTitle, { color: C.error }]}>Previous Rejection Reason</Text>
-                      <Text style={[s.modalField, { color: '#555' }]}>{verificationDetail.rejectionReason}</Text>
+                      <Text style={[s.modalField, { color: 'rgba(255,255,255,0.85)' }]}>{verificationDetail.rejectionReason}</Text>
                       {verificationDetail.rejectedAt && (
                         <Text style={[s.modalField, { fontSize: 13, color: C.gray }]}>Rejected on {new Date(verificationDetail.rejectedAt).toLocaleDateString()}</Text>
                       )}
@@ -380,7 +382,7 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                               />
                             </View>
                             <View style={{ flex: 1 }}>
-                              <Text style={{ fontSize: 14, fontWeight: '700', color: '#333' }}>{step.label}</Text>
+                              <Text style={{ fontSize: 14, fontWeight: '700', color: '#FFFFFF' }}>{step.label}</Text>
                               <Text style={{ fontSize: 13, color: stepApproved ? C.success : step.submitted ? C.warning : C.error, fontWeight: '600' }}>
                                 {stepApproved ? 'Approved' : step.submitted ? 'Under Review' : 'Not submitted'}
                               </Text>
@@ -462,7 +464,7 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                   </View>
 
                   {showRejectInput ? (
-                    <View style={[s.modalSection, { backgroundColor: '#FFF5F5', borderRadius: 12, padding: 14 }]}>
+                    <View style={[s.modalSection, { backgroundColor: 'rgba(255,71,87,0.08)', borderRadius: 12, padding: 14 }]}>
                       <Text style={[s.modalSectionTitle, { color: C.error }]}>Rejection Reason</Text>
                       <Text style={{ fontSize: 13, color: C.gray, marginBottom: 8 }}>This reason will be sent to the trainer as a notification.</Text>
                       <TextInput

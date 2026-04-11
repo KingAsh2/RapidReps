@@ -320,7 +320,7 @@ export const s = StyleSheet.create({
   modalBody: { paddingHorizontal: 20, paddingBottom: 30 },
   modalSection: { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)' },
   modalSectionTitle: { fontSize: 14, fontWeight: '700', color: '#FF6A00', marginBottom: 8 },
-  modalField: { fontSize: 13, color: C.grayDark, lineHeight: 22 },
+  modalField: { fontSize: 13, color: '#FFFFFF', lineHeight: 22 },
   messageInput: { borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', borderRadius: 10, padding: 14, minHeight: 100, fontSize: 14, color: '#FFFFFF', textAlignVertical: 'top', backgroundColor: '#1A2035' },
   textInput: { borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', borderRadius: 10, padding: 12, fontSize: 14, color: '#FFFFFF', marginBottom: 12, backgroundColor: '#1A2035' },
   inputLabel: { fontSize: 13, fontWeight: '600', color: C.grayDark, marginBottom: 6 },
