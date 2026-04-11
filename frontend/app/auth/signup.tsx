@@ -22,6 +22,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AnimatedPillButton } from '../../src/components/AnimatedPillButton';
 import { haptic } from '../../src/utils/haptics';
+import { SocialAuthButtons } from '../../src/components/SocialAuthButtons';
 
 const { width } = Dimensions.get('window');
 
@@ -49,14 +50,15 @@ const COLORS = {
 export default function SignupScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const { signup } = useAuth();
+  const { signup, socialLogin } = useAuth();
   const { showAlert } = useAlert();
   const [loading, setLoading] = useState(false);
+  const isSocialAuth = params.socialAuth === 'true';
   const [formData, setFormData] = useState({
-    email: '',
+    email: (params.socialEmail as string) || '',
     password: '',
     confirmPassword: '',
-    fullName: '',
+    fullName: (params.socialName as string) || '',
     phone: '',
     roles: [] as string[],
     referralCode: '',
@@ -142,48 +144,39 @@ export default function SignupScreen() {
   }, []);
 
   const handleSignup = async () => {
-    if (!formData.email || !formData.password || !formData.fullName) {
-      showAlert({
-        title: 'Missing Information',
-        message: 'Please fill in all required fields',
-        type: 'warning',
-      });
+    if (!formData.fullName) {
+      showAlert({ title: 'Missing Information', message: 'Please enter your name', type: 'warning' });
       return;
     }
 
-    if (formData.password !== formData.confirmPassword) {
-      showAlert({
-        title: 'Password Mismatch',
-        message: 'Your passwords don\'t match. Please try again.',
-        type: 'error',
-      });
+    if (!formData.email) {
+      showAlert({ title: 'Missing Information', message: 'Please enter your email', type: 'warning' });
       return;
     }
 
-    if (formData.password.length < 8) {
-      showAlert({
-        title: 'Weak Password',
-        message: 'Password must be at least 8 characters.',
-        type: 'warning',
-      });
-      return;
+    // Password fields only required for non-social signup
+    if (!isSocialAuth) {
+      if (!formData.password) {
+        showAlert({ title: 'Missing Information', message: 'Please create a password', type: 'warning' });
+        return;
+      }
+      if (formData.password !== formData.confirmPassword) {
+        showAlert({ title: 'Password Mismatch', message: "Your passwords don't match.", type: 'error' });
+        return;
+      }
+      if (formData.password.length < 8) {
+        showAlert({ title: 'Weak Password', message: 'Password must be at least 8 characters.', type: 'warning' });
+        return;
+      }
     }
 
     if (formData.roles.length === 0) {
-      showAlert({
-        title: 'Choose Your Path',
-        message: 'Please select whether you want to find a trainer or become one.',
-        type: 'warning',
-      });
+      showAlert({ title: 'Choose Your Path', message: 'Please select whether you want to find a trainer or become one.', type: 'warning' });
       return;
     }
 
     if (!formData.phone) {
-      showAlert({
-        title: 'Phone Required',
-        message: 'We need your phone number to connect you with trainers.',
-        type: 'warning',
-      });
+      showAlert({ title: 'Phone Required', message: 'We need your phone number to connect you with trainers.', type: 'warning' });
       return;
     }
 
@@ -193,9 +186,10 @@ export default function SignupScreen() {
         fullName: formData.fullName,
         email: formData.email,
         phone: formData.phone,
-        password: formData.password,
+        password: isSocialAuth ? undefined : formData.password,
         roles: formData.roles,
         referralCode: formData.referralCode || undefined,
+        isSocialAuth: isSocialAuth || undefined,
       });
 
       if (formData.roles.includes(UserRole.TRAINER)) {
@@ -303,9 +297,39 @@ export default function SignupScreen() {
                   resizeMode="contain"
                 />
               </View>
-              <Text style={styles.heroTitle}>Let's Build Your{'\n'}Fitness Momentum 🔥</Text>
+              <Text style={styles.heroTitle}>Let's Build Your{'\n'}Fitness Momentum</Text>
               <Text style={styles.heroSubtitle}>Train smarter. Move faster. Get real results.</Text>
             </Animated.View>
+
+            {/* Social Sign-Up (only for non-social-redirected users) */}
+            {!isSocialAuth && (
+              <Animated.View
+                style={[
+                  styles.formCard,
+                  { opacity: formCardAnim, transform: [{ translateY: formTranslateY }], marginBottom: 0 },
+                ]}
+              >
+                <View style={{ paddingHorizontal: 20, paddingVertical: 20 }}>
+                  <SocialAuthButtons
+                    onError={(msg) => showAlert({ title: 'Sign Up Failed', message: msg, type: 'error' })}
+                  />
+                  <View style={styles.dividerRow}>
+                    <View style={styles.dividerLine} />
+                    <Text style={styles.dividerText}>or create account with email</Text>
+                    <View style={styles.dividerLine} />
+                  </View>
+                </View>
+              </Animated.View>
+            )}
+
+            {/* Social user banner */}
+            {isSocialAuth && (
+              <View style={{ backgroundColor: 'rgba(0,200,83,0.1)', borderRadius: 12, padding: 14, marginBottom: 14, borderWidth: 1, borderColor: 'rgba(0,200,83,0.25)' }}>
+                <Text style={{ fontSize: 14, fontWeight: '700', color: '#00C853', textAlign: 'center' }}>
+                  Almost there! Just pick your role and add your phone number.
+                </Text>
+              </View>
+            )}
 
             {/* Form Card */}
             <Animated.View
@@ -369,7 +393,8 @@ export default function SignupScreen() {
                   </View>
                 </View>
 
-                {/* Password Input */}
+                {/* Password Input - only for email signup */}
+                {!isSocialAuth && (
                 <View style={styles.inputGroup}>
                   <Text style={styles.inputLabel}>Create a strong password</Text>
                   <View style={styles.inputWrapper}>
@@ -383,10 +408,12 @@ export default function SignupScreen() {
                       secureTextEntry
                     />
                   </View>
-                  <Text style={styles.helperText}>At least 8 characters. Strength matters. 💪</Text>
+                  <Text style={styles.helperText}>At least 8 characters. Strength matters.</Text>
                 </View>
+                )}
 
-                {/* Confirm Password Input */}
+                {/* Confirm Password Input - only for email signup */}
+                {!isSocialAuth && (
                 <View style={styles.inputGroup}>
                   <Text style={styles.inputLabel}>Lock it in</Text>
                   <View style={styles.inputWrapper}>
@@ -401,6 +428,7 @@ export default function SignupScreen() {
                     />
                   </View>
                 </View>
+                )}
               </LinearGradient>
             </Animated.View>
 
@@ -903,5 +931,21 @@ const styles = StyleSheet.create({
     marginTop: 6,
     marginLeft: 4,
     fontWeight: '500',
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 18,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+  },
+  dividerText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.7)',
+    paddingHorizontal: 14,
   },
 });

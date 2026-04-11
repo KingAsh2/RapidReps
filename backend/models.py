@@ -175,9 +175,10 @@ class UserSignUp(BaseModel):
     fullName: str
     email: EmailStr
     phone: str
-    password: str
+    password: Optional[str] = None
     roles: List[str]
     referralCode: Optional[str] = None
+    isSocialAuth: Optional[bool] = False
 
 class UserLogin(BaseModel):
     email: EmailStr

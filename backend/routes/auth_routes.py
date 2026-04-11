@@ -31,17 +31,41 @@ router = APIRouter(prefix="/api")
 @limiter.limit("30/minute")
 async def signup(request: Request, user_data: UserSignUp):
     """Register a new user"""
-    # Validate password length
-    if len(user_data.password) < 6:
+    # Validate password length (skip for social auth)
+    if not user_data.isSocialAuth and (not user_data.password or len(user_data.password) < 6):
         raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
     
     # Check if user already exists
     existing_user = await db.users.find_one({'email': user_data.email})
     if existing_user:
+        # If social auth user, update their roles and phone instead of rejecting
+        if user_data.isSocialAuth:
+            update_fields = {
+                'roles': user_data.roles,
+                'phone': user_data.phone,
+                'fullName': sanitize_text(user_data.fullName) or existing_user.get('fullName', ''),
+                'updatedAt': datetime.utcnow(),
+            }
+            await db.users.update_one({'_id': existing_user['_id']}, {'$set': update_fields})
+            existing_user.update(update_fields)
+            user_id = str(existing_user['_id'])
+            access_token = create_access_token(user_id, user_data.email)
+            return {
+                'access_token': access_token,
+                'user': UserResponse(
+                    id=user_id,
+                    fullName=update_fields['fullName'],
+                    email=user_data.email,
+                    phone=user_data.phone,
+                    roles=user_data.roles,
+                    isAdmin=existing_user.get('isAdmin', False),
+                    createdAt=existing_user.get('createdAt', datetime.utcnow()),
+                ).dict(),
+            }
         raise HTTPException(status_code=400, detail="Email already registered")
     
-    # Hash password
-    hashed_password = hash_password(user_data.password)
+    # Hash password (None for social auth users)
+    hashed_password = hash_password(user_data.password) if user_data.password else None
     
     # Generate unique referral code for this user
     referral_code = f"RR-{''.join(random.choices(string.ascii_uppercase + string.digits, k=6))}"

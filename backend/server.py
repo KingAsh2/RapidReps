@@ -95,6 +95,7 @@ from routes.admin_routes import router as admin_router
 from routes.profile_routes import router as profile_router
 from routes.streak_routes import router as streak_router
 from routes.payment_routes import router as payment_router
+from routes.social_auth_routes import router as social_auth_router
 
 
 # Auth routes extracted to routes/auth_routes.py
@@ -2655,6 +2656,7 @@ app.include_router(admin_router)
 app.include_router(profile_router)
 app.include_router(streak_router)
 app.include_router(payment_router)
+app.include_router(social_auth_router)
 
 # Include new feature route modules
 from routes.matching import router as matching_router

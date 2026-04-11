@@ -10,6 +10,7 @@ interface AuthContextType {
   isDemoMode: boolean;
   signup: (data: any) => Promise<void>;
   login: (email: string, password: string) => Promise<User>;
+  socialLogin: (provider: 'google' | 'apple' | 'facebook', data: any) => Promise<{ user: User; isNewUser: boolean }>;
   logout: () => Promise<void>;
   setActiveRole: (role: string) => Promise<void>;
   setDemoMode: (role: 'trainee' | 'trainer') => void;
@@ -132,7 +133,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       response = await authAPI.login(email, password);
     } catch (apiErr) {
-      // Re-throw API errors as-is (axios errors with response/status)
       throw apiErr;
     }
     
@@ -144,14 +144,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     try {
       await AsyncStorage.removeItem('demo_role');
-    } catch (_) {
-      // Non-critical, ignore
-    }
+    } catch (_) {}
     
     setIsDemoMode(false);
     setUser(response.user);
     
-    // Set active role
     try {
       const savedRole = await AsyncStorage.getItem('active_role');
       if (savedRole && response.user.roles?.includes(savedRole)) {
@@ -162,11 +159,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await AsyncStorage.setItem('active_role', initialRole);
       }
     } catch (roleErr: any) {
-      // Non-critical - role setting failed but login succeeded
       console.error('Role setting error:', roleErr);
     }
     
     return response.user;
+  };
+
+  const socialLogin = async (provider: 'google' | 'apple' | 'facebook', data: any): Promise<{ user: User; isNewUser: boolean }> => {
+    const response = await authAPI.socialLogin(provider, data);
+
+    await AsyncStorage.setItem('auth_token', response.access_token);
+    await AsyncStorage.removeItem('demo_role');
+    setIsDemoMode(false);
+    setUser(response.user);
+
+    if (response.user.roles?.length > 0) {
+      const initialRole = response.user.roles[0];
+      setActiveRoleState(initialRole);
+      await AsyncStorage.setItem('active_role', initialRole);
+    }
+
+    return { user: response.user, isNewUser: response.isNewUser };
   };
 
   const logout = async () => {
@@ -195,6 +208,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isDemoMode,
         signup,
         login,
+        socialLogin,
         logout,
         setActiveRole,
         setDemoMode,
@@ -216,6 +230,7 @@ export const useAuth = () => {
       isDemoMode: false,
       signup: async () => { throw new Error('Auth not initialized'); },
       login: async () => { throw new Error('Auth not initialized'); },
+      socialLogin: async () => { throw new Error('Auth not initialized'); },
       logout: async () => {},
       setActiveRole: async () => {},
       setDemoMode: () => {},

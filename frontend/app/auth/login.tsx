@@ -23,6 +23,7 @@ import { useAuth } from '../../src/contexts/AuthContext';
 import { useAlert } from '../../src/contexts/AlertContext';
 import { AnimatedPillButton } from '../../src/components/AnimatedPillButton';
 import { haptic } from '../../src/utils/haptics';
+import { SocialAuthButtons } from '../../src/components/SocialAuthButtons';
 
 const { width } = Dimensions.get('window');
 
@@ -245,6 +246,25 @@ export default function LoginScreen() {
               <View style={styles.taglineRow}>
                 <Text style={styles.taglineBold}>LET'S GET TO WORK</Text>
                 <Text style={styles.fireEmoji}>&#x1F525;</Text>
+              </View>
+            </Animated.View>
+
+            {/* Social Login Buttons */}
+            <Animated.View
+              style={[
+                styles.formSection,
+                { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+              ]}
+            >
+              <SocialAuthButtons
+                onError={(msg) => showAlert({ title: 'Sign In Failed', message: msg, type: 'error' })}
+              />
+
+              {/* Divider */}
+              <View style={styles.dividerRow}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>or sign in with email</Text>
+                <View style={styles.dividerLine} />
               </View>
             </Animated.View>
 
@@ -497,5 +517,21 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: BRAND.white,
     textDecorationLine: 'underline',
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 18,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+  },
+  dividerText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.7)',
+    paddingHorizontal: 14,
   },
 });

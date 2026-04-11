@@ -84,6 +84,11 @@ export const authAPI = {
     const response = await api.post('/auth/change-password', { currentPassword, newPassword });
     return response.data;
   },
+
+  socialLogin: async (provider: 'google' | 'apple' | 'facebook', data: any): Promise<AuthResponse & { isNewUser: boolean }> => {
+    const response = await api.post(`/auth/social/${provider}`, data);
+    return response.data;
+  },
 };
 
 
