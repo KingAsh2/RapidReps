@@ -27,7 +27,6 @@ import { SocialAuthButtons } from '../../src/components/SocialAuthButtons';
 
 const { width } = Dimensions.get('window');
 
-// Match main screen brand colors exactly
 const BRAND = {
   orange: '#FF7F00',
   orangeLight: '#FFA526',
@@ -35,7 +34,6 @@ const BRAND = {
   white: '#FFFFFF',
 };
 
-// Same background as main screen
 const backgroundImage = require('../../assets/images/bg-battle-ropes.png');
 
 export default function LoginScreen() {
@@ -48,12 +46,12 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [loginSuccess, setLoginSuccess] = useState(false);
 
-  // Animations matching main screen
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
   const logoScale = useRef(new Animated.Value(0.8)).current;
   const pulseScale = useRef(new Animated.Value(1)).current;
   const glowOpacity = useRef(new Animated.Value(0.6)).current;
+  const headerShimmer = useRef(new Animated.Value(0)).current;
   const combinedLogoScale = useRef(Animated.multiply(logoScale, pulseScale)).current;
   const emailBorderAnim = useRef(new Animated.Value(0)).current;
   const passwordBorderAnim = useRef(new Animated.Value(0)).current;
@@ -62,34 +60,17 @@ export default function LoginScreen() {
   const animationsAlive = useRef(true);
 
   useEffect(() => {
-    // Entrance animations — same as main screen
     Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        friction: 8,
-        tension: 40,
-        useNativeDriver: true,
-      }),
-      Animated.spring(logoScale, {
-        toValue: 1,
-        friction: 6,
-        tension: 40,
-        useNativeDriver: true,
-      }),
+      Animated.timing(fadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
+      Animated.spring(slideAnim, { toValue: 0, friction: 8, tension: 40, useNativeDriver: true }),
+      Animated.spring(logoScale, { toValue: 1, friction: 6, tension: 40, useNativeDriver: true }),
     ]).start(() => {
       if (animationsAlive.current) startPulse();
     });
-
     return () => { animationsAlive.current = false; };
   }, []);
 
   const startPulse = () => {
-    // Heartbeat pulse — same as main screen
     Animated.loop(
       Animated.sequence([
         Animated.timing(pulseScale, { toValue: 1.06, duration: 150, useNativeDriver: true }),
@@ -99,7 +80,6 @@ export default function LoginScreen() {
         Animated.delay(1800),
       ])
     ).start();
-    // Glow pulse — same as main screen
     Animated.loop(
       Animated.sequence([
         Animated.timing(glowOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
@@ -107,6 +87,12 @@ export default function LoginScreen() {
         Animated.timing(glowOpacity, { toValue: 0.9, duration: 200, useNativeDriver: true }),
         Animated.timing(glowOpacity, { toValue: 0.6, duration: 600, useNativeDriver: true }),
         Animated.delay(1200),
+      ])
+    ).start();
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(headerShimmer, { toValue: 1, duration: 1500, useNativeDriver: true }),
+        Animated.timing(headerShimmer, { toValue: 0, duration: 1500, useNativeDriver: true }),
       ])
     ).start();
   };
@@ -124,11 +110,9 @@ export default function LoginScreen() {
 
   const animateFocus = (anim: Animated.Value, toValue: number) => {
     try {
-      // Stop any running animation on this value first
       anim.stopAnimation();
       Animated.spring(anim, { toValue, tension: 50, friction: 3, useNativeDriver: false }).start();
     } catch (e) {
-      // Fallback: just set the value directly if animation fails
       anim.setValue(toValue);
     }
   };
@@ -187,21 +171,19 @@ export default function LoginScreen() {
     inputRange: [0, 1],
     outputRange: ['rgba(255,255,255,0.25)', '#FFD700'],
   });
+  const headerGlowOpacity = headerShimmer.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.7, 1],
+  });
 
   return (
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
-      {/* Orange gradient overlay — matching main screen exactly */}
       <LinearGradient
         colors={['rgba(255, 127, 0, 0.92)', 'rgba(255, 127, 0, 0.88)', 'rgba(255, 165, 38, 0.85)']}
         style={StyleSheet.absoluteFill}
       />
-
       <SafeAreaView style={styles.safeArea}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={{ flex: 1 }}
-        >
-          {/* Back Button */}
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
           <TouchableOpacity
             onPress={() => router.replace('/')}
             style={styles.backButton}
@@ -216,51 +198,56 @@ export default function LoginScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            {/* Pulsating Logo — same as main screen */}
+            {/* Header Logo — Rapid Reps text with shimmer */}
+            <Animated.View
+              style={[
+                styles.headerLogoSection,
+                { opacity: Animated.multiply(fadeAnim, headerGlowOpacity) },
+              ]}
+            >
+              <View style={styles.headerLogoGlow}>
+                <Image
+                  source={require('../../assets/rapidreps-header.png')}
+                  style={styles.headerLogoImage}
+                  resizeMode="contain"
+                />
+              </View>
+            </Animated.View>
+
+            {/* Pulsating RR Icon Logo — fills entire circular frame */}
             <Animated.View
               style={[
                 styles.logoSection,
-                {
-                  opacity: fadeAnim,
-                  transform: [{ scale: combinedLogoScale }],
-                },
+                { opacity: fadeAnim, transform: [{ scale: combinedLogoScale }] },
               ]}
             >
               <Animated.View style={[styles.logoBacking, { opacity: glowOpacity }]}>
                 <Image
-                  source={require('../../assets/rapidreps-logo.png')}
+                  source={require('../../assets/rapidreps-icon-logo.png')}
                   style={styles.logo}
-                  resizeMode="contain"
+                  resizeMode="cover"
                 />
               </Animated.View>
             </Animated.View>
 
             {/* Welcome Text */}
             <Animated.View
-              style={[
-                styles.headerSection,
-                { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
-              ]}
+              style={[styles.headerSection, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}
             >
               <Text style={styles.welcomeTitle}>WELCOME BACK</Text>
               <View style={styles.taglineRow}>
                 <Text style={styles.taglineBold}>LET'S GET TO WORK</Text>
-                <Text style={styles.fireEmoji}>&#x1F525;</Text>
               </View>
             </Animated.View>
 
             {/* Social Login Buttons */}
             <Animated.View
-              style={[
-                styles.formSection,
-                { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
-              ]}
+              style={[styles.formSection, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}
             >
               <SocialAuthButtons
                 onError={(msg) => showAlert({ title: 'Sign In Failed', message: msg, type: 'error' })}
               />
 
-              {/* Divider */}
               <View style={styles.dividerRow}>
                 <View style={styles.dividerLine} />
                 <Text style={styles.dividerText}>or sign in with email</Text>
@@ -270,19 +257,10 @@ export default function LoginScreen() {
 
             {/* Login Form */}
             <Animated.View
-              style={[
-                styles.formSection,
-                { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
-              ]}
+              style={[styles.formSection, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}
             >
-              {/* Email */}
               <View style={styles.inputGroup}>
-                <Animated.View
-                  style={[
-                    styles.inputContainer,
-                    { borderColor: emailBorderColor, borderWidth: 2 },
-                  ]}
-                >
+                <Animated.View style={[styles.inputContainer, { borderColor: emailBorderColor, borderWidth: 2 }]}>
                   <View style={styles.inputIconCircle}>
                     <Ionicons name="mail" size={18} color={BRAND.navy} />
                   </View>
@@ -303,24 +281,15 @@ export default function LoginScreen() {
                 </Animated.View>
               </View>
 
-              {/* Password */}
               <View style={styles.inputGroup}>
                 <Animated.View
                   style={[
                     styles.inputContainer,
-                    {
-                      borderColor: passwordBorderColor,
-                      borderWidth: 2,
-                      transform: [{ translateX: lockShakeAnim }],
-                    },
+                    { borderColor: passwordBorderColor, borderWidth: 2, transform: [{ translateX: lockShakeAnim }] },
                   ]}
                 >
                   <View style={styles.inputIconCircle}>
-                    <Ionicons
-                      name={showPassword ? 'lock-open' : 'lock-closed'}
-                      size={18}
-                      color={BRAND.navy}
-                    />
+                    <Ionicons name={showPassword ? 'lock-open' : 'lock-closed'} size={18} color={BRAND.navy} />
                   </View>
                   <TextInput
                     style={styles.input}
@@ -340,16 +309,11 @@ export default function LoginScreen() {
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
                   >
-                    <Ionicons
-                      name={showPassword ? 'eye-off' : 'eye'}
-                      size={22}
-                      color="rgba(255,255,255,0.8)"
-                    />
+                    <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={22} color="rgba(255,255,255,0.8)" />
                   </TouchableOpacity>
                 </Animated.View>
               </View>
 
-              {/* Forgot Password */}
               <TouchableOpacity
                 onPress={() => router.push('/auth/forgot-password')}
                 style={styles.forgotButton}
@@ -358,7 +322,6 @@ export default function LoginScreen() {
                 <Text style={styles.forgotText}>Forgot password?</Text>
               </TouchableOpacity>
 
-              {/* Login Button — using AnimatedPillButton to match main screen */}
               <AnimatedPillButton
                 title="Log In"
                 onPress={handleLogin}
@@ -369,7 +332,6 @@ export default function LoginScreen() {
                 testID="login-submit-btn"
               />
 
-              {/* Sign Up Link */}
               <View style={styles.signupContainer}>
                 <Text style={styles.signupText}>Don't have an account? </Text>
                 <TouchableOpacity onPress={() => router.push('/auth/signup')} accessibilityLabel="Sign up">
@@ -384,154 +346,74 @@ export default function LoginScreen() {
   );
 }
 
+const LOGO_SIZE = Math.min(width * 0.4, 160);
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: BRAND.orange,
-  },
-  safeArea: {
-    flex: 1,
-  },
+  container: { flex: 1, backgroundColor: BRAND.orange },
+  safeArea: { flex: 1 },
   backButton: {
-    position: 'absolute',
-    top: 12,
-    left: 16,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    position: 'absolute', top: 12, left: 16,
+    width: 44, height: 44, borderRadius: 22,
     backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 10,
+    justifyContent: 'center', alignItems: 'center', zIndex: 10,
   },
   scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 60,
-    paddingBottom: 30,
+    flexGrow: 1, justifyContent: 'center',
+    paddingHorizontal: 24, paddingTop: 60, paddingBottom: 30,
   },
-  // Logo — same as main screen
-  logoSection: {
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  logoBacking: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    borderRadius: 100,
-    padding: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+
+  /* Header Logo */
+  headerLogoSection: { alignItems: 'center', marginBottom: 8 },
+  headerLogoGlow: {
     shadowColor: '#FFD700',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowOpacity: 0.5, shadowRadius: 16, elevation: 8,
+  },
+  headerLogoImage: {
+    width: width * 0.45, height: width * 0.15,
+    maxWidth: 200, maxHeight: 65,
+  },
+
+  /* Pulsating Icon Logo */
+  logoSection: { alignItems: 'center', marginBottom: 8 },
+  logoBacking: {
+    width: LOGO_SIZE, height: LOGO_SIZE,
+    borderRadius: LOGO_SIZE / 2,
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6, shadowRadius: 20, elevation: 10,
+    overflow: 'hidden',
   },
   logo: {
-    width: width * 0.38,
-    height: width * 0.38,
-    maxWidth: 160,
-    maxHeight: 160,
+    width: LOGO_SIZE, height: LOGO_SIZE,
+    borderRadius: LOGO_SIZE / 2,
   },
-  // Header text — matching main screen tagline style
-  headerSection: {
-    alignItems: 'center',
-    marginBottom: 28,
-  },
-  welcomeTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: BRAND.white,
-    letterSpacing: 2,
-  },
-  taglineRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  taglineBold: {
-    fontSize: 24,
-    fontWeight: '900',
-    color: BRAND.navy,
-    letterSpacing: 1,
-  },
-  fireEmoji: {
-    fontSize: 24,
-    marginLeft: 8,
-  },
-  // Form
-  formSection: {
-    gap: 4,
-  },
-  inputGroup: {
-    marginBottom: 14,
-  },
+
+  headerSection: { alignItems: 'center', marginBottom: 20 },
+  welcomeTitle: { fontSize: 18, fontWeight: '700', color: BRAND.white, letterSpacing: 2 },
+  taglineRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
+  taglineBold: { fontSize: 24, fontWeight: '900', color: BRAND.navy, letterSpacing: 1 },
+  formSection: { gap: 4 },
+  inputGroup: { marginBottom: 14 },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'row', alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.12)',
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    height: 56,
-    gap: 12,
+    borderRadius: 16, paddingHorizontal: 14, height: 56, gap: 12,
   },
   inputIconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 36, height: 36, borderRadius: 18,
     backgroundColor: BRAND.white,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'center', alignItems: 'center',
   },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '600',
-    color: BRAND.white,
-  },
-  forgotButton: {
-    alignSelf: 'flex-end',
-    marginBottom: 20,
-    paddingVertical: 4,
-  },
-  forgotText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: BRAND.white,
-    textDecorationLine: 'underline',
-  },
-  signupContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  signupText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: 'rgba(255, 255, 255, 0.85)',
-  },
-  signupLink: {
-    fontSize: 14,
-    fontWeight: '900',
-    color: BRAND.white,
-    textDecorationLine: 'underline',
-  },
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 18,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: 'rgba(255,255,255,0.25)',
-  },
-  dividerText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: 'rgba(255,255,255,0.7)',
-    paddingHorizontal: 14,
-  },
+  input: { flex: 1, fontSize: 16, fontWeight: '600', color: BRAND.white },
+  forgotButton: { alignSelf: 'flex-end', marginBottom: 20, paddingVertical: 4 },
+  forgotText: { fontSize: 14, fontWeight: '700', color: BRAND.white, textDecorationLine: 'underline' },
+  signupContainer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 20 },
+  signupText: { fontSize: 14, fontWeight: '600', color: 'rgba(255, 255, 255, 0.85)' },
+  signupLink: { fontSize: 14, fontWeight: '900', color: BRAND.white, textDecorationLine: 'underline' },
+  dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 18 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.25)' },
+  dividerText: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.7)', paddingHorizontal: 14 },
 });

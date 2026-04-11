@@ -1,439 +1,337 @@
-<analysis>Here is the handover summary based on the detailed analysis of the conversation history.
-
-**original_problem_statement**: RapidReps fitness app (React Native/Expo + FastAPI + MongoDB). The user previously requested to revert the login screen and modularize the massive  backend file. In this session, after completing those tasks, the user requested to globally update the app's logo and fix 10 critical TestFlight bugs (crashes, unclickable buttons, missing navigation, and UI text color issues).
+<analysis>**original_problem_statement**: RapidReps fitness app (React Native/Expo + FastAPI + MongoDB). The user previously requested to fix 10 critical TestFlight bugs. In this session, the user requested to fix multiple rounds of TestFlight bugs (crashes on profile save, invisible admin text, vibe music not saving/playing, deployment errors), implement Social Login (Google, Apple, Facebook), and adjust UI elements like the pulsating logo and social login buttons layout.
 
 **User's preferred language**: English
 *(INSTRUCT next agent to respond in English only)*
 
-**what currently exists?**: A highly functional, Premium Dark Theme full-stack React Native app. The backend  has been successfully reduced from ~6,000 to ~2,700 lines by extracting profile, streak, and payment routes. The app's logo has been updated globally. The first 5 TestFlight bugs were fixed and verified. The agent just applied code fixes for the second batch of 5 TestFlight bugs but has not yet verified or communicated completion.
+**what currently exists?**: A highly functional full-stack React Native app with a FastAPI backend. Multiple batches of TestFlight bugs have been resolved, including profile saving, admin panel video playback, and text visibility issues. Vibe music saving and auto-play (via iTunes API proxy) are fully functional. Social authentication (Google, Apple, Facebook) is implemented using web-browser-based OAuth (to bypass EAS deployment entitlement failures) and supports passwordless signup.
 
 **Last working item**:
-- **Last item agent was working**: Fixing the 2nd batch of 5 TestFlight bugs. The agent used  to fix navigation on Nearby Trainer cards ( -> ), fix white-on-light text visibility in Admin Verification/Payment tabs, and wire up the hero BOOK SESSION button in  which was previously just triggering haptic feedback.
-- **Status**: USER VERIFICATION PENDING / IN PROGRESS (Changes applied, but not tested or confirmed with user).
-- **Agent Testing Done**: N (for the last 5 fixes).
+- **Last item agent was working**: Modifying the pulsating logo sizing on  and  so the logo fills the entire circular frame, and redesigning the social media login buttons. The user requested the social buttons be changed from large vertical elements to small horizontal icons (aligned right to left) without the Continue With... text.
+- **Status**: IN PROGRESS / TESTING PENDING (The agent executed  to apply these layout changes to  and  but did not complete the  refactor or verify the changes).
+- **Agent Testing Done**: N
 - **Which testing method agent to use?**: Frontend compilation check (env: load .env
 env: export EXPO_TUNNEL_SUBDOMAIN EXPO_PACKAGER_HOSTNAME EXPO_PACKAGER_PROXY_URL EXPO_PUBLIC_BACKEND_URL EXPO_USE_FAST_RESOLVER METRO_CACHE_ROOT EXPO_PUBLIC_GOOGLE_MAPS_API_KEY EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY SENTRY_AUTH_TOKEN SENTRY_DISABLE_AUTO_UPLOAD
 Fast resolver is enabled.
 Starting Metro Bundler
 Static rendering is enabled. Learn more: https://docs.expo.dev/router/reference/static-rendering/
-Web node_modules/expo-router/entry.js ▓▓▓▓░░░░░░░░░░░░ 30.8% (272/490)
-λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓░░░░░░░░ 53.2% (554/760)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 76.7% (1446/1651)
-λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 85.4% (1626/1759)
-λ Bundled 6936ms node_modules/expo-router/node/render.js (2116 modules)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (2076/2076)
-Web Bundled 9931ms node_modules/expo-router/entry.js (2076 modules)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (2076/2076)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓░░░░░░░░░░░ 32.0% (290/513)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓░░░░░░░░░ 43.8% (430/650)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 79.4% (1470/1650)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 86.3% (1682/1811)
+λ Bundled 7538ms node_modules/expo-router/node/render.js (2120 modules)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (2080/2080)
+Web Bundled 10284ms node_modules/expo-router/entry.js (2080 modules)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (2080/2080)
 
 › web bundles (1):
-_expo/static/js/web/entry-ae3c54d4367a7f16f895098a13b8c73b.js (4.87 MB)
+_expo/static/js/web/entry-224c9abd6fdf334833f380cabe01e1f4.js (4.89 MB)
 
 › Static routes (84):
-/ (index) (58.1 kB)
-/_sitemap (56.7 kB)
-/+not-found (56.7 kB)
-/auth/login (63.1 kB)
-/auth/signup (66.8 kB)
-/legal/terms (61.7 kB)
-/trainee/feed (59 kB)
-/trainee/home (75.6 kB)
-/trainer/home (58.3 kB)
-/notifications (59.3 kB)
-/legal/privacy (61 kB)
-/messages/chat (58.3 kB)
-/trainee/saved (68.1 kB)
-/trainer/badge (58.6 kB)
-/messages (58.5 kB)
-/referral (58.1 kB)
-/trainer/boosts (63.5 kB)
-/change-password (61.3 kB)
-/admin/dashboard (62.1 kB)
-/trainee/payment (61.7 kB)
-/trainee/receipt (58.5 kB)
-/trainee/profile (67.8 kB)
-/trainer/receipt (58.5 kB)
-/trainer/profile (75.5 kB)
-/trainee/messages (68.1 kB)
-/trainee/receipts (68.8 kB)
-/trainee/sessions (67.8 kB)
-/trainer/en-route (64.1 kB)
-/trainer/earnings (67.4 kB)
-/trainer/messages (67.3 kB)
-/trainer/receipts (67.8 kB)
-/trainer/sessions (68.9 kB)
-/trainer/set-rates (58.1 kB)
-/trainee/membership (58.5 kB)
-/trainer/onboarding (58.3 kB)
-/trainer/vibe-setup (59.6 kB)
-/trainee/leaderboard (58.2 kB)
-/trainee/my-sessions (58.3 kB)
-/trainee/(tabs)/home (75.6 kB)
-/trainer/(tabs)/home (67.1 kB)
-/auth/forgot-password (60.5 kB)
-/trainee/achievements (58.1 kB)
-/trainee/rate-session (61.1 kB)
-/trainee/report-issue (61.9 kB)
-/trainee/share-status (62.1 kB)
-/trainee/share-streak (58.1 kB)
-/trainee/(tabs)/saved (68.1 kB)
-/trainer/achievements (58.1 kB)
-/trainer/connect-bank (58.6 kB)
-/trainer/edit-profile (58.3 kB)
-/trainer/upload-video (60.7 kB)
-/trainer/verification (68.3 kB)
-/trainee/instant-match (59 kB)
-/trainee/safety-center (63.8 kB)
-/trainee/user-progress (61.2 kB)
-/trainer/start-session (60.9 kB)
-/trainer/trainer-tools (60 kB)
-/trainee/group-sessions (58.7 kB)
-/trainee/session-active (61.1 kB)
-/trainee/session-detail (58.2 kB)
-/trainee/trainer-detail (58.3 kB)
-/trainee/verify-trainer (58.5 kB)
-/trainee/(tabs)/profile (67.8 kB)
-/trainer/group-sessions (59.7 kB)
-/trainer/(tabs)/profile (75.5 kB)
-/auth/onboarding-trainee (61.3 kB)
-/auth/onboarding-trainer (61.6 kB)
-/trainee/confirm-booking (63.3 kB)
-/trainee/virtual-confirm (62.3 kB)
-/trainee/(tabs)/messages (68.1 kB)
-/trainee/(tabs)/receipts (68.8 kB)
-/trainee/(tabs)/sessions (67.8 kB)
-/trainer/trainee-profile (60.1 kB)
-/trainer/virtual-request (58.6 kB)
-/trainer/(tabs)/earnings (67.4 kB)
-/trainer/(tabs)/messages (67.3 kB)
-/trainer/(tabs)/receipts (67.8 kB)
-/trainer/(tabs)/sessions (68.9 kB)
-/notification-preferences (58.1 kB)
-/trainee/session-complete (61.5 kB)
-/trainee/trainer-en-route (64.8 kB)
-/trainer/highlight-upload (59.9 kB)
-/trainee/schedule-training (62 kB)
-/trainee/recurring-sessions (71.2 kB)
+/ (index) (58.2 kB)
+/_sitemap (56.8 kB)
+/+not-found (56.8 kB)
+/auth/login (66.9 kB)
+/auth/signup (70.7 kB)
+/legal/terms (61.8 kB)
+/trainee/feed (59.1 kB)
+/trainee/home (75.7 kB)
+/trainer/home (58.4 kB)
+/notifications (59.4 kB)
+/legal/privacy (61.2 kB)
+/messages/chat (58.4 kB)
+/trainee/saved (68.3 kB)
+/trainer/badge (58.8 kB)
+/messages (58.7 kB)
+/referral (58.2 kB)
+/trainer/boosts (63.7 kB)
+/change-password (61.5 kB)
+/admin/dashboard (62.3 kB)
+/trainee/payment (61.9 kB)
+/trainee/receipt (58.7 kB)
+/trainee/profile (68 kB)
+/trainer/receipt (58.7 kB)
+/trainer/profile (75.7 kB)
+/trainee/messages (68.3 kB)
+/trainee/receipts (68.9 kB)
+/trainee/sessions (68 kB)
+/trainer/en-route (64.3 kB)
+/trainer/earnings (67.6 kB)
+/trainer/messages (67.5 kB)
+/trainer/receipts (67.9 kB)
+/trainer/sessions (69 kB)
+/trainer/set-rates (58.2 kB)
+/trainee/membership (58.7 kB)
+/trainer/onboarding (58.5 kB)
+/trainer/vibe-setup (59.8 kB)
+/trainee/leaderboard (58.4 kB)
+/trainee/my-sessions (58.5 kB)
+/trainee/(tabs)/home (75.7 kB)
+/trainer/(tabs)/home (67.2 kB)
+/auth/forgot-password (60.7 kB)
+/trainee/achievements (58.3 kB)
+/trainee/rate-session (61.3 kB)
+/trainee/report-issue (62.1 kB)
+/trainee/share-status (62.3 kB)
+/trainee/share-streak (58.2 kB)
+/trainee/(tabs)/saved (68.3 kB)
+/trainer/achievements (58.3 kB)
+/trainer/connect-bank (58.8 kB)
+/trainer/edit-profile (58.4 kB)
+/trainer/upload-video (60.8 kB)
+/trainer/verification (68.5 kB)
+/trainee/instant-match (59.2 kB)
+/trainee/safety-center (64 kB)
+/trainee/user-progress (61.3 kB)
+/trainer/start-session (61 kB)
+/trainer/trainer-tools (60.2 kB)
+/trainee/group-sessions (58.9 kB)
+/trainee/session-active (61.3 kB)
+/trainee/session-detail (58.4 kB)
+/trainee/trainer-detail (58.4 kB)
+/trainee/verify-trainer (58.7 kB)
+/trainee/(tabs)/profile (68 kB)
+/trainer/group-sessions (59.9 kB)
+/trainer/(tabs)/profile (75.7 kB)
+/auth/onboarding-trainee (61.4 kB)
+/auth/onboarding-trainer (61.7 kB)
+/trainee/confirm-booking (63.4 kB)
+/trainee/virtual-confirm (62.5 kB)
+/trainee/(tabs)/messages (68.3 kB)
+/trainee/(tabs)/receipts (68.9 kB)
+/trainee/(tabs)/sessions (68 kB)
+/trainer/trainee-profile (60.2 kB)
+/trainer/virtual-request (58.7 kB)
+/trainer/(tabs)/earnings (67.6 kB)
+/trainer/(tabs)/messages (67.5 kB)
+/trainer/(tabs)/receipts (67.9 kB)
+/trainer/(tabs)/sessions (69 kB)
+/notification-preferences (58.3 kB)
+/trainee/session-complete (61.6 kB)
+/trainee/trainer-en-route (64.9 kB)
+/trainer/highlight-upload (60.1 kB)
+/trainee/schedule-training (62.2 kB)
+/trainee/recurring-sessions (71.4 kB)
 
-Exported: dist) / Manual  / Screenshot tool.
+Exported: dist) / Screenshot tool to verify layout.
 - **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
-  Issue 1: Verify and confirm 2nd batch of TestFlight bug fixes (P0)
-  Issue 2: Full 508 Compliance missing on minor elements (P2)
-  Issue 3: EAS iOS Build Failure - Invalid Certificate (P1)
-
+  Issue 1: Finalize Logo Resize and Horizontal Social Button Layout (P0)
+  Issue 2: Provide Facebook App ID for Social Login (P1)
+  Issue 3: TestFlight / EAS Deployment Disk Space Issue (P2)
+  
   Issues Detail:
-  - Issue 1: Verify 2nd batch of TestFlight bug fixes
-     - Attempted fixes: Agent used  on , , , , and .
-     - Next debug checklist: Run env: load .env
+  - Issue 1: Finalize Logo Resize and Horizontal Social Button Layout
+     - Attempted fixes: Agent applied styling edits to  and  to fix the logo border-radius/padding and align the social buttons container.
+     - Next debug checklist: Ensure  is updated to only display icons (Apple, Google, Facebook) horizontally from right to left without text. Verify visually using screenshots and run env: load .env
 env: export EXPO_TUNNEL_SUBDOMAIN EXPO_PACKAGER_HOSTNAME EXPO_PACKAGER_PROXY_URL EXPO_PUBLIC_BACKEND_URL EXPO_USE_FAST_RESOLVER METRO_CACHE_ROOT EXPO_PUBLIC_GOOGLE_MAPS_API_KEY EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY SENTRY_AUTH_TOKEN SENTRY_DISABLE_AUTO_UPLOAD
 Fast resolver is enabled.
 Starting Metro Bundler
 Static rendering is enabled. Learn more: https://docs.expo.dev/router/reference/static-rendering/
-λ Bundled 1764ms node_modules/expo-router/node/render.js (2116 modules)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (2076/2076)
-Web Bundled 3545ms node_modules/expo-router/entry.js (2076 modules)
+λ Bundled 1935ms node_modules/expo-router/node/render.js (2078 modules)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (2080/2080)
+Web Bundled 3629ms node_modules/expo-router/entry.js (2080 modules)
 
 › web bundles (1):
-_expo/static/js/web/entry-ae3c54d4367a7f16f895098a13b8c73b.js (4.87 MB)
+_expo/static/js/web/entry-224c9abd6fdf334833f380cabe01e1f4.js (4.89 MB)
 
 › Static routes (84):
-/ (index) (58.1 kB)
-/_sitemap (56.7 kB)
-/+not-found (56.7 kB)
-/auth/login (63.1 kB)
-/auth/signup (66.8 kB)
-/legal/terms (61.7 kB)
-/trainee/feed (59 kB)
-/trainee/home (75.6 kB)
-/trainer/home (58.3 kB)
-/notifications (59.3 kB)
-/legal/privacy (61 kB)
-/messages/chat (58.3 kB)
-/trainee/saved (68.1 kB)
-/trainer/badge (58.6 kB)
-/messages (58.5 kB)
-/referral (58.1 kB)
-/trainer/boosts (63.5 kB)
-/change-password (61.3 kB)
-/admin/dashboard (62.1 kB)
-/trainee/payment (61.7 kB)
-/trainee/receipt (58.5 kB)
-/trainee/profile (67.8 kB)
-/trainer/receipt (58.5 kB)
-/trainer/profile (75.5 kB)
-/trainee/messages (68.1 kB)
-/trainee/receipts (68.8 kB)
-/trainee/sessions (67.8 kB)
-/trainer/en-route (64.1 kB)
-/trainer/earnings (67.4 kB)
-/trainer/messages (67.3 kB)
-/trainer/receipts (67.8 kB)
-/trainer/sessions (68.9 kB)
-/trainer/set-rates (58.1 kB)
-/trainee/membership (58.5 kB)
-/trainer/onboarding (58.3 kB)
-/trainer/vibe-setup (59.6 kB)
-/trainee/leaderboard (58.2 kB)
-/trainee/my-sessions (58.3 kB)
-/trainee/(tabs)/home (75.6 kB)
-/trainer/(tabs)/home (67.1 kB)
-/auth/forgot-password (60.5 kB)
-/trainee/achievements (58.1 kB)
-/trainee/rate-session (61.1 kB)
-/trainee/report-issue (61.9 kB)
-/trainee/share-status (62.1 kB)
-/trainee/share-streak (58.1 kB)
-/trainee/(tabs)/saved (68.1 kB)
-/trainer/achievements (58.1 kB)
-/trainer/connect-bank (58.6 kB)
-/trainer/edit-profile (58.3 kB)
-/trainer/upload-video (60.7 kB)
-/trainer/verification (68.3 kB)
-/trainee/instant-match (59 kB)
-/trainee/safety-center (63.8 kB)
-/trainee/user-progress (61.2 kB)
-/trainer/start-session (60.9 kB)
-/trainer/trainer-tools (60 kB)
-/trainee/group-sessions (58.7 kB)
-/trainee/session-active (61.1 kB)
-/trainee/session-detail (58.2 kB)
-/trainee/trainer-detail (58.3 kB)
-/trainee/verify-trainer (58.5 kB)
-/trainee/(tabs)/profile (67.8 kB)
-/trainer/group-sessions (59.7 kB)
-/trainer/(tabs)/profile (75.5 kB)
-/auth/onboarding-trainee (61.3 kB)
-/auth/onboarding-trainer (61.6 kB)
-/trainee/confirm-booking (63.3 kB)
-/trainee/virtual-confirm (62.3 kB)
-/trainee/(tabs)/messages (68.1 kB)
-/trainee/(tabs)/receipts (68.8 kB)
-/trainee/(tabs)/sessions (67.8 kB)
-/trainer/trainee-profile (60.1 kB)
-/trainer/virtual-request (58.6 kB)
-/trainer/(tabs)/earnings (67.4 kB)
-/trainer/(tabs)/messages (67.3 kB)
-/trainer/(tabs)/receipts (67.8 kB)
-/trainer/(tabs)/sessions (68.9 kB)
-/notification-preferences (58.1 kB)
-/trainee/session-complete (61.5 kB)
-/trainee/trainer-en-route (64.8 kB)
-/trainer/highlight-upload (59.9 kB)
-/trainee/schedule-training (62 kB)
-/trainee/recurring-sessions (71.2 kB)
+/ (index) (58.2 kB)
+/_sitemap (56.8 kB)
+/+not-found (56.8 kB)
+/auth/login (66.9 kB)
+/auth/signup (70.7 kB)
+/legal/terms (61.8 kB)
+/trainee/feed (59.1 kB)
+/trainee/home (75.7 kB)
+/trainer/home (58.4 kB)
+/notifications (59.4 kB)
+/legal/privacy (61.2 kB)
+/messages/chat (58.4 kB)
+/trainee/saved (68.3 kB)
+/trainer/badge (58.8 kB)
+/messages (58.7 kB)
+/referral (58.2 kB)
+/trainer/boosts (63.7 kB)
+/change-password (61.5 kB)
+/admin/dashboard (62.3 kB)
+/trainee/payment (61.9 kB)
+/trainee/receipt (58.7 kB)
+/trainee/profile (68 kB)
+/trainer/receipt (58.7 kB)
+/trainer/profile (75.7 kB)
+/trainee/messages (68.3 kB)
+/trainee/receipts (68.9 kB)
+/trainee/sessions (68 kB)
+/trainer/en-route (64.3 kB)
+/trainer/earnings (67.6 kB)
+/trainer/messages (67.5 kB)
+/trainer/receipts (67.9 kB)
+/trainer/sessions (69 kB)
+/trainer/set-rates (58.2 kB)
+/trainee/membership (58.7 kB)
+/trainer/onboarding (58.5 kB)
+/trainer/vibe-setup (59.8 kB)
+/trainee/leaderboard (58.4 kB)
+/trainee/my-sessions (58.5 kB)
+/trainee/(tabs)/home (75.7 kB)
+/trainer/(tabs)/home (67.2 kB)
+/auth/forgot-password (60.7 kB)
+/trainee/achievements (58.3 kB)
+/trainee/rate-session (61.3 kB)
+/trainee/report-issue (62.1 kB)
+/trainee/share-status (62.3 kB)
+/trainee/share-streak (58.2 kB)
+/trainee/(tabs)/saved (68.3 kB)
+/trainer/achievements (58.3 kB)
+/trainer/connect-bank (58.8 kB)
+/trainer/edit-profile (58.4 kB)
+/trainer/upload-video (60.8 kB)
+/trainer/verification (68.5 kB)
+/trainee/instant-match (59.2 kB)
+/trainee/safety-center (64 kB)
+/trainee/user-progress (61.3 kB)
+/trainer/start-session (61 kB)
+/trainer/trainer-tools (60.2 kB)
+/trainee/group-sessions (58.9 kB)
+/trainee/session-active (61.3 kB)
+/trainee/session-detail (58.4 kB)
+/trainee/trainer-detail (58.4 kB)
+/trainee/verify-trainer (58.7 kB)
+/trainee/(tabs)/profile (68 kB)
+/trainer/group-sessions (59.9 kB)
+/trainer/(tabs)/profile (75.7 kB)
+/auth/onboarding-trainee (61.4 kB)
+/auth/onboarding-trainer (61.7 kB)
+/trainee/confirm-booking (63.4 kB)
+/trainee/virtual-confirm (62.5 kB)
+/trainee/(tabs)/messages (68.3 kB)
+/trainee/(tabs)/receipts (68.9 kB)
+/trainee/(tabs)/sessions (68 kB)
+/trainer/trainee-profile (60.2 kB)
+/trainer/virtual-request (58.7 kB)
+/trainer/(tabs)/earnings (67.6 kB)
+/trainer/(tabs)/messages (67.5 kB)
+/trainer/(tabs)/receipts (67.9 kB)
+/trainer/(tabs)/sessions (69 kB)
+/notification-preferences (58.3 kB)
+/trainee/session-complete (61.6 kB)
+/trainee/trainer-en-route (64.9 kB)
+/trainer/highlight-upload (60.1 kB)
+/trainee/schedule-training (62.2 kB)
+/trainee/recurring-sessions (71.4 kB)
 
-Exported: dist to ensure no syntax errors were introduced. Verify the hero BOOK SESSION button works. Inform the user that the last 5 screenshots are addressed.
-     - Why fix this issue and what will be achieved with the fix? Unblocks user's testing workflow and prevents app crashes/dead-ends.
-     - Status: TESTING PENDING
-     - Is recurring issue? N
-     - Should Test frontend/backend/both after fix? Frontend
-     - Blocked on other issue: None
-
-  - Issue 2: Full 508 Compliance missing on minor elements
-     - Attempted fixes: Incremental updates applying accessibility tags.
-     - Next debug checklist: Scan UI components for missing ARIA/accessibility attributes.
-     - Why fix this issue? Full 508 compliance.
+Exported: dist to ensure compilation.
+     - Why fix this issue and what will be achieved with the fix? Directly requested by the user to fix the app's visual proportions and reduce screen clutter.
      - Status: IN PROGRESS
      - Is recurring issue? N
      - Should Test frontend/backend/both after fix? Frontend
      - Blocked on other issue: None
 
-  - Issue 3: EAS iOS Build Failure
-     - Attempted fixes: Cannot be fixed in code.
-     - Next debug checklist: User must run An Expo user account is required to proceed.
+  - Issue 2: Provide Facebook App ID for Social Login
+     - Attempted fixes: Social auth framework built, but Facebook requires a specific App ID to function.
+     - Next debug checklist: Ask user for the Facebook App ID when they are ready to activate Facebook login.
+     - Why fix this issue? Facebook login will fail (returning 501) without it.
+     - Status: BLOCKED (Awaiting User)
+     - Is recurring issue? N
+     - Should Test frontend/backend/both after fix? Backend
 
-Log in to EAS with email or username (exit and run eas login --help to see other login options)
-Input is required, but stdin is not readable. Failed to display prompt: Email or username.
-     - Why fix this issue? Unblocks iOS production deployments.
-     - Status: BLOCKED
-     - Is recurring issue? Y
-     - Should Test frontend/backend/both after fix? N/A
-     - Blocked on other issue: User action outside codebase.
+  - Issue 3: TestFlight / EAS Deployment Disk Space Issue
+     - Attempted fixes: Agent identified that the previous iOS deployment failure was due to the Mac VM () running out of disk space during IPA download, not a code issue.
+     - Next debug checklist: Advise user to retry the deployment or contact Emergent support, as the code-related entitlement failure was successfully bypassed.
+     - Status: RESOLVED from a code perspective.
 
 **In progress Task List**:
-  None currently active.
+  Task 1: Complete and verify horizontal UI layout for Social Auth Buttons (P0)
+     - Where to resume: Modify  to remove the text and large pill styles, replacing them with simple, horizontally aligned circular icons.
+     - What will be achieved with this? Fulfills user's request for a cleaner, less intrusive login UI.
+     - Status: IN PROGRESS
+     - Should Test frontend/backend/both after fix? Frontend
 
 **Upcoming and Future Tasks**
     Upcoming Tasks:
-    - SendGrid Email Integration (P2) - Requires User API key.
-    - Extract remaining messaging and location routes from  to get it under 1,000 lines (P2 Enhancement).
+    - 508 Accessibility Compliance (P2)
+    - SendGrid Email Integration (P2) - Requires User API key
     Future Tasks:
+    - Extract remaining messaging and location routes from  to get it under 1,000 lines (P3 Enhancement).
     - Auto-color detection from profile photo (P3).
 
 **Completed work in this session**
-- Verified and finalized Login Screen Revert ( and original logo restored) (DONE)
-- Extracted , , and  from  (DONE - 100% test pass rate)
-- Replaced app logo globally () with new pulsing animation across UI (DONE)
-- Fixed TestFlight Bug Batch 1 (Crash on traineeData, object_storage crash, address save failure missing zip code, address banner edit mode, vibe save error handling) (DONE)
+- Fixed pulsating logo padding gap (DONE)
+- Fixed TestFlight Bug Batch 3 (Profile Save crash on  typo, empty state text colors, verification ID scan timing, highlight reel base64 fallback upload) (DONE)
+- Fixed TestFlight Bug Batch 4 (Admin video playback relative URL error, Admin verification text visibility on light/dark backgrounds) (DONE)
+- Fixed Vibe Music Bug (Resolved backend silent fail on 0 matching documents for new trainers, added iTunes preview URL proxy to auto-play fresh audio streams) (DONE)
+- Integrated Social Login (Google, Apple, Facebook) with passwordless backend signup handling (DONE)
+- Resolved EAS iOS Entitlement Deployment Error (Replaced native  module with  OAuth to bypass Apple Sign-In provisioning profile restrictions) (DONE)
 
 **Earlier issues found/mentioned but not fixed**
    - Issue 1: Missing SendGrid API Key
-   - Debug checklist: Ask user for SendGrid API key if they request email functionality.
-   - Why to solve this issue? Unblocks automated email notifications.
-   - Should Test frontend/backend/both after fix: Backend
-   - Is recurring issue? Y
+   - Issue 2: Missing Facebook App ID for Social Auth
 
 **Known issue recurrence from previous fork**
-  - Issue recurrence in previous fork: EAS Deployment Failures (Certificate).
-  - Recurrence count: 6
-  - Status: BLOCKED
+  - Issue recurrence in previous fork: EAS Deployment Failures.
+  - Recurrence count: 7
+  - Status: RESOLVED (Code changes made to bypass entitlement, remaining issue is an infrastructure VM disk space error).
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- React Native (Expo), FastAPI, MongoDB, Pydantic, Shared FastApi APIRouters.
+- React Native (Expo), FastAPI, MongoDB, Social OAuth (Google, Apple, Facebook) using  instead of native libraries, iTunes Search API Proxying.
 
 **key DB schema**
   - : , 
-  - :  (ADDED)
+  - : , 
 
 **changes in tech stack**
-  - None, but backend architecture is heavily modularized now.
+  - Added  for Apple Sign-In OAuth handling. Removed  to solve EAS build limitations.
 
 **All files of reference**
--  (Refactored)
-- , ,  (Created)
--  (Updated)
--  (Bug fixes)
--  (Bug fixes)
--  (Bug fixes)
+-  (Current Working File)
+-  &  (Current Working Files)
+- 
+- 
+- 
 
 **Areas that need refactoring**:
--  still contains messaging and location routes. Extracting these would push it under 1000 lines.
+- None explicitly requested, but  requires immediate layout changes.
 
 **key api endpoints**
-- All profile, streak, and payment routes are now prefixed with  but live in .
+- , , 
+- , 
 
 **Critical Info for New Agent** 
-- **React Native Web Preview Warning**: Do not rely on web screenshots for full-screen structural checks (like the login page), as Expo defaults to its web fallback UI. Trust your code, compile using env: load .env
-env: export EXPO_TUNNEL_SUBDOMAIN EXPO_PACKAGER_HOSTNAME EXPO_PACKAGER_PROXY_URL EXPO_PUBLIC_BACKEND_URL EXPO_USE_FAST_RESOLVER METRO_CACHE_ROOT EXPO_PUBLIC_GOOGLE_MAPS_API_KEY EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY SENTRY_AUTH_TOKEN SENTRY_DISABLE_AUTO_UPLOAD
-Fast resolver is enabled.
-Starting Metro Bundler
-Static rendering is enabled. Learn more: https://docs.expo.dev/router/reference/static-rendering/
-λ Bundled 1870ms node_modules/expo-router/node/render.js (2051 modules)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (2076/2076)
-Web Bundled 3641ms node_modules/expo-router/entry.js (2076 modules)
-
-› web bundles (1):
-_expo/static/js/web/entry-ae3c54d4367a7f16f895098a13b8c73b.js (4.87 MB)
-
-› Static routes (84):
-/ (index) (58.1 kB)
-/_sitemap (56.7 kB)
-/+not-found (56.7 kB)
-/auth/login (63.1 kB)
-/auth/signup (66.8 kB)
-/legal/terms (61.7 kB)
-/trainee/feed (59 kB)
-/trainee/home (75.6 kB)
-/trainer/home (58.3 kB)
-/notifications (59.3 kB)
-/legal/privacy (61 kB)
-/messages/chat (58.3 kB)
-/trainee/saved (68.1 kB)
-/trainer/badge (58.6 kB)
-/messages (58.5 kB)
-/referral (58.1 kB)
-/trainer/boosts (63.5 kB)
-/change-password (61.3 kB)
-/admin/dashboard (62.1 kB)
-/trainee/payment (61.7 kB)
-/trainee/receipt (58.5 kB)
-/trainee/profile (67.8 kB)
-/trainer/receipt (58.5 kB)
-/trainer/profile (75.5 kB)
-/trainee/messages (68.1 kB)
-/trainee/receipts (68.8 kB)
-/trainee/sessions (67.8 kB)
-/trainer/en-route (64.1 kB)
-/trainer/earnings (67.4 kB)
-/trainer/messages (67.3 kB)
-/trainer/receipts (67.8 kB)
-/trainer/sessions (68.9 kB)
-/trainer/set-rates (58.1 kB)
-/trainee/membership (58.5 kB)
-/trainer/onboarding (58.3 kB)
-/trainer/vibe-setup (59.6 kB)
-/trainee/leaderboard (58.2 kB)
-/trainee/my-sessions (58.3 kB)
-/trainee/(tabs)/home (75.6 kB)
-/trainer/(tabs)/home (67.1 kB)
-/auth/forgot-password (60.5 kB)
-/trainee/achievements (58.1 kB)
-/trainee/rate-session (61.1 kB)
-/trainee/report-issue (61.9 kB)
-/trainee/share-status (62.1 kB)
-/trainee/share-streak (58.1 kB)
-/trainee/(tabs)/saved (68.1 kB)
-/trainer/achievements (58.1 kB)
-/trainer/connect-bank (58.6 kB)
-/trainer/edit-profile (58.3 kB)
-/trainer/upload-video (60.7 kB)
-/trainer/verification (68.3 kB)
-/trainee/instant-match (59 kB)
-/trainee/safety-center (63.8 kB)
-/trainee/user-progress (61.2 kB)
-/trainer/start-session (60.9 kB)
-/trainer/trainer-tools (60 kB)
-/trainee/group-sessions (58.7 kB)
-/trainee/session-active (61.1 kB)
-/trainee/session-detail (58.2 kB)
-/trainee/trainer-detail (58.3 kB)
-/trainee/verify-trainer (58.5 kB)
-/trainee/(tabs)/profile (67.8 kB)
-/trainer/group-sessions (59.7 kB)
-/trainer/(tabs)/profile (75.5 kB)
-/auth/onboarding-trainee (61.3 kB)
-/auth/onboarding-trainer (61.6 kB)
-/trainee/confirm-booking (63.3 kB)
-/trainee/virtual-confirm (62.3 kB)
-/trainee/(tabs)/messages (68.1 kB)
-/trainee/(tabs)/receipts (68.8 kB)
-/trainee/(tabs)/sessions (67.8 kB)
-/trainer/trainee-profile (60.1 kB)
-/trainer/virtual-request (58.6 kB)
-/trainer/(tabs)/earnings (67.4 kB)
-/trainer/(tabs)/messages (67.3 kB)
-/trainer/(tabs)/receipts (67.8 kB)
-/trainer/(tabs)/sessions (68.9 kB)
-/notification-preferences (58.1 kB)
-/trainee/session-complete (61.5 kB)
-/trainee/trainer-en-route (64.8 kB)
-/trainer/highlight-upload (59.9 kB)
-/trainee/schedule-training (62 kB)
-/trainee/recurring-sessions (71.2 kB)
-
-Exported: dist, and use test files/curl for backend validation.
-- The previous agent just finished using  to apply 5 fixes from the user's latest TestFlight feedback screenshots, but ran out of context before verifying they compiled or informing the user. Your first priority is to run the Expo build command, confirm success, and respond to the user.
+- **EAS Deployment Warning**: Do not install native Apple Sign-In libraries (), as they inject entitlements that the current deployment profile does not support. Keep Apple Sign-In operating via the web-browser flow.
+- The previous agent was in the middle of executing a user request to make the Social Login buttons into small, horizontally aligned icons (ordered right-to-left) and adjusting logo sizes on  and . Start by reviewing  and those two screens to ensure the layout matches the user's latest description.
 
 **documents and test reports created in this job** 
-  -  (Backend Route Regression - 100% Pass)
-  - 
+  - None created this session.
 
 **Last 10 User Messages and any pending HUMAN messages** 
- - *User:* are they fixed?
- - *Agent:* Yes — all 5 bugs are fixed. Here's what was wrong and what changed...
- - *User:* (Uploaded 5 TestFlight screenshots) Fix these
- - *Agent:* Applied code fixes via  (Session ended before confirmation).
+ - *User:* Use deployment agent to identify the issues. Sharing build error logs when trying to deploy...
+ - *Agent:* Removed native Apple auth, swapped to web-browser Apple auth.
+ - *User:* Starting TestFlight upload step... ERROR: failed to download IPA: no space left on device.
+ - *Agent:* Explained it's an infrastructure VM issue, not a code issue.
+ - *User:* The Pulsing Logo on the Main Page and on the Login Page are smaller than the circular frame. Make the logo take up the entire size. The social medial login options are way too large... provide smaller Icons... Align horizontally from right to left...
+ - *Agent:* Executed  on  and . (Session ended).
 
 **Project Health Check:**
-- Broken: None known, pending confirmation of latest  edits.
-- Mocked: None
-- Healthy: Backend APIs modularized, feature components, bug fixes.
+- Broken: None.
+- Mocked: Facebook Auth lacks an App ID.
+- Healthy: Backend APIs modularized, TestFlight bugs fixed, Social Auth implemented.
 
 **3rd Party Integrations** 
  - Google Maps — requires User API Key
- - SendGrid (Emails) — requires User API Key
  - iTunes Search API — Free/Public (Proxied via Backend)
- - Emergent Object Storage — Uses Emergent LLM Key (Functional)
+ - Apple/Google Social Auth — Handled via Web Browser Auth
+ - Facebook Auth — requires User App ID
+ - Emergent Object Storage — Uses Emergent LLM Key
 
 **Testing status**
-  - Testing agent used after significant changes: YES (iteration 66 for backend extraction).
+  - Testing agent used after significant changes: NO
   - Troubleshoot agent used after agent stuck in loop: NO
   - Test files created: None
-  - Known regressions: None, but latest 5 UI fixes need compilation check.
+  - Known regressions: None, but latest UI edits to  and  need verification.
 
 **Credentials to test flow:**
 | Role | Email | Password |
@@ -443,108 +341,10 @@ Exported: dist, and use test files/curl for backend validation.
 | Trainer |  |  |
 
 **What agent forgot to execute**
-The agent completed writing the fixes for the second batch of 5 TestFlight bugs but ran out of context before running a frontend compilation check (env: load .env
-env: export EXPO_TUNNEL_SUBDOMAIN EXPO_PACKAGER_HOSTNAME EXPO_PACKAGER_PROXY_URL EXPO_PUBLIC_BACKEND_URL EXPO_USE_FAST_RESOLVER METRO_CACHE_ROOT EXPO_PUBLIC_GOOGLE_MAPS_API_KEY EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY SENTRY_AUTH_TOKEN SENTRY_DISABLE_AUTO_UPLOAD
-Fast resolver is enabled.
-Starting Metro Bundler
-Static rendering is enabled. Learn more: https://docs.expo.dev/router/reference/static-rendering/
-λ Bundled 1718ms node_modules/expo-router/node/render.js (2103 modules)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (2076/2076)
-Web Bundled 3478ms node_modules/expo-router/entry.js (2076 modules)
-
-› web bundles (1):
-_expo/static/js/web/entry-ae3c54d4367a7f16f895098a13b8c73b.js (4.87 MB)
-
-› Static routes (84):
-/ (index) (58.1 kB)
-/_sitemap (56.7 kB)
-/+not-found (56.7 kB)
-/auth/login (63.1 kB)
-/auth/signup (66.8 kB)
-/legal/terms (61.7 kB)
-/trainee/feed (59 kB)
-/trainee/home (75.6 kB)
-/trainer/home (58.3 kB)
-/notifications (59.3 kB)
-/legal/privacy (61 kB)
-/messages/chat (58.3 kB)
-/trainee/saved (68.1 kB)
-/trainer/badge (58.6 kB)
-/messages (58.5 kB)
-/referral (58.1 kB)
-/trainer/boosts (63.5 kB)
-/change-password (61.3 kB)
-/admin/dashboard (62.1 kB)
-/trainee/payment (61.7 kB)
-/trainee/receipt (58.5 kB)
-/trainee/profile (67.8 kB)
-/trainer/receipt (58.5 kB)
-/trainer/profile (75.5 kB)
-/trainee/messages (68.1 kB)
-/trainee/receipts (68.8 kB)
-/trainee/sessions (67.8 kB)
-/trainer/en-route (64.1 kB)
-/trainer/earnings (67.4 kB)
-/trainer/messages (67.3 kB)
-/trainer/receipts (67.8 kB)
-/trainer/sessions (68.9 kB)
-/trainer/set-rates (58.1 kB)
-/trainee/membership (58.5 kB)
-/trainer/onboarding (58.3 kB)
-/trainer/vibe-setup (59.6 kB)
-/trainee/leaderboard (58.2 kB)
-/trainee/my-sessions (58.3 kB)
-/trainee/(tabs)/home (75.6 kB)
-/trainer/(tabs)/home (67.1 kB)
-/auth/forgot-password (60.5 kB)
-/trainee/achievements (58.1 kB)
-/trainee/rate-session (61.1 kB)
-/trainee/report-issue (61.9 kB)
-/trainee/share-status (62.1 kB)
-/trainee/share-streak (58.1 kB)
-/trainee/(tabs)/saved (68.1 kB)
-/trainer/achievements (58.1 kB)
-/trainer/connect-bank (58.6 kB)
-/trainer/edit-profile (58.3 kB)
-/trainer/upload-video (60.7 kB)
-/trainer/verification (68.3 kB)
-/trainee/instant-match (59 kB)
-/trainee/safety-center (63.8 kB)
-/trainee/user-progress (61.2 kB)
-/trainer/start-session (60.9 kB)
-/trainer/trainer-tools (60 kB)
-/trainee/group-sessions (58.7 kB)
-/trainee/session-active (61.1 kB)
-/trainee/session-detail (58.2 kB)
-/trainee/trainer-detail (58.3 kB)
-/trainee/verify-trainer (58.5 kB)
-/trainee/(tabs)/profile (67.8 kB)
-/trainer/group-sessions (59.7 kB)
-/trainer/(tabs)/profile (75.5 kB)
-/auth/onboarding-trainee (61.3 kB)
-/auth/onboarding-trainer (61.6 kB)
-/trainee/confirm-booking (63.3 kB)
-/trainee/virtual-confirm (62.3 kB)
-/trainee/(tabs)/messages (68.1 kB)
-/trainee/(tabs)/receipts (68.8 kB)
-/trainee/(tabs)/sessions (67.8 kB)
-/trainer/trainee-profile (60.1 kB)
-/trainer/virtual-request (58.6 kB)
-/trainer/(tabs)/earnings (67.4 kB)
-/trainer/(tabs)/messages (67.3 kB)
-/trainer/(tabs)/receipts (67.8 kB)
-/trainer/(tabs)/sessions (68.9 kB)
-/notification-preferences (58.1 kB)
-/trainee/session-complete (61.5 kB)
-/trainee/trainer-en-route (64.8 kB)
-/trainer/highlight-upload (59.9 kB)
-/trainee/schedule-training (62 kB)
-/trainee/recurring-sessions (71.2 kB)
-
-Exported: dist) to verify the file edits were structurally sound. They also did not formally inform the user that the second batch was complete.
+The agent executed the edits for  and  to fix the logo and align the social buttons container, but the session ended before they could update  to actually render the small horizontal icons (without text) as requested by the user.
 
 **Debugging checklist for current issue**
-    Issue: Verify 2nd Batch of TestFlight Fixes
+    Issue: Finalize Social Auth Buttons and Logo UI 
     
     Frontend files to check: 
     - 
@@ -556,97 +356,97 @@ env: export EXPO_TUNNEL_SUBDOMAIN EXPO_PACKAGER_HOSTNAME EXPO_PACKAGER_PROXY_URL
 Fast resolver is enabled.
 Starting Metro Bundler
 Static rendering is enabled. Learn more: https://docs.expo.dev/router/reference/static-rendering/
-λ Bundled 1732ms node_modules/expo-router/node/render.js (1949 modules)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (2076/2076)
-Web Bundled 3469ms node_modules/expo-router/entry.js (2076 modules)
+λ Bundled 1707ms node_modules/expo-router/node/render.js (2110 modules)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (2080/2080)
+Web Bundled 3365ms node_modules/expo-router/entry.js (2080 modules)
 
 › web bundles (1):
-_expo/static/js/web/entry-ae3c54d4367a7f16f895098a13b8c73b.js (4.87 MB)
+_expo/static/js/web/entry-224c9abd6fdf334833f380cabe01e1f4.js (4.89 MB)
 
 › Static routes (84):
-/ (index) (58.1 kB)
-/_sitemap (56.7 kB)
-/+not-found (56.7 kB)
-/auth/login (63.1 kB)
-/auth/signup (66.8 kB)
-/legal/terms (61.7 kB)
-/trainee/feed (59 kB)
-/trainee/home (75.6 kB)
-/trainer/home (58.3 kB)
-/notifications (59.3 kB)
-/legal/privacy (61 kB)
-/messages/chat (58.3 kB)
-/trainee/saved (68.1 kB)
-/trainer/badge (58.6 kB)
-/messages (58.5 kB)
-/referral (58.1 kB)
-/trainer/boosts (63.5 kB)
-/change-password (61.3 kB)
-/admin/dashboard (62.1 kB)
-/trainee/payment (61.7 kB)
-/trainee/receipt (58.5 kB)
-/trainee/profile (67.8 kB)
-/trainer/receipt (58.5 kB)
-/trainer/profile (75.5 kB)
-/trainee/messages (68.1 kB)
-/trainee/receipts (68.8 kB)
-/trainee/sessions (67.8 kB)
-/trainer/en-route (64.1 kB)
-/trainer/earnings (67.4 kB)
-/trainer/messages (67.3 kB)
-/trainer/receipts (67.8 kB)
-/trainer/sessions (68.9 kB)
-/trainer/set-rates (58.1 kB)
-/trainee/membership (58.5 kB)
-/trainer/onboarding (58.3 kB)
-/trainer/vibe-setup (59.6 kB)
-/trainee/leaderboard (58.2 kB)
-/trainee/my-sessions (58.3 kB)
-/trainee/(tabs)/home (75.6 kB)
-/trainer/(tabs)/home (67.1 kB)
-/auth/forgot-password (60.5 kB)
-/trainee/achievements (58.1 kB)
-/trainee/rate-session (61.1 kB)
-/trainee/report-issue (61.9 kB)
-/trainee/share-status (62.1 kB)
-/trainee/share-streak (58.1 kB)
-/trainee/(tabs)/saved (68.1 kB)
-/trainer/achievements (58.1 kB)
-/trainer/connect-bank (58.6 kB)
-/trainer/edit-profile (58.3 kB)
-/trainer/upload-video (60.7 kB)
-/trainer/verification (68.3 kB)
-/trainee/instant-match (59 kB)
-/trainee/safety-center (63.8 kB)
-/trainee/user-progress (61.2 kB)
-/trainer/start-session (60.9 kB)
-/trainer/trainer-tools (60 kB)
-/trainee/group-sessions (58.7 kB)
-/trainee/session-active (61.1 kB)
-/trainee/session-detail (58.2 kB)
-/trainee/trainer-detail (58.3 kB)
-/trainee/verify-trainer (58.5 kB)
-/trainee/(tabs)/profile (67.8 kB)
-/trainer/group-sessions (59.7 kB)
-/trainer/(tabs)/profile (75.5 kB)
-/auth/onboarding-trainee (61.3 kB)
-/auth/onboarding-trainer (61.6 kB)
-/trainee/confirm-booking (63.3 kB)
-/trainee/virtual-confirm (62.3 kB)
-/trainee/(tabs)/messages (68.1 kB)
-/trainee/(tabs)/receipts (68.8 kB)
-/trainee/(tabs)/sessions (67.8 kB)
-/trainer/trainee-profile (60.1 kB)
-/trainer/virtual-request (58.6 kB)
-/trainer/(tabs)/earnings (67.4 kB)
-/trainer/(tabs)/messages (67.3 kB)
-/trainer/(tabs)/receipts (67.8 kB)
-/trainer/(tabs)/sessions (68.9 kB)
-/notification-preferences (58.1 kB)
-/trainee/session-complete (61.5 kB)
-/trainee/trainer-en-route (64.8 kB)
-/trainer/highlight-upload (59.9 kB)
-/trainee/schedule-training (62 kB)
-/trainee/recurring-sessions (71.2 kB)
+/ (index) (58.2 kB)
+/_sitemap (56.8 kB)
+/+not-found (56.8 kB)
+/auth/login (66.9 kB)
+/auth/signup (70.7 kB)
+/legal/terms (61.8 kB)
+/trainee/feed (59.1 kB)
+/trainee/home (75.7 kB)
+/trainer/home (58.4 kB)
+/notifications (59.4 kB)
+/legal/privacy (61.2 kB)
+/messages/chat (58.4 kB)
+/trainee/saved (68.3 kB)
+/trainer/badge (58.8 kB)
+/messages (58.7 kB)
+/referral (58.2 kB)
+/trainer/boosts (63.7 kB)
+/change-password (61.5 kB)
+/admin/dashboard (62.3 kB)
+/trainee/payment (61.9 kB)
+/trainee/receipt (58.7 kB)
+/trainee/profile (68 kB)
+/trainer/receipt (58.7 kB)
+/trainer/profile (75.7 kB)
+/trainee/messages (68.3 kB)
+/trainee/receipts (68.9 kB)
+/trainee/sessions (68 kB)
+/trainer/en-route (64.3 kB)
+/trainer/earnings (67.6 kB)
+/trainer/messages (67.5 kB)
+/trainer/receipts (67.9 kB)
+/trainer/sessions (69 kB)
+/trainer/set-rates (58.2 kB)
+/trainee/membership (58.7 kB)
+/trainer/onboarding (58.5 kB)
+/trainer/vibe-setup (59.8 kB)
+/trainee/leaderboard (58.4 kB)
+/trainee/my-sessions (58.5 kB)
+/trainee/(tabs)/home (75.7 kB)
+/trainer/(tabs)/home (67.2 kB)
+/auth/forgot-password (60.7 kB)
+/trainee/achievements (58.3 kB)
+/trainee/rate-session (61.3 kB)
+/trainee/report-issue (62.1 kB)
+/trainee/share-status (62.3 kB)
+/trainee/share-streak (58.2 kB)
+/trainee/(tabs)/saved (68.3 kB)
+/trainer/achievements (58.3 kB)
+/trainer/connect-bank (58.8 kB)
+/trainer/edit-profile (58.4 kB)
+/trainer/upload-video (60.8 kB)
+/trainer/verification (68.5 kB)
+/trainee/instant-match (59.2 kB)
+/trainee/safety-center (64 kB)
+/trainee/user-progress (61.3 kB)
+/trainer/start-session (61 kB)
+/trainer/trainer-tools (60.2 kB)
+/trainee/group-sessions (58.9 kB)
+/trainee/session-active (61.3 kB)
+/trainee/session-detail (58.4 kB)
+/trainee/trainer-detail (58.4 kB)
+/trainee/verify-trainer (58.7 kB)
+/trainee/(tabs)/profile (68 kB)
+/trainer/group-sessions (59.9 kB)
+/trainer/(tabs)/profile (75.7 kB)
+/auth/onboarding-trainee (61.4 kB)
+/auth/onboarding-trainer (61.7 kB)
+/trainee/confirm-booking (63.4 kB)
+/trainee/virtual-confirm (62.5 kB)
+/trainee/(tabs)/messages (68.3 kB)
+/trainee/(tabs)/receipts (68.9 kB)
+/trainee/(tabs)/sessions (68 kB)
+/trainer/trainee-profile (60.2 kB)
+/trainer/virtual-request (58.7 kB)
+/trainer/(tabs)/earnings (67.6 kB)
+/trainer/(tabs)/messages (67.5 kB)
+/trainer/(tabs)/receipts (67.9 kB)
+/trainer/(tabs)/sessions (69 kB)
+/notification-preferences (58.3 kB)
+/trainee/session-complete (61.6 kB)
+/trainee/trainer-en-route (64.9 kB)
+/trainer/highlight-upload (60.1 kB)
+/trainee/schedule-training (62.2 kB)
+/trainee/recurring-sessions (71.4 kB)
 
 Exported: dist</analysis>

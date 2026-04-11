@@ -75,9 +75,15 @@ RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoD
 26. **iOS Build Failure — Apple Sign-In Entitlement**: `expo-apple-authentication` auto-injected `com.apple.developer.applesignin` entitlement which provisioning profile doesn't support. Fixed by removing the native package and switching to web-based Apple Sign-In via `expo-web-browser` (Apple's OAuth web flow). No native entitlement required.
 27. **Dual Lock File Warning**: Removed `package-lock.json` (build warned about yarn.lock + package-lock.json conflict)
 
+## UI Updates (Apr 11, 2026 — Session 2)
+28. **Rapid Reps Header Logo**: Added user-provided stylized "Rapid Reps" text logo (`rapidreps-header.png`) at the very top of main page (`index.tsx`) and login page (`login.tsx`) with shimmer glow animation effect
+29. **RR Dumbbell Icon Logo**: Replaced old logo with user-provided RR dumbbell icon (`rapidreps-icon-logo.png`), now fills entire circular frame using `resizeMode="cover"` with exact borderRadius matching. Pulsing heartbeat animation preserved
+30. **Social Auth Buttons Redesign**: Converted from large vertical pill buttons with text to small 48px circular icons arranged horizontally (Facebook, Google, Apple), no "Continue with..." text — cleaner, less intrusive UI
+
 ## Known Issues
 - EAS iOS Build Failure (BLOCKED - user must regenerate Apple Distribution Certificate)
 - SendGrid Email Integration (BLOCKED - needs user API key)
+- Facebook App ID missing (BLOCKED - needs user to provide App ID)
 - 508 Accessibility Compliance (IN PROGRESS - incremental)
 
 ## Upcoming Tasks

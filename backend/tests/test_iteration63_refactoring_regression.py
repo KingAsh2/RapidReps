@@ -8,7 +8,7 @@ import os
 import random
 import string
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://reps-qa-preview.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://auth-layout-preview.preview.emergentagent.com').rstrip('/')
 
 # Test credentials from test_credentials.md
 TRAINER_EMAIL = "test_trainer_iter25@test.com"

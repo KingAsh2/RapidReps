@@ -26,7 +26,7 @@ from bson import ObjectId
 
 BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', '').rstrip('/')
 if not BASE_URL:
-    BASE_URL = "https://reps-qa-preview.preview.emergentagent.com"
+    BASE_URL = "https://auth-layout-preview.preview.emergentagent.com"
 
 # MongoDB connection for direct test session creation
 MONGO_URL = "mongodb://localhost:27017"

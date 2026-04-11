@@ -22,7 +22,7 @@ import requests
 import os
 import io
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://reps-qa-preview.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://auth-layout-preview.preview.emergentagent.com')
 
 # Test credentials from test_credentials.md
 ADMIN_EMAIL = "admin@rapidreps.com"

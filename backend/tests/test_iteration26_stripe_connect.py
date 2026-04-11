@@ -19,7 +19,7 @@ import requests
 import os
 import uuid
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://reps-qa-preview.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://auth-layout-preview.preview.emergentagent.com')
 if BASE_URL and not BASE_URL.startswith('http'):
     BASE_URL = f"https://{BASE_URL}"
 BASE_URL = BASE_URL.rstrip('/')

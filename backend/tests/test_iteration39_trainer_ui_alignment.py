@@ -9,7 +9,7 @@ import os
 
 BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', '').rstrip('/')
 if not BASE_URL:
-    BASE_URL = "https://reps-qa-preview.preview.emergentagent.com"
+    BASE_URL = "https://auth-layout-preview.preview.emergentagent.com"
 
 
 class TestHealthCheck:
