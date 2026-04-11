@@ -11,6 +11,7 @@ interface VibeData {
   vibeArtworkUrl?: string | null;
   vibePreviewUrl?: string | null;
   vibeAppleMusicUrl?: string | null;
+  vibeTrackId?: string | null;
 }
 
 interface Props {
@@ -27,35 +28,58 @@ export const TrainerVibePlayer = ({ vibe, autoPlay = true, compact = false }: Pr
   const [isMuted, setIsMuted] = useState(false);
   const [hasPlayed, setHasPlayed] = useState(false);
   const [previewEnded, setPreviewEnded] = useState(false);
+  const [freshPreviewUrl, setFreshPreviewUrl] = useState<string | null>(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
   const mountedRef = useRef(true);
+  const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
+
+  const getPreviewUrl = () => freshPreviewUrl || vibe.vibePreviewUrl;
 
   useEffect(() => {
     Animated.timing(fadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }).start();
-    loadMutePreference();
+    initAutoPlay();
     return () => {
       mountedRef.current = false;
       cleanupSound();
     };
   }, []);
 
-  useEffect(() => {
-    if (autoPlay && !hasPlayed && !isMuted && vibe.vibePreviewUrl) {
-      playPreview();
-    }
-  }, [isMuted]);
-
-  const loadMutePreference = async () => {
+  const initAutoPlay = async () => {
+    // Load mute preference first
     try {
       const val = await AsyncStorage.getItem(MUTE_KEY);
-      if (val === 'true') setIsMuted(true);
-      else if (autoPlay && vibe.vibePreviewUrl && !hasPlayed) {
-        playPreview();
+      if (val === 'true') {
+        setIsMuted(true);
+        return;
       }
     } catch { /* ignore */ }
+    
+    // Re-fetch fresh preview URL if we have a trackId (iTunes URLs expire)
+    if (vibe.vibeTrackId) {
+      try {
+        const res = await fetch(`${API_URL}/api/music/lookup?trackId=${vibe.vibeTrackId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.previewUrl) setFreshPreviewUrl(data.previewUrl);
+        }
+      } catch { /* use stored URL */ }
+    }
+
+    if (autoPlay && !hasPlayed) {
+      // Small delay to let state settle
+      setTimeout(() => {
+        if (mountedRef.current) playPreview();
+      }, 300);
+    }
   };
+
+  useEffect(() => {
+    if (autoPlay && !hasPlayed && !isMuted && getPreviewUrl()) {
+      playPreview();
+    }
+  }, [isMuted, freshPreviewUrl]);
 
   const cleanupSound = async () => {
     if (sound) {
@@ -64,11 +88,12 @@ export const TrainerVibePlayer = ({ vibe, autoPlay = true, compact = false }: Pr
   };
 
   const playPreview = async () => {
-    if (!vibe.vibePreviewUrl || hasPlayed) return;
+    const url = getPreviewUrl();
+    if (!url || hasPlayed) return;
     try {
       await Audio.setAudioModeAsync({ playsInSilentModeIOS: true, staysActiveInBackground: false });
       const { sound: newSound } = await Audio.Sound.createAsync(
-        { uri: vibe.vibePreviewUrl },
+        { uri: url },
         { shouldPlay: true, volume: 0.6 },
         (status) => {
           if (!mountedRef.current) return;

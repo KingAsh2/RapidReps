@@ -513,8 +513,13 @@ async def update_trainer_vibe(user_id: str, body: dict, current_user: dict = Dep
         'vibeAppleMusicUrl': body.get('vibeAppleMusicUrl'), 'vibeTrackId': body.get('vibeTrackId'),
         'updatedAt': datetime.utcnow(),
     }
-    await db.trainer_profiles.update_one({'userId': user_id}, {'$set': vibe_data})
-    return {"success": True, **{k: v for k, v in vibe_data.items() if k != 'updatedAt'}}
+    result = await db.trainer_profiles.update_one({'userId': user_id}, {'$set': vibe_data})
+    if result.matched_count == 0:
+        # Profile doesn't exist yet — create a minimal one with vibe data
+        vibe_data['userId'] = user_id
+        vibe_data['createdAt'] = datetime.utcnow()
+        await db.trainer_profiles.insert_one(vibe_data)
+    return {"success": True, **{k: v for k, v in vibe_data.items() if k not in ('updatedAt', 'createdAt', '_id', 'userId')}}
 
 
 @router.delete("/trainer-profiles/{user_id}/vibe")
@@ -599,6 +604,26 @@ async def search_music(q: str = Query(..., min_length=2), limit: int = Query(10,
             'collectionName': item.get('collectionName', ''),
         })
     return {"results": results}
+
+
+@router.get("/music/lookup")
+async def lookup_music(trackId: str = Query(...)):
+    """Lookup a specific iTunes track by ID to get fresh preview URL."""
+    url = f"https://itunes.apple.com/lookup?id={trackId}"
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as resp:
+            data = await resp.json(content_type=None)
+    results = data.get('results', [])
+    if not results:
+        return {"previewUrl": None}
+    item = results[0]
+    return {
+        "previewUrl": item.get('previewUrl', ''),
+        "artworkUrl": (item.get('artworkUrl100', '') or '').replace('100x100', '600x600'),
+        "trackName": item.get('trackName', ''),
+        "artistName": item.get('artistName', ''),
+    }
+
 
 
 @router.post("/trainer-profiles/{user_id}/highlights")
