@@ -48,10 +48,12 @@ export default function LoginScreen() {
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
-  const logoScale = useRef(new Animated.Value(0.8)).current;
+  const logoScale = useRef(new Animated.Value(0.3)).current;
   const pulseScale = useRef(new Animated.Value(1)).current;
   const glowOpacity = useRef(new Animated.Value(0.6)).current;
   const headerShimmer = useRef(new Animated.Value(0)).current;
+  const headerSlide = useRef(new Animated.Value(-60)).current;
+  const headerFade = useRef(new Animated.Value(0)).current;
   const combinedLogoScale = useRef(Animated.multiply(logoScale, pulseScale)).current;
   const emailBorderAnim = useRef(new Animated.Value(0)).current;
   const passwordBorderAnim = useRef(new Animated.Value(0)).current;
@@ -60,10 +62,17 @@ export default function LoginScreen() {
   const animationsAlive = useRef(true);
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
-      Animated.spring(slideAnim, { toValue: 0, friction: 8, tension: 40, useNativeDriver: true }),
-      Animated.spring(logoScale, { toValue: 1, friction: 6, tension: 40, useNativeDriver: true }),
+    // Staggered cinematic entrance: header slides down first, then logo scales up
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(headerFade, { toValue: 1, duration: 500, useNativeDriver: true }),
+        Animated.spring(headerSlide, { toValue: 0, friction: 8, tension: 50, useNativeDriver: true }),
+      ]),
+      Animated.parallel([
+        Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }),
+        Animated.spring(logoScale, { toValue: 1, friction: 5, tension: 40, useNativeDriver: true }),
+        Animated.spring(slideAnim, { toValue: 0, friction: 8, tension: 40, useNativeDriver: true }),
+      ]),
     ]).start(() => {
       if (animationsAlive.current) startPulse();
     });
@@ -198,11 +207,14 @@ export default function LoginScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            {/* Header Logo — Rapid Reps text with shimmer */}
+            {/* Header Logo — Rapid Reps text slides down from top */}
             <Animated.View
               style={[
                 styles.headerLogoSection,
-                { opacity: Animated.multiply(fadeAnim, headerGlowOpacity) },
+                {
+                  opacity: Animated.multiply(headerFade, headerGlowOpacity),
+                  transform: [{ translateY: headerSlide }],
+                },
               ]}
             >
               <View style={styles.headerLogoGlow}>

@@ -40,12 +40,14 @@ export default function WelcomeScreen() {
   
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
-  const logoScale = useRef(new Animated.Value(0.8)).current;
+  const logoScale = useRef(new Animated.Value(0.3)).current;
   const videoFadeOut = useRef(new Animated.Value(1)).current;
   
   const pulseScale = useRef(new Animated.Value(1)).current;
   const glowOpacity = useRef(new Animated.Value(0.6)).current;
   const headerShimmer = useRef(new Animated.Value(0)).current;
+  const headerSlide = useRef(new Animated.Value(-60)).current;
+  const headerFade = useRef(new Animated.Value(0)).current;
 
   const combinedLogoScale = useRef(Animated.multiply(logoScale, pulseScale)).current;
   const animationsAlive = useRef(true);
@@ -65,10 +67,19 @@ export default function WelcomeScreen() {
 
   useEffect(() => {
     if (!showVideo && isReady) {
-      Animated.parallel([
-        Animated.timing(fadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
-        Animated.spring(slideAnim, { toValue: 0, friction: 8, tension: 40, useNativeDriver: true }),
-        Animated.spring(logoScale, { toValue: 1, friction: 6, tension: 40, useNativeDriver: true }),
+      // Staggered cinematic entrance: header slides down first, then logo scales up
+      Animated.sequence([
+        // Step 1: Header slides down from top with fade
+        Animated.parallel([
+          Animated.timing(headerFade, { toValue: 1, duration: 500, useNativeDriver: true }),
+          Animated.spring(headerSlide, { toValue: 0, friction: 8, tension: 50, useNativeDriver: true }),
+        ]),
+        // Step 2: Logo scales up from center + rest of content fades in
+        Animated.parallel([
+          Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }),
+          Animated.spring(logoScale, { toValue: 1, friction: 5, tension: 40, useNativeDriver: true }),
+          Animated.spring(slideAnim, { toValue: 0, friction: 8, tension: 40, useNativeDriver: true }),
+        ]),
       ]).start(() => {
         if (animationsAlive.current) startPulseAnimation();
       });
@@ -178,11 +189,14 @@ export default function WelcomeScreen() {
           <SafeAreaView style={styles.safeArea}>
             <View style={styles.content}>
 
-              {/* Header Logo — "Rapid Reps" stylized text at very top */}
+              {/* Header Logo — "Rapid Reps" stylized text slides down from top */}
               <Animated.View
                 style={[
                   styles.headerLogoSection,
-                  { opacity: Animated.multiply(fadeAnim, headerGlowOpacity) },
+                  {
+                    opacity: Animated.multiply(headerFade, headerGlowOpacity),
+                    transform: [{ translateY: headerSlide }],
+                  },
                 ]}
               >
                 <View style={styles.headerLogoGlow}>
