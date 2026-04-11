@@ -225,24 +225,44 @@ export const SocialAuthButtons = ({ preSelectedRole, onError, onSuccess }: Socia
   };
 
   const handleAppleLogin = async () => {
-    if (Platform.OS !== 'ios') { onError?.('Apple Sign-In is only available on iOS.'); return; }
     setLoadingProvider('apple');
     try {
-      const AppleAuth = await import('expo-apple-authentication');
-      const credential = await AppleAuth.signInAsync({
-        requestedScopes: [AppleAuth.AppleAuthenticationScope.FULL_NAME, AppleAuth.AppleAuthenticationScope.EMAIL],
-      });
-      if (!credential.identityToken) { onError?.('Apple Sign-In failed.'); return; }
-      let fullName: string | undefined;
-      if (credential.fullName) {
-        const parts = [credential.fullName.givenName, credential.fullName.familyName].filter(Boolean);
-        if (parts.length > 0) fullName = parts.join(' ');
+      // Web-based Apple Sign-In (no native entitlement required)
+      const redirectUrl = Linking.createURL('auth/apple-callback');
+      const appleAuthUrl = `https://appleid.apple.com/auth/authorize?` +
+        `client_id=${encodeURIComponent('app.emergent.trainer-finder-9f806c77e')}` +
+        `&redirect_uri=${encodeURIComponent(redirectUrl)}` +
+        `&response_type=code+id_token` +
+        `&scope=name+email` +
+        `&response_mode=fragment`;
+
+      const result = await WebBrowser.openAuthSessionAsync(appleAuthUrl, redirectUrl);
+
+      if (result.type === 'success' && result.url) {
+        const fragment = result.url.split('#')[1] || '';
+        const params = new URLSearchParams(fragment);
+        const idToken = params.get('id_token');
+        const code = params.get('code');
+
+        if (!idToken) {
+          onError?.('Apple sign-in was cancelled or failed.');
+          return;
+        }
+
+        // Decode the JWT payload (without verification — backend will verify)
+        const payloadB64 = idToken.split('.')[1] || '';
+        const payload = JSON.parse(atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/')));
+        const appleUserId = payload.sub || '';
+        const email = payload.email || undefined;
+
+        const { user, isNewUser } = await socialLogin('apple', {
+          identityToken: idToken,
+          userId: appleUserId,
+          email,
+          authorizationCode: code || undefined,
+        });
+        await handleSocialResult(user, isNewUser);
       }
-      const { user, isNewUser } = await socialLogin('apple', {
-        identityToken: credential.identityToken, userId: credential.user,
-        email: credential.email || undefined, fullName: fullName || undefined,
-      });
-      await handleSocialResult(user, isNewUser);
     } catch (err: any) {
       if (err.code !== 'ERR_REQUEST_CANCELED') {
         onError?.(err?.response?.data?.detail || err?.message || 'Apple sign-in failed.');
@@ -264,8 +284,7 @@ export const SocialAuthButtons = ({ preSelectedRole, onError, onSuccess }: Socia
   return (
     <View style={styles.container}>
       {/* Apple — sleek black */}
-      {Platform.OS === 'ios' && (
-        <SocialBtn
+      <SocialBtn
           provider="apple"
           label="Continue with Apple"
           icon="logo-apple"
@@ -279,7 +298,6 @@ export const SocialAuthButtons = ({ preSelectedRole, onError, onSuccess }: Socia
           onPress={handleAppleLogin}
           testId="social-apple-btn"
         />
-      )}
 
       {/* Google — clean white with color accent */}
       <SocialBtn
@@ -290,7 +308,7 @@ export const SocialAuthButtons = ({ preSelectedRole, onError, onSuccess }: Socia
         gradientColors={['#FFFFFF', '#F5F7FA']}
         textColor="#2D3748"
         borderColors={['rgba(66,133,244,0.3)', 'rgba(66,133,244,0.05)']}
-        delay={Platform.OS === 'ios' ? 100 : 0}
+        delay={100}
         loading={loadingProvider === 'google'}
         disabled={isLoading}
         onPress={handleGoogleLogin}
@@ -306,7 +324,7 @@ export const SocialAuthButtons = ({ preSelectedRole, onError, onSuccess }: Socia
         gradientColors={['#1877F2', '#0C5DC7']}
         textColor="#FFFFFF"
         borderColors={['rgba(24,119,242,0.4)', 'rgba(24,119,242,0.1)']}
-        delay={Platform.OS === 'ios' ? 200 : 100}
+        delay={200}
         loading={loadingProvider === 'facebook'}
         disabled={isLoading}
         onPress={handleFacebookLogin}

@@ -71,6 +71,10 @@ RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoD
 24. **Backend Social Auth**: `social_auth_routes.py` with `find_or_create_social_user()` helper — links social providers to existing accounts by email, upserts new accounts without password
 25. **Updated UserSignUp Model**: `password` now Optional, `isSocialAuth` flag added — signup endpoint handles passwordless social users gracefully
 
+## Deployment Fix (Apr 11, 2026)
+26. **iOS Build Failure — Apple Sign-In Entitlement**: `expo-apple-authentication` auto-injected `com.apple.developer.applesignin` entitlement which provisioning profile doesn't support. Fixed by removing the native package and switching to web-based Apple Sign-In via `expo-web-browser` (Apple's OAuth web flow). No native entitlement required.
+27. **Dual Lock File Warning**: Removed `package-lock.json` (build warned about yarn.lock + package-lock.json conflict)
+
 ## Known Issues
 - EAS iOS Build Failure (BLOCKED - user must regenerate Apple Distribution Certificate)
 - SendGrid Email Integration (BLOCKED - needs user API key)
