@@ -923,7 +923,7 @@ export default function TrainerHomeScreen() {
               {upcomingSessions.length === 0 ? (
                 <View style={styles.emptyCard}>
                   <LinearGradient
-                    colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.9)']}
+                    colors={['#141929', '#1A2035']}
                     style={styles.emptyGradient}
                   >
                     <Ionicons name="calendar-outline" size={48} color={COLORS.orange} />

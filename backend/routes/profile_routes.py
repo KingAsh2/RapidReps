@@ -632,6 +632,46 @@ async def upload_highlight(user_id: str, file: UploadFile = File(...), caption: 
     return {"success": True, "highlight": highlight}
 
 
+@router.post("/trainer-profiles/{user_id}/highlights/base64")
+async def upload_highlight_base64(user_id: str, body: dict, current_user: dict = Depends(get_current_user)):
+    """Upload a highlight via base64 data (more reliable for iOS photo uploads)."""
+    if str(current_user['_id']) != user_id:
+        raise HTTPException(403, "Can only update your own highlights")
+
+    import base64
+    data_b64 = body.get('data', '')
+    filename = body.get('filename', 'highlight.jpg')
+    content_type = body.get('contentType', 'image/jpeg')
+    caption = body.get('caption', '')
+
+    if not data_b64:
+        raise HTTPException(400, "No data provided")
+
+    content = base64.b64decode(data_b64)
+    if len(content) > 50 * 1024 * 1024:
+        raise HTTPException(400, "File too large (max 50MB)")
+
+    ext = filename.split('.')[-1].lower() or 'jpg'
+    is_video = ext in ('mp4', 'mov', 'avi', 'webm')
+    media_type = 'video' if is_video else 'photo'
+
+    storage_path = generate_upload_path(user_id, ext, folder="highlights")
+    try:
+        put_object(storage_path, content, content_type)
+    except Exception as e:
+        raise HTTPException(500, f"Upload failed: {str(e)}")
+    url = f"/api/files/{storage_path}"
+
+    highlight = {
+        'url': url, 'storagePath': storage_path, 'type': media_type,
+        'caption': caption, 'createdAt': datetime.utcnow().isoformat(),
+    }
+
+    await db.trainer_profiles.update_one({'userId': user_id}, {'$push': {'highlights': highlight}})
+    return {"success": True, "highlight": highlight}
+
+
+
 @router.delete("/trainer-profiles/{user_id}/highlights/{index}")
 async def delete_highlight(user_id: str, index: int, current_user: dict = Depends(get_current_user)):
     """Delete a highlight by index."""

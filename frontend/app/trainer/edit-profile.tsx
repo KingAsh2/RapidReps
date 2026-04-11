@@ -237,9 +237,6 @@ export default function EditTrainerProfileScreen() {
         longitude: formData.longitude,
         locationAddress: formData.locationAddress,
         isAvailable: formData.isAvailable,
-        avatarUrl: formData.profilePhotoUrl.trim() || undefined,
-        introVideoUrl: formData.introVideoUrl.trim() || undefined,
-        introVideoUploaded: !!formData.introVideoUrl.trim(),
         socialLinks: formData.socialLinks,
       };
 

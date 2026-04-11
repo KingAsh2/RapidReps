@@ -109,9 +109,13 @@ export default function TrainerVibeSetup() {
   const selectTrack = async (track: Track) => {
     await cleanupAudio();
     setPlayingId(null);
+    if (!user?.id || !token) {
+      toast.error('Please log in to save your vibe');
+      return;
+    }
     setSaving(true);
     try {
-      const res = await fetch(`${API_URL}/api/trainer-profiles/${user?.id}/vibe`, {
+      const res = await fetch(`${API_URL}/api/trainer-profiles/${user.id}/vibe`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
@@ -123,10 +127,13 @@ export default function TrainerVibeSetup() {
           vibeTrackId: track.trackId,
         }),
       });
-      if (!res.ok) throw new Error('Failed to save');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || 'Failed to save');
+      }
       setCurrentVibe(track);
       toast.success('Vibe saved!');
-    } catch { toast.error('Failed to save vibe'); } finally { setSaving(false); }
+    } catch (err: any) { toast.error(err.message || 'Failed to save vibe'); } finally { setSaving(false); }
   };
 
   const removeVibe = async () => {

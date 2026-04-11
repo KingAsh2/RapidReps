@@ -41,14 +41,36 @@ export default function HighlightUpload() {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: mediaType === 'video' ? ImagePicker.MediaTypeOptions.Videos : ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      quality: 0.8,
+      quality: 0.7,
       videoMaxDuration: 30,
+      base64: mediaType === 'photo' ? true : false,
     });
     if (result.canceled || !result.assets?.[0]) return;
 
     setUploading(true);
     try {
       const asset = result.assets[0];
+      
+      // For photos, try base64 upload first (more reliable on iOS)
+      if (mediaType === 'photo' && asset.base64) {
+        const res = await fetch(`${API_URL}/api/trainer-profiles/${user?.id}/highlights/base64`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({
+            data: asset.base64,
+            filename: 'highlight.jpg',
+            contentType: 'image/jpeg',
+            caption: '',
+          }),
+        });
+        if (res.ok) {
+          toast.success('Highlight uploaded!');
+          loadHighlights();
+          return;
+        }
+      }
+      
+      // Fallback to FormData upload
       const formData = new FormData();
       const ext = asset.uri.split('.').pop() || (mediaType === 'video' ? 'mp4' : 'jpg');
       formData.append('file', { uri: asset.uri, name: `highlight.${ext}`, type: mediaType === 'video' ? 'video/mp4' : 'image/jpeg' } as any);
@@ -63,10 +85,11 @@ export default function HighlightUpload() {
         toast.success('Highlight uploaded!');
         loadHighlights();
       } else {
-        toast.error('Upload failed');
+        const errData = await res.json().catch(() => ({}));
+        toast.error(errData.detail || 'Upload failed. Try a smaller file.');
       }
     } catch (err) {
-      toast.error('Upload failed');
+      toast.error('Upload failed. Check your connection and try again.');
     } finally { setUploading(false); }
   };
 

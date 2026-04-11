@@ -49,6 +49,12 @@ RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoD
 
 ## Bug Fixes (Apr 11, 2026)
 6. **Pulsating Logo Circle Too Large**: `logoBacking` padding 20→0, borderRadius 140→120, added overflow:hidden so logo fills circle
+7. **Profile Save Crash (edit-profile.tsx)**: Removed references to non-existent `formData.profilePhotoUrl` and `formData.introVideoUrl` that caused `TypeError: Cannot read properties of undefined (reading 'trim')`
+8. **Empty Sessions Card Invisible Text**: Changed empty state gradient from white `rgba(255,255,255,0.95)` to dark `#141929/#1A2035` so white text is visible
+9. **ID Scanning Overlay Freeze**: Moved `setShowScanningOverlay(true)` to AFTER camera capture instead of before, preventing overlay from showing while camera is open and timer from firing prematurely
+10. **Vibe Save Guard**: Added null check for `user?.id` and `token` before API call, plus better error messages from backend response
+11. **Highlight Upload Reliability**: Added base64 photo upload path for iOS reliability, reduced quality to 0.7, better error messages
+12. **Onboarding Rates Prompt**: Post-onboarding modal now shows "Set Your Rates" as primary CTA before verification
 
 ## Known Issues
 - EAS iOS Build Failure (BLOCKED - user must regenerate Apple Distribution Certificate)

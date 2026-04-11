@@ -570,32 +570,35 @@ export default function TrainerOnboardingScreen() {
             </View>
             <Text style={styles.modalTitle}>Profile Created!</Text>
             <Text style={styles.modalSubtitle}>
-              Your trainer profile is set up. To start accepting clients, you need to complete identity verification.
+              Your trainer profile is set up. Next, set your session rates so clients know your pricing.
             </Text>
-
-            <View style={styles.modalSteps}>
-              {['Upload Government ID', 'Complete Background Check', 'Upload Certifications', 'Add Profile Photo & Video'].map((s, i) => (
-                <View key={i} style={styles.modalStepRow}>
-                  <View style={styles.modalStepDot}>
-                    <Text style={styles.modalStepNum}>{i + 1}</Text>
-                  </View>
-                  <Text style={styles.modalStepText}>{s}</Text>
-                </View>
-              ))}
-            </View>
 
             <TouchableOpacity
               style={styles.modalPrimaryBtn}
+              onPress={() => {
+                setShowVerificationModal(false);
+                router.replace('/trainer/set-rates');
+              }}
+              data-testid="set-rates-btn-onboarding"
+            >
+              <LinearGradient colors={['#FF6A00', '#FF9F1C']} style={styles.modalPrimaryGradient}>
+                <Ionicons name="cash" size={20} color="#FFFFFF" />
+                <Text style={styles.modalPrimaryText}>Set Your Rates</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.modalSecondaryBtn, { borderWidth: 1.5, borderColor: 'rgba(26,42,94,0.4)', borderRadius: 14, paddingVertical: 14 }]}
               onPress={() => {
                 setShowVerificationModal(false);
                 router.replace('/trainer/verification');
               }}
               data-testid="start-verification-btn"
             >
-              <LinearGradient colors={['#1a2a5e', '#2a3a6e']} style={styles.modalPrimaryGradient}>
-                <Ionicons name="shield-checkmark" size={20} color="#FFFFFF" />
-                <Text style={styles.modalPrimaryText}>Start Verification</Text>
-              </LinearGradient>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <Ionicons name="shield-checkmark" size={18} color="#1a2a5e" />
+                <Text style={[styles.modalSecondaryText, { color: '#1a2a5e', fontWeight: '700' }]}>Start Verification</Text>
+              </View>
             </TouchableOpacity>
 
             <TouchableOpacity

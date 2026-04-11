@@ -346,9 +346,6 @@ export default function TrainerVerificationScreen() {
       setVerificationStatus(prev => ({ ...prev, [stepId]: 'uploading' }));
 
       if (stepId === 'identity') {
-        // Show scanning overlay immediately for scan illusion
-        setShowScanningOverlay(true);
-        
         // #2: Scan ID with camera - request permission first
         const { status } = await ImagePicker.requestCameraPermissionsAsync();
         let result;
@@ -360,7 +357,6 @@ export default function TrainerVerificationScreen() {
           });
         } else {
           // Fallback to image library if camera permission denied
-          setShowScanningOverlay(false);
           toast.info('Camera access denied. Please select your ID from gallery.');
           result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -370,11 +366,10 @@ export default function TrainerVerificationScreen() {
         }
         if (result && !result.canceled && result.assets?.[0]) {
           const asset = result.assets[0];
-          // Keep scanning animation going with the actual image
+          // Show scanning animation AFTER photo is captured
           setPendingIdUri(asset.uri);
-          // Scanning overlay is already visible
+          setShowScanningOverlay(true);
         } else {
-          setShowScanningOverlay(false);
           setVerificationStatus(prev => ({ ...prev, [stepId]: 'pending' }));
         }
       } else if (stepId === 'photo') {
