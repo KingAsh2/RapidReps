@@ -405,8 +405,8 @@ const styles = StyleSheet.create({
   },
   logoBacking: {
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    borderRadius: 140,
-    padding: 20,
+    borderRadius: 120,
+    padding: 0,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#FFD700',
@@ -414,6 +414,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.6,
     shadowRadius: 20,
     elevation: 10,
+    overflow: 'hidden',
   },
   logo: {
     width: width * 0.6,

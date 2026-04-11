@@ -47,6 +47,9 @@ RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoD
 4. **Address Input Blocked**: Banner didn't trigger edit mode → added `?editAddress=true` param
 5. **Vibe Save Silent Failure**: Missing `res.ok` check → added error handling
 
+## Bug Fixes (Apr 11, 2026)
+6. **Pulsating Logo Circle Too Large**: `logoBacking` padding 20→0, borderRadius 140→120, added overflow:hidden so logo fills circle
+
 ## Known Issues
 - EAS iOS Build Failure (BLOCKED - user must regenerate Apple Distribution Certificate)
 - SendGrid Email Integration (BLOCKED - needs user API key)
