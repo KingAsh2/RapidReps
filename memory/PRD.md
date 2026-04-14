@@ -79,7 +79,8 @@ RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoD
 28. **Rapid Reps Header Logo**: Added user-provided stylized "Rapid Reps" text logo (`rapidreps-header.png`) at the very top of main page (`index.tsx`) and login page (`login.tsx`) with shimmer glow animation effect
 29. **RR Dumbbell Icon Logo**: Replaced old logo with user-provided RR dumbbell icon (`rapidreps-icon-logo.png`), now fills entire circular frame using `resizeMode="cover"` with exact borderRadius matching. Pulsing heartbeat animation preserved
 30. **Social Auth Buttons Redesign**: Converted from large vertical pill buttons with text to small 48px circular icons arranged horizontally (Facebook, Google, Apple), no "Continue with..." text — cleaner, less intrusive UI
-31. **Cinematic Entrance Animation**: Header logo slides down from top first (500ms spring), then RR icon scales up from 0.3x to 1x from center with a dramatic spring bounce. Staggered sequence gives a premium cinematic first impression on both main and login screens
+31. **Cinematic Entrance Animation**: Header logo slides down from top first (500ms spring), then RR icon scales up from 0.3x to 1x from center with a dramatic spring bounce
+32. **Strict Logo Sizing (User Spec)**: Header = 90% screen width (auto height, max 120px, 10px top spacing). Circle = 65% screen width (perfect circle). Logo inside circle = 108% of circle diameter with `resizeMode="cover"` and `overflow: hidden` — no padding, no empty space. 20px gap between header and circle. Applied identically to index.tsx, login.tsx, signup.tsx
 
 ## Known Issues
 - EAS iOS Build Failure (BLOCKED - user must regenerate Apple Distribution Certificate)

@@ -292,10 +292,19 @@ export default function SignupScreen() {
             >
               <View style={styles.logoContainer}>
                 <Image 
-                  source={require('../../assets/rapidreps-logo.png')} 
-                  style={styles.logoImage}
+                  source={require('../../assets/rapidreps-header.png')} 
+                  style={styles.headerLogoImage}
                   resizeMode="contain"
                 />
+              </View>
+              <View style={styles.circleLogoContainer}>
+                <View style={styles.circleBacking}>
+                  <Image 
+                    source={require('../../assets/rapidreps-icon-logo.png')} 
+                    style={styles.circleLogoImage}
+                    resizeMode="cover"
+                  />
+                </View>
               </View>
               <Text style={styles.heroTitle}>Let's Build Your{'\n'}Fitness Momentum</Text>
               <Text style={styles.heroSubtitle}>Train smarter. Move faster. Get real results.</Text>
@@ -673,8 +682,38 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   logoContainer: {
-    marginBottom: 16,
+    marginBottom: 20,
     alignItems: 'center',
+    width: width * 0.9,
+    alignSelf: 'center',
+  },
+  headerLogoImage: {
+    width: width * 0.9,
+    height: undefined,
+    aspectRatio: 1179 / 442,
+    maxHeight: 120,
+  },
+  circleLogoContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  circleBacking: {
+    width: width * 0.65,
+    height: width * 0.65,
+    borderRadius: (width * 0.65) / 2,
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 20,
+    elevation: 10,
+    overflow: 'hidden',
+  },
+  circleLogoImage: {
+    width: width * 0.65 * 1.08,
+    height: width * 0.65 * 1.08,
   },
   logoImage: {
     width: 140,

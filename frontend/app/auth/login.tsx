@@ -358,7 +358,8 @@ export default function LoginScreen() {
   );
 }
 
-const LOGO_SIZE = Math.min(width * 0.4, 160);
+const CIRCLE_SIZE = width * 0.65;
+const LOGO_SCALE = 1.08;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: BRAND.orange },
@@ -374,23 +375,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24, paddingTop: 60, paddingBottom: 30,
   },
 
-  /* Header Logo */
-  headerLogoSection: { alignItems: 'center', marginBottom: 8 },
+  /* Header Logo — 90% width, auto height, max 120px */
+  headerLogoSection: { alignItems: 'center', marginBottom: 20 },
   headerLogoGlow: {
     shadowColor: '#FFD700',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.5, shadowRadius: 16, elevation: 8,
+    width: width * 0.9,
   },
   headerLogoImage: {
-    width: width * 0.45, height: width * 0.15,
-    maxWidth: 200, maxHeight: 65,
+    width: width * 0.9,
+    height: undefined,
+    aspectRatio: 1179 / 442,
+    maxHeight: 120,
   },
 
-  /* Pulsating Icon Logo */
+  /* Circle Logo — 65% screen width, logo fills 108% */
   logoSection: { alignItems: 'center', marginBottom: 8 },
   logoBacking: {
-    width: LOGO_SIZE, height: LOGO_SIZE,
-    borderRadius: LOGO_SIZE / 2,
+    width: CIRCLE_SIZE, height: CIRCLE_SIZE,
+    borderRadius: CIRCLE_SIZE / 2,
     backgroundColor: 'rgba(0, 0, 0, 0.35)',
     alignItems: 'center', justifyContent: 'center',
     shadowColor: '#FFD700',
@@ -399,8 +403,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   logo: {
-    width: LOGO_SIZE, height: LOGO_SIZE,
-    borderRadius: LOGO_SIZE / 2,
+    width: CIRCLE_SIZE * LOGO_SCALE,
+    height: CIRCLE_SIZE * LOGO_SCALE,
   },
 
   headerSection: { alignItems: 'center', marginBottom: 20 },

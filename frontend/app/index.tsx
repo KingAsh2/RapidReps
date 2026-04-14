@@ -294,7 +294,8 @@ export default function WelcomeScreen() {
   );
 }
 
-const LOGO_SIZE = Math.min(width * 0.52, 210);
+const CIRCLE_SIZE = width * 0.65;
+const LOGO_SCALE = 1.08;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: BRAND.orange },
@@ -313,28 +314,31 @@ const styles = StyleSheet.create({
   overlay: { ...StyleSheet.absoluteFillObject },
   safeArea: { flex: 1 },
   content: {
-    flex: 1, paddingHorizontal: 24,
+    flex: 1, paddingHorizontal: 0,
     justifyContent: 'space-between',
-    paddingTop: 4, paddingBottom: 20,
+    paddingTop: 10, paddingBottom: 20,
   },
 
-  /* Header Logo — Rapid Reps text at very top */
-  headerLogoSection: { alignItems: 'center', marginTop: 0, marginBottom: 4 },
+  /* Header Logo — 90% width, auto height, max 120px */
+  headerLogoSection: { alignItems: 'center', marginTop: 0, marginBottom: 20 },
   headerLogoGlow: {
     shadowColor: '#FFD700',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.5, shadowRadius: 16, elevation: 8,
+    width: width * 0.9,
   },
   headerLogoImage: {
-    width: width * 0.55, height: width * 0.18,
-    maxWidth: 240, maxHeight: 80,
+    width: width * 0.9,
+    height: undefined,
+    aspectRatio: 1179 / 442,
+    maxHeight: 120,
   },
 
-  /* Pulsating Icon Logo (RR dumbbell) — fills circle */
+  /* Circle Logo — 65% screen width, logo fills 108% */
   logoSection: { alignItems: 'center', marginTop: 0, justifyContent: 'center' },
   logoBacking: {
-    width: LOGO_SIZE, height: LOGO_SIZE,
-    borderRadius: LOGO_SIZE / 2,
+    width: CIRCLE_SIZE, height: CIRCLE_SIZE,
+    borderRadius: CIRCLE_SIZE / 2,
     backgroundColor: 'rgba(0, 0, 0, 0.35)',
     alignItems: 'center', justifyContent: 'center',
     shadowColor: '#FFD700',
@@ -343,15 +347,15 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   logo: {
-    width: LOGO_SIZE, height: LOGO_SIZE,
-    borderRadius: LOGO_SIZE / 2,
+    width: CIRCLE_SIZE * LOGO_SCALE,
+    height: CIRCLE_SIZE * LOGO_SCALE,
   },
 
-  taglineSection: { alignItems: 'center', marginTop: 8 },
+  taglineSection: { alignItems: 'center', marginTop: 8, paddingHorizontal: 24 },
   tagline: { fontSize: 20, fontWeight: '700', color: BRAND.white, letterSpacing: 2 },
   taglineHighlight: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
   taglineBold: { fontSize: 26, fontWeight: '900', color: BRAND.navy, letterSpacing: 1 },
-  valuePropsSection: { flexDirection: 'row', justifyContent: 'space-around', paddingHorizontal: 10 },
+  valuePropsSection: { flexDirection: 'row', justifyContent: 'space-around', paddingHorizontal: 24 },
   valueProp: { alignItems: 'center', flex: 1 },
   valuePropIcon: {
     width: 48, height: 48, borderRadius: 24,
@@ -362,7 +366,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
   },
   valuePropText: { fontSize: 13, fontWeight: '700', color: BRAND.white, textAlign: 'center' },
-  ctaSection: { gap: 14 },
+  ctaSection: { gap: 14, paddingHorizontal: 24 },
   termsText: { fontSize: 13, color: 'rgba(255,255,255,0.8)', textAlign: 'center', marginTop: 8 },
   termsLink: { textDecorationLine: 'underline', fontWeight: '600' },
   loginLinkContainer: { marginTop: 16, paddingVertical: 8 },
