@@ -682,7 +682,7 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   logoContainer: {
-    marginBottom: 20,
+    marginBottom: 8,
     alignItems: 'center',
     width: width * 0.9,
     alignSelf: 'center',
@@ -691,7 +691,6 @@ const styles = StyleSheet.create({
     width: width * 0.9,
     height: undefined,
     aspectRatio: 1179 / 442,
-    maxHeight: 120,
   },
   circleLogoContainer: {
     alignItems: 'center',
@@ -702,6 +701,8 @@ const styles = StyleSheet.create({
     height: width * 0.65,
     borderRadius: (width * 0.65) / 2,
     backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    borderWidth: 3,
+    borderColor: '#FF9F00',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#FFD700',
@@ -712,8 +713,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   circleLogoImage: {
-    width: width * 0.65 * 1.08,
-    height: width * 0.65 * 1.08,
+    width: width * 0.65 * 1.30,
+    height: width * 0.65 * 1.30,
   },
   logoImage: {
     width: 140,

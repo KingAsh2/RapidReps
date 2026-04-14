@@ -359,7 +359,7 @@ export default function LoginScreen() {
 }
 
 const CIRCLE_SIZE = width * 0.65;
-const LOGO_SCALE = 1.08;
+const LOGO_SCALE = 1.30;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: BRAND.orange },
@@ -375,8 +375,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24, paddingTop: 60, paddingBottom: 30,
   },
 
-  /* Header Logo — 90% width, auto height, max 120px */
-  headerLogoSection: { alignItems: 'center', marginBottom: 20 },
+  /* Header Logo — full width, no max height cap */
+  headerLogoSection: { alignItems: 'center', marginBottom: 8 },
   headerLogoGlow: {
     shadowColor: '#FFD700',
     shadowOffset: { width: 0, height: 0 },
@@ -387,15 +387,16 @@ const styles = StyleSheet.create({
     width: width * 0.9,
     height: undefined,
     aspectRatio: 1179 / 442,
-    maxHeight: 120,
   },
 
-  /* Circle Logo — 65% screen width, logo fills 108% */
+  /* Circle Logo — 65% screen width, orange border, logo fills 130% */
   logoSection: { alignItems: 'center', marginBottom: 8 },
   logoBacking: {
     width: CIRCLE_SIZE, height: CIRCLE_SIZE,
     borderRadius: CIRCLE_SIZE / 2,
     backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    borderWidth: 3,
+    borderColor: '#FF9F00',
     alignItems: 'center', justifyContent: 'center',
     shadowColor: '#FFD700',
     shadowOffset: { width: 0, height: 0 },
