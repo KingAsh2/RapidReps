@@ -305,7 +305,6 @@ export default function WelcomeScreen() {
                 ]}
               >
                 {/* Energy ring behind logo */}
-                <Animated.View style={[styles.energyRingOuter, { opacity: energyRing }]} />
                 <View style={styles.logoBacking}>
                   <Image
                     source={require('../assets/rapidreps-icon-logo.png')}

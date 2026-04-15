@@ -344,7 +344,6 @@ export default function SignupScreen() {
                   },
                 ]}
               >
-                <Animated.View style={[styles.energyRingStyle, { opacity: energyRing }]} />
                 <View style={styles.circleBacking}>
                   <Image 
                     source={require('../../assets/rapidreps-icon-logo.png')} 
