@@ -260,7 +260,7 @@ export default function SignupScreen() {
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
       {/* Orange overlay */}
       <LinearGradient
-        colors={['rgba(10, 14, 26, 0.92)', 'rgba(17, 24, 39, 0.88)']}
+        colors={['rgba(10, 14, 26, 0.97)', 'rgba(17, 24, 39, 0.96)']}
         style={StyleSheet.absoluteFill}
       />
 
@@ -684,11 +684,11 @@ const styles = StyleSheet.create({
   logoContainer: {
     marginBottom: 0,
     alignItems: 'center',
-    width: width * 1.15,
+    width: width * 1.30,
     alignSelf: 'center',
   },
   headerLogoImage: {
-    width: width * 1.15,
+    width: width * 1.30,
     height: undefined,
     aspectRatio: 1179 / 442,
   },

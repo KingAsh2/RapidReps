@@ -183,7 +183,7 @@ export default function WelcomeScreen() {
       {!showVideo && (
         <ImageBackground source={welcomeBackground} style={styles.backgroundImage} resizeMode="cover">
           <LinearGradient
-            colors={['rgba(255, 127, 0, 0.92)', 'rgba(255, 127, 0, 0.88)', 'rgba(255, 165, 38, 0.85)']}
+            colors={['rgba(255, 127, 0, 0.97)', 'rgba(255, 127, 0, 0.96)', 'rgba(255, 165, 38, 0.95)']}
             style={styles.overlay}
           />
           <SafeAreaView style={styles.safeArea}>
@@ -322,10 +322,10 @@ const styles = StyleSheet.create({
   /* Header Logo — oversized to cover background logo */
   headerLogoSection: { alignItems: 'center', marginTop: 0, marginBottom: 0 },
   headerLogoGlow: {
-    width: width * 1.15,
+    width: width * 1.30,
   },
   headerLogoImage: {
-    width: width * 1.15,
+    width: width * 1.30,
     height: undefined,
     aspectRatio: 1179 / 442,
   },
