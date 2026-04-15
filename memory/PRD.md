@@ -80,7 +80,16 @@ RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoD
 29. **RR Dumbbell Icon Logo**: Replaced old logo with user-provided RR dumbbell icon (`rapidreps-icon-logo.png`), now fills entire circular frame using `resizeMode="cover"` with exact borderRadius matching. Pulsing heartbeat animation preserved
 30. **Social Auth Buttons Redesign**: Converted from large vertical pill buttons with text to small 48px circular icons arranged horizontally (Facebook, Google, Apple), no "Continue with..." text — cleaner, less intrusive UI
 31. **Cinematic Entrance Animation**: Header logo slides down from top first (500ms spring), then RR icon scales up from 0.3x to 1x from center with a dramatic spring bounce
-32. **Strict Logo Sizing (User Spec)**: Header = 90% screen width (auto height, max 120px, 10px top spacing). Circle = 65% screen width (perfect circle). Logo inside circle = 108% of circle diameter with `resizeMode="cover"` and `overflow: hidden` — no padding, no empty space. 20px gap between header and circle. Applied identically to index.tsx, login.tsx, signup.tsx
+32. **Strict Logo Sizing (User Spec)**: Header = 130% screen width (no height cap). Circle = 65% screen width. Logo inside = 130% circle diameter. Gray backing removed (transparent). Overlay opacity 0.95-0.97 to hide background logo. Applied to all 3 screens
+33. **Explosive Fitness Entrance Animations**: Full premium explosive animation system on all 3 screens:
+    - Header SLAMS down from -250px with rotation correction (-12deg to 0)
+    - Gold impact FLASH burst (0.45 opacity, 80ms)
+    - Logo EXPLODES from scale 0 with 360deg spin + overshoot spring
+    - Pulsing gold energy ring behind logo (continuous)
+    - Staggered content cascade (tagline, props, buttons slide up 120ms apart)
+    - Heartbeat pulse + header shimmer (continuous loops)
+    - Boxing bell impact sound on home screen entrance (expo-av Audio)
+    - Plays every time app opens (not just first visit)
 
 ## Known Issues
 - EAS iOS Build Failure (BLOCKED - user must regenerate Apple Distribution Certificate)

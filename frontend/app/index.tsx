@@ -10,16 +10,17 @@ import {
   Dimensions,
   Animated,
   StatusBar,
+  Easing,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Video, ResizeMode } from 'expo-av';
+import { Video, ResizeMode, Audio } from 'expo-av';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AnimatedPillButton } from '../src/components/AnimatedPillButton';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const { width } = Dimensions.get('window');
+const { width, height: screenHeight } = Dimensions.get('window');
 
 const BRAND = {
   orange: '#FF7F00',
@@ -37,17 +38,31 @@ export default function WelcomeScreen() {
   const [showVideo, setShowVideo] = useState(false);
   const [videoVisible, setVideoVisible] = useState(false);
   const videoRef = useRef<Video>(null);
-  
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
-  const logoScale = useRef(new Animated.Value(0.3)).current;
-  const videoFadeOut = useRef(new Animated.Value(1)).current;
-  
-  const pulseScale = useRef(new Animated.Value(1)).current;
-  const glowOpacity = useRef(new Animated.Value(0.6)).current;
-  const headerShimmer = useRef(new Animated.Value(0)).current;
-  const headerSlide = useRef(new Animated.Value(-60)).current;
+
+  // ── Entrance Animations ──
+  const headerSlam = useRef(new Animated.Value(-250)).current;
   const headerFade = useRef(new Animated.Value(0)).current;
+  const headerRotate = useRef(new Animated.Value(-12)).current;
+
+  const logoScale = useRef(new Animated.Value(0)).current;
+  const logoSpin = useRef(new Animated.Value(0)).current;
+  const logoFade = useRef(new Animated.Value(0)).current;
+
+  const flashOpacity = useRef(new Animated.Value(0)).current;
+
+  const taglineFade = useRef(new Animated.Value(0)).current;
+  const taglineSlide = useRef(new Animated.Value(40)).current;
+  const propsFade = useRef(new Animated.Value(0)).current;
+  const propsSlide = useRef(new Animated.Value(50)).current;
+  const ctaFade = useRef(new Animated.Value(0)).current;
+  const ctaSlide = useRef(new Animated.Value(60)).current;
+
+  const videoFadeOut = useRef(new Animated.Value(1)).current;
+
+  // ── Continuous Animations ──
+  const pulseScale = useRef(new Animated.Value(1)).current;
+  const headerShimmer = useRef(new Animated.Value(0)).current;
+  const energyRing = useRef(new Animated.Value(0.5)).current;
 
   const combinedLogoScale = useRef(Animated.multiply(logoScale, pulseScale)).current;
   const animationsAlive = useRef(true);
@@ -65,52 +80,106 @@ export default function WelcomeScreen() {
     return () => { animationsAlive.current = false; };
   }, []);
 
+  // ── Play explosive impact sound ──
+  const playImpactSound = async () => {
+    try {
+      await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
+      const { sound } = await Audio.Sound.createAsync(
+        require('../assets/sounds/boxing-bell.wav'),
+        { volume: 0.8 }
+      );
+      await sound.playAsync();
+      sound.setOnPlaybackStatusUpdate((status) => {
+        if (status.isLoaded && status.didJustFinish) sound.unloadAsync();
+      });
+    } catch (e) { /* silent fail — sound is bonus */ }
+  };
+
   useEffect(() => {
     if (!showVideo && isReady) {
-      // Staggered cinematic entrance: header slides down first, then logo scales up
-      Animated.sequence([
-        // Step 1: Header slides down from top with fade
-        Animated.parallel([
-          Animated.timing(headerFade, { toValue: 1, duration: 500, useNativeDriver: true }),
-          Animated.spring(headerSlide, { toValue: 0, friction: 8, tension: 50, useNativeDriver: true }),
-        ]),
-        // Step 2: Logo scales up from center + rest of content fades in
-        Animated.parallel([
-          Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }),
-          Animated.spring(logoScale, { toValue: 1, friction: 5, tension: 40, useNativeDriver: true }),
-          Animated.spring(slideAnim, { toValue: 0, friction: 8, tension: 40, useNativeDriver: true }),
-        ]),
-      ]).start(() => {
-        if (animationsAlive.current) startPulseAnimation();
-      });
+      runEntranceAnimation();
     }
   }, [showVideo, isReady]);
 
-  const startPulseAnimation = () => {
+  const runEntranceAnimation = () => {
+    // Play impact sound at the moment of header slam
+    setTimeout(() => playImpactSound(), 350);
+
+    Animated.sequence([
+      // ── PHASE 1: Header SLAMS down (250ms) ──
+      Animated.parallel([
+        Animated.timing(headerFade, { toValue: 1, duration: 200, useNativeDriver: true }),
+        Animated.spring(headerSlam, {
+          toValue: 0, friction: 6, tension: 120, useNativeDriver: true,
+        }),
+        Animated.spring(headerRotate, {
+          toValue: 0, friction: 8, tension: 100, useNativeDriver: true,
+        }),
+      ]),
+
+      // ── PHASE 2: Impact flash + Logo EXPLODES in with spin (400ms) ──
+      Animated.parallel([
+        // Flash burst
+        Animated.sequence([
+          Animated.timing(flashOpacity, { toValue: 0.45, duration: 80, useNativeDriver: true }),
+          Animated.timing(flashOpacity, { toValue: 0, duration: 250, useNativeDriver: true }),
+        ]),
+        // Logo scale explosion with overshoot
+        Animated.timing(logoFade, { toValue: 1, duration: 150, useNativeDriver: true }),
+        Animated.spring(logoScale, {
+          toValue: 1, friction: 4, tension: 80, useNativeDriver: true,
+        }),
+        // Logo spin (half rotation)
+        Animated.timing(logoSpin, {
+          toValue: 1, duration: 600, easing: Easing.out(Easing.back(1.2)), useNativeDriver: true,
+        }),
+      ]),
+
+      // ── PHASE 3: Content cascade — staggered entrance ──
+      Animated.stagger(120, [
+        Animated.parallel([
+          Animated.timing(taglineFade, { toValue: 1, duration: 300, useNativeDriver: true }),
+          Animated.spring(taglineSlide, { toValue: 0, friction: 8, tension: 60, useNativeDriver: true }),
+        ]),
+        Animated.parallel([
+          Animated.timing(propsFade, { toValue: 1, duration: 300, useNativeDriver: true }),
+          Animated.spring(propsSlide, { toValue: 0, friction: 8, tension: 60, useNativeDriver: true }),
+        ]),
+        Animated.parallel([
+          Animated.timing(ctaFade, { toValue: 1, duration: 300, useNativeDriver: true }),
+          Animated.spring(ctaSlide, { toValue: 0, friction: 8, tension: 60, useNativeDriver: true }),
+        ]),
+      ]),
+    ]).start(() => {
+      if (animationsAlive.current) startContinuousAnimations();
+    });
+  };
+
+  const startContinuousAnimations = () => {
+    // Heartbeat pulse on logo
     Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseScale, { toValue: 1.06, duration: 150, useNativeDriver: true }),
-        Animated.timing(pulseScale, { toValue: 0.98, duration: 100, useNativeDriver: true }),
-        Animated.timing(pulseScale, { toValue: 1.03, duration: 100, useNativeDriver: true }),
-        Animated.timing(pulseScale, { toValue: 1, duration: 120, useNativeDriver: true }),
-        Animated.delay(1800),
+        Animated.timing(pulseScale, { toValue: 1.08, duration: 120, useNativeDriver: true }),
+        Animated.timing(pulseScale, { toValue: 0.96, duration: 100, useNativeDriver: true }),
+        Animated.timing(pulseScale, { toValue: 1.04, duration: 100, useNativeDriver: true }),
+        Animated.timing(pulseScale, { toValue: 1, duration: 150, useNativeDriver: true }),
+        Animated.delay(2000),
       ])
     ).start();
 
+    // Header energy shimmer
     Animated.loop(
       Animated.sequence([
-        Animated.timing(glowOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
-        Animated.timing(glowOpacity, { toValue: 0.5, duration: 500, useNativeDriver: true }),
-        Animated.timing(glowOpacity, { toValue: 0.9, duration: 200, useNativeDriver: true }),
-        Animated.timing(glowOpacity, { toValue: 0.6, duration: 600, useNativeDriver: true }),
-        Animated.delay(1200),
+        Animated.timing(headerShimmer, { toValue: 1, duration: 1200, useNativeDriver: true }),
+        Animated.timing(headerShimmer, { toValue: 0, duration: 1200, useNativeDriver: true }),
       ])
     ).start();
 
+    // Subtle energy ring pulse behind logo
     Animated.loop(
       Animated.sequence([
-        Animated.timing(headerShimmer, { toValue: 1, duration: 1500, useNativeDriver: true }),
-        Animated.timing(headerShimmer, { toValue: 0, duration: 1500, useNativeDriver: true }),
+        Animated.timing(energyRing, { toValue: 1, duration: 800, useNativeDriver: true }),
+        Animated.timing(energyRing, { toValue: 0.3, duration: 1200, useNativeDriver: true }),
       ])
     ).start();
   };
@@ -118,11 +187,9 @@ export default function WelcomeScreen() {
   const handleFindTrainer = () => {
     router.push({ pathname: '/auth/signup', params: { role: 'trainee' } });
   };
-
   const handleBecomeTrainer = () => {
     router.push({ pathname: '/auth/signup', params: { role: 'trainer' } });
   };
-
   const handleVideoEnd = () => {
     AsyncStorage.setItem('has_seen_intro_video', 'true');
     Animated.timing(videoFadeOut, { toValue: 0, duration: 400, useNativeDriver: true }).start(() => {
@@ -130,7 +197,6 @@ export default function WelcomeScreen() {
       setVideoVisible(false);
     });
   };
-
   const handleSkipVideo = () => {
     AsyncStorage.setItem('has_seen_intro_video', 'true');
     Animated.timing(videoFadeOut, { toValue: 0, duration: 300, useNativeDriver: true }).start(() => {
@@ -139,9 +205,18 @@ export default function WelcomeScreen() {
     });
   };
 
-  const headerGlowOpacity = headerShimmer.interpolate({
+  // ── Interpolations ──
+  const headerRotateStr = headerRotate.interpolate({
+    inputRange: [-12, 0],
+    outputRange: ['-12deg', '0deg'],
+  });
+  const logoSpinStr = logoSpin.interpolate({
     inputRange: [0, 1],
-    outputRange: [0.7, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+  const headerGlow = headerShimmer.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.75, 1],
   });
 
   if (!isReady) {
@@ -186,49 +261,65 @@ export default function WelcomeScreen() {
             colors={['rgba(255, 127, 0, 0.97)', 'rgba(255, 127, 0, 0.96)', 'rgba(255, 165, 38, 0.95)']}
             style={styles.overlay}
           />
+
+          {/* Impact flash overlay */}
+          <Animated.View
+            style={[styles.flashOverlay, { opacity: flashOpacity }]}
+            pointerEvents="none"
+          />
+
           <SafeAreaView style={styles.safeArea}>
             <View style={styles.content}>
 
-              {/* Header Logo — "Rapid Reps" stylized text slides down from top */}
+              {/* Header — SLAMS down with rotation */}
               <Animated.View
                 style={[
                   styles.headerLogoSection,
                   {
-                    opacity: Animated.multiply(headerFade, headerGlowOpacity),
-                    transform: [{ translateY: headerSlide }],
+                    opacity: Animated.multiply(headerFade, headerGlow),
+                    transform: [
+                      { translateY: headerSlam },
+                      { rotate: headerRotateStr },
+                    ],
                   },
                 ]}
               >
-                <View style={styles.headerLogoGlow}>
-                  <Image
-                    source={require('../assets/rapidreps-header.png')}
-                    style={styles.headerLogoImage}
-                    resizeMode="contain"
-                  />
-                </View>
+                <Image
+                  source={require('../assets/rapidreps-header.png')}
+                  style={styles.headerLogoImage}
+                  resizeMode="contain"
+                />
               </Animated.View>
 
-              {/* Pulsating RR Icon Logo — fills entire circular frame */}
+              {/* Logo — EXPLODES in with spin + energy ring */}
               <Animated.View
                 style={[
                   styles.logoSection,
-                  { opacity: fadeAnim, transform: [{ scale: combinedLogoScale }] },
+                  {
+                    opacity: logoFade,
+                    transform: [
+                      { scale: combinedLogoScale },
+                      { rotate: logoSpinStr },
+                    ],
+                  },
                 ]}
               >
-                <Animated.View style={[styles.logoBacking, { opacity: glowOpacity }]}>
+                {/* Energy ring behind logo */}
+                <Animated.View style={[styles.energyRingOuter, { opacity: energyRing }]} />
+                <View style={styles.logoBacking}>
                   <Image
                     source={require('../assets/rapidreps-icon-logo.png')}
                     style={styles.logo}
                     resizeMode="cover"
                   />
-                </Animated.View>
+                </View>
               </Animated.View>
 
-              {/* Tagline */}
+              {/* Tagline — slides up */}
               <Animated.View
                 style={[
                   styles.taglineSection,
-                  { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+                  { opacity: taglineFade, transform: [{ translateY: taglineSlide }] },
                 ]}
               >
                 <Text style={styles.tagline}>YOUR WORKOUT</Text>
@@ -237,11 +328,11 @@ export default function WelcomeScreen() {
                 </View>
               </Animated.View>
 
-              {/* Value Props */}
+              {/* Value Props — slides up */}
               <Animated.View
                 style={[
                   styles.valuePropsSection,
-                  { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+                  { opacity: propsFade, transform: [{ translateY: propsSlide }] },
                 ]}
               >
                 <View style={styles.valueProp}>
@@ -264,22 +355,20 @@ export default function WelcomeScreen() {
                 </View>
               </Animated.View>
 
-              {/* CTA Buttons */}
+              {/* CTA Buttons — slides up */}
               <Animated.View
                 style={[
                   styles.ctaSection,
-                  { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+                  { opacity: ctaFade, transform: [{ translateY: ctaSlide }] },
                 ]}
               >
                 <AnimatedPillButton title="Find a Trainer" onPress={handleFindTrainer} variant="teal" icon="search" testID="find-trainer-btn" />
                 <AnimatedPillButton title="Become a Trainer" onPress={handleBecomeTrainer} variant="navy" icon="barbell" testID="become-trainer-btn" />
-
                 <Text style={styles.termsText}>
                   By continuing, you agree to our{' '}
                   <Text style={styles.termsLink} onPress={() => router.push('/legal/terms')}>Terms</Text> &{' '}
                   <Text style={styles.termsLink} onPress={() => router.push('/legal/privacy')}>Privacy Policy</Text>
                 </Text>
-
                 <TouchableOpacity onPress={() => router.push('/auth/login')} style={styles.loginLinkContainer}>
                   <Text style={styles.loginLinkText}>
                     Already have an account? <Text style={styles.loginLinkBold}>Log In</Text>
@@ -313,25 +402,33 @@ const styles = StyleSheet.create({
   backgroundImage: { flex: 1 },
   overlay: { ...StyleSheet.absoluteFillObject },
   safeArea: { flex: 1 },
+  flashOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#FFD700',
+    zIndex: 100,
+  },
   content: {
     flex: 1, paddingHorizontal: 0,
     justifyContent: 'space-between',
     paddingTop: 10, paddingBottom: 20,
   },
 
-  /* Header Logo — oversized to cover background logo */
   headerLogoSection: { alignItems: 'center', marginTop: 0, marginBottom: 0 },
-  headerLogoGlow: {
-    width: width * 1.30,
-  },
   headerLogoImage: {
     width: width * 1.30,
     height: undefined,
     aspectRatio: 1179 / 442,
   },
 
-  /* Circle Logo — no backing, no shadow, just clipped circle */
   logoSection: { alignItems: 'center', marginTop: 0, justifyContent: 'center' },
+  energyRingOuter: {
+    position: 'absolute',
+    width: CIRCLE_SIZE + 20,
+    height: CIRCLE_SIZE + 20,
+    borderRadius: (CIRCLE_SIZE + 20) / 2,
+    borderWidth: 2,
+    borderColor: '#FFD700',
+  },
   logoBacking: {
     width: CIRCLE_SIZE, height: CIRCLE_SIZE,
     borderRadius: CIRCLE_SIZE / 2,

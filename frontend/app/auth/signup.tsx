@@ -12,6 +12,7 @@ import {
   Platform,
   Image,
   ImageBackground,
+  Easing,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
@@ -85,61 +86,79 @@ export default function SignupScreen() {
   const traineeCardOpacity = useRef(new Animated.Value(1)).current;
   const trainerCardOpacity = useRef(new Animated.Value(1)).current;
 
-  // Entrance animations
+  // ── Explosive entrance animations ──
+  const headerSlam = useRef(new Animated.Value(-250)).current;
+  const headerFade = useRef(new Animated.Value(0)).current;
+  const headerRotate = useRef(new Animated.Value(-12)).current;
+  const logoScale = useRef(new Animated.Value(0)).current;
+  const logoSpin = useRef(new Animated.Value(0)).current;
+  const logoFade = useRef(new Animated.Value(0)).current;
+  const flashOpacity = useRef(new Animated.Value(0)).current;
+  const pulseScale = useRef(new Animated.Value(1)).current;
+  const headerShimmer = useRef(new Animated.Value(0)).current;
+  const energyRing = useRef(new Animated.Value(0.5)).current;
+  const combinedLogoScale = useRef(Animated.multiply(logoScale, pulseScale)).current;
+
   useEffect(() => {
-    // Hero fade + slide down
-    Animated.timing(heroAnim, {
-      toValue: 1,
-      duration: 400,
-      useNativeDriver: true,
-    }).start();
+    // Phase 1: Header SLAMS
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(headerFade, { toValue: 1, duration: 200, useNativeDriver: true }),
+        Animated.spring(headerSlam, { toValue: 0, friction: 6, tension: 120, useNativeDriver: true }),
+        Animated.spring(headerRotate, { toValue: 0, friction: 8, tension: 100, useNativeDriver: true }),
+      ]),
+      // Phase 2: Flash + Logo explodes
+      Animated.parallel([
+        Animated.sequence([
+          Animated.timing(flashOpacity, { toValue: 0.4, duration: 80, useNativeDriver: true }),
+          Animated.timing(flashOpacity, { toValue: 0, duration: 250, useNativeDriver: true }),
+        ]),
+        Animated.timing(logoFade, { toValue: 1, duration: 150, useNativeDriver: true }),
+        Animated.spring(logoScale, { toValue: 1, friction: 4, tension: 80, useNativeDriver: true }),
+        Animated.timing(logoSpin, { toValue: 1, duration: 600, easing: Easing.out(Easing.back(1.2)), useNativeDriver: true }),
+        Animated.timing(heroAnim, { toValue: 1, duration: 400, useNativeDriver: true }),
+      ]),
+      // Phase 3: Form cascade
+      Animated.parallel([
+        Animated.spring(formCardAnim, { toValue: 1, friction: 8, tension: 40, useNativeDriver: true }),
+      ]),
+      Animated.parallel([
+        Animated.spring(roleCardsAnim, { toValue: 1, friction: 8, tension: 40, useNativeDriver: true }),
+      ]),
+      Animated.parallel([
+        Animated.spring(ctaAnim, { toValue: 1, friction: 8, tension: 40, useNativeDriver: true }),
+      ]),
+    ]).start(() => {
+      // Start continuous pulse
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseScale, { toValue: 1.08, duration: 120, useNativeDriver: true }),
+          Animated.timing(pulseScale, { toValue: 0.96, duration: 100, useNativeDriver: true }),
+          Animated.timing(pulseScale, { toValue: 1.04, duration: 100, useNativeDriver: true }),
+          Animated.timing(pulseScale, { toValue: 1, duration: 150, useNativeDriver: true }),
+          Animated.delay(2000),
+        ])
+      ).start();
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(headerShimmer, { toValue: 1, duration: 1200, useNativeDriver: true }),
+          Animated.timing(headerShimmer, { toValue: 0, duration: 1200, useNativeDriver: true }),
+        ])
+      ).start();
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(energyRing, { toValue: 1, duration: 800, useNativeDriver: true }),
+          Animated.timing(energyRing, { toValue: 0.3, duration: 1200, useNativeDriver: true }),
+        ])
+      ).start();
+    });
 
-    // Form card cascade
-    setTimeout(() => {
-      Animated.spring(formCardAnim, {
-        toValue: 1,
-        friction: 8,
-        tension: 40,
-        useNativeDriver: true,
-      }).start();
-    }, 200);
-
-    // Role cards stagger
-    setTimeout(() => {
-      Animated.spring(roleCardsAnim, {
-        toValue: 1,
-        friction: 8,
-        tension: 40,
-        useNativeDriver: true,
-      }).start();
-    }, 350);
-
-    // CTA button
-    setTimeout(() => {
-      Animated.spring(ctaAnim, {
-        toValue: 1,
-        friction: 8,
-        tension: 40,
-        useNativeDriver: true,
-      }).start();
-    }, 500);
-
-    // CTA pulse every 7 seconds
     const pulseInterval = setInterval(() => {
       Animated.sequence([
-        Animated.timing(ctaPulseAnim, {
-          toValue: 1.03,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(ctaPulseAnim, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
+        Animated.timing(ctaPulseAnim, { toValue: 1.03, duration: 300, useNativeDriver: true }),
+        Animated.timing(ctaPulseAnim, { toValue: 1, duration: 300, useNativeDriver: true }),
       ]).start();
     }, 7000);
-
     return () => clearInterval(pulseInterval);
   }, []);
 
@@ -241,6 +260,19 @@ export default function SignupScreen() {
     outputRange: [-30, 0],
   });
 
+  const headerRotateStr = headerRotate.interpolate({
+    inputRange: [-12, 0],
+    outputRange: ['-12deg', '0deg'],
+  });
+  const logoSpinStr = logoSpin.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+  const headerGlowOpacity = headerShimmer.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.75, 1],
+  });
+
   const formTranslateY = formCardAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [50, 0],
@@ -280,24 +312,39 @@ export default function SignupScreen() {
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            {/* Hero Section */}
-            <Animated.View
-              style={[
-                styles.heroSection,
-                {
-                  opacity: heroAnim,
-                  transform: [{ translateY: heroTranslateY }],
-                },
-              ]}
-            >
-              <View style={styles.logoContainer}>
+            {/* Flash overlay */}
+            <Animated.View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#FFD700', opacity: flashOpacity, zIndex: 100 }} pointerEvents="none" />
+
+            {/* Hero Section — explosive entrance */}
+            <View style={styles.heroSection}>
+              {/* Header SLAMS down */}
+              <Animated.View
+                style={[
+                  styles.logoContainer,
+                  {
+                    opacity: Animated.multiply(headerFade, headerGlowOpacity),
+                    transform: [{ translateY: headerSlam }, { rotate: headerRotateStr }],
+                  },
+                ]}
+              >
                 <Image 
                   source={require('../../assets/rapidreps-header.png')} 
                   style={styles.headerLogoImage}
                   resizeMode="contain"
                 />
-              </View>
-              <View style={styles.circleLogoContainer}>
+              </Animated.View>
+
+              {/* Logo EXPLODES with spin */}
+              <Animated.View
+                style={[
+                  styles.circleLogoContainer,
+                  {
+                    opacity: logoFade,
+                    transform: [{ scale: combinedLogoScale }, { rotate: logoSpinStr }],
+                  },
+                ]}
+              >
+                <Animated.View style={[styles.energyRingStyle, { opacity: energyRing }]} />
                 <View style={styles.circleBacking}>
                   <Image 
                     source={require('../../assets/rapidreps-icon-logo.png')} 
@@ -305,10 +352,13 @@ export default function SignupScreen() {
                     resizeMode="cover"
                   />
                 </View>
-              </View>
-              <Text style={styles.heroTitle}>Let's Build Your{'\n'}Fitness Momentum</Text>
-              <Text style={styles.heroSubtitle}>Train smarter. Move faster. Get real results.</Text>
-            </Animated.View>
+              </Animated.View>
+
+              <Animated.View style={{ opacity: heroAnim, transform: [{ translateY: heroTranslateY }] }}>
+                <Text style={styles.heroTitle}>Let's Build Your{'\n'}Fitness Momentum</Text>
+                <Text style={styles.heroSubtitle}>Train smarter. Move faster. Get real results.</Text>
+              </Animated.View>
+            </View>
 
             {/* Social Sign-Up (only for non-social-redirected users) */}
             {!isSocialAuth && (
@@ -695,6 +745,15 @@ const styles = StyleSheet.create({
   circleLogoContainer: {
     alignItems: 'center',
     marginBottom: 16,
+    justifyContent: 'center',
+  },
+  energyRingStyle: {
+    position: 'absolute',
+    width: width * 0.65 + 20,
+    height: width * 0.65 + 20,
+    borderRadius: (width * 0.65 + 20) / 2,
+    borderWidth: 2,
+    borderColor: '#FFD700',
   },
   circleBacking: {
     width: width * 0.65,

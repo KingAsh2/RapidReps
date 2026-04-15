@@ -13,6 +13,7 @@ import {
   Image,
   ImageBackground,
   ScrollView,
+  Easing,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -46,14 +47,19 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [loginSuccess, setLoginSuccess] = useState(false);
 
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
-  const logoScale = useRef(new Animated.Value(0.3)).current;
-  const pulseScale = useRef(new Animated.Value(1)).current;
-  const glowOpacity = useRef(new Animated.Value(0.6)).current;
-  const headerShimmer = useRef(new Animated.Value(0)).current;
-  const headerSlide = useRef(new Animated.Value(-60)).current;
+  // ── Explosive Entrance ──
+  const headerSlam = useRef(new Animated.Value(-250)).current;
   const headerFade = useRef(new Animated.Value(0)).current;
+  const headerRotate = useRef(new Animated.Value(-12)).current;
+  const logoScale = useRef(new Animated.Value(0)).current;
+  const logoSpin = useRef(new Animated.Value(0)).current;
+  const logoFade = useRef(new Animated.Value(0)).current;
+  const flashOpacity = useRef(new Animated.Value(0)).current;
+  const formFade = useRef(new Animated.Value(0)).current;
+  const formSlide = useRef(new Animated.Value(50)).current;
+  const pulseScale = useRef(new Animated.Value(1)).current;
+  const headerShimmer = useRef(new Animated.Value(0)).current;
+  const energyRing = useRef(new Animated.Value(0.5)).current;
   const combinedLogoScale = useRef(Animated.multiply(logoScale, pulseScale)).current;
   const emailBorderAnim = useRef(new Animated.Value(0)).current;
   const passwordBorderAnim = useRef(new Animated.Value(0)).current;
@@ -62,16 +68,28 @@ export default function LoginScreen() {
   const animationsAlive = useRef(true);
 
   useEffect(() => {
-    // Staggered cinematic entrance: header slides down first, then logo scales up
+    // Explosive entrance sequence
     Animated.sequence([
+      // Header SLAMS down
       Animated.parallel([
-        Animated.timing(headerFade, { toValue: 1, duration: 500, useNativeDriver: true }),
-        Animated.spring(headerSlide, { toValue: 0, friction: 8, tension: 50, useNativeDriver: true }),
+        Animated.timing(headerFade, { toValue: 1, duration: 200, useNativeDriver: true }),
+        Animated.spring(headerSlam, { toValue: 0, friction: 6, tension: 120, useNativeDriver: true }),
+        Animated.spring(headerRotate, { toValue: 0, friction: 8, tension: 100, useNativeDriver: true }),
       ]),
+      // Flash + Logo EXPLODES with spin
       Animated.parallel([
-        Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }),
-        Animated.spring(logoScale, { toValue: 1, friction: 5, tension: 40, useNativeDriver: true }),
-        Animated.spring(slideAnim, { toValue: 0, friction: 8, tension: 40, useNativeDriver: true }),
+        Animated.sequence([
+          Animated.timing(flashOpacity, { toValue: 0.4, duration: 80, useNativeDriver: true }),
+          Animated.timing(flashOpacity, { toValue: 0, duration: 250, useNativeDriver: true }),
+        ]),
+        Animated.timing(logoFade, { toValue: 1, duration: 150, useNativeDriver: true }),
+        Animated.spring(logoScale, { toValue: 1, friction: 4, tension: 80, useNativeDriver: true }),
+        Animated.timing(logoSpin, { toValue: 1, duration: 600, easing: Easing.out(Easing.back(1.2)), useNativeDriver: true }),
+      ]),
+      // Form content fades in
+      Animated.parallel([
+        Animated.timing(formFade, { toValue: 1, duration: 300, useNativeDriver: true }),
+        Animated.spring(formSlide, { toValue: 0, friction: 8, tension: 60, useNativeDriver: true }),
       ]),
     ]).start(() => {
       if (animationsAlive.current) startPulse();
@@ -82,26 +100,23 @@ export default function LoginScreen() {
   const startPulse = () => {
     Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseScale, { toValue: 1.06, duration: 150, useNativeDriver: true }),
-        Animated.timing(pulseScale, { toValue: 0.98, duration: 100, useNativeDriver: true }),
-        Animated.timing(pulseScale, { toValue: 1.03, duration: 100, useNativeDriver: true }),
-        Animated.timing(pulseScale, { toValue: 1, duration: 120, useNativeDriver: true }),
-        Animated.delay(1800),
+        Animated.timing(pulseScale, { toValue: 1.08, duration: 120, useNativeDriver: true }),
+        Animated.timing(pulseScale, { toValue: 0.96, duration: 100, useNativeDriver: true }),
+        Animated.timing(pulseScale, { toValue: 1.04, duration: 100, useNativeDriver: true }),
+        Animated.timing(pulseScale, { toValue: 1, duration: 150, useNativeDriver: true }),
+        Animated.delay(2000),
       ])
     ).start();
     Animated.loop(
       Animated.sequence([
-        Animated.timing(glowOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
-        Animated.timing(glowOpacity, { toValue: 0.5, duration: 500, useNativeDriver: true }),
-        Animated.timing(glowOpacity, { toValue: 0.9, duration: 200, useNativeDriver: true }),
-        Animated.timing(glowOpacity, { toValue: 0.6, duration: 600, useNativeDriver: true }),
-        Animated.delay(1200),
+        Animated.timing(headerShimmer, { toValue: 1, duration: 1200, useNativeDriver: true }),
+        Animated.timing(headerShimmer, { toValue: 0, duration: 1200, useNativeDriver: true }),
       ])
     ).start();
     Animated.loop(
       Animated.sequence([
-        Animated.timing(headerShimmer, { toValue: 1, duration: 1500, useNativeDriver: true }),
-        Animated.timing(headerShimmer, { toValue: 0, duration: 1500, useNativeDriver: true }),
+        Animated.timing(energyRing, { toValue: 1, duration: 800, useNativeDriver: true }),
+        Animated.timing(energyRing, { toValue: 0.3, duration: 1200, useNativeDriver: true }),
       ])
     ).start();
   };
@@ -182,7 +197,15 @@ export default function LoginScreen() {
   });
   const headerGlowOpacity = headerShimmer.interpolate({
     inputRange: [0, 1],
-    outputRange: [0.7, 1],
+    outputRange: [0.75, 1],
+  });
+  const headerRotateStr = headerRotate.interpolate({
+    inputRange: [-12, 0],
+    outputRange: ['-12deg', '0deg'],
+  });
+  const logoSpinStr = logoSpin.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
   });
 
   return (
@@ -207,44 +230,49 @@ export default function LoginScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            {/* Header Logo — Rapid Reps text slides down from top */}
+            {/* Impact flash */}
+            <Animated.View style={[styles.flashOverlay, { opacity: flashOpacity }]} pointerEvents="none" />
+
+            {/* Header — SLAMS down with rotation */}
             <Animated.View
               style={[
                 styles.headerLogoSection,
                 {
                   opacity: Animated.multiply(headerFade, headerGlowOpacity),
-                  transform: [{ translateY: headerSlide }],
+                  transform: [{ translateY: headerSlam }, { rotate: headerRotateStr }],
                 },
               ]}
             >
-              <View style={styles.headerLogoGlow}>
-                <Image
-                  source={require('../../assets/rapidreps-header.png')}
-                  style={styles.headerLogoImage}
-                  resizeMode="contain"
-                />
-              </View>
+              <Image
+                source={require('../../assets/rapidreps-header.png')}
+                style={styles.headerLogoImage}
+                resizeMode="contain"
+              />
             </Animated.View>
 
-            {/* Pulsating RR Icon Logo — fills entire circular frame */}
+            {/* Logo — EXPLODES with spin + energy ring */}
             <Animated.View
               style={[
                 styles.logoSection,
-                { opacity: fadeAnim, transform: [{ scale: combinedLogoScale }] },
+                {
+                  opacity: logoFade,
+                  transform: [{ scale: combinedLogoScale }, { rotate: logoSpinStr }],
+                },
               ]}
             >
-              <Animated.View style={[styles.logoBacking, { opacity: glowOpacity }]}>
+              <Animated.View style={[styles.energyRingOuter, { opacity: energyRing }]} />
+              <View style={styles.logoBacking}>
                 <Image
                   source={require('../../assets/rapidreps-icon-logo.png')}
                   style={styles.logo}
                   resizeMode="cover"
                 />
-              </Animated.View>
+              </View>
             </Animated.View>
 
             {/* Welcome Text */}
             <Animated.View
-              style={[styles.headerSection, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}
+              style={[styles.headerSection, { opacity: formFade, transform: [{ translateY: formSlide }] }]}
             >
               <Text style={styles.welcomeTitle}>WELCOME BACK</Text>
               <View style={styles.taglineRow}>
@@ -254,7 +282,7 @@ export default function LoginScreen() {
 
             {/* Social Login Buttons */}
             <Animated.View
-              style={[styles.formSection, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}
+              style={[styles.formSection, { opacity: formFade, transform: [{ translateY: formSlide }] }]}
             >
               <SocialAuthButtons
                 onError={(msg) => showAlert({ title: 'Sign In Failed', message: msg, type: 'error' })}
@@ -269,7 +297,7 @@ export default function LoginScreen() {
 
             {/* Login Form */}
             <Animated.View
-              style={[styles.formSection, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}
+              style={[styles.formSection, { opacity: formFade, transform: [{ translateY: formSlide }] }]}
             >
               <View style={styles.inputGroup}>
                 <Animated.View style={[styles.inputContainer, { borderColor: emailBorderColor, borderWidth: 2 }]}>
@@ -377,17 +405,24 @@ const styles = StyleSheet.create({
 
   /* Header Logo — oversized to cover background logo */
   headerLogoSection: { alignItems: 'center', marginBottom: 0 },
-  headerLogoGlow: {
-    width: width * 1.30,
-  },
   headerLogoImage: {
     width: width * 1.30,
     height: undefined,
     aspectRatio: 1179 / 442,
   },
+  flashOverlay: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: '#FFD700', zIndex: 100,
+  },
 
   /* Circle Logo — no backing, no shadow, just clipped circle */
   logoSection: { alignItems: 'center', marginBottom: 8 },
+  energyRingOuter: {
+    position: 'absolute',
+    width: CIRCLE_SIZE + 20, height: CIRCLE_SIZE + 20,
+    borderRadius: (CIRCLE_SIZE + 20) / 2,
+    borderWidth: 2, borderColor: '#FFD700',
+  },
   logoBacking: {
     width: CIRCLE_SIZE, height: CIRCLE_SIZE,
     borderRadius: CIRCLE_SIZE / 2,
