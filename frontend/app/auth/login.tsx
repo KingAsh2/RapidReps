@@ -375,32 +375,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24, paddingTop: 60, paddingBottom: 30,
   },
 
-  /* Header Logo — full width, no max height cap */
-  headerLogoSection: { alignItems: 'center', marginBottom: 8 },
+  /* Header Logo — oversized to cover background logo */
+  headerLogoSection: { alignItems: 'center', marginBottom: 0 },
   headerLogoGlow: {
-    shadowColor: '#FFD700',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5, shadowRadius: 16, elevation: 8,
-    width: width * 0.9,
+    width: width * 1.15,
   },
   headerLogoImage: {
-    width: width * 0.9,
+    width: width * 1.15,
     height: undefined,
     aspectRatio: 1179 / 442,
   },
 
-  /* Circle Logo — 65% screen width, orange border, logo fills 130% */
+  /* Circle Logo — no backing, no shadow, just clipped circle */
   logoSection: { alignItems: 'center', marginBottom: 8 },
   logoBacking: {
     width: CIRCLE_SIZE, height: CIRCLE_SIZE,
     borderRadius: CIRCLE_SIZE / 2,
-    backgroundColor: 'rgba(0, 0, 0, 0.35)',
-    borderWidth: 3,
-    borderColor: '#FF9F00',
+    backgroundColor: 'transparent',
     alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#FFD700',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6, shadowRadius: 20, elevation: 10,
     overflow: 'hidden',
   },
   logo: {
