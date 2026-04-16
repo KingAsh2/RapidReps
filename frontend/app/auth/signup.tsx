@@ -737,7 +737,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   headerLogoImage: {
-    width: width * 1.30,
+    width: width * 1.69,
     height: undefined,
     aspectRatio: 1179 / 442,
   },

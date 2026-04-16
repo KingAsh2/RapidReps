@@ -405,7 +405,7 @@ const styles = StyleSheet.create({
   /* Header Logo — oversized to cover background logo */
   headerLogoSection: { alignItems: 'center', marginBottom: 0 },
   headerLogoImage: {
-    width: width * 1.30,
+    width: width * 1.69,
     height: undefined,
     aspectRatio: 1179 / 442,
   },

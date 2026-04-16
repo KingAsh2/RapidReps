@@ -414,7 +414,7 @@ const styles = StyleSheet.create({
 
   headerLogoSection: { alignItems: 'center', marginTop: 0, marginBottom: 0 },
   headerLogoImage: {
-    width: width * 1.30,
+    width: width * 1.69,
     height: undefined,
     aspectRatio: 1179 / 442,
   },
@@ -440,11 +440,11 @@ const styles = StyleSheet.create({
     height: CIRCLE_SIZE * LOGO_SCALE,
   },
 
-  taglineSection: { alignItems: 'center', marginTop: 8, paddingHorizontal: 24 },
+  taglineSection: { alignItems: 'center', marginTop: 12, marginBottom: 20, paddingHorizontal: 24 },
   tagline: { fontSize: 20, fontWeight: '700', color: BRAND.white, letterSpacing: 2 },
   taglineHighlight: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
   taglineBold: { fontSize: 26, fontWeight: '900', color: BRAND.navy, letterSpacing: 1 },
-  valuePropsSection: { flexDirection: 'row', justifyContent: 'space-around', paddingHorizontal: 24 },
+  valuePropsSection: { flexDirection: 'row', justifyContent: 'space-around', paddingHorizontal: 24, marginBottom: 24 },
   valueProp: { alignItems: 'center', flex: 1 },
   valuePropIcon: {
     width: 48, height: 48, borderRadius: 24,
