@@ -415,14 +415,14 @@ const styles = StyleSheet.create({
     paddingTop: 0, paddingBottom: 16,
   },
 
-  headerLogoSection: { alignItems: 'center', marginTop: -20, marginBottom: -10 },
+  headerLogoSection: { alignItems: 'center', marginTop: -20, marginBottom: 0 },
   headerLogoImage: {
     width: width * 1.69,
     height: undefined,
     aspectRatio: 1179 / 442,
   },
 
-  logoSection: { alignItems: 'center', marginTop: -8, justifyContent: 'center' },
+  logoSection: { alignItems: 'center', marginTop: 0, justifyContent: 'center' },
   energyRingOuter: {
     position: 'absolute',
     width: CIRCLE_SIZE + 20,
