@@ -85,8 +85,8 @@ export default function WelcomeScreen() {
     try {
       await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
       const { sound } = await Audio.Sound.createAsync(
-        require('../assets/sounds/boxing-bell.wav'),
-        { volume: 0.8 }
+        require('../assets/sounds/explosion-impact.wav'),
+        { volume: 1.0 }
       );
       await sound.playAsync();
       sound.setOnPlaybackStatusUpdate((status) => {
