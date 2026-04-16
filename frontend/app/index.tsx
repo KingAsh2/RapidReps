@@ -382,7 +382,10 @@ export default function WelcomeScreen() {
   );
 }
 
-const CIRCLE_SIZE = width * 0.48;
+// Adaptive circle: maximize for large screens, safe on small ones
+// iPhone 17 Pro Max: min(440*0.60, 956*0.24) = min(264, 229) → 229px ≈ 52% width
+// iPhone SE: min(375*0.60, 667*0.24) = min(225, 160) → 160px ≈ 43% width  
+const CIRCLE_SIZE = Math.min(width * 0.60, screenHeight * 0.24);
 const LOGO_SCALE = 1.30;
 
 const styles = StyleSheet.create({
