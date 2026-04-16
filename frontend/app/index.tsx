@@ -382,7 +382,7 @@ export default function WelcomeScreen() {
   );
 }
 
-const CIRCLE_SIZE = width * 0.65;
+const CIRCLE_SIZE = width * 0.48;
 const LOGO_SCALE = 1.30;
 
 const styles = StyleSheet.create({
@@ -409,17 +409,17 @@ const styles = StyleSheet.create({
   content: {
     flex: 1, paddingHorizontal: 0,
     justifyContent: 'space-between',
-    paddingTop: 10, paddingBottom: 20,
+    paddingTop: 0, paddingBottom: 16,
   },
 
-  headerLogoSection: { alignItems: 'center', marginTop: 0, marginBottom: 0 },
+  headerLogoSection: { alignItems: 'center', marginTop: -20, marginBottom: -10 },
   headerLogoImage: {
     width: width * 1.69,
     height: undefined,
     aspectRatio: 1179 / 442,
   },
 
-  logoSection: { alignItems: 'center', marginTop: 0, justifyContent: 'center' },
+  logoSection: { alignItems: 'center', marginTop: -8, justifyContent: 'center' },
   energyRingOuter: {
     position: 'absolute',
     width: CIRCLE_SIZE + 20,
@@ -440,11 +440,11 @@ const styles = StyleSheet.create({
     height: CIRCLE_SIZE * LOGO_SCALE,
   },
 
-  taglineSection: { alignItems: 'center', marginTop: 12, marginBottom: 20, paddingHorizontal: 24 },
+  taglineSection: { alignItems: 'center', marginTop: 8, marginBottom: 14, paddingHorizontal: 24 },
   tagline: { fontSize: 20, fontWeight: '700', color: BRAND.white, letterSpacing: 2 },
   taglineHighlight: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
   taglineBold: { fontSize: 26, fontWeight: '900', color: BRAND.navy, letterSpacing: 1 },
-  valuePropsSection: { flexDirection: 'row', justifyContent: 'space-around', paddingHorizontal: 24, marginBottom: 24 },
+  valuePropsSection: { flexDirection: 'row', justifyContent: 'space-around', paddingHorizontal: 24, marginBottom: 16 },
   valueProp: { alignItems: 'center', flex: 1 },
   valuePropIcon: {
     width: 48, height: 48, borderRadius: 24,
