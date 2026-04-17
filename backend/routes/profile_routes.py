@@ -42,6 +42,15 @@ async def create_trainer_profile(profile: TrainerProfileCreate, current_user: di
     profile_doc['createdAt'] = datetime.utcnow()
     profile_doc['updatedAt'] = datetime.utcnow()
 
+    # Sync profile photo to avatarUrl and users collection
+    photo = profile_doc.get('profilePhoto')
+    if photo:
+        profile_doc['avatarUrl'] = photo
+        await db.users.update_one(
+            {'_id': ObjectId(profile.userId)},
+            {'$set': {'profilePhoto': photo}}
+        )
+
     if existing_profile:
         profile_doc['createdAt'] = existing_profile['createdAt']
         await db.trainer_profiles.update_one(
@@ -343,6 +352,11 @@ async def submit_verification_step(
 
     if submission.stepId == 'photo' and submission.fileUri:
         update_data['avatarUrl'] = submission.fileUri
+        # Sync to users collection
+        await db.users.update_one(
+            {'_id': ObjectId(user_id)},
+            {'$set': {'profilePhoto': submission.fileUri}}
+        )
     if submission.stepId == 'video' and submission.fileUri:
         update_data['introVideoUrl'] = submission.fileUri
         update_data['introVideoUploaded'] = True
@@ -357,6 +371,10 @@ async def submit_verification_step(
         }
         if submission.stepId == 'photo' and submission.fileUri:
             profile_doc['avatarUrl'] = submission.fileUri
+            await db.users.update_one(
+                {'_id': ObjectId(user_id)},
+                {'$set': {'profilePhoto': submission.fileUri}}
+            )
         if submission.stepId == 'video' and submission.fileUri:
             profile_doc['introVideoUrl'] = submission.fileUri
             profile_doc['introVideoUploaded'] = True
@@ -872,6 +890,14 @@ async def create_trainee_profile(profile: TraineeProfileCreate, current_user: di
     profile_doc = profile.dict()
     profile_doc['createdAt'] = datetime.utcnow()
     profile_doc['updatedAt'] = datetime.utcnow()
+
+    # Sync profile photo to users collection
+    photo = profile_doc.get('profilePhoto')
+    if photo:
+        await db.users.update_one(
+            {'_id': ObjectId(profile.userId)},
+            {'$set': {'profilePhoto': photo}}
+        )
 
     if existing_profile:
         profile_doc['createdAt'] = existing_profile['createdAt']

@@ -104,6 +104,7 @@ RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoD
 37. **Admin Background Check Status Controls (P1)**: Added `POST /api/admin/verifications/{trainer_id}/background-check-status` endpoint. Admin panel now shows Passed/Pending/Failed toggle buttons in the background check info section.
 38. **Unverified Trainers Visibility (P1)**: Added `GET /api/admin/verifications/unverified` endpoint that finds trainers with the trainer role but no verification status. Added "Unverified" tab to admin panel VerificationsTab with trainer list and join dates.
 39. **Selection Highlights Orange (P1)**: Changed trainee onboarding selection chip colors from dark (#0A0E1A) to branded orange (#FF7F00) for experience levels, training styles, and training mode selections.
+40. **Profile Photo Synchronization (P1)**: Backend now syncs profile photos across all collections when updated. `create_trainer_profile`, `create_trainee_profile`, and `submit_verification_step` (photo step) all now update `users.profilePhoto` in addition to the profile-specific fields. The `get_trainer_profile` endpoint already falls back from `users.profilePhoto` to `trainer_profiles.avatarUrl`.
 
 ## Upcoming Tasks
 - Profile Photo Synchronization across Home/Edit/Verification screens (P1)
