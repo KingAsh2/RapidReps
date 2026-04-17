@@ -97,7 +97,16 @@ RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoD
 - Facebook App ID missing (BLOCKED - needs user to provide App ID)
 - 508 Accessibility Compliance (IN PROGRESS - incremental)
 
+## Bug Fixes (Apr 17, 2026)
+34. **Invalid Token on Highlight Uploads / Vibe Saves (P0)**: `AuthContext.tsx` was not exporting `token` in its context. Both `highlight-upload.tsx` and `vibe-setup.tsx` destructured `{ user, token }` from `useAuth()`, but `token` was always `undefined`. Fixed by adding `token: string | null` to the AuthContextType interface, adding a `[token, setToken]` state, and populating it on login/signup/socialLogin/loadUser, clearing on logout.
+35. **Admin Panel Document URLs Invalid (P0)**: Verification documents were stored as local device URIs (file://...) which are inaccessible from the admin panel. Added `POST /api/trainer/upload-verification-file` and `POST /api/trainer/upload-verification-file-base64` endpoints to upload files to object storage. Updated `verification.tsx` to upload files to storage before submitting steps. Admin panel now also shows a warning for legacy local URIs.
+36. **Background Check Form Validations (P1)**: Added SSN validation (exactly 9 digits), DOB validation (MM/DD/YYYY format with auto-formatting), Address validation (alphanumeric + standard punctuation). Replaced submit button with "Hold to Submit" orange pressable button (2-second hold with progress animation).
+37. **Admin Background Check Status Controls (P1)**: Added `POST /api/admin/verifications/{trainer_id}/background-check-status` endpoint. Admin panel now shows Passed/Pending/Failed toggle buttons in the background check info section.
+38. **Unverified Trainers Visibility (P1)**: Added `GET /api/admin/verifications/unverified` endpoint that finds trainers with the trainer role but no verification status. Added "Unverified" tab to admin panel VerificationsTab with trainer list and join dates.
+39. **Selection Highlights Orange (P1)**: Changed trainee onboarding selection chip colors from dark (#0A0E1A) to branded orange (#FF7F00) for experience levels, training styles, and training mode selections.
+
 ## Upcoming Tasks
+- Profile Photo Synchronization across Home/Edit/Verification screens (P1)
 - 508 Accessibility Compliance (P2)
 - SendGrid Email Integration (P2, blocked on API key)
 - Auto-color detection from profile photo (P3)
