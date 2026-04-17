@@ -26,7 +26,7 @@ import { AnimatedPillButton } from '../../src/components/AnimatedPillButton';
 import { haptic } from '../../src/utils/haptics';
 import { SocialAuthButtons } from '../../src/components/SocialAuthButtons';
 
-const { width } = Dimensions.get('window');
+const { width, height: screenHeight } = Dimensions.get('window');
 
 const BRAND = {
   orange: '#FF7F00',
@@ -366,6 +366,7 @@ export default function LoginScreen() {
                 onPress={handleLogin}
                 loading={loading}
                 disabled={loading}
+                variant="teal"
                 icon="flash"
                 showArrow={false}
                 testID="login-submit-btn"
@@ -385,7 +386,8 @@ export default function LoginScreen() {
   );
 }
 
-const CIRCLE_SIZE = width * 0.65;
+// Match main page dimensions exactly
+const CIRCLE_SIZE = Math.min(width * 0.60, screenHeight * 0.24);
 const LOGO_SCALE = 1.30;
 
 const styles = StyleSheet.create({
@@ -398,12 +400,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center', zIndex: 10,
   },
   scrollContent: {
-    flexGrow: 1, justifyContent: 'center',
-    paddingHorizontal: 24, paddingTop: 60, paddingBottom: 30,
+    flexGrow: 1,
+    paddingHorizontal: 24, paddingTop: 0, paddingBottom: 16,
   },
 
-  /* Header Logo — oversized to cover background logo */
-  headerLogoSection: { alignItems: 'center', marginBottom: 0 },
+  /* Header — matches main page: 169% width, pulled up, no overlap */
+  headerLogoSection: { alignItems: 'center', marginTop: -20, marginBottom: 0 },
   headerLogoImage: {
     width: width * 1.69,
     height: undefined,
@@ -414,8 +416,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFD700', zIndex: 100,
   },
 
-  /* Circle Logo — no backing, no shadow, just clipped circle */
-  logoSection: { alignItems: 'center', marginBottom: 8 },
+  /* Circle — matches main page: adaptive size, no overlap */
+  logoSection: { alignItems: 'center', marginTop: 0, marginBottom: 0 },
   energyRingOuter: {
     position: 'absolute',
     width: CIRCLE_SIZE + 20, height: CIRCLE_SIZE + 20,
@@ -434,29 +436,29 @@ const styles = StyleSheet.create({
     height: CIRCLE_SIZE * LOGO_SCALE,
   },
 
-  headerSection: { alignItems: 'center', marginBottom: 20 },
+  headerSection: { alignItems: 'center', marginTop: 8, marginBottom: 10 },
   welcomeTitle: { fontSize: 18, fontWeight: '700', color: BRAND.white, letterSpacing: 2 },
   taglineRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
   taglineBold: { fontSize: 24, fontWeight: '900', color: BRAND.navy, letterSpacing: 1 },
   formSection: { gap: 4 },
-  inputGroup: { marginBottom: 14 },
+  inputGroup: { marginBottom: 12 },
   inputContainer: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.12)',
-    borderRadius: 16, paddingHorizontal: 14, height: 56, gap: 12,
+    borderRadius: 16, paddingHorizontal: 14, height: 52, gap: 12,
   },
   inputIconCircle: {
-    width: 36, height: 36, borderRadius: 18,
+    width: 34, height: 34, borderRadius: 17,
     backgroundColor: BRAND.white,
     justifyContent: 'center', alignItems: 'center',
   },
   input: { flex: 1, fontSize: 16, fontWeight: '600', color: BRAND.white },
-  forgotButton: { alignSelf: 'flex-end', marginBottom: 20, paddingVertical: 4 },
+  forgotButton: { alignSelf: 'flex-end', marginBottom: 14, paddingVertical: 4 },
   forgotText: { fontSize: 14, fontWeight: '700', color: BRAND.white, textDecorationLine: 'underline' },
-  signupContainer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 20 },
+  signupContainer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 16 },
   signupText: { fontSize: 14, fontWeight: '600', color: 'rgba(255, 255, 255, 0.85)' },
   signupLink: { fontSize: 14, fontWeight: '900', color: BRAND.white, textDecorationLine: 'underline' },
-  dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 18 },
+  dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 12 },
   dividerLine: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.25)' },
   dividerText: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.7)', paddingHorizontal: 14 },
 });
