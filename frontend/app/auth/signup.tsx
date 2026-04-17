@@ -25,7 +25,7 @@ import { AnimatedPillButton } from '../../src/components/AnimatedPillButton';
 import { haptic } from '../../src/utils/haptics';
 import { SocialAuthButtons } from '../../src/components/SocialAuthButtons';
 
-const { width } = Dimensions.get('window');
+const { width, height: screenHeight } = Dimensions.get('window');
 
 // Background image - Box jumps (high energy, getting started)
 const backgroundImage = require('../../assets/images/bg-box-jumps.png');
@@ -292,7 +292,7 @@ export default function SignupScreen() {
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
       {/* Orange overlay */}
       <LinearGradient
-        colors={['rgba(10, 14, 26, 0.97)', 'rgba(17, 24, 39, 0.96)']}
+        colors={['rgba(255, 127, 0, 0.97)', 'rgba(255, 127, 0, 0.96)', 'rgba(255, 165, 38, 0.95)']}
         style={StyleSheet.absoluteFill}
       />
 
@@ -710,31 +710,31 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
+    paddingTop: 0,
+    paddingBottom: 16,
   },
-  // Hero
   heroSection: {
     alignItems: 'center',
-    paddingTop: 20,
-    paddingBottom: 24,
+    paddingTop: 0,
+    paddingBottom: 0,
   },
   backButton: {
     position: 'absolute',
-    top: 50,
+    top: 12,
     left: 16,
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,
   },
   logoContainer: {
-    marginBottom: 0,
     alignItems: 'center',
-    width: width * 1.30,
-    alignSelf: 'center',
+    marginTop: -20,
+    marginBottom: 0,
   },
   headerLogoImage: {
     width: width * 1.69,
@@ -743,29 +743,30 @@ const styles = StyleSheet.create({
   },
   circleLogoContainer: {
     alignItems: 'center',
-    marginBottom: 16,
+    marginTop: 0,
+    marginBottom: 0,
     justifyContent: 'center',
   },
   energyRingStyle: {
     position: 'absolute',
-    width: width * 0.65 + 20,
-    height: width * 0.65 + 20,
-    borderRadius: (width * 0.65 + 20) / 2,
+    width: Math.min(width * 0.60, screenHeight * 0.24) + 20,
+    height: Math.min(width * 0.60, screenHeight * 0.24) + 20,
+    borderRadius: (Math.min(width * 0.60, screenHeight * 0.24) + 20) / 2,
     borderWidth: 2,
     borderColor: '#FFD700',
   },
   circleBacking: {
-    width: width * 0.65,
-    height: width * 0.65,
-    borderRadius: (width * 0.65) / 2,
+    width: Math.min(width * 0.60, screenHeight * 0.24),
+    height: Math.min(width * 0.60, screenHeight * 0.24),
+    borderRadius: Math.min(width * 0.60, screenHeight * 0.24) / 2,
     backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
   },
   circleLogoImage: {
-    width: width * 0.65 * 1.30,
-    height: width * 0.65 * 1.30,
+    width: Math.min(width * 0.60, screenHeight * 0.24) * 1.30,
+    height: Math.min(width * 0.60, screenHeight * 0.24) * 1.30,
   },
   logoImage: {
     width: 140,
