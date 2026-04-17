@@ -23,6 +23,9 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
   const [approvedTrainers, setApprovedTrainers] = useState<any[]>([]);
   const [showApproved, setShowApproved] = useState(false);
   const [loadingApproved, setLoadingApproved] = useState(false);
+  const [unverifiedTrainers, setUnverifiedTrainers] = useState<any[]>([]);
+  const [showUnverified, setShowUnverified] = useState(false);
+  const [loadingUnverified, setLoadingUnverified] = useState(false);
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const videoRef = useRef<Video>(null);
@@ -74,10 +77,22 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
       const res = await api.get('/admin/verifications/approved', { headers });
       setApprovedTrainers(res.data || []);
     } catch (err) {
-      // If endpoint doesn't exist yet, use empty array
       setApprovedTrainers([]);
     } finally {
       setLoadingApproved(false);
+    }
+  };
+
+  const fetchUnverifiedTrainers = async () => {
+    setLoadingUnverified(true);
+    try {
+      const headers = await getAuthHeader();
+      const res = await api.get('/admin/verifications/unverified', { headers });
+      setUnverifiedTrainers(res.data || []);
+    } catch (err) {
+      setUnverifiedTrainers([]);
+    } finally {
+      setLoadingUnverified(false);
     }
   };
 
@@ -130,28 +145,42 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
 
   return (
     <View>
-      {/* Toggle between Pending and Approved */}
-      <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
+      {/* Toggle between Pending, Approved, and Unverified */}
+      <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
         <TouchableOpacity
           style={{
-            flex: 1, paddingVertical: 12, borderRadius: 12, alignItems: 'center',
-            backgroundColor: !showApproved ? '#FF6A00' : '#f0f0f0',
+            flex: 1, paddingVertical: 10, borderRadius: 12, alignItems: 'center',
+            backgroundColor: !showApproved && !showUnverified ? '#FF6A00' : '#f0f0f0',
           }}
-          onPress={() => setShowApproved(false)}
+          onPress={() => { setShowApproved(false); setShowUnverified(false); }}
+          data-testid="tab-pending"
         >
-          <Text style={{ fontSize: 14, fontWeight: '700', color: !showApproved ? C.white : C.gray }}>
+          <Text style={{ fontSize: 13, fontWeight: '700', color: !showApproved && !showUnverified ? C.white : C.gray }}>
             Pending ({verifications.length})
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={{
-            flex: 1, paddingVertical: 12, borderRadius: 12, alignItems: 'center',
+            flex: 1, paddingVertical: 10, borderRadius: 12, alignItems: 'center',
             backgroundColor: showApproved ? C.success : '#f0f0f0',
           }}
-          onPress={() => { setShowApproved(true); fetchApprovedTrainers(); }}
+          onPress={() => { setShowApproved(true); setShowUnverified(false); fetchApprovedTrainers(); }}
+          data-testid="tab-approved"
         >
-          <Text style={{ fontSize: 14, fontWeight: '700', color: showApproved ? C.white : C.gray }}>
-            Approved Trainers
+          <Text style={{ fontSize: 13, fontWeight: '700', color: showApproved ? C.white : C.gray }}>
+            Approved
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={{
+            flex: 1, paddingVertical: 10, borderRadius: 12, alignItems: 'center',
+            backgroundColor: showUnverified ? C.warning : '#f0f0f0',
+          }}
+          onPress={() => { setShowApproved(false); setShowUnverified(true); fetchUnverifiedTrainers(); }}
+          data-testid="tab-unverified"
+        >
+          <Text style={{ fontSize: 13, fontWeight: '700', color: showUnverified ? C.white : C.gray }}>
+            Unverified
           </Text>
         </TouchableOpacity>
       </View>
@@ -189,6 +218,37 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                   <Text style={{ fontSize: 13, fontWeight: '600', color: '#FF6A00' }}>View Documents</Text>
                 </View>
               </TouchableOpacity>
+            ))
+          )}
+        </>
+      ) : showUnverified ? (
+        // Unverified Trainers List
+        <>
+          <Text style={s.sectionTitle}>Unverified Trainers</Text>
+          {loadingUnverified ? (
+            <ActivityIndicator size="large" color={'#FF6A00'} style={{ marginVertical: 20 }} />
+          ) : unverifiedTrainers.length === 0 ? (
+            <View style={s.emptyState}>
+              <Ionicons name="shield-outline" size={48} color={C.gray} />
+              <Text style={s.emptyTitle}>No Unverified Trainers</Text>
+              <Text style={s.emptySub}>All trainers have started or completed verification.</Text>
+            </View>
+          ) : (
+            unverifiedTrainers.map((trainer: any, idx: number) => (
+              <View key={idx} style={[s.verifyCard, { borderLeftWidth: 3, borderLeftColor: C.warning }]}>
+                <View style={s.verifyHeader}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.verifyName}>{trainer.fullName || 'Trainer'}</Text>
+                    <Text style={s.verifySub}>{trainer.email || ''}</Text>
+                  </View>
+                  <View style={[s.pendingBadge, { backgroundColor: '#FFF5EB' }]}>
+                    <Text style={[s.pendingBadgeText, { color: C.warning }]}>UNVERIFIED</Text>
+                  </View>
+                </View>
+                <Text style={{ fontSize: 12, color: C.gray, marginTop: 6 }}>
+                  Joined: {trainer.createdAt ? new Date(trainer.createdAt).toLocaleDateString() : 'Unknown'}
+                </Text>
+              </View>
             ))
           )}
         </>
@@ -350,6 +410,45 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                           </View>
                         )}
                       </View>
+                      {/* Background Check Status Controls */}
+                      <View style={{ marginTop: 12 }}>
+                        <Text style={{ fontSize: 12, fontWeight: '700', color: C.gray, marginBottom: 8 }}>SET BACKGROUND CHECK STATUS</Text>
+                        <View style={{ flexDirection: 'row', gap: 8 }}>
+                          {(['passed', 'pending', 'failed'] as const).map((status) => {
+                            const bgCheckStatus = verificationDetail.backgroundInfo?.status || 'pending_admin_review';
+                            const isActive = (status === 'passed' && bgCheckStatus === 'passed') ||
+                                             (status === 'pending' && (bgCheckStatus === 'pending_admin_review' || bgCheckStatus === 'pending')) ||
+                                             (status === 'failed' && bgCheckStatus === 'failed');
+                            const statusColors = { passed: C.success, pending: C.warning, failed: C.error };
+                            const statusLabels = { passed: 'Passed', pending: 'Pending', failed: 'Failed' };
+                            return (
+                              <TouchableOpacity
+                                key={status}
+                                onPress={async () => {
+                                  try {
+                                    const headers = await getAuthHeader();
+                                    await api.post(`/admin/verifications/${verificationDetail.profile?.userId}/background-check-status`, { status }, { headers });
+                                    toast.success(`Background check marked as ${statusLabels[status]}`);
+                                    const updated = await api.get(`/admin/verifications/${verificationDetail.profile?.userId}/detail`, { headers });
+                                    setVerificationDetail(updated.data);
+                                    fetchVerifications();
+                                  } catch { toast.error('Failed to update status'); }
+                                }}
+                                style={{
+                                  flex: 1, paddingVertical: 10, borderRadius: 10, alignItems: 'center',
+                                  backgroundColor: isActive ? statusColors[status] : 'rgba(255,255,255,0.06)',
+                                  borderWidth: 1, borderColor: isActive ? statusColors[status] : 'rgba(255,255,255,0.1)',
+                                }}
+                                data-testid={`bg-check-${status}-btn`}
+                              >
+                                <Text style={{ fontSize: 13, fontWeight: '700', color: isActive ? C.white : statusColors[status] }}>
+                                  {statusLabels[status]}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                      </View>
                     </View>
                   )}
 
@@ -400,6 +499,11 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                                     <Ionicons name="play-circle" size={14} color="#FF6A00" />
                                     <Text style={{ fontSize: 13, fontWeight: '600', color: '#FF6A00' }}>Play (15s preview)</Text>
                                   </TouchableOpacity>
+                                ) : step.url.startsWith('file://') || step.url.startsWith('content://') || step.url.startsWith('ph://') ? (
+                                  <View style={{ backgroundColor: '#FFF5EB', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                                    <Ionicons name="alert-circle-outline" size={14} color={C.warning} />
+                                    <Text style={{ fontSize: 13, fontWeight: '600', color: C.warning }}>Uploaded (local file - ask trainer to re-upload)</Text>
+                                  </View>
                                 ) : (
                                   <TouchableOpacity
                                     onPress={() => {

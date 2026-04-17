@@ -761,7 +761,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.06)',
   },
   experienceChipSelected: {
-    backgroundColor: '#0A0E1A',
+    backgroundColor: '#FF7F00',
+    borderColor: '#FF7F00',
   },
   experienceText: {
     fontSize: 14,
@@ -800,7 +801,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   styleChipSelected: {
-    backgroundColor: '#0A0E1A',
+    backgroundColor: '#FF7F00',
+    borderColor: '#FF7F00',
   },
   styleText: {
     fontSize: 13,
@@ -836,7 +838,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   modeChipSelected: {
-    backgroundColor: '#0A0E1A',
+    backgroundColor: '#FF7F00',
+    borderColor: '#FF7F00',
   },
   modeText: {
     fontSize: 15,

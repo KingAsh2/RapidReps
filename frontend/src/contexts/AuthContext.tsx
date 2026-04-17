@@ -5,6 +5,7 @@ import { User, AuthResponse } from '../types';
 
 interface AuthContextType {
   user: User | null;
+  token: string | null;
   loading: boolean;
   activeRole: string | null;
   isDemoMode: boolean;
@@ -20,6 +21,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeRole, setActiveRoleState] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -51,10 +53,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      const token = await AsyncStorage.getItem('auth_token');
+      const storedToken = await AsyncStorage.getItem('auth_token');
       const savedRole = await AsyncStorage.getItem('active_role');
       
-      if (token) {
+      if (storedToken) {
+        setToken(storedToken);
         try {
           const userData = await authAPI.getMe();
           // Defensive check - make sure userData is valid
@@ -70,12 +73,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Invalid user data, clear token
             console.error('Invalid user data received, clearing auth');
             await AsyncStorage.removeItem('auth_token');
+            setToken(null);
           }
         } catch (apiError: any) {
           // Only clear token on 401 Unauthorized — keep session alive on network/timeout errors
           if (apiError?.response?.status === 401) {
             console.error('Token expired or invalid, clearing auth');
             await AsyncStorage.removeItem('auth_token');
+            setToken(null);
           } else {
             console.error('Transient error fetching user (keeping token):', apiError?.message);
           }
@@ -87,6 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         await AsyncStorage.removeItem('auth_token');
         await AsyncStorage.removeItem('active_role');
+        setToken(null);
       } catch (e) {
         // Ignore cleanup errors
       }
@@ -118,6 +124,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await AsyncStorage.setItem('auth_token', response.access_token);
     await AsyncStorage.removeItem('demo_role'); // Clear demo mode
     setIsDemoMode(false);
+    setToken(response.access_token);
     setUser(response.user);
     
     // Set initial active role
@@ -147,6 +154,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (_) {}
     
     setIsDemoMode(false);
+    setToken(response.access_token);
     setUser(response.user);
     
     try {
@@ -171,6 +179,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await AsyncStorage.setItem('auth_token', response.access_token);
     await AsyncStorage.removeItem('demo_role');
     setIsDemoMode(false);
+    setToken(response.access_token);
     setUser(response.user);
 
     if (response.user.roles?.length > 0) {
@@ -187,6 +196,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await AsyncStorage.removeItem('active_role');
     await AsyncStorage.removeItem('demo_role');
     setUser(null);
+    setToken(null);
     setActiveRoleState(null);
     setIsDemoMode(false);
     // Navigation to '/' is handled by the root layout detecting null user
@@ -203,6 +213,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider
       value={{
         user,
+        token,
         loading,
         activeRole,
         isDemoMode,
@@ -225,6 +236,7 @@ export const useAuth = () => {
   if (!context) {
     return {
       user: null,
+      token: null,
       loading: true,
       activeRole: null,
       isDemoMode: false,

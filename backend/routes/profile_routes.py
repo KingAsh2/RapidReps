@@ -265,6 +265,60 @@ class VerificationSubmission(BaseModel):
     fileName: Optional[str] = None
 
 
+@router.post("/trainer/upload-verification-file")
+async def upload_verification_file(
+    file: UploadFile = File(...),
+    stepId: str = Form(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Upload a verification document file to object storage and return its URL."""
+    import base64 as b64mod
+    user_id = str(current_user['_id'])
+    content = await file.read()
+    if len(content) > 50 * 1024 * 1024:
+        raise HTTPException(400, "File too large (max 50MB)")
+
+    ext = (file.filename or 'doc.jpg').split('.')[-1].lower()
+    content_type_str = MIME_TYPES.get(ext, file.content_type or 'application/octet-stream')
+    storage_path = generate_upload_path(user_id, ext, folder="verification")
+    try:
+        put_object(storage_path, content, content_type_str)
+    except Exception as e:
+        raise HTTPException(500, f"Upload failed: {str(e)}")
+    url = f"/api/files/{storage_path}"
+    return {"success": True, "url": url, "stepId": stepId}
+
+
+@router.post("/trainer/upload-verification-file-base64")
+async def upload_verification_file_base64(
+    body: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Upload a verification document via base64 data and return its URL."""
+    import base64
+    user_id = str(current_user['_id'])
+    data_b64 = body.get('data', '')
+    step_id = body.get('stepId', '')
+    filename = body.get('filename', 'doc.jpg')
+    content_type = body.get('contentType', 'image/jpeg')
+
+    if not data_b64:
+        raise HTTPException(400, "No data provided")
+
+    content = base64.b64decode(data_b64)
+    if len(content) > 50 * 1024 * 1024:
+        raise HTTPException(400, "File too large (max 50MB)")
+
+    ext = filename.split('.')[-1].lower() or 'jpg'
+    storage_path = generate_upload_path(user_id, ext, folder="verification")
+    try:
+        put_object(storage_path, content, content_type)
+    except Exception as e:
+        raise HTTPException(500, f"Upload failed: {str(e)}")
+    url = f"/api/files/{storage_path}"
+    return {"success": True, "url": url, "stepId": step_id}
+
+
 @router.post("/trainer/submit-verification-step")
 async def submit_verification_step(
     submission: VerificationSubmission,

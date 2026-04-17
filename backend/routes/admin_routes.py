@@ -511,6 +511,36 @@ async def admin_get_approved_trainers(admin_user: dict = Depends(require_admin))
     
     return result
 
+
+@router.get("/admin/verifications/unverified")
+async def admin_get_unverified_trainers(admin_user: dict = Depends(require_admin)):
+    """Get trainers who have the trainer role but haven't completed verification"""
+    # Get all users with trainer role
+    trainer_users = await db.users.find(
+        {'roles': {'$in': ['trainer']}},
+        {'fullName': 1, 'email': 1, 'createdAt': 1}
+    ).to_list(None)
+
+    # Get all trainer profiles
+    all_profile_user_ids = set()
+    async for p in db.trainer_profiles.find({}, {'userId': 1, 'verificationStatus': 1}):
+        vs = p.get('verificationStatus')
+        if vs in (VerificationStatus.VERIFIED, VerificationStatus.PENDING, VerificationStatus.REJECTED):
+            all_profile_user_ids.add(p['userId'])
+
+    result = []
+    for user in trainer_users:
+        uid = str(user['_id'])
+        if uid not in all_profile_user_ids:
+            result.append({
+                "userId": uid,
+                "fullName": user.get('fullName', ''),
+                "email": user.get('email', ''),
+                "createdAt": user.get('createdAt'),
+            })
+
+    return result
+
 @router.get("/admin/verifications/{trainer_id}/detail")
 async def admin_get_verification_detail(trainer_id: str, admin_user: dict = Depends(require_admin)):
     """Get full verification details for a specific trainer"""
@@ -646,6 +676,34 @@ async def admin_reject_verification(
     })
     
     return {"success": True, "message": "Trainer verification rejected"}
+
+
+@router.post("/admin/verifications/{trainer_id}/background-check-status")
+async def admin_set_background_check_status(
+    trainer_id: str,
+    body: dict,
+    admin_user: dict = Depends(require_admin)
+):
+    """Admin: Set background check status to passed/pending/failed"""
+    status = body.get('status', 'pending')
+    if status not in ('passed', 'pending', 'failed'):
+        raise HTTPException(400, "Status must be 'passed', 'pending', or 'failed'")
+
+    # Update background check request
+    await db.background_check_requests.update_one(
+        {'userId': trainer_id},
+        {'$set': {'status': status, 'updatedAt': datetime.utcnow(), 'reviewedBy': str(admin_user['_id'])}}
+    )
+
+    # Update trainer profile
+    bg_passed = status == 'passed'
+    await db.trainer_profiles.update_one(
+        {'userId': trainer_id},
+        {'$set': {'backgroundCheckPassed': bg_passed, 'updatedAt': datetime.utcnow()}}
+    )
+
+    return {"success": True, "status": status, "message": f"Background check marked as {status}"}
+
 
 @router.post("/admin/verifications/{trainer_id}/approve-step")
 async def admin_approve_verification_step(

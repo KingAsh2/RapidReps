@@ -264,6 +264,8 @@ export default function TrainerVerificationScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [holdProgress] = useState(new Animated.Value(0));
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [piiHoldProgress] = useState(new Animated.Value(0));
+  const piiHoldTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fadeAnim = useState(new Animated.Value(0))[0];
   const [showScanningOverlay, setShowScanningOverlay] = useState(false);
   const [pendingIdUri, setPendingIdUri] = useState<string | null>(null);
@@ -329,11 +331,39 @@ export default function TrainerVerificationScreen() {
     }
   };
 
+  const uploadFileToStorage = async (stepId: string, fileUri: string, fileName: string): Promise<string | null> => {
+    try {
+      const formData = new FormData();
+      const ext = fileName.split('.').pop()?.toLowerCase() || 'jpg';
+      const mimeType = ['mp4', 'mov', 'avi'].includes(ext) ? 'video/mp4' : 
+                       ['pdf'].includes(ext) ? 'application/pdf' : 'image/jpeg';
+      formData.append('file', { uri: fileUri, name: fileName, type: mimeType } as any);
+      formData.append('stepId', stepId);
+
+      const res = await api.post('/trainer/upload-verification-file', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 60000,
+      });
+      return res.data?.url || null;
+    } catch (err) {
+      console.error('File upload to storage failed:', err);
+      return null;
+    }
+  };
+
   const submitStepToBackend = async (stepId: string, fileUri?: string, fileName?: string) => {
     try {
+      let remoteUrl = fileUri;
+      // Upload file to storage first if it's a local file URI
+      if (fileUri && (fileUri.startsWith('file://') || fileUri.startsWith('content://') || fileUri.startsWith('ph://'))) {
+        const uploadedUrl = await uploadFileToStorage(stepId, fileUri, fileName || 'file.jpg');
+        if (uploadedUrl) {
+          remoteUrl = uploadedUrl;
+        }
+      }
       await api.post('/trainer/submit-verification-step', {
         stepId,
-        fileUri: fileUri || null,
+        fileUri: remoteUrl || null,
         fileName: fileName || null,
       });
     } catch (err) {
@@ -449,8 +479,26 @@ export default function TrainerVerificationScreen() {
       toast.error('Please fill in all required fields.');
       return;
     }
+    // Validate DOB: MM/DD/YYYY
+    const dobRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01])\/(19|20)\d{2}$/;
+    if (!dobRegex.test(piiData.dob)) {
+      toast.error('Date of Birth must be in MM/DD/YYYY format.');
+      return;
+    }
+    // Validate SSN: exactly 9 digits (if provided)
+    if (piiData.ssn && !/^\d{9}$/.test(piiData.ssn.replace(/[-\s]/g, ''))) {
+      toast.error('SSN must be exactly 9 digits.');
+      return;
+    }
+    // Validate Address: alphanumeric characters, spaces, commas, periods, hashes
+    const addressRegex = /^[a-zA-Z0-9\s,.\-#]+$/;
+    if (!addressRegex.test(piiData.address)) {
+      toast.error('Address must contain only letters, numbers, and standard punctuation.');
+      return;
+    }
     try {
-      await api.post('/trainer/submit-background-pii', piiData);
+      const cleanSsn = piiData.ssn ? piiData.ssn.replace(/[-\s]/g, '') : '';
+      await api.post('/trainer/submit-background-pii', { ...piiData, ssn: cleanSsn });
       setVerificationStatus(prev => ({ ...prev, background: 'submitted' }));
       setShowPIIModal(false);
       toast.success('Information submitted! Admin will run your background check.');
@@ -782,31 +830,71 @@ export default function TrainerVerificationScreen() {
               placeholder="Date of Birth (MM/DD/YYYY) *"
               placeholderTextColor="#5a6785"
               value={piiData.dob}
-              onChangeText={(t) => setPiiData(p => ({ ...p, dob: t }))}
+              onChangeText={(t) => {
+                // Auto-format: add slashes as user types
+                let cleaned = t.replace(/[^\d/]/g, '');
+                if (cleaned.length === 2 && !cleaned.includes('/') && piiData.dob.length < t.length) cleaned += '/';
+                if (cleaned.length === 5 && cleaned.split('/').length === 2 && piiData.dob.length < t.length) cleaned += '/';
+                if (cleaned.length <= 10) setPiiData(p => ({ ...p, dob: cleaned }));
+              }}
+              keyboardType="number-pad"
+              maxLength={10}
               data-testid="pii-dob"
             />
             <TextInput
               style={{ backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 12, padding: 14, fontSize: 15, marginBottom: 10, color: '#FFFFFF' }}
-              placeholder="SSN (optional)"
+              placeholder="SSN (9 digits, optional)"
               placeholderTextColor="#5a6785"
               value={piiData.ssn}
-              onChangeText={(t) => setPiiData(p => ({ ...p, ssn: t }))}
+              onChangeText={(t) => {
+                const digitsOnly = t.replace(/\D/g, '');
+                if (digitsOnly.length <= 9) setPiiData(p => ({ ...p, ssn: digitsOnly }));
+              }}
+              keyboardType="number-pad"
               secureTextEntry
+              maxLength={9}
               data-testid="pii-ssn"
             />
             <TextInput
               style={{ backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 12, padding: 14, fontSize: 15, marginBottom: 16, color: '#FFFFFF' }}
-              placeholder="Current Address *"
+              placeholder="Current Address (alphanumeric) *"
               placeholderTextColor="#5a6785"
               value={piiData.address}
               onChangeText={(t) => setPiiData(p => ({ ...p, address: t }))}
               data-testid="pii-address"
             />
-            <TouchableOpacity onPress={handleSubmitPII} style={modalStyles.btn} data-testid="pii-submit-btn">
-              <LinearGradient colors={['#0A0E1A', '#141929']} style={modalStyles.btnGradient}>
-                <Text style={modalStyles.btnText}>Submit Information</Text>
-              </LinearGradient>
-            </TouchableOpacity>
+            <Pressable
+              onPressIn={() => {
+                haptic.heavy();
+                piiHoldProgress.setValue(0);
+                Animated.timing(piiHoldProgress, { toValue: 1, duration: 2000, useNativeDriver: false }).start();
+                piiHoldTimer.current = setTimeout(() => {
+                  haptic.success();
+                  handleSubmitPII();
+                }, 2000);
+              }}
+              onPressOut={() => {
+                if (piiHoldTimer.current) {
+                  clearTimeout(piiHoldTimer.current);
+                  piiHoldTimer.current = null;
+                }
+                piiHoldProgress.setValue(0);
+              }}
+              style={{ borderRadius: 14, overflow: 'hidden' }}
+              data-testid="pii-hold-submit-btn"
+            >
+              <View style={{ backgroundColor: '#FF7F00', borderRadius: 14, overflow: 'hidden' }}>
+                <Animated.View style={{
+                  position: 'absolute', left: 0, top: 0, bottom: 0,
+                  backgroundColor: '#FF5500',
+                  width: piiHoldProgress.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }),
+                }} />
+                <View style={{ paddingVertical: 16, alignItems: 'center' }}>
+                  <Text style={{ color: '#FFFFFF', fontWeight: '900', fontSize: 16, letterSpacing: 1 }}>HOLD TO SUBMIT</Text>
+                  <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, marginTop: 2 }}>Press and hold for 2 seconds</Text>
+                </View>
+              </View>
+            </Pressable>
             <TouchableOpacity onPress={() => setShowPIIModal(false)} style={{ marginTop: 12, alignItems: 'center' }}>
               <Text style={{ color: 'rgba(255,255,255,0.5)', fontWeight: '600', fontSize: 15 }}>Cancel</Text>
             </TouchableOpacity>
