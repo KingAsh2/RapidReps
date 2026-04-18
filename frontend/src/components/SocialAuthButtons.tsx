@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  View, TouchableOpacity, StyleSheet, ActivityIndicator, Animated, Easing,
+  View, TouchableOpacity, StyleSheet, ActivityIndicator, Animated, Easing, Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
@@ -123,7 +123,9 @@ export const SocialAuthButtons = ({ preSelectedRole, onError, onSuccess }: Socia
   const handleGoogleLogin = async () => {
     setLoadingProvider('google');
     try {
-      const redirectUrl = Linking.createURL('auth/callback');
+      const redirectUrl = Platform.OS === 'web'
+        ? `${window.location.origin}/auth/callback`
+        : Linking.createURL('auth/callback');
       const authUrl = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
       const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUrl);
       if (result.type === 'success' && result.url) {
@@ -142,7 +144,9 @@ export const SocialAuthButtons = ({ preSelectedRole, onError, onSuccess }: Socia
   const handleAppleLogin = async () => {
     setLoadingProvider('apple');
     try {
-      const redirectUrl = Linking.createURL('auth/apple-callback');
+      const redirectUrl = Platform.OS === 'web'
+        ? `${window.location.origin}/auth/apple-callback`
+        : Linking.createURL('auth/apple-callback');
       const appleAuthUrl = `https://appleid.apple.com/auth/authorize?` +
         `client_id=${encodeURIComponent('app.emergent.trainer-finder-9f806c77e')}` +
         `&redirect_uri=${encodeURIComponent(redirectUrl)}` +
