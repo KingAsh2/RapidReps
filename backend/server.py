@@ -2674,6 +2674,12 @@ app.include_router(progress_router)
 from routes.safety_check import router as safety_check_router
 app.include_router(safety_check_router)
 
+from routes.subscription_routes import router as subscription_router
+app.include_router(subscription_router)
+
+from routes.gps_checkin_routes import router as gps_checkin_router
+app.include_router(gps_checkin_router)
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
