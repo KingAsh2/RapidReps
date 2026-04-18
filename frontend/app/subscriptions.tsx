@@ -6,8 +6,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '../../src/contexts/AuthContext';
-import { useAlert } from '../../src/contexts/AlertContext';
+import { useAuth } from '../src/contexts/AuthContext';
+import { useAlert } from '../src/contexts/AlertContext';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
