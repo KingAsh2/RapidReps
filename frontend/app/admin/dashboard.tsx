@@ -32,8 +32,9 @@ import { PayoutsTab } from '../../src/components/admin/PayoutsTab';
 import { ProfileTab } from '../../src/components/admin/ProfileTab';
 import { SafetyTab } from '../../src/components/admin/SafetyTab';
 import { ZelleTab } from '../../src/components/admin/ZelleTab';
+import { SubscriptionsTab } from '../../src/components/admin/SubscriptionsTab';
 
-type Tab = 'overview' | 'users' | 'verifications' | 'sessions' | 'payments' | 'payouts' | 'zelle' | 'safety' | 'profile';
+type Tab = 'overview' | 'users' | 'verifications' | 'sessions' | 'subscriptions' | 'payments' | 'payouts' | 'zelle' | 'safety' | 'profile';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -402,6 +403,7 @@ export default function AdminDashboard() {
     { id: 'users', icon: 'people', label: 'Users' },
     { id: 'verifications', icon: 'shield-checkmark', label: 'Verify' },
     { id: 'sessions', icon: 'calendar', label: 'Sessions' },
+    { id: 'subscriptions', icon: 'repeat', label: 'Subs' },
     { id: 'payments', icon: 'card', label: 'Payments' },
     { id: 'payouts', icon: 'wallet', label: 'Payouts' },
     { id: 'zelle', icon: 'send', label: 'Zelle' },
@@ -611,6 +613,9 @@ export default function AdminDashboard() {
                 sessionTypeFilter={sessionTypeFilter} onTypeFilterChange={setSessionTypeFilter}
                 fetchSessions={fetchSessions}
               />
+            )}
+            {activeTab === 'subscriptions' && (
+              <SubscriptionsTab />
             )}
             {activeTab === 'payments' && (
               <PaymentsTab

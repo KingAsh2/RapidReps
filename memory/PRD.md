@@ -109,6 +109,9 @@ RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoD
 ## New Features (Apr 18, 2026)
 41. **Subscription Tiers**: Custom plans where trainee picks 1-7 sessions/week. Trainer sets their rate, platform takes 20%. Full lifecycle: create, accept, decline, pause, resume, cancel. Auto-scheduling picks available slots for next week based on preferred days/times. If conflicts, system finds next available.
 42. **Live GPS Check-in**: Both parties check in with GPS at session location. Haversine distance calculation. Trainer sets radius (1-35 miles). No-show handling: trainer decides to cancel, wait, or proceed. Push notifications on check-in/warning.
+43. **Frontend: Subscription Management Screen** (`/app/frontend/app/subscriptions.tsx`): Full subscription list with status badges, pricing breakdown, action buttons (accept/decline/pause/resume/cancel), and create modal with day/time pickers.
+44. **Frontend: GPS Check-in Card** (`/app/frontend/app/trainer/gps-checkin.tsx`): Reusable component showing check-in status for both parties, GPS check-in button with location permission, distance result display, and trainer no-show action buttons.
+45. **Admin: Subscriptions Tab** (`/app/frontend/src/components/admin/SubscriptionsTab.tsx`): Admin panel tab showing all subscriptions with stats (total/active/paused/cancelled/revenue), status filters, and detailed list with trainee→trainer names, rates, and platform fees. Backend: `GET /api/admin/subscriptions`.
 
 ## Upcoming Tasks
 - Profile Photo Synchronization across Home/Edit/Verification screens (P1)

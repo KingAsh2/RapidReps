@@ -674,8 +674,44 @@ async def admin_reject_verification(
         'createdAt': datetime.utcnow(),
         'metadata': {'rejectionReason': reason},
     })
-    
-    return {"success": True, "message": "Trainer verification rejected"}
+
+    return {"success": True, "message": f"Trainer verification rejected. Reason: {reason}"}
+
+
+@router.get("/admin/subscriptions")
+async def admin_get_subscriptions(admin_user: dict = Depends(require_admin)):
+    """Admin: Get all subscriptions with stats."""
+    all_subs = await db.subscriptions.find().sort('createdAt', -1).to_list(None)
+
+    # Compute stats
+    active = sum(1 for s in all_subs if s.get('status') == 'active')
+    paused = sum(1 for s in all_subs if s.get('status') == 'paused')
+    cancelled = sum(1 for s in all_subs if s.get('status') == 'cancelled')
+    total_platform_rev = sum(
+        (s.get('platformFeeCents', 0) * s.get('sessionsCompleted', 0))
+        for s in all_subs if s.get('status') in ('active', 'paused', 'completed')
+    )
+
+    # Enrich with user names
+    results = []
+    for s in all_subs:
+        trainee = await db.users.find_one({'_id': ObjectId(s['traineeId'])}, {'fullName': 1})
+        trainer = await db.users.find_one({'_id': ObjectId(s['trainerId'])}, {'fullName': 1})
+        s.pop('_id', None)
+        s['traineeName'] = trainee.get('fullName', '') if trainee else ''
+        s['trainerName'] = trainer.get('fullName', '') if trainer else ''
+        results.append(s)
+
+    return {
+        "subscriptions": results,
+        "stats": {
+            "total": len(all_subs),
+            "active": active,
+            "paused": paused,
+            "cancelled": cancelled,
+            "revenue": total_platform_rev,
+        }
+    }
 
 
 @router.post("/admin/verifications/{trainer_id}/background-check-status")
