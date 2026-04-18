@@ -106,6 +106,10 @@ RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoD
 39. **Selection Highlights Orange (P1)**: Changed trainee onboarding selection chip colors from dark (#0A0E1A) to branded orange (#FF7F00) for experience levels, training styles, and training mode selections.
 40. **Profile Photo Synchronization (P1)**: Backend now syncs profile photos across all collections when updated. `create_trainer_profile`, `create_trainee_profile`, and `submit_verification_step` (photo step) all now update `users.profilePhoto` in addition to the profile-specific fields. The `get_trainer_profile` endpoint already falls back from `users.profilePhoto` to `trainer_profiles.avatarUrl`.
 
+## New Features (Apr 18, 2026)
+41. **Subscription Tiers**: Custom plans where trainee picks 1-7 sessions/week. Trainer sets their rate, platform takes 20%. Full lifecycle: create, accept, decline, pause, resume, cancel. Auto-scheduling picks available slots for next week based on preferred days/times. If conflicts, system finds next available.
+42. **Live GPS Check-in**: Both parties check in with GPS at session location. Haversine distance calculation. Trainer sets radius (1-35 miles). No-show handling: trainer decides to cancel, wait, or proceed. Push notifications on check-in/warning.
+
 ## Upcoming Tasks
 - Profile Photo Synchronization across Home/Edit/Verification screens (P1)
 - 508 Accessibility Compliance (P2)
