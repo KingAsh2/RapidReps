@@ -214,17 +214,19 @@ export const SocialAuthButtons = ({ preSelectedRole, onError, onSuccess }: Socia
         onPress={handleGoogleLogin}
         testId="social-google-btn"
       />
-      <IconBtn
-        icon="logo-apple"
-        iconColor="#FFFFFF"
-        bgColor="#000000"
-        borderColor="rgba(255,255,255,0.25)"
-        delay={0}
-        loading={loadingProvider === 'apple'}
-        disabled={isLoading}
-        onPress={handleAppleLogin}
-        testId="social-apple-btn"
-      />
+      {Platform.OS !== 'android' && (
+        <IconBtn
+          icon="logo-apple"
+          iconColor="#FFFFFF"
+          bgColor="#000000"
+          borderColor="rgba(255,255,255,0.25)"
+          delay={0}
+          loading={loadingProvider === 'apple'}
+          disabled={isLoading}
+          onPress={handleAppleLogin}
+          testId="social-apple-btn"
+        />
+      )}
     </View>
   );
 };

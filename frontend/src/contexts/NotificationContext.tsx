@@ -128,7 +128,9 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
           if (finalStatus === 'granted') {
             try {
-              const tokenData = await Notifications.getExpoPushTokenAsync();
+              const tokenData = await Notifications.getExpoPushTokenAsync({
+                projectId: 'e17065a3-949a-4a61-8a90-13473a6eafe5',
+              });
               const pushToken = tokenData.data;
               if (isMounted.current) {
                 setExpoPushToken(pushToken);
