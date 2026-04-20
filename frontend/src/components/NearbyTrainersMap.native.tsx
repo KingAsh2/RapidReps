@@ -1,39 +1,53 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ActivityIndicator,
-  Dimensions,
-  Platform,
-  Animated,
-  Image,
+  View, Text, StyleSheet, TouchableOpacity, ActivityIndicator,
+  Dimensions, Platform, Animated, ScrollView, Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 
-const MAP_HEIGHT = 400;
+const { width: SCREEN_W } = Dimensions.get('window');
+const MAP_HEIGHT = Dimensions.get('window').height * 0.52;
 
-const COLORS = {
-  teal: '#1a2a5e',
-  tealDark: '#0D8B88',
-  orange: '#F7931E',
-  orangeHot: '#FF6A00',
-  navy: '#1a2a5e',
+// Neon color palette — matching RapidReps brand
+const NEON = {
+  green: '#00FF6A',
+  greenDim: '#00C853',
+  orange: '#FF6A00',
+  orangeGlow: '#FF9F1C',
+  purple: '#B24BF3',
+  teal: '#00E5CC',
+  bg: '#0A0E14',
+  card: '#111820',
+  cardBorder: '#1C2630',
   white: '#FFFFFF',
   gray: '#5a6785',
-  success: '#00D68F',
+  grayLight: 'rgba(255,255,255,0.45)',
+  star: '#FFB800',
 };
 
+// Assign neon colors to trainers based on rating tier
+const getMarkerColor = (rating: number, idx: number) => {
+  if (rating >= 4.5) return NEON.green;
+  if (rating >= 3.5) return NEON.orange;
+  return NEON.purple;
+};
+
+// Ultra-dark map style matching the reference
 const darkMapStyle = [
-  { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] },
-  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#38414e' }] },
-  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#17263c' }] },
+  { elementType: 'geometry', stylers: [{ color: '#0D1117' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#0D1117' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#3B4A5C' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#1A2332' }] },
+  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#1A2332' }] },
+  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#1E2D3D' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0A1520' }] },
+  { featureType: 'landscape', elementType: 'geometry', stylers: [{ color: '#0D1117' }] },
+  { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+  { featureType: 'administrative', elementType: 'geometry.stroke', stylers: [{ color: '#1A2332' }] },
+  { featureType: 'administrative.locality', elementType: 'labels.text.fill', stylers: [{ color: '#4A5568' }] },
 ];
 
 interface NearbyTrainer {
@@ -61,35 +75,21 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
   const mapRef = useRef<MapView>(null);
   const [selectedTrainer, setSelectedTrainer] = useState<NearbyTrainer | null>(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
-  const cardAnim = useRef(new Animated.Value(0)).current;
-  const mapGlowAnim = useRef(new Animated.Value(0.3)).current;
+  const cardSlideAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const pulse = Animated.loop(
+    Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.3, duration: 1000, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 1000, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1.6, duration: 1200, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 1200, useNativeDriver: true }),
       ])
-    );
-    pulse.start();
-
-    // Map glow animation
-    const glow = Animated.loop(
-      Animated.sequence([
-        Animated.timing(mapGlowAnim, { toValue: 0.7, duration: 2000, useNativeDriver: true }),
-        Animated.timing(mapGlowAnim, { toValue: 0.3, duration: 2000, useNativeDriver: true }),
-      ])
-    );
-    glow.start();
-
-    return () => { pulse.stop(); glow.stop(); };
+    ).start();
   }, []);
 
   useEffect(() => {
-    Animated.spring(cardAnim, {
+    Animated.spring(cardSlideAnim, {
       toValue: selectedTrainer ? 1 : 0,
-      friction: 8,
-      useNativeDriver: true,
+      friction: 8, useNativeDriver: true,
     }).start();
   }, [selectedTrainer]);
 
@@ -99,578 +99,239 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
       mapRef.current.animateToRegion({
         latitude: (userLocation.latitude + trainer.latitude) / 2,
         longitude: (userLocation.longitude + trainer.longitude) / 2,
-        latitudeDelta: 0.03,
-        longitudeDelta: 0.03,
+        latitudeDelta: 0.035, longitudeDelta: 0.035,
       }, 400);
     }
   };
 
   const centerOnUser = () => {
     if (mapRef.current && userLocation) {
-      mapRef.current.animateToRegion({
-        ...userLocation,
-        latitudeDelta: 0.015,
-        longitudeDelta: 0.015,
-      }, 500);
+      mapRef.current.animateToRegion({ ...userLocation, latitudeDelta: 0.015, longitudeDelta: 0.015 }, 500);
     }
   };
 
+  const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
+  // Available now = all trainers sorted by rating
+  const availableTrainers = [...trainers].sort((a, b) => (b.averageRating || 0) - (a.averageRating || 0));
+
   if (!userLocation) {
     return (
-      <View style={styles.container}>
-        <View style={styles.loadingBox}>
-          <ActivityIndicator size="large" color={COLORS.orange} />
-          <Text style={styles.loadingText}>Getting your location...</Text>
+      <View style={st.container}>
+        <View style={st.loadingBox}>
+          <ActivityIndicator size="large" color={NEON.green} />
+          <Text style={st.loadingText}>Getting your location...</Text>
         </View>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Text style={styles.title}>Trainers Near You</Text>
-          <View style={styles.liveBadge}>
-            <View style={styles.liveDot} />
-            <Text style={styles.liveText}>LIVE</Text>
-          </View>
+    <View style={st.container} data-testid="nearby-trainers-map">
+      {/* Header */}
+      <View style={st.header}>
+        <View style={st.headerLeft}>
+          <Ionicons name="location" size={20} color={NEON.green} />
+          <Text style={st.title}>Nearby Trainers</Text>
         </View>
-        <View style={styles.headerRight}>
-          <View style={styles.countBadge}>
-            <Ionicons name="people" size={14} color={COLORS.white} />
-            <Text style={styles.countText}>{trainers.length}</Text>
-          </View>
-          <TouchableOpacity style={styles.refreshBtn} onPress={onRefresh}>
-            {refreshing ? (
-              <ActivityIndicator size="small" color={COLORS.white} />
-            ) : (
-              <Ionicons name="refresh" size={18} color={COLORS.white} />
-            )}
-          </TouchableOpacity>
+        <TouchableOpacity style={st.refreshBtn} onPress={onRefresh} data-testid="map-refresh-btn">
+          {refreshing ? <ActivityIndicator size="small" color={NEON.green} /> : <Ionicons name="refresh" size={20} color={NEON.green} />}
+        </TouchableOpacity>
+      </View>
+
+      {/* Count badge */}
+      <View style={st.countRow}>
+        <View style={st.countBadge}>
+          <Ionicons name="people" size={14} color={NEON.green} />
+          <Text style={st.countText}>{trainers.length} trainers nearby</Text>
         </View>
       </View>
 
-      <View style={styles.mapWrapper}>
-        <Animated.View style={[styles.mapGlow, { opacity: mapGlowAnim }]} />
+      {/* Map */}
+      <View style={st.mapWrapper}>
         <MapView
           ref={mapRef}
-          style={styles.map}
+          style={st.map}
           provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
           customMapStyle={darkMapStyle}
-          initialRegion={{
-            latitude: userLocation.latitude,
-            longitude: userLocation.longitude,
-            latitudeDelta: 0.015,
-            longitudeDelta: 0.015,
-          }}
+          initialRegion={{ ...userLocation, latitudeDelta: 0.02, longitudeDelta: 0.02 }}
           showsUserLocation={false}
           showsMyLocationButton={false}
           onPress={() => setSelectedTrainer(null)}
         >
+          {/* User marker */}
           <Marker coordinate={userLocation} anchor={{ x: 0.5, y: 0.5 }}>
-            <View style={styles.userMarker}>
-              <Animated.View style={[styles.userPulse, { transform: [{ scale: pulseAnim }] }]} />
-              <View style={styles.userDot}>
-                <Ionicons name="person" size={12} color={COLORS.white} />
+            <View style={st.userMarker}>
+              <Animated.View style={[st.userPulse, { transform: [{ scale: pulseAnim }] }]} />
+              <View style={st.userDot}>
+                <Ionicons name="person" size={10} color={NEON.bg} />
               </View>
             </View>
           </Marker>
 
-          {trainers.map((trainer) => (
-            <Marker
-              key={trainer.id}
-              coordinate={{ latitude: trainer.latitude, longitude: trainer.longitude }}
-              onPress={() => handleTrainerPress(trainer)}
-              anchor={{ x: 0.5, y: 0.5 }}
-            >
-              <View style={[styles.trainerMarkerContainer, selectedTrainer?.id === trainer.id && styles.trainerMarkerSelected]}>
-                {/* Uber-style circular avatar with glow effect */}
-                <View style={styles.trainerMarkerGlow}>
-                  {trainer.avatarUrl ? (
-                    <Image source={{ uri: trainer.avatarUrl }} style={styles.trainerMarkerAvatar} />
-                  ) : (
-                    <LinearGradient colors={[COLORS.orange, COLORS.orangeHot]} style={styles.trainerMarkerIcon}>
-                      <Ionicons name="fitness" size={20} color={COLORS.white} />
-                    </LinearGradient>
-                  )}
-                </View>
-                {/* ETA badge like Uber shows for cars */}
-                <View style={styles.etaBadge}>
-                  <Text style={styles.etaBadgeText}>{trainer.etaMinutes}m</Text>
-                </View>
-              </View>
-            </Marker>
-          ))}
-        </MapView>
-
-        <TouchableOpacity style={styles.recenterBtn} onPress={centerOnUser}>
-          <Ionicons name="locate" size={22} color={'#FFFFFF'} />
-        </TouchableOpacity>
-
-        {selectedTrainer && (
-          <Animated.View style={[styles.trainerCard, { 
-            opacity: cardAnim,
-            transform: [{ translateY: cardAnim.interpolate({ inputRange: [0, 1], outputRange: [80, 0] }) }]
-          }]}>
-            {/* Uber-style drag indicator */}
-            <View style={styles.dragIndicator} />
-            
-            <View style={styles.cardRow}>
-              <View style={styles.cardLeft}>
-                {selectedTrainer.avatarUrl ? (
-                  <Image source={{ uri: selectedTrainer.avatarUrl }} style={styles.cardAvatar} />
-                ) : (
-                  <LinearGradient colors={[COLORS.orange, COLORS.orangeHot]} style={styles.cardAvatarPlaceholder}>
-                    <Text style={styles.cardInitial}>{selectedTrainer.fullName.charAt(0)}</Text>
-                  </LinearGradient>
-                )}
-                <View style={styles.cardInfo}>
-                  <Text style={styles.cardName} numberOfLines={1}>{selectedTrainer.fullName}</Text>
-                  <View style={styles.cardMeta}>
-                    <Ionicons name="star" size={14} color={COLORS.orange} />
-                    <Text style={styles.cardRating}>{selectedTrainer.averageRating?.toFixed(1)}</Text>
+          {/* Trainer neon markers */}
+          {trainers.map((trainer, idx) => {
+            const color = getMarkerColor(trainer.averageRating, idx);
+            const isSelected = selectedTrainer?.id === trainer.id;
+            return (
+              <Marker
+                key={trainer.id}
+                coordinate={{ latitude: trainer.latitude, longitude: trainer.longitude }}
+                onPress={() => handleTrainerPress(trainer)}
+                anchor={{ x: 0.5, y: 0.5 }}
+              >
+                <View style={[st.neonMarkerWrap, isSelected && { transform: [{ scale: 1.25 }] }]}>
+                  {/* Outer glow ring */}
+                  <View style={[st.neonGlowOuter, { borderColor: color, shadowColor: color }]} />
+                  {/* Inner circle with initial */}
+                  <View style={[st.neonCircle, { borderColor: color, backgroundColor: NEON.bg }]}>
+                    <Text style={[st.neonInitial, { color }]}>{getInitials(trainer.fullName)}</Text>
                   </View>
                 </View>
+              </Marker>
+            );
+          })}
+        </MapView>
+
+        {/* Recenter button */}
+        <TouchableOpacity style={st.recenterBtn} onPress={centerOnUser}>
+          <Ionicons name="locate" size={20} color={NEON.green} />
+        </TouchableOpacity>
+
+        {/* Selected trainer detail card */}
+        {selectedTrainer && (
+          <Animated.View style={[st.detailCard, {
+            opacity: cardSlideAnim,
+            transform: [{ translateY: cardSlideAnim.interpolate({ inputRange: [0, 1], outputRange: [100, 0] }) }]
+          }]}>
+            <View style={st.detailDrag} />
+            <View style={st.detailRow}>
+              <View style={[st.detailAvatar, { borderColor: getMarkerColor(selectedTrainer.averageRating, 0) }]}>
+                <Text style={[st.detailInitial, { color: getMarkerColor(selectedTrainer.averageRating, 0) }]}>
+                  {getInitials(selectedTrainer.fullName)}
+                </Text>
               </View>
-              
-              {/* Price section like Uber */}
-              <View style={styles.priceSection}>
-                <Text style={styles.priceLabel}>From</Text>
-                <Text style={styles.priceValue}>${((selectedTrainer.ratePerMinuteCents * 30) / 100).toFixed(0)}</Text>
-                <Text style={styles.priceUnit}>/30 min</Text>
+              <View style={st.detailInfo}>
+                <Text style={st.detailName} numberOfLines={1}>{selectedTrainer.fullName}</Text>
+                <View style={st.detailMeta}>
+                  <Ionicons name="star" size={13} color={NEON.star} />
+                  <Text style={st.detailRating}>{selectedTrainer.averageRating?.toFixed(1)}</Text>
+                  <Text style={st.detailDist}>{selectedTrainer.distanceMiles?.toFixed(1)} mi</Text>
+                </View>
+              </View>
+              <View style={st.detailPrice}>
+                <Text style={st.detailPriceVal}>${((selectedTrainer.ratePerMinuteCents * 30) / 100).toFixed(0)}</Text>
+                <Text style={st.detailPriceUnit}>/30 min</Text>
               </View>
             </View>
-            
-            {/* ETA and distance row */}
-            <View style={styles.etaRow}>
-              <View style={styles.etaItem}>
-                <Ionicons name="time-outline" size={16} color={COLORS.gray} />
-                <Text style={styles.etaText}>{selectedTrainer.etaMinutes} min away</Text>
-              </View>
-              <View style={styles.etaItem}>
-                <Ionicons name="location-outline" size={16} color={COLORS.gray} />
-                <Text style={styles.etaText}>{selectedTrainer.distanceMiles?.toFixed(1)} miles</Text>
-              </View>
-            </View>
-            
-            {/* Book button */}
-            <TouchableOpacity 
-              style={styles.bookBtn}
+            <TouchableOpacity
+              style={st.bookBtn}
               onPress={() => router.push(`/trainee/trainer-detail?trainerId=${selectedTrainer.trainerId}`)}
+              data-testid="book-trainer-btn"
             >
-              <LinearGradient colors={[COLORS.orange, COLORS.orangeHot]} style={styles.bookBtnGradient}>
-                <Text style={styles.bookBtnText}>View Profile & Book</Text>
-                <Ionicons name="arrow-forward" size={18} color={COLORS.white} />
-              </LinearGradient>
+              <Text style={st.bookBtnText}>View Profile & Book</Text>
+              <Ionicons name="arrow-forward" size={16} color={NEON.bg} />
             </TouchableOpacity>
           </Animated.View>
         )}
       </View>
+
+      {/* Available Now horizontal scroll */}
+      {availableTrainers.length > 0 && (
+        <View style={st.availSection}>
+          <Text style={st.availTitle}>Available Now</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={st.availScroll}>
+            {availableTrainers.map((trainer, idx) => {
+              const color = getMarkerColor(trainer.averageRating, idx);
+              return (
+                <TouchableOpacity
+                  key={trainer.id}
+                  style={st.availCard}
+                  onPress={() => {
+                    handleTrainerPress(trainer);
+                    router.push(`/trainee/trainer-detail?trainerId=${trainer.trainerId}`);
+                  }}
+                  data-testid={`avail-card-${idx}`}
+                >
+                  <View style={[st.availCircle, { borderColor: color, shadowColor: color }]}>
+                    <Text style={[st.availInitial, { color }]}>{getInitials(trainer.fullName)}</Text>
+                  </View>
+                  <Text style={st.availName} numberOfLines={1}>{trainer.fullName.split(' ')[0]}</Text>
+                  <View style={st.availRatingRow}>
+                    <Ionicons name="star" size={11} color={NEON.star} />
+                    <Text style={st.availRating}>{trainer.averageRating?.toFixed(1)}</Text>
+                  </View>
+                  <Text style={st.availDist}>{trainer.distanceMiles?.toFixed(1)} mi</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+      )}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    marginHorizontal: -20,
-    marginBottom: 16,
-    borderRadius: 0,
-    overflow: 'visible',
-    backgroundColor: '#0A0E1A',
-  },
-  loadingBox: {
-    height: MAP_HEIGHT,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.7)',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 14,
-    backgroundColor: 'rgba(26, 42, 94, 0.98)',
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: COLORS.white,
-  },
-  liveBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 214, 143, 0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 10,
-    gap: 4,
-  },
-  liveDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: COLORS.success,
-  },
-  liveText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: COLORS.success,
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  countBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
-    gap: 5,
-  },
-  countText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: COLORS.white,
-  },
-  refreshBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  mapWrapper: {
-    height: MAP_HEIGHT,
-    position: 'relative',
-    overflow: 'visible',
-  },
-  mapGlow: {
-    position: 'absolute',
-    top: -3,
-    left: -3,
-    right: -3,
-    bottom: -3,
-    borderRadius: 18,
-    borderWidth: 2,
-    borderColor: COLORS.orange,
-    shadowColor: COLORS.orange,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 15,
-    elevation: 10,
-    zIndex: 0,
-  },
-  map: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  userMarker: {
-    width: 44,
-    height: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  userPulse: {
-    position: 'absolute',
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(31, 184, 180, 0.3)',
-  },
-  userDot: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#FF6A00',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 3,
-    borderColor: COLORS.white,
-  },
-  trainerMarkerContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  trainerMarkerSelected: {
-    transform: [{ scale: 1.2 }],
-  },
-  trainerMarkerGlow: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: 'rgba(247, 147, 30, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: COLORS.orange,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
-    elevation: 6,
-  },
-  trainerMarkerAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 3,
-    borderColor: COLORS.white,
-  },
-  trainerMarkerIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 3,
-    borderColor: COLORS.white,
-  },
-  etaBadge: {
-    position: 'absolute',
-    bottom: -4,
-    backgroundColor: '#0A0E1A',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
-    borderWidth: 1.5,
-    borderColor: COLORS.white,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
-    elevation: 4,
-  },
-  etaBadgeText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: COLORS.white,
-    letterSpacing: 0.3,
-  },
-  trainerPin: {
-    alignItems: 'center',
-  },
-  trainerPinSelected: {
-    transform: [{ scale: 1.15 }],
-  },
-  trainerIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: COLORS.orange,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 3,
-    borderColor: COLORS.white,
-  },
-  trainerAvatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    borderWidth: 3,
-    borderColor: COLORS.white,
-  },
-  trainerArrow: {
-    width: 0,
-    height: 0,
-    borderLeftWidth: 9,
-    borderRightWidth: 9,
-    borderTopWidth: 11,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderTopColor: COLORS.white,
-    marginTop: -3,
-  },
-  distanceLabel: {
-    backgroundColor: COLORS.orange,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-    marginTop: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
-    elevation: 3,
-  },
-  distanceLabelText: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: COLORS.white,
-    letterSpacing: 0.3,
-  },
-  recenterBtn: {
-    position: 'absolute',
-    right: 12,
-    top: 12,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#141929',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  trainerCard: {
-    position: 'absolute',
-    bottom: 16,
-    left: 16,
-    right: 16,
-    backgroundColor: '#141929',
-    borderRadius: 20,
-    padding: 16,
-    paddingTop: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
-    zIndex: 999,
-  },
-  cardRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  cardLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  cardAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    marginRight: 12,
-  },
-  cardAvatarPlaceholder: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    marginRight: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  cardInitial: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: COLORS.white,
-  },
-  cardInfo: {
-    flex: 1,
-  },
-  cardName: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginBottom: 3,
-  },
-  cardMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  cardRating: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: COLORS.orange,
-    marginLeft: 3,
-  },
-  cardDistance: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.5)',
-  },
-  cardEta: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.5)',
-  },
-  viewBtn: {
-    borderRadius: 10,
-    overflow: 'hidden',
-    marginLeft: 12,
-  },
-  viewBtnGradient: {
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-  },
-  viewBtnText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: COLORS.white,
-  },
-  // Uber-style card enhancements
-  dragIndicator: {
-    width: 40,
-    height: 4,
-    backgroundColor: '#E0E0E0',
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginBottom: 12,
-  },
-  priceSection: {
-    alignItems: 'flex-end',
-  },
-  priceLabel: {
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.5)',
-    fontWeight: '500',
-  },
-  priceValue: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
-  priceUnit: {
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.5)',
-    fontWeight: '500',
-  },
-  etaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-  },
-  etaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  etaText: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.5)',
-    fontWeight: '500',
-  },
-  bookBtn: {
-    marginTop: 14,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  bookBtnGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    gap: 8,
-  },
-  bookBtnText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: COLORS.white,
-  },
+const st = StyleSheet.create({
+  container: { backgroundColor: NEON.bg, marginHorizontal: -20, marginBottom: 16 },
+  loadingBox: { height: MAP_HEIGHT, justifyContent: 'center', alignItems: 'center' },
+  loadingText: { marginTop: 12, fontSize: 14, color: NEON.grayLight },
+
+  // Header
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 14, paddingBottom: 4 },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  title: { fontSize: 20, fontWeight: '800', color: NEON.white, letterSpacing: -0.3 },
+  refreshBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,255,106,0.1)', justifyContent: 'center', alignItems: 'center' },
+
+  // Count badge
+  countRow: { paddingHorizontal: 16, paddingBottom: 10 },
+  countBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(0,255,106,0.12)', alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 14 },
+  countText: { fontSize: 13, fontWeight: '700', color: NEON.green },
+
+  // Map
+  mapWrapper: { height: MAP_HEIGHT, position: 'relative' },
+  map: { ...StyleSheet.absoluteFillObject },
+
+  // User marker
+  userMarker: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
+  userPulse: { position: 'absolute', width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,255,106,0.2)' },
+  userDot: { width: 20, height: 20, borderRadius: 10, backgroundColor: NEON.green, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: NEON.bg },
+
+  // Neon trainer markers
+  neonMarkerWrap: { width: 52, height: 52, justifyContent: 'center', alignItems: 'center' },
+  neonGlowOuter: { position: 'absolute', width: 52, height: 52, borderRadius: 26, borderWidth: 1.5, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.8, shadowRadius: 12, elevation: 8 },
+  neonCircle: { width: 40, height: 40, borderRadius: 20, borderWidth: 2, justifyContent: 'center', alignItems: 'center' },
+  neonInitial: { fontSize: 16, fontWeight: '900', letterSpacing: 0.5 },
+
+  // Recenter
+  recenterBtn: { position: 'absolute', right: 12, top: 12, width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(17,24,32,0.9)', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: NEON.cardBorder },
+
+  // Selected detail card
+  detailCard: { position: 'absolute', bottom: 12, left: 12, right: 12, backgroundColor: NEON.card, borderRadius: 18, padding: 14, paddingTop: 6, borderWidth: 1, borderColor: NEON.cardBorder, zIndex: 999 },
+  detailDrag: { width: 36, height: 4, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 2, alignSelf: 'center', marginBottom: 10 },
+  detailRow: { flexDirection: 'row', alignItems: 'center' },
+  detailAvatar: { width: 46, height: 46, borderRadius: 23, borderWidth: 2, backgroundColor: NEON.bg, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
+  detailInitial: { fontSize: 18, fontWeight: '900' },
+  detailInfo: { flex: 1 },
+  detailName: { fontSize: 15, fontWeight: '700', color: NEON.white },
+  detailMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 },
+  detailRating: { fontSize: 13, fontWeight: '600', color: NEON.star },
+  detailDist: { fontSize: 12, color: NEON.gray, marginLeft: 6 },
+  detailPrice: { alignItems: 'flex-end' },
+  detailPriceVal: { fontSize: 20, fontWeight: '800', color: NEON.white },
+  detailPriceUnit: { fontSize: 11, color: NEON.gray },
+  bookBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: NEON.green, paddingVertical: 12, borderRadius: 12, marginTop: 12 },
+  bookBtnText: { fontSize: 14, fontWeight: '700', color: NEON.bg },
+
+  // Available Now section
+  availSection: { paddingTop: 14, paddingBottom: 6, backgroundColor: NEON.bg },
+  availTitle: { fontSize: 17, fontWeight: '800', color: NEON.white, paddingHorizontal: 16, marginBottom: 12 },
+  availScroll: { paddingHorizontal: 12, gap: 10 },
+  availCard: { width: SCREEN_W * 0.28, backgroundColor: NEON.card, borderRadius: 14, padding: 12, alignItems: 'center', borderWidth: 1, borderColor: NEON.cardBorder },
+  availCircle: { width: 48, height: 48, borderRadius: 24, borderWidth: 2, backgroundColor: NEON.bg, justifyContent: 'center', alignItems: 'center', marginBottom: 8, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.6, shadowRadius: 10, elevation: 6 },
+  availInitial: { fontSize: 18, fontWeight: '900' },
+  availName: { fontSize: 13, fontWeight: '600', color: NEON.white, marginBottom: 4 },
+  availRatingRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginBottom: 2 },
+  availRating: { fontSize: 12, fontWeight: '700', color: NEON.star },
+  availDist: { fontSize: 11, color: NEON.gray },
 });

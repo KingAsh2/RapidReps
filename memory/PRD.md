@@ -112,6 +112,7 @@ RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoD
 43. **Frontend: Subscription Management Screen** (`/app/frontend/app/subscriptions.tsx`): Full subscription list with status badges, pricing breakdown, action buttons (accept/decline/pause/resume/cancel), and create modal with day/time pickers.
 44. **Frontend: GPS Check-in Card** (`/app/frontend/app/trainer/gps-checkin.tsx`): Reusable component showing check-in status for both parties, GPS check-in button with location permission, distance result display, and trainer no-show action buttons.
 45. **Admin: Subscriptions Tab** (`/app/frontend/src/components/admin/SubscriptionsTab.tsx`): Admin panel tab showing all subscriptions with stats (total/active/paused/cancelled/revenue), status filters, and detailed list with trainee→trainer names, rates, and platform fees. Backend: `GET /api/admin/subscriptions`.
+46. **Neon Map Redesign** (`/app/frontend/src/components/NearbyTrainersMap.native.tsx`): Complete UI overhaul of the trainer map to match premium neon aesthetic: ultra-dark map style, neon-glowing circular markers with trainer initials (green=top rated, orange=mid, purple=new), pulsating user location dot, "Available Now" horizontal scrolling card row at bottom with neon-bordered cards showing initial, name, star rating, distance. Color-coded by rating tier.
 
 ## Upcoming Tasks
 - Profile Photo Synchronization across Home/Edit/Verification screens (P1)
