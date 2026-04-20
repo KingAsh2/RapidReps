@@ -7,60 +7,50 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 
-const { width: SCREEN_W } = Dimensions.get('window');
-const MAP_HEIGHT = Dimensions.get('window').height * 0.52;
+const { width: W, height: H } = Dimensions.get('window');
+const MAP_H = H * 0.54;
 
-// Neon color palette — matching RapidReps brand
-const NEON = {
-  green: '#00FF6A',
-  greenDim: '#00C853',
-  orange: '#FF6A00',
-  orangeGlow: '#FF9F1C',
-  purple: '#B24BF3',
-  teal: '#00E5CC',
+// === NEON PALETTE ===
+const N = {
+  green: '#39FF14',
+  greenDim: 'rgba(57,255,20,0.15)',
+  orange: '#FF5F1F',
+  orangeDim: 'rgba(255,95,31,0.12)',
+  purple: '#B026FF',
+  purpleDim: 'rgba(176,38,255,0.12)',
   bg: '#0A0E14',
-  card: '#111820',
-  cardBorder: '#1C2630',
+  surface: 'rgba(255,255,255,0.02)',
+  glass: 'rgba(10,14,20,0.82)',
+  border: 'rgba(255,255,255,0.15)',
+  borderSubtle: 'rgba(255,255,255,0.05)',
   white: '#FFFFFF',
-  gray: '#5a6785',
-  grayLight: 'rgba(255,255,255,0.45)',
+  textSec: 'rgba(255,255,255,0.5)',
   star: '#FFB800',
 };
 
-// Assign neon colors to trainers based on rating tier
-const getMarkerColor = (rating: number, idx: number) => {
-  if (rating >= 4.5) return NEON.green;
-  if (rating >= 3.5) return NEON.orange;
-  return NEON.purple;
-};
+const getColor = (r: number) => r >= 4.5 ? N.green : r >= 3.5 ? N.orange : N.purple;
+const getDim = (r: number) => r >= 4.5 ? N.greenDim : r >= 3.5 ? N.orangeDim : N.purpleDim;
 
-// Ultra-dark map style matching the reference
-const darkMapStyle = [
-  { elementType: 'geometry', stylers: [{ color: '#0D1117' }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#0D1117' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#3B4A5C' }] },
-  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#1A2332' }] },
-  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#1A2332' }] },
-  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#1E2D3D' }] },
-  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0A1520' }] },
-  { featureType: 'landscape', elementType: 'geometry', stylers: [{ color: '#0D1117' }] },
+// Stealth dark map — nearly invisible roads
+const mapStyle = [
+  { elementType: 'geometry', stylers: [{ color: '#080C12' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#080C12' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#2A3545' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#111822' }] },
+  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#0D1117' }] },
+  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#141E2B' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#060A10' }] },
+  { featureType: 'landscape', elementType: 'geometry', stylers: [{ color: '#0A0E14' }] },
   { featureType: 'poi', stylers: [{ visibility: 'off' }] },
   { featureType: 'transit', stylers: [{ visibility: 'off' }] },
-  { featureType: 'administrative', elementType: 'geometry.stroke', stylers: [{ color: '#1A2332' }] },
-  { featureType: 'administrative.locality', elementType: 'labels.text.fill', stylers: [{ color: '#4A5568' }] },
+  { featureType: 'administrative', elementType: 'geometry.stroke', stylers: [{ color: '#111822' }] },
+  { featureType: 'administrative.locality', elementType: 'labels.text.fill', stylers: [{ color: '#344155' }] },
 ];
 
 interface NearbyTrainer {
-  id: string;
-  trainerId: string;
-  fullName: string;
-  avatarUrl?: string;
-  latitude: number;
-  longitude: number;
-  distanceMiles: number;
-  etaMinutes: number;
-  averageRating: number;
-  ratePerMinuteCents: number;
+  id: string; trainerId: string; fullName: string; avatarUrl?: string;
+  latitude: number; longitude: number; distanceMiles: number;
+  etaMinutes: number; averageRating: number; ratePerMinuteCents: number;
 }
 
 interface Props {
@@ -73,119 +63,138 @@ interface Props {
 export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, refreshing }: Props) {
   const router = useRouter();
   const mapRef = useRef<MapView>(null);
-  const [selectedTrainer, setSelectedTrainer] = useState<NearbyTrainer | null>(null);
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  const cardSlideAnim = useRef(new Animated.Value(0)).current;
+  const [selected, setSelected] = useState<NearbyTrainer | null>(null);
+
+  // Animations
+  const radarAnim = useRef(new Animated.Value(0)).current;
+  const cardAnim = useRef(new Animated.Value(0)).current;
+  const scanPulse = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
+    // Harsh radar burst — abrupt opacity, not smooth
     Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.6, duration: 1200, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 1200, useNativeDriver: true }),
+        Animated.timing(radarAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+        Animated.timing(radarAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
+        Animated.delay(600),
+      ])
+    ).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(scanPulse, { toValue: 1.05, duration: 3000, useNativeDriver: true }),
+        Animated.timing(scanPulse, { toValue: 1, duration: 3000, useNativeDriver: true }),
       ])
     ).start();
   }, []);
 
   useEffect(() => {
-    Animated.spring(cardSlideAnim, {
-      toValue: selectedTrainer ? 1 : 0,
-      friction: 8, useNativeDriver: true,
-    }).start();
-  }, [selectedTrainer]);
+    Animated.spring(cardAnim, { toValue: selected ? 1 : 0, friction: 9, tension: 65, useNativeDriver: true }).start();
+  }, [selected]);
 
-  const handleTrainerPress = (trainer: NearbyTrainer) => {
-    setSelectedTrainer(trainer);
+  const tap = (t: NearbyTrainer) => {
+    setSelected(t);
     if (mapRef.current && userLocation) {
       mapRef.current.animateToRegion({
-        latitude: (userLocation.latitude + trainer.latitude) / 2,
-        longitude: (userLocation.longitude + trainer.longitude) / 2,
+        latitude: (userLocation.latitude + t.latitude) / 2,
+        longitude: (userLocation.longitude + t.longitude) / 2,
         latitudeDelta: 0.035, longitudeDelta: 0.035,
-      }, 400);
+      }, 350);
     }
   };
 
-  const centerOnUser = () => {
-    if (mapRef.current && userLocation) {
-      mapRef.current.animateToRegion({ ...userLocation, latitudeDelta: 0.015, longitudeDelta: 0.015 }, 500);
-    }
+  const recenter = () => {
+    if (mapRef.current && userLocation) mapRef.current.animateToRegion({ ...userLocation, latitudeDelta: 0.015, longitudeDelta: 0.015 }, 500);
   };
 
-  const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  const initials = (name: string) => {
+    const parts = name.split(' ');
+    return parts.length > 1 ? (parts[0][0] + parts[1][0]).toUpperCase() : name.substring(0, 2).toUpperCase();
+  };
 
-  // Available now = all trainers sorted by rating
-  const availableTrainers = [...trainers].sort((a, b) => (b.averageRating || 0) - (a.averageRating || 0));
+  const sorted = [...trainers].sort((a, b) => (b.averageRating || 0) - (a.averageRating || 0));
 
   if (!userLocation) {
     return (
-      <View style={st.container}>
-        <View style={st.loadingBox}>
-          <ActivityIndicator size="large" color={NEON.green} />
-          <Text style={st.loadingText}>Getting your location...</Text>
+      <View style={s.root}>
+        <View style={s.loadWrap}>
+          <ActivityIndicator size="large" color={N.green} />
+          <Text style={s.loadLabel}>ACQUIRING SIGNAL</Text>
         </View>
       </View>
     );
   }
 
   return (
-    <View style={st.container} data-testid="nearby-trainers-map">
-      {/* Header */}
-      <View style={st.header}>
-        <View style={st.headerLeft}>
-          <Ionicons name="location" size={20} color={NEON.green} />
-          <Text style={st.title}>Nearby Trainers</Text>
+    <View style={s.root} data-testid="nearby-trainers-map-container">
+
+      {/* === HEADER — asymmetric, left-heavy === */}
+      <View style={s.head}>
+        <View style={s.headLeft}>
+          <View style={s.headIcon}>
+            <Ionicons name="radio-outline" size={16} color={N.green} />
+          </View>
+          <View>
+            <Text style={s.headLabel}>SCANNING AREA</Text>
+            <Text style={s.headTitle}>Nearby Trainers</Text>
+          </View>
         </View>
-        <TouchableOpacity style={st.refreshBtn} onPress={onRefresh} data-testid="map-refresh-btn">
-          {refreshing ? <ActivityIndicator size="small" color={NEON.green} /> : <Ionicons name="refresh" size={20} color={NEON.green} />}
+        {/* SCAN button — brutalist block */}
+        <TouchableOpacity style={s.scanBtn} onPress={onRefresh} activeOpacity={0.7} data-testid="map-refresh-button">
+          {refreshing ? <ActivityIndicator size="small" color={N.green} /> : (
+            <Text style={s.scanText}>SCAN</Text>
+          )}
         </TouchableOpacity>
       </View>
 
-      {/* Count badge */}
-      <View style={st.countRow}>
-        <View style={st.countBadge}>
-          <Ionicons name="people" size={14} color={NEON.green} />
-          <Text style={st.countText}>{trainers.length} trainers nearby</Text>
+      {/* === MASSIVE BACKGROUND COUNT — bleeds off screen === */}
+      <View style={s.bgCountWrap} pointerEvents="none">
+        <Text style={s.bgCount}>{trainers.length}</Text>
+      </View>
+
+      {/* === LIVE COUNT CHIP — not centered, pushed left with offset === */}
+      <View style={s.countRow}>
+        <View style={s.countChip}>
+          <View style={s.countDot} />
+          <Text style={s.countLabel}>{trainers.length} ACTIVE NEARBY</Text>
         </View>
       </View>
 
-      {/* Map */}
-      <View style={st.mapWrapper}>
+      {/* === MAP === */}
+      <View style={s.mapWrap}>
         <MapView
           ref={mapRef}
-          style={st.map}
+          style={s.map}
           provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
-          customMapStyle={darkMapStyle}
+          customMapStyle={mapStyle}
           initialRegion={{ ...userLocation, latitudeDelta: 0.02, longitudeDelta: 0.02 }}
-          showsUserLocation={false}
-          showsMyLocationButton={false}
-          onPress={() => setSelectedTrainer(null)}
+          showsUserLocation={false} showsMyLocationButton={false}
+          onPress={() => setSelected(null)}
         >
-          {/* User marker */}
+          {/* User — harsh white square with radar burst */}
           <Marker coordinate={userLocation} anchor={{ x: 0.5, y: 0.5 }}>
-            <View style={st.userMarker}>
-              <Animated.View style={[st.userPulse, { transform: [{ scale: pulseAnim }] }]} />
-              <View style={st.userDot}>
-                <Ionicons name="person" size={10} color={NEON.bg} />
-              </View>
+            <View style={s.userWrap} data-testid="user-location-indicator">
+              <Animated.View style={[s.userRadar, {
+                opacity: radarAnim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, 0.6, 0] }),
+                transform: [{ scale: radarAnim.interpolate({ inputRange: [0, 1], outputRange: [0.5, 2.2] }) }],
+              }]} />
+              <View style={s.userNode} />
             </View>
           </Marker>
 
-          {/* Trainer neon markers */}
-          {trainers.map((trainer, idx) => {
-            const color = getMarkerColor(trainer.averageRating, idx);
-            const isSelected = selectedTrainer?.id === trainer.id;
+          {/* Trainer markers — diamond geometry, not circles */}
+          {trainers.map((t, i) => {
+            const c = getColor(t.averageRating);
+            const isSel = selected?.id === t.id;
             return (
-              <Marker
-                key={trainer.id}
-                coordinate={{ latitude: trainer.latitude, longitude: trainer.longitude }}
-                onPress={() => handleTrainerPress(trainer)}
-                anchor={{ x: 0.5, y: 0.5 }}
-              >
-                <View style={[st.neonMarkerWrap, isSelected && { transform: [{ scale: 1.25 }] }]}>
-                  {/* Outer glow ring */}
-                  <View style={[st.neonGlowOuter, { borderColor: color, shadowColor: color }]} />
-                  {/* Inner circle with initial */}
-                  <View style={[st.neonCircle, { borderColor: color, backgroundColor: NEON.bg }]}>
-                    <Text style={[st.neonInitial, { color }]}>{getInitials(trainer.fullName)}</Text>
+              <Marker key={t.id} coordinate={{ latitude: t.latitude, longitude: t.longitude }}
+                onPress={() => tap(t)} anchor={{ x: 0.5, y: 0.5 }}>
+                <View style={[s.markerWrap, isSel && { transform: [{ scale: 1.3 }] }]} data-testid="trainer-marker-node">
+                  {/* Outer diamond glow */}
+                  <View style={[s.markerGlow, { borderColor: c, shadowColor: c }]} />
+                  {/* Inner diamond with initials — slightly off-center */}
+                  <View style={[s.markerInner, { borderColor: c }]}>
+                    <Text style={[s.markerInit, { color: c, marginLeft: 1, marginTop: -1 }]}>{initials(t.fullName)}</Text>
                   </View>
                 </View>
               </Marker>
@@ -193,75 +202,84 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
           })}
         </MapView>
 
-        {/* Recenter button */}
-        <TouchableOpacity style={st.recenterBtn} onPress={centerOnUser}>
-          <Ionicons name="locate" size={20} color={NEON.green} />
+        {/* Recenter — sharp rectangle sticking from right edge */}
+        <TouchableOpacity style={s.recenter} onPress={recenter} data-testid="map-recenter-button">
+          <Ionicons name="scan-outline" size={18} color={N.white} />
         </TouchableOpacity>
 
-        {/* Selected trainer detail card */}
-        {selectedTrainer && (
-          <Animated.View style={[st.detailCard, {
-            opacity: cardSlideAnim,
-            transform: [{ translateY: cardSlideAnim.interpolate({ inputRange: [0, 1], outputRange: [100, 0] }) }]
-          }]}>
-            <View style={st.detailDrag} />
-            <View style={st.detailRow}>
-              <View style={[st.detailAvatar, { borderColor: getMarkerColor(selectedTrainer.averageRating, 0) }]}>
-                <Text style={[st.detailInitial, { color: getMarkerColor(selectedTrainer.averageRating, 0) }]}>
-                  {getInitials(selectedTrainer.fullName)}
-                </Text>
-              </View>
-              <View style={st.detailInfo}>
-                <Text style={st.detailName} numberOfLines={1}>{selectedTrainer.fullName}</Text>
-                <View style={st.detailMeta}>
-                  <Ionicons name="star" size={13} color={NEON.star} />
-                  <Text style={st.detailRating}>{selectedTrainer.averageRating?.toFixed(1)}</Text>
-                  <Text style={st.detailDist}>{selectedTrainer.distanceMiles?.toFixed(1)} mi</Text>
+        {/* === SELECTED TRAINER POPUP — top-anchored, asymmetric === */}
+        {selected && (
+          <Animated.View style={[s.popup, {
+            opacity: cardAnim,
+            transform: [{ translateY: cardAnim.interpolate({ inputRange: [0, 1], outputRange: [-60, 0] }) }],
+          }]} data-testid="trainer-detail-popup-card">
+            {/* Heavy bottom border in trainer's neon color */}
+            <View style={[s.popupBar, { backgroundColor: getColor(selected.averageRating) }]} />
+            <View style={s.popupBody}>
+              <View style={s.popupLeft}>
+                {/* Diamond avatar */}
+                <View style={[s.popupAvatar, { borderColor: getColor(selected.averageRating) }]}>
+                  <Text style={[s.popupAvatarInit, { color: getColor(selected.averageRating) }]}>{initials(selected.fullName)}</Text>
                 </View>
               </View>
-              <View style={st.detailPrice}>
-                <Text style={st.detailPriceVal}>${((selectedTrainer.ratePerMinuteCents * 30) / 100).toFixed(0)}</Text>
-                <Text style={st.detailPriceUnit}>/30 min</Text>
+              <View style={s.popupInfo}>
+                <Text style={s.popupName} numberOfLines={1}>{selected.fullName}</Text>
+                <View style={s.popupMeta}>
+                  <Ionicons name="star" size={12} color={N.star} />
+                  <Text style={s.popupRating}>{selected.averageRating?.toFixed(1)}</Text>
+                  <View style={s.popupDivider} />
+                  <Text style={s.popupDist}>{selected.distanceMiles?.toFixed(1)} MI</Text>
+                  <View style={s.popupDivider} />
+                  <Text style={s.popupEta}>{selected.etaMinutes}M ETA</Text>
+                </View>
+              </View>
+              <View style={s.popupPrice}>
+                <Text style={s.popupPriceVal}>${((selected.ratePerMinuteCents * 30) / 100).toFixed(0)}</Text>
+                <Text style={s.popupPriceUnit}>/30m</Text>
               </View>
             </View>
-            <TouchableOpacity
-              style={st.bookBtn}
-              onPress={() => router.push(`/trainee/trainer-detail?trainerId=${selectedTrainer.trainerId}`)}
-              data-testid="book-trainer-btn"
-            >
-              <Text style={st.bookBtnText}>View Profile & Book</Text>
-              <Ionicons name="arrow-forward" size={16} color={NEON.bg} />
+            <TouchableOpacity style={s.popupAction}
+              onPress={() => router.push(`/trainee/trainer-detail?trainerId=${selected.trainerId}`)}
+              data-testid="book-trainer-btn">
+              <Text style={s.popupActionText}>VIEW PROFILE</Text>
+              <Ionicons name="chevron-forward" size={14} color={N.bg} />
             </TouchableOpacity>
           </Animated.View>
         )}
       </View>
 
-      {/* Available Now horizontal scroll */}
-      {availableTrainers.length > 0 && (
-        <View style={st.availSection}>
-          <Text style={st.availTitle}>Available Now</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={st.availScroll}>
-            {availableTrainers.map((trainer, idx) => {
-              const color = getMarkerColor(trainer.averageRating, idx);
+      {/* === AVAILABLE NOW — staggered cards, sharp edges === */}
+      {sorted.length > 0 && (
+        <View style={s.availWrap} data-testid="available-trainers-scroll-row">
+          <View style={s.availHead}>
+            <View style={s.availDot} />
+            <Text style={s.availLabel}>AVAILABLE NOW</Text>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}
+            contentContainerStyle={s.availScroll}>
+            {sorted.map((t, i) => {
+              const c = getColor(t.averageRating);
+              const isOdd = i % 2 !== 0;
               return (
-                <TouchableOpacity
-                  key={trainer.id}
-                  style={st.availCard}
-                  onPress={() => {
-                    handleTrainerPress(trainer);
-                    router.push(`/trainee/trainer-detail?trainerId=${trainer.trainerId}`);
-                  }}
-                  data-testid={`avail-card-${idx}`}
+                <TouchableOpacity key={t.id}
+                  style={[s.availCard, {
+                    marginTop: isOdd ? 0 : 14, // stagger effect
+                    borderLeftColor: c,
+                    borderTopColor: N.border,
+                  }]}
+                  onPress={() => { tap(t); router.push(`/trainee/trainer-detail?trainerId=${t.trainerId}`); }}
+                  data-testid={`avail-card-${i}`}
                 >
-                  <View style={[st.availCircle, { borderColor: color, shadowColor: color }]}>
-                    <Text style={[st.availInitial, { color }]}>{getInitials(trainer.fullName)}</Text>
+                  {/* Diamond initial */}
+                  <View style={[s.availDiamond, { borderColor: c, shadowColor: c }]}>
+                    <Text style={[s.availInit, { color: c }]}>{initials(t.fullName)}</Text>
                   </View>
-                  <Text style={st.availName} numberOfLines={1}>{trainer.fullName.split(' ')[0]}</Text>
-                  <View style={st.availRatingRow}>
-                    <Ionicons name="star" size={11} color={NEON.star} />
-                    <Text style={st.availRating}>{trainer.averageRating?.toFixed(1)}</Text>
+                  <Text style={s.availName} numberOfLines={1}>{t.fullName.split(' ')[0]}</Text>
+                  <View style={s.availRatingRow}>
+                    <Ionicons name="star" size={10} color={N.star} />
+                    <Text style={s.availRating}>{t.averageRating?.toFixed(1)}</Text>
                   </View>
-                  <Text style={st.availDist}>{trainer.distanceMiles?.toFixed(1)} mi</Text>
+                  <Text style={s.availDist}>{t.distanceMiles?.toFixed(1)} MI</Text>
                 </TouchableOpacity>
               );
             })}
@@ -272,66 +290,88 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
   );
 }
 
-const st = StyleSheet.create({
-  container: { backgroundColor: NEON.bg, marginHorizontal: -20, marginBottom: 16 },
-  loadingBox: { height: MAP_HEIGHT, justifyContent: 'center', alignItems: 'center' },
-  loadingText: { marginTop: 12, fontSize: 14, color: NEON.grayLight },
+const s = StyleSheet.create({
+  root: { backgroundColor: N.bg, marginHorizontal: -20, marginBottom: 16 },
 
-  // Header
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 14, paddingBottom: 4 },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  title: { fontSize: 20, fontWeight: '800', color: NEON.white, letterSpacing: -0.3 },
-  refreshBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,255,106,0.1)', justifyContent: 'center', alignItems: 'center' },
+  // Loading
+  loadWrap: { height: MAP_H, justifyContent: 'center', alignItems: 'center' },
+  loadLabel: { marginTop: 14, fontSize: 11, fontWeight: '700', color: N.green, letterSpacing: 4 },
 
-  // Count badge
-  countRow: { paddingHorizontal: 16, paddingBottom: 10 },
-  countBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(0,255,106,0.12)', alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 14 },
-  countText: { fontSize: 13, fontWeight: '700', color: NEON.green },
+  // Head — asymmetric: more left padding, less right
+  head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingLeft: 22, paddingRight: 14, paddingTop: 16, paddingBottom: 2 },
+  headLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  headIcon: { width: 28, height: 28, borderWidth: 1.5, borderColor: N.green, justifyContent: 'center', alignItems: 'center', transform: [{ rotate: '45deg' }] },
+  headLabel: { fontSize: 9, fontWeight: '700', color: N.green, letterSpacing: 3, marginBottom: 1 },
+  headTitle: { fontSize: 19, fontWeight: '800', color: N.white, letterSpacing: -0.5 },
+  // Scan button — brutalist block, not a circle
+  scanBtn: { paddingHorizontal: 14, paddingVertical: 7, borderWidth: 0, borderBottomWidth: 2, borderRightWidth: 2, borderColor: N.green, backgroundColor: 'transparent' },
+  scanText: { fontSize: 11, fontWeight: '800', color: N.green, letterSpacing: 3 },
+
+  // Massive background count
+  bgCountWrap: { position: 'absolute', top: -8, right: -12, zIndex: 0, overflow: 'hidden', width: 160, height: 120 },
+  bgCount: { fontSize: 130, fontWeight: '900', color: N.white, opacity: 0.04, letterSpacing: -8, lineHeight: 130 },
+
+  // Count chip — pushed left, not centered
+  countRow: { paddingLeft: 22, paddingRight: 14, paddingBottom: 8, paddingTop: 2 },
+  countChip: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start' },
+  countDot: { width: 6, height: 6, backgroundColor: N.green, transform: [{ rotate: '45deg' }] },
+  countLabel: { fontSize: 10, fontWeight: '700', color: N.textSec, letterSpacing: 2.5 },
 
   // Map
-  mapWrapper: { height: MAP_HEIGHT, position: 'relative' },
+  mapWrap: { height: MAP_H, position: 'relative' },
   map: { ...StyleSheet.absoluteFillObject },
 
-  // User marker
-  userMarker: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
-  userPulse: { position: 'absolute', width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,255,106,0.2)' },
-  userDot: { width: 20, height: 20, borderRadius: 10, backgroundColor: NEON.green, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: NEON.bg },
+  // User marker — white square, not circle
+  userWrap: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
+  userRadar: { position: 'absolute', width: 44, height: 44, borderWidth: 1.5, borderColor: N.white },
+  userNode: { width: 8, height: 8, backgroundColor: N.white, transform: [{ rotate: '45deg' }] },
 
-  // Neon trainer markers
-  neonMarkerWrap: { width: 52, height: 52, justifyContent: 'center', alignItems: 'center' },
-  neonGlowOuter: { position: 'absolute', width: 52, height: 52, borderRadius: 26, borderWidth: 1.5, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.8, shadowRadius: 12, elevation: 8 },
-  neonCircle: { width: 40, height: 40, borderRadius: 20, borderWidth: 2, justifyContent: 'center', alignItems: 'center' },
-  neonInitial: { fontSize: 16, fontWeight: '900', letterSpacing: 0.5 },
+  // Trainer markers — diamond geometry
+  markerWrap: { width: 50, height: 50, justifyContent: 'center', alignItems: 'center' },
+  markerGlow: { position: 'absolute', width: 44, height: 44, borderWidth: 1, transform: [{ rotate: '45deg' }], shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.7, shadowRadius: 14, elevation: 8 },
+  markerInner: { width: 34, height: 34, borderWidth: 1.5, backgroundColor: N.bg, transform: [{ rotate: '45deg' }], justifyContent: 'center', alignItems: 'center' },
+  markerInit: { fontSize: 12, fontWeight: '900', letterSpacing: 1, transform: [{ rotate: '-45deg' }] },
 
-  // Recenter
-  recenterBtn: { position: 'absolute', right: 12, top: 12, width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(17,24,32,0.9)', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: NEON.cardBorder },
+  // Recenter — sharp tab from right edge
+  recenter: { position: 'absolute', right: 0, top: '42%', width: 38, paddingVertical: 12, borderTopWidth: 1, borderBottomWidth: 1, borderLeftWidth: 1, borderColor: N.border, backgroundColor: N.glass, alignItems: 'center' },
 
-  // Selected detail card
-  detailCard: { position: 'absolute', bottom: 12, left: 12, right: 12, backgroundColor: NEON.card, borderRadius: 18, padding: 14, paddingTop: 6, borderWidth: 1, borderColor: NEON.cardBorder, zIndex: 999 },
-  detailDrag: { width: 36, height: 4, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 2, alignSelf: 'center', marginBottom: 10 },
-  detailRow: { flexDirection: 'row', alignItems: 'center' },
-  detailAvatar: { width: 46, height: 46, borderRadius: 23, borderWidth: 2, backgroundColor: NEON.bg, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
-  detailInitial: { fontSize: 18, fontWeight: '900' },
-  detailInfo: { flex: 1 },
-  detailName: { fontSize: 15, fontWeight: '700', color: NEON.white },
-  detailMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 },
-  detailRating: { fontSize: 13, fontWeight: '600', color: NEON.star },
-  detailDist: { fontSize: 12, color: NEON.gray, marginLeft: 6 },
-  detailPrice: { alignItems: 'flex-end' },
-  detailPriceVal: { fontSize: 20, fontWeight: '800', color: NEON.white },
-  detailPriceUnit: { fontSize: 11, color: NEON.gray },
-  bookBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: NEON.green, paddingVertical: 12, borderRadius: 12, marginTop: 12 },
-  bookBtnText: { fontSize: 14, fontWeight: '700', color: NEON.bg },
+  // Selected popup — anchored top, not bottom
+  popup: { position: 'absolute', top: 12, left: 14, right: 14, backgroundColor: N.glass, zIndex: 999, overflow: 'hidden' },
+  popupBar: { height: 3, width: '100%' },
+  popupBody: { flexDirection: 'row', alignItems: 'center', paddingTop: 14, paddingBottom: 10, paddingLeft: 16, paddingRight: 12 },
+  popupLeft: { marginRight: 14 },
+  popupAvatar: { width: 42, height: 42, borderWidth: 1.5, backgroundColor: N.bg, transform: [{ rotate: '45deg' }], justifyContent: 'center', alignItems: 'center' },
+  popupAvatarInit: { fontSize: 16, fontWeight: '900', transform: [{ rotate: '-45deg' }] },
+  popupInfo: { flex: 1 },
+  popupName: { fontSize: 15, fontWeight: '800', color: N.white, letterSpacing: -0.3 },
+  popupMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+  popupRating: { fontSize: 12, fontWeight: '700', color: N.star },
+  popupDivider: { width: 3, height: 3, backgroundColor: N.textSec, transform: [{ rotate: '45deg' }] },
+  popupDist: { fontSize: 10, fontWeight: '700', color: N.textSec, letterSpacing: 1.5 },
+  popupEta: { fontSize: 10, fontWeight: '700', color: N.textSec, letterSpacing: 1.5 },
+  popupPrice: { alignItems: 'flex-end', paddingLeft: 10 },
+  popupPriceVal: { fontSize: 22, fontWeight: '900', color: N.white, letterSpacing: -1 },
+  popupPriceUnit: { fontSize: 10, fontWeight: '600', color: N.textSec, letterSpacing: 1 },
+  popupAction: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, backgroundColor: N.green, paddingVertical: 11, marginHorizontal: 16, marginBottom: 14 },
+  popupActionText: { fontSize: 12, fontWeight: '800', color: N.bg, letterSpacing: 2.5 },
 
-  // Available Now section
-  availSection: { paddingTop: 14, paddingBottom: 6, backgroundColor: NEON.bg },
-  availTitle: { fontSize: 17, fontWeight: '800', color: NEON.white, paddingHorizontal: 16, marginBottom: 12 },
-  availScroll: { paddingHorizontal: 12, gap: 10 },
-  availCard: { width: SCREEN_W * 0.28, backgroundColor: NEON.card, borderRadius: 14, padding: 12, alignItems: 'center', borderWidth: 1, borderColor: NEON.cardBorder },
-  availCircle: { width: 48, height: 48, borderRadius: 24, borderWidth: 2, backgroundColor: NEON.bg, justifyContent: 'center', alignItems: 'center', marginBottom: 8, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.6, shadowRadius: 10, elevation: 6 },
-  availInitial: { fontSize: 18, fontWeight: '900' },
-  availName: { fontSize: 13, fontWeight: '600', color: NEON.white, marginBottom: 4 },
-  availRatingRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginBottom: 2 },
-  availRating: { fontSize: 12, fontWeight: '700', color: NEON.star },
-  availDist: { fontSize: 11, color: NEON.gray },
+  // Available Now — sharp cards, staggered
+  availWrap: { paddingTop: 18, paddingBottom: 8, backgroundColor: N.bg },
+  availHead: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 22, marginBottom: 14 },
+  availDot: { width: 5, height: 5, backgroundColor: N.green, transform: [{ rotate: '45deg' }] },
+  availLabel: { fontSize: 11, fontWeight: '800', color: N.white, letterSpacing: 3 },
+  availScroll: { paddingLeft: 22, paddingRight: 14, gap: 10 },
+  // Sharp corners, left+top borders only for brutalist 3D
+  availCard: {
+    width: W * 0.30, paddingTop: 16, paddingBottom: 12, paddingHorizontal: 10,
+    backgroundColor: N.surface, alignItems: 'center',
+    borderLeftWidth: 2, borderTopWidth: 1, borderRightWidth: 0, borderBottomWidth: 0,
+    borderColor: N.borderSubtle,
+  },
+  availDiamond: { width: 40, height: 40, borderWidth: 1.5, backgroundColor: N.bg, transform: [{ rotate: '45deg' }], justifyContent: 'center', alignItems: 'center', marginBottom: 12, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.5, shadowRadius: 10, elevation: 6 },
+  availInit: { fontSize: 14, fontWeight: '900', transform: [{ rotate: '-45deg' }], letterSpacing: 0.5 },
+  availName: { fontSize: 13, fontWeight: '700', color: N.white, marginBottom: 4, letterSpacing: 0.3 },
+  availRatingRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginBottom: 3 },
+  availRating: { fontSize: 11, fontWeight: '700', color: N.star },
+  availDist: { fontSize: 10, fontWeight: '600', color: N.textSec, letterSpacing: 1.5 },
 });
