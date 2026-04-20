@@ -1,0 +1,100 @@
+{
+  "theme": "Dark",
+  "archetype": "Archetype 2 (Performance Pro) + Electric Neon Accents",
+  "global_rules": {
+    "anti_ai_principles": [
+      "No perfect symmetry. All elements must have intentional offset alignments (e.g., overlapping borders, mismatched left/right paddings).",
+      "Avoid standard pill badges or perfectly circular FABs. Use sharp geometric cuts, brutalist block shadows, or exposed grid lines.",
+      "Embrace negative space and typographic overlaps. Large numbers bleeding off the screen instead of small inline text.",
+      "Simulate designer tension: Use jagged, varying spacing. Do not use uniform gap-4 for everything. Mix gap-2 with gap-12 to create rhythm.",
+      "Containers must feel tactile, using heavy borders (border-b-4, border-r-4) instead of soft box-shadows."
+    ]
+  },
+  "colors": {
+    "background": "#0A0E14",
+    "surface": "rgba(255, 255, 255, 0.02)",
+    "surface_glass": "rgba(10, 14, 20, 0.75)",
+    "border": "rgba(255, 255, 255, 0.15)",
+    "border_subtle": "rgba(255, 255, 255, 0.05)",
+    "text_primary": "#FFFFFF",
+    "text_secondary": "rgba(255, 255, 255, 0.5)",
+    "neon": {
+      "green": "#39FF14",
+      "orange": "#FF5F1F",
+      "purple": "#B026FF"
+    },
+    "user_dot": "#FFFFFF"
+  },
+  "typography": {
+    "heading_font": "Anton",
+    "body_font": "Outfit",
+    "hierarchy": {
+      "background_count": "text-[140px] font-heading leading-none tracking-tighter opacity-10 text-white absolute -top-8 -left-4 pointer-events-none",
+      "h1": "text-4xl font-heading tracking-tight uppercase text-white",
+      "card_title": "text-xl font-heading tracking-wide uppercase text-white",
+      "body": "text-sm font-body tracking-wider text-text_secondary",
+      "label": "text-[10px] font-heading tracking-[0.2em] uppercase text-neon-green"
+    }
+  },
+  "spacing_and_layout": {
+    "container_padding": "px-6 py-8",
+    "card_padding": "pt-6 pr-4 pb-4 pl-6",
+    "stagger_gap": "Every even card in a list should have a translate-y-4 offset."
+  },
+  "components": {
+    "map_base": {
+      "style": "A dark #0A0E14 base with a subtle grid pattern or topographic SVG background. No bright or standard map tiles. Completely stealth.",
+      "data_testid": "nearby-trainers-map-container"
+    },
+    "trainer_markers": {
+      "style": "Not standard teardrop pins. Use harsh square or diamond geometric nodes with glowing borders.",
+      "glow_effect": "shadow-[0_0_15px_var(--neon-color)]",
+      "anti_ai_detail": "The inner initials should be slightly italicized and pushed off-center (e.g., translate-x-[1px] translate-y-[2px]) to feel raw.",
+      "data_testid": "trainer-marker-node"
+    },
+    "available_now_row": {
+      "layout": "Horizontal scroll, floating 40px above the bottom edge. NOT flush. The first card has a heavy pl-8 margin.",
+      "card_style": "Sharp corners (rounded-none). Top and left borders only (border-t border-l border-white/20) for a brutalist 3D effect. backdrop-blur-xl.",
+      "stagger_effect": "Cards should not perfectly align. Odd cards are translateY(0), Even cards are translateY(-12px).",
+      "data_testid": "available-trainers-scroll-row"
+    },
+    "trainer_detail_popup": {
+      "style": "Occupies the top portion of the screen when a marker is tapped. Uses an asymmetrical layout with the trainer's image bleeding off the top edge.",
+      "border": "Heavy 2px border on the bottom edge matching the trainer's status neon color.",
+      "data_testid": "trainer-detail-popup-card"
+    },
+    "recenter_button": {
+      "position": "absolute right-0 top-1/2 -translate-y-1/2",
+      "style": "A sharp rectangle sticking out from the right edge. border-y border-l border-white/20. No right border. The icon is a raw crosshair.",
+      "data_testid": "map-recenter-button"
+    },
+    "refresh_button": {
+      "position": "absolute top-8 right-6",
+      "style": "Brutalist block. border-b-2 border-r-2 border-neon-green bg-transparent hover:translate-x-[2px] hover:translate-y-[2px] hover:border-b-0 hover:border-r-0 transition-all px-4 py-2",
+      "text": "SCAN AREA",
+      "data_testid": "map-refresh-button"
+    },
+    "user_location_dot": {
+      "style": "A pure white 4px square. Instead of a smooth ripple, it has a glitching, harsh radar burst animation (opacity switching abruptly).",
+      "data_testid": "user-location-indicator"
+    }
+  },
+  "image_urls": {
+    "trainer_1": "https://images.pexels.com/photos/10960029/pexels-photo-10960029.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+    "trainer_2": "https://images.unsplash.com/photo-1603503363848-6952525df449?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzR8MHwxfHNlYXJjaHwxfHxmaXRuZXNzJTIwdHJhaW5lciUyMHBvcnRyYWl0fGVufDB8fHx8MTc3NjY5Mjk3Mnww&ixlib=rb-4.1.0&q=85",
+    "trainer_3": "https://images.unsplash.com/photo-1646072507419-9f836f8d3f67?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzR8MHwxfHNlYXJjaHw0fHxmaXRuZXNzJTIwdHJhaW5lciUyMHBvcnRyYWl0fGVufDB8fHx8MTc3NjY5Mjk3Mnww&ixlib=rb-4.1.0&q=85",
+    "trainer_4": "https://images.pexels.com/photos/3912944/pexels-photo-3912944.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+  },
+  "animations": {
+    "radar_burst": "keyframes: { 0%: { box-shadow: 0 0 0 0 rgba(255,255,255,0.8) }, 50%: { box-shadow: 0 0 0 20px rgba(255,255,255,0) }, 100%: { box-shadow: 0 0 0 0 rgba(255,255,255,0) } }",
+    "marker_glitch": "slight random X/Y translations on hover to feel unstable and high-energy."
+  },
+  "instructions_to_main_agent": [
+    "Install Google Fonts: 'Anton' and 'Outfit' inside your global CSS.",
+    "Do NOT use standard rounded cards (rounded-xl, etc.). Implement sharp edges, asymmetrical borders (border-l, border-t), and raw brutalist geometry.",
+    "Implement the map as a relative mobile-sized container (e.g., max-w-md h-[850px] overflow-hidden). If map API isn't present, mock the map with a deep #0A0E14 background, a subtle CSS grid, and fixed marker nodes.",
+    "Trainer Count Badge must be implemented as a massive background typography element (h1) that bleeds off the screen with tracking-tighter and opacity-10.",
+    "Add 'data-testid' to every interactive or distinct visual component as specified.",
+    "Never center the layout perfectly. If a column of text is left aligned, add an arbitrary padding to its container (like pl-6) to push it off-balance."
+  ]
+}
