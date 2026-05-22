@@ -619,20 +619,12 @@ async def admin_approve_verification(
     })
     
     # Send push notification
-    try:
-        user = await db.users.find_one({'_id': ObjectId(trainer_id)}, {'pushToken': 1})
-        if user and user.get('pushToken'):
-            from exponent_server_sdk import PushClient, PushMessage
-            push_client = PushClient()
-            push_client.publish(PushMessage(
-                to=user['pushToken'],
-                title='Verification Approved!',
-                body='Congratulations! Your account has been verified. You can now accept sessions.',
-                sound='default',
-                priority='high',
-            ))
-    except Exception:
-        pass  # Push is best-effort
+    await send_push_notification(
+        trainer_id,
+        'Verification Approved!',
+        'Congratulations! Your account has been verified. You can now accept sessions.',
+        {'type': 'verification_approved'}
+    )
     
     return {"success": True, "message": "Trainer verification approved"}
 
@@ -785,21 +777,13 @@ async def admin_approve_verification_step(
         'createdAt': datetime.utcnow(),
     })
     
-    # Try sending push notification
-    try:
-        user = await db.users.find_one({'_id': ObjectId(trainer_id)}, {'pushToken': 1})
-        if user and user.get('pushToken'):
-            from exponent_server_sdk import PushClient, PushMessage
-            push_client = PushClient()
-            push_client.publish(PushMessage(
-                to=user['pushToken'],
-                title=f'{step_name} Approved',
-                body=f'Your {step_name} has been reviewed and approved.',
-                sound='default',
-                priority='high',
-            ))
-    except Exception:
-        pass  # Push is best-effort
+    # Send push notification
+    await send_push_notification(
+        trainer_id,
+        f'{step_name} Approved',
+        f'Your {step_name} has been reviewed and approved.',
+        {'type': 'step_approved', 'stepId': step_id}
+    )
     
     return {"success": True, "message": f"{step_name} approved"}
 
