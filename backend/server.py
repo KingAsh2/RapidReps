@@ -232,6 +232,66 @@ async def get_referral_credits(current_user: dict = Depends(get_current_user)):
     """Get available referral credits for session discount."""
     return {"availableCredits": current_user.get('referralCredits', 0)}
 
+
+# ── Invite Tracking (powers funnel analytics for empty-state share CTA) ──
+class InviteTrackBody(BaseModel):
+    channel: str  # 'sms' | 'email' | 'share'
+    audience: Optional[str] = None  # 'trainer' | 'trainee' — who the inviter was searching for
+    targetQuery: Optional[str] = None  # opaque — may be a phone, email or name
+
+
+@api_router.post("/referral/track-invite")
+async def track_invite(body: InviteTrackBody, current_user: dict = Depends(get_current_user)):
+    """Log an outbound invite so we can analyse channel performance.
+    Mask phone/email PII before persistence — store only the type & last 4 chars."""
+    channel = (body.channel or '').lower().strip()
+    if channel not in ('sms', 'email', 'share'):
+        raise HTTPException(400, "channel must be one of: sms, email, share")
+
+    masked_target = None
+    if body.targetQuery:
+        q = body.targetQuery.strip()
+        if '@' in q:
+            masked_target = f"email:***{q[-6:]}" if len(q) > 6 else "email:***"
+        elif sum(c.isdigit() for c in q) >= 6:
+            digits = ''.join(c for c in q if c.isdigit())
+            masked_target = f"phone:***{digits[-4:]}" if len(digits) >= 4 else "phone:***"
+        else:
+            masked_target = "name:***"
+
+    invite_doc = {
+        '_id': str(uuid.uuid4()),
+        'inviterId': str(current_user['_id']),
+        'inviterRoles': current_user.get('roles', []),
+        'referralCode': current_user.get('referralCode'),
+        'channel': channel,
+        'audience': body.audience,
+        'maskedTarget': masked_target,
+        'createdAt': datetime.utcnow(),
+    }
+    await db.referral_invites.insert_one(invite_doc)
+    return {'success': True, 'channel': channel}
+
+
+@api_router.get("/referral/invite-stats")
+async def get_invite_stats(current_user: dict = Depends(get_current_user)):
+    """Aggregate invite count per channel for the current user."""
+    pipeline = [
+        {'$match': {'inviterId': str(current_user['_id'])}},
+        {'$group': {'_id': '$channel', 'count': {'$sum': 1}}},
+    ]
+    by_channel = {row['_id']: row['count'] async for row in db.referral_invites.aggregate(pipeline)}
+    total = sum(by_channel.values())
+    return {
+        'total': total,
+        'byChannel': {
+            'sms': by_channel.get('sms', 0),
+            'email': by_channel.get('email', 0),
+            'share': by_channel.get('share', 0),
+        },
+    }
+
+
 # ============================================================================
 # CHAT / MESSAGING ROUTES
 # ============================================================================

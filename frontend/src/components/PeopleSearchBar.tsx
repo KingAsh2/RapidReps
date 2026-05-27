@@ -22,6 +22,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { referralAPI } from '../services/api';
+import { toast } from '../utils/toast';
+import { haptic } from '../utils/haptics';
 
 export interface PersonResult {
   id?: string;
@@ -134,6 +136,8 @@ export const PeopleSearchBar: React.FC<PeopleSearchBarProps> = ({
     const q = query.trim();
     const message = buildInviteMessage(inviteAudience, referralCode);
     setInviting(true);
+    let channel: 'sms' | 'email' | 'share' = 'share';
+    let success = false;
     try {
       // Smart deep-link by detected query type
       if (looksLikeEmail(q)) {
@@ -143,21 +147,36 @@ export const PeopleSearchBar: React.FC<PeopleSearchBarProps> = ({
         const canOpen = await Linking.canOpenURL(url).catch(() => false);
         if (canOpen) {
           await Linking.openURL(url);
-          return;
+          channel = 'email';
+          success = true;
         }
       } else if (looksLikePhone(q)) {
         const cleanPhone = q.replace(/[^\d+]/g, '');
-        // iOS uses & separator, Android uses ?
         const sep = Platform.OS === 'ios' ? '&' : '?';
         const url = `sms:${cleanPhone}${sep}body=${encodeURIComponent(message)}`;
         const canOpen = await Linking.canOpenURL(url).catch(() => false);
         if (canOpen) {
           await Linking.openURL(url);
-          return;
+          channel = 'sms';
+          success = true;
         }
       }
       // Fallback — native share sheet
-      await Share.share({ message });
+      if (!success) {
+        const result = await Share.share({ message });
+        channel = 'share';
+        // iOS returns action='sharedAction' if user actually shared
+        success = (result as any)?.action === 'sharedAction' || (result as any)?.action !== 'dismissedAction';
+      }
+
+      if (success) {
+        haptic.success();
+        toast.success(`Invite sent via ${channel === 'sms' ? 'SMS' : channel === 'email' ? 'email' : 'share'} — they get $5 off, you do too`);
+        // Fire-and-forget analytics — never block UX
+        referralAPI
+          .trackInvite({ channel, audience: inviteAudience, targetQuery: q })
+          .catch(() => {});
+      }
     } catch {
       // user cancelled or share failed — silent
     } finally {

@@ -696,6 +696,21 @@ export const referralAPI = {
     const response = await api.get('/referral/credits');
     return response.data;
   },
+  trackInvite: async (params: {
+    channel: 'sms' | 'email' | 'share';
+    audience?: 'trainer' | 'trainee';
+    targetQuery?: string;
+  }): Promise<{ success: boolean }> => {
+    const response = await api.post('/referral/track-invite', params);
+    return response.data;
+  },
+  getInviteStats: async (): Promise<{
+    total: number;
+    byChannel: { sms: number; email: number; share: number };
+  }> => {
+    const response = await api.get('/referral/invite-stats');
+    return response.data;
+  },
 };
 
 // Admin Payouts API

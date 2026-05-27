@@ -126,6 +126,10 @@ RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoD
     - **Phone-shaped query** → `sms:` with prefilled body (iOS uses `&body=`, Android uses `?body=`)
     - **Other** → Native `Share.share` sheet
     Each share carries the user's referral code (auto-fetched once via `/api/referral/my-code`) and pitches "we both get $5 off". Available on both trainee (audience=trainer) and trainer (audience=trainee) home screens — every "user not found" becomes a referral opportunity.
+54. **Invite Tracking & Funnel Analytics** (backend `server.py` + `referralAPI.trackInvite/getInviteStats`):
+    - `POST /api/referral/track-invite` — logs `{inviterId, channel, audience, maskedTarget}` to `referral_invites` collection. PII is auto-masked server-side (phone → `phone:***1234` last 4 digits; email → `email:***ail.com` last 6 chars; name → `name:***`).
+    - `GET /api/referral/invite-stats` — aggregates invites per channel (sms/email/share) for the current user; foundation for a "Channel performance" dashboard.
+    - Frontend: After successful share, `PeopleSearchBar` shows toast "Invite sent via SMS/email/share — they get $5 off, you do too" + success haptic, and fires-and-forgets the tracking call.
 
 ## Backend Tested (Iteration 70)
 - 21/21 pytest tests passed (100%) — name/email/phone substring (case-insensitive), trainer-only RBAC, unauthenticated rejection, q required validation, whitespace-q safe handling, no-match empty result, backward-compatible legacy filter mode when q is absent, regression sanity for /api/auth/login + /api/auth/me.
