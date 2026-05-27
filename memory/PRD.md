@@ -114,12 +114,26 @@ RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoD
 45. **Admin: Subscriptions Tab** (`/app/frontend/src/components/admin/SubscriptionsTab.tsx`): Admin panel tab showing all subscriptions with stats (total/active/paused/cancelled/revenue), status filters, and detailed list with trainee→trainer names, rates, and platform fees. Backend: `GET /api/admin/subscriptions`.
 46. **Neon Map Redesign** (`/app/frontend/src/components/NearbyTrainersMap.native.tsx`): Complete UI overhaul of the trainer map to match premium neon aesthetic: ultra-dark map style, neon-glowing circular markers with trainer initials (green=top rated, orange=mid, purple=new), pulsating user location dot, "Available Now" horizontal scrolling card row at bottom with neon-bordered cards showing initial, name, star rating, distance. Color-coded by rating tier.
 
+## New Features (May 27, 2026 — UI Polish & Search)
+47. **Thunder Startup Sound** (`/app/frontend/assets/sounds/thunder.wav`): Replaced explosion-impact with a procedurally generated 3-second thunder clap (sharp crack + sub-bass boom + rolling rumble + intermittent crackle). Triggered at the header-slam moment in `app/index.tsx`. More energetic and atmospheric than the previous sound.
+48. **Trainer Onboarding Travel Radius — Slider** (`/app/frontend/app/auth/onboarding-trainer.tsx`): Replaced dropdown + modal picker (which had navy-on-navy unreadable text) with an inline orange-themed Slider (1–35 miles, step 1). Now matches the slider pattern used in `trainer/edit-profile.tsx`. White value text on dark card with orange thumb/track. Removed unused `FlatList` import and `RADIUS_OPTIONS`/`showRadiusPicker` state.
+49. **People Search Component** (`/app/frontend/src/components/PeopleSearchBar.tsx` — NEW): Reusable, design-uniform search bar used by BOTH trainee and trainer home screens. 350ms debounced input, navy gradient card with orange search icon, animated results dropdown with avatar + name + meta pills (distance, rating, email) + role badge. Single source of truth — guarantees identical look on both sides.
+50. **Trainee → Trainer Search** (frontend: `app/trainee/(tabs)/home.tsx`; backend: `GET /api/trainers/search?q=...`): Trainees can find any trainer nationwide by name, email, or phone number — proximity is bypassed when `q` is provided. Case-insensitive regex match.
+51. **Trainer → Trainee Search** (frontend: `app/trainer/(tabs)/home.tsx`; backend: `GET /api/trainees/search?q=...` — NEW endpoint): Trainers can reach any trainee nationwide by name, email, or phone number. RBAC-gated: trainees blocked with 403 ("Only trainers can search trainees"). Returns distance if trainer has GPS location set.
+52. **UI/UX Uniformity Pass**: PeopleSearchBar enforces identical visual language across trainee and trainer flows (same card gradient, same orange accents, same typography, same empty-state, same result row, same role badge style). Replaced navy-on-navy invisible text in trainer onboarding radius picker. Standardized on white text + orange accents on dark surfaces (no Colors.text/#1a2a5e on dark backgrounds).
+
+## Backend Tested (Iteration 70)
+- 21/21 pytest tests passed (100%) — name/email/phone substring (case-insensitive), trainer-only RBAC, unauthenticated rejection, q required validation, whitespace-q safe handling, no-match empty result, backward-compatible legacy filter mode when q is absent, regression sanity for /api/auth/login + /api/auth/me.
+
 ## Upcoming Tasks
-- Profile Photo Synchronization across Home/Edit/Verification screens (P1)
 - 508 Accessibility Compliance (P2)
 - SendGrid Email Integration (P2, blocked on API key)
+- Facebook Social Login (P2, blocked on App ID)
 - Auto-color detection from profile photo (P3)
 - Further server.py extraction: messaging, location, notifications (P3)
+
+## Active Blocker
+- **iOS App Store Deployment**: EAS build fails with `XCODE_BUILD_ERROR — Signing certificate "iPhone Distribution: Ashton Bundy" revoked` (Apple side). Resolution: contact support@emergent.sh with Job ID + Expo project ID `aa258400-544c-4da6-b007-0aff7ef361f6` to refresh iOS signing credentials.
 
 ## Test Credentials
 | Role | Email | Password |
