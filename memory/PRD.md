@@ -130,6 +130,17 @@ RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoD
     - `POST /api/referral/track-invite` — logs `{inviterId, channel, audience, maskedTarget}` to `referral_invites` collection. PII is auto-masked server-side (phone → `phone:***1234` last 4 digits; email → `email:***ail.com` last 6 chars; name → `name:***`).
     - `GET /api/referral/invite-stats` — aggregates invites per channel (sms/email/share) for the current user; foundation for a "Channel performance" dashboard.
     - Frontend: After successful share, `PeopleSearchBar` shows toast "Invite sent via SMS/email/share — they get $5 off, you do too" + success haptic, and fires-and-forgets the tracking call.
+55. **Instagram Integration Scaffold (PRE-CREDENTIALS)** — Tinder-style profile linking, ready to activate the moment Meta credentials arrive:
+    - **Backend** (`/app/backend/routes/instagram_routes.py` — NEW): 9 endpoints — `/oauth/start`, `/oauth/callback`, `/status`, `/media`, `/public-media/{userId}`, `/curate`, `/refresh`, `/unlink`, `/deauthorize`, `/data-deletion`. Uses Instagram Graph API w/ Instagram Login (post-Dec-2024 replacement for Basic Display API).
+    - **Tokens encrypted at rest** with AES-GCM via the `cryptography` lib. `INSTAGRAM_TOKEN_ENC_KEY` (32-byte URL-safe base64) in backend `.env`.
+    - **Personal accounts blocked** at callback with 403 `code=PERSONAL_ACCOUNT_NOT_SUPPORTED` → frontend routes to a tutorial screen instructing user to convert to Creator.
+    - **User curation**: After link, user multi-selects which of the 8 most-recent media items appear publicly. Stored as `selectedMediaIds` array on the `instagram_links` doc. The `/public-media/{userId}` endpoint returns ONLY the curated subset.
+    - **User-triggered refresh**: `/refresh` re-fetches /me/media + extends long-lived token if < 7 days from expiry. No auto-refresh.
+    - **Meta-required webhooks**: `/deauthorize` (deletes link on revoke) + `/data-deletion` (returns confirmation URL per spec). Both reachable via GET for Meta's "Verify" button.
+    - **Frontend components** (`src/components/InstagramSection.tsx`, `app/instagram/curator.tsx`, `app/instagram/personal-account-help.tsx`, `app/instagram-callback.tsx`): InstagramSection wired into trainee profile (own view), trainer-viewing-trainee profile (public view), and trainee-viewing-trainer-detail profile (public view).
+    - **Privacy policy** published at `/api/privacy/policy` with full IG-integration addendum. Data-deletion confirmation page at `/api/privacy/data-deletion-status?code=`.
+    - **Meta App Review prep doc** at `/app/memory/META_REVIEW_PREP.md` — screencast script, deliverables checklist, going-live steps.
+    - Tested 26/26 (100%) in iteration_71.json.
 
 ## Backend Tested (Iteration 70)
 - 21/21 pytest tests passed (100%) — name/email/phone substring (case-insensitive), trainer-only RBAC, unauthenticated rejection, q required validation, whitespace-q safe handling, no-match empty result, backward-compatible legacy filter mode when q is absent, regression sanity for /api/auth/login + /api/auth/me.
