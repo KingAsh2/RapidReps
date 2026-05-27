@@ -733,6 +733,61 @@ export const adminPayoutsAPI = {
   },
 };
 
+// Instagram API — Tinder-style profile linking
+export interface IgMediaItem {
+  id: string;
+  media_type: string;
+  media_product_type?: string | null;
+  media_url?: string | null;
+  thumbnail_url?: string | null;
+  permalink?: string | null;
+  caption?: string | null;
+  timestamp?: string | null;
+  isSelected?: boolean;
+}
+
+export const instagramAPI = {
+  status: async (): Promise<{
+    linked: boolean; username?: string; accountType?: string;
+    selectedMediaIds: string[]; lastSyncedAt?: string; expiresAt?: string;
+  }> => {
+    const response = await api.get('/instagram/status');
+    return response.data;
+  },
+  oauthStart: async (): Promise<{ authorization_url: string; state: string }> => {
+    const response = await api.post('/instagram/oauth/start');
+    return response.data;
+  },
+  oauthCallback: async (code: string, state: string): Promise<{
+    linked: boolean; username?: string; accountType?: string; mediaCount: number;
+  }> => {
+    const response = await api.post('/instagram/oauth/callback', { code, state });
+    return response.data;
+  },
+  getMedia: async (): Promise<{ items: IgMediaItem[]; lastSyncedAt?: string }> => {
+    const response = await api.get('/instagram/media');
+    return response.data;
+  },
+  getPublicMedia: async (targetUserId: string): Promise<{
+    linked: boolean; items: IgMediaItem[]; username?: string;
+  }> => {
+    const response = await api.get(`/instagram/public-media/${targetUserId}`);
+    return response.data;
+  },
+  curate: async (selectedMediaIds: string[]): Promise<{ success: boolean; selectedCount: number }> => {
+    const response = await api.post('/instagram/curate', { selectedMediaIds });
+    return response.data;
+  },
+  refresh: async (): Promise<{ items: IgMediaItem[]; lastSyncedAt?: string }> => {
+    const response = await api.post('/instagram/refresh');
+    return response.data;
+  },
+  unlink: async (): Promise<{ success: boolean; deleted: boolean }> => {
+    const response = await api.post('/instagram/unlink');
+    return response.data;
+  },
+};
+
 // Session Tracking API (en-route + GPS)
 export const sessionTrackingAPI = {
   startEnRoute: async (sessionId: string): Promise<any> => {

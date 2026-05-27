@@ -26,6 +26,7 @@ import { traineeAPI, streaksAPI } from '../../../src/services/api';
 import * as ImagePicker from 'expo-image-picker';
 import { toast } from '../../../src/utils/toast';
 import { ProfileGallery, SocialLinksDisplay } from '../../../src/components/ProfileSections';
+import InstagramSection from '../../../src/components/InstagramSection';
 import { PersonalityTagBadge, PersonalityTagSelector } from '../../../src/components/PersonalityTagBadge';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
@@ -807,6 +808,11 @@ export default function TraineeProfileScreen() {
                   thumbColor={COLORS.white}
                 />
               </View>
+            </View>
+
+            {/* Instagram — own view: link / curate / refresh / unlink */}
+            <View style={{ paddingHorizontal: 16 }}>
+              <InstagramSection />
             </View>
 
             {/* Gallery (editable) */}

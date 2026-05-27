@@ -21,6 +21,7 @@ import { useAlert } from '../../src/contexts/AlertContext';
 import { toast } from '../../src/utils/toast';
 import { haptic } from '../../src/utils/haptics';
 import { ProfileGallery, SocialLinksDisplay } from '../../src/components/ProfileSections';
+import InstagramSection from '../../src/components/InstagramSection';
 
 export default function TraineeProfileScreen() {
   const router = useRouter();
@@ -500,6 +501,7 @@ export default function TraineeProfileScreen() {
         {/* Gallery & Social Links */}
         <View style={{ paddingHorizontal: 20, paddingBottom: 20 }}>
           <ProfileGallery gallery={traineeData?.gallery || []} />
+          <InstagramSection targetUserId={traineeId} />
           <SocialLinksDisplay socialLinks={traineeData?.socialLinks || {}} />
         </View>
       </ScrollView>

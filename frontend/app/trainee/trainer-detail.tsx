@@ -23,6 +23,7 @@ import { Video, ResizeMode } from 'expo-av';
 import { toast } from '../../src/utils/toast';
 import { haptic } from '../../src/utils/haptics';
 import { ProfileGallery, SocialLinksDisplay } from '../../src/components/ProfileSections';
+import InstagramSection from '../../src/components/InstagramSection';
 import { TrainerVibePlayer } from '../../src/components/TrainerVibePlayer';
 import { HighlightReel } from '../../src/components/HighlightReel';
 import { PersonalityTagBadge } from '../../src/components/PersonalityTagBadge';
@@ -609,6 +610,7 @@ export default function TrainerDetailScreen() {
             {((trainer as any)?.gallery || []).length > 0 && (
               <View style={{ paddingHorizontal: 20, marginBottom: 4 }}>
                 <ProfileGallery gallery={(trainer as any)?.gallery || []} />
+                <InstagramSection targetUserId={(trainer as any)?.userId} />
               </View>
             )}
           </Animated.View>

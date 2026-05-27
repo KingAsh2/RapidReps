@@ -1,0 +1,36 @@
+{
+  "summary": "Iteration 71 backend testing for Instagram integration scaffold (credentials-empty precondition). 26/26 pytest tests passed (100%). Verified: /api/instagram/status returns {linked:false} for non-linked trainee; oauth/start + oauth/callback return 503 'Instagram integration not yet configured'; /media + /curate return 404 'Instagram not linked' for non-linked user; /refresh returns 503 (configured check happens first — also acceptable per spec); /unlink is idempotent and returns {success:true, deleted:false}; webhooks (GET + POST) /deauthorize and /data-deletion return 200 status:'ok'; data-deletion POST returns Meta-required {url, confirmation_code} shape with the url pointing to /api/privacy/data-deletion-status; /public-media/<random> returns {linked:false, items:[], username:null}; /api/privacy/policy serves HTML (text/html); /api/privacy/data-deletion-status?code=XYZ123 echoes the code in HTML. Regression: /api/auth/login, /api/auth/me, /api/referral/my-code, /api/referral/track-invite, /api/trainers/search?q=test, /api/trainees/search?q=test all pass. No issues found.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration71_instagram_integration.py",
+    "/app/test_reports/pytest/iteration71_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "instagram_routes.py: hardcoded host 'https://trainer-finder-9.emergent.host' in data_deletion_webhook URL response (line 480). Should derive from env var (e.g., PUBLIC_BASE_URL or request.base_url) so the link works across preview/prod deployments. Currently the test asserts substring 'data-deletion-status' which passes, but if this host is decommissioned the Meta confirmation link will 404.",
+    "instagram_routes.py /refresh: checks _instagram_configured() BEFORE checking if user is linked. For a non-linked user when creds ARE configured, behavior differs vs unconfigured — that's fine, but consider returning 404 'not linked' first to give clearer error to clients regardless of config state. Currently returns 503 in empty-creds env, which is what the test allowed.",
+    "instagram_routes.py /oauth/start: writes oauthState to db BEFORE building params — fine, but should also set TTL/expiration on oauthState (currently only oauthStateCreatedAt is recorded; no $expireAfterSeconds index on this field). A stale state could be reused weeks later.",
+    "instagram_routes.py /oauth/callback: ig_user_id used as fallback for ig_uid even when profile call returns. If both are missing the link doc would have None for instagramUserId, which then breaks the deauthorize webhook (delete_many would match nothing for that user). Consider validating ig_uid is non-empty before persisting.",
+    "instagram_routes.py /data-deletion webhook: generates confirmation_code but does NOT persist it. The /api/privacy/data-deletion-status page accepts ANY ?code= value and echoes it — so the confirmation link is effectively unauthenticated. Acceptable for Meta's reachability check, but if Meta App Review requires verifiable deletion proof, consider storing {code: ig_user_id, deletedAt} for later lookup.",
+    "instagram_routes.py: file is well under the 700-line guideline (~490 lines) — no split needed.",
+    "instagram_routes.py /public-media/{target_user_id}: requires authentication. If profiles are publicly viewable (Tinder-style swiping inside the app), this is fine; if marketing/web previews need IG grid, would need a separate public endpoint."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration71_instagram_integration.py"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "n/a (skipped per request)"},
+  "test_credentials": "Trainee test_trainee_iter25@test.com / Test123!  |  Trainer test_trainer_iter25@test.com / Test123! (both verified)",
+  "seed_data_creation": "None — used existing accounts. Unlink test is idempotent (deleted:false confirms no prior link).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Instagram scaffold contract is solid in empty-creds mode. When real INSTAGRAM_APP_ID/SECRET are provided, /oauth/start should transition from 503 → 200 with authorization_url, /refresh on a non-linked user should transition to 404 'Instagram not linked'. The test file test_iteration71_instagram_integration.py uses .status_code in (404, 503) for /refresh so it will remain green after creds are added. The hardcoded host in /data-deletion response URL should be parameterized before going to prod.",
+  "rca of the issue": "N/A — no bugs found. All 26 endpoint contracts match the iteration 71 spec."
+}

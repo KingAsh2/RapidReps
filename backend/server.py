@@ -81,6 +81,29 @@ async def download_workflow_guide():
     return FileResponse("/app/backend/static/RapidReps_Workflow_Guide.pdf", filename="RapidReps_Workflow_Guide.pdf", media_type="application/pdf")
 
 
+@app.get("/api/privacy/policy")
+async def privacy_policy():
+    """Public privacy policy URL (Meta App Review requires this to be reachable)."""
+    return FileResponse("/app/backend/static/privacy-policy.html", media_type="text/html")
+
+
+@app.get("/api/privacy/data-deletion-status")
+async def data_deletion_status(code: str = ""):
+    """Public landing page that Meta links to after a user requests data deletion."""
+    html = f"""<!doctype html><html><head><meta charset='utf-8'><title>RapidReps — Data Deletion</title>
+<style>body{{font-family:-apple-system,system-ui,sans-serif;background:#0A0E1A;color:#fff;padding:40px;line-height:1.6}}
+.box{{max-width:600px;margin:auto;background:#141929;padding:32px;border-radius:14px;border:1px solid rgba(255,255,255,0.1)}}
+h1{{color:#FF7F00;margin-top:0}} code{{background:rgba(255,127,0,0.12);padding:2px 8px;border-radius:6px;color:#FF7F00}}</style></head>
+<body><div class='box'><h1>Data Deletion Confirmed</h1>
+<p>Your Instagram connection has been removed from RapidReps. All cached media references and
+your encrypted access token have been deleted from our servers.</p>
+<p>Confirmation code: <code>{code or 'N/A'}</code></p>
+<p>If you have any questions, contact <a href='mailto:privacy@rapidreps.app' style='color:#FF7F00'>privacy@rapidreps.app</a>.</p>
+</div></body></html>"""
+    from fastapi.responses import HTMLResponse
+    return HTMLResponse(html)
+
+
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
@@ -2718,7 +2741,9 @@ app.include_router(streak_router)
 app.include_router(payment_router)
 app.include_router(social_auth_router)
 
-# Include new feature route modules
+# Instagram (Tinder-style profile linking)
+from routes.instagram_routes import router as instagram_router
+app.include_router(instagram_router)
 from routes.matching import router as matching_router
 from routes.trainer_tools import router as trainer_tools_router
 from routes.feed import router as feed_router
