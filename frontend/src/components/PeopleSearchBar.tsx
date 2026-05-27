@@ -15,9 +15,13 @@ import {
   Image,
   ScrollView,
   Keyboard,
+  Share,
+  Linking,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { referralAPI } from '../services/api';
 
 export interface PersonResult {
   id?: string;
@@ -41,7 +45,24 @@ interface PeopleSearchBarProps {
   emptyHint?: string;           // shown above results when no query
   resultBadgeLabel?: string;    // e.g. "TRAINER" / "TRAINEE"
   testIDPrefix?: string;
+  /** When true, no-results state shows an "Invite to RapidReps" CTA that opens
+   *  native Share / SMS / Email with the current user's referral code. */
+  enableInvite?: boolean;
+  /** What kind of person the inviter is looking for — used in the share message. */
+  inviteAudience?: 'trainer' | 'trainee';
 }
+
+// ── Helpers to detect input type ──
+const looksLikeEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim());
+const looksLikePhone = (s: string) => /^[+\d][\d\s\-().]{6,}$/.test(s.trim()) && /\d/.test(s);
+
+const buildInviteMessage = (audience: 'trainer' | 'trainee', referralCode: string | null) => {
+  const role = audience === 'trainer' ? 'trainer' : 'workout partner';
+  const codePart = referralCode
+    ? `Use my code ${referralCode} when you sign up and we BOTH get $5 off our first session.`
+    : 'Sign up now and book your first session.';
+  return `Hey! I'm using RapidReps to book sessions with my ${role}. ${codePart} Download here: https://rapidreps.app`;
+};
 
 export const PeopleSearchBar: React.FC<PeopleSearchBarProps> = ({
   placeholder,
@@ -50,12 +71,31 @@ export const PeopleSearchBar: React.FC<PeopleSearchBarProps> = ({
   emptyHint,
   resultBadgeLabel = 'PROFILE',
   testIDPrefix = 'people-search',
+  enableInvite = false,
+  inviteAudience = 'trainer',
 }) => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<PersonResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [inviting, setInviting] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Lazy-load referral code on first render when invite is enabled
+  useEffect(() => {
+    if (!enableInvite) return;
+    let cancelled = false;
+    referralAPI
+      .getMyCode()
+      .then((data) => {
+        if (!cancelled) setReferralCode(data?.referralCode || null);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [enableInvite]);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -89,6 +129,49 @@ export const PeopleSearchBar: React.FC<PeopleSearchBarProps> = ({
     setHasSearched(false);
     Keyboard.dismiss();
   };
+
+  const handleInvite = async () => {
+    const q = query.trim();
+    const message = buildInviteMessage(inviteAudience, referralCode);
+    setInviting(true);
+    try {
+      // Smart deep-link by detected query type
+      if (looksLikeEmail(q)) {
+        const subject = encodeURIComponent('Join me on RapidReps');
+        const body = encodeURIComponent(message);
+        const url = `mailto:${encodeURIComponent(q)}?subject=${subject}&body=${body}`;
+        const canOpen = await Linking.canOpenURL(url).catch(() => false);
+        if (canOpen) {
+          await Linking.openURL(url);
+          return;
+        }
+      } else if (looksLikePhone(q)) {
+        const cleanPhone = q.replace(/[^\d+]/g, '');
+        // iOS uses & separator, Android uses ?
+        const sep = Platform.OS === 'ios' ? '&' : '?';
+        const url = `sms:${cleanPhone}${sep}body=${encodeURIComponent(message)}`;
+        const canOpen = await Linking.canOpenURL(url).catch(() => false);
+        if (canOpen) {
+          await Linking.openURL(url);
+          return;
+        }
+      }
+      // Fallback — native share sheet
+      await Share.share({ message });
+    } catch {
+      // user cancelled or share failed — silent
+    } finally {
+      setInviting(false);
+    }
+  };
+
+  const isEmail = looksLikeEmail(query);
+  const isPhone = !isEmail && looksLikePhone(query);
+  const inviteCtaLabel = isEmail
+    ? `Email invite to "${query.trim()}"`
+    : isPhone
+    ? `Text invite to "${query.trim()}"`
+    : 'Invite a friend to RapidReps';
 
   return (
     <View style={styles.container} data-testid={`${testIDPrefix}-container`}>
@@ -137,6 +220,43 @@ export const PeopleSearchBar: React.FC<PeopleSearchBarProps> = ({
               <Ionicons name="search-outline" size={32} color="rgba(255,255,255,0.35)" />
               <Text style={styles.emptyText}>No results for &quot;{query}&quot;</Text>
               <Text style={styles.emptySubText}>Try a different name, email, or phone</Text>
+
+              {enableInvite && (
+                <TouchableOpacity
+                  onPress={handleInvite}
+                  disabled={inviting}
+                  activeOpacity={0.85}
+                  style={styles.inviteBtnWrap}
+                  data-testid={`${testIDPrefix}-invite-btn`}
+                >
+                  <LinearGradient
+                    colors={['#FF6A00', '#FF9F1C']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.inviteBtn}
+                  >
+                    {inviting ? (
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                    ) : (
+                      <Ionicons
+                        name={isEmail ? 'mail' : isPhone ? 'chatbubble-ellipses' : 'gift'}
+                        size={16}
+                        color="#FFFFFF"
+                      />
+                    )}
+                    <Text style={styles.inviteBtnText} numberOfLines={1}>
+                      {inviteCtaLabel}
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              )}
+
+              {enableInvite && referralCode && (
+                <Text style={styles.inviteRewardText}>
+                  You both get $5 off when they sign up with code{' '}
+                  <Text style={styles.inviteRewardCode}>{referralCode}</Text>
+                </Text>
+              )}
             </View>
           ) : (
             <ScrollView
@@ -322,6 +442,44 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#FF7F00',
     letterSpacing: 0.5,
+  },
+  // ── Invite-to-RapidReps CTA (empty state) ──
+  inviteBtnWrap: {
+    marginTop: 16,
+    borderRadius: 12,
+    overflow: 'hidden',
+    shadowColor: '#FF6A00',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  inviteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    maxWidth: 280,
+  },
+  inviteBtnText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
+  },
+  inviteRewardText: {
+    marginTop: 10,
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.6)',
+    textAlign: 'center',
+    paddingHorizontal: 16,
+  },
+  inviteRewardCode: {
+    color: '#FF9F1C',
+    fontWeight: '800',
+    letterSpacing: 1,
   },
 });
 

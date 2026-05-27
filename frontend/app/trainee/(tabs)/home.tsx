@@ -704,6 +704,8 @@ export default function TraineeHomeScreen() {
               emptyHint="Find any trainer nationwide — not limited to your area"
               resultBadgeLabel="TRAINER"
               testIDPrefix="trainee-trainer-search"
+              enableInvite
+              inviteAudience="trainer"
               onSearch={async (q) => {
                 try {
                   const data = await trainerAPI.searchTrainers({ q });

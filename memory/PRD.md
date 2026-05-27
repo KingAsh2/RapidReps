@@ -121,6 +121,11 @@ RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoD
 50. **Trainee → Trainer Search** (frontend: `app/trainee/(tabs)/home.tsx`; backend: `GET /api/trainers/search?q=...`): Trainees can find any trainer nationwide by name, email, or phone number — proximity is bypassed when `q` is provided. Case-insensitive regex match.
 51. **Trainer → Trainee Search** (frontend: `app/trainer/(tabs)/home.tsx`; backend: `GET /api/trainees/search?q=...` — NEW endpoint): Trainers can reach any trainee nationwide by name, email, or phone number. RBAC-gated: trainees blocked with 403 ("Only trainers can search trainees"). Returns distance if trainer has GPS location set.
 52. **UI/UX Uniformity Pass**: PeopleSearchBar enforces identical visual language across trainee and trainer flows (same card gradient, same orange accents, same typography, same empty-state, same result row, same role badge style). Replaced navy-on-navy invisible text in trainer onboarding radius picker. Standardized on white text + orange accents on dark surfaces (no Colors.text/#1a2a5e on dark backgrounds).
+53. **Invite-to-RapidReps in Empty Search State** (`src/components/PeopleSearchBar.tsx`): When a search returns 0 results, surface an orange CTA that opens the right native deep-link:
+    - **Email-shaped query** → `mailto:` with prefilled subject/body
+    - **Phone-shaped query** → `sms:` with prefilled body (iOS uses `&body=`, Android uses `?body=`)
+    - **Other** → Native `Share.share` sheet
+    Each share carries the user's referral code (auto-fetched once via `/api/referral/my-code`) and pitches "we both get $5 off". Available on both trainee (audience=trainer) and trainer (audience=trainee) home screens — every "user not found" becomes a referral opportunity.
 
 ## Backend Tested (Iteration 70)
 - 21/21 pytest tests passed (100%) — name/email/phone substring (case-insensitive), trainer-only RBAC, unauthenticated rejection, q required validation, whitespace-q safe handling, no-match empty result, backward-compatible legacy filter mode when q is absent, regression sanity for /api/auth/login + /api/auth/me.
