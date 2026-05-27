@@ -40,6 +40,7 @@ import { FavoriteAvailability } from '../../../src/components/trainee-home/Favor
 import { TrainerCard } from '../../../src/components/trainee-home/TrainerCard';
 import { haptic } from '../../../src/utils/haptics';
 import TrainerBottomSheet from '../../../src/components/TrainerBottomSheet';
+import PeopleSearchBar from '../../../src/components/PeopleSearchBar';
 
 const { width, height } = Dimensions.get('window');
 
@@ -696,6 +697,26 @@ export default function TraineeHomeScreen() {
                 </LinearGradient>
               </TouchableOpacity>
             </View>
+
+            {/* === GLOBAL TRAINER SEARCH (by name / email / phone) === */}
+            <PeopleSearchBar
+              placeholder="Search trainers by name, email, or phone"
+              emptyHint="Find any trainer nationwide — not limited to your area"
+              resultBadgeLabel="TRAINER"
+              testIDPrefix="trainee-trainer-search"
+              onSearch={async (q) => {
+                try {
+                  const data = await trainerAPI.searchTrainers({ q });
+                  return (data || []) as any[];
+                } catch {
+                  return [];
+                }
+              }}
+              onSelectResult={(p) => {
+                const id = p.userId || p.id;
+                if (id) router.push(`/trainee/trainer-detail?trainerId=${id}`);
+              }}
+            />
 
             {/* === CONVENIENCE FEATURES === */}
 

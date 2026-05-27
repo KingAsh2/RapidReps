@@ -129,6 +129,12 @@ export const trainerAPI = {
     return response.data;
   },
 
+  // Search trainees by name, email, or phone (nationwide — bypasses proximity)
+  searchTrainees: async (q: string): Promise<{ trainees: any[]; count: number }> => {
+    const response = await api.get('/trainees/search', { params: { q } });
+    return response.data;
+  },
+
   getSessions: async (status?: string): Promise<Session[]> => {
     const response = await api.get('/trainer/sessions', { params: { status } });
     return response.data;

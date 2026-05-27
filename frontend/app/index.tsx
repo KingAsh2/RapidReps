@@ -80,12 +80,12 @@ export default function WelcomeScreen() {
     return () => { animationsAlive.current = false; };
   }, []);
 
-  // ── Play explosive impact sound ──
+  // ── Play THUNDER startup sound — high-energy crack + rolling rumble ──
   const playImpactSound = async () => {
     try {
       await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
       const { sound } = await Audio.Sound.createAsync(
-        require('../assets/sounds/explosion-impact.wav'),
+        require('../assets/sounds/thunder.wav'),
         { volume: 1.0 }
       );
       await sound.playAsync();

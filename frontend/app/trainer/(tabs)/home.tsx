@@ -26,6 +26,7 @@ import { useAlert } from '../../../src/contexts/AlertContext';
 import { useNotifications } from '../../../src/contexts/NotificationContext';
 import { toast } from '../../../src/utils/toast';
 import { haptic } from '../../../src/utils/haptics';
+import PeopleSearchBar from '../../../src/components/PeopleSearchBar';
 
 const { width } = Dimensions.get('window');
 
@@ -787,6 +788,26 @@ export default function TrainerHomeScreen() {
                 </LinearGradient>
               </TouchableOpacity>
             </View>
+
+            {/* === GLOBAL TRAINEE SEARCH (by name / email / phone) === */}
+            <PeopleSearchBar
+              placeholder="Search trainees by name, email, or phone"
+              emptyHint="Reach any trainee nationwide — not limited to nearby"
+              resultBadgeLabel="TRAINEE"
+              testIDPrefix="trainer-trainee-search"
+              onSearch={async (q) => {
+                try {
+                  const data = await trainerAPI.searchTrainees(q);
+                  return (data?.trainees || []) as any[];
+                } catch {
+                  return [];
+                }
+              }}
+              onSelectResult={(p) => {
+                const id = p.userId || p.id;
+                if (id) router.push(`/trainer/trainee-profile?userId=${id}`);
+              }}
+            />
 
             {/* Pending Requests Section */}
             {pendingSessions.length > 0 && (

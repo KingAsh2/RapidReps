@@ -11,10 +11,10 @@ import {
   ImageBackground,
   Modal,
   Linking,
-  FlatList,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import Slider from '@react-native-community/slider';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useAlert } from '../../src/contexts/AlertContext';
@@ -414,19 +414,31 @@ export default function TrainerOnboardingScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Travel Radius (miles)</Text>
-              <TouchableOpacity
-                style={styles.input}
-                onPress={() => setShowRadiusPicker(true)}
-                data-testid="onboard-travel-radius-dropdown"
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Text style={{ color: Colors.text, fontSize: 15, fontWeight: '600' }}>
+              <Text style={styles.label}>Travel Radius</Text>
+              <View style={styles.sliderCard}>
+                <View style={styles.sliderValueRow}>
+                  <Ionicons name="navigate" size={16} color={Colors.primary} />
+                  <Text style={styles.sliderValueText}>
                     {formData.travelRadiusMiles} {formData.travelRadiusMiles === 1 ? 'mile' : 'miles'}
                   </Text>
-                  <Ionicons name="chevron-down" size={18} color={Colors.textLight} />
                 </View>
-              </TouchableOpacity>
+                <Slider
+                  style={{ width: '100%', height: 40 }}
+                  minimumValue={1}
+                  maximumValue={35}
+                  step={1}
+                  value={formData.travelRadiusMiles}
+                  onValueChange={(val: number) => setFormData({ ...formData, travelRadiusMiles: Math.round(val) })}
+                  minimumTrackTintColor={Colors.primary}
+                  maximumTrackTintColor="rgba(255,255,255,0.18)"
+                  thumbTintColor={Colors.primary}
+                  data-testid="onboard-travel-radius-slider"
+                />
+                <View style={styles.sliderLabelsRow}>
+                  <Text style={styles.sliderLabelText}>1 mi</Text>
+                  <Text style={styles.sliderLabelText}>35 mi</Text>
+                </View>
+              </View>
             </View>
 
             <View style={styles.inputGroup}>
@@ -615,56 +627,7 @@ export default function TrainerOnboardingScreen() {
         </View>
       </Modal>
 
-      {/* Travel Radius Picker Modal */}
-      <Modal visible={showRadiusPicker} transparent animationType="slide">
-        <TouchableOpacity
-          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}
-          activeOpacity={1}
-          onPress={() => setShowRadiusPicker(false)}
-        >
-          <View style={{ backgroundColor: '#141929', borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: 400 }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 16, borderBottomWidth: 1, borderBottomColor: '#eee' }}>
-              <Text style={{ fontSize: 17, fontWeight: '700', color: Colors.text }}>Travel Radius (miles)</Text>
-              <TouchableOpacity onPress={() => setShowRadiusPicker(false)}>
-                <Ionicons name="close-circle" size={26} color={Colors.textLight} />
-              </TouchableOpacity>
-            </View>
-            <FlatList
-              data={RADIUS_OPTIONS}
-              keyExtractor={(item) => item.toString()}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={{
-                    paddingVertical: 14,
-                    paddingHorizontal: 20,
-                    backgroundColor: formData.travelRadiusMiles === item ? 'rgba(255,106,0,0.12)' : 'rgba(255,255,255,0.06)',
-                    borderBottomWidth: 0.5,
-                    borderBottomColor: '#f0f0f0',
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                  }}
-                  onPress={() => {
-                    setFormData({ ...formData, travelRadiusMiles: item });
-                    setShowRadiusPicker(false);
-                  }}
-                >
-                  <Text style={{
-                    fontSize: 16,
-                    color: formData.travelRadiusMiles === item ? Colors.primary : Colors.text,
-                    fontWeight: formData.travelRadiusMiles === item ? '700' : '400',
-                  }}>
-                    {item} {item === 1 ? 'mile' : 'miles'}
-                  </Text>
-                  {formData.travelRadiusMiles === item && (
-                    <Ionicons name="checkmark-circle" size={22} color={Colors.primary} />
-                  )}
-                </TouchableOpacity>
-              )}
-            />
-          </View>
-        </TouchableOpacity>
-      </Modal>
+      {/* Travel Radius now uses inline Slider — modal picker removed */}
     </ImageBackground>
   );
 }
@@ -1001,5 +964,35 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#5a6785',
+  },
+  // ── Slider (matches Edit Profile pattern) ──
+  sliderCard: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.18)',
+  },
+  sliderValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  sliderValueText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  sliderLabelsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: -4,
+  },
+  sliderLabelText: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.6)',
+    fontWeight: '600',
   },
 });

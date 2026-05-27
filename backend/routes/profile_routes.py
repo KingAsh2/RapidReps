@@ -490,9 +490,53 @@ async def search_trainers(
     minPrice: Optional[int] = None, maxPrice: Optional[int] = None,
     inPerson: Optional[bool] = None, virtual: Optional[bool] = None,
     latitude: Optional[float] = None, longitude: Optional[float] = None,
-    wantsVirtual: Optional[bool] = None
+    wantsVirtual: Optional[bool] = None,
+    q: Optional[str] = None,
 ):
-    """Search trainers with filters - includes location and virtual matching"""
+    """Search trainers with filters - includes location and virtual matching.
+    When `q` is provided, matches trainer by fullName / email / phone across ALL trainers
+    (proximity is ignored so trainees can find specific trainers nationwide)."""
+    # ── Direct lookup by name/email/phone (bypasses proximity entirely) ──
+    if q and q.strip():
+        q_clean = q.strip()
+        import re
+        regex = {'$regex': re.escape(q_clean), '$options': 'i'}
+        matched_users = await db.users.find(
+            {
+                'roles': UserRole.TRAINER,
+                '$or': [
+                    {'fullName': regex},
+                    {'email': regex},
+                    {'phone': regex},
+                ],
+            },
+            {'_id': 1, 'fullName': 1}
+        ).to_list(50)
+        if not matched_users:
+            return []
+        user_ids = [str(u['_id']) for u in matched_users]
+        names_map = {str(u['_id']): u.get('fullName', 'Unknown Trainer') for u in matched_users}
+        trainer_projection = {
+            'userId': 1, 'avatarUrl': 1, 'profilePhoto': 1, 'bio': 1, 'experienceYears': 1,
+            'certifications': 1, 'trainingStyles': 1, 'gymsWorkedAt': 1, 'primaryGym': 1,
+            'offersInPerson': 1, 'offersVirtual': 1, 'offersOutdoor': 1, 'offersInHome': 1,
+            'sessionDurationsOffered': 1, 'virtualRateCents': 1, 'outdoorRateCents': 1,
+            'inHomeRateCents': 1, 'ratePerMinuteCents': 1, 'travelRadiusMiles': 1,
+            'cancellationPolicy': 1, 'averageRating': 1, 'totalReviews': 1,
+            'totalSessionsCompleted': 1, 'isVerified': 1, 'trainerTier': 1,
+            'verificationStatus': 1, 'canGoLive': 1, 'latitude': 1, 'longitude': 1,
+            'locationAddress': 1, 'isAvailable': 1, 'isVirtualTrainingAvailable': 1,
+            'videoCallPreference': 1, 'createdAt': 1,
+        }
+        trainers_q = await db.trainer_profiles.find(
+            {'userId': {'$in': user_ids}}, trainer_projection
+        ).to_list(50)
+        for t in trainers_q:
+            t['fullName'] = names_map.get(t['userId'], 'Unknown Trainer')
+            t['distance'] = None
+            t['matchType'] = 'direct-search'
+        return [TrainerProfileResponse(**serialize_doc(t)) for t in trainers_q]
+
     query = {'isAvailable': True}
     if styles:
         query['trainingStyles'] = {'$in': styles.split(',')}
@@ -992,3 +1036,73 @@ async def toggle_trainer_availability(isAvailable: bool, current_user: dict = De
         'success': True, 'isAvailable': isAvailable,
         'message': f"You are now {'available' if isAvailable else 'unavailable'} to trainees"
     }
+
+
+@router.get("/trainees/search")
+async def search_trainees(
+    q: str = Query(..., min_length=1, description="Search by trainee name, email, or phone"),
+    current_user: dict = Depends(get_current_user),
+):
+    """Trainer-only: search trainees nationwide by fullName / email / phone.
+    Proximity is ignored — trainers can reach out to any trainee."""
+    if UserRole.TRAINER not in (current_user.get('roles') or []):
+        raise HTTPException(403, "Only trainers can search trainees")
+
+    import re
+    q_clean = q.strip()
+    if not q_clean:
+        return {'trainees': [], 'count': 0}
+
+    regex = {'$regex': re.escape(q_clean), '$options': 'i'}
+    matched_users = await db.users.find(
+        {
+            'roles': UserRole.TRAINEE,
+            '$or': [
+                {'fullName': regex},
+                {'email': regex},
+                {'phone': regex},
+            ],
+        },
+        {'_id': 1, 'fullName': 1, 'email': 1, 'phone': 1, 'profilePhoto': 1}
+    ).to_list(50)
+
+    if not matched_users:
+        return {'trainees': [], 'count': 0}
+
+    user_ids = [str(u['_id']) for u in matched_users]
+    profiles = await db.trainee_profiles.find(
+        {'userId': {'$in': user_ids}},
+        {'userId': 1, 'avatarUrl': 1, 'fitnessGoals': 1, 'fitnessLevel': 1,
+         'latitude': 1, 'longitude': 1, 'locationAddress': 1}
+    ).to_list(50)
+    profile_map = {p['userId']: p for p in profiles}
+
+    # Compute distance if trainer has a location
+    trainer_profile = await db.trainer_profiles.find_one(
+        {'userId': str(current_user['_id'])},
+        {'latitude': 1, 'longitude': 1}
+    )
+    t_lat = (trainer_profile or {}).get('latitude')
+    t_lon = (trainer_profile or {}).get('longitude')
+
+    results = []
+    for u in matched_users:
+        uid = str(u['_id'])
+        p = profile_map.get(uid, {})
+        distance = None
+        if t_lat and t_lon and p.get('latitude') and p.get('longitude'):
+            distance = round(calculate_distance(t_lat, t_lon, p['latitude'], p['longitude']), 1)
+        results.append({
+            'userId': uid,
+            'id': uid,
+            'fullName': u.get('fullName', 'Unknown Trainee'),
+            'email': u.get('email'),
+            'phone': u.get('phone'),
+            'profilePhoto': u.get('profilePhoto') or p.get('avatarUrl'),
+            'avatarUrl': p.get('avatarUrl') or u.get('profilePhoto'),
+            'fitnessGoals': p.get('fitnessGoals'),
+            'fitnessLevel': p.get('fitnessLevel'),
+            'locationAddress': p.get('locationAddress'),
+            'distance': distance,
+        })
+    return {'trainees': results, 'count': len(results)}
