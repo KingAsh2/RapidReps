@@ -178,31 +178,11 @@ export const SocialAuthButtons = ({ preSelectedRole, onError, onSuccess }: Socia
     } finally { setLoadingProvider(null); }
   };
 
-  const handleFacebookLogin = async () => {
-    setLoadingProvider('facebook');
-    haptic.light();
-    setTimeout(() => {
-      onError?.('Facebook login is coming soon. Use Google or Apple to sign in.');
-      setLoadingProvider(null);
-    }, 800);
-  };
-
   const isLoading = !!loadingProvider;
 
-  /* Rendered right-to-left: Facebook, Google, Apple */
+  /* Rendered right-to-left: Google, Apple (Facebook intentionally removed) */
   return (
     <View style={styles.container}>
-      <IconBtn
-        icon="logo-facebook"
-        iconColor="#FFFFFF"
-        bgColor="#1877F2"
-        borderColor="rgba(24,119,242,0.5)"
-        delay={200}
-        loading={loadingProvider === 'facebook'}
-        disabled={isLoading}
-        onPress={handleFacebookLogin}
-        testId="social-facebook-btn"
-      />
       <IconBtn
         icon="logo-google"
         iconColor="#4285F4"
