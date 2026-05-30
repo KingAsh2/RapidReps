@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  View, TouchableOpacity, StyleSheet, ActivityIndicator, Animated, Easing, Platform,
+  View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Animated, Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
@@ -15,11 +15,13 @@ interface SocialAuthButtonsProps {
   onSuccess?: (user: any, isNewUser: boolean) => void;
 }
 
-/* ── Compact circular icon button ── */
-interface IconBtnProps {
+/* ── Full-width pill button (Apple HIG + Google brand compliant) ── */
+interface PillBtnProps {
+  label: string;
   icon: string;
   iconColor: string;
   bgColor: string;
+  textColor: string;
   borderColor: string;
   delay: number;
   loading: boolean;
@@ -28,10 +30,10 @@ interface IconBtnProps {
   testId: string;
 }
 
-const IconBtn = ({
-  icon, iconColor, bgColor, borderColor,
+const PillBtn = ({
+  label, icon, iconColor, bgColor, textColor, borderColor,
   delay, loading, disabled, onPress, testId,
-}: IconBtnProps) => {
+}: PillBtnProps) => {
   const entranceAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
@@ -46,95 +48,69 @@ const IconBtn = ({
   }, []);
 
   const handlePressIn = () => {
-    Animated.spring(scaleAnim, { toValue: 0.88, friction: 8, tension: 200, useNativeDriver: true }).start();
+    Animated.spring(scaleAnim, { toValue: 0.97, friction: 8, tension: 200, useNativeDriver: true }).start();
   };
   const handlePressOut = () => {
-    Animated.spring(scaleAnim, { toValue: 1, friction: 5, tension: 100, useNativeDriver: true }).start();
-  };
-  const handlePress = () => {
-    haptic.light();
-    Animated.sequence([
-      Animated.spring(scaleAnim, { toValue: 0.88, friction: 8, tension: 300, useNativeDriver: true }),
-      Animated.spring(scaleAnim, { toValue: 1, friction: 4, tension: 120, useNativeDriver: true }),
-    ]).start();
-    onPress();
+    Animated.spring(scaleAnim, { toValue: 1, friction: 8, tension: 200, useNativeDriver: true }).start();
   };
 
-  const translateY = entranceAnim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] });
-  const opacity = entranceAnim.interpolate({ inputRange: [0, 0.4, 1], outputRange: [0, 0, 1] });
+  const translateY = entranceAnim.interpolate({ inputRange: [0, 1], outputRange: [14, 0] });
 
   return (
-    <Animated.View style={{ opacity, transform: [{ translateY }, { scale: scaleAnim }] }}>
+    <Animated.View
+      style={{ opacity: entranceAnim, transform: [{ translateY }, { scale: scaleAnim }] }}
+    >
       <TouchableOpacity
+        style={[
+          styles.pillBtn,
+          { backgroundColor: bgColor, borderColor },
+          disabled && !loading && { opacity: 0.6 },
+        ]}
+        onPress={onPress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
-        onPress={handlePress}
         disabled={disabled}
-        activeOpacity={0.8}
+        activeOpacity={0.9}
         data-testid={testId}
-        style={[
-          styles.iconBtn,
-          {
-            backgroundColor: bgColor,
-            borderColor: borderColor,
-          },
-        ]}
       >
         {loading ? (
-          <ActivityIndicator size="small" color={iconColor} />
+          <ActivityIndicator size="small" color={textColor} />
         ) : (
-          <Ionicons name={icon as any} size={22} color={iconColor} />
+          <>
+            <Ionicons name={icon as any} size={20} color={iconColor} />
+            <Text style={[styles.pillText, { color: textColor }]}>{label}</Text>
+          </>
         )}
       </TouchableOpacity>
     </Animated.View>
   );
 };
 
-/* ── Main Component ── */
-export const SocialAuthButtons = ({ preSelectedRole, onError, onSuccess }: SocialAuthButtonsProps) => {
+export const SocialAuthButtons: React.FC<SocialAuthButtonsProps> = ({
+  preSelectedRole, onError, onSuccess,
+}) => {
   const { socialLogin } = useAuth();
   const router = useRouter();
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
 
-  const handleSocialResult = async (user: any, isNewUser: boolean) => {
-    if (onSuccess) {
-      onSuccess(user, isNewUser);
-      return;
-    }
-    if (isNewUser || !user.roles?.length) {
-      router.replace({
-        pathname: '/auth/signup',
-        params: {
-          socialName: user.fullName || '',
-          socialEmail: user.email || '',
-          socialAuth: 'true',
-          role: preSelectedRole || '',
-        },
-      });
-    } else {
-      haptic.success();
-      const role = user.roles[0];
-      if (user.isAdmin || role === 'admin') router.replace('/admin/dashboard');
-      else if (role === 'trainer') router.replace('/trainer/(tabs)/home');
-      else router.replace('/trainee/(tabs)/home');
-    }
-  };
-
   const handleGoogleLogin = async () => {
     setLoadingProvider('google');
+    haptic.light();
     try {
       const redirectUrl = Platform.OS === 'web'
-        ? `${window.location.origin}/auth/callback`
-        : Linking.createURL('auth/callback');
+        ? `${window.location.origin}/auth/google-callback`
+        : Linking.createURL('auth/google-callback');
       const authUrl = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
       const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUrl);
       if (result.type === 'success' && result.url) {
-        const fragment = result.url.split('#')[1] || '';
-        const params = new URLSearchParams(fragment);
-        const sessionId = params.get('session_id');
+        const sessionId = new URL(result.url.replace('rapidreps://', 'https://placeholder/'))
+          .searchParams.get('session_id')
+          || result.url.split('session_id=')[1]?.split('&')[0];
         if (!sessionId) { onError?.('Google sign-in was cancelled or failed.'); return; }
         const { user, isNewUser } = await socialLogin('google', { sessionId });
-        await handleSocialResult(user, isNewUser);
+        if (onSuccess) onSuccess(user, isNewUser);
+        else if (isNewUser) router.replace(`/auth/signup?isSocialAuth=true&socialId=${user.id}`);
+        else router.replace(user.roles?.includes('trainer') ? '/trainer/(tabs)/home' : '/trainee/(tabs)/home');
       }
     } catch (err: any) {
       onError?.(err?.response?.data?.detail || err?.message || 'Google sign-in failed.');
@@ -143,63 +119,52 @@ export const SocialAuthButtons = ({ preSelectedRole, onError, onSuccess }: Socia
 
   const handleAppleLogin = async () => {
     setLoadingProvider('apple');
+    haptic.light();
     try {
       const redirectUrl = Platform.OS === 'web'
         ? `${window.location.origin}/auth/apple-callback`
         : Linking.createURL('auth/apple-callback');
       const appleAuthUrl = `https://appleid.apple.com/auth/authorize?` +
-        `client_id=${encodeURIComponent('app.emergent.trainer-finder-9f806c77e')}` +
-        `&redirect_uri=${encodeURIComponent(redirectUrl)}` +
-        `&response_type=code+id_token` +
-        `&scope=name+email` +
-        `&response_mode=fragment`;
+        `client_id=app.emergent.trainer-finder-9f806c77e&` +
+        `redirect_uri=${encodeURIComponent(redirectUrl)}&` +
+        `response_type=code id_token&` +
+        `scope=name email&` +
+        `response_mode=fragment`;
       const result = await WebBrowser.openAuthSessionAsync(appleAuthUrl, redirectUrl);
       if (result.type === 'success' && result.url) {
         const fragment = result.url.split('#')[1] || '';
         const params = new URLSearchParams(fragment);
         const idToken = params.get('id_token');
         if (!idToken) { onError?.('Apple sign-in was cancelled or failed.'); return; }
-        const payloadB64 = idToken.split('.')[1] || '';
-        const payload = JSON.parse(atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/')));
+        const payload = JSON.parse(atob(idToken.split('.')[1]));
+        const email = payload.email || '';
         const appleUserId = payload.sub || '';
-        const email = payload.email || undefined;
         const { user, isNewUser } = await socialLogin('apple', {
           identityToken: idToken,
           userId: appleUserId,
           email,
-          authorizationCode: params.get('code') || undefined,
         });
-        await handleSocialResult(user, isNewUser);
+        if (onSuccess) onSuccess(user, isNewUser);
+        else if (isNewUser) router.replace(`/auth/signup?isSocialAuth=true&socialId=${user.id}`);
+        else router.replace(user.roles?.includes('trainer') ? '/trainer/(tabs)/home' : '/trainee/(tabs)/home');
       }
     } catch (err: any) {
-      if (err.code !== 'ERR_REQUEST_CANCELED') {
-        onError?.(err?.response?.data?.detail || err?.message || 'Apple sign-in failed.');
-      }
+      onError?.(err?.response?.data?.detail || err?.message || 'Apple sign-in failed.');
     } finally { setLoadingProvider(null); }
   };
 
   const isLoading = !!loadingProvider;
 
-  /* Rendered right-to-left: Google, Apple (Facebook intentionally removed) */
   return (
     <View style={styles.container}>
-      <IconBtn
-        icon="logo-google"
-        iconColor="#4285F4"
-        bgColor="#FFFFFF"
-        borderColor="rgba(66,133,244,0.3)"
-        delay={100}
-        loading={loadingProvider === 'google'}
-        disabled={isLoading}
-        onPress={handleGoogleLogin}
-        testId="social-google-btn"
-      />
       {Platform.OS !== 'android' && (
-        <IconBtn
+        <PillBtn
+          label="Continue with Apple"
           icon="logo-apple"
           iconColor="#FFFFFF"
           bgColor="#000000"
-          borderColor="rgba(255,255,255,0.25)"
+          textColor="#FFFFFF"
+          borderColor="rgba(255,255,255,0.18)"
           delay={0}
           loading={loadingProvider === 'apple'}
           disabled={isLoading}
@@ -207,30 +172,46 @@ export const SocialAuthButtons = ({ preSelectedRole, onError, onSuccess }: Socia
           testId="social-apple-btn"
         />
       )}
+      <PillBtn
+        label="Continue with Google"
+        icon="logo-google"
+        iconColor="#4285F4"
+        bgColor="#FFFFFF"
+        textColor="#1F1F1F"
+        borderColor="rgba(0,0,0,0.08)"
+        delay={Platform.OS !== 'android' ? 80 : 0}
+        loading={loadingProvider === 'google'}
+        disabled={isLoading}
+        onPress={handleGoogleLogin}
+        testId="social-google-btn"
+      />
     </View>
   );
 };
 
-const ICON_SIZE = 48;
-
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 16,
+    flexDirection: 'column',
+    gap: 12,
   },
-  iconBtn: {
-    width: ICON_SIZE,
-    height: ICON_SIZE,
-    borderRadius: ICON_SIZE / 2,
-    justifyContent: 'center',
+  pillBtn: {
+    flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1.5,
+    justifyContent: 'center',
+    gap: 10,
+    height: 50,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 18,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.18,
     shadowRadius: 6,
-    elevation: 4,
+    elevation: 3,
+  },
+  pillText: {
+    fontSize: 15,
+    fontWeight: '700',
+    letterSpacing: 0.2,
   },
 });
