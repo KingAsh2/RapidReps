@@ -141,6 +141,14 @@ RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoD
     - **Privacy policy** published at `/api/privacy/policy` with full IG-integration addendum. Data-deletion confirmation page at `/api/privacy/data-deletion-status?code=`.
     - **Meta App Review prep doc** at `/app/memory/META_REVIEW_PREP.md` — screencast script, deliverables checklist, going-live steps.
     - Tested 26/26 (100%) in iteration_71.json.
+56. **Facebook Login removed; Apple + Google sign-in polished**: Stripped Facebook button + handler from `SocialAuthButtons`. Replaced circular icon buttons with full-width premium pill buttons (`Continue with Apple` / `Continue with Google`) — Apple HIG + Google brand compliant, 50 px tall, 12 px corner radius, 12 px vertical gap. Apple shown only on iOS.
+57. **Email/Password input fields unified with new pill aesthetic** (login.tsx): 50 px height (was 52), 12 px corner radius (was 16), softer shadow + 15 px font for visual harmony with the social pill buttons directly above.
+58. **A/B Testing Infrastructure** (`useExperiment` hook + 3 backend endpoints):
+    - Frontend hook `/app/frontend/src/hooks/useExperiment.ts`: deterministic per-device variant assignment via FNV-1a hash → no flicker, persists across reloads via AsyncStorage device ID.
+    - Backend: `POST /api/experiments/event` (no auth, public) logs `{experimentKey, variant, event: 'impression'|'click'|'conversion', deviceId}` to `experiment_events` collection.
+    - Backend: `GET /api/experiments/{key}/results` (admin-only) returns per-variant impressions/clicks/conversions + CTR.
+    - **First experiment live**: `google_cta_copy` — variants `control` (*"Continue with Google"*) vs `fast` (*"Sign up free in 5 seconds"*). Impressions auto-fire on render; clicks fire on button press.
+    - Verified end-to-end via curl: events log 200, admin results endpoint returns aggregated per-variant CTR data.
 
 ## Backend Tested (Iteration 70)
 - 21/21 pytest tests passed (100%) — name/email/phone substring (case-insensitive), trainer-only RBAC, unauthenticated rejection, q required validation, whitespace-q safe handling, no-match empty result, backward-compatible legacy filter mode when q is absent, regression sanity for /api/auth/login + /api/auth/me.

@@ -315,6 +315,52 @@ async def get_invite_stats(current_user: dict = Depends(get_current_user)):
     }
 
 
+# ── A/B EXPERIMENTS ──
+class ExperimentEventBody(BaseModel):
+    experimentKey: str  # e.g. "google_cta_copy"
+    variant: str        # e.g. "control" | "fast"
+    event: str          # "impression" | "click" | "conversion"
+    deviceId: Optional[str] = None  # anon device id (hashed client-side)
+
+
+@api_router.post("/experiments/event")
+async def log_experiment_event(body: ExperimentEventBody):
+    """Log A/B experiment events. No auth — happens pre-login on signup screens."""
+    if body.event not in ("impression", "click", "conversion"):
+        raise HTTPException(400, "event must be: impression | click | conversion")
+    doc = {
+        "_id": str(uuid.uuid4()),
+        "experimentKey": body.experimentKey,
+        "variant": body.variant,
+        "event": body.event,
+        "deviceId": body.deviceId,
+        "createdAt": datetime.utcnow(),
+    }
+    await db.experiment_events.insert_one(doc)
+    return {"ok": True}
+
+
+@api_router.get("/experiments/{experiment_key}/results")
+async def get_experiment_results(experiment_key: str, current_user: dict = Depends(get_current_user)):
+    """Admin-only: variant performance breakdown."""
+    if "admin" not in (current_user.get("roles") or []):
+        raise HTTPException(403, "Admin only")
+    pipeline = [
+        {"$match": {"experimentKey": experiment_key}},
+        {"$group": {"_id": {"variant": "$variant", "event": "$event"}, "count": {"$sum": 1}}},
+    ]
+    results: dict = {}
+    async for row in db.experiment_events.aggregate(pipeline):
+        v = row["_id"]["variant"]
+        e = row["_id"]["event"]
+        results.setdefault(v, {"impression": 0, "click": 0, "conversion": 0})[e] = row["count"]
+    # Add CTR per variant
+    for v in results.values():
+        imp = v.get("impression", 0)
+        v["ctr"] = round(v.get("click", 0) / imp, 4) if imp > 0 else 0.0
+    return {"experimentKey": experiment_key, "variants": results}
+
+
 # ============================================================================
 # CHAT / MESSAGING ROUTES
 # ============================================================================

@@ -28,6 +28,8 @@ const api = axios.create({
   timeout: 15000,
 });
 
+export { api };
+
 // Add auth token to requests
 api.interceptors.request.use(async (config) => {
   const token = await AsyncStorage.getItem('auth_token');

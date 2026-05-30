@@ -8,6 +8,9 @@ import * as Linking from 'expo-linking';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'expo-router';
 import { haptic } from '../utils/haptics';
+import { useExperiment } from '../hooks/useExperiment';
+
+const GOOGLE_CTA_VARIANTS = ['control', 'fast'] as const;
 
 interface SocialAuthButtonsProps {
   preSelectedRole?: string;
@@ -205,6 +208,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  pillText: {
+    fontSize: 15,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+  },
+});
+t: { width: 0, height: 2 },
     shadowOpacity: 0.18,
     shadowRadius: 6,
     elevation: 3,
