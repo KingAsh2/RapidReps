@@ -203,7 +203,7 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
         </MapView>
 
         {/* Recenter — sharp rectangle sticking from right edge */}
-        <TouchableOpacity style={s.recenter} onPress={recenter} data-testid="map-recenter-button">
+        <TouchableOpacity style={s.recenter} onPress={recenter} data-testid="map-recenter-button" accessibilityLabel="Recenter map on my location" accessibilityRole="button">
           <Ionicons name="scan-outline" size={18} color={N.white} />
         </TouchableOpacity>
 

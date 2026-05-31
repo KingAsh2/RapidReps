@@ -52,7 +52,7 @@ export default function TrainerFilters({ filters, onFiltersChange, onClose }: Fi
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Filters</Text>
-        <TouchableOpacity onPress={onClose}>
+        <TouchableOpacity onPress={onClose} accessibilityLabel="Close" accessibilityRole="button">
           <Ionicons name="close" size={28} color={Colors.navy} />
         </TouchableOpacity>
       </View>

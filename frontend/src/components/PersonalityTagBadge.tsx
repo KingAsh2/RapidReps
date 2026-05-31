@@ -93,7 +93,7 @@ export const PersonalityTagSelector = ({ visible, onClose, onSelect, currentTag 
           <LinearGradient colors={['#141929', '#1A2035']} style={styles.modalGradient}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>YOUR VIBE</Text>
-              <TouchableOpacity onPress={onClose} data-testid="close-personality-selector">
+              <TouchableOpacity onPress={onClose} data-testid="close-personality-selector" accessibilityLabel="Close personality selector" accessibilityRole="button">
                 <Ionicons name="close-circle" size={28} color="rgba(255,255,255,0.4)" />
               </TouchableOpacity>
             </View>

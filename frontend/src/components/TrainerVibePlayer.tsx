@@ -229,7 +229,7 @@ export const TrainerVibePlayer = ({ vibe, autoPlay = true, compact = false }: Pr
         </View>
 
         {/* Mute control */}
-        <TouchableOpacity onPress={toggleMute} style={styles.muteBtn} data-testid="vibe-mute-btn">
+        <TouchableOpacity onPress={toggleMute} style={styles.muteBtn} data-testid="vibe-mute-btn" accessibilityLabel="Toggle audio preview" accessibilityRole="button">
           <Ionicons name={isMuted ? 'volume-mute' : 'volume-high'} size={18} color="rgba(255,255,255,0.6)" />
         </TouchableOpacity>
       </LinearGradient>

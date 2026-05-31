@@ -173,7 +173,7 @@ export default function TrainerProfileScreen() {
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Profile</Text>
-          <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn} data-testid="trainer-profile-logout">
+          <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn} data-testid="trainer-profile-logout" accessibilityLabel="Log out" accessibilityRole="button">
             <Ionicons name="log-out-outline" size={22} color={COLORS.white} />
           </TouchableOpacity>
         </View>

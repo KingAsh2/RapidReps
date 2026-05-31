@@ -37,7 +37,7 @@ export const AccentColorPicker = ({ visible, onClose, onSelect, currentColor }: 
           <LinearGradient colors={['#141929', '#1A2035']} style={styles.gradient}>
             <View style={styles.header}>
               <Text style={styles.title}>BRAND COLOR</Text>
-              <TouchableOpacity onPress={onClose} data-testid="close-accent-picker">
+              <TouchableOpacity onPress={onClose} data-testid="close-accent-picker" accessibilityLabel="Close color picker" accessibilityRole="button">
                 <Ionicons name="close-circle" size={28} color="rgba(255,255,255,0.4)" />
               </TouchableOpacity>
             </View>

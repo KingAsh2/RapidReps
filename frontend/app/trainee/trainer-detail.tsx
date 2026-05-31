@@ -437,13 +437,13 @@ export default function TrainerDetailScreen() {
             <Ionicons name="arrow-back" size={24} color={COLORS.white} />
           </TouchableOpacity>
           <View style={styles.headerActions}>
-            <TouchableOpacity onPress={handleToggleFavorite} style={styles.headerBtn} data-testid="favorite-trainer-btn">
+            <TouchableOpacity onPress={handleToggleFavorite} style={styles.headerBtn} data-testid="favorite-trainer-btn" accessibilityLabel="Toggle favorite trainer" accessibilityRole="button">
               <Ionicons name={isFavorite ? "heart" : "heart-outline"} size={22} color={isFavorite ? COLORS.error : COLORS.white} />
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleMessage} style={styles.headerBtn}>
+            <TouchableOpacity onPress={handleMessage} style={styles.headerBtn} accessibilityLabel="Open chat" accessibilityRole="button">
               <Ionicons name="chatbubble" size={22} color={COLORS.white} />
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleReportTrainer} style={styles.headerBtn}>
+            <TouchableOpacity onPress={handleReportTrainer} style={styles.headerBtn} accessibilityLabel="Report this trainer" accessibilityRole="button">
               <Ionicons name="flag" size={22} color={COLORS.white} />
             </TouchableOpacity>
           </View>

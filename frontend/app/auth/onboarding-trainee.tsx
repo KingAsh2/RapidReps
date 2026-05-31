@@ -459,7 +459,7 @@ export default function TraineeOnboardingScreen() {
         {/* Header */}
         <View style={styles.header}>
           {step > 1 ? (
-            <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+            <TouchableOpacity onPress={handleBack} style={styles.backButton} accessibilityLabel="Go back" accessibilityRole="button">
               <Ionicons name="arrow-back" size={24} color={COLORS.white} />
             </TouchableOpacity>
           ) : (

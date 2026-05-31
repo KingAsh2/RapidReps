@@ -196,7 +196,7 @@ export const InstagramSection: React.FC<Props> = ({ targetUserId }) => {
               style={styles.iconBtn}
               onPress={handleUnlink}
               data-testid="ig-unlink-btn"
-            >
+             accessibilityLabel="Unlink Instagram account" accessibilityRole="button">
               <Ionicons name="unlink" size={16} color="rgba(255,255,255,0.6)" />
             </TouchableOpacity>
           </View>

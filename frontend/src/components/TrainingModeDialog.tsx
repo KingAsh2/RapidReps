@@ -40,7 +40,7 @@ export default function TrainingModeDialog({
             style={styles.dialog}
           >
             {/* Close Button */}
-            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+            <TouchableOpacity style={styles.closeButton} onPress={onClose} accessibilityLabel="Close" accessibilityRole="button">
               <Ionicons name="close" size={28} color={Colors.navy} />
             </TouchableOpacity>
 

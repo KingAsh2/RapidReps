@@ -99,7 +99,7 @@ export default function InstantMatchScreen() {
       <LinearGradient colors={['rgba(255, 127, 0, 0.92)', 'rgba(255, 106, 0, 0.88)']} style={StyleSheet.absoluteFillObject} />
 
       <View style={styles.header}>
-        <TouchableOpacity onPress={handleCancel} style={styles.backBtn} data-testid="instant-match-back">
+        <TouchableOpacity onPress={handleCancel} style={styles.backBtn} data-testid="instant-match-back" accessibilityLabel="Go back" accessibilityRole="button">
           <Ionicons name="close" size={24} color={COLORS.white} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Instant Workout</Text>

@@ -221,7 +221,7 @@ export const PeopleSearchBar: React.FC<PeopleSearchBarProps> = ({
               onPress={clearQuery}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               data-testid={`${testIDPrefix}-clear-btn`}
-            >
+             accessibilityLabel="Close" accessibilityRole="button">
               <Ionicons name="close-circle" size={20} color="rgba(255,255,255,0.55)" />
             </TouchableOpacity>
           ) : null}

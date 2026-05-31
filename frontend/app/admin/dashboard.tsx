@@ -564,7 +564,7 @@ export default function AdminDashboard() {
             <Text style={s.headerTitle}>Admin Panel</Text>
             <Text style={s.headerSub}>RapidReps Management</Text>
           </View>
-          <TouchableOpacity onPress={handleLogout} style={s.logoutBtn} data-testid="admin-logout-btn">
+          <TouchableOpacity onPress={handleLogout} style={s.logoutBtn} data-testid="admin-logout-btn" accessibilityLabel="Log out" accessibilityRole="button">
             <Ionicons name="log-out-outline" size={22} color={C.white} />
           </TouchableOpacity>
         </View>

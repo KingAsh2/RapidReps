@@ -219,7 +219,7 @@ export default function TrainerVibeSetup() {
                   <Text style={s.currentVibeTitle} numberOfLines={1}>{currentVibe.trackName}</Text>
                   <Text style={s.currentVibeArtist} numberOfLines={1}>{currentVibe.artistName}</Text>
                 </View>
-                <TouchableOpacity onPress={removeVibe} style={s.removeBtn} data-testid="remove-vibe-btn">
+                <TouchableOpacity onPress={removeVibe} style={s.removeBtn} data-testid="remove-vibe-btn" accessibilityLabel="Remove music selection" accessibilityRole="button">
                   <Ionicons name="close-circle" size={24} color="rgba(255,71,87,0.7)" />
                 </TouchableOpacity>
               </View>

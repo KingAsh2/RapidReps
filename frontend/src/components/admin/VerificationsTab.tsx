@@ -645,7 +645,7 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
           <View style={{ backgroundColor: '#000', borderRadius: 16, padding: 4, width: '90%', maxWidth: 400 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 12 }}>
               <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>Intro Video (15s preview)</Text>
-              <TouchableOpacity onPress={handleCloseVideo} data-testid="close-video-modal">
+              <TouchableOpacity onPress={handleCloseVideo} data-testid="close-video-modal" accessibilityLabel="Close video preview" accessibilityRole="button">
                 <Ionicons name="close-circle" size={28} color="#fff" />
               </TouchableOpacity>
             </View>

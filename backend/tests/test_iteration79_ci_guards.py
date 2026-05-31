@@ -89,6 +89,48 @@ def test_no_expo_router_route_collisions():
     )
 
 
+# ---------------------------------------------------------------------------
+# Guard 5 — Icon-only TouchableOpacity must have accessibilityLabel (a11y / 508)
+# ---------------------------------------------------------------------------
+ICON_ONLY_TOUCHABLE_RE = re.compile(
+    r"<TouchableOpacity\b([^>]{0,400})>\s*<Ionicons\b[^/>]{0,200}/>\s*</TouchableOpacity>",
+)
+
+
+def test_icon_only_buttons_have_accessibility_label():
+    """Buttons that contain ONLY an icon (no text child) are silent to screen readers
+    unless explicitly labeled. This was the largest a11y hole in iter80 audit (17 buttons).
+    
+    Allowed: buttons with `accessibilityLabel="..."`. Text-bearing buttons are exempt
+    because RN auto-announces the inner Text.
+    """
+    offenders: list[tuple[str, int]] = []
+    for base in FRONTEND_SRC_DIRS:
+        if not base.is_dir():
+            continue
+        for path in base.rglob("*"):
+            if not path.is_file() or path.suffix not in {".tsx", ".jsx"}:
+                continue
+            if any(part in {"node_modules", ".expo", "dist", ".metro-cache", "build"} for part in path.parts):
+                continue
+            rel = str(path.relative_to(REPO_ROOT))
+            try:
+                text = path.read_text(errors="ignore")
+            except Exception:
+                continue
+            for m in ICON_ONLY_TOUCHABLE_RE.finditer(text):
+                if "accessibilityLabel" in m.group(1):
+                    continue
+                line = text[: m.start()].count("\n") + 1
+                offenders.append((rel, line))
+    assert not offenders, (
+        f"{len(offenders)} icon-only TouchableOpacity without accessibilityLabel "
+        "(silent to screen readers — Section 508 / WCAG 2.1 AA violation):\n"
+        + "\n".join(f"  • {f}:{ln}" for f, ln in offenders)
+        + "\nAdd accessibilityLabel + accessibilityRole=\"button\" to each."
+    )
+
+
 if __name__ == "__main__":
     # Allow `python test_iteration79_ci_guards.py` for quick local check
     pytest.main([__file__, "-v"])
