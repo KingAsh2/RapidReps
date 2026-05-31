@@ -33,6 +33,8 @@ export const TrainerVibePlayer = ({ vibe, autoPlay = true, compact = false }: Pr
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
   const mountedRef = useRef(true);
+  // Synchronous lock to prevent two simultaneous playPreview() calls from racing useEffects.
+  const playLockRef = useRef(false);
   const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
   const getPreviewUrl = () => freshPreviewUrl || vibe.vibePreviewUrl;
@@ -89,7 +91,8 @@ export const TrainerVibePlayer = ({ vibe, autoPlay = true, compact = false }: Pr
 
   const playPreview = async () => {
     const url = getPreviewUrl();
-    if (!url || hasPlayed) return;
+    if (!url || hasPlayed || playLockRef.current) return;
+    playLockRef.current = true; // synchronous lock — second concurrent caller exits immediately
     try {
       await Audio.setAudioModeAsync({ playsInSilentModeIOS: true, staysActiveInBackground: false });
       const { sound: newSound } = await Audio.Sound.createAsync(
@@ -118,6 +121,7 @@ export const TrainerVibePlayer = ({ vibe, autoPlay = true, compact = false }: Pr
       }
     } catch (err) {
       console.log('Vibe playback error:', err);
+      playLockRef.current = false; // release lock on failure so retry is possible
     }
   };
 

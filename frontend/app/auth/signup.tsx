@@ -54,6 +54,8 @@ export default function SignupScreen() {
   const { signup, socialLogin } = useAuth();
   const { showAlert } = useAlert();
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const isSocialAuth = params.socialAuth === 'true';
   const [formData, setFormData] = useState({
     email: (params.socialEmail as string) || '',
@@ -458,13 +460,25 @@ export default function SignupScreen() {
                   <View style={styles.inputWrapper}>
                     <Ionicons name="lock-closed-outline" size={20} color={COLORS.gray} style={styles.inputIcon} />
                     <TextInput
-                      style={styles.input}
+                      style={[styles.input, { paddingRight: 44 }]}
                       value={formData.password}
                       onChangeText={(text) => setFormData({ ...formData, password: text })}
                       placeholder="••••••••"
                       placeholderTextColor={COLORS.gray}
-                      secureTextEntry
+                      secureTextEntry={!showPassword}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      textContentType="newPassword"
+                      data-testid="signup-password-input"
                     />
+                    <TouchableOpacity
+                      onPress={() => setShowPassword(v => !v)}
+                      style={{ position: 'absolute', right: 12, top: 0, bottom: 0, justifyContent: 'center', paddingHorizontal: 4 }}
+                      accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+                      data-testid="signup-password-toggle"
+                    >
+                      <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color={COLORS.gray} />
+                    </TouchableOpacity>
                   </View>
                   <Text style={styles.helperText}>At least 8 characters. Strength matters.</Text>
                 </View>
@@ -477,13 +491,25 @@ export default function SignupScreen() {
                   <View style={styles.inputWrapper}>
                     <Ionicons name="shield-checkmark-outline" size={20} color={COLORS.gray} style={styles.inputIcon} />
                     <TextInput
-                      style={styles.input}
+                      style={[styles.input, { paddingRight: 44 }]}
                       value={formData.confirmPassword}
                       onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })}
                       placeholder="••••••••"
                       placeholderTextColor={COLORS.gray}
-                      secureTextEntry
+                      secureTextEntry={!showConfirmPassword}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      textContentType="newPassword"
+                      data-testid="signup-confirm-password-input"
                     />
+                    <TouchableOpacity
+                      onPress={() => setShowConfirmPassword(v => !v)}
+                      style={{ position: 'absolute', right: 12, top: 0, bottom: 0, justifyContent: 'center', paddingHorizontal: 4 }}
+                      accessibilityLabel={showConfirmPassword ? 'Hide password' : 'Show password'}
+                      data-testid="signup-confirm-password-toggle"
+                    >
+                      <Ionicons name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color={COLORS.gray} />
+                    </TouchableOpacity>
                   </View>
                 </View>
                 )}

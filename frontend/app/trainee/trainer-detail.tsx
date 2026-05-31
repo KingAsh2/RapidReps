@@ -79,6 +79,16 @@ export default function TrainerDetailScreen() {
   const pressTimer = useRef<NodeJS.Timeout | null>(null);
   const [isHolding, setIsHolding] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+  // Ref to the ScrollView + measured Y of the Booking Card — used to scroll hero button to booking section
+  const scrollRef = useRef<any>(null);
+  const bookingCardY = useRef(0);
+
+  const scrollToBookingCard = () => {
+    try {
+      const y = Math.max(0, (bookingCardY.current || 0) - 60);
+      scrollRef.current?.scrollTo?.({ y, animated: true });
+    } catch { /* ignore */ }
+  };
 
   useEffect(() => {
     loadTrainerDetails();
@@ -439,6 +449,7 @@ export default function TrainerDetailScreen() {
         </Animated.View>
 
         <Animated.ScrollView
+          ref={scrollRef}
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
@@ -514,7 +525,11 @@ export default function TrainerDetailScreen() {
                 )}
                 <View style={styles.heroPriceChip}>
                   <Text style={styles.heroPriceText}>
-                    ${((trainer.ratePerMinuteCents || 0) / 100).toFixed(0)}<Text style={styles.heroPriceUnit}>/min</Text>
+                    {(() => {
+                      const perMin = (trainer.ratePerMinuteCents || 0) / 100;
+                      const thirtyMin = perMin * 30;
+                      return thirtyMin > 0 ? `$${thirtyMin.toFixed(0)}` : '—';
+                    })()}<Text style={styles.heroPriceUnit}>/30 min</Text>
                   </Text>
                 </View>
               </Animated.View>
@@ -575,9 +590,7 @@ export default function TrainerDetailScreen() {
                   <Ionicons name={isFavorite ? "heart" : "heart-outline"} size={18} color={isFavorite ? '#FF4757' : accent} />
                 </TouchableOpacity>
                 <TouchableOpacity
-                  onPress={() => {
-                    handleBookSession();
-                  }}
+                  onPress={scrollToBookingCard}
                   style={styles.heroCTAPrimary}
                   accessibilityLabel="Book a session with this trainer"
                   accessibilityRole="button"
@@ -597,22 +610,17 @@ export default function TrainerDetailScreen() {
             </View>
           </Animated.View>
 
-          {/* MEDIA SHOWCASE — Gallery + Highlights (immediately after hero) */}
+          {/* MEDIA SHOWCASE — Highlight Reel only (Gallery removed per product decision) */}
           <Animated.View style={{ opacity: contentAnim, transform: [{ translateY: contentTranslateY }] }}>
-            {/* Highlight Reel */}
             {highlights.length > 0 && (
               <View style={{ paddingLeft: 16, marginBottom: 4 }}>
                 <HighlightReel highlights={highlights} trainerName={trainer.fullName || 'Trainer'} />
               </View>
             )}
-
-            {/* Gallery — prominent, right after hero */}
-            {((trainer as any)?.gallery || []).length > 0 && (
-              <View style={{ paddingHorizontal: 20, marginBottom: 4 }}>
-                <ProfileGallery gallery={(trainer as any)?.gallery || []} />
-                <InstagramSection targetUserId={(trainer as any)?.userId} />
-              </View>
-            )}
+            {/* Instagram embed (optional, hidden until trainer links account) */}
+            <View style={{ paddingHorizontal: 20, marginBottom: 4 }}>
+              <InstagramSection targetUserId={(trainer as any)?.userId} />
+            </View>
           </Animated.View>
 
           {/* Profile Details Card */}
@@ -678,6 +686,7 @@ export default function TrainerDetailScreen() {
 
           {/* Booking Card */}
           <Animated.View
+            onLayout={(e) => { bookingCardY.current = e.nativeEvent.layout.y; }}
             style={[
               styles.bookingCard,
               {
@@ -861,32 +870,44 @@ export default function TrainerDetailScreen() {
                 </Text>
               </View>
 
-              {/* Hold to Book Button */}
-              <Pressable
-                onPressIn={handlePressIn}
-                onPressOut={handlePressOut}
-                disabled={booking}
+              {/* BOOK SESSION — single tap, navigates to Confirm Booking */}
+              <TouchableOpacity
+                onPress={() => {
+                  if (booking || !trainer) return;
+                  const start = new Date();
+                  start.setDate(start.getDate() + 1);
+                  start.setHours(10, 0, 0, 0);
+                  router.push({
+                    pathname: '/trainee/confirm-booking',
+                    params: {
+                      trainerName: trainer.fullName || 'Trainer',
+                      trainerId: trainer.userId,
+                      date: start.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+                      time: start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                      duration: String(selectedDuration),
+                      sessionType: selectedSessionType,
+                      priceCents: String(Math.round((prices.sessionRate || 0) * 100)),
+                      sessionDateTimeStartIso: start.toISOString(),
+                      locationNameOrAddress: selectedSessionType === 'virtual'
+                        ? 'Virtual'
+                        : (trainer.primaryGym || 'Outdoor Location'),
+                    },
+                  });
+                }}
+                disabled={booking || !trainer}
                 style={styles.bookButtonWrapper}
+                data-testid="book-session-btn"
               >
                 <LinearGradient
                   colors={booking ? [COLORS.gray, COLORS.grayLight] : [COLORS.orangeHot, COLORS.orange]}
                   style={styles.bookButton}
                 >
-                  <Animated.View style={[styles.progressOverlay, { width: progressWidth }]} />
                   <View style={styles.bookButtonContent}>
-                    {booking ? (
-                      <ActivityIndicator size="small" color={COLORS.white} />
-                    ) : (
-                      <>
-                        <Ionicons name={isHolding ? "finger-print" : "calendar"} size={22} color={COLORS.white} />
-                        <Text style={styles.bookButtonText}>
-                          {isHolding ? 'Hold to Confirm...' : 'Hold to Book Session'}
-                        </Text>
-                      </>
-                    )}
+                    <Ionicons name="flash" size={22} color={COLORS.white} />
+                    <Text style={styles.bookButtonText}>BOOK SESSION</Text>
                   </View>
                 </LinearGradient>
-              </Pressable>
+              </TouchableOpacity>
             </LinearGradient>
           </Animated.View>
 
@@ -1015,47 +1036,8 @@ export default function TrainerDetailScreen() {
             <Text style={styles.blockText}>Block this Trainer</Text>
           </TouchableOpacity>
 
-          <View style={{ height: 100 }} />
+          <View style={{ height: 40 }} />
         </Animated.ScrollView>
-
-        {/* Sticky Book Now Button */}
-        <View style={styles.stickyBookContainer}>
-          <LinearGradient
-            colors={['transparent', '#0A0E1A']}
-            style={styles.stickyBookGradient}
-          >
-            <View style={styles.stickyBookRow}>
-              <View>
-                <Text style={styles.stickyBookPrice}>
-                  ${((trainer.ratePerMinuteCents || 0) / 100).toFixed(2)}/min
-                </Text>
-                <Text style={styles.stickyBookSub}>
-                  {selectedDuration} min session
-                </Text>
-              </View>
-              <TouchableOpacity
-                onPress={handleBookSession}
-                disabled={booking}
-                style={styles.stickyBookButton}
-                data-testid="sticky-book-now-btn"
-              >
-                <LinearGradient
-                  colors={booking ? ['#555', '#666'] : [accent, `${accent}CC`]}
-                  style={styles.stickyBookButtonGradient}
-                >
-                  {booking ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                  ) : (
-                    <>
-                      <Ionicons name="flash" size={18} color="#fff" />
-                      <Text style={styles.stickyBookButtonText}>Book Now</Text>
-                    </>
-                  )}
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
-          </LinearGradient>
-        </View>
       </SafeAreaView>
 
       {/* Trainee's Home Consent Modal */}

@@ -88,11 +88,51 @@ export default function ConfirmBookingScreen() {
       const token = await AsyncStorage.getItem('auth_token');
       const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 
-      // Session booking goes through - Zelle payment tracked separately
+      // Resolve trainee id from /auth/me (so we don't depend on a stale stored user object)
+      const meRes = await axios.get(`${API_URL}/api/auth/me`, { headers });
+      const traineeId = meRes.data?.id;
+      if (!traineeId) {
+        throw new Error('Could not resolve your account. Please sign in again.');
+      }
+
+      // Map sessionType -> locationType expected by backend
+      const locationType =
+        sessionType === 'virtual' ? 'virtual'
+        : sessionType === 'in_home' ? 'home'
+        : sessionType === 'trainee_home' ? 'home'
+        : 'outdoor';
+
+      // Build sessionDateTimeStart from params: date is a friendly label, so use ISO if provided, else default to +1 day
+      const isoParam = String(params.sessionDateTimeStartIso || '');
+      let sessionDateTimeStart: string;
+      if (isoParam) {
+        sessionDateTimeStart = isoParam;
+      } else {
+        const dt = new Date();
+        dt.setDate(dt.getDate() + 1);
+        dt.setHours(10, 0, 0, 0);
+        sessionDateTimeStart = dt.toISOString();
+      }
+
+      // Actually create the session — status=REQUESTED on backend (shows under My Sessions → Pending)
+      await axios.post(
+        `${API_URL}/api/sessions`,
+        {
+          traineeId,
+          trainerId,
+          sessionDateTimeStart,
+          durationMinutes: Number(duration) || 60,
+          sessionType,
+          locationType,
+          locationNameOrAddress: String(params.locationNameOrAddress || (sessionType === 'virtual' ? 'Virtual' : 'TBD')),
+        },
+        { headers }
+      );
+
       setPaymentStep('success');
       setShowBookingModal(true);
     } catch (err: any) {
-      const msg = err?.response?.data?.detail || 'Booking failed. Please try again.';
+      const msg = err?.response?.data?.detail || err?.message || 'Booking failed. Please try again.';
       setPaymentStep('review');
       toast.error(msg);
     } finally {
@@ -255,21 +295,21 @@ export default function ConfirmBookingScreen() {
             <View style={bookingModalStyles.iconCircle}>
               <Ionicons name="checkmark-circle" size={64} color={COLORS.success} />
             </View>
-            <Text style={bookingModalStyles.title}>Session Booked!</Text>
+            <Text style={bookingModalStyles.title}>Training Request Sent!</Text>
             <Text style={bookingModalStyles.subtitle}>
-              Your session with {trainerName} is confirmed for {date} at {time}.
-              You'll receive a notification when your trainer is en route.
+              Your training request has been sent to {trainerName}.{'\n\n'}
+              You can find this session in My Sessions → Pending.
             </Text>
             <TouchableOpacity
               onPress={() => {
                 setShowBookingModal(false);
-                router.replace('/trainee/(tabs)/sessions');
+                router.replace({ pathname: '/trainee/(tabs)/sessions', params: { tab: 'pending' } });
               }}
               style={bookingModalStyles.btn}
               data-testid="booking-modal-view-sessions-btn"
             >
               <LinearGradient colors={['#FF6A00', '#FF9F1C']} style={bookingModalStyles.btnGradient}>
-                <Text style={bookingModalStyles.btnText}>View My Sessions</Text>
+                <Text style={bookingModalStyles.btnText}>View My Pending Sessions</Text>
               </LinearGradient>
             </TouchableOpacity>
             <TouchableOpacity
@@ -338,9 +378,9 @@ const styles = StyleSheet.create({
   stripeText: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
   stripeSubtext: { fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 1 },
 
-  policyCard: { backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 14, padding: 16, gap: 10, marginBottom: 14 },
+  policyCard: { backgroundColor: 'rgba(20, 25, 41, 0.92)', borderRadius: 14, padding: 16, gap: 10, marginBottom: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' },
   policyRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  policyText: { fontSize: 13, color: 'rgba(255,255,255,0.5)', flex: 1 },
+  policyText: { fontSize: 13, color: 'rgba(255,255,255,0.92)', flex: 1, fontWeight: '500' },
 
   bottomBar: { paddingHorizontal: 16, paddingBottom: 24, paddingTop: 8 },
   confirmBtn: { borderRadius: 16, overflow: 'hidden' },

@@ -13,7 +13,9 @@ import {
   Animated,
   Dimensions,
   AppState,
+  Modal,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { trainerAPI } from '../../../src/services/api';
 import { Session, SessionStatus } from '../../../src/types';
@@ -73,6 +75,9 @@ export default function TrainerHomeScreen() {
   const [locationPermission, setLocationPermission] = useState<boolean | null>(null);
   const [menuVisible, setMenuVisible] = useState(false);
   const [needsZelleSetup, setNeedsZelleSetup] = useState(false);
+  // One-time post-approval celebratory modal — fires when canGoLive becomes true and never been shown
+  const [showApprovalModal, setShowApprovalModal] = useState(false);
+  const APPROVAL_SEEN_KEY = '@rapidreps_trainer_approval_modal_seen';
 
   // Location tracking interval ref
   const locationIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -111,6 +116,17 @@ export default function TrainerHomeScreen() {
   useEffect(() => {
     loadData();
     checkLocationPermission();
+    // Check trainer approval state — one-time celebratory modal if just approved
+    (async () => {
+      try {
+        const seen = await AsyncStorage.getItem(APPROVAL_SEEN_KEY);
+        if (seen === '1') return;
+        const status = await trainerAPI.getVerificationStatus();
+        if (status?.canGoLive) {
+          setShowApprovalModal(true);
+        }
+      } catch { /* silent */ }
+    })();
     
     // Cleanup on unmount
     return () => {
@@ -1035,6 +1051,49 @@ export default function TrainerHomeScreen() {
           </ScrollView>
         </SafeAreaView>
       </ImageBackground>
+
+      {/* One-time Trainer Approval Celebration Modal */}
+      <Modal
+        visible={showApprovalModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowApprovalModal(false)}
+        data-testid="trainer-approval-modal"
+      >
+        <View style={approvalModalStyles.overlay}>
+          <LinearGradient
+            colors={['#0A0E1A', '#141929', '#1f0e00']}
+            style={approvalModalStyles.card}
+          >
+            <View style={approvalModalStyles.glowRing}>
+              <LinearGradient colors={['#FF6A00', '#FFD700']} style={approvalModalStyles.iconCircle}>
+                <Ionicons name="checkmark" size={40} color="#FFFFFF" />
+              </LinearGradient>
+            </View>
+            <Text style={approvalModalStyles.confetti}>🎉  🎊  ✨</Text>
+            <Text style={approvalModalStyles.title}>Congratulations!</Text>
+            <Text style={approvalModalStyles.subtitle}>Your profile has been approved!</Text>
+            <Text style={approvalModalStyles.body}>Clients can now book you for training.</Text>
+            <View style={approvalModalStyles.brandRow}>
+              <Ionicons name="flash" size={16} color="#FF6A00" />
+              <Text style={approvalModalStyles.brand}>Welcome to Rapid Reps</Text>
+              <Ionicons name="flash" size={16} color="#FF6A00" />
+            </View>
+            <TouchableOpacity
+              onPress={async () => {
+                try { await AsyncStorage.setItem(APPROVAL_SEEN_KEY, '1'); } catch { /* ignore */ }
+                setShowApprovalModal(false);
+              }}
+              style={approvalModalStyles.btn}
+              data-testid="approval-modal-dismiss-btn"
+            >
+              <LinearGradient colors={['#FF6A00', '#FF9F1C']} style={approvalModalStyles.btnGradient}>
+                <Text style={approvalModalStyles.btnText}>Let's Get Started</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </LinearGradient>
+        </View>
+      </Modal>
     </>
   );
 }
@@ -1646,3 +1705,20 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.7)',
   },
 });
+
+const approvalModalStyles = StyleSheet.create({
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.78)', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 24 },
+  card: { width: '100%', maxWidth: 380, borderRadius: 28, padding: 32, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,106,0,0.35)', shadowColor: '#FF6A00', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.4, shadowRadius: 24, elevation: 12 },
+  glowRing: { width: 96, height: 96, borderRadius: 48, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,215,0,0.12)', borderWidth: 2, borderColor: 'rgba(255,215,0,0.4)', marginBottom: 12 },
+  iconCircle: { width: 80, height: 80, borderRadius: 40, justifyContent: 'center', alignItems: 'center' },
+  confetti: { fontSize: 22, letterSpacing: 6, marginVertical: 8 },
+  title: { fontSize: 28, fontWeight: '900', color: '#FFFFFF', textAlign: 'center', marginTop: 6 },
+  subtitle: { fontSize: 17, fontWeight: '700', color: '#FFD700', textAlign: 'center', marginTop: 8 },
+  body: { fontSize: 15, fontWeight: '500', color: 'rgba(255,255,255,0.85)', textAlign: 'center', marginTop: 10, lineHeight: 22 },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 18, marginBottom: 4 },
+  brand: { fontSize: 14, fontWeight: '800', color: '#FF6A00', letterSpacing: 1, textTransform: 'uppercase' },
+  btn: { width: '100%', borderRadius: 14, overflow: 'hidden', marginTop: 22 },
+  btnGradient: { paddingVertical: 16, alignItems: 'center' },
+  btnText: { fontSize: 16, fontWeight: '800', color: '#FFFFFF', letterSpacing: 0.5 },
+});
+

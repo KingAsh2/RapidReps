@@ -1,0 +1,41 @@
+{
+  "summary": "Iteration 73 — Backend-only verification of new booking flow (POST /api/sessions) and approval-modal verification-status endpoint. 13/13 pytest tests PASSED against https://highlight-vibe-bugs.preview.emergentagent.com. CRITICAL P0 BUG FOUND AND FIXED: /app/backend/routes/session_routes.py was missing imports for `MembershipStatus`, `REFERRAL_CREDIT_CENTS`, and `create_and_send_notification` — every POST /api/sessions call was 500-ing with NameError on line 91, which meant the entire booking flow added in this iteration (confirm-booking.tsx → POST /api/sessions) was completely broken on the deployed backend. After fixing imports, full flow now works: trainee POSTs /api/sessions with the trainer-detail.tsx payload shape ({traineeId, trainerId, sessionDateTimeStart ISO, durationMinutes:60, sessionType:'outdoor', locationType:'outdoor', locationNameOrAddress}) → 200 with status='requested' → new session appears in GET /api/trainee/sessions?session_status=requested and the pending count increments by 1. Also verified GET /api/trainer/verification-status returns required FE-contract shape {steps:{identity|background|certification|cpr|insurance|photo|video}, canGoLive:bool, missingRequirements, verificationStatus, ...}; admin approval flow via POST /api/admin/verifications/{trainer_id}/approve flips canGoLive→true. Regression sanity (login admin+trainee+trainer, /api/auth/me, /api/trainer-profiles/{id}, /api/trainee/sessions, /api/experiments/event, /api/instagram/data-deletion) all green.",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "POST /api/sessions", "issue": "FIXED — NameError: 'MembershipStatus' is not defined (also REFERRAL_CREDIT_CENTS and create_and_send_notification were unimported). Triggered 500 on every booking attempt. Added imports in /app/backend/routes/session_routes.py.", "priority": "CRITICAL"}
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration73_booking_flow.py",
+    "/app/test_reports/pytest/iteration73_results.xml"
+  ],
+  "action_items": [
+    "Verify the import fix in /app/backend/routes/session_routes.py (added MembershipStatus + REFERRAL_CREDIT_CENTS from models and create_and_send_notification from deps). All booking traffic relies on this.",
+    "The test trainer (test_trainer_iter25@test.com) had to be admin-approved via POST /api/admin/verifications/{uid}/approve to make canGoLive=true. The trainer's profile is missing identity/background/cpr/video docs, so without the admin override booking would 403. Per memory/test_credentials.md the trainer is supposed to be pre-verified — re-seed or keep auto-approve baked into seed data.",
+    "Main agent can self-test the booking flow now: it will hit the FE Modal copy 'Training Request Sent / find in My Sessions → Pending'."
+  ],
+  "critical_code_review_comments": [
+    "P0 (fixed): session_routes.py had 3 undefined names (MembershipStatus, REFERRAL_CREDIT_CENTS, create_and_send_notification). Linting / pyflakes / ruff would have caught this at PR time. Recommend adding ruff to CI to block undefined-name errors before deploy.",
+    "P1 (carry-over from iter71): instagram_routes.py data_deletion_webhook URL still hardcoded to 'https://trainer-finder-9.emergent.host' — parameterize via PUBLIC_BASE_URL env var before Meta App Review.",
+    "P2: /api/instagram/data-deletion still generates confirmation_code without persisting; /api/privacy/data-deletion-status echoes any submitted code without verification. Acceptable for Meta reachability check, not for verifiable proof.",
+    "P3: session_routes.py is now 1552 lines — well past the 700-line guideline. Split into booking, lifecycle (confirm/decline/cancel/no-show), in-session (PIN/GPS/selfie/arrival), and summary/share modules.",
+    "P3: POST /api/sessions does not validate sessionDateTimeStart is in the future — a trainee can technically book a session in the past."
+  ],
+  "updated_files": [
+    "/app/backend/routes/session_routes.py",
+    "/app/backend/tests/test_iteration73_booking_flow.py"
+  ],
+  "success_rate": {"backend": "100% (13/13)", "frontend": "n/a (skipped per request — RN/Expo app, web preview unusable)"},
+  "test_credentials": "Admin admin@rapidreps.com/admin123 | Trainee test_trainee_iter25@test.com/Test123! | Trainer test_trainer_iter25@test.com/Test123! (had to be re-approved via admin endpoint mid-test; canGoLive=true now)",
+  "seed_data_creation": "Created one TEST booking from trainee→trainer for 'Central Park, NYC' (60-min outdoor, status=requested) sitting in the DB; safe to leave or admin-clean.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Reusable regression file: /app/backend/tests/test_iteration73_booking_flow.py — covers auth (admin/trainee/trainer), trainer verification-status shape, the brand-new POST /api/sessions booking flow with pending-count verification, plus IG/experiments/profile sanity. Login response uses 'access_token' (not 'token'); experiments/event payload uses {experimentKey, variant, event}; admin trainer approval is POST /api/admin/verifications/{uid}/approve (no body). If the trainer ever reverts to unverified, the test will auto-approve via the ensure_trainer_verified fixture. Run: `pytest backend/tests/test_iteration73_booking_flow.py -v`.",
+  "rca of the issue": "ROOT CAUSE — When the booking flow was implemented this iteration (confirm-booking.tsx now actually calls POST /api/sessions instead of being a no-op), the backend session_routes.py was updated with new logic at lines 87-93 (membership lookup) and 124-153 (referral activation + notification), but the corresponding imports were never added. Python only raises NameError at runtime, so the syntax-valid file passed startup checks but every POST /api/sessions blew up with 500. REPRODUCTION — POST /api/sessions with any valid payload → 500 + backend log: `NameError: name 'MembershipStatus' is not defined`. MITIGATION — Added `MembershipStatus, REFERRAL_CREDIT_CENTS` to the `from models import` block and `create_and_send_notification` to the `from deps import` block in /app/backend/routes/session_routes.py. Verified end-to-end booking flow now returns 200 and the session is queryable via /api/trainee/sessions?session_status=requested. RECOMMEND — Enable ruff (already in /app) on pre-commit and CI to block this class of bug."
+}

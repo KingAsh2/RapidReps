@@ -12,7 +12,7 @@ import {
   Animated,
   Dimensions,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -52,12 +52,16 @@ const COLORS = {
 
 export default function SessionsScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const { user } = useAuth();
   const { showAlert } = useAlert();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [sessions, setSessions] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<'upcoming' | 'pending' | 'past'>('upcoming');
+  const initialTab = (params.tab === 'pending' || params.tab === 'past' || params.tab === 'upcoming')
+    ? (params.tab as 'upcoming' | 'pending' | 'past')
+    : 'upcoming';
+  const [activeTab, setActiveTab] = useState<'upcoming' | 'pending' | 'past'>(initialTab);
 
   // Animations
   const headerAnim = useRef(new Animated.Value(0)).current;

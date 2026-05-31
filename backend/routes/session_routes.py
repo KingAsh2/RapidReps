@@ -15,10 +15,12 @@ from deps import (
     check_trainer_can_go_live, calculate_session_payout, calculate_travel_fee_split,
     calculate_time_based_cancellation_penalty,
     calculate_session_pricing, send_push_notification,
+    create_and_send_notification,
 )
 from models import (
     SessionCreate, SessionResponse, SessionStatus, SessionType,
     PricingRules, TrainerTier, TransactionType, PaymentStatus,
+    MembershipStatus, REFERRAL_CREDIT_CENTS,
 )
 from email_service import send_session_booked_email
 
