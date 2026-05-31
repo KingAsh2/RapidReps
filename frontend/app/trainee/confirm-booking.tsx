@@ -19,6 +19,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { toast } from '../../src/utils/toast';
 import { haptic } from '../../src/utils/haptics';
+import { useNotifications } from '../../src/contexts/NotificationContext';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -41,6 +42,7 @@ const backgroundImage = require('../../assets/images/bg-battle-ropes.png');
 export default function ConfirmBookingScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const { refreshPendingSessionCount } = useNotifications();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentStep, setPaymentStep] = useState<'review' | 'processing' | 'success'>('review');
 
@@ -131,6 +133,8 @@ export default function ConfirmBookingScreen() {
 
       setPaymentStep('success');
       setShowBookingModal(true);
+      // Refresh the pending session count so the tab badge updates immediately.
+      refreshPendingSessionCount().catch(() => {});
     } catch (err: any) {
       const msg = err?.response?.data?.detail || err?.message || 'Booking failed. Please try again.';
       setPaymentStep('review');

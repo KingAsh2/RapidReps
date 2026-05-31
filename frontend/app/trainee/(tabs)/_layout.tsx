@@ -14,7 +14,7 @@ const BRAND = {
 };
 
 export default function TabLayout() {
-  const { unreadMessageCount } = useNotifications();
+  const { unreadMessageCount, pendingSessionCount } = useNotifications();
 
   return (
     <Tabs
@@ -66,6 +66,8 @@ export default function TabLayout() {
         options={{
           title: 'Sessions',
           tabBarAccessibilityLabel: 'My sessions tab',
+          tabBarBadge: pendingSessionCount > 0 ? pendingSessionCount : undefined,
+          tabBarBadgeStyle: { backgroundColor: BRAND.accent, fontSize: 13, fontWeight: '700' },
           tabBarIcon: ({ color, focused }) => (
             <View style={focused ? styles.activeIconContainer : null}>
               <Ionicons 

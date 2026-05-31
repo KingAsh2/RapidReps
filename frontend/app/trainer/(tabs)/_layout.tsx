@@ -13,7 +13,7 @@ const COLORS = {
 };
 
 export default function TrainerTabsLayout() {
-  const { unreadMessageCount } = useNotifications();
+  const { unreadMessageCount, pendingSessionCount } = useNotifications();
 
   return (
     <Tabs
@@ -55,6 +55,8 @@ export default function TrainerTabsLayout() {
         options={{
           title: 'Sessions',
           tabBarAccessibilityLabel: 'My sessions tab',
+          tabBarBadge: pendingSessionCount > 0 ? pendingSessionCount : undefined,
+          tabBarBadgeStyle: { backgroundColor: '#FF6A00', fontSize: 13, fontWeight: '700' },
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="calendar" size={size} color={color} />
           ),

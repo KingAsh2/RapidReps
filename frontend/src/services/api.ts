@@ -577,6 +577,18 @@ export const sessionsAPI = {
   },
 };
 
+// Referral API
+export const referralAPI = {
+  getMyCode: async (): Promise<{ referralCode: string }> => {
+    const response = await api.get('/referral/my-code');
+    return response.data;
+  },
+  getStats: async (): Promise<any> => {
+    const response = await api.get('/referral/stats');
+    return response.data;
+  },
+};
+
 export default api;
 
 

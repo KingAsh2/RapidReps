@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { useAuth } from './AuthContext';
-import { notificationsAPI, chatAPI } from '../services/api';
+import { notificationsAPI, chatAPI, traineeAPI, trainerAPI } from '../services/api';
 import { router } from 'expo-router';
 
 // Configure how notifications appear when the app is in the foreground
@@ -20,9 +20,11 @@ interface NotificationContextType {
   notifications: any[];
   unreadCount: number;
   unreadMessageCount: number;
+  pendingSessionCount: number;
   refreshNotifications: () => Promise<void>;
   markAllRead: () => Promise<void>;
   refreshMessageCount: () => Promise<void>;
+  refreshPendingSessionCount: () => Promise<void>;
   isReady: boolean;
 }
 
@@ -31,9 +33,11 @@ const NotificationContext = createContext<NotificationContextType>({
   notifications: [],
   unreadCount: 0,
   unreadMessageCount: 0,
+  pendingSessionCount: 0,
   refreshNotifications: async () => {},
   markAllRead: async () => {},
   refreshMessageCount: async () => {},
+  refreshPendingSessionCount: async () => {},
   isReady: false,
 });
 
@@ -43,6 +47,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+  const [pendingSessionCount, setPendingSessionCount] = useState(0);
   const [isReady, setIsReady] = useState(false);
   const notificationListener = useRef<any>();
   const responseListener = useRef<any>();
@@ -84,6 +89,22 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
+  const refreshPendingSessionCount = async () => {
+    if (!user) return;
+    try {
+      const isTrainer = (user.roles || []).includes('trainer');
+      // Backend session status for awaiting-trainer-approval is 'requested'
+      const sessions = isTrainer
+        ? await trainerAPI.getSessions('requested')
+        : await traineeAPI.getSessions('requested');
+      if (isMounted.current) {
+        setPendingSessionCount(Array.isArray(sessions) ? sessions.length : 0);
+      }
+    } catch (error) {
+      console.log('Pending session count fetch error (non-critical):', error);
+    }
+  };
+
   const markAllRead = async () => {
     if (!user) return;
     try {
@@ -110,6 +131,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       setNotifications([]);
       setUnreadCount(0);
       setUnreadMessageCount(0);
+      setPendingSessionCount(0);
       return;
     }
 
@@ -157,6 +179,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         await Promise.allSettled([
           refreshNotifications(),
           refreshMessageCount(),
+          refreshPendingSessionCount(),
         ]);
       } catch (error) {
         console.log('Notification initialization error (non-critical):', error);
@@ -167,6 +190,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     notificationListener.current = Notifications.addNotificationReceivedListener((notification) => {
       refreshNotifications();
       refreshMessageCount();
+      refreshPendingSessionCount();
     });
 
     // Listen for notification taps (user interacts with notification)
@@ -175,6 +199,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       if (__DEV__) console.log('Notification tapped:', data);
       refreshNotifications();
       refreshMessageCount();
+      refreshPendingSessionCount();
 
       // Deep-link to receipt screen when tapping payment verification notifications
       if (data?.action === 'view_receipt' && data?.sessionId) {
@@ -186,14 +211,16 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
     });
 
-    // Poll for unread messages every 30 seconds
+    // Poll for unread messages every 30 seconds; pending sessions every 60s (lower frequency).
     const messageInterval = setInterval(refreshMessageCount, 30000);
+    const pendingSessionInterval = setInterval(refreshPendingSessionCount, 60000);
 
     return () => {
       try {
         isMounted.current = false;
         clearTimeout(initTimeout);
         clearInterval(messageInterval);
+        clearInterval(pendingSessionInterval);
         
         // Safe cleanup of notification listeners
         const notifSub = notificationListener.current;
@@ -222,9 +249,11 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         notifications,
         unreadCount,
         unreadMessageCount,
+        pendingSessionCount,
         refreshNotifications,
         markAllRead,
         refreshMessageCount,
+        refreshPendingSessionCount,
         isReady,
       }}
     >
@@ -241,9 +270,11 @@ export const useNotifications = () => {
     notifications: [],
     unreadCount: 0,
     unreadMessageCount: 0,
+    pendingSessionCount: 0,
     refreshNotifications: async () => {},
     markAllRead: async () => {},
     refreshMessageCount: async () => {},
+    refreshPendingSessionCount: async () => {},
     isReady: false,
   };
 };

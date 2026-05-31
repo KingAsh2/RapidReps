@@ -162,7 +162,18 @@ RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoD
 - **"My Referrals" Dashboard Tab** (P2, saved 2026-05-27 for a later session): Surface a new in-app dashboard for both trainee + trainer that visualizes referral performance — bar chart of invites by channel (SMS / email / share) using `react-native-svg`, lifetime credits earned, and a list of recent invitee signups. Data sources already live: `referralAPI.getStats()` + `referralAPI.getInviteStats()`. Estimated ~30 min to ship. Goal: close the referral loop so users see ROI on inviting → compounding growth.
 
 ## Recent Fixes
-- **2026-05-31 (5)** — Iteration 76 — Three optional file-serving hardenings:
+- **2026-05-31 (6)** — Iteration 77 — Pending Session badge + Referrals dashboard:
+  - **Pending Session count badge** on Sessions tab icon (both trainee + trainer). Lives in `NotificationContext` as `pendingSessionCount`, fetched on mount + every 60s + after a successful booking from confirm-booking. Wired into `app/trainee/(tabs)/_layout.tsx` + `app/trainer/(tabs)/_layout.tsx` via Expo Router's `tabBarBadge`. Tab shows e.g. `Sessions (2)` so users don't forget about open requests.
+  - **Referrals dashboard** at `/app/referral.tsx` (fixes broken `router.push('/referral')` from profile menus that previously 404'd). Features hero card with copy-able + shareable referral code, 4 stat cards (total/activated/pending/success-rate), earnings card ($ total + available), 3-bar chart visualization (activated vs pending vs slots-left), referral history list with status dots and credit amounts. Uses native `Clipboard` + `Share` APIs (no new deps).
+  - **API additions**: `referralAPI.getMyCode()` + `referralAPI.getStats()` in `src/services/api.ts` for clean call-sites.
+  - **Verified backend**: `GET /api/referral/stats` returns expected shape (referralCode, totalReferrals, activatedReferrals, pendingReferrals, totalCreditsEarned, availableCredits, maxReferrals, referralsRemaining, referralHistory[]). All existing iter75/iter76 tests still pass.
+- **2026-05-31 (5)** — Iteration 76: HEAD method + ETag/304 + StreamingResponse for `/api/files/{path}`.
+- **2026-05-31 (4)** — Iter75: HTTP Range support + `/api/auth/me` profilePhoto/avatarUrl exposure.
+- **2026-05-31 (3)** — Iter74: 5 deferred punch-list items.
+- **2026-05-31 (2)** — Iter73: 15-item punch list + booking flow rewire.
+- **2026-05-31 (1)** — Iter72: Deployment blocker fix.
+
+## Active Blocker
   - **HEAD `/api/files/{path}`**: Was returning 405 → now returns 200 with the same headers as GET but no body. Fixes iOS AVPlayer preflight + link preview crawlers.
   - **ETag + If-None-Match `304 Not Modified`**: Computes MD5 ETag from content; conditional GET with matching `If-None-Match` returns 304 with empty body. Pragmatic workaround for the Cloudflare/ingress `no-store` override (which strips our `Cache-Control: public, max-age=...` headers) — client sends ETag on every request, saves bandwidth via 304 short-circuit.
   - **`StreamingResponse` with 64KB chunks**: GET/206 responses now stream content instead of buffering the whole slice into a single Response. Bounds peak memory under concurrent video streams. Also added `Vary: Range` so intermediate caches don't merge Range/full responses.
