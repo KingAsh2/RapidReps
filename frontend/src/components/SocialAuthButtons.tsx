@@ -218,14 +218,3 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
 });
-t: { width: 0, height: 2 },
-    shadowOpacity: 0.18,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  pillText: {
-    fontSize: 15,
-    fontWeight: '700',
-    letterSpacing: 0.2,
-  },
-});

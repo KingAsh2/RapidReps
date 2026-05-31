@@ -161,6 +161,9 @@ RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoD
 - Further server.py extraction: messaging, location, notifications (P3)
 - **"My Referrals" Dashboard Tab** (P2, saved 2026-05-27 for a later session): Surface a new in-app dashboard for both trainee + trainer that visualizes referral performance — bar chart of invites by channel (SMS / email / share) using `react-native-svg`, lifetime credits earned, and a list of recent invitee signups. Data sources already live: `referralAPI.getStats()` + `referralAPI.getInviteStats()`. Estimated ~30 min to ship. Goal: close the referral loop so users see ROI on inviting → compounding growth.
 
+## Recent Fixes
+- **2026-05-31** — Resolved P0 deployment blocker: removed garbage residue (`t: { width: 0, height: 2 }, ...` lines 221–231) from `/app/frontend/src/components/SocialAuthButtons.tsx` left over from a botched search/replace. Metro bundler now compiles cleanly (722 modules). EAS deploy unblocked.
+
 ## Active Blocker
 - **iOS App Store Deployment**: EAS build fails with `XCODE_BUILD_ERROR — Signing certificate "iPhone Distribution: Ashton Bundy" revoked` (Apple side). Resolution: contact support@emergent.sh with Job ID + Expo project ID `aa258400-544c-4da6-b007-0aff7ef361f6` to refresh iOS signing credentials.
 
