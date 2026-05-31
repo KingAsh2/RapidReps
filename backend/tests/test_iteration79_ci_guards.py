@@ -92,3 +92,91 @@ def test_no_expo_router_route_collisions():
 if __name__ == "__main__":
     # Allow `python test_iteration79_ci_guards.py` for quick local check
     pytest.main([__file__, "-v"])
+
+
+# ---------------------------------------------------------------------------
+# Guard 3 — hardcoded URLs in frontend (the classic "forgot REACT_APP_BACKEND_URL")
+# ---------------------------------------------------------------------------
+FRONTEND_SRC_DIRS = [
+    REPO_ROOT / "frontend" / "src",
+    REPO_ROOT / "frontend" / "app",
+]
+HARDCODED_URL_RE = re.compile(
+    r"""(?:["'`])(?:https?://)?(?:localhost|127\.0\.0\.1|0\.0\.0\.0)(?::\d+)?(?:["'`/])"""
+)
+# Files where hardcoded references are legitimate (e.g. .env templates, test fixtures, ngrok webhook docs)
+HARDCODED_URL_ALLOWLIST = {
+    # Add file paths (relative to REPO_ROOT) here if any false-positive is intentional
+}
+
+
+def test_no_hardcoded_localhost_urls_in_frontend():
+    """Iter78 inadvertently routed an analytics ping to localhost:8001 in a prior session.
+    Catching this class of bug at test time avoids the classic 'works on simulator,
+    fails on device' debug spiral. Always go through `process.env.EXPO_PUBLIC_BACKEND_URL`."""
+    offenders: list[tuple[str, int, str]] = []
+    for base in FRONTEND_SRC_DIRS:
+        if not base.is_dir():
+            continue
+        for path in base.rglob("*"):
+            if not path.is_file() or path.suffix not in {".tsx", ".jsx", ".ts", ".js"}:
+                continue
+            if any(part in {"node_modules", ".expo", "dist", ".metro-cache", "build"} for part in path.parts):
+                continue
+            rel = str(path.relative_to(REPO_ROOT))
+            if rel in HARDCODED_URL_ALLOWLIST:
+                continue
+            try:
+                text = path.read_text(errors="ignore")
+            except Exception:
+                continue
+            for lineno, line in enumerate(text.splitlines(), start=1):
+                # Comments are fine ("see http://localhost:8001 for local dev")
+                stripped = line.lstrip()
+                if stripped.startswith("//") or stripped.startswith("*") or stripped.startswith("/*"):
+                    continue
+                if HARDCODED_URL_RE.search(line):
+                    offenders.append((rel, lineno, line.strip()[:120]))
+    assert not offenders, (
+        "Hardcoded localhost / 127.0.0.1 / 0.0.0.0 URLs found in frontend code "
+        "(use `process.env.EXPO_PUBLIC_BACKEND_URL` instead — these break on real devices):\n"
+        + "\n".join(f"  • {f}:{ln}  {snippet}" for f, ln, snippet in offenders)
+    )
+
+
+# ---------------------------------------------------------------------------
+# Guard 4 — high-signal debug-string console.logs ('TODO', 'DEBUG', 'XXX', 'FIXME')
+# ---------------------------------------------------------------------------
+# Intentionally narrow: full ban on console.log would false-positive on legitimate
+# error-path logging. This only catches obvious leftover-from-debugging patterns.
+DEBUG_CONSOLE_RE = re.compile(
+    r"""console\.(?:log|debug|info|warn)\s*\(\s*["'`]\s*(?:TODO|DEBUG|XXX|FIXME|TEMP|REMOVE\s+THIS|TEST\s+LOG)""",
+    re.IGNORECASE,
+)
+
+
+def test_no_debug_marker_console_logs_in_frontend():
+    """Catches `console.log('TODO: ...')`, `console.log('DEBUG ...')`, `console.warn('FIXME')`
+    and similar leftovers. Legitimate `console.log('Failed to fetch:', err)` is allowed."""
+    offenders: list[tuple[str, int, str]] = []
+    for base in FRONTEND_SRC_DIRS:
+        if not base.is_dir():
+            continue
+        for path in base.rglob("*"):
+            if not path.is_file() or path.suffix not in {".tsx", ".jsx", ".ts", ".js"}:
+                continue
+            if any(part in {"node_modules", ".expo", "dist", ".metro-cache", "build"} for part in path.parts):
+                continue
+            rel = str(path.relative_to(REPO_ROOT))
+            try:
+                text = path.read_text(errors="ignore")
+            except Exception:
+                continue
+            for lineno, line in enumerate(text.splitlines(), start=1):
+                if DEBUG_CONSOLE_RE.search(line):
+                    offenders.append((rel, lineno, line.strip()[:120]))
+    assert not offenders, (
+        "Debug-marker console.log statements found in frontend code:\n"
+        + "\n".join(f"  • {f}:{ln}  {snippet}" for f, ln, snippet in offenders)
+        + "\nThese are leftover debugging noise. Remove them before shipping."
+    )

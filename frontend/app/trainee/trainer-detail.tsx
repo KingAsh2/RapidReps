@@ -421,7 +421,7 @@ export default function TrainerDetailScreen() {
     );
   }
 
-  const accent = (trainer as any).accentColor || '#FF6A00';
+  const accent = (trainer as any).accentColor || (trainer as any).accentColorAuto || '#FF6A00';
 
   return (
     <View style={styles.container}>

@@ -59,7 +59,7 @@ export const TrainerCard = ({ trainer, cardAnim, onViewProfile, onAvatarLongPres
 
   const hasVibe = !!trainer.vibeTrackTitle;
   const hasPersonalityTag = !!trainer.personalityTag;
-  const accent = trainer.accentColor || '#FF6A00';
+  const accent = trainer.accentColor || (trainer as any).accentColorAuto || '#FF6A00';
 
   return (
     <Animated.View

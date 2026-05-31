@@ -51,6 +51,28 @@ async def create_trainer_profile(profile: TrainerProfileCreate, current_user: di
             {'_id': ObjectId(profile.userId)},
             {'$set': {'profilePhoto': photo}}
         )
+        # Auto-extract dominant color from the new photo. Failures fall back silently to
+        # the previous accentColorAuto (or the FE default '#FF6A00').
+        try:
+            from color_extractor import extract_from_data_uri_or_url, extract_dominant_color
+            new_auto: Optional[str] = None
+            if photo.startswith('data:'):
+                new_auto = extract_from_data_uri_or_url(photo)
+            elif photo.startswith('/api/files/'):
+                # Resolve to bytes via object storage. Strip the route prefix to get the storage path.
+                from storage import get_object
+                path = photo[len('/api/files/'):]
+                try:
+                    content, _ = get_object(path)
+                    new_auto = extract_dominant_color(content)
+                except Exception:
+                    new_auto = None
+            if new_auto:
+                profile_doc['accentColorAuto'] = new_auto
+        except Exception as exc:
+            # Never block profile save on color extraction failure
+            import logging
+            logging.getLogger(__name__).info('accentColorAuto extraction skipped: %s', exc)
 
     if existing_profile:
         profile_doc['createdAt'] = existing_profile['createdAt']

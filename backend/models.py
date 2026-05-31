@@ -245,6 +245,7 @@ class TrainerProfileCreate(BaseModel):
     vibeTrackId: Optional[str] = None
     personalityTag: Optional[str] = None
     accentColor: Optional[str] = None
+    accentColorAuto: Optional[str] = None  # Server-extracted from profile photo
 
 class TrainerProfileResponse(BaseModel):
     id: str
@@ -302,6 +303,7 @@ class TrainerProfileResponse(BaseModel):
     vibeTrackId: Optional[str] = None
     personalityTag: Optional[str] = None
     accentColor: Optional[str] = None
+    accentColorAuto: Optional[str] = None  # Server-extracted from profile photo
     createdAt: datetime
 
 class TraineeProfileCreate(BaseModel):

@@ -162,7 +162,24 @@ RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoD
 - **"My Referrals" Dashboard Tab** (P2, saved 2026-05-27 for a later session): Surface a new in-app dashboard for both trainee + trainer that visualizes referral performance — bar chart of invites by channel (SMS / email / share) using `react-native-svg`, lifetime credits earned, and a list of recent invitee signups. Data sources already live: `referralAPI.getStats()` + `referralAPI.getInviteStats()`. Estimated ~30 min to ship. Goal: close the referral loop so users see ROI on inviting → compounding growth.
 
 ## Recent Fixes
-- **2026-05-31 (9)** — Iteration 79b — Added CI guards to prevent re-occurrence of iter77 crash class:
+- **2026-05-31 (10)** — Iteration 80 — Auto-color detection + 2 more CI guards:
+  - **Auto-color from profile photo**: new `/app/backend/color_extractor.py` uses Pillow median-cut quantization + saturation/luminance scoring to extract a vibrant dominant color. Rejects near-black (lum < 0.1) and near-white (lum > 0.92) pixels so washed-out backgrounds don't dominate. Hooked into `POST /api/trainer-profiles` — every photo upload also computes `accentColorAuto` (data URIs decoded inline; `/api/files/...` URLs resolved via object storage). Added `accentColorAuto` field to both `TrainerProfileCreate` AND `TrainerProfileResponse` (initially missed the latter, caught immediately because the test agent's first run returned `None`).
+  - **Frontend wiring**: `trainer-detail.tsx` + `TrainerCard.tsx` accent now falls back through `accentColor || accentColorAuto || '#FF6A00'`. Manual user-set color always wins; auto-detection only fills the gap.
+  - **End-to-end verified**: red subject photo → `#DC2828`, blue subject → `#1E64F0`, persisted correctly across GET.
+  - **CI Guard 3**: No hardcoded `localhost` / `127.0.0.1` / `0.0.0.0` URLs in `frontend/src/` or `frontend/app/`. Skips comment lines. Use `EXPO_PUBLIC_BACKEND_URL` instead.
+  - **CI Guard 4**: No high-signal debug-marker `console.log` (`'TODO'`, `'DEBUG'`, `'XXX'`, `'FIXME'`, `'TEMP'`, `'REMOVE THIS'`, `'TEST LOG'`). Intentionally narrow — legitimate `console.log('Error fetching:', err)` is allowed. Both guards destructive-test-verified.
+  - **New test suites**: `test_color_extractor.py` (12 tests: solid colors, white-bg-vibrant-subject, error paths, data-URI helper, <100ms performance check). Combined: **33/33 passing**.
+- **2026-05-31 (9)** — Iter79b: 2 initial CI guards (duplicate exports + route collisions).
+- **2026-05-31 (8)** — Iter79: Production crash fixes (duplicate `referralAPI` + `/referral.tsx` route collision).
+- **2026-05-31 (7)** — Iter78: Auto-clear Pending badge + 15s hero video preview.
+- **2026-05-31 (6)** — Iter77: Pending Session badge + Referrals dashboard.
+- **2026-05-31 (5)** — Iter76: HEAD + ETag/304 + StreamingResponse.
+- **2026-05-31 (4)** — Iter75: Range support + /me profile photo.
+- **2026-05-31 (3)** — Iter74: 5 deferred punch-list items.
+- **2026-05-31 (2)** — Iter73: 15-item punch list + booking flow rewire.
+- **2026-05-31 (1)** — Iter72: Deployment blocker fix.
+
+## Active Blocker
   - `/app/backend/tests/test_iteration79_ci_guards.py` — 2 fast pytest checks (~50ms total) that run alongside the regression suite.
   - **Guard 1**: No duplicate `export const NAME` in `frontend/src/services/api.ts` (would crash production Metro bundler).
   - **Guard 2**: No `*.tsx`/`*.jsx`/`*.ts`/`*.js` file with the same basename as a sibling directory anywhere under `frontend/app/` (would cause Expo Router route collision → crash on launch). Skips `_layout.tsx` and `+not-found.tsx` Expo Router specials. Skips `node_modules`, `.expo`, `dist`, `.metro-cache`.
