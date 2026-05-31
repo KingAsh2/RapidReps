@@ -1,0 +1,33 @@
+{
+  "summary": "Iteration 72 — PRE-DEPLOYMENT FULL-STACK REGRESSION (backend only, per request). 32/32 pytest tests PASSED (100%). All ship-blocker contracts verified against https://highlight-vibe-bugs.preview.emergentagent.com. AUTH: admin/trainee/trainer login all return 200 with correct role detection in roles[] and /api/auth/me echoes correct profile for each. SEARCH: GET /api/trainers/search?q=trainer (trainee-authed) returns list; ?q=<exact email> returns >=1 hit; GET /api/trainees/search?q=test as trainer returns {trainees:[], count} shape; as trainee = 403 (RBAC); unauthenticated = 403. REFERRAL: GET /api/referral/my-code returns referralCode; POST /api/referral/track-invite {channel:'sms'} = 200 ok; invalid channel = 400; GET /api/referral/invite-stats returns {total, byChannel:{...}}. A/B EXPERIMENTS: POST /api/experiments/event for impression/click/conversion all = 200 ok; invalid event type = 400; GET /api/experiments/google_cta_copy/results as admin returns both 'control' and 'fast' variants each with impression/click/conversion/ctr fields; same call as trainee = 403. INSTAGRAM (pre-creds, expected scaffold behaviour): /status linked:false; /oauth/start = 503 'not yet configured'; GET /deauthorize = 200; POST /data-deletion returns {url, confirmation_code} (Meta-required shape); /public-media/<random> returns {linked:false, items:[]}. PUBLIC: /api/privacy/policy = 200 HTML; /api/privacy/data-deletion-status?code=test = 200 HTML with echoed code. CORE FLOWS: GET /api/trainer-profiles/{me}, /api/trainee-profiles/{me}, /api/trainer/sessions, /api/trainee/sessions all 200. Zero regressions. APP IS DEPLOY-READY.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration72_predeploy_regression.py",
+    "/app/test_reports/pytest/iteration72_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Carry-over from iter71 (still applies, P1 fix-after-deploy): instagram_routes.py data_deletion_webhook URL is hardcoded to 'https://trainer-finder-9.emergent.host'. Should be parameterized via env (e.g., PUBLIC_BASE_URL) before Meta verifies the deletion URL in production. If the preview host changes, Meta's confirmation link will 404.",
+    "Carry-over from iter71 (P2): /api/instagram/oauthState collection has no TTL/expiration index. Stale OAuth states linger indefinitely.",
+    "Carry-over from iter71 (P2): /api/instagram/data-deletion generates a confirmation_code but never persists it; /api/privacy/data-deletion-status echoes any submitted code without verification. Acceptable for Meta's reachability check, but won't survive App Review if Meta requests verifiable proof.",
+    "Frontend not tested per request (testing_type: backend only). Visual A/B variants of google_cta_copy, thunder sound, travel-radius slider, Apple/Google pill buttons, and the share-CTA Instagram pill should be manually QA'd by main agent or a follow-up frontend testing pass before App Store/Play Store submission."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration72_predeploy_regression.py"
+  ],
+  "success_rate": {"backend": "100% (32/32)", "frontend": "n/a (skipped per request)"},
+  "test_credentials": "Admin admin@rapidreps.com/admin123 | Trainee test_trainee_iter25@test.com/Test123! | Trainer test_trainer_iter25@test.com/Test123! — all three working",
+  "seed_data_creation": "None. Used existing accounts. Referral track-invite + experiment events are idempotent inserts; no cleanup required.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend deploy-blockers: ZERO. The reusable regression file /app/backend/tests/test_iteration72_predeploy_regression.py covers all 6 feature areas in ~3s and is safe to re-run after future deploys. EXPO project — backend URL is sourced from EXPO_PUBLIC_BACKEND_URL (not REACT_APP_BACKEND_URL); the test file falls back through both. When real INSTAGRAM_APP_ID/SECRET are configured, TestInstagram.test_oauth_start_503 will flip RED — at that point update the assertion to 200 and add a redirect-URL shape assertion. Profile endpoint shape: /api/trainer-profiles/{user_id} and /api/trainee-profiles/{user_id} (the {user_id} from login response user.id), NOT /me-style routes.",
+  "rca of the issue": "N/A — no regressions found. Code change since iter71: none functional, only the pre-deploy smoke pass. Two initial failures in TestCoreFlows were caused by test-script guessing the wrong endpoint URLs (/api/trainer/profile, /api/trainees/me); fixed by switching to the actual implemented routes (/api/trainer-profiles/{uid}, /api/trainee-profiles/{uid}, /api/trainer/sessions, /api/trainee/sessions). No production code touched."
+}
