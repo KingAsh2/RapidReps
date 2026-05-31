@@ -167,6 +167,45 @@ export default function ReferralScreen() {
             </View>
           </View>
 
+          {/* Referral Breakdown Chart */}
+          {stats && stats.totalReferrals > 0 && (() => {
+            const activated = stats.activatedReferrals || 0;
+            const pending = stats.pendingReferrals || 0;
+            const remaining = stats.referralsRemaining || 0;
+            const barMax = Math.max(stats.totalReferrals, stats.maxReferrals || 5, 1);
+            const aH = (activated / barMax) * 120;
+            const pH = (pending / barMax) * 120;
+            const rH = (remaining / barMax) * 120;
+            return (
+              <View style={styles.chartCard} data-testid="referral-chart-card">
+                <Text style={styles.sectionTitle}>Breakdown</Text>
+                <View style={styles.chartRow}>
+                  <View style={styles.barColumn}>
+                    <Text style={styles.barValue}>{activated}</Text>
+                    <View style={styles.barTrack}>
+                      <View style={[styles.barFill, { height: Math.max(6, aH), backgroundColor: COLORS.success }]} />
+                    </View>
+                    <Text style={styles.barLabel}>Activated</Text>
+                  </View>
+                  <View style={styles.barColumn}>
+                    <Text style={styles.barValue}>{pending}</Text>
+                    <View style={styles.barTrack}>
+                      <View style={[styles.barFill, { height: Math.max(6, pH), backgroundColor: COLORS.orange }]} />
+                    </View>
+                    <Text style={styles.barLabel}>Pending</Text>
+                  </View>
+                  <View style={styles.barColumn}>
+                    <Text style={styles.barValue}>{remaining}</Text>
+                    <View style={styles.barTrack}>
+                      <View style={[styles.barFill, { height: Math.max(6, rH), backgroundColor: COLORS.orangeHot }]} />
+                    </View>
+                    <Text style={styles.barLabel}>Slots left</Text>
+                  </View>
+                </View>
+              </View>
+            );
+          })()}
+
           {/* Referral History */}
           {stats?.referralHistory && stats.referralHistory.length > 0 && (
             <View style={styles.historySection}>
@@ -251,4 +290,12 @@ const styles = StyleSheet.create({
   historyStatus: { fontSize: 14, fontWeight: '700' },
 
   limitNotice: { fontSize: 13, color: 'rgba(255,255,255,0.4)', textAlign: 'center', lineHeight: 18, marginTop: 8, marginBottom: 20 },
+
+  chartCard: { backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 16, padding: 18, marginBottom: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
+  chartRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-around', height: 160 },
+  barColumn: { alignItems: 'center', gap: 6, flex: 1 },
+  barValue: { fontSize: 13, fontWeight: '800', color: COLORS.white },
+  barTrack: { width: 36, height: 120, justifyContent: 'flex-end', borderRadius: 8, overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.05)' },
+  barFill: { width: '100%', borderRadius: 8 },
+  barLabel: { fontSize: 11, color: 'rgba(255,255,255,0.6)', fontWeight: '600' },
 });

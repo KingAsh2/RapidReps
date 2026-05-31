@@ -162,7 +162,18 @@ RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoD
 - **"My Referrals" Dashboard Tab** (P2, saved 2026-05-27 for a later session): Surface a new in-app dashboard for both trainee + trainer that visualizes referral performance — bar chart of invites by channel (SMS / email / share) using `react-native-svg`, lifetime credits earned, and a list of recent invitee signups. Data sources already live: `referralAPI.getStats()` + `referralAPI.getInviteStats()`. Estimated ~30 min to ship. Goal: close the referral loop so users see ROI on inviting → compounding growth.
 
 ## Recent Fixes
-- **2026-05-31 (7)** — Iteration 78 — Quick-win UX polish:
+- **2026-05-31 (8)** — Iteration 79 — Two production-blocker fixes:
+  - **EAS build SyntaxError**: `frontend/src/services/api.ts` had duplicate `export const referralAPI` declarations (line 581 added by iter77, line 696 pre-existing canonical). Production Metro bundler is stricter than dev — error was masked by hot-reload. Removed my iter77 duplicate; the original canonical version with 4 methods (`getMyCode`, `getStats`, `validateCode`, `getCredits`) was already complete.
+  - **App crash on launch (route collision)**: I created `/app/referral.tsx` in iter77 while `/app/referral/index.tsx` already existed — Expo Router file-based routing collided on `/referral` URL, throwing an unhandled exception during route tree construction at app boot. Deleted my duplicate and merged the chart visualization (3-bar Activated/Pending/Slots-left) into the existing `referral/index.tsx`.
+- **2026-05-31 (7)** — Iter78: Auto-clear Pending badge on tab view + 15s hero video preview.
+- **2026-05-31 (6)** — Iter77: Pending Session badge + Referrals dashboard.
+- **2026-05-31 (5)** — Iter76: HEAD + ETag/304 + StreamingResponse.
+- **2026-05-31 (4)** — Iter75: Range support + /me profile photo.
+- **2026-05-31 (3)** — Iter74: 5 deferred punch-list items.
+- **2026-05-31 (2)** — Iter73: 15-item punch list + booking flow rewire.
+- **2026-05-31 (1)** — Iter72: Deployment blocker fix.
+
+## Active Blocker
   - **Auto-clear Pending badge on tab view**: `markPendingSessionsSeen()` added to `NotificationContext`, persists `lastSeenPendingAt` timestamp via AsyncStorage. Badge count = pending sessions created AFTER this timestamp, so it stays cleared across reloads until a NEW request arrives. Wired into:
     - Trainee Sessions tab — fires on `activeTab === 'pending'` selection
     - Trainer Sessions tab — fires on screen mount (pending requests are bundled into the trainer's 'upcoming' filter)
