@@ -192,6 +192,8 @@ class UserResponse(BaseModel):
     roles: List[str]
     isAdmin: bool = False
     createdAt: datetime
+    profilePhoto: Optional[str] = None  # Exposed so /auth/me reflects the synced trainer profile photo
+    avatarUrl: Optional[str] = None     # Canonical alias kept in sync via /trainer-profiles POST
 
 class TokenResponse(BaseModel):
     access_token: str

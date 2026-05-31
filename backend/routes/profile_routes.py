@@ -913,13 +913,62 @@ async def delete_gallery_item(item_index: int, current_user: dict = Depends(get_
 
 
 @router.get("/files/{path:path}")
-async def serve_file(path: str):
-    """Serve a file from object storage."""
+async def serve_file(path: str, request: Request):
+    """Serve a file from object storage with HTTP Range support.
+    
+    Range support is REQUIRED for video playback in React Native (expo-av), iOS Safari
+    AVPlayer, and most browser <video> elements — without it, videos may not play
+    at all on iOS and cannot be seeked anywhere on Android.
+    """
     try:
         content, content_type = get_object(path)
-        return Response(content=content, media_type=content_type)
     except Exception:
         raise HTTPException(404, "File not found")
+
+    file_size = len(content)
+    range_header = request.headers.get('range') or request.headers.get('Range')
+
+    if not range_header:
+        # No Range — return full content with headers that signal streaming support
+        return Response(
+            content=content,
+            media_type=content_type,
+            headers={
+                'Accept-Ranges': 'bytes',
+                'Content-Length': str(file_size),
+                'Cache-Control': 'public, max-age=31536000',
+            },
+        )
+
+    # Parse "bytes=START-END" (END is optional)
+    try:
+        units, _, range_spec = range_header.strip().partition('=')
+        if units.lower() != 'bytes':
+            raise ValueError('only bytes unit supported')
+        start_str, _, end_str = range_spec.partition('-')
+        start = int(start_str) if start_str else 0
+        end = int(end_str) if end_str else file_size - 1
+        if start < 0 or end >= file_size or start > end:
+            raise ValueError('invalid range')
+    except (ValueError, AttributeError):
+        # Malformed Range — return 416
+        return Response(
+            status_code=416,
+            headers={'Content-Range': f'bytes */{file_size}'},
+        )
+
+    chunk = content[start:end + 1]
+    return Response(
+        content=chunk,
+        status_code=206,
+        media_type=content_type,
+        headers={
+            'Content-Range': f'bytes {start}-{end}/{file_size}',
+            'Accept-Ranges': 'bytes',
+            'Content-Length': str(len(chunk)),
+            'Cache-Control': 'public, max-age=31536000',
+        },
+    )
 
 
 # ============================================================================

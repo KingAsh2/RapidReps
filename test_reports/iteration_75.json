@@ -1,0 +1,36 @@
+{
+  "summary": "Iteration 75 backend-only verification — 9/10 pytest tests PASS against https://highlight-vibe-bugs.preview.emergentagent.com. All 4 HTTP Range scenarios on GET /api/files/{path} are GREEN (200 no-range with Accept-Ranges/Content-Length/Cache-Control, 206 for bytes=0-49 with correct Content-Range, 206 for open-ended bytes=N- to EOF, 416 with Content-Range: bytes */N for both over-range and malformed `bytes=abc-xyz`). UserResponse model now exposes profilePhoto+avatarUrl keys on /api/auth/me (key presence test passes). Regression GREEN: POST /api/sessions (iter73), POST /trainer-profiles/{uid}/highlights/base64 (iter74), GET /api/admin/verifications/{uid}/detail. ONE FAILURE — real backend bug: after POST /trainer-profiles with profilePhoto=<sentinel>, GET /api/auth/me still returns profilePhoto=null (and avatarUrl=null) for the trainer. Root cause: /app/backend/routes/auth_routes.py L174-182 hand-constructs UserResponse with only id/fullName/email/phone/roles/isAdmin/createdAt — it does NOT read users.profilePhoto from the DB doc, so the synced value is never surfaced. The Pydantic model addition (models.py L195-196) is wired correctly on the response shape but the route handler doesn't supply values. Confirmed in backend logs: POST /api/trainer-profiles → 200 (sync runs at profile_routes.py L46-52), immediately followed by GET /api/auth/me → 200 but profilePhoto/avatarUrl are still null.",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "GET /api/auth/me", "issue": "profilePhoto + avatarUrl always return null even after users.profilePhoto is synced via POST /trainer-profiles. Fix: in /app/backend/routes/auth_routes.py L174-182, add `profilePhoto=current_user.get('profilePhoto')` and `avatarUrl=current_user.get('avatarUrl')` to the UserResponse(...) call. (current_user is the raw user dict from get_current_user, so the field is available.) Also consider adding to the login/signup UserResponse constructions at L55, L120, L158 for consistency.", "priority": "HIGH"}
+    ],
+    "minor": [
+      {"endpoint": "GET /api/files/{path}", "issue": "Route sets Cache-Control: public, max-age=31536000 but some upstream middleware overwrites it to `no-store, no-cache, must-revalidate`. Header is present (so iOS/Android won't reject the response), but long-cache behavior intended by the route is being defeated. Not blocking expo-av playback, but worth checking the global no-cache middleware (likely in server.py/main.py) and exempting /api/files/."},
+      {"endpoint": "GET /api/files/{path}", "issue": "HEAD method returns 405. expo-av Video on iOS sometimes preflights with HEAD before GET; add a @router.head decorator alongside the @router.get for /files/{path:path} to support it (mirroring the same headers without the body)."}
+    ]
+  },
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iteration75_range_and_me.py",
+    "/app/test_reports/pytest/iteration75_results.xml"
+  ],
+  "action_items": [
+    "FIX in /app/backend/routes/auth_routes.py: pass profilePhoto=current_user.get('profilePhoto') and avatarUrl=current_user.get('avatarUrl') into the UserResponse(...) constructor in get_me() (L174-182). Then re-run the iter75 suite — the one failing test will go green.",
+    "Optional: also wire the same two fields into UserResponse constructions in login/signup paths (L55, L120, L158) so token responses also carry the synced photo.",
+    "Optional: investigate the upstream `Cache-Control: no-store` middleware overriding /api/files/ caching, and add a @router.head for /api/files/{path:path}."
+  ],
+  "critical_code_review_comments": [
+    "P1: auth_routes.py get_me() is a hand-rolled UserResponse constructor — it silently drops any new field added to the Pydantic model unless the handler is also touched. Consider building from the raw dict (`UserResponse(**{k: current_user.get(k) for k in UserResponse.model_fields})`) or use `UserResponse.model_validate(current_user)` so future model additions auto-propagate.",
+    "P2: serve_file route hard-codes `Cache-Control: public, max-age=31536000`, but a global middleware appears to override to no-store. Either suppress the middleware for /api/files/ or stop setting the header (currently misleading).",
+    "P3 (carryover): /app/backend/routes/profile_routes.py is now 1158 lines — still needs splitting.",
+    "P3: serve_file loads the entire file from object storage into memory (get_object returns full bytes) even for Range requests. For large videos this defeats the purpose of Range. Consider streaming from storage with byte offsets to avoid loading 100MB into RAM per range request."
+  ],
+  "updated_files": ["/app/backend/tests/test_iteration75_range_and_me.py"],
+  "success_rate": {"backend": "90% (9/10)", "frontend": "n/a (skipped — RN/Expo app, backend-only request)"},
+  "test_credentials": "Admin admin@rapidreps.com/admin123 | Trainee test_trainee_iter25@test.com/Test123! | Trainer test_trainer_iter25@test.com/Test123!",
+  "seed_data_creation": "Created one new tiny PNG highlight on the test trainer (caption=TEST_iter75_range, ~67 bytes — used as the byte-range fixture). One TEST_iter75 outdoor booking from trainee→trainer ~2 days out (status=requested). Trainer profile.avatarUrl was repeatedly overwritten with example.com sentinel values during the /me sync test — main agent may want to reset it to a real /api/files/... URL post-fix.",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Reusable file: /app/backend/tests/test_iteration75_range_and_me.py — 10 tests, run with `pytest /app/backend/tests/test_iteration75_range_and_me.py -v`. BASE_URL is read from REACT_APP_BACKEND_URL → EXPO_PUBLIC_BACKEND_URL → hardcoded fallback. The only failing test (test_me_reflects_synced_profilePhoto_after_trainer_profile_post) will pass once auth_routes.py get_me() passes profilePhoto/avatarUrl into UserResponse. Login returns access_token (not token). Range tests use a freshly-uploaded 67-byte PNG so they're independent of any prior highlight state.",
+  "rca of the issue": "BUG: /api/auth/me does not surface synced profilePhoto/avatarUrl. REPRO: (1) POST /api/auth/login as test_trainer_iter25@test.com → grab access_token. (2) POST /api/trainer-profiles {userId:<trainer_uid>, profilePhoto:'https://X.png', avatarUrl:'https://X.png'} with Bearer token → 200. Backend log confirms profile_routes.py L46-52 runs db.users.update_one to set users.profilePhoto. (3) GET /api/auth/me with same Bearer → 200 but body is `{..., profilePhoto:null, avatarUrl:null}`. CAUSE: auth_routes.py L174-182 manually constructs UserResponse and never reads current_user['profilePhoto'] / current_user.get('avatarUrl'). The Pydantic model (models.py L187-196) was updated correctly, but the construction call site was not. MITIGATION: change the UserResponse(...) call in get_me() to include `profilePhoto=current_user.get('profilePhoto'), avatarUrl=current_user.get('avatarUrl')`. Two lines."
+}
