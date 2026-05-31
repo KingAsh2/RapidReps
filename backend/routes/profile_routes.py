@@ -1,5 +1,6 @@
 """Profile routes: Trainer & trainee profiles, gallery, vibe, personality tags, verification, highlights."""
 from fastapi import APIRouter, HTTPException, Depends, Request, UploadFile, File, Query, Response, Form, Body
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime, timedelta
@@ -912,13 +913,70 @@ async def delete_gallery_item(item_index: int, current_user: dict = Depends(get_
     return {"success": True, "gallery": gallery}
 
 
+def _build_file_headers(file_size: int, content_type: str, etag: str, extra: dict | None = None) -> dict:
+    """Common headers for /api/files/{path} responses.
+    
+    Note: Cloudflare/ingress overrides plain `Cache-Control` to `no-store` on this domain.
+    We additionally send `Surrogate-Control` and `CDN-Cache-Control` so CF-aware tiers respect
+    the long cache, and we rely on ETag/If-None-Match for client-side 304 short-circuits as
+    the practical workaround when CF strips Cache-Control.
+    """
+    headers = {
+        'Accept-Ranges': 'bytes',
+        'Content-Length': str(file_size),
+        'ETag': etag,
+        'Cache-Control': 'public, max-age=31536000, immutable',
+        'CDN-Cache-Control': 'public, max-age=31536000, immutable',
+        'Surrogate-Control': 'public, max-age=31536000, immutable',
+        'Vary': 'Range',
+        'Content-Type': content_type,
+    }
+    if extra:
+        headers.update(extra)
+    return headers
+
+
+def _parse_range(range_header: str, file_size: int):
+    """Parse `Range: bytes=START-END` into (start, end) or raise ValueError."""
+    units, _, range_spec = range_header.strip().partition('=')
+    if units.lower() != 'bytes':
+        raise ValueError('only bytes unit supported')
+    start_str, _, end_str = range_spec.partition('-')
+    start = int(start_str) if start_str else 0
+    end = int(end_str) if end_str else file_size - 1
+    if start < 0 or end >= file_size or start > end:
+        raise ValueError('invalid range')
+    return start, end
+
+
+def _stream_bytes(content: bytes, chunk_size: int = 64 * 1024):
+    """Yield bytes in fixed-size chunks for StreamingResponse — bounds peak memory under concurrency."""
+    for i in range(0, len(content), chunk_size):
+        yield content[i:i + chunk_size]
+
+
+@router.head("/files/{path:path}")
+async def head_file(path: str):
+    """HEAD support for /files/{path}. Some clients (iOS AVPlayer in certain configurations,
+    HLS validators, link preview crawlers) preflight with HEAD before GET. Without this,
+    we'd 405 and they'd refuse to play the video at all."""
+    try:
+        content, content_type = get_object(path)
+    except Exception:
+        raise HTTPException(404, "File not found")
+    import hashlib
+    etag = f'"{hashlib.md5(content).hexdigest()}"'
+    headers = _build_file_headers(len(content), content_type, etag)
+    return Response(status_code=200, headers=headers)
+
+
 @router.get("/files/{path:path}")
 async def serve_file(path: str, request: Request):
-    """Serve a file from object storage with HTTP Range support.
+    """Serve a file from object storage with HTTP Range support + ETag-based 304 caching
+    + chunked StreamingResponse to keep memory bounded under concurrent video streams.
     
-    Range support is REQUIRED for video playback in React Native (expo-av), iOS Safari
-    AVPlayer, and most browser <video> elements — without it, videos may not play
-    at all on iOS and cannot be seeked anywhere on Android.
+    Range support is REQUIRED for video playback in React Native (expo-av), iOS AVPlayer,
+    and most browser <video> elements.
     """
     try:
         content, content_type = get_object(path)
@@ -926,49 +984,46 @@ async def serve_file(path: str, request: Request):
         raise HTTPException(404, "File not found")
 
     file_size = len(content)
-    range_header = request.headers.get('range') or request.headers.get('Range')
+    import hashlib
+    etag = f'"{hashlib.md5(content).hexdigest()}"'
 
-    if not range_header:
-        # No Range — return full content with headers that signal streaming support
+    # 304 Not Modified short-circuit — primary workaround for downstream `no-store` override.
+    if_none_match = request.headers.get('if-none-match') or request.headers.get('If-None-Match')
+    if if_none_match and if_none_match == etag:
         return Response(
-            content=content,
-            media_type=content_type,
+            status_code=304,
             headers={
-                'Accept-Ranges': 'bytes',
-                'Content-Length': str(file_size),
-                'Cache-Control': 'public, max-age=31536000',
+                'ETag': etag,
+                'Cache-Control': 'public, max-age=31536000, immutable',
+                'Vary': 'Range',
             },
         )
 
-    # Parse "bytes=START-END" (END is optional)
+    range_header = request.headers.get('range') or request.headers.get('Range')
+
+    if not range_header:
+        headers = _build_file_headers(file_size, content_type, etag)
+        return StreamingResponse(_stream_bytes(content), media_type=content_type, headers=headers)
+
     try:
-        units, _, range_spec = range_header.strip().partition('=')
-        if units.lower() != 'bytes':
-            raise ValueError('only bytes unit supported')
-        start_str, _, end_str = range_spec.partition('-')
-        start = int(start_str) if start_str else 0
-        end = int(end_str) if end_str else file_size - 1
-        if start < 0 or end >= file_size or start > end:
-            raise ValueError('invalid range')
+        start, end = _parse_range(range_header, file_size)
     except (ValueError, AttributeError):
-        # Malformed Range — return 416
         return Response(
             status_code=416,
-            headers={'Content-Range': f'bytes */{file_size}'},
+            headers={
+                'Content-Range': f'bytes */{file_size}',
+                'ETag': etag,
+            },
         )
 
     chunk = content[start:end + 1]
-    return Response(
-        content=chunk,
-        status_code=206,
-        media_type=content_type,
-        headers={
-            'Content-Range': f'bytes {start}-{end}/{file_size}',
-            'Accept-Ranges': 'bytes',
-            'Content-Length': str(len(chunk)),
-            'Cache-Control': 'public, max-age=31536000',
-        },
+    headers = _build_file_headers(
+        len(chunk),
+        content_type,
+        etag,
+        extra={'Content-Range': f'bytes {start}-{end}/{file_size}'},
     )
+    return StreamingResponse(_stream_bytes(chunk), status_code=206, media_type=content_type, headers=headers)
 
 
 # ============================================================================

@@ -162,7 +162,18 @@ RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoD
 - **"My Referrals" Dashboard Tab** (P2, saved 2026-05-27 for a later session): Surface a new in-app dashboard for both trainee + trainer that visualizes referral performance — bar chart of invites by channel (SMS / email / share) using `react-native-svg`, lifetime credits earned, and a list of recent invitee signups. Data sources already live: `referralAPI.getStats()` + `referralAPI.getInviteStats()`. Estimated ~30 min to ship. Goal: close the referral loop so users see ROI on inviting → compounding growth.
 
 ## Recent Fixes
-- **2026-05-31 (4)** — Iteration 75 — Two follow-up backend hardenings:
+- **2026-05-31 (5)** — Iteration 76 — Three optional file-serving hardenings:
+  - **HEAD `/api/files/{path}`**: Was returning 405 → now returns 200 with the same headers as GET but no body. Fixes iOS AVPlayer preflight + link preview crawlers.
+  - **ETag + If-None-Match `304 Not Modified`**: Computes MD5 ETag from content; conditional GET with matching `If-None-Match` returns 304 with empty body. Pragmatic workaround for the Cloudflare/ingress `no-store` override (which strips our `Cache-Control: public, max-age=...` headers) — client sends ETag on every request, saves bandwidth via 304 short-circuit.
+  - **`StreamingResponse` with 64KB chunks**: GET/206 responses now stream content instead of buffering the whole slice into a single Response. Bounds peak memory under concurrent video streams. Also added `Vary: Range` so intermediate caches don't merge Range/full responses.
+  - **Upstream Range investigation**: Verified Emergent object storage upstream does NOT support Range requests (ignores header, returns full content). So byte-offset streaming from upstream isn't possible — we still fetch the full file once, but now slice + stream the response, which is the practical optimization available.
+  - **Tests**: `/app/backend/tests/test_iteration76_head_etag_streaming.py` — 7 new tests (HEAD x2, ETag x3, Range+Streaming x2). Combined with iter75 suite: **17/17 passing**.
+- **2026-05-31 (4)** — Iter75: HTTP Range support on `/api/files/{path}` + `/api/auth/me` now exposes `profilePhoto`+`avatarUrl` with trainer-profile fallback.
+- **2026-05-31 (3)** — Iter74: 5 deferred punch-list items resolved (Pydantic profilePhoto alias, admin verify View/invalid-state, Edit Profile unification, group sessions KeyboardAvoidingView, Highlight Reel persistence race).
+- **2026-05-31 (2)** — Iter73: 15-item punch list batch + booking flow rewire.
+- **2026-05-31 (1)** — Iter72: Deployment blocker (SocialAuthButtons.tsx syntax error).
+
+## Active Blocker
   - **HTTP Range support on `GET /api/files/{path}`**: Root cause of "trainer videos don't play on trainee profile view" — iOS AVPlayer and `expo-av` Video REQUIRE 206 Partial Content responses for streaming/seeking. The original handler returned the whole file in a single 200, which iOS rejects for video. Now supports `bytes=START-END`, `bytes=START-` (open-ended), returns 206 + `Content-Range` for valid ranges, 416 for over-range/malformed, 200 + `Accept-Ranges: bytes` for plain GETs. Includes `Cache-Control: public, max-age=31536000`.
   - **`/api/auth/me` exposes `profilePhoto` + `avatarUrl`**: Added both fields to `UserResponse` Pydantic model AND wired `get_me()` to read from `users` collection with trainer-profile fallback (when `roles` contains 'trainer' and the user doc has no avatar, look up `trainer_profiles.avatarUrl`/`profilePhoto`).
   - **Tests**: `/app/backend/tests/test_iteration75_range_and_me.py` — 10/10 passed including all 4 Range scenarios + /me profile photo sync + 3 regression tests for sessions/highlights/admin verifications.
