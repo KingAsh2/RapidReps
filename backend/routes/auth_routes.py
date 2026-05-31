@@ -171,6 +171,18 @@ async def login(request: Request, credentials: UserLogin):
 @router.get("/auth/me", response_model=UserResponse)
 async def get_me(current_user: dict = Depends(get_current_user)):
     """Get current user profile"""
+    # If trainer, pull avatarUrl from trainer_profiles as the authoritative source
+    avatar_url = current_user.get('avatarUrl')
+    profile_photo = current_user.get('profilePhoto')
+    if not avatar_url and 'trainer' in (current_user.get('roles') or []):
+        tp = await db.trainer_profiles.find_one(
+            {'userId': str(current_user['_id'])},
+            {'avatarUrl': 1, 'profilePhoto': 1}
+        )
+        if tp:
+            avatar_url = tp.get('avatarUrl') or tp.get('profilePhoto')
+            if not profile_photo:
+                profile_photo = tp.get('profilePhoto') or tp.get('avatarUrl')
     return UserResponse(
         id=str(current_user['_id']),
         fullName=current_user['fullName'],
@@ -178,7 +190,9 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         phone=current_user['phone'],
         roles=current_user['roles'],
         isAdmin=current_user.get('isAdmin', False),
-        createdAt=current_user['createdAt']
+        createdAt=current_user['createdAt'],
+        profilePhoto=profile_photo,
+        avatarUrl=avatar_url,
     )
 
 
