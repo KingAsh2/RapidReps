@@ -220,6 +220,16 @@ export default function TrainerProfileScreen() {
                   <Ionicons name="share-social" size={18} color={COLORS.white} />
                   <Text style={styles.shareProfileBtnText}>Share Profile</Text>
                 </TouchableOpacity>
+
+                {/* Edit Profile Button — single source-of-truth route for trainer edits */}
+                <TouchableOpacity
+                  onPress={() => router.push('/trainer/edit-profile')}
+                  style={styles.shareProfileBtn}
+                  data-testid="edit-profile-btn"
+                >
+                  <Ionicons name="pencil" size={18} color={COLORS.white} />
+                  <Text style={styles.shareProfileBtnText}>Edit Profile</Text>
+                </TouchableOpacity>
               </Animated.View>
 
               {/* Stats */}

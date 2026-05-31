@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, RefreshControl, TextInput, Modal, ScrollView, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, RefreshControl, TextInput, Modal, ScrollView, ImageBackground, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -192,9 +192,16 @@ export default function TrainerGroupSessionsScreen() {
 
       {/* Create Modal */}
       <Modal visible={showCreate} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+        >
           <View style={styles.modalContent}>
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={{ paddingBottom: 24 }}
+            >
               <Text style={styles.modalTitle}>Create Group Session</Text>
               <Text style={styles.inputLabel}>Title</Text>
               <TextInput style={styles.input} placeholder="e.g. HIIT in the Park" value={title} onChangeText={setTitle} placeholderTextColor={COLORS.gray} />
@@ -226,12 +233,16 @@ export default function TrainerGroupSessionsScreen() {
               </View>
             </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Edit Modal */}
       <Modal visible={!!editingSession} transparent animationType="slide">
-        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' }}
+        >
+          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-end' }}>
           <View style={{ backgroundColor: '#0A0E1A', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24 }}>
             <Text style={{ fontSize: 20, fontWeight: '800', color: '#fff', marginBottom: 16 }}>Edit Session</Text>
             <TextInput style={styles.input} placeholder="Title" placeholderTextColor="#888" value={editTitle} onChangeText={setEditTitle} data-testid="edit-title" />
@@ -250,7 +261,8 @@ export default function TrainerGroupSessionsScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </Modal>
       </SafeAreaView>
     </ImageBackground>

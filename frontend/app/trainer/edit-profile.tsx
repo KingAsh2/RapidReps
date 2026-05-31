@@ -231,6 +231,8 @@ export default function EditTrainerProfileScreen() {
         offersVirtual: formData.offersVirtual,
         sessionDurationsOffered: formData.sessionDurations,
         travelRadiusMiles: parseInt(formData.travelRadiusMiles) || 10,
+        // Backend Pydantic model only accepts `avatarUrl`; legacy `profilePhoto` field was silently dropped, hence avatar never persisted.
+        avatarUrl: formData.profilePhoto || undefined,
         profilePhoto: formData.profilePhoto || undefined,
         cancellationPolicy: formData.cancellationPolicy,
         latitude: formData.latitude,

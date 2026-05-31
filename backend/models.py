@@ -201,6 +201,7 @@ class TokenResponse(BaseModel):
 class TrainerProfileCreate(BaseModel):
     userId: str
     avatarUrl: Optional[str] = None
+    profilePhoto: Optional[str] = None  # legacy alias — synced to avatarUrl by route handler
     bio: Optional[str] = None
     experienceYears: Optional[int] = 0
     certifications: List[str] = []

@@ -468,12 +468,19 @@ export default function TrainerDetailScreen() {
               ],
             }}>
               <View style={styles.heroSection} data-testid="trainer-hero-section">
-                {/* Hero Image - Full width with parallax */}
-                {trainer.avatarUrl ? (
-                  <Image source={{ uri: trainer.avatarUrl }} style={styles.heroImage} blurRadius={heroBlurAnim.interpolate ? 0 : 0} />
-                ) : (
-                  <LinearGradient colors={['#1A1F38', '#0A0E1A']} style={styles.heroImage} />
-                )}
+                {/* Hero Image - Full width with parallax. Fallback chain across legacy field names. */}
+                {(() => {
+                  const heroUri = (trainer as any)?.avatarUrl
+                    || (trainer as any)?.profilePhotoUrl
+                    || (trainer as any)?.photoFileUri
+                    || (trainer as any)?.profilePictureUrl
+                    || null;
+                  return heroUri ? (
+                    <Image source={{ uri: heroUri }} style={styles.heroImage} />
+                  ) : (
+                    <LinearGradient colors={['#1A1F38', '#0A0E1A']} style={styles.heroImage} />
+                  );
+                })()}
                 {/* Dramatic multi-layer gradient overlay */}
                 <LinearGradient
                   colors={['transparent', 'rgba(10,14,26,0.3)', 'rgba(10,14,26,0.85)', '#0A0E1A']}

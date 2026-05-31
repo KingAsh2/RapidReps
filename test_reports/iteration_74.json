@@ -1,0 +1,39 @@
+{
+  "summary": "Iteration 74 backend-only verification — 12/12 pytest tests PASSED against https://highlight-vibe-bugs.preview.emergentagent.com. Verified the iter74 backend additions: (1) TrainerProfileCreate Pydantic model now accepts legacy `profilePhoto` field and the route handler at /app/backend/routes/profile_routes.py L46-52 correctly syncs it BOTH to profile.avatarUrl AND to users.profilePhoto (proven by clearing avatarUrl on the profile and confirming the GET handler's fallback at L77 re-surfaces the value from users.profilePhoto). (2) Canonical `avatarUrl` field still works on POST + GET. (3) POST /api/trainer-profiles/{uid}/highlights/base64 uploads a base64 PNG, returns {success:true, highlight:{url:/api/files/..., type:'photo', caption}}, GET /api/trainer-profiles/{uid}/highlights includes it, and GET /api/files/{path} serves the raw image bytes with image/* content-type. (4) Admin verification detail returns 7 steps each with a `url` field (photo step's url is populated after the avatarUrl sync); POST /api/admin/verifications/{uid}/approve-step with valid stepId returns 200 {success:true, message:str}; missing stepId returns 400 — sufficient shape for the FE to gate invalid Approved+No-file state. (5) Regression green: admin/trainee/trainer login, POST /api/sessions (iter73 booking flow), GET /api/trainee/sessions?session_status=requested, GET /api/trainer/verification-status with all 7 steps.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/auth/me (UserResponse model)", "issue": "UserResponse Pydantic model (backend/models.py L187-194) does NOT expose `profilePhoto`. So once users.profilePhoto is synced, the FE can't read it back via /me — only via /api/trainer-profiles/{uid}. Not blocking iter74 (FE uses trainer-profiles endpoint), but is a latent inconsistency: trainee-side flows that rely on /me to render the avatar will silently lose the sync. Consider adding `profilePhoto: Optional[str] = None` to UserResponse."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration74_profile_photo_highlights.py",
+    "/app/test_reports/pytest/iteration74_results.xml"
+  ],
+  "action_items": [
+    "Optional: add `profilePhoto: Optional[str] = None` to UserResponse model so /api/auth/me exposes the synced photo (minor; iter74 FE doesn't depend on it).",
+    "Main agent can self-test the 5 frontend punch-list items via Expo (web preview not reliable for RN). Backend contracts they depend on are all green."
+  ],
+  "critical_code_review_comments": [
+    "P3 (carryover): /app/backend/routes/profile_routes.py is 1109 lines, mixing trainer profile, trainee profile, gallery, highlights, verification, and file-serving. Split into focused modules.",
+    "P3 (carryover from iter73): /app/backend/routes/session_routes.py >1550 lines, still needs splitting.",
+    "P2: TrainerProfileCreate.profilePhoto is described as legacy/alias for avatarUrl, but both fields coexist in the Pydantic model and the dict is dumped wholesale into Mongo. After sync, both profilePhoto AND avatarUrl are persisted on the trainer_profiles document — wastes space and risks drift if a future POST only sets avatarUrl (profilePhoto stays as stale legacy value). Consider deleting profile_doc['profilePhoto'] after sync.",
+    "P2: profile_routes.py L46-52 — when profilePhoto is supplied, `db.users.update_one` is called inside POST /trainer-profiles, but there is NO equivalent rollback if the trainer_profiles update_one fails afterwards. Wrap in a try/except or use a transaction.",
+    "P3: /api/admin/verifications/{trainer_id}/approve-step (admin_routes.py L736-788) blindly writes `{stepId}Approved=true` to trainer_profiles without validating that the document for that step was actually submitted (url present). The new FE-side disable handles UX, but a malicious/buggy client can still flip the flag. Recommend re-fetching the profile, asserting the corresponding `*Uploaded`/`*FileUri` field, and returning 400 if missing."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration74_profile_photo_highlights.py"
+  ],
+  "success_rate": {"backend": "100% (12/12)", "frontend": "n/a (skipped per request — RN/Expo app)"},
+  "test_credentials": "Admin admin@rapidreps.com/admin123 | Trainee test_trainee_iter25@test.com/Test123! | Trainer test_trainer_iter25@test.com/Test123! (canGoLive=true)",
+  "seed_data_creation": "Created during test run: (a) trainer profile avatarUrl set to a unique sentinel data URI (legacy profilePhoto path), then re-set via canonical avatarUrl path; (b) one new base64 PNG highlight on the test trainer's profile (caption=TEST_iter74_*); (c) one TEST_iter74 outdoor booking from trainee→trainer for ~2 days out (status=requested). All safe to leave or admin-clean.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Reusable regression file: /app/backend/tests/test_iteration74_profile_photo_highlights.py — covers profilePhoto/avatarUrl sync (both directions incl. users.profilePhoto fallback), highlight base64 upload + retrieval + /api/files serving, admin approve-step (incl. 400 for missing stepId), trainer verification-status shape, and the iter73 booking regression. BASE_URL is read from EXPO_PUBLIC_BACKEND_URL (this is an Expo app — frontend/.env has no REACT_APP_BACKEND_URL). Login returns access_token (not token). Run: `pytest /app/backend/tests/test_iteration74_profile_photo_highlights.py -v`.",
+  "rca of the issue": "N/A — no bugs found in iter74 scope. Initial test had an over-strict assertion that /api/auth/me would expose the synced users.profilePhoto, but UserResponse does not include that field; replaced with the more correct verification path: clear avatarUrl on profile and confirm GET /api/trainer-profiles falls back to users.profilePhoto (profile_routes.py L77), which proves the sync actually wrote to the users collection. All 12 tests pass."
+}

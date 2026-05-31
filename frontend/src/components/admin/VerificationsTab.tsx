@@ -485,10 +485,16 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                               <Text style={{ fontSize: 13, color: stepApproved ? C.success : step.submitted ? C.warning : C.error, fontWeight: '600' }}>
                                 {stepApproved ? 'Approved' : step.submitted ? 'Under Review' : 'Not submitted'}
                               </Text>
+                              {stepApproved && !step.url && (
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, backgroundColor: 'rgba(255,71,87,0.12)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, alignSelf: 'flex-start' }}>
+                                  <Ionicons name="warning" size={12} color={C.error} />
+                                  <Text style={{ fontSize: 11, fontWeight: '700', color: C.error }}>Invalid state — approved but no file. Ask trainer to re-upload.</Text>
+                                </View>
+                              )}
                             </View>
                           </View>
                           {step.submitted && (
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8, marginLeft: 48 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8, marginLeft: 48, flexWrap: 'wrap' }}>
                               {step.url ? (
                                 step.id === 'video' ? (
                                   <TouchableOpacity
@@ -528,6 +534,10 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                                 <>
                                   <TouchableOpacity
                                     onPress={async () => {
+                                      if (!step.url) {
+                                        toast.error('Cannot approve — trainer has not uploaded this document yet.');
+                                        return;
+                                      }
                                       try {
                                         const headers = await getAuthHeader();
                                         await api.post(`/admin/verifications/${verificationDetail.profile?.userId}/approve-step`, { stepId: step.id }, { headers });
@@ -536,7 +546,8 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                                         setVerificationDetail(updated.data);
                                       } catch { toast.error('Failed to approve'); }
                                     }}
-                                    style={{ backgroundColor: C.success, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                                    disabled={!step.url}
+                                    style={{ backgroundColor: step.url ? C.success : '#9ca3af', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 4, opacity: step.url ? 1 : 0.6 }}
                                     data-testid={`approve-step-${step.id}`}
                                   >
                                     <Ionicons name="checkmark" size={14} color={C.white} />

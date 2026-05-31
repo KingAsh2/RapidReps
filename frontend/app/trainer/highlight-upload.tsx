@@ -27,14 +27,28 @@ export default function HighlightUpload() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
 
-  useEffect(() => { loadHighlights(); }, []);
+  useEffect(() => {
+    if (user?.id) {
+      loadHighlights();
+    } else {
+      setLoading(false);
+    }
+  }, [user?.id]);
 
   const loadHighlights = async () => {
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
     try {
-      const res = await fetch(`${API_URL}/api/trainer-profiles/${user?.id}/highlights`);
+      const res = await fetch(`${API_URL}/api/trainer-profiles/${user.id}/highlights`);
+      if (!res.ok) {
+        setHighlights([]);
+        return;
+      }
       const data = await res.json();
       setHighlights(data.highlights || []);
-    } catch { } finally { setLoading(false); }
+    } catch { setHighlights([]); } finally { setLoading(false); }
   };
 
   const pickAndUpload = async (mediaType: 'video' | 'photo') => {
