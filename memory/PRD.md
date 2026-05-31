@@ -162,7 +162,16 @@ RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoD
 - **"My Referrals" Dashboard Tab** (P2, saved 2026-05-27 for a later session): Surface a new in-app dashboard for both trainee + trainer that visualizes referral performance — bar chart of invites by channel (SMS / email / share) using `react-native-svg`, lifetime credits earned, and a list of recent invitee signups. Data sources already live: `referralAPI.getStats()` + `referralAPI.getInviteStats()`. Estimated ~30 min to ship. Goal: close the referral loop so users see ROI on inviting → compounding growth.
 
 ## Recent Fixes
-- **2026-05-31** — Resolved P0 deployment blocker: removed garbage residue (`t: { width: 0, height: 2 }, ...` lines 221–231) from `/app/frontend/src/components/SocialAuthButtons.tsx` left over from a botched search/replace. Metro bundler now compiles cleanly (722 modules). EAS deploy unblocked.
+- **2026-05-31 (2)** — Shipped 15-item punch-list batch from user PDF testing notes:
+  - **Trainer profile (trainee view)**: removed redundant `Hold to Book` + sticky `Book Now`; single tap `BOOK SESSION` button now navigates to `/trainee/confirm-booking`. Hero rate badge shows `$X / 30 min` (computed from `ratePerMinuteCents`) instead of hard-coded `$1/min`. Hero CTA scrolls to Booking Card. Gallery section removed entirely (consolidated into Highlight Reel per user choice).
+  - **Trainer Vibe Player**: fixed double-audio race between two `useEffect`s by adding synchronous `playLockRef` (TrainerVibePlayer.tsx).
+  - **Confirm Booking page** (`confirm-booking.tsx`): now actually calls `POST /api/sessions` (was previously a no-op that just flipped state). Success modal updated to required copy: *"Training Request Sent — Your training request has been sent to {trainer}. You can find this session in My Sessions → Pending."* Policy info card contrast fixed (was white-text-on-near-white).
+  - **Sessions tab** (`/trainee/(tabs)/sessions.tsx`): accepts `tab=pending` deep-link param so the post-booking modal CTA lands on Pending.
+  - **Zelle Setup** (`connect-bank.tsx`): input bg changed from `rgba(255,255,255,0.9)` → `rgba(255,255,255,0.06)` so white text values are visible (resolves IMG_1125 white-on-white).
+  - **Signup**: eye-toggle icon added on both Password + Confirm Password fields with proper `autoCapitalize/autoCorrect/textContentType` attributes.
+  - **Trainer Home**: one-time celebratory approval Modal (confetti, glow ring, brand pill) shown when `GET /api/trainer/verification-status` returns `canGoLive=true`. AsyncStorage flag `@rapidreps_trainer_approval_modal_seen` ensures it shows only once.
+  - **Backend P0 (caught by iter73 testing agent)**: added missing imports `MembershipStatus`, `REFERRAL_CREDIT_CENTS`, `create_and_send_notification` in `session_routes.py` — every `POST /api/sessions` was 500-ing with `NameError`. Now end-to-end booking flow returns 200 and sessions appear under My Sessions → Pending. 13/13 backend tests passed (`/app/backend/tests/test_iteration73_booking_flow.py`).
+- **2026-05-31 (1)** — Resolved P0 deployment blocker: removed garbage residue lines 221–231 from `/app/frontend/src/components/SocialAuthButtons.tsx`.
 
 ## Active Blocker
 - **iOS App Store Deployment**: EAS build fails with `XCODE_BUILD_ERROR — Signing certificate "iPhone Distribution: Ashton Bundy" revoked` (Apple side). Resolution: contact support@emergent.sh with Job ID + Expo project ID `aa258400-544c-4da6-b007-0aff7ef361f6` to refresh iOS signing credentials.
