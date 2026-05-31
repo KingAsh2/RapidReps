@@ -18,6 +18,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { useAlert } from '../../../src/contexts/AlertContext';
+import { useNotifications } from '../../../src/contexts/NotificationContext';
 import { traineeAPI } from '../../../src/services/api';
 import { SessionCountdown } from '../../../src/components/SessionCountdown';
 
@@ -55,6 +56,7 @@ export default function SessionsScreen() {
   const params = useLocalSearchParams();
   const { user } = useAuth();
   const { showAlert } = useAlert();
+  const { markPendingSessionsSeen } = useNotifications();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [sessions, setSessions] = useState<any[]>([]);
@@ -71,6 +73,14 @@ export default function SessionsScreen() {
   useEffect(() => {
     loadSessions();
   }, []);
+
+  // Clear the pending-session badge when the user views the Pending sub-tab.
+  // Persisted via AsyncStorage in NotificationContext so it survives reloads.
+  useEffect(() => {
+    if (activeTab === 'pending') {
+      markPendingSessionsSeen().catch(() => {});
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     if (!loading) {

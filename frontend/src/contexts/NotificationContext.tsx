@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { useAuth } from './AuthContext';
@@ -25,6 +26,7 @@ interface NotificationContextType {
   markAllRead: () => Promise<void>;
   refreshMessageCount: () => Promise<void>;
   refreshPendingSessionCount: () => Promise<void>;
+  markPendingSessionsSeen: () => Promise<void>;
   isReady: boolean;
 }
 
@@ -38,6 +40,7 @@ const NotificationContext = createContext<NotificationContextType>({
   markAllRead: async () => {},
   refreshMessageCount: async () => {},
   refreshPendingSessionCount: async () => {},
+  markPendingSessionsSeen: async () => {},
   isReady: false,
 });
 
@@ -48,6 +51,10 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [unreadCount, setUnreadCount] = useState(0);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
   const [pendingSessionCount, setPendingSessionCount] = useState(0);
+  // Marks "I've seen the Pending tab as of timestamp T" — badge only counts sessions created AFTER T.
+  // Persisted in AsyncStorage per-user so it survives app restarts.
+  const lastSeenPendingRef = useRef<string | null>(null);
+  const PENDING_SEEN_KEY = '@rapidreps_pending_seen_at';
   const [isReady, setIsReady] = useState(false);
   const notificationListener = useRef<any>();
   const responseListener = useRef<any>();
@@ -97,12 +104,33 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const sessions = isTrainer
         ? await trainerAPI.getSessions('requested')
         : await traineeAPI.getSessions('requested');
-      if (isMounted.current) {
-        setPendingSessionCount(Array.isArray(sessions) ? sessions.length : 0);
+      const list = Array.isArray(sessions) ? sessions : [];
+      // Hydrate "lastSeen" timestamp once (cheap; AsyncStorage read).
+      if (lastSeenPendingRef.current === null) {
+        try { lastSeenPendingRef.current = (await AsyncStorage.getItem(PENDING_SEEN_KEY)) || ''; } catch { lastSeenPendingRef.current = ''; }
       }
+      const seenAt = lastSeenPendingRef.current;
+      const count = !seenAt
+        ? list.length
+        : list.filter((s: any) => {
+            const created = s.createdAt || s.created_at || s.requestedAt || '';
+            // Only count sessions newer than the last time the user opened Pending.
+            return !created || String(created) > seenAt;
+          }).length;
+      if (isMounted.current) setPendingSessionCount(count);
     } catch (error) {
       console.log('Pending session count fetch error (non-critical):', error);
     }
+  };
+
+  // Called by the Sessions screen when the user lands on / switches to the Pending sub-tab.
+  // Optimistically clears the badge and persists a "seen at" timestamp so the badge stays cleared
+  // across reloads until a NEW pending request arrives.
+  const markPendingSessionsSeen = async () => {
+    const now = new Date().toISOString();
+    lastSeenPendingRef.current = now;
+    try { await AsyncStorage.setItem(PENDING_SEEN_KEY, now); } catch { /* ignore */ }
+    if (isMounted.current) setPendingSessionCount(0);
   };
 
   const markAllRead = async () => {
@@ -254,6 +282,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         markAllRead,
         refreshMessageCount,
         refreshPendingSessionCount,
+        markPendingSessionsSeen,
         isReady,
       }}
     >
@@ -275,6 +304,7 @@ export const useNotifications = () => {
     markAllRead: async () => {},
     refreshMessageCount: async () => {},
     refreshPendingSessionCount: async () => {},
+    markPendingSessionsSeen: async () => {},
     isReady: false,
   };
 };

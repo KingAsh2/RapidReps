@@ -26,6 +26,7 @@ import { ProfileGallery, SocialLinksDisplay } from '../../src/components/Profile
 import InstagramSection from '../../src/components/InstagramSection';
 import { TrainerVibePlayer } from '../../src/components/TrainerVibePlayer';
 import { HighlightReel } from '../../src/components/HighlightReel';
+import { TrainerHeroVideoPreview } from '../../src/components/TrainerHeroVideoPreview';
 import { PersonalityTagBadge } from '../../src/components/PersonalityTagBadge';
 
 const { width, height: screenHeight } = Dimensions.get('window');
@@ -479,6 +480,20 @@ export default function TrainerDetailScreen() {
                     <Image source={{ uri: heroUri }} style={styles.heroImage} />
                   ) : (
                     <LinearGradient colors={['#1A1F38', '#0A0E1A']} style={styles.heroImage} />
+                  );
+                })()}
+
+                {/* 15s auto-preview of first video highlight (muted, single-play, fades after).
+                    Sits ABOVE the static hero image but BELOW the gradient + text overlays. */}
+                {(() => {
+                  const firstVideo = (highlights || []).find((h: any) => h?.type === 'video' && h?.url);
+                  if (!firstVideo) return null;
+                  return (
+                    <TrainerHeroVideoPreview
+                      videoUrl={firstVideo.url}
+                      previewMs={15000}
+                      posterUrl={(trainer as any)?.avatarUrl}
+                    />
                   );
                 })()}
                 {/* Dramatic multi-layer gradient overlay */}

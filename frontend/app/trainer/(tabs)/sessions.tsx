@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
+import { useNotifications } from '../../../src/contexts/NotificationContext';
 import { SessionCountdown } from '../../../src/components/SessionCountdown';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
@@ -41,9 +42,12 @@ export default function TrainerSessionsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeFilter, setActiveFilter] = useState<TabFilter>('upcoming');
+  const { markPendingSessionsSeen } = useNotifications();
 
   useEffect(() => {
     loadSessions();
+    // Trainer's Sessions screen surfaces pending requests under 'upcoming' — clear badge on view.
+    markPendingSessionsSeen().catch(() => {});
   }, []);
 
   const loadSessions = async () => {

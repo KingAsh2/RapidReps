@@ -162,7 +162,25 @@ RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoD
 - **"My Referrals" Dashboard Tab** (P2, saved 2026-05-27 for a later session): Surface a new in-app dashboard for both trainee + trainer that visualizes referral performance — bar chart of invites by channel (SMS / email / share) using `react-native-svg`, lifetime credits earned, and a list of recent invitee signups. Data sources already live: `referralAPI.getStats()` + `referralAPI.getInviteStats()`. Estimated ~30 min to ship. Goal: close the referral loop so users see ROI on inviting → compounding growth.
 
 ## Recent Fixes
-- **2026-05-31 (6)** — Iteration 77 — Pending Session badge + Referrals dashboard:
+- **2026-05-31 (7)** — Iteration 78 — Quick-win UX polish:
+  - **Auto-clear Pending badge on tab view**: `markPendingSessionsSeen()` added to `NotificationContext`, persists `lastSeenPendingAt` timestamp via AsyncStorage. Badge count = pending sessions created AFTER this timestamp, so it stays cleared across reloads until a NEW request arrives. Wired into:
+    - Trainee Sessions tab — fires on `activeTab === 'pending'` selection
+    - Trainer Sessions tab — fires on screen mount (pending requests are bundled into the trainer's 'upcoming' filter)
+  - **15s hero video auto-preview** on trainer-detail (Instagram Reels style). New component `TrainerHeroVideoPreview.tsx`:
+    - Plays first video highlight muted + autoplay on hero overlay
+    - Fades out after 15s so the rest of the page stays readable
+    - Tap-to-unmute pill in top-right, "LIVE PREVIEW" badge in top-left
+    - Gradient overlay preserves hero text readability
+    - Leverages iter75 backend Range support for smooth iOS playback + iter76 ETag for repeat-view bandwidth savings
+  - **Group Sessions pending count — DEFERRED with rationale**: After auditing the data model (`backend/routes/group_sessions.py`), trainees auto-join group sessions on capacity availability (no trainer-approval pending state). So the 1:1-style badge concept doesn't directly apply. Would require introducing an approval workflow or repurposing as "new signups since last view" — flagged for product decision.
+- **2026-05-31 (6)** — Iter77: Pending Session badge + Referrals dashboard.
+- **2026-05-31 (5)** — Iter76: HEAD method + ETag/304 + StreamingResponse.
+- **2026-05-31 (4)** — Iter75: HTTP Range support + /me profile photo.
+- **2026-05-31 (3)** — Iter74: 5 deferred punch-list items.
+- **2026-05-31 (2)** — Iter73: 15-item punch list + booking flow rewire.
+- **2026-05-31 (1)** — Iter72: Deployment blocker fix.
+
+## Active Blocker
   - **Pending Session count badge** on Sessions tab icon (both trainee + trainer). Lives in `NotificationContext` as `pendingSessionCount`, fetched on mount + every 60s + after a successful booking from confirm-booking. Wired into `app/trainee/(tabs)/_layout.tsx` + `app/trainer/(tabs)/_layout.tsx` via Expo Router's `tabBarBadge`. Tab shows e.g. `Sessions (2)` so users don't forget about open requests.
   - **Referrals dashboard** at `/app/referral.tsx` (fixes broken `router.push('/referral')` from profile menus that previously 404'd). Features hero card with copy-able + shareable referral code, 4 stat cards (total/activated/pending/success-rate), earnings card ($ total + available), 3-bar chart visualization (activated vs pending vs slots-left), referral history list with status dots and credit amounts. Uses native `Clipboard` + `Share` APIs (no new deps).
   - **API additions**: `referralAPI.getMyCode()` + `referralAPI.getStats()` in `src/services/api.ts` for clean call-sites.
