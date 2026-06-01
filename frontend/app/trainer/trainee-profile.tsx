@@ -328,6 +328,25 @@ export default function TraineeProfileScreen() {
               <Text style={styles.goalsText}>{session.traineeGoals}</Text>
             </View>
           )}
+
+          {/* View Full Profile (vibrant showcase) */}
+          <TouchableOpacity
+            onPress={() => router.push({ pathname: '/trainer/trainee-detail', params: { traineeId } })}
+            data-testid="view-trainee-showcase-btn"
+            accessibilityLabel="View full trainee profile with highlights and vibe"
+            accessibilityRole="button"
+            style={{ marginTop: 14, borderRadius: 14, overflow: 'hidden' }}
+          >
+            <LinearGradient
+              colors={['#FF6A00', '#FF3D00']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 12, gap: 8 }}
+            >
+              <Ionicons name="sparkles" size={16} color="#FFF" />
+              <Text style={{ fontSize: 13, fontFamily: 'Oswald_700Bold', color: '#FFF', letterSpacing: 1.5 }}>VIEW FULL PROFILE</Text>
+            </LinearGradient>
+          </TouchableOpacity>
         </View>
 
         {/* Session Details Card */}

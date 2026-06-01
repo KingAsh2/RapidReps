@@ -290,6 +290,33 @@ RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoD
   - **Backend P0 (caught by iter73 testing agent)**: added missing imports `MembershipStatus`, `REFERRAL_CREDIT_CENTS`, `create_and_send_notification` in `session_routes.py` — every `POST /api/sessions` was 500-ing with `NameError`. Now end-to-end booking flow returns 200 and sessions appear under My Sessions → Pending. 13/13 backend tests passed (`/app/backend/tests/test_iteration73_booking_flow.py`).
 - **2026-05-31 (1)** — Resolved P0 deployment blocker: removed garbage residue lines 221–231 from `/app/frontend/src/components/SocialAuthButtons.tsx`.
 
+## 2026-06-01 — Iteration 82: Trainee Profile Vibrancy Parity (Feature)
+- **User request**: "I want the trainee profiles to have the same effects as the trainer profiles. What will you update to make this happen? Right now the Trainer profiles are way more exciting and vibrant with music and media etc"
+- **Scope**: Bring trainee profiles to full visual+interactive parity with trainer profiles (Option C: both edit screens and public showcase).
+
+### Backend additions
+- **Models** (`/app/backend/models.py`): Extended `TraineeProfileCreate` + `TraineeProfileResponse` with `bio`, `vibeTrackTitle`, `vibeArtistName`, `vibeArtworkUrl`, `vibePreviewUrl`, `vibeAppleMusicUrl`, `vibeTrackId`, `accentColor`, `accentColorAuto`, `highlights`, `fullName`.
+- **Routes** (`/app/backend/routes/profile_routes.py`): Added trainee endpoints mirroring the trainer ones:
+  - `PUT /api/trainee-profiles/{user_id}/vibe` + `DELETE`
+  - `PUT /api/trainee-profiles/{user_id}/accent-color` (validates against `VALID_ACCENT_COLORS`)
+  - `PUT /api/trainee-profiles/{user_id}/bio`
+  - `POST /api/trainee-profiles/{user_id}/highlights` (file upload)
+  - `POST /api/trainee-profiles/{user_id}/highlights/base64` (iOS-friendly)
+  - `DELETE /api/trainee-profiles/{user_id}/highlights/{index}`
+  - `GET /api/trainee-profiles/{user_id}/highlights`
+
+### Frontend additions
+- **`app/trainee/vibe-setup.tsx`** (NEW): iTunes Search-powered music picker for trainees, mirrors trainer's vibe-setup.
+- **`app/trainee/highlight-upload.tsx`** (NEW): Photo+video reel uploader for trainees with base64 fallback.
+- **`app/trainee/(tabs)/profile.tsx`** (UPDATED): Added 3 new CTA tiles next to existing Personality Tag — Vibe, Highlight Reel, Brand Color — plus AccentColorPicker modal and handler.
+- **`app/trainer/trainee-detail.tsx`** (NEW): Cinematic public showcase of a trainee — same hero/parallax/glow/stagger entrance animations as `trainee/trainer-detail.tsx`. Surfaces: fitness level badge, name, bio/goals, personality tag, stats bar (training styles / highlights / format), vibe player (auto-play), highlight reel, Instagram embed, goals/styles/limitations/location cards. Accent color drives all tints. Single "MESSAGE" CTA replaces "BOOK SESSION".
+- **`app/trainer/trainee-profile.tsx`** (UPDATED): Added a "VIEW FULL PROFILE" gradient CTA on the operational session-prep page that routes to `/trainer/trainee-detail`.
+
+### Test coverage
+- New file: `/app/backend/tests/test_iteration82_trainee_vibrancy.py` — 7 tests:
+  vibe lifecycle, accent color (valid+invalid), bio update, highlights base64 lifecycle, response surfaces showcase keys, cross-user 403 on vibe, cross-user 403 on highlight. All passing.
+- Existing CI guards (79, 81) re-run green: 13/13 total passing.
+
 ## Active Blocker
 - **iOS App Store Deployment**: EAS build fails with `XCODE_BUILD_ERROR — Signing certificate "iPhone Distribution: Ashton Bundy" revoked` (Apple side). Resolution: contact support@emergent.sh with Job ID + Expo project ID `aa258400-544c-4da6-b007-0aff7ef361f6` to refresh iOS signing credentials.
 

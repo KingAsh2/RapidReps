@@ -309,6 +309,7 @@ class TrainerProfileResponse(BaseModel):
 class TraineeProfileCreate(BaseModel):
     userId: str
     profilePhoto: Optional[str] = None
+    bio: Optional[str] = None
     fitnessGoals: Optional[str] = None
     currentFitnessLevel: str = FitnessLevel.BEGINNER
     experienceLevel: Optional[str] = None
@@ -330,11 +331,21 @@ class TraineeProfileCreate(BaseModel):
     longitude: Optional[float] = None
     locationAddress: Optional[str] = None
     personalityTag: Optional[str] = None
+    # Vibe / showcase fields (parity with TrainerProfile)
+    vibeTrackTitle: Optional[str] = None
+    vibeArtistName: Optional[str] = None
+    vibeArtworkUrl: Optional[str] = None
+    vibePreviewUrl: Optional[str] = None
+    vibeAppleMusicUrl: Optional[str] = None
+    vibeTrackId: Optional[str] = None
+    accentColor: Optional[str] = None
+    accentColorAuto: Optional[str] = None
 
 class TraineeProfileResponse(BaseModel):
     id: str
     userId: str
     profilePhoto: Optional[str] = None
+    bio: Optional[str] = None
     fitnessGoals: Optional[str] = None
     currentFitnessLevel: str = FitnessLevel.BEGINNER
     experienceLevel: Optional[str] = None
@@ -358,6 +369,17 @@ class TraineeProfileResponse(BaseModel):
     personalityTag: Optional[str] = None
     gallery: List[dict] = []
     socialLinks: Optional[dict] = None
+    highlights: List[dict] = []
+    # Vibe / showcase fields (parity with TrainerProfile)
+    vibeTrackTitle: Optional[str] = None
+    vibeArtistName: Optional[str] = None
+    vibeArtworkUrl: Optional[str] = None
+    vibePreviewUrl: Optional[str] = None
+    vibeAppleMusicUrl: Optional[str] = None
+    vibeTrackId: Optional[str] = None
+    accentColor: Optional[str] = None
+    accentColorAuto: Optional[str] = None
+    fullName: Optional[str] = None
     createdAt: datetime
 
 class SessionCreate(BaseModel):

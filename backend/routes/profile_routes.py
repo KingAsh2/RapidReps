@@ -1108,6 +1108,160 @@ async def update_trainee_social_links(user_id: str, body: dict, current_user: di
     return {"success": True, "socialLinks": social_links}
 
 
+@router.put("/trainee-profiles/{user_id}/vibe")
+async def update_trainee_vibe(user_id: str, body: dict, current_user: dict = Depends(get_current_user)):
+    """Update trainee's profile vibe/anthem."""
+    if str(current_user['_id']) != user_id:
+        raise HTTPException(403, "Can only update your own vibe")
+    vibe_data = {
+        'vibeTrackTitle': body.get('vibeTrackTitle'), 'vibeArtistName': body.get('vibeArtistName'),
+        'vibeArtworkUrl': body.get('vibeArtworkUrl'), 'vibePreviewUrl': body.get('vibePreviewUrl'),
+        'vibeAppleMusicUrl': body.get('vibeAppleMusicUrl'), 'vibeTrackId': body.get('vibeTrackId'),
+        'updatedAt': datetime.utcnow(),
+    }
+    result = await db.trainee_profiles.update_one({'userId': user_id}, {'$set': vibe_data})
+    if result.matched_count == 0:
+        vibe_data['userId'] = user_id
+        vibe_data['createdAt'] = datetime.utcnow()
+        await db.trainee_profiles.insert_one(vibe_data)
+    return {"success": True, **{k: v for k, v in vibe_data.items() if k not in ('updatedAt', 'createdAt', '_id', 'userId')}}
+
+
+@router.delete("/trainee-profiles/{user_id}/vibe")
+async def remove_trainee_vibe(user_id: str, current_user: dict = Depends(get_current_user)):
+    """Remove trainee's profile vibe/anthem."""
+    if str(current_user['_id']) != user_id:
+        raise HTTPException(403, "Can only update your own vibe")
+    clear_data = {
+        'vibeTrackTitle': None, 'vibeArtistName': None, 'vibeArtworkUrl': None,
+        'vibePreviewUrl': None, 'vibeAppleMusicUrl': None, 'vibeTrackId': None,
+        'updatedAt': datetime.utcnow(),
+    }
+    await db.trainee_profiles.update_one({'userId': user_id}, {'$set': clear_data})
+    return {"success": True}
+
+
+@router.put("/trainee-profiles/{user_id}/accent-color")
+async def update_trainee_accent_color(user_id: str, body: dict = Body(...), current_user: dict = Depends(get_current_user)):
+    """Update trainee's brand accent color."""
+    if str(current_user['_id']) != user_id:
+        raise HTTPException(403, "Can only update your own accent color")
+    color = body.get("accentColor")
+    if color and color not in VALID_ACCENT_COLORS:
+        raise HTTPException(400, f"Invalid accent color. Must be one of: {VALID_ACCENT_COLORS}")
+    await db.trainee_profiles.update_one(
+        {'userId': user_id},
+        {'$set': {'accentColor': color, 'updatedAt': datetime.utcnow()}}
+    )
+    return {"success": True, "accentColor": color}
+
+
+@router.put("/trainee-profiles/{user_id}/bio")
+async def update_trainee_bio(user_id: str, body: dict = Body(...), current_user: dict = Depends(get_current_user)):
+    """Update trainee's bio/about-me."""
+    if str(current_user['_id']) != user_id:
+        raise HTTPException(403, "Can only update your own bio")
+    bio = sanitize_text(body.get("bio"))
+    await db.trainee_profiles.update_one(
+        {'userId': user_id},
+        {'$set': {'bio': bio, 'updatedAt': datetime.utcnow()}}
+    )
+    return {"success": True, "bio": bio}
+
+
+@router.post("/trainee-profiles/{user_id}/highlights")
+async def upload_trainee_highlight(user_id: str, file: UploadFile = File(...), caption: str = Form(""), current_user: dict = Depends(get_current_user)):
+    """Upload a trainee highlight reel clip (short video or image)."""
+    if str(current_user['_id']) != user_id:
+        raise HTTPException(403, "Can only update your own highlights")
+
+    content = await file.read()
+    if len(content) > 50 * 1024 * 1024:
+        raise HTTPException(400, "File too large (max 50MB)")
+
+    ext = (file.filename or 'clip.mp4').split('.')[-1].lower()
+    is_video = ext in ('mp4', 'mov', 'avi', 'webm')
+    media_type = 'video' if is_video else 'photo'
+
+    storage_path = generate_upload_path(user_id, ext, folder="highlights")
+    content_type_str = MIME_TYPES.get(ext, file.content_type or 'application/octet-stream')
+    try:
+        put_object(storage_path, content, content_type_str)
+    except Exception as e:
+        raise HTTPException(500, f"Upload failed: {str(e)}")
+    url = f"/api/files/{storage_path}"
+
+    highlight = {
+        'url': url, 'storagePath': storage_path, 'type': media_type,
+        'caption': caption, 'createdAt': datetime.utcnow().isoformat(),
+    }
+
+    await db.trainee_profiles.update_one({'userId': user_id}, {'$push': {'highlights': highlight}})
+    return {"success": True, "highlight": highlight}
+
+
+@router.post("/trainee-profiles/{user_id}/highlights/base64")
+async def upload_trainee_highlight_base64(user_id: str, body: dict, current_user: dict = Depends(get_current_user)):
+    """Upload a trainee highlight via base64 data (more reliable for iOS photo uploads)."""
+    if str(current_user['_id']) != user_id:
+        raise HTTPException(403, "Can only update your own highlights")
+
+    import base64
+    data_b64 = body.get('data', '')
+    filename = body.get('filename', 'highlight.jpg')
+    content_type = body.get('contentType', 'image/jpeg')
+    caption = body.get('caption', '')
+
+    if not data_b64:
+        raise HTTPException(400, "No data provided")
+
+    content = base64.b64decode(data_b64)
+    if len(content) > 50 * 1024 * 1024:
+        raise HTTPException(400, "File too large (max 50MB)")
+
+    ext = filename.split('.')[-1].lower() or 'jpg'
+    is_video = ext in ('mp4', 'mov', 'avi', 'webm')
+    media_type = 'video' if is_video else 'photo'
+
+    storage_path = generate_upload_path(user_id, ext, folder="highlights")
+    try:
+        put_object(storage_path, content, content_type)
+    except Exception as e:
+        raise HTTPException(500, f"Upload failed: {str(e)}")
+    url = f"/api/files/{storage_path}"
+
+    highlight = {
+        'url': url, 'storagePath': storage_path, 'type': media_type,
+        'caption': caption, 'createdAt': datetime.utcnow().isoformat(),
+    }
+
+    await db.trainee_profiles.update_one({'userId': user_id}, {'$push': {'highlights': highlight}})
+    return {"success": True, "highlight": highlight}
+
+
+@router.delete("/trainee-profiles/{user_id}/highlights/{index}")
+async def delete_trainee_highlight(user_id: str, index: int, current_user: dict = Depends(get_current_user)):
+    """Delete a trainee highlight by index."""
+    if str(current_user['_id']) != user_id:
+        raise HTTPException(403, "Can only update your own highlights")
+    profile = await db.trainee_profiles.find_one({'userId': user_id})
+    if not profile:
+        raise HTTPException(404, "Profile not found")
+    highlights = profile.get('highlights', [])
+    if index < 0 or index >= len(highlights):
+        raise HTTPException(400, "Invalid highlight index")
+    highlights.pop(index)
+    await db.trainee_profiles.update_one({'userId': user_id}, {'$set': {'highlights': highlights}})
+    return {"success": True, "highlights": highlights}
+
+
+@router.get("/trainee-profiles/{user_id}/highlights")
+async def get_trainee_highlights(user_id: str):
+    """Get all highlights for a trainee."""
+    profile = await db.trainee_profiles.find_one({'userId': user_id}, {'highlights': 1})
+    return {"highlights": (profile or {}).get('highlights', [])}
+
+
 @router.get("/trainers/nearby-trainees")
 async def get_nearby_trainees(current_user: dict = Depends(get_current_user)):
     """Get trainees within 15 miles of the trainer"""

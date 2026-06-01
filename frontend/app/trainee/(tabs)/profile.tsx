@@ -28,6 +28,7 @@ import { toast } from '../../../src/utils/toast';
 import { ProfileGallery, SocialLinksDisplay } from '../../../src/components/ProfileSections';
 import InstagramSection from '../../../src/components/InstagramSection';
 import { PersonalityTagBadge, PersonalityTagSelector } from '../../../src/components/PersonalityTagBadge';
+import { AccentColorPicker } from '../../../src/components/AccentColorPicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
@@ -107,6 +108,7 @@ export default function TraineeProfileScreen() {
   const [streakData, setStreakData] = useState<any>(null);
   const streakPulseAnim = useRef(new Animated.Value(1)).current;
   const [showTagSelector, setShowTagSelector] = useState(false);
+  const [showColorPicker, setShowColorPicker] = useState(false);
 
   const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -297,6 +299,22 @@ export default function TraineeProfileScreen() {
     } catch (e) {
       console.error('Tag update error:', e);
       toast.error('Failed to update personality tag');
+    }
+  };
+
+  const handleSelectAccentColor = async (color: string) => {
+    try {
+      const token = await AsyncStorage.getItem('auth_token');
+      await axios.put(`${API_URL}/api/trainee-profiles/${user?.id}/accent-color`,
+        { accentColor: color },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setProfile({ ...profile, accentColor: color });
+      setShowColorPicker(false);
+      toast.success('Brand color updated');
+    } catch (e) {
+      console.error('Color update error:', e);
+      toast.error('Failed to update brand color');
     }
   };
 
@@ -837,6 +855,66 @@ export default function TraineeProfileScreen() {
                 <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.3)" />
               </TouchableOpacity>
 
+              {/* Trainee Vibe CTA */}
+              <TouchableOpacity
+                onPress={() => router.push('/trainee/vibe-setup')}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,106,0,0.08)', borderRadius: 16, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: 'rgba(255,106,0,0.15)' }}
+                data-testid="trainee-vibe-setup-btn"
+                accessibilityLabel="Set your profile anthem"
+                accessibilityRole="button"
+              >
+                <LinearGradient colors={['#FF6A00', '#FF3D00']} style={{ width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center' }}>
+                  <Ionicons name="musical-notes" size={22} color="#FFF" />
+                </LinearGradient>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 16, fontWeight: '800', color: '#FFF' }}>
+                    {profile?.vibeTrackTitle ? 'Your Vibe' : 'Set Your Vibe'}
+                  </Text>
+                  <Text style={{ fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.5)' }}>
+                    {profile?.vibeTrackTitle ? `${profile.vibeTrackTitle} - ${profile.vibeArtistName}` : 'Choose a profile anthem'}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.3)" />
+              </TouchableOpacity>
+
+              {/* Highlight Reel Upload CTA */}
+              <TouchableOpacity
+                onPress={() => router.push('/trainee/highlight-upload')}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' }}
+                data-testid="trainee-highlight-upload-btn"
+                accessibilityLabel="Upload your highlight reel"
+                accessibilityRole="button"
+              >
+                <LinearGradient colors={['#1A2035', '#141929']} style={{ width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,106,0,0.2)' }}>
+                  <Ionicons name="film" size={22} color="#FF6A00" />
+                </LinearGradient>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 16, fontWeight: '800', color: '#FFF' }}>Highlight Reel</Text>
+                  <Text style={{ fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.5)' }}>Show off your progress with photos & clips</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.3)" />
+              </TouchableOpacity>
+
+              {/* Accent Color CTA */}
+              <TouchableOpacity
+                onPress={() => setShowColorPicker(true)}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: `${profile?.accentColor || '#FF6A00'}10`, borderRadius: 16, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: `${profile?.accentColor || '#FF6A00'}20` }}
+                data-testid="trainee-accent-color-btn"
+                accessibilityLabel="Pick your brand color"
+                accessibilityRole="button"
+              >
+                <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: profile?.accentColor || '#FF6A00', justifyContent: 'center', alignItems: 'center' }}>
+                  <Ionicons name="color-palette" size={22} color="#FFF" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 16, fontFamily: 'Oswald_700Bold', color: '#FFF', letterSpacing: 0.5 }}>BRAND COLOR</Text>
+                  <Text style={{ fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.5)' }}>
+                    Tints your profile hero and accents
+                  </Text>
+                </View>
+                <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: profile?.accentColor || '#FF6A00', borderWidth: 2, borderColor: 'rgba(255,255,255,0.15)' }} />
+              </TouchableOpacity>
+
               <ProfileGallery
                 gallery={profile?.gallery || []}
                 editable
@@ -867,6 +945,14 @@ export default function TraineeProfileScreen() {
         onClose={() => setShowTagSelector(false)}
         onSelect={handleSelectPersonalityTag}
         currentTag={profile?.personalityTag}
+      />
+
+      {/* Accent Color Picker Modal */}
+      <AccentColorPicker
+        visible={showColorPicker}
+        onClose={() => setShowColorPicker(false)}
+        onSelect={handleSelectAccentColor}
+        currentColor={profile?.accentColor}
       />
     </ImageBackground>
   );
