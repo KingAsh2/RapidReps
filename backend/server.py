@@ -2837,3 +2837,24 @@ async def start_notification_scheduler():
             "zellePhone": "240-281-0462",
             "updatedAt": datetime.utcnow(),
         })
+
+    # Idempotent admin seed — ensures admin@rapidreps.com always exists for ops + testing.
+    # If the user gets deleted (e.g. dev DB wipe), this restores it on next server boot.
+    # Password is admin123 (also documented in /app/memory/test_credentials.md).
+    try:
+        from deps import hash_password
+        existing_admin = await db.users.find_one({"email": "admin@rapidreps.com"})
+        if not existing_admin:
+            await db.users.insert_one({
+                "email": "admin@rapidreps.com",
+                "phone": "+15550000000",
+                "fullName": "RapidReps Admin",
+                "passwordHash": hash_password("admin123"),
+                "roles": ["admin"],
+                "isAdmin": True,
+                "isActive": True,
+                "createdAt": datetime.utcnow(),
+            })
+            logging.info("Admin user seeded (admin@rapidreps.com)")
+    except Exception as e:
+        logging.warning(f"Admin seed skipped: {e}")

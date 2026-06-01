@@ -320,12 +320,27 @@ async def get_verification_status(current_user: dict = Depends(get_current_user)
         'certification': 'fitnessCertUploaded', 'cpr': 'cprAedCertUploaded',
         'insurance': 'insuranceUploaded', 'photo': 'profilePhotoUploaded', 'video': 'introVideoUploaded',
     }
+    verification_status = profile.get('verificationStatus', 'pending')
+
+    # Per-step status derivation:
+    #  - verified profile → every UPLOADED step shows as 'approved'
+    #  - rejected profile → every UPLOADED step shows as 'rejected' (so trainer knows to re-submit)
+    #  - otherwise (pending/under_review) → 'submitted' if uploaded, else 'pending'
+    # This was the root cause of "stuck on Under Review after admin approves" — the old
+    # implementation always returned 'submitted' for uploaded docs, never reading
+    # verificationStatus to bubble approval down to per-step badges.
+    if verification_status == 'verified':
+        uploaded_state = 'approved'
+    elif verification_status == 'rejected':
+        uploaded_state = 'rejected'
+    else:
+        uploaded_state = 'submitted'
+
     steps = {}
     for step_id, field in field_map.items():
-        steps[step_id] = 'submitted' if profile.get(field, False) else 'pending'
+        steps[step_id] = uploaded_state if profile.get(field, False) else 'pending'
 
     can_go_live, missing = check_trainer_can_go_live(profile)
-    verification_status = profile.get('verificationStatus', 'pending')
     rejection_reason = profile.get('rejectionReason')
 
     return {

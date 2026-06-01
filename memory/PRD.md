@@ -4,6 +4,37 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, Zelle payments, trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards.
 
 
+## 2026-06-01 (continued) — Iteration 83 Phase C: Verification Status Sync Bug Fix
+
+### RCA
+User report (PDF RR_7-9 #4): Trainer's verification screen showed "Under Review" / "Not Started" for Liability Insurance, Profile Photo, and Intro Video **even after admin clicked Approve**.
+
+Found the root cause in `/app/backend/routes/profile_routes.py::get_verification_status` (line ~315):
+```python
+# OLD — only knew two states, never read overall verificationStatus
+steps[step_id] = 'submitted' if profile.get(field, False) else 'pending'
+```
+The admin approve endpoint correctly writes `verificationStatus: 'verified'` to the trainer profile, but the per-step endpoint **never read it** — it just bucketed uploaded docs into `'submitted'` regardless of approval. So the trainer UI rendered "Under Review" forever.
+
+### Fix
+The endpoint now derives the per-step status from BOTH the per-doc uploaded flag AND the overall `verificationStatus`:
+- `verified` profile → uploaded docs return `'approved'`
+- `rejected` profile → uploaded docs return `'rejected'` (so trainer knows to re-submit)
+- Otherwise → `'submitted'` if uploaded, else `'pending'`
+
+### Bonus: idempotent admin seed
+Server logs showed repeated `LOGIN FAIL` for `admin@rapidreps.com` because the user kept getting wiped from the DB. Added an idempotent admin seed to `server.py` startup hook so the admin always exists with the documented `admin123` password after any server boot.
+
+### Test coverage
+- New file: `/app/backend/tests/test_iteration83_phase_c_verification_sync.py` — 5 tests:
+  - Admin login works (smoke + regression-lock on the seed)
+  - After admin approve, uploaded steps return `'approved'` (the core fix)
+  - After admin reject, uploaded steps return `'rejected'` (paired behavior)
+  - All step statuses are in the documented set `{pending, submitted, approved, rejected}`
+  - Non-admin tokens get 403 on approve/reject endpoints
+- **All iterations green: 37/37 tests passing** across iter79, iter81, iter82, iter83a (UI cleanup), iter83b (highlight reel), iter83c (verification sync).
+
+
 ## 2026-06-01 (continued) — Iteration 83 Phase B: Highlight Reel Overhaul
 
 ### Backend
