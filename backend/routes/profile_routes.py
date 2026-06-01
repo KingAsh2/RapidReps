@@ -22,8 +22,52 @@ from models import (
     VerificationStatus, TrainerTier, PricingRules, UserRole,
 )
 from storage import init_storage, put_object, get_object, generate_upload_path, MIME_TYPES
+from video_thumbnails import extract_video_thumbnail
 
 router = APIRouter(prefix="/api")
+
+
+# ============================================================================
+# HIGHLIGHT HELPER
+# ============================================================================
+
+async def _store_highlight(content: bytes, ext: str, content_type: str, user_id: str, caption: str) -> dict:
+    """Persist a highlight blob + optional video thumbnail and return the
+    serialized highlight document. Raises HTTPException on storage failure.
+
+    Used by all 4 highlight upload endpoints (trainer/trainee × multipart/base64)
+    to keep thumbnail generation logic DRY.
+    """
+    ext = (ext or 'bin').lower()
+    is_video = ext in ('mp4', 'mov', 'avi', 'webm', 'mkv', 'm4v')
+    media_type = 'video' if is_video else 'photo'
+
+    storage_path = generate_upload_path(user_id, ext, folder="highlights")
+    try:
+        put_object(storage_path, content, content_type)
+    except Exception as e:
+        raise HTTPException(500, f"Upload failed: {str(e)}")
+    url = f"/api/files/{storage_path}"
+
+    highlight = {
+        'url': url, 'storagePath': storage_path, 'type': media_type,
+        'caption': caption, 'createdAt': datetime.utcnow().isoformat(),
+    }
+
+    # Try to extract a poster frame for videos. Failure is non-fatal — the
+    # upload still succeeds and the reel falls back to its old behavior.
+    if is_video:
+        thumb_bytes = extract_video_thumbnail(content)
+        if thumb_bytes:
+            thumb_path = generate_upload_path(user_id, 'jpg', folder="highlight_thumbs")
+            try:
+                put_object(thumb_path, thumb_bytes, 'image/jpeg')
+                highlight['thumbnailUrl'] = f"/api/files/{thumb_path}"
+                highlight['thumbnailStoragePath'] = thumb_path
+            except Exception as e:
+                logging.getLogger(__name__).warning("Thumbnail persist failed: %s", e)
+
+    return highlight
 
 # ============================================================================
 # TRAINER PROFILE ROUTES
@@ -778,22 +822,8 @@ async def upload_highlight(user_id: str, file: UploadFile = File(...), caption: 
         raise HTTPException(400, "File too large (max 50MB)")
 
     ext = (file.filename or 'clip.mp4').split('.')[-1].lower()
-    is_video = ext in ('mp4', 'mov', 'avi', 'webm')
-    media_type = 'video' if is_video else 'photo'
-
-    storage_path = generate_upload_path(user_id, ext, folder="highlights")
     content_type_str = MIME_TYPES.get(ext, file.content_type or 'application/octet-stream')
-    try:
-        put_object(storage_path, content, content_type_str)
-    except Exception as e:
-        raise HTTPException(500, f"Upload failed: {str(e)}")
-    url = f"/api/files/{storage_path}"
-
-    highlight = {
-        'url': url, 'storagePath': storage_path, 'type': media_type,
-        'caption': caption, 'createdAt': datetime.utcnow().isoformat(),
-    }
-
+    highlight = await _store_highlight(content, ext, content_type_str, user_id, caption)
     await db.trainer_profiles.update_one({'userId': user_id}, {'$push': {'highlights': highlight}})
     return {"success": True, "highlight": highlight}
 
@@ -821,21 +851,7 @@ async def upload_highlight_base64(user_id: str, body: dict, current_user: dict =
         raise HTTPException(400, "File too large (max 50MB)")
 
     ext = filename.split('.')[-1].lower() or 'jpg'
-    is_video = ext in ('mp4', 'mov', 'avi', 'webm')
-    media_type = 'video' if is_video else 'photo'
-
-    storage_path = generate_upload_path(user_id, ext, folder="highlights")
-    try:
-        put_object(storage_path, content, content_type)
-    except Exception as e:
-        raise HTTPException(500, f"Upload failed: {str(e)}")
-    url = f"/api/files/{storage_path}"
-
-    highlight = {
-        'url': url, 'storagePath': storage_path, 'type': media_type,
-        'caption': caption, 'createdAt': datetime.utcnow().isoformat(),
-    }
-
+    highlight = await _store_highlight(content, ext, content_type, user_id, caption)
     await db.trainer_profiles.update_one({'userId': user_id}, {'$push': {'highlights': highlight}})
     return {"success": True, "highlight": highlight}
 
@@ -1269,22 +1285,8 @@ async def upload_trainee_highlight(user_id: str, file: UploadFile = File(...), c
         raise HTTPException(400, "File too large (max 50MB)")
 
     ext = (file.filename or 'clip.mp4').split('.')[-1].lower()
-    is_video = ext in ('mp4', 'mov', 'avi', 'webm')
-    media_type = 'video' if is_video else 'photo'
-
-    storage_path = generate_upload_path(user_id, ext, folder="highlights")
     content_type_str = MIME_TYPES.get(ext, file.content_type or 'application/octet-stream')
-    try:
-        put_object(storage_path, content, content_type_str)
-    except Exception as e:
-        raise HTTPException(500, f"Upload failed: {str(e)}")
-    url = f"/api/files/{storage_path}"
-
-    highlight = {
-        'url': url, 'storagePath': storage_path, 'type': media_type,
-        'caption': caption, 'createdAt': datetime.utcnow().isoformat(),
-    }
-
+    highlight = await _store_highlight(content, ext, content_type_str, user_id, caption)
     await db.trainee_profiles.update_one({'userId': user_id}, {'$push': {'highlights': highlight}})
     return {"success": True, "highlight": highlight}
 
@@ -1312,21 +1314,7 @@ async def upload_trainee_highlight_base64(user_id: str, body: dict, current_user
         raise HTTPException(400, "File too large (max 50MB)")
 
     ext = filename.split('.')[-1].lower() or 'jpg'
-    is_video = ext in ('mp4', 'mov', 'avi', 'webm')
-    media_type = 'video' if is_video else 'photo'
-
-    storage_path = generate_upload_path(user_id, ext, folder="highlights")
-    try:
-        put_object(storage_path, content, content_type)
-    except Exception as e:
-        raise HTTPException(500, f"Upload failed: {str(e)}")
-    url = f"/api/files/{storage_path}"
-
-    highlight = {
-        'url': url, 'storagePath': storage_path, 'type': media_type,
-        'caption': caption, 'createdAt': datetime.utcnow().isoformat(),
-    }
-
+    highlight = await _store_highlight(content, ext, content_type, user_id, caption)
     await db.trainee_profiles.update_one({'userId': user_id}, {'$push': {'highlights': highlight}})
     return {"success": True, "highlight": highlight}
 

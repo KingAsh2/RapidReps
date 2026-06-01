@@ -4,6 +4,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Video, ResizeMode } from 'expo-av';
 
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
+
+/**
+ * Resolve a stored file path to an absolute URL.
+ * Server returns paths like "/api/files/..." that need the API host prepended.
+ */
+const resolveUrl = (url?: string) => {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  return `${API_URL}${url}`;
+};
+
 const { width } = Dimensions.get('window');
 const REEL_WIDTH = width * 0.55;
 const REEL_HEIGHT = REEL_WIDTH * 1.4;
@@ -13,6 +25,7 @@ interface Highlight {
   type: 'video' | 'photo';
   caption?: string;
   createdAt?: string;
+  thumbnailUrl?: string; // Server-generated poster frame for videos (iter83)
 }
 
 interface Props {
@@ -86,17 +99,36 @@ export const HighlightReel = ({ highlights, trainerName }: Props) => {
               data-testid={`highlight-${idx}`}
             >
               {item.type === 'video' ? (
-                <Video
-                  source={{ uri: item.url }}
-                  style={styles.reelMedia}
-                  resizeMode={ResizeMode.COVER}
-                  shouldPlay={idx === activeIndex}
-                  isLooping
-                  isMuted
-                  posterSource={{ uri: item.url }}
-                />
+                item.thumbnailUrl ? (
+                  // Use server-generated thumbnail as instant poster, only mount
+                  // the <Video> component when this card is the active one.
+                  // This is the fix for "thumbnails not visible" + "long load times".
+                  idx === activeIndex ? (
+                    <Video
+                      source={{ uri: resolveUrl(item.url) }}
+                      style={styles.reelMedia}
+                      resizeMode={ResizeMode.COVER}
+                      shouldPlay
+                      isLooping
+                      isMuted
+                      posterSource={{ uri: resolveUrl(item.thumbnailUrl) }}
+                      usePoster
+                    />
+                  ) : (
+                    <Image source={{ uri: resolveUrl(item.thumbnailUrl) }} style={styles.reelMedia} />
+                  )
+                ) : (
+                  <Video
+                    source={{ uri: resolveUrl(item.url) }}
+                    style={styles.reelMedia}
+                    resizeMode={ResizeMode.COVER}
+                    shouldPlay={idx === activeIndex}
+                    isLooping
+                    isMuted
+                  />
+                )
               ) : (
-                <Image source={{ uri: item.url }} style={styles.reelMedia} />
+                <Image source={{ uri: resolveUrl(item.url) }} style={styles.reelMedia} />
               )}
 
               {/* Gradient overlay */}
@@ -148,16 +180,18 @@ export const HighlightReel = ({ highlights, trainerName }: Props) => {
 
           {highlights[viewerIdx]?.type === 'video' ? (
             <Video
-              source={{ uri: highlights[viewerIdx].url }}
+              source={{ uri: resolveUrl(highlights[viewerIdx].url) }}
               style={styles.viewerMedia}
               resizeMode={ResizeMode.CONTAIN}
               shouldPlay
               isLooping
               useNativeControls
+              posterSource={highlights[viewerIdx].thumbnailUrl ? { uri: resolveUrl(highlights[viewerIdx].thumbnailUrl as string) } : undefined}
+              usePoster={!!highlights[viewerIdx].thumbnailUrl}
             />
           ) : (
             <Image
-              source={{ uri: highlights[viewerIdx].url }}
+              source={{ uri: resolveUrl(highlights[viewerIdx].url) }}
               style={styles.viewerMedia}
               resizeMode="contain"
             />

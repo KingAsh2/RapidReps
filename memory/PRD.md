@@ -3,6 +3,39 @@
 ## Original Problem Statement
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, Zelle payments, trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards.
 
+
+## 2026-06-01 (continued) — Iteration 83 Phase B: Highlight Reel Overhaul
+
+### Backend
+- New module `/app/backend/video_thumbnails.py`: server-side video thumbnail extractor using `imageio-ffmpeg` (bundled binary, no system ffmpeg required). Extracts a single JPEG frame at t=1s, downscales to 720px, quality≈75%. Non-fatal failure mode — upload still succeeds if extraction fails.
+- New helper `_store_highlight()` in `profile_routes.py`: single source of truth for persisting highlight blobs + optional video poster. Used by all 4 upload paths (trainer/trainee × multipart/base64). Eliminates ~80 lines of duplicated logic.
+- All 4 highlight upload endpoints refactored to use the helper. New `thumbnailUrl` field appears on video highlight documents pointing to `/api/files/rapidreps/highlight_thumbs/<userId>/<uuid>.jpg`.
+- `requirements.txt`: added `imageio-ffmpeg==0.6.0`, deduped a stray duplicate `ffmpeg-python` line.
+
+### Frontend
+- `HighlightReel.tsx`: now consumes `thumbnailUrl` from the highlight payload. Two key changes:
+  1. Inactive video cards render as a plain `<Image>` showing the server-generated thumbnail — no video decoder mounted off-screen.
+  2. The active card uses `<Video posterSource={...} usePoster>` so the thumbnail shows instantly while the stream loads.
+- Added `resolveUrl()` helper to prepend `EXPO_PUBLIC_BACKEND_URL` to relative `/api/files/...` paths.
+- Full-screen viewer Modal also uses thumbnail as the video poster — instant visual feedback when tapping a video.
+
+### Issues addressed (from user-marked PDF RR_7-9)
+- **#5 thumbnails missing** → ✅ fixed (server now generates per-video JPEG, frontend renders it instantly).
+- **#6 won't open on tap** → ✅ The full-screen Modal viewer was already wired but starved of a poster. Now displays thumbnail while the video stream loads.
+- **#7 slow upload + playback** → 🟡 PARTIALLY ADDRESSED:
+  - Playback infrastructure already had HTTP Range, HEAD, ETag/304 (regression-locked by new test).
+  - Thumbnails make first paint instant — previously the user saw a black/gray placeholder until video bytes arrived; now they see the poster frame immediately.
+  - Upload speed: still on base64 path. Switching the trainee/trainer upload UI to chunked multipart with progress bar was descoped (touches `app/trainee/highlight-upload.tsx` + `app/trainer/highlight-upload.tsx` and adds a progress UI). Pick up next turn if uploads still feel slow after this fix lands.
+
+### Test coverage
+- New file: `/app/backend/tests/test_iteration83_phase_b_highlights.py` — 5 tests:
+  - trainee video upload returns `thumbnailUrl`, JPEG served via /api/files (200 + correct content-type)
+  - trainer video upload returns `thumbnailUrl`
+  - photo upload does NOT have thumbnailUrl (no over-eager extraction)
+  - /api/files supports Range requests (206 Partial Content + `Accept-Ranges: bytes`)
+  - Static check: HighlightReel.tsx references `thumbnailUrl` and `resolveUrl`, and the old buggy `posterSource={{ uri: item.url }}` pattern is gone
+- All previous iterations still green: **32/32 tests passing** across iter79, iter81, iter82, iter83a, iter83b.
+
 ## Architecture
 - **Frontend**: React Native (Expo) with Oswald typography, Premium Dark Theme
 - **Backend**: FastAPI with modular APIRouter architecture
