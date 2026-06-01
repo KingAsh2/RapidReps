@@ -368,10 +368,11 @@ export default function TraineeHomeScreen() {
   const getFilteredAndSortedTrainers = () => {
     let filtered = [...trainers];
 
-    // Travel to Trainer Proximity filter
+    // Trainer Proximity filter — strictly enforced
     if (travelProximity > 0) {
       filtered = filtered.filter((t) => {
-        if (t.distance === null || t.distance === undefined) return true; // show trainers without distance data
+        // Strict: drop trainers without a known distance OR beyond the radius
+        if (t.distance === null || t.distance === undefined) return false;
         return t.distance <= travelProximity;
       });
     }
@@ -617,55 +618,10 @@ export default function TraineeHomeScreen() {
               </LinearGradient>
             </Animated.View>
 
-            {/* Urgent CTA Banner - Need a trainer NOW */}
-            <Animated.View
-              style={[
-                styles.urgentBannerContainer,
-                {
-                  opacity: urgentBannerAnim,
-                  transform: [
-                    { translateX: urgentTranslateX },
-                    { scale: ctaPulseAnim },
-                  ],
-                },
-              ]}
-            >
-              <TouchableOpacity 
-                onPress={() => router.push('/trainee/virtual-confirm')}
-                activeOpacity={0.9}
-              >
-                <LinearGradient
-                  colors={['#FF6A00', '#FF9F1C']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.urgentBanner}
-                >
-                  <View style={styles.urgentIconContainer}>
-                    <Ionicons name="flash" size={36} color="#FFFFFF" />
-                  </View>
-                  <View style={styles.urgentContent}>
-                    <Text style={styles.urgentTitle}>⚡ NEED A TRAINER NOW?</Text>
-                    <Text style={styles.urgentSubtitle}>Get matched instantly with a trainer</Text>
-                  </View>
-                  <View style={styles.urgentArrow}>
-                    <Ionicons name="chevron-forward-circle" size={44} color="#FFFFFF" />
-                  </View>
-                </LinearGradient>
-              </TouchableOpacity>
-            </Animated.View>
+            {/* Urgent "Need a Trainer Now" banner removed — felt cluttered (user request) */}
 
             {/* === QUICK FEATURE ACTIONS === */}
             <View style={styles.featureActionsGrid}>
-              <TouchableOpacity
-                style={styles.featureAction}
-                onPress={() => { haptic.light(); router.push('/trainee/instant-match'); }}
-                data-testid="instant-workout-btn"
-              >
-                <LinearGradient colors={['#FF6A00', '#FF9F1C']} style={styles.featureActionGrad}>
-                  <Ionicons name="flash" size={22} color="#fff" />
-                  <Text style={styles.featureActionText}>Instant{'\n'}Workout</Text>
-                </LinearGradient>
-              </TouchableOpacity>
               <TouchableOpacity
                 style={styles.featureAction}
                 onPress={() => { haptic.light(); router.push('/trainee/group-sessions'); }}
@@ -743,10 +699,14 @@ export default function TraineeHomeScreen() {
               />
             )}
 
-            {/* MAP - Trainers Near You */}
+            {/* MAP - Trainers Near You — strictly filtered by Trainer Proximity */}
             <NearbyTrainersMap
               userLocation={userLocation}
-              trainers={nearbyTrainers}
+              trainers={nearbyTrainers.filter((t: any) => {
+                if (travelProximity <= 0) return true;
+                if (t.distance === null || t.distance === undefined) return false;
+                return t.distance <= travelProximity;
+              })}
               onRefresh={handleMapRefresh}
               refreshing={mapRefreshing}
             />
@@ -809,7 +769,7 @@ export default function TraineeHomeScreen() {
 
             {/* Available Trainers Section */}
             <View style={styles.trainersSection}>
-              {/* Travel to Trainer Proximity Selector */}
+              {/* Trainer Proximity Selector */}
               <TouchableOpacity 
                 style={styles.proximityContainer} 
                 data-testid="proximity-container"
@@ -817,7 +777,7 @@ export default function TraineeHomeScreen() {
               >
                 <View style={styles.proximityHeader}>
                   <Ionicons name="navigate-outline" size={18} color="#FF6A00" />
-                  <Text style={styles.proximityLabel}>Travel to Trainer Proximity</Text>
+                  <Text style={styles.proximityLabel}>Trainer Proximity</Text>
                 </View>
                 <View style={styles.proximityDropdown}>
                   <Text style={styles.proximityDropdownText}>{travelProximity} miles</Text>
@@ -883,24 +843,24 @@ export default function TraineeHomeScreen() {
               </View>
               
               {displayedTrainers.length === 0 ? (
-                <View style={styles.emptyCard}>
+                <View style={styles.emptyCard} data-testid="trainee-no-trainers-empty">
                   <LinearGradient
                     colors={['#141929', '#1A2035']}
                     style={styles.emptyGradient}
                   >
-                    <Ionicons name="fitness-outline" size={64} color="#FF6A00" />
-                    <Text style={styles.emptyTitle}>No trainers nearby</Text>
-                    <Text style={styles.emptySubtitle}>Try virtual training instead!</Text>
-                    <TouchableOpacity 
+                    <Ionicons name="location-outline" size={48} color="rgba(255,255,255,0.25)" />
+                    <Text style={styles.emptyTitle}>No trainers within {travelProximity} mi</Text>
+                    <Text style={styles.emptySubtitle}>Try widening your search radius</Text>
+                    <TouchableOpacity
                       style={styles.emptyButton}
-                      onPress={() => setShowTrainingModeDialog(true)}
+                      onPress={() => setShowProximityPicker(true)}
+                      data-testid="trainee-expand-radius-btn"
+                      accessibilityLabel="Expand search radius"
+                      accessibilityRole="button"
                     >
-                      <LinearGradient
-                        colors={['#FF6A00', '#FF9F1C']}
-                        style={styles.emptyButtonGradient}
-                      >
-                        <Text style={styles.emptyButtonText}>Find Virtual Trainers</Text>
-                      </LinearGradient>
+                      <View style={[styles.emptyButtonGradient, { borderWidth: 1.5, borderColor: 'rgba(255,106,0,0.4)', backgroundColor: 'transparent' }]}>
+                        <Text style={[styles.emptyButtonText, { color: '#FF6A00' }]}>Adjust Radius</Text>
+                      </View>
                     </TouchableOpacity>
                   </LinearGradient>
                 </View>

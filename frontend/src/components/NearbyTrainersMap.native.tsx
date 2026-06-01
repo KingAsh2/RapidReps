@@ -132,7 +132,7 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
       <View style={s.head}>
         <View style={s.headLeft}>
           <View style={s.headIcon}>
-            <Ionicons name="radio-outline" size={16} color={N.green} />
+            <Ionicons name="radio-outline" size={16} color={N.orange} />
           </View>
           <View>
             <Text style={s.headLabel}>SCANNING AREA</Text>
@@ -141,7 +141,7 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
         </View>
         {/* SCAN button — brutalist block */}
         <TouchableOpacity style={s.scanBtn} onPress={onRefresh} activeOpacity={0.7} data-testid="map-refresh-button">
-          {refreshing ? <ActivityIndicator size="small" color={N.green} /> : (
+          {refreshing ? <ActivityIndicator size="small" color={N.orange} /> : (
             <Text style={s.scanText}>SCAN</Text>
           )}
         </TouchableOpacity>
@@ -300,12 +300,12 @@ const s = StyleSheet.create({
   // Head — asymmetric: more left padding, less right
   head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingLeft: 22, paddingRight: 14, paddingTop: 16, paddingBottom: 2 },
   headLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  headIcon: { width: 28, height: 28, borderWidth: 1.5, borderColor: N.green, justifyContent: 'center', alignItems: 'center', transform: [{ rotate: '45deg' }] },
-  headLabel: { fontSize: 9, fontWeight: '700', color: N.green, letterSpacing: 3, marginBottom: 1 },
+  headIcon: { width: 28, height: 28, borderWidth: 1.5, borderColor: N.orange, justifyContent: 'center', alignItems: 'center', transform: [{ rotate: '45deg' }] },
+  headLabel: { fontSize: 9, fontWeight: '700', color: N.orange, letterSpacing: 3, marginBottom: 1 },
   headTitle: { fontSize: 19, fontWeight: '800', color: N.white, letterSpacing: -0.5 },
   // Scan button — brutalist block, not a circle
-  scanBtn: { paddingHorizontal: 14, paddingVertical: 7, borderWidth: 0, borderBottomWidth: 2, borderRightWidth: 2, borderColor: N.green, backgroundColor: 'transparent' },
-  scanText: { fontSize: 11, fontWeight: '800', color: N.green, letterSpacing: 3 },
+  scanBtn: { paddingHorizontal: 14, paddingVertical: 7, borderWidth: 0, borderBottomWidth: 2, borderRightWidth: 2, borderColor: N.orange, backgroundColor: 'transparent' },
+  scanText: { fontSize: 11, fontWeight: '800', color: N.orange, letterSpacing: 3 },
 
   // Massive background count
   bgCountWrap: { position: 'absolute', top: -8, right: -12, zIndex: 0, overflow: 'hidden', width: 160, height: 120 },
