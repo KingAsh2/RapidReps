@@ -317,6 +317,26 @@ RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoD
   vibe lifecycle, accent color (valid+invalid), bio update, highlights base64 lifecycle, response surfaces showcase keys, cross-user 403 on vibe, cross-user 403 on highlight. All passing.
 - Existing CI guards (79, 81) re-run green: 13/13 total passing.
 
+## 2026-06-01 (continued) — Iteration 82.1: Bug Fixes + Discover Trainees
+
+### Discover Trainees feature (NEW — user-requested enhancement)
+- **Backend** `GET /api/trainees/discover` (`profile_routes.py`): auth-required feed of trainees who have any showcase signal (vibe / personality tag / accent color / bio / highlights). Joins `trainee_profiles` with `users` for `fullName`, filters to users with `trainee` role, excludes the caller, sorts by `updatedAt` desc, supports `limit` + `offset`. Response items have: `userId`, `fullName`, `profilePhoto`, `bio`, `fitnessGoals`, `currentFitnessLevel`, `personalityTag`, `accentColor`, `vibeTrackTitle`, `vibeArtistName`, `vibeArtworkUrl`, `firstHighlight`, `highlightCount`.
+- **Frontend** new `/app/frontend/app/trainer/discover-trainees.tsx`: vertical feed of large hero cards. Each card uses trainee's accent color as the border/strip, shows first-highlight or profile photo as hero, layered gradient, personality badge, name (Oswald uppercase), bio/goals snippet, vibe chip (artwork + track). Tapping routes to `/trainer/trainee-detail` cinematic showcase. Pull-to-refresh enabled.
+- **Trainer Home tile**: Added a second Quick Actions row with a wide pink-gradient "DISCOVER TRAINEES" tile that routes to the feed.
+
+### Bug fixes from testing agent feedback
+1. **500 on bad base64**: Wrapped `base64.b64decode(data_b64)` in both `upload_highlight_base64` (trainer) and `upload_trainee_highlight_base64` with `try/except` → returns 400 "Invalid base64 payload" instead. Also switched to `validate=True` for stricter checks.
+2. **Empty accent color**: Trainer + trainee `PUT /accent-color` now normalizes `""` to `None` before validation, so empty string acts as a clear instead of being stored as `''`.
+3. **Parity gap**: Added `highlights: List[dict] = []` to `TrainerProfileResponse` in `models.py` so trainer and trainee profile GET shapes match.
+
+### eas.json production patch
+- Added missing `EXPO_PUBLIC_BACKEND_URL` to the `production` profile (set to current preview URL). Prevents TestFlight builds from launching with undefined API URL.
+
+### Test coverage final tally
+- `tests/test_iteration82_trainee_vibrancy.py` — 14 tests (added 4: bad base64 trainee + trainer, empty accent color clears null, trainer response has `highlights` key)
+- `tests/test_iteration82_regression_and_edges.py` — 15 tests delivered by testing agent (validates trainer-side parity, discover shape, ObjectId leak guard, accent palette variants)
+- All CI guards (iter79, iter81) still green. **29/29 iteration-82 tests passing.**
+
 ## Active Blocker
 - **iOS App Store Deployment**: EAS build fails with `XCODE_BUILD_ERROR — Signing certificate "iPhone Distribution: Ashton Bundy" revoked` (Apple side). Resolution: contact support@emergent.sh with Job ID + Expo project ID `aa258400-544c-4da6-b007-0aff7ef361f6` to refresh iOS signing credentials.
 

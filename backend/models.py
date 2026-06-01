@@ -304,6 +304,7 @@ class TrainerProfileResponse(BaseModel):
     personalityTag: Optional[str] = None
     accentColor: Optional[str] = None
     accentColorAuto: Optional[str] = None  # Server-extracted from profile photo
+    highlights: List[dict] = []
     createdAt: datetime
 
 class TraineeProfileCreate(BaseModel):

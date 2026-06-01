@@ -715,6 +715,8 @@ async def update_trainer_accent_color(user_id: str, body: dict = Body(...), curr
     if str(current_user['_id']) != user_id:
         raise HTTPException(403, "Can only update your own accent color")
     color = body.get("accentColor")
+    if color == "":
+        color = None  # normalize empty string to null (clear)
     if color and color not in VALID_ACCENT_COLORS:
         raise HTTPException(400, f"Invalid accent color. Must be one of: {VALID_ACCENT_COLORS}")
     await db.trainer_profiles.update_one(
@@ -811,7 +813,10 @@ async def upload_highlight_base64(user_id: str, body: dict, current_user: dict =
     if not data_b64:
         raise HTTPException(400, "No data provided")
 
-    content = base64.b64decode(data_b64)
+    try:
+        content = base64.b64decode(data_b64, validate=True)
+    except Exception:
+        raise HTTPException(400, "Invalid base64 payload")
     if len(content) > 50 * 1024 * 1024:
         raise HTTPException(400, "File too large (max 50MB)")
 
@@ -1229,6 +1234,8 @@ async def update_trainee_accent_color(user_id: str, body: dict = Body(...), curr
     if str(current_user['_id']) != user_id:
         raise HTTPException(403, "Can only update your own accent color")
     color = body.get("accentColor")
+    if color == "":
+        color = None  # normalize empty string to null (clear)
     if color and color not in VALID_ACCENT_COLORS:
         raise HTTPException(400, f"Invalid accent color. Must be one of: {VALID_ACCENT_COLORS}")
     await db.trainee_profiles.update_one(
@@ -1297,7 +1304,10 @@ async def upload_trainee_highlight_base64(user_id: str, body: dict, current_user
     if not data_b64:
         raise HTTPException(400, "No data provided")
 
-    content = base64.b64decode(data_b64)
+    try:
+        content = base64.b64decode(data_b64, validate=True)
+    except Exception:
+        raise HTTPException(400, "Invalid base64 payload")
     if len(content) > 50 * 1024 * 1024:
         raise HTTPException(400, "File too large (max 50MB)")
 

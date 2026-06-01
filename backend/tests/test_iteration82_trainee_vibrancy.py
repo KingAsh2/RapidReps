@@ -250,3 +250,67 @@ def test_discover_requires_auth():
     """No token → 401/403."""
     r = requests.get(f"{BASE_URL}/api/trainees/discover", timeout=30)
     assert r.status_code in (401, 403)
+
+
+def test_bad_base64_returns_400_not_500(trainee_session):
+    """Malformed base64 payload returns 400, not 500."""
+    s, user_id = trainee_session
+    r = s.post(
+        f"{BASE_URL}/api/trainee-profiles/{user_id}/highlights/base64",
+        json={
+            "data": "!!!not-base64-at-all!!!",
+            "filename": "x.jpg",
+            "contentType": "image/jpeg",
+            "caption": "",
+        },
+        timeout=30,
+    )
+    assert r.status_code == 400, f"Expected 400, got {r.status_code}: {r.text}"
+
+
+def test_trainer_bad_base64_returns_400(trainer_session):
+    """Same protection on the trainer-side endpoint."""
+    s, user_id = trainer_session
+    r = s.post(
+        f"{BASE_URL}/api/trainer-profiles/{user_id}/highlights/base64",
+        json={
+            "data": "@@@bogus@@@",
+            "filename": "x.jpg",
+            "contentType": "image/jpeg",
+            "caption": "",
+        },
+        timeout=30,
+    )
+    assert r.status_code == 400, f"Expected 400, got {r.status_code}: {r.text}"
+
+
+def test_empty_accent_color_clears_to_null(trainee_session):
+    """Empty string accent color should normalize to null (clear), not stored as ''."""
+    s, user_id = trainee_session
+    # First set a real color
+    r = s.put(
+        f"{BASE_URL}/api/trainee-profiles/{user_id}/accent-color",
+        json={"accentColor": "#6C5CE7"},
+        timeout=30,
+    )
+    assert r.status_code == 200
+    # Now clear via empty string
+    r = s.put(
+        f"{BASE_URL}/api/trainee-profiles/{user_id}/accent-color",
+        json={"accentColor": ""},
+        timeout=30,
+    )
+    assert r.status_code == 200, r.text
+    assert r.json()["accentColor"] is None
+    # GET should reflect null
+    r = requests.get(f"{BASE_URL}/api/trainee-profiles/{user_id}", timeout=30)
+    assert r.json()["accentColor"] is None
+
+
+def test_trainer_profile_response_includes_highlights_field():
+    """Parity gap fix: TrainerProfileResponse must include 'highlights' key."""
+    data = _login(TRAINER_EMAIL, TRAINER_PASS)
+    user_id = data["user"]["id"]
+    r = requests.get(f"{BASE_URL}/api/trainer-profiles/{user_id}", timeout=30)
+    assert r.status_code == 200
+    assert "highlights" in r.json(), "TrainerProfileResponse should include 'highlights' for parity with trainee"
