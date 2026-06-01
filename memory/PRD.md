@@ -293,6 +293,26 @@ RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoD
 ## Active Blocker
 - **iOS App Store Deployment**: EAS build fails with `XCODE_BUILD_ERROR — Signing certificate "iPhone Distribution: Ashton Bundy" revoked` (Apple side). Resolution: contact support@emergent.sh with Job ID + Expo project ID `aa258400-544c-4da6-b007-0aff7ef361f6` to refresh iOS signing credentials.
 
+## 2026-05-31 (Fork-Continued) — EAS Build Timeout Diagnosis
+- **Issue**: User repeatedly hitting `context deadline exceeded` (25-min timeout) on EAS iOS production builds, destined for TestFlight.
+- **Diagnosis (no code changes needed)**:
+  1. Previous fork session fixed real code issues: hardcoded preview URL in `eas.json` production block, missing `.easignore` (~500 MB upload bloat), and garbage binary filenames (`=13px`, `=44px`, `@@9@8`) causing `lstat ENOENT` tarball failures. CI guard added at `/app/backend/tests/test_iteration81_no_garbage_files.py`.
+  2. Last user log (`May 31 23:41:17`) shows `Uploaded to EAS` succeeded — codebase is healthy. Timeout occurred while waiting in Expo queue.
+  3. User clarified destination is **TestFlight**, confused EAS vs TestFlight. Agent explained: EAS Build compiles the `.ipa`, then TestFlight distributes it. EAS is the vehicle, TestFlight is the destination.
+  4. User then pasted EAS status page incident: **macOS data center networking outage May 31 13:38–ongoing PDT** — perfectly explains the queue stalls. Likely the *primary* cause, not credits.
+- **Outstanding items for next session**:
+  1. **⚠️ Production `EXPO_PUBLIC_BACKEND_URL` is MISSING** in `eas.json` production profile (lines 32–40). Code uses `process.env.EXPO_PUBLIC_BACKEND_URL` with no fallback — production builds will have `undefined` API URL and ALL screens will fail in TestFlight. User has not yet chosen a/b/c (a=preview URL, b=different prod URL, c=no prod backend deployed).
+  2. User chose **Option C — Local Mac Build** as fallback. Steps documented in chat: Save-to-GitHub (requires paid Emergent subscription) → `git clone` on Mac → `yarn install` → `eas build --platform ios --profile production --local` → upload `.ipa` via Transporter app to App Store Connect → enable in TestFlight.
+  3. User is pausing for the night. Will retry EAS cloud build after data center outage is resolved (monitor https://status.expo.dev).
+- **DO NOT**: modify code attempting to fix the EAS timeout. Code is clean (35/35 CI guards pass). Issue is Expo infrastructure outage + missing production env var.
+
+## Pending Tasks Backlog (P1–P3)
+- **P1**: Patch missing `EXPO_PUBLIC_BACKEND_URL` in `eas.json` production profile (needs user decision a/b/c)
+- **P1**: Instagram Graph API — endpoints scaffolded, awaiting user's `Instagram App ID` + `Instagram App Secret`
+- **P2**: SendGrid email integration — awaiting user's SendGrid API key
+- **P3**: Extract remaining messaging/location routes from `server.py` (~2700 lines) into `/app/backend/routes/`
+- **P3**: Corporate wellness B2B partnerships onboarding
+
 ## Test Credentials
 | Role | Email | Password |
 |------|-------|----------|
