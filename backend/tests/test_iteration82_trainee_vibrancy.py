@@ -204,3 +204,49 @@ def test_cross_user_highlight_upload_blocked(trainee_session, trainer_session):
         timeout=30,
     )
     assert r.status_code == 403
+
+
+def test_discover_trainees_returns_showcase_users(trainee_session, trainer_session):
+    """Trainer GET /api/trainees/discover surfaces trainees with any showcase signal."""
+    ts, trainee_id = trainee_session
+    trainer_s, _ = trainer_session
+
+    # Seed a showcase signal so the trainee qualifies
+    r = ts.put(
+        f"{BASE_URL}/api/trainee-profiles/{trainee_id}/bio",
+        json={"bio": "Discover me — iter82 test"},
+        timeout=30,
+    )
+    assert r.status_code == 200
+
+    # Trainer hits discover
+    r = trainer_s.get(f"{BASE_URL}/api/trainees/discover?limit=30", timeout=30)
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert "trainees" in body
+    assert isinstance(body["trainees"], list)
+
+    # The seeded trainee must be present
+    found = next((t for t in body["trainees"] if t["userId"] == trainee_id), None)
+    assert found is not None, "Showcase trainee missing from discover feed"
+    assert found["fullName"]
+    assert found["bio"] == "Discover me — iter82 test"
+    assert "highlightCount" in found
+    assert "personalityTag" in found
+    assert "accentColor" in found
+    assert "vibeTrackTitle" in found
+
+
+def test_discover_excludes_current_user(trainee_session):
+    """A trainee hitting discover must not see themselves in the feed."""
+    s, my_id = trainee_session
+    r = s.get(f"{BASE_URL}/api/trainees/discover?limit=50", timeout=30)
+    assert r.status_code == 200
+    ids = [t["userId"] for t in r.json()["trainees"]]
+    assert my_id not in ids, "discover feed must exclude the current user"
+
+
+def test_discover_requires_auth():
+    """No token → 401/403."""
+    r = requests.get(f"{BASE_URL}/api/trainees/discover", timeout=30)
+    assert r.status_code in (401, 403)

@@ -1,0 +1,48 @@
+{
+  "summary": "Backend-only verification of iter82 trainee vibrancy parity + Discover Trainees. Re-ran the 10 in-tree iter82 tests (all pass) and added a 15-case regression+edge suite covering trainer-side endpoints, discover-item shape, ObjectId leak guard, accent-color whitelist variants, bad-base64 handling, and unauthenticated PUT. Result: 23 passed, 1 xfailed (known parity gap), 1 real failure exposing a 500 on bad base64 input. Spec requirements (1)-(11) are all met functionally; two RCAs flagged below.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "POST /api/trainee-profiles/{id}/highlights/base64 (and POST /api/trainer-profiles/{id}/highlights/base64)",
+        "issue": "Returns 500 Internal Server Error when 'data' is not valid base64. binascii.Error from base64.b64decode is uncaught at routes/profile_routes.py:814. Should return 400 with a descriptive message. Affects BOTH trainee and trainer (shared code path)."
+      },
+      {
+        "endpoint": "PUT /api/trainee-profiles/{id}/accent-color",
+        "issue": "Empty string accentColor='' is accepted with 200 and stored as ''. Likely intended as a 'clear' affordance, but the trainee endpoint should either DELETE-style clear it (set to null) or reject empty strings. Trainer endpoint behaves the same."
+      },
+      {
+        "endpoint": "GET /api/trainer-profiles/{id}",
+        "issue": "Response does NOT include 'highlights' key, but GET /api/trainee-profiles/{id} does. Parity gap. Either expose highlights inline on the trainer GET (matching trainee) or document that highlights must always be fetched via /highlights subresource."
+      }
+    ]
+  },
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iteration82_trainee_vibrancy.py",
+    "/app/backend/tests/test_iteration82_regression_and_edges.py",
+    "/app/test_reports/pytest/iter82_full.xml"
+  ],
+  "action_items": [
+    "Wrap base64.b64decode in profile_routes.py:upload_highlight_base64 (line 814) with try/except binascii.Error -> raise HTTPException(400, 'Invalid base64 payload'). Same fix applies to the trainer variant.",
+    "Decide policy on empty accentColor: either persist as null or reject with 400. Apply consistently to trainer + trainee endpoints.",
+    "Add 'highlights' to TrainerProfileResponse (or strip it from TraineeProfileResponse) to make the two profile GETs consistent.",
+    "(Nit) The TraineeProfile/TrainerProfile accent-color endpoints use a whitelist palette, but the iter82 description in the request says 'rejects invalid colors / accepts valid hex like #6C5CE7'. Update the human-facing docs to clarify the whitelist (currently 10 colors)."
+  ],
+  "critical_code_review_comments": [
+    "profile_routes.py:upload_highlight_base64 — missing try/except around base64.b64decode causes 500s on malformed user input. Standard HTTP hygiene gap.",
+    "TrainerProfileResponse vs TraineeProfileResponse drift: trainee includes 'highlights' inline, trainer does not. Pick one; the iter82 spec implies parity.",
+    "Discover endpoint correctly excludes the caller, requires auth (403 without token), excludes Mongo _id, and joins users for fullName. No ObjectId leakage observed.",
+    "Cross-user 403 enforcement verified on vibe and highlights endpoints — good."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration82_regression_and_edges.py (new)"
+  ],
+  "success_rate": {"backend": "96% (24/25, 1 xfail)", "frontend": "skipped per request"},
+  "test_credentials": "From /app/memory/test_credentials.md — Admin admin@rapidreps.com/admin123, Trainee test_trainee_iter25@test.com/Test123!, Trainer test_trainer_iter25@test.com/Test123!",
+  "seed_data_creation": "Tests seed bio/vibe/accent on the iter25 trainee to ensure they appear in the discover feed. Highlights are uploaded then immediately deleted in lifecycle tests to leave no residue.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Spec items (1)-(11) all functionally pass against the live preview backend. The new regression suite at /app/backend/tests/test_iteration82_regression_and_edges.py covers trainer-side endpoints, discover shape, and edge cases. The single failing test (test_trainee_highlight_bad_base64) demonstrates the 500 bug — re-run it after main agent fixes the base64 try/except in profile_routes.py:upload_highlight_base64 to confirm. The xfail on test_trainer_profile_response_keys will turn green automatically once 'highlights' is added to TrainerProfileResponse.",
+  "rca of the issue": "RCA #1 (500 on bad base64): /app/backend/routes/profile_routes.py line 814 calls base64.b64decode(data_b64) directly. Python's binascii.Error propagates up to FastAPI which returns 500. Reproduction: POST /api/trainee-profiles/{id}/highlights/base64 with data='!!!not-base64!!!'. Fix: try: content = base64.b64decode(data_b64, validate=True) except (binascii.Error, ValueError): raise HTTPException(400, 'Invalid base64 data'). RCA #2 (highlights missing on trainer GET): TrainerProfileResponse in models.py does not declare a 'highlights' field, while TraineeProfileResponse does. Add `highlights: List[Dict] = []` to TrainerProfileResponse and populate it in the assembler (mirroring the trainee path) for parity."
+}

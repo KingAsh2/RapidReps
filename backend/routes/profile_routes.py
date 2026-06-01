@@ -1108,6 +1108,88 @@ async def update_trainee_social_links(user_id: str, body: dict, current_user: di
     return {"success": True, "socialLinks": social_links}
 
 
+@router.get("/trainees/discover")
+async def discover_trainees(
+    limit: int = Query(20, ge=1, le=50),
+    offset: int = Query(0, ge=0),
+    current_user: dict = Depends(get_current_user),
+):
+    """Trainer-facing feed of trainees who've built out their showcase
+    (have at least a vibe, personality tag, accent color, highlights, or bio).
+    Excludes the current user. Sorted by most recently updated.
+    """
+    me_id = str(current_user['_id'])
+
+    # Query: any showcase signal present
+    query = {
+        'userId': {'$ne': me_id},
+        '$or': [
+            {'vibeTrackTitle': {'$nin': [None, '']}},
+            {'personalityTag': {'$nin': [None, '']}},
+            {'accentColor': {'$nin': [None, '']}},
+            {'bio': {'$nin': [None, '']}},
+            {'highlights.0': {'$exists': True}},
+        ],
+    }
+
+    projection = {
+        '_id': 0,
+        'userId': 1, 'profilePhoto': 1, 'bio': 1, 'fitnessGoals': 1,
+        'currentFitnessLevel': 1, 'personalityTag': 1, 'accentColor': 1,
+        'vibeTrackTitle': 1, 'vibeArtistName': 1, 'vibeArtworkUrl': 1,
+        'highlights': 1, 'updatedAt': 1,
+    }
+
+    cursor = (
+        db.trainee_profiles
+        .find(query, projection)
+        .sort('updatedAt', -1)
+        .skip(offset)
+        .limit(limit)
+    )
+    profiles = await cursor.to_list(length=limit)
+
+    # Enrich with fullName from users collection
+    user_ids = [ObjectId(p['userId']) for p in profiles if p.get('userId')]
+    users_map = {}
+    if user_ids:
+        users = await db.users.find(
+            {'_id': {'$in': user_ids}},
+            {'fullName': 1, 'profilePhoto': 1, 'roles': 1}
+        ).to_list(length=len(user_ids))
+        for u in users:
+            uid = str(u['_id'])
+            # Only include users who actually have 'trainee' in roles
+            if 'trainee' in (u.get('roles') or []):
+                users_map[uid] = u
+
+    # Filter and shape
+    out = []
+    for p in profiles:
+        uid = p.get('userId', '')
+        if uid not in users_map:
+            continue  # Skip non-trainees / deleted users
+        u = users_map[uid]
+        highlights = p.get('highlights') or []
+        out.append({
+            'userId': uid,
+            'fullName': u.get('fullName', 'Athlete'),
+            'profilePhoto': p.get('profilePhoto') or u.get('profilePhoto'),
+            'bio': p.get('bio'),
+            'fitnessGoals': p.get('fitnessGoals'),
+            'currentFitnessLevel': p.get('currentFitnessLevel'),
+            'personalityTag': p.get('personalityTag'),
+            'accentColor': p.get('accentColor'),
+            'vibeTrackTitle': p.get('vibeTrackTitle'),
+            'vibeArtistName': p.get('vibeArtistName'),
+            'vibeArtworkUrl': p.get('vibeArtworkUrl'),
+            'firstHighlight': highlights[0] if highlights else None,
+            'highlightCount': len(highlights),
+        })
+
+    return {'trainees': out, 'count': len(out), 'offset': offset, 'limit': limit}
+
+
 @router.put("/trainee-profiles/{user_id}/vibe")
 async def update_trainee_vibe(user_id: str, body: dict, current_user: dict = Depends(get_current_user)):
     """Update trainee's profile vibe/anthem."""
