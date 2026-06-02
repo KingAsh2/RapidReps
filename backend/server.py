@@ -1268,10 +1268,20 @@ async def unregister_push_token(data: PushTokenRegister, current_user: dict = De
 async def get_notifications(current_user: dict = Depends(get_current_user)):
     """Get notification history for the current user"""
     user_id = str(current_user['_id'])
-    notifications = await db.notifications.find(
-        {'userId': user_id},
-        {'_id': 0}
+    notifications_raw = await db.notifications.find(
+        {'userId': user_id}
     ).sort('createdAt', -1).to_list(50)
+    notifications = []
+    for n in notifications_raw:
+        n_id = str(n.pop('_id'))
+        n['id'] = n_id
+        # Inject deep-link for virtual session requests so the FE can route to the trainee profile
+        if n.get('type') == 'virtual_session_request':
+            metadata = n.get('metadata') or {}
+            trainee_id = metadata.get('traineeId') or n.get('senderUserId')
+            if trainee_id:
+                n['deepLink'] = f"/trainer/trainee-detail?traineeId={trainee_id}&showAcceptCTA=true"
+        notifications.append(n)
     return {"notifications": notifications}
 
 @api_router.post("/notifications/mark-read")
@@ -1282,6 +1292,21 @@ async def mark_notifications_read(current_user: dict = Depends(get_current_user)
         {'userId': user_id, 'read': False},
         {'$set': {'read': True}}
     )
+    return {"success": True}
+
+
+@api_router.delete("/notifications/{notification_id}")
+async def delete_notification(notification_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a single notification (swipe-to-delete)."""
+    from bson import ObjectId
+    user_id = str(current_user['_id'])
+    try:
+        oid = ObjectId(notification_id)
+    except Exception:
+        raise HTTPException(400, "Invalid notification id")
+    result = await db.notifications.delete_one({'_id': oid, 'userId': user_id})
+    if result.deleted_count == 0:
+        raise HTTPException(404, "Notification not found")
     return {"success": True}
 
 # create_and_send_notification now imported from deps.py

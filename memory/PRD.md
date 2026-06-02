@@ -4,6 +4,24 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, Zelle payments, trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards.
 
 
+## 2026-06-02 — Iteration 84 round 2: 5-of-6 PDF round-4 fixes shipped ✅
+
+### Shipped
+- **#2 Unread notification readability**: Rewrote `app/notifications.tsx`. Unread cards now use `rgba(255,106,0,0.12)` background + 4px orange left border + 900-weight title + 0.92-opacity body text. Read cards stay subtle. Empty/active visual states clearly distinguishable.
+- **#3 Swipe-left-to-delete**: Built with native `PanResponder` (no extra dep). 80px red Delete reveal under each row. Backend `DELETE /api/notifications/{id}` added (server.py), returns 403 for cross-user, 400 for invalid ObjectId, 404 for not-found. Frontend wires axios DELETE + refreshes list. Notification GET now projects `id` (was excluded as `_id`).
+- **#4 Virtual session deep link**: Backend injects `deepLink: /trainer/trainee-detail?traineeId=X&showAcceptCTA=true` into `virtual_session_request` notifications. Frontend `notifications.tsx` routes by `deepLink` on tap. `trainee-detail.tsx` reads `showAcceptCTA` param and renders sticky green "ACCEPT SESSION" CTA at the bottom of the cinematic showcase. Wired to `/api/sessions/instant-accept` if `sessionRequestId` provided.
+- **#7 Intro Video position + editable title/description**: Moved intro video JSX in `trainee/trainer-detail.tsx` from inside the profile-details card to ABOVE `<HighlightReel>`. Added editable `introVideoTitle` + `introVideoDescription` fields to `TrainerProfileCreate` + `TrainerProfileResponse` models. New `PUT /api/trainer-profiles/{id}/intro-video-meta` endpoint with cross-user 403 protection. Edit screen surfaces both as `<TextInput>`s (title 60ch, description 300ch). Public view: video now uses `useNativeControls` + `usePoster` (the profile photo) so the user can actually press Play (also addresses #9). Default title fallback: "INTRO TO MY PROFILE".
+- **#8 Safety Center contrast**: Bumped all body text from `rgba(255,255,255,0.6)` (per user "grayed out / not legible") to `0.88` / `0.92`. Cards now have `rgba(10,14,26,0.78)` deep-navy background + `0.18` white border for cleaner contrast.
+
+### Verified
+- **New CI tests**: `/app/backend/tests/test_iteration84_pdf_round4.py` — 9 tests covering all 5 fixes (live API + static asserts).
+- **Full regression**: 32/32 across iter79/81/83a/83b/83c/84 all green.
+
+### Still open (next turn)
+- **#9 Admin can't play intro video**: Partially mitigated by `useNativeControls` on the cinematic view. The admin verification-detail screen still needs the same `useNativeControls` patch — root cause is its raw `<Video shouldPlay isMuted />` block. Will reproduce + fix next turn.
+- **#6 leftover — upload success modal**: Add "✓ Uploaded!" auto-dismiss modal after POST returns 200 in `app/trainer/highlight-upload.tsx` + `app/trainee/highlight-upload.tsx`. (Phase B added the toast — user wants a modal instead.)
+
+
 ## 2026-06-02 — Iteration 84 (in progress) — User PDF feedback round 4
 
 ### Resolved this turn

@@ -1417,7 +1417,23 @@ async def delete_trainee_highlight(user_id: str, index: int, current_user: dict 
     return {"success": True, "highlights": highlights}
 
 
-@router.get("/trainee-profiles/{user_id}/highlights")
+@router.put("/trainer-profiles/{user_id}/intro-video-meta")
+async def update_intro_video_meta(user_id: str, body: dict = Body(...), current_user: dict = Depends(get_current_user)):
+    """Update the editable title + description shown above the trainer's intro video."""
+    if str(current_user['_id']) != user_id:
+        raise HTTPException(403, "Can only update your own intro video meta")
+    title = sanitize_text(body.get('introVideoTitle')) if body.get('introVideoTitle') is not None else None
+    description = sanitize_text(body.get('introVideoDescription')) if body.get('introVideoDescription') is not None else None
+    update = {'updatedAt': datetime.utcnow()}
+    if 'introVideoTitle' in body:
+        update['introVideoTitle'] = title
+    if 'introVideoDescription' in body:
+        update['introVideoDescription'] = description
+    await db.trainer_profiles.update_one({'userId': user_id}, {'$set': update})
+    return {"success": True, "introVideoTitle": title, "introVideoDescription": description}
+
+
+
 async def get_trainee_highlights(user_id: str):
     """Get all highlights for a trainee."""
     profile = await db.trainee_profiles.find_one({'userId': user_id}, {'highlights': 1})

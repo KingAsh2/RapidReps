@@ -231,6 +231,8 @@ class TrainerProfileCreate(BaseModel):
     fitnessCertUploaded: bool = False
     introVideoUrl: Optional[str] = None
     introVideoUploaded: bool = False
+    introVideoTitle: Optional[str] = None  # iter84 — editable section heading (default "Intro to my profile")
+    introVideoDescription: Optional[str] = None  # iter84 — editable description below the video
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     locationAddress: Optional[str] = None
@@ -282,6 +284,8 @@ class TrainerProfileResponse(BaseModel):
     fitnessCertUploaded: bool = False
     introVideoUrl: Optional[str] = None
     introVideoUploaded: bool = False
+    introVideoTitle: Optional[str] = None  # iter84 — editable section heading (default "Intro to my profile")
+    introVideoDescription: Optional[str] = None  # iter84 — editable description below the video
     gallery: List[dict] = []
     socialLinks: Optional[dict] = None
     canGoLive: bool = False

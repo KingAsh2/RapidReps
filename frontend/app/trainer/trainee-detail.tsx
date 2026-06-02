@@ -52,6 +52,8 @@ export default function TraineeDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const traineeId = (params.traineeId || params.userId) as string;
+  const showAcceptCTA = params.showAcceptCTA === 'true';
+  const sessionRequestId = params.sessionRequestId as string | undefined;
   const { user } = useAuth();
   const { showAlert } = useAlert();
 
@@ -390,6 +392,49 @@ export default function TraineeDetailScreen() {
           <View style={{ height: 60 }} />
         </Animated.ScrollView>
       </SafeAreaView>
+
+      {/* Sticky ACCEPT SESSION CTA — only when arrived via virtual-session-request deep link */}
+      {showAcceptCTA && (
+        <View style={styles.stickyAcceptBar} data-testid="trainee-detail-sticky-accept">
+          <LinearGradient
+            colors={['rgba(10,14,26,0)', 'rgba(10,14,26,0.95)']}
+            style={StyleSheet.absoluteFill}
+          />
+          <Text style={styles.stickyAcceptHint}>VIRTUAL SESSION REQUEST · FIRST TO ACCEPT WINS</Text>
+          <TouchableOpacity
+            onPress={async () => {
+              try {
+                const token = await import('@react-native-async-storage/async-storage').then((m) => m.default.getItem('auth_token'));
+                if (sessionRequestId) {
+                  await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/sessions/instant-accept`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ requestId: sessionRequestId }),
+                  });
+                }
+                toast.success('Session accepted!');
+                router.push('/sessions');
+              } catch {
+                toast.error('Could not accept — someone else may have grabbed it.');
+              }
+            }}
+            data-testid="trainee-detail-accept-session-btn"
+            accessibilityLabel="Accept this virtual session request"
+            accessibilityRole="button"
+            style={styles.stickyAcceptBtn}
+          >
+            <LinearGradient
+              colors={['#00C853', '#00E676']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.stickyAcceptGradient}
+            >
+              <Ionicons name="flash" size={18} color="#FFF" />
+              <Text style={styles.stickyAcceptText}>ACCEPT SESSION</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 }
@@ -434,4 +479,10 @@ const styles = StyleSheet.create({
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 14, borderWidth: 1 },
   chipText: { fontSize: 12, fontFamily: 'Oswald_600SemiBold', letterSpacing: 0.5 },
+  // Sticky accept CTA shown only when arriving via a virtual_session_request deep link
+  stickyAcceptBar: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingTop: 32, paddingBottom: 28, paddingHorizontal: 20, alignItems: 'center' },
+  stickyAcceptHint: { fontSize: 10, fontFamily: 'Oswald_700Bold', color: '#FF6A00', letterSpacing: 1.5, marginBottom: 10 },
+  stickyAcceptBtn: { width: '100%', borderRadius: 16, overflow: 'hidden', shadowColor: '#00C853', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.5, shadowRadius: 18, elevation: 12 },
+  stickyAcceptGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, gap: 10 },
+  stickyAcceptText: { fontSize: 16, fontFamily: 'Oswald_700Bold', color: '#FFFFFF', letterSpacing: 2.5 },
 });

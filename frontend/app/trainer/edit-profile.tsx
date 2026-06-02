@@ -78,6 +78,8 @@ export default function EditTrainerProfileScreen() {
     latitude: null as number | null,
     longitude: null as number | null,
     locationAddress: '',
+    introVideoTitle: '',
+    introVideoDescription: '',
     isAvailable: true,
     socialLinks: {} as Record<string, string>,
   });
@@ -131,6 +133,8 @@ export default function EditTrainerProfileScreen() {
           locationAddress: data.locationAddress || '',
           isAvailable: data.isAvailable ?? true,
           socialLinks: data.socialLinks || {},
+          introVideoTitle: data.introVideoTitle || '',
+          introVideoDescription: data.introVideoDescription || '',
         });
       }
     } catch (error) {
@@ -240,6 +244,8 @@ export default function EditTrainerProfileScreen() {
         locationAddress: formData.locationAddress,
         isAvailable: formData.isAvailable,
         socialLinks: formData.socialLinks,
+        introVideoTitle: formData.introVideoTitle.trim(),
+        introVideoDescription: formData.introVideoDescription.trim(),
       };
 
       if (profile) {
@@ -378,6 +384,32 @@ export default function EditTrainerProfileScreen() {
                     multiline
                     numberOfLines={4}
                   />
+
+                  {/* Intro Video Title + Description (iter84) — these appear above the Intro Video on public profile */}
+                  <View style={{ marginTop: 18 }}>
+                    <Text style={styles.inputLabel}>Intro Video Section Title</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={formData.introVideoTitle}
+                      onChangeText={(text) => setFormData({ ...formData, introVideoTitle: text })}
+                      placeholder="Intro to my profile"
+                      placeholderTextColor={COLORS.gray}
+                      maxLength={60}
+                      data-testid="intro-video-title-input"
+                    />
+                    <Text style={[styles.inputLabel, { marginTop: 12 }]}>Intro Video Description</Text>
+                    <TextInput
+                      style={styles.textArea}
+                      value={formData.introVideoDescription}
+                      onChangeText={(text) => setFormData({ ...formData, introVideoDescription: text })}
+                      placeholder="A short note about what trainees will see in your intro video..."
+                      placeholderTextColor={COLORS.gray}
+                      multiline
+                      numberOfLines={3}
+                      maxLength={300}
+                      data-testid="intro-video-description-input"
+                    />
+                  </View>
                   <View style={styles.row}>
                     <View style={styles.inputGroup}>
                       <Text style={styles.inputLabel}>Years Experience</Text>

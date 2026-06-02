@@ -632,6 +632,34 @@ export default function TrainerDetailScreen() {
             </View>
           </Animated.View>
 
+          {/* INTRO VIDEO — surfaced ABOVE Highlight Reel per user request (iter84) */}
+          <Animated.View style={{ opacity: contentAnim, transform: [{ translateY: contentTranslateY }] }}>
+            {(trainer as any).introVideoUrl && (
+              <View style={[styles.videoSection, { paddingHorizontal: 20, marginBottom: 16 }]} data-testid="trainer-video-intro">
+                <Text style={styles.sectionLabel}>
+                  {((trainer as any).introVideoTitle || '').toString().trim() || 'INTRO TO MY PROFILE'}
+                </Text>
+                <View style={styles.videoContainer}>
+                  <Video
+                    source={{ uri: (trainer as any).introVideoUrl }}
+                    style={styles.videoPlayer}
+                    resizeMode={ResizeMode.COVER}
+                    shouldPlay={false}
+                    isLooping
+                    useNativeControls
+                    posterSource={trainer.profilePhoto ? { uri: trainer.profilePhoto } : undefined}
+                    usePoster={!!trainer.profilePhoto}
+                  />
+                </View>
+                {(trainer as any).introVideoDescription ? (
+                  <Text style={{ fontSize: 14, fontWeight: '500', color: 'rgba(255,255,255,0.85)', lineHeight: 21, marginTop: 10 }} data-testid="trainer-intro-video-description">
+                    {(trainer as any).introVideoDescription}
+                  </Text>
+                ) : null}
+              </View>
+            )}
+          </Animated.View>
+
           {/* MEDIA SHOWCASE — Highlight Reel only (Gallery removed per product decision) */}
           <Animated.View style={{ opacity: contentAnim, transform: [{ translateY: contentTranslateY }] }}>
             {highlights.length > 0 && (
@@ -678,31 +706,7 @@ export default function TrainerDetailScreen() {
                 </View>
               )}
 
-              {/* Video Content Section */}
-              {(trainer as any).introVideoUrl && (
-                <View style={styles.videoSection} data-testid="trainer-video-intro">
-                  <Text style={styles.sectionLabel}>VIDEO CONTENT</Text>
-                  <View style={styles.videoContainer}>
-                    <Video
-                      source={{ uri: (trainer as any).introVideoUrl }}
-                      style={styles.videoPlayer}
-                      resizeMode={ResizeMode.COVER}
-                      shouldPlay
-                      isLooping
-                      isMuted
-                    />
-                    <LinearGradient
-                      colors={['transparent', 'rgba(0,0,0,0.4)']}
-                      style={styles.videoOverlay}
-                    >
-                      <View style={styles.videoPlayBadge}>
-                        <Ionicons name="play" size={14} color={COLORS.white} />
-                        <Text style={styles.videoPlayText}>Intro</Text>
-                      </View>
-                    </LinearGradient>
-                  </View>
-                </View>
-              )}
+              {/* Video Content section removed — intro video now lives above Highlight Reel (iter84) */}
             </LinearGradient>
           </Animated.View>
 
