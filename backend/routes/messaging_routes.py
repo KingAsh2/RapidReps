@@ -1,0 +1,206 @@
+"""Messaging routes: conversations and messages. Extracted from server.py (Iteration 85)."""
+from fastapi import APIRouter, HTTPException, Depends
+from typing import List
+from datetime import datetime
+from bson import ObjectId
+import uuid
+import asyncio
+
+from deps import db, get_current_user, sanitize_text, create_and_send_notification
+from models import MessageCreate, MessageResponse, ConversationResponse
+
+router = APIRouter(prefix="/api")
+
+
+@router.post("/messages", response_model=MessageResponse)
+async def send_message(message_data: MessageCreate, current_user: dict = Depends(get_current_user)):
+    """Send a message to another user."""
+    sender_id = str(current_user['_id'])
+    receiver_id = message_data.receiverId
+
+    conversation = await db.conversations.find_one({
+        'participants': {'$all': [sender_id, receiver_id]}
+    })
+
+    if not conversation:
+        conversation_doc = {
+            '_id': str(uuid.uuid4()),
+            'participants': [sender_id, receiver_id],
+            'createdAt': datetime.utcnow(),
+            'updatedAt': datetime.utcnow(),
+        }
+        await db.conversations.insert_one(conversation_doc)
+        conversation = conversation_doc
+
+    message_doc = {
+        '_id': str(uuid.uuid4()),
+        'conversationId': str(conversation['_id']),
+        'senderId': sender_id,
+        'receiverId': receiver_id,
+        'content': sanitize_text(message_data.content),
+        'isRead': False,
+        'createdAt': datetime.utcnow(),
+    }
+
+    await db.messages.insert_one(message_doc)
+
+    await db.conversations.update_one(
+        {'_id': conversation['_id']},
+        {'$set': {'updatedAt': datetime.utcnow()}},
+    )
+
+    sender_name = current_user.get('fullName', 'Someone')
+    preview = (message_doc['content'] or '')[:50]
+    asyncio.create_task(create_and_send_notification(
+        receiver_id,
+        f"New message from {sender_name}",
+        preview,
+        "new_message",
+        {"conversationId": str(conversation['_id']), "senderId": sender_id, "screen": "messages/chat"},
+    ))
+
+    return MessageResponse(
+        id=str(message_doc['_id']),
+        conversationId=str(message_doc['conversationId']),
+        senderId=message_doc['senderId'],
+        receiverId=message_doc['receiverId'],
+        content=message_doc['content'],
+        isRead=message_doc['isRead'],
+        createdAt=message_doc['createdAt'],
+    )
+
+
+@router.get("/conversations", response_model=List[ConversationResponse])
+async def get_conversations(current_user: dict = Depends(get_current_user)):
+    """Get all conversations for the current user (batched user/profile/last-message/unread queries)."""
+    user_id = str(current_user['_id'])
+
+    conversations_list = await db.conversations.find({'participants': user_id}).sort('updatedAt', -1).to_list(100)
+    if not conversations_list:
+        return []
+
+    all_participant_ids = set()
+    conversation_ids = []
+    for conv in conversations_list:
+        all_participant_ids.update(conv['participants'])
+        conversation_ids.append(str(conv['_id']))
+
+    users_cursor = db.users.find({'_id': {'$in': [ObjectId(pid) for pid in all_participant_ids]}})
+    users_list = await users_cursor.to_list(len(all_participant_ids))
+    users_map = {str(u['_id']): u for u in users_list}
+
+    trainer_profiles = await db.trainer_profiles.find({'userId': {'$in': list(all_participant_ids)}}).to_list(len(all_participant_ids))
+    trainee_profiles = await db.trainee_profiles.find({'userId': {'$in': list(all_participant_ids)}}).to_list(len(all_participant_ids))
+
+    profiles_map: dict = {}
+    for p in trainer_profiles:
+        profiles_map[p['userId']] = p
+    for p in trainee_profiles:
+        if p['userId'] not in profiles_map:
+            profiles_map[p['userId']] = p
+
+    last_messages_pipeline = [
+        {'$match': {'conversationId': {'$in': conversation_ids}}},
+        {'$sort': {'createdAt': -1}},
+        {'$group': {'_id': '$conversationId', 'lastMessage': {'$first': '$$ROOT'}}},
+    ]
+    last_messages_list = await db.messages.aggregate(last_messages_pipeline).to_list(len(conversation_ids))
+    last_messages_map = {lm['_id']: lm['lastMessage'] for lm in last_messages_list}
+
+    unread_counts_pipeline = [
+        {'$match': {'conversationId': {'$in': conversation_ids}, 'receiverId': user_id, 'isRead': False}},
+        {'$group': {'_id': '$conversationId', 'count': {'$sum': 1}}},
+    ]
+    unread_counts_list = await db.messages.aggregate(unread_counts_pipeline).to_list(len(conversation_ids))
+    unread_counts_map = {uc['_id']: uc['count'] for uc in unread_counts_list}
+
+    conversations = []
+    for conv in conversations_list:
+        participant_details = []
+        for participant_id in conv['participants']:
+            user = users_map.get(participant_id)
+            if user:
+                profile = profiles_map.get(participant_id)
+                participant_details.append({
+                    'id': participant_id,
+                    'fullName': user.get('fullName', 'Unknown'),
+                    'avatarUrl': profile.get('avatarUrl') or profile.get('profilePhoto') if profile else None,
+                    'roles': user.get('roles', []),
+                })
+
+        conv_id_str = str(conv['_id'])
+        last_message_doc = last_messages_map.get(conv_id_str)
+        last_message = None
+        if last_message_doc:
+            last_message = {
+                'content': last_message_doc['content'],
+                'createdAt': last_message_doc['createdAt'].isoformat(),
+                'senderId': last_message_doc['senderId'],
+            }
+
+        unread_count = unread_counts_map.get(conv_id_str, 0)
+
+        conversations.append(ConversationResponse(
+            id=conv_id_str,
+            participants=conv['participants'],
+            participantDetails=participant_details,
+            lastMessage=last_message,
+            unreadCount=unread_count,
+            updatedAt=conv['updatedAt'],
+        ))
+
+    return conversations
+
+
+@router.get("/conversations/{conversation_id}/messages", response_model=List[MessageResponse])
+async def get_messages(conversation_id: str, current_user: dict = Depends(get_current_user)):
+    """Get all messages in a conversation, marking unread received messages as read."""
+    user_id = str(current_user['_id'])
+
+    conversation = await db.conversations.find_one({'_id': conversation_id})
+    if not conversation or user_id not in conversation['participants']:
+        raise HTTPException(status_code=403, detail="Not authorized to view this conversation")
+
+    cursor = db.messages.find({'conversationId': conversation_id}).sort('createdAt', 1).limit(500)
+
+    messages = []
+    async for msg in cursor:
+        messages.append(MessageResponse(
+            id=str(msg['_id']),
+            conversationId=msg['conversationId'],
+            senderId=msg['senderId'],
+            receiverId=msg['receiverId'],
+            content=msg['content'],
+            isRead=msg.get('isRead', False),
+            createdAt=msg['createdAt'],
+        ))
+
+    await db.messages.update_many(
+        {'conversationId': conversation_id, 'receiverId': user_id, 'isRead': False},
+        {'$set': {'isRead': True}},
+    )
+
+    return messages
+
+
+@router.post("/conversations")
+async def get_or_create_conversation(receiver_id: str, current_user: dict = Depends(get_current_user)):
+    """Get or create a conversation with another user."""
+    sender_id = str(current_user['_id'])
+
+    conversation = await db.conversations.find_one({
+        'participants': {'$all': [sender_id, receiver_id]}
+    })
+
+    if conversation:
+        return {'conversationId': str(conversation['_id'])}
+
+    conversation_doc = {
+        '_id': str(uuid.uuid4()),
+        'participants': [sender_id, receiver_id],
+        'createdAt': datetime.utcnow(),
+        'updatedAt': datetime.utcnow(),
+    }
+    await db.conversations.insert_one(conversation_doc)
+
+    return {'conversationId': str(conversation_doc['_id'])}

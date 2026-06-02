@@ -124,6 +124,26 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
     }
   };
 
+  const handleApproveAllSteps = async (trainerId: string) => {
+    if (!trainerId) return;
+    try {
+      const headers = await getAuthHeader();
+      const res = await api.post(`/admin/verifications/${trainerId}/approve-all-steps`, {}, { headers });
+      const count = res?.data?.approvedCount ?? 0;
+      const skipped = (res?.data?.skipped || []).length;
+      if (count === 0) {
+        toast.info(skipped > 0 ? `Nothing to approve — ${skipped} step(s) missing files` : 'All submitted steps were already approved');
+      } else {
+        toast.success(`Approved ${count} document${count === 1 ? '' : 's'}${skipped > 0 ? ` · ${skipped} skipped` : ''}`);
+      }
+      const updated = await api.get(`/admin/verifications/${trainerId}/detail`, { headers });
+      setVerificationDetail(updated.data);
+      fetchVerifications();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail || 'Failed to approve documents');
+    }
+  };
+
   const handleSubmitRejection = async () => {
     if (!rejectReason.trim()) {
       toast.warning('Please provide a reason for rejection');
@@ -463,7 +483,25 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                   )}
 
                   <View style={s.modalSection}>
-                    <Text style={s.modalSectionTitle}>Verification Documents</Text>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                      <Text style={s.modalSectionTitle}>Verification Documents</Text>
+                      {verificationDetail.steps?.some((st: any) => st.submitted && !verificationDetail.profile?.[`${st.id}Approved`] && st.url) && (
+                        <TouchableOpacity
+                          onPress={() => handleApproveAllSteps(verificationDetail.profile?.userId)}
+                          style={{
+                            flexDirection: 'row', alignItems: 'center', gap: 6,
+                            backgroundColor: C.success, paddingHorizontal: 12, paddingVertical: 8,
+                            borderRadius: 999,
+                          }}
+                          data-testid="approve-all-steps-btn"
+                          accessibilityLabel="Approve all uploaded documents"
+                          accessibilityRole="button"
+                        >
+                          <Ionicons name="checkmark-done" size={16} color={C.white} />
+                          <Text style={{ fontSize: 12, fontWeight: '800', color: C.white, letterSpacing: 0.4 }}>APPROVE ALL</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
                     {verificationDetail.steps?.map((step: any) => {
                       const stepApproved = verificationDetail.profile?.[`${step.id}Approved`];
                       return (

@@ -1417,6 +1417,13 @@ async def delete_trainee_highlight(user_id: str, index: int, current_user: dict 
     return {"success": True, "highlights": highlights}
 
 
+@router.get("/trainee-profiles/{user_id}/highlights")
+async def get_trainee_highlights(user_id: str):
+    """Get all highlights for a trainee."""
+    profile = await db.trainee_profiles.find_one({'userId': user_id}, {'highlights': 1})
+    return {"highlights": (profile or {}).get('highlights', [])}
+
+
 @router.put("/trainer-profiles/{user_id}/intro-video-meta")
 async def update_intro_video_meta(user_id: str, body: dict = Body(...), current_user: dict = Depends(get_current_user)):
     """Update the editable title + description shown above the trainer's intro video."""

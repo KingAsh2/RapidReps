@@ -825,6 +825,78 @@ async def admin_reject_verification_step(
     
     return {"success": True, "message": f"{step_name} rejected"}
 
+
+@router.post("/admin/verifications/{trainer_id}/approve-all-steps")
+async def admin_approve_all_steps(
+    trainer_id: str,
+    admin_user: dict = Depends(require_admin),
+):
+    """One-tap moderation: approve every submitted-but-not-yet-approved step on a
+    trainer's verification packet. Returns the list of step IDs that were just
+    approved. Steps that have no uploaded file are skipped (cannot be approved).
+    Does NOT change the overall verificationStatus — admin still clicks the
+    main Approve button to mark the trainer verified, so review remains intentional.
+    """
+    profile = await db.trainer_profiles.find_one({'userId': trainer_id})
+    if not profile:
+        raise HTTPException(404, "Trainer profile not found")
+
+    step_definitions = [
+        ('identity', 'governmentIdUploaded', profile.get('identityFileUri')),
+        ('background', 'backgroundCheckPassed', profile.get('backgroundFileUri')),
+        ('certification', 'fitnessCertUploaded', profile.get('certificationFileUri')),
+        ('cpr', 'cprAedCertUploaded', profile.get('cprFileUri')),
+        ('insurance', 'insuranceUploaded', profile.get('insuranceFileUri')),
+        ('photo', 'profilePhotoUploaded', profile.get('avatarUrl') or profile.get('photoFileUri')),
+        ('video', 'introVideoUploaded', profile.get('introVideoUrl') or profile.get('videoFileUri')),
+    ]
+
+    now = datetime.utcnow()
+    admin_id = str(admin_user['_id'])
+    set_fields: dict = {}
+    approved_step_ids: list = []
+    skipped: list = []
+
+    for step_id, uploaded_field, url in step_definitions:
+        is_uploaded = bool(profile.get(uploaded_field))
+        already_approved = bool(profile.get(f'{step_id}Approved'))
+        if not is_uploaded or already_approved:
+            continue
+        if not url:
+            skipped.append({'stepId': step_id, 'reason': 'No file uploaded'})
+            continue
+        set_fields[f'{step_id}Approved'] = True
+        set_fields[f'{step_id}ApprovedAt'] = now
+        set_fields[f'{step_id}ApprovedBy'] = admin_id
+        approved_step_ids.append(step_id)
+
+    if set_fields:
+        await db.trainer_profiles.update_one({'userId': trainer_id}, {'$set': set_fields})
+
+    if approved_step_ids:
+        await db.notifications.insert_one({
+            'userId': trainer_id,
+            'type': 'documents_approved',
+            'title': f'{len(approved_step_ids)} document{"s" if len(approved_step_ids) != 1 else ""} approved',
+            'message': 'Your remaining verification documents were reviewed and approved.',
+            'read': False,
+            'createdAt': now,
+        })
+        await send_push_notification(
+            trainer_id,
+            f'{len(approved_step_ids)} document{"s" if len(approved_step_ids) != 1 else ""} approved',
+            'Your remaining verification documents were reviewed and approved.',
+            {'type': 'documents_approved', 'count': len(approved_step_ids)},
+        )
+
+    return {
+        'success': True,
+        'approvedSteps': approved_step_ids,
+        'skipped': skipped,
+        'approvedCount': len(approved_step_ids),
+    }
+
+
 @router.post("/trainer/set-rates")
 async def trainer_set_rates(
     body: dict,

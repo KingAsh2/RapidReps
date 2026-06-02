@@ -4,6 +4,23 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, Zelle payments, trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards.
 
 
+## 2026-06-02 — Iteration 85: Refactor, Approve-All, Upload Progress ✅
+
+### Shipped
+- **server.py refactor (P3)**: Extracted messaging (4 endpoints) → `routes/messaging_routes.py` and notifications/push-tokens/prefs (7 endpoints) → `routes/notification_routes.py`. server.py: 2885 → 2533 lines (-352).
+- **Admin Approve All (P2)**: New endpoint `POST /api/admin/verifications/{trainerId}/approve-all-steps` approves every submitted-but-not-yet-approved step in one atomic Mongo update, then fires a single notification + push. Skips steps without uploaded files (returns them in `skipped` array). Frontend: green "APPROVE ALL" pill on the Documents section of the verification modal — only visible when there's something to approve. Estimated ~85% click reduction during moderation.
+- **Highlight upload progress (P1)**: Both trainer + trainee highlight-upload screens rewired from `fetch` to `XMLHttpRequest` so `xhr.upload.onprogress` events drive a real-time `0%–100%` indicator inside the upload button + an orange progress bar below. Addresses user's "uploads feel slow" complaint by providing immediate visual feedback during the slow base64/multipart phase.
+
+### Verified
+- **New CI tests**: `tests/test_iteration85_refactor_approve_all.py` — 14 tests covering refactor regression (messages/conversations/notifications/prefs/push-tokens still respond 200), Approve-All response shape + RBAC (admin-only, 404 for unknown trainer), static guards (server.py < 2600 lines, no duplicate routes, frontend has Approve All button + XHR progress wiring).
+- **Combined regression**: 46/46 across iter79/81/83a/83b/83c/84/85 green.
+
+### Still open / Backlog
+- **Instagram Graph API** — endpoints scaffolded, awaiting user's Instagram App ID + App Secret.
+- **SendGrid email** — awaiting user's API key.
+- **Further server.py extraction** — location/GPS routes (~500 lines) is the next slice once tests scale.
+
+
 ## 2026-06-02 — Iteration 84 round 2: 5-of-6 PDF round-4 fixes shipped ✅
 
 ### Shipped

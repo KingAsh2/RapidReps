@@ -26,6 +26,7 @@ export default function TraineeHighlightUpload() {
   const [highlights, setHighlights] = useState<Highlight[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [successVisible, setSuccessVisible] = useState(false);
   const successScale = React.useRef(new Animated.Value(0)).current;
 
@@ -34,6 +35,28 @@ export default function TraineeHighlightUpload() {
     successScale.setValue(0);
     Animated.spring(successScale, { toValue: 1, friction: 5, tension: 80, useNativeDriver: true }).start();
     setTimeout(() => setSuccessVisible(false), 1400);
+  };
+
+  // XHR-based upload so we can show real-time progress (fetch on RN doesn't expose progress events).
+  const uploadWithProgress = (url: string, body: FormData | string, headers: Record<string, string>): Promise<{ ok: boolean; status: number; data: any }> => {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', url);
+      Object.entries(headers).forEach(([k, v]) => xhr.setRequestHeader(k, v));
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 100);
+          setUploadProgress(pct);
+        }
+      };
+      xhr.onload = () => {
+        let parsed: any = {};
+        try { parsed = JSON.parse(xhr.responseText || '{}'); } catch {}
+        resolve({ ok: xhr.status >= 200 && xhr.status < 300, status: xhr.status, data: parsed });
+      };
+      xhr.onerror = () => reject(new Error('Network error during upload'));
+      xhr.send(body as any);
+    });
   };
 
   useEffect(() => {
@@ -71,20 +94,21 @@ export default function TraineeHighlightUpload() {
     if (result.canceled || !result.assets?.[0]) return;
 
     setUploading(true);
+    setUploadProgress(0);
     try {
       const asset = result.assets[0];
 
       if (mediaType === 'photo' && asset.base64) {
-        const res = await fetch(`${API_URL}/api/trainee-profiles/${user?.id}/highlights/base64`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({
+        const res = await uploadWithProgress(
+          `${API_URL}/api/trainee-profiles/${user?.id}/highlights/base64`,
+          JSON.stringify({
             data: asset.base64,
             filename: 'highlight.jpg',
             contentType: 'image/jpeg',
             caption: '',
           }),
-        });
+          { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        );
         if (res.ok) {
           showSuccessModal();
           loadHighlights();
@@ -97,21 +121,20 @@ export default function TraineeHighlightUpload() {
       formData.append('file', { uri: asset.uri, name: `highlight.${ext}`, type: mediaType === 'video' ? 'video/mp4' : 'image/jpeg' } as any);
       formData.append('caption', '');
 
-      const res = await fetch(`${API_URL}/api/trainee-profiles/${user?.id}/highlights`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
+      const res = await uploadWithProgress(
+        `${API_URL}/api/trainee-profiles/${user?.id}/highlights`,
+        formData,
+        { Authorization: `Bearer ${token}` },
+      );
       if (res.ok) {
         showSuccessModal();
         loadHighlights();
       } else {
-        const errData = await res.json().catch(() => ({}));
-        toast.error(errData.detail || 'Upload failed. Try a smaller file.');
+        toast.error(res.data?.detail || 'Upload failed. Try a smaller file.');
       }
     } catch (err) {
       toast.error('Upload failed. Check your connection and try again.');
-    } finally { setUploading(false); }
+    } finally { setUploading(false); setUploadProgress(0); }
   };
 
   const deleteHighlight = async (index: number) => {
@@ -169,7 +192,12 @@ export default function TraineeHighlightUpload() {
         <View style={s.uploadRow}>
           <TouchableOpacity style={s.uploadBtn} onPress={() => pickAndUpload('video')} disabled={uploading} data-testid="trainee-upload-video-btn" accessibilityLabel="Upload a video highlight" accessibilityRole="button">
             <LinearGradient colors={['#FF6A00', '#FF3D00']} style={s.uploadBtnGradient}>
-              {uploading ? <ActivityIndicator size="small" color="#FFF" /> : (
+              {uploading ? (
+                <View style={{ alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}>
+                  <ActivityIndicator size="small" color="#FFF" />
+                  <Text style={s.uploadBtnText}>{uploadProgress > 0 ? `${uploadProgress}%` : 'UPLOADING…'}</Text>
+                </View>
+              ) : (
                 <>
                   <Ionicons name="videocam" size={20} color="#FFF" />
                   <Text style={s.uploadBtnText}>ADD VIDEO</Text>
@@ -184,6 +212,12 @@ export default function TraineeHighlightUpload() {
             </View>
           </TouchableOpacity>
         </View>
+
+        {uploading && uploadProgress > 0 && (
+          <View style={s.progressBarTrack} data-testid="trainee-upload-progress-bar">
+            <View style={[s.progressBarFill, { width: `${uploadProgress}%` }]} />
+          </View>
+        )}
 
         <Text style={s.tipText}>Upload short clips (under 30s) and photos that show off your progress and energy</Text>
 
@@ -243,6 +277,8 @@ const s = StyleSheet.create({
   emptyState: { alignItems: 'center', paddingTop: 60, gap: 10 },
   emptyTitle: { fontSize: 18, fontWeight: '800', color: '#FFF' },
   emptyText: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.3)', textAlign: 'center', maxWidth: 260 },
+  progressBarTrack: { height: 4, marginHorizontal: 20, marginTop: 4, marginBottom: 8, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.08)', overflow: 'hidden' },
+  progressBarFill: { height: '100%', backgroundColor: '#FF6A00', borderRadius: 2 },
   successOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(10,14,26,0.85)', justifyContent: 'center', alignItems: 'center', padding: 30 },
   successCard: { backgroundColor: '#141929', borderRadius: 24, padding: 32, alignItems: 'center', gap: 12, borderWidth: 1, borderColor: 'rgba(0,200,83,0.3)' },
   successCheckCircle: { width: 88, height: 88, borderRadius: 44, justifyContent: 'center', alignItems: 'center', marginBottom: 4, shadowColor: '#00C853', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.5, shadowRadius: 16, elevation: 12 },

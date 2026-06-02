@@ -97,14 +97,19 @@ def test_notification_delete_404_for_bogus_id(trainee_session):
 
 def test_virtual_session_notification_has_deeplink(trainee_session):
     """Inject a virtual_session_request notification directly and confirm deepLink is generated."""
-    # We don't have a public endpoint to insert notifications, so this is a static
-    # contract test: confirm the server.py code path injects deepLink for that type.
-    server_path = os.path.join(os.path.dirname(__file__), "..", "server.py")
-    with open(server_path, "r", encoding="utf-8") as f:
-        src = f.read()
-    assert "virtual_session_request" in src, "server must reference virtual_session_request notification type"
-    assert "deepLink" in src, "server must inject deepLink for virtual session notifications"
-    assert "trainee-detail?traineeId" in src, "deepLink must point to /trainer/trainee-detail with traineeId"
+    # Static contract test: code path that injects deepLink for that type used to live in
+    # server.py — moved to routes/notification_routes.py during iter85 refactor.
+    candidates = [
+        os.path.join(os.path.dirname(__file__), "..", "server.py"),
+        os.path.join(os.path.dirname(__file__), "..", "routes", "notification_routes.py"),
+    ]
+    combined = ""
+    for path in candidates:
+        with open(path, "r", encoding="utf-8") as f:
+            combined += f.read() + "\n"
+    assert "virtual_session_request" in combined, "server must reference virtual_session_request notification type"
+    assert "deepLink" in combined, "server must inject deepLink for virtual session notifications"
+    assert "trainee-detail?traineeId" in combined, "deepLink must point to /trainer/trainee-detail with traineeId"
 
 
 # -------- #4 Sticky ACCEPT CTA on the cinematic showcase --------
