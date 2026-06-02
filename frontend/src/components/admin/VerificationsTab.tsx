@@ -496,7 +496,13 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                           {step.submitted && (
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8, marginLeft: 48, flexWrap: 'wrap' }}>
                               {step.url ? (
-                                step.id === 'video' ? (
+                                step.url.startsWith('file://') || step.url.startsWith('content://') || step.url.startsWith('ph://') ? (
+                                  // Local-device URI never made it to server storage — common cause of "video won't play"
+                                  <View style={{ backgroundColor: '#FFF5EB', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                                    <Ionicons name="alert-circle-outline" size={14} color={C.warning} />
+                                    <Text style={{ fontSize: 13, fontWeight: '600', color: C.warning }}>Local file — ask trainer to re-upload</Text>
+                                  </View>
+                                ) : step.id === 'video' ? (
                                   <TouchableOpacity
                                     onPress={() => handlePlayVideo(step.url)}
                                     style={{ backgroundColor: '#FFF0E8', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }}
@@ -505,11 +511,6 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                                     <Ionicons name="play-circle" size={14} color="#FF6A00" />
                                     <Text style={{ fontSize: 13, fontWeight: '600', color: '#FF6A00' }}>Play (15s preview)</Text>
                                   </TouchableOpacity>
-                                ) : step.url.startsWith('file://') || step.url.startsWith('content://') || step.url.startsWith('ph://') ? (
-                                  <View style={{ backgroundColor: '#FFF5EB', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                                    <Ionicons name="alert-circle-outline" size={14} color={C.warning} />
-                                    <Text style={{ fontSize: 13, fontWeight: '600', color: C.warning }}>Uploaded (local file - ask trainer to re-upload)</Text>
-                                  </View>
                                 ) : (
                                   <TouchableOpacity
                                     onPress={() => {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, FlatList, ActivityIndicator, Alert, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, FlatList, ActivityIndicator, Alert, Dimensions, Modal, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -26,6 +26,15 @@ export default function TraineeHighlightUpload() {
   const [highlights, setHighlights] = useState<Highlight[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [successVisible, setSuccessVisible] = useState(false);
+  const successScale = React.useRef(new Animated.Value(0)).current;
+
+  const showSuccessModal = () => {
+    setSuccessVisible(true);
+    successScale.setValue(0);
+    Animated.spring(successScale, { toValue: 1, friction: 5, tension: 80, useNativeDriver: true }).start();
+    setTimeout(() => setSuccessVisible(false), 1400);
+  };
 
   useEffect(() => {
     if (user?.id) {
@@ -77,7 +86,7 @@ export default function TraineeHighlightUpload() {
           }),
         });
         if (res.ok) {
-          toast.success('Highlight uploaded!');
+          showSuccessModal();
           loadHighlights();
           return;
         }
@@ -94,7 +103,7 @@ export default function TraineeHighlightUpload() {
         body: formData,
       });
       if (res.ok) {
-        toast.success('Highlight uploaded!');
+        showSuccessModal();
         loadHighlights();
       } else {
         const errData = await res.json().catch(() => ({}));
@@ -197,6 +206,19 @@ export default function TraineeHighlightUpload() {
           />
         )}
       </SafeAreaView>
+
+      {/* Upload success modal (iter84 #6) — replaces toast with a celebratory checkmark */}
+      <Modal visible={successVisible} transparent animationType="fade" onRequestClose={() => setSuccessVisible(false)}>
+        <View style={s.successOverlay} data-testid="highlight-upload-success-modal">
+          <Animated.View style={[s.successCard, { transform: [{ scale: successScale }] }]}>
+            <LinearGradient colors={['#00C853', '#00E676']} style={s.successCheckCircle}>
+              <Ionicons name="checkmark" size={48} color="#FFF" />
+            </LinearGradient>
+            <Text style={s.successTitle}>Uploaded!</Text>
+            <Text style={s.successSub}>Your highlight is live on your profile</Text>
+          </Animated.View>
+        </View>
+      </Modal>
     </LinearGradient>
   );
 }
@@ -221,4 +243,9 @@ const s = StyleSheet.create({
   emptyState: { alignItems: 'center', paddingTop: 60, gap: 10 },
   emptyTitle: { fontSize: 18, fontWeight: '800', color: '#FFF' },
   emptyText: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.3)', textAlign: 'center', maxWidth: 260 },
+  successOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(10,14,26,0.85)', justifyContent: 'center', alignItems: 'center', padding: 30 },
+  successCard: { backgroundColor: '#141929', borderRadius: 24, padding: 32, alignItems: 'center', gap: 12, borderWidth: 1, borderColor: 'rgba(0,200,83,0.3)' },
+  successCheckCircle: { width: 88, height: 88, borderRadius: 44, justifyContent: 'center', alignItems: 'center', marginBottom: 4, shadowColor: '#00C853', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.5, shadowRadius: 16, elevation: 12 },
+  successTitle: { fontSize: 24, fontFamily: 'Oswald_700Bold', color: '#FFF', letterSpacing: 1 },
+  successSub: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.6)', textAlign: 'center' },
 });
