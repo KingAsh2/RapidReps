@@ -8,7 +8,7 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { Animated, Easing, ImageBackground, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { PremiumColors } from '../theme/premium';
+import { PremiumColors } from '../../theme/premium';
 
 type Props = {
   variant?: 'welcome' | 'login' | 'signup';
