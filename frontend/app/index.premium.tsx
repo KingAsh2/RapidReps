@@ -68,16 +68,32 @@ export default function PremiumWelcomeScreen() {
               { opacity: fade, transform: [{ translateY: slideUp }] },
             ]}
           >
-            <PremiumLogo size={240} testID="premium-welcome-logo" />
+            <PremiumLogo size={200} testID="premium-welcome-logo" />
           </Animated.View>
 
           {/* ── Hero typography — larger, tighter, athletic ─── */}
           <Animated.View
             style={[styles.heroTextWrap, { opacity: fade, transform: [{ translateY: slideUp }] }]}
           >
-            <Text style={styles.eyebrow}>YOUR WORKOUT</Text>
-            <Text style={styles.heroLineWhite}>DELIVERED</Text>
-            <Text style={styles.heroLineOrange}>RAPIDLY</Text>
+            <Text style={styles.eyebrow} numberOfLines={1}>YOUR WORKOUT</Text>
+            <Text
+              style={styles.heroLineWhite}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.7}
+              allowFontScaling={false}
+            >
+              DELIVERED
+            </Text>
+            <Text
+              style={styles.heroLineOrange}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.7}
+              allowFontScaling={false}
+            >
+              RAPIDLY
+            </Text>
             <View style={styles.boltUnderline} />
           </Animated.View>
 
@@ -164,55 +180,57 @@ export default function PremiumWelcomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, paddingHorizontal: 24, paddingBottom: 20 },
+  safe: { flex: 1, paddingHorizontal: 24, paddingBottom: 12 },
   heroLogoWrap: {
     alignItems: 'center',
-    marginTop: 4,
-    marginBottom: -10, // slight negative — lets logo halo touch the headline
+    marginTop: 0,
+    marginBottom: -6, // slight negative — lets logo halo touch the headline
   },
-  heroTextWrap: { alignItems: 'center', marginBottom: 28 },
+  heroTextWrap: { alignItems: 'center', marginBottom: 18, alignSelf: 'stretch' },
   eyebrow: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '900',
     letterSpacing: 5,
     color: PremiumColors.orange,
-    marginBottom: 4,
+    marginBottom: 2,
     fontFamily: 'Oswald_700Bold',
     textShadowColor: 'rgba(255,122,0,0.5)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
   },
   heroLineWhite: {
-    fontSize: 78,
+    fontSize: 64,
     fontWeight: '900',
     color: PremiumColors.white,
-    letterSpacing: -1.5,
-    lineHeight: 78,
+    letterSpacing: -1,
+    lineHeight: 66,
     textAlign: 'center',
     fontFamily: 'Oswald_700Bold',
     transform: [{ skewX: '-8deg' }],
     textShadowColor: 'rgba(0,0,0,0.75)',
-    textShadowOffset: { width: 0, height: 6 },
-    textShadowRadius: 16,
+    textShadowOffset: { width: 0, height: 5 },
+    textShadowRadius: 14,
+    alignSelf: 'stretch',
   },
   heroLineOrange: {
-    fontSize: 92,
+    fontSize: 76,
     fontWeight: '900',
     color: PremiumColors.orange,
-    letterSpacing: -2,
-    lineHeight: 90,
+    letterSpacing: -1.4,
+    lineHeight: 76,
     textAlign: 'center',
-    marginTop: -6,
+    marginTop: -4,
     fontFamily: 'Oswald_700Bold',
     transform: [{ skewX: '-8deg' }],
     textShadowColor: 'rgba(255,122,0,0.85)',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 28,
+    textShadowRadius: 24,
+    alignSelf: 'stretch',
   },
   boltUnderline: {
-    width: 220,
+    width: 200,
     height: 3,
-    marginTop: 10,
+    marginTop: 8,
     backgroundColor: PremiumColors.orangeGlow,
     borderRadius: 2,
     shadowColor: PremiumColors.orange,
@@ -223,22 +241,22 @@ const styles = StyleSheet.create({
   featuresRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: 20,
   },
   featureDivider: {
     width: 1,
-    height: 64,
+    height: 56,
     backgroundColor: 'rgba(255,255,255,0.12)',
     marginHorizontal: 2,
   },
-  ctaStack: { marginTop: 4 },
-  footerWrap: { marginTop: 26, alignItems: 'center', paddingBottom: 4 },
+  ctaStack: { marginTop: 2 },
+  footerWrap: { marginTop: 16, alignItems: 'center', paddingBottom: 0 },
   termsText: {
-    fontSize: 13,
+    fontSize: 12,
     color: PremiumColors.textMuted,
     fontWeight: '600',
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 18,
   },
   termsLink: {
     color: PremiumColors.orangeGlow,
@@ -248,17 +266,17 @@ const styles = StyleSheet.create({
   boltDivider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 22,
-    marginBottom: 16,
+    marginTop: 12,
+    marginBottom: 8,
     width: '72%',
   },
   boltLine: { flex: 1, height: 1, backgroundColor: 'rgba(255,122,0,0.4)' },
   boltIcon: {
     marginHorizontal: 12,
-    fontSize: 18,
+    fontSize: 16,
     color: PremiumColors.orangeGlow,
   },
-  loginTap: { paddingVertical: 6 },
+  loginTap: { paddingVertical: 4 },
   loginPrompt: {
     fontSize: 14,
     fontWeight: '600',

@@ -93,11 +93,27 @@ export default function PremiumLoginScreen() {
                   { opacity: fade, transform: [{ translateY: slideUp }, { scale: heroScale }] },
                 ]}
               >
-                <PremiumLogo size={210} testID="premium-login-logo" />
-                <Text style={styles.brandWordmark}>RAPIDREPS</Text>
-                <Text style={styles.eyebrow}>WELCOME BACK</Text>
-                <Text style={styles.heroLineWhite}>LET'S GET</Text>
-                <Text style={styles.heroLineOrange}>TO WORK</Text>
+                <PremiumLogo size={190} testID="premium-login-logo" />
+                <Text style={styles.brandWordmark} numberOfLines={1}>RAPIDREPS</Text>
+                <Text style={styles.eyebrow} numberOfLines={1}>WELCOME BACK</Text>
+                <Text
+                  style={styles.heroLineWhite}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.7}
+                  allowFontScaling={false}
+                >
+                  LET'S GET
+                </Text>
+                <Text
+                  style={styles.heroLineOrange}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.7}
+                  allowFontScaling={false}
+                >
+                  TO WORK
+                </Text>
                 <View style={styles.boltUnderline} />
               </Animated.View>
 
@@ -207,31 +223,33 @@ const styles = StyleSheet.create({
     fontFamily: 'Oswald_700Bold',
   },
   heroLineWhite: {
-    fontSize: 66,
+    fontSize: 58,
     fontWeight: '900',
     color: PremiumColors.white,
-    letterSpacing: -1.2,
-    lineHeight: 68,
+    letterSpacing: -1,
+    lineHeight: 60,
     textAlign: 'center',
     fontFamily: 'Oswald_700Bold',
     transform: [{ skewX: '-8deg' }],
     textShadowColor: 'rgba(0,0,0,0.7)',
     textShadowOffset: { width: 0, height: 5 },
     textShadowRadius: 12,
+    alignSelf: 'stretch',
   },
   heroLineOrange: {
-    fontSize: 78,
+    fontSize: 68,
     fontWeight: '900',
     color: PremiumColors.orange,
-    letterSpacing: -1.6,
-    lineHeight: 78,
+    letterSpacing: -1.3,
+    lineHeight: 70,
     textAlign: 'center',
     marginTop: -4,
     fontFamily: 'Oswald_700Bold',
     transform: [{ skewX: '-8deg' }],
     textShadowColor: 'rgba(255,122,0,0.8)',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 24,
+    textShadowRadius: 22,
+    alignSelf: 'stretch',
   },
   boltUnderline: {
     width: 210,

@@ -132,14 +132,26 @@ export default function PremiumSignupScreen() {
               <Animated.View
                 style={[styles.heroWrap, { opacity: fade, transform: [{ translateY: slideUp }] }]}
               >
-                <PremiumLogo size={170} haloIntensity={0.85} testID="premium-signup-logo" />
-                <Text style={styles.eyebrow}>
+                <PremiumLogo size={160} haloIntensity={0.85} testID="premium-signup-logo" />
+                <Text style={styles.eyebrow} numberOfLines={1}>
                   {isTrainer ? 'JOIN THE ELITE' : 'LET\u2019S GET YOU MOVING'}
                 </Text>
-                <Text style={styles.heroLineWhite}>
+                <Text
+                  style={styles.heroLineWhite}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.7}
+                  allowFontScaling={false}
+                >
                   {isTrainer ? 'BECOME A' : 'FIND YOUR'}
                 </Text>
-                <Text style={styles.heroLineOrange}>
+                <Text
+                  style={styles.heroLineOrange}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.7}
+                  allowFontScaling={false}
+                >
                   {isTrainer ? 'TRAINER' : 'TRAINER'}
                 </Text>
                 <View style={styles.boltUnderline} />
@@ -347,31 +359,33 @@ const styles = StyleSheet.create({
     fontFamily: 'Oswald_700Bold',
   },
   heroLineWhite: {
-    fontSize: 56,
+    fontSize: 50,
     fontWeight: '900',
     color: PremiumColors.white,
-    letterSpacing: -1.2,
-    lineHeight: 58,
+    letterSpacing: -1,
+    lineHeight: 52,
     textAlign: 'center',
     fontFamily: 'Oswald_700Bold',
     transform: [{ skewX: '-8deg' }],
     textShadowColor: 'rgba(0,0,0,0.65)',
     textShadowOffset: { width: 0, height: 4 },
     textShadowRadius: 10,
+    alignSelf: 'stretch',
   },
   heroLineOrange: {
-    fontSize: 66,
+    fontSize: 58,
     fontWeight: '900',
     color: PremiumColors.orange,
-    letterSpacing: -1.4,
-    lineHeight: 66,
+    letterSpacing: -1.2,
+    lineHeight: 58,
     textAlign: 'center',
     marginTop: -3,
     fontFamily: 'Oswald_700Bold',
     transform: [{ skewX: '-8deg' }],
     textShadowColor: 'rgba(255,122,0,0.78)',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 22,
+    textShadowRadius: 20,
+    alignSelf: 'stretch',
   },
   boltUnderline: {
     width: 190,

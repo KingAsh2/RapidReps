@@ -105,14 +105,26 @@ export default function PremiumForgotPasswordScreen() {
               <Animated.View
                 style={[styles.heroWrap, { opacity: fade, transform: [{ translateY: slideUp }] }]}
               >
-                <PremiumLogo size={170} haloIntensity={0.8} testID="premium-forgot-logo" />
-                <Text style={styles.eyebrow}>
+                <PremiumLogo size={160} haloIntensity={0.8} testID="premium-forgot-logo" />
+                <Text style={styles.eyebrow} numberOfLines={1}>
                   {emailSent ? 'CHECK YOUR INBOX' : 'PASSWORD RESET'}
                 </Text>
-                <Text style={styles.heroLineWhite}>
+                <Text
+                  style={styles.heroLineWhite}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.7}
+                  allowFontScaling={false}
+                >
                   {emailSent ? "YOU'RE" : 'RESET YOUR'}
                 </Text>
-                <Text style={styles.heroLineOrange}>
+                <Text
+                  style={styles.heroLineOrange}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.7}
+                  allowFontScaling={false}
+                >
                   {emailSent ? 'ALL SET' : 'PASSWORD'}
                 </Text>
                 <View style={styles.boltUnderline} />
@@ -222,31 +234,33 @@ const styles = StyleSheet.create({
     textShadowRadius: 8,
   },
   heroLineWhite: {
-    fontSize: 58,
+    fontSize: 50,
     fontWeight: '900',
     color: PremiumColors.white,
-    letterSpacing: -1.2,
-    lineHeight: 60,
+    letterSpacing: -1,
+    lineHeight: 52,
     textAlign: 'center',
     fontFamily: 'Oswald_700Bold',
     transform: [{ skewX: '-8deg' }],
     textShadowColor: 'rgba(0,0,0,0.65)',
     textShadowOffset: { width: 0, height: 4 },
     textShadowRadius: 10,
+    alignSelf: 'stretch',
   },
   heroLineOrange: {
-    fontSize: 70,
+    fontSize: 60,
     fontWeight: '900',
     color: PremiumColors.orange,
-    letterSpacing: -1.5,
-    lineHeight: 70,
+    letterSpacing: -1.3,
+    lineHeight: 62,
     textAlign: 'center',
     marginTop: -3,
     fontFamily: 'Oswald_700Bold',
     transform: [{ skewX: '-8deg' }],
     textShadowColor: 'rgba(255,122,0,0.78)',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 22,
+    textShadowRadius: 20,
+    alignSelf: 'stretch',
   },
   boltUnderline: {
     width: 190,
