@@ -4,7 +4,24 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, Zelle payments, trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards.
 
 
-## 2026-06-02 — Iteration 89: Premium UI redesign (Login + Welcome + Signup) ✅
+## 2026-06-02 — Iteration 89 round 2: Cinematic backgrounds + stencil typography + animated embers ✅
+
+### Shipped (D — all three gap-closers from the user's "Do they match?" feedback)
+- **Nano Banana image generation**: `scripts/generate_premium_backgrounds.py` calls Gemini `gemini-3.1-flash-image-preview` via the Emergent LLM key to one-shot generate two cinematic hero backgrounds:
+  - `assets/images/premium-welcome-bg.png` (574 KB) — two athletic silhouettes facing inward (male boxer + female fighter) in an orange ember storm with negative space top-center for the logo. Verified via `analyze_file_tool`.
+  - `assets/images/premium-login-bg.png` (557 KB) — solo weightlifter mid-clean-and-jerk in fiery orange explosion fading to black at the bottom.
+- **PremiumHeroBg rewrite**: pure CSS gradients replaced with `ImageBackground` + the generated assets. Top + bottom vignette gradients preserve text legibility. Background is now cinematic photography-level fidelity.
+- **Animated ember overlay**: 14 native-driver-animated ember particles drifting upward through the scene with staggered delays + horizontal sway + fade-in/fade-out. Matches the "burning embers floating" energy from the mockups. CPU cost negligible (all on `useNativeDriver: true`).
+- **Stencil-style typography**: hero copy ("DELIVERED / RAPIDLY", "LET'S GET / TO WORK", "FIND YOUR / TRAINER") now uses `Oswald_700Bold` (Google Font, already in `@expo-google-fonts/oswald`) with `transform: [{ skewX: '-8deg' }]` to fake the italic stencil cut. Looks dramatically closer to the mockup display font than the previous system-bold-italic.
+- **Logo halo**: added a glowing orange halo (60px shadow radius, 90% opacity) behind the RR logo on the Welcome screen — gives the cinematic glow from the mockup.
+
+### Verified
+- New CI tests added: `test_premium_background_assets_exist` (both PNGs on disk, > 50KB each).
+- Full regression: **66/66** across iter79/81/85/86/87/88/89 green.
+- Image content verified via `analyze_file_tool` → confirmed cinematic athletic silhouettes + orange ember storm + central negative space for logo.
+
+
+
 
 ### Shipped
 - **RapidReps Classic vs RapidReps Premium**: User asked for a premium overhaul of 4 screens (which collapse to 3 files since Find/Become Trainer both route to `auth/signup.tsx` with `?role=`). Built as a **reversible alternate layer**, not a destructive replacement.

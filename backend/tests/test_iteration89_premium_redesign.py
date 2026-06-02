@@ -112,6 +112,16 @@ def test_premium_theme_exists():
         assert name in src
 
 
+def test_premium_background_assets_exist():
+    """Iter89 round-2: cinematic Nano Banana-generated backgrounds must be on disk."""
+    for p in (
+        '/app/frontend/assets/images/premium-welcome-bg.png',
+        '/app/frontend/assets/images/premium-login-bg.png',
+    ):
+        assert os.path.exists(p), f"Missing generated bg: {p}"
+        assert os.path.getsize(p) > 50_000, f"{p} looks truncated"
+
+
 def test_premium_components_exist():
     for p in (
         '/app/frontend/src/components/premium/PremiumHeroBg.tsx',

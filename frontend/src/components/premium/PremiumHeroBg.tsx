@@ -1,97 +1,120 @@
 /**
- * Premium cinematic background — orange ember radial wash fading to navy/black.
- * Used by Welcome + Login + Signup. CSS-only (no external image dependency)
- * so it stays fast and reproducible across Expo Go + EAS builds.
+ * Premium cinematic background — uses the Nano Banana-generated PNG for the
+ * hero scene (athletic silhouettes + ember storm) and stacks gradient overlays
+ * + an animated ember particle layer on top for additional depth.
+ *
+ * Falls back to pure CSS gradients only if image fails to load (defensive).
  */
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useEffect, useMemo, useRef } from 'react';
+import { Animated, Easing, ImageBackground, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { PremiumColors } from '../theme/premium';
 
 type Props = {
-  /** Which screen variant — affects gradient stops & overall hue. */
   variant?: 'welcome' | 'login' | 'signup';
   children?: React.ReactNode;
 };
 
+const SOURCES = {
+  welcome: require('../../assets/images/premium-welcome-bg.png'),
+  login: require('../../assets/images/premium-login-bg.png'),
+  // Signup reuses welcome bg for cohesion (different hero copy will distinguish)
+  signup: require('../../assets/images/premium-welcome-bg.png'),
+};
+
+/** Animated ember particle — drifts upward + fades */
+const Ember: React.FC<{ delay: number; left: string; size: number; duration: number }> = ({
+  delay,
+  left,
+  size,
+  duration,
+}) => {
+  const y = useRef(new Animated.Value(0)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.parallel([
+          Animated.timing(y, { toValue: 1, duration, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+          Animated.sequence([
+            Animated.timing(opacity, { toValue: 0.9, duration: duration * 0.2, useNativeDriver: true }),
+            Animated.timing(opacity, { toValue: 0, duration: duration * 0.8, useNativeDriver: true }),
+          ]),
+        ]),
+        Animated.timing(y, { toValue: 0, duration: 0, useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, []);
+
+  const translateY = y.interpolate({ inputRange: [0, 1], outputRange: [0, -260] });
+  const translateX = y.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, 8, -6] });
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        bottom: 0,
+        left: left as any,
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: PremiumColors.orangeEmber,
+        opacity,
+        transform: [{ translateY }, { translateX }],
+        shadowColor: PremiumColors.orange,
+        shadowOpacity: 0.9,
+        shadowRadius: size,
+        shadowOffset: { width: 0, height: 0 },
+      }}
+    />
+  );
+};
+
 export const PremiumHeroBg: React.FC<Props> = ({ variant = 'welcome', children }) => {
-  // Base gradient stack — multi-stop "fire-into-night" wash
-  const baseColors: readonly [string, string, ...string[]] =
-    variant === 'login'
-      ? ['#FF6A00', '#E55A00', '#7A2100', '#3A0F00', '#0A0A0A']
-      : variant === 'signup'
-      ? ['#091A3A', '#10254F', '#3A0F00', '#0A0A0A']
-      : ['#1B0700', '#3A0F00', '#5C1800', '#0A0A0A'];
+  // Stable ember configuration across renders
+  const embers = useMemo(
+    () =>
+      Array.from({ length: 14 }).map((_, i) => ({
+        delay: i * 350 + (i % 3) * 200,
+        left: `${(i * 7) % 95}%`,
+        size: 2.5 + (i % 4) * 1.5,
+        duration: 3500 + (i % 5) * 800,
+      })),
+    [],
+  );
 
   return (
     <View style={styles.root}>
-      {/* Base vertical gradient (fire → night) */}
-      <LinearGradient colors={baseColors} style={StyleSheet.absoluteFill} locations={undefined} />
-
-      {/* Top-center orange ember glow */}
-      <LinearGradient
-        colors={['rgba(255,122,0,0.55)', 'rgba(255,122,0,0.18)', 'transparent']}
-        style={[StyleSheet.absoluteFill, { opacity: 0.9 }]}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 0.55 }}
-      />
-
-      {/* Bottom navy fade for content legibility */}
-      <LinearGradient
-        colors={['transparent', 'rgba(10,10,10,0.4)', 'rgba(10,10,10,0.85)']}
-        style={StyleSheet.absoluteFill}
-        start={{ x: 0.5, y: 0.55 }}
-        end={{ x: 0.5, y: 1 }}
-      />
-
-      {/* Subtle warm ember vignette top-left & bottom-right (asymmetric flair) */}
-      <View style={[styles.emberBlob, { top: -80, left: -60 }]} pointerEvents="none" />
-      <View style={[styles.emberBlobSm, { bottom: 40, right: -40 }]} pointerEvents="none" />
-
-      {/* Motion streaks — subtle horizontal lines giving the "rapid" vibe */}
-      <View pointerEvents="none" style={styles.streaksWrap}>
-        {Array.from({ length: 5 }).map((_, i) => (
-          <View
-            key={i}
-            style={[
-              styles.streak,
-              {
-                top: `${20 + i * 14}%`,
-                width: `${50 + (i % 3) * 18}%`,
-                left: `${i % 2 === 0 ? 0 : 30}%`,
-                opacity: 0.06 + (i % 3) * 0.04,
-              },
-            ]}
-          />
-        ))}
-      </View>
-
-      {children}
+      <ImageBackground source={SOURCES[variant]} style={StyleSheet.absoluteFill} resizeMode="cover">
+        {/* Top vignette — keeps hero copy crisp */}
+        <LinearGradient
+          colors={['rgba(10,10,10,0.45)', 'rgba(10,10,10,0)']}
+          style={[StyleSheet.absoluteFill, { height: '40%' }]}
+        />
+        {/* Bottom vignette — keeps CTAs/forms legible */}
+        <LinearGradient
+          colors={['rgba(10,10,10,0)', 'rgba(10,10,10,0.78)', 'rgba(10,10,10,0.95)']}
+          style={[StyleSheet.absoluteFill, { top: '45%' }]}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+        />
+        {/* Animated ember particles drifting upward */}
+        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+          {embers.map((e, i) => (
+            <Ember key={i} {...e} />
+          ))}
+        </View>
+        {children}
+      </ImageBackground>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: PremiumColors.black },
-  emberBlob: {
-    position: 'absolute',
-    width: 280,
-    height: 280,
-    borderRadius: 140,
-    backgroundColor: 'rgba(255,122,0,0.32)',
-    transform: [{ scaleX: 1.3 }],
-  },
-  emberBlobSm: {
-    position: 'absolute',
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: 'rgba(255,155,47,0.22)',
-  },
-  streaksWrap: { ...StyleSheet.absoluteFillObject },
-  streak: {
-    position: 'absolute',
-    height: 1.5,
-    backgroundColor: PremiumColors.orangeEmber,
-  },
 });

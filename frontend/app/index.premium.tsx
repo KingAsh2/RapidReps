@@ -59,6 +59,8 @@ export default function PremiumWelcomeScreen() {
               { opacity: fade, transform: [{ translateY: slideUp }, { scale: heroScale }] },
             ]}
           >
+            {/* Orange halo glow behind the logo */}
+            <View pointerEvents="none" style={styles.logoHalo} />
             <Image
               source={require('../assets/rapidreps-logo.png')}
               style={styles.logo}
@@ -158,6 +160,20 @@ export default function PremiumWelcomeScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, paddingHorizontal: 22, paddingBottom: 14 },
   heroWrap: { alignItems: 'center', marginTop: 10, marginBottom: 18 },
+  logoHalo: {
+    position: 'absolute',
+    top: 6,
+    width: 240,
+    height: 200,
+    borderRadius: 120,
+    backgroundColor: 'rgba(255,122,0,0.35)',
+    transform: [{ scaleX: 1.4 }],
+    shadowColor: '#FF7A00',
+    shadowOpacity: 0.9,
+    shadowRadius: 60,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 20,
+  },
   logo: { width: 200, height: 180, marginBottom: 6 },
   eyebrow: {
     fontSize: 16,
@@ -165,31 +181,34 @@ const styles = StyleSheet.create({
     letterSpacing: 4,
     color: PremiumColors.orange,
     marginTop: 2,
+    fontFamily: 'Oswald_700Bold',
   },
   heroLineWhite: {
-    fontSize: 52,
+    fontSize: 56,
     fontWeight: '900',
-    fontStyle: 'italic',
     color: PremiumColors.white,
-    letterSpacing: -1,
-    lineHeight: 52,
+    letterSpacing: 1,
+    lineHeight: 58,
     textAlign: 'center',
-    textShadowColor: 'rgba(0,0,0,0.6)',
-    textShadowOffset: { width: 0, height: 3 },
-    textShadowRadius: 8,
+    fontFamily: 'Oswald_700Bold',
+    transform: [{ skewX: '-8deg' }],
+    textShadowColor: 'rgba(0,0,0,0.7)',
+    textShadowOffset: { width: 0, height: 4 },
+    textShadowRadius: 12,
   },
   heroLineOrange: {
-    fontSize: 60,
+    fontSize: 68,
     fontWeight: '900',
-    fontStyle: 'italic',
     color: PremiumColors.orange,
-    letterSpacing: -1.2,
-    lineHeight: 60,
+    letterSpacing: 1.5,
+    lineHeight: 70,
     textAlign: 'center',
-    marginTop: -4,
-    textShadowColor: 'rgba(255,122,0,0.45)',
+    marginTop: -2,
+    fontFamily: 'Oswald_700Bold',
+    transform: [{ skewX: '-8deg' }],
+    textShadowColor: 'rgba(255,122,0,0.7)',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 18,
+    textShadowRadius: 22,
   },
   boltUnderline: {
     width: 220,
