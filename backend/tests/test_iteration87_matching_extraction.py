@@ -80,8 +80,8 @@ def test_instant_request_trainer_role_forbidden(trainer_session):
 def test_server_py_has_matching_router():
     with open('/app/backend/server.py', 'r') as f:
         src = f.read()
-    assert 'from routes.matching_routes import router as matching_router' in src
-    assert 'app.include_router(matching_router)' in src
+    assert 'from routes.matching_routes import router as engine_router' in src
+    assert 'app.include_router(engine_router)' in src
 
 
 def test_no_duplicate_matching_routes_in_server():

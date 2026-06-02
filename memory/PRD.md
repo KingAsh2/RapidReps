@@ -4,7 +4,19 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, Zelle payments, trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards.
 
 
-## 2026-06-02 — Iteration 87: Matching engine extracted ✅
+## 2026-06-02 — Iteration 88: Convenience features extracted ✅ (Refactor mission complete)
+
+### Shipped
+- **server.py refactor — final P3 slice**: Extracted convenience block (`/trainee/recent-trainers`, `/trainee/streak`, `/sessions/recurring`, `/trainer/go-live`, `/trainer/go-offline`, `/trainee/toggle-favorite/{id}`, `/trainee/saved-trainers`, `/trainee/favorite-availability` + `RecurringSessionCreate` Pydantic model — 358 LOC) → `routes/convenience_routes.py` (373 lines).
+- **Also fixed naming collision**: my iter87 `matching_router` import collided with the pre-existing `routes.matching` import. Renamed iter87 import to `engine_router` to avoid confusion.
+- **server.py size**: 1409 → 1057 lines. **Cumulative iter85→88: 2885 → 1057 (-63%, 1,828 lines moved out across 5 new route modules).** Below the 1,100-line stretch target and dramatically simpler to navigate. Remaining content in server.py is what *legitimately belongs* there: imports, FastAPI bootstrap, middleware, public/static routes (root/health/legal/manual downloads), safety/referral/experiments inline mini-blocks (could be next slice if you want), the weekly-digest endpoint, the notification scheduler coroutine, and the startup/seed hook.
+
+### Verified
+- New CI tests: `tests/test_iteration88_convenience_extraction.py` — 12 tests (every extracted endpoint reachable, RecurringSessionCreate model moved, static guards: convenience_router imported & wired, no duplicate decorators in server.py, server.py < 1,100 lines).
+- Full regression: **79/79** across iter79/81/83a/83b/83c/84/85/86/87/88 green.
+
+
+
 
 ### Shipped
 - **server.py refactor — round 3**: Extracted the entire **Uber-style matching engine** (`score_trainer`, `get_wave_trainers`, `run_matching_engine` helpers + 9 routes: `/virtual/request`, `/instant/request`, `/virtual/request/{id}`, `/virtual/pending`, `/virtual/accept/{id}`, `/virtual/reject/{id}`, `/virtual/trainee-confirm/{id}`, `/virtual/find-another/{id}`, `/virtual/cancel/{id}`) → `routes/matching_routes.py` (623 lines).
