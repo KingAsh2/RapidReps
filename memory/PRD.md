@@ -4,7 +4,18 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, Zelle payments, trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards.
 
 
-## 2026-06-02 — Iteration 86: Location/GPS routes extracted ✅
+## 2026-06-02 — Iteration 87: Matching engine extracted ✅
+
+### Shipped
+- **server.py refactor — round 3**: Extracted the entire **Uber-style matching engine** (`score_trainer`, `get_wave_trainers`, `run_matching_engine` helpers + 9 routes: `/virtual/request`, `/instant/request`, `/virtual/request/{id}`, `/virtual/pending`, `/virtual/accept/{id}`, `/virtual/reject/{id}`, `/virtual/trainee-confirm/{id}`, `/virtual/find-another/{id}`, `/virtual/cancel/{id}`) → `routes/matching_routes.py` (623 lines).
+- **server.py size**: 2011 → 1409 lines. **Cumulative iter85+86+87: 2885 → 1409 (-51%, 1,476 lines moved out).** Below the 1,500-line target.
+
+### Verified
+- New CI tests: `tests/test_iteration87_matching_extraction.py` — 11 tests (every extracted endpoint reachable, role-based 400s for wrong roles, RBAC/ObjectId error handling preserved, static guards: matching_router imported & wired, no duplicate decorators, helpers exist in new module).
+- Full regression: **67/67** across iter79/81/83a/83b/83c/84/85/86/87 green.
+
+
+
 
 ### Shipped
 - **server.py refactor — round 2**: Extracted location & GPS routes (`PUT /api/trainer/location`, `PUT /api/trainer/availability`, `GET /api/trainer/my-location-status`, `POST /api/sessions/{id}/gps-update`, `GET /api/sessions/{id}/gps-track`, `POST /api/sessions/{id}/start-en-route`, `POST /api/sessions/{id}/start-session`, `GET /api/trainers/nearby`) + Haversine + ETA helpers + 3 Pydantic models → `routes/location_routes.py` (542 lines).
