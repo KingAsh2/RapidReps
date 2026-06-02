@@ -7,7 +7,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Easing,
-  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -29,6 +28,7 @@ import { PremiumColors } from '../../src/theme/premium';
 import { PremiumHeroBg } from '../../src/components/premium/PremiumHeroBg';
 import { PremiumGlassInput } from '../../src/components/premium/PremiumGlassInput';
 import { PremiumGradientButton } from '../../src/components/premium/PremiumGradientButton';
+import { PremiumLogo } from '../../src/components/premium/PremiumLogo';
 
 export default function PremiumLoginScreen() {
   const router = useRouter();
@@ -93,11 +93,7 @@ export default function PremiumLoginScreen() {
                   { opacity: fade, transform: [{ translateY: slideUp }, { scale: heroScale }] },
                 ]}
               >
-                <Image
-                  source={require('../../assets/rapidreps-logo-premium.png')}
-                  style={styles.logo}
-                  resizeMode="contain"
-                />
+                <PremiumLogo size={210} testID="premium-login-logo" />
                 <Text style={styles.brandWordmark}>RAPIDREPS</Text>
                 <Text style={styles.eyebrow}>WELCOME BACK</Text>
                 <Text style={styles.heroLineWhite}>LET'S GET</Text>
@@ -185,20 +181,20 @@ export default function PremiumLoginScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, paddingHorizontal: 22 },
-  scroll: { paddingBottom: 30 },
-  heroWrap: { alignItems: 'center', marginTop: 4, marginBottom: 18 },
+  scroll: { paddingBottom: 36 },
+  heroWrap: { alignItems: 'center', marginTop: 4, marginBottom: 22 },
   logo: { width: 200, height: 170, marginBottom: 4 },
   brandWordmark: {
     fontSize: 38,
     fontWeight: '900',
-    letterSpacing: 4,
+    letterSpacing: 5,
     color: PremiumColors.white,
     fontFamily: 'Oswald_700Bold',
     transform: [{ skewX: '-6deg' }],
     textShadowColor: 'rgba(255,122,0,0.6)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 14,
-    marginTop: -10,
+    marginTop: -8,
     marginBottom: 8,
   },
   eyebrow: {
@@ -211,42 +207,46 @@ const styles = StyleSheet.create({
     fontFamily: 'Oswald_700Bold',
   },
   heroLineWhite: {
-    fontSize: 54,
+    fontSize: 66,
     fontWeight: '900',
     color: PremiumColors.white,
-    letterSpacing: 1,
-    lineHeight: 56,
+    letterSpacing: -1.2,
+    lineHeight: 68,
     textAlign: 'center',
     fontFamily: 'Oswald_700Bold',
     transform: [{ skewX: '-8deg' }],
-    textShadowColor: 'rgba(0,0,0,0.65)',
-    textShadowOffset: { width: 0, height: 4 },
-    textShadowRadius: 10,
+    textShadowColor: 'rgba(0,0,0,0.7)',
+    textShadowOffset: { width: 0, height: 5 },
+    textShadowRadius: 12,
   },
   heroLineOrange: {
-    fontSize: 64,
+    fontSize: 78,
     fontWeight: '900',
     color: PremiumColors.orange,
-    letterSpacing: 1.5,
-    lineHeight: 66,
+    letterSpacing: -1.6,
+    lineHeight: 78,
     textAlign: 'center',
-    marginTop: -2,
+    marginTop: -4,
     fontFamily: 'Oswald_700Bold',
     transform: [{ skewX: '-8deg' }],
-    textShadowColor: 'rgba(255,122,0,0.7)',
+    textShadowColor: 'rgba(255,122,0,0.8)',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 20,
+    textShadowRadius: 24,
   },
   boltUnderline: {
-    width: 200,
+    width: 210,
     height: 3,
-    marginTop: 8,
+    marginTop: 10,
     backgroundColor: PremiumColors.orangeGlow,
     borderRadius: 2,
+    shadowColor: PremiumColors.orange,
+    shadowOpacity: 0.85,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 0 },
   },
   socialWrap: { marginTop: 10, gap: 10 },
-  orRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 18 },
-  orLine: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.25)' },
+  orRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 22 },
+  orLine: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.22)' },
   orText: {
     marginHorizontal: 14,
     fontSize: 12,
@@ -255,15 +255,15 @@ const styles = StyleSheet.create({
     letterSpacing: 6,
   },
   formWrap: { marginBottom: 4 },
-  forgotBtn: { alignSelf: 'flex-end', marginTop: 2, marginBottom: 10, paddingVertical: 6 },
+  forgotBtn: { alignSelf: 'flex-end', marginTop: 2, marginBottom: 12, paddingVertical: 6 },
   forgotText: {
     fontSize: 13,
     fontWeight: '800',
     color: PremiumColors.orangeGlow,
     textDecorationLine: 'underline',
   },
-  ctaWrap: { marginTop: 6, marginBottom: 18 },
-  signupWrap: { alignItems: 'center', marginTop: 4 },
+  ctaWrap: { marginTop: 10, marginBottom: 24 },
+  signupWrap: { alignItems: 'center', marginTop: 8, paddingBottom: 4 },
   signupPrompt: { fontSize: 14, color: PremiumColors.white, fontWeight: '600' },
   signupLink: {
     color: PremiumColors.orange,

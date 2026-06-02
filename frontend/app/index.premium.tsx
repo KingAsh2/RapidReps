@@ -1,17 +1,23 @@
 /**
- * RapidReps PREMIUM Welcome screen (Iteration 89).
- * Pixel-targeted match for the user's "DELIVERED RAPIDLY" mockup.
+ * RapidReps PREMIUM Welcome screen (Iteration 90 — refinement pass).
  *
- * Preserves all routing & business logic of the classic version:
+ * Refinements from user feedback:
+ *  - Removed boxed/halo logo container; logo now cinematically blends via PremiumLogo
+ *  - Larger, tighter "DELIVERED / RAPIDLY" hero typography for athletic impact
+ *  - Premium glassmorphism feature badges with deeper shadows + edge lighting
+ *  - Stronger orange edge + deeper glass on "BECOME A TRAINER"
+ *  - More breathing room in footer/CTA stack
+ *  - Logo breathes (scale + halo pulse + subtle tilt + ember sparkle)
+ *
+ * Business logic preserved 100%:
  *  - Find a Trainer  → /auth/signup?role=trainee
  *  - Become a Trainer → /auth/signup?role=trainer
- *  - Already auth'd → routed to dashboard
- *  - Terms / Privacy links unchanged
+ *  - Auth'd users     → routed to /auth/login
+ *  - Terms / Privacy / Log In links unchanged
  */
 import React, { useEffect, useRef } from 'react';
 import {
   Animated,
-  Image,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -26,15 +32,14 @@ import { PremiumColors } from '../src/theme/premium';
 import { PremiumHeroBg } from '../src/components/premium/PremiumHeroBg';
 import { PremiumGradientButton } from '../src/components/premium/PremiumGradientButton';
 import { PremiumFeatureBadge } from '../src/components/premium/PremiumFeatureBadge';
+import { PremiumLogo } from '../src/components/premium/PremiumLogo';
 
 export default function PremiumWelcomeScreen() {
   const router = useRouter();
   const fade = useRef(new Animated.Value(0)).current;
   const slideUp = useRef(new Animated.Value(28)).current;
-  const heroScale = useRef(new Animated.Value(0.85)).current;
 
   useEffect(() => {
-    // Auto-redirect if logged in (preserve classic behavior)
     (async () => {
       const token = await AsyncStorage.getItem('@rapidreps_token');
       if (token) router.replace('/auth/login');
@@ -42,8 +47,12 @@ export default function PremiumWelcomeScreen() {
 
     Animated.parallel([
       Animated.timing(fade, { toValue: 1, duration: 700, useNativeDriver: true }),
-      Animated.timing(slideUp, { toValue: 0, duration: 700, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-      Animated.spring(heroScale, { toValue: 1, friction: 7, tension: 80, useNativeDriver: true }),
+      Animated.timing(slideUp, {
+        toValue: 0,
+        duration: 700,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
     ]).start();
   }, []);
 
@@ -52,26 +61,23 @@ export default function PremiumWelcomeScreen() {
       <StatusBar barStyle="light-content" />
       <PremiumHeroBg variant="welcome">
         <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-          {/* ── Hero logo + tagline ─────────────────────────── */}
+          {/* ── Hero logo (cinematic blend — NO boxed container) ─── */}
           <Animated.View
             style={[
-              styles.heroWrap,
-              { opacity: fade, transform: [{ translateY: slideUp }, { scale: heroScale }] },
+              styles.heroLogoWrap,
+              { opacity: fade, transform: [{ translateY: slideUp }] },
             ]}
           >
-            {/* Orange halo glow behind the logo */}
-            <View pointerEvents="none" style={styles.logoHalo} />
-            <Image
-              source={require('../assets/rapidreps-logo-premium.png')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
+            <PremiumLogo size={240} testID="premium-welcome-logo" />
+          </Animated.View>
 
+          {/* ── Hero typography — larger, tighter, athletic ─── */}
+          <Animated.View
+            style={[styles.heroTextWrap, { opacity: fade, transform: [{ translateY: slideUp }] }]}
+          >
             <Text style={styles.eyebrow}>YOUR WORKOUT</Text>
             <Text style={styles.heroLineWhite}>DELIVERED</Text>
             <Text style={styles.heroLineOrange}>RAPIDLY</Text>
-
-            {/* Small lightning underline accent */}
             <View style={styles.boltUnderline} />
           </Animated.View>
 
@@ -109,7 +115,7 @@ export default function PremiumWelcomeScreen() {
               testID="premium-find-trainer-btn"
               accessibilityLabel="Find a trainer"
             />
-            <View style={{ height: 14 }} />
+            <View style={{ height: 16 }} />
             <PremiumGradientButton
               label="BECOME A TRAINER"
               leftIcon="barbell"
@@ -120,8 +126,8 @@ export default function PremiumWelcomeScreen() {
             />
           </Animated.View>
 
-          {/* ── Terms ──────────────────────────────────────── */}
-          <Animated.View style={[styles.termsWrap, { opacity: fade }]}>
+          {/* ── Footer (more breathing room) ──────────────── */}
+          <Animated.View style={[styles.footerWrap, { opacity: fade }]}>
             <Text style={styles.termsText}>
               By continuing, you agree to our{' '}
               <Text style={styles.termsLink} onPress={() => router.push('/legal/terms')}>
@@ -133,7 +139,6 @@ export default function PremiumWelcomeScreen() {
               </Text>
             </Text>
 
-            {/* Decorative bolt divider */}
             <View style={styles.boltDivider}>
               <View style={styles.boltLine} />
               <Text style={styles.boltIcon}>⚡</Text>
@@ -145,6 +150,7 @@ export default function PremiumWelcomeScreen() {
               testID="premium-login-link"
               accessibilityRole="button"
               accessibilityLabel="Log in to existing account"
+              style={styles.loginTap}
             >
               <Text style={styles.loginPrompt}>
                 Already have an account? <Text style={styles.loginLink}>Log In</Text>
@@ -158,88 +164,81 @@ export default function PremiumWelcomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, paddingHorizontal: 22, paddingBottom: 14 },
-  heroWrap: { alignItems: 'center', marginTop: 10, marginBottom: 18 },
-  logoHalo: {
-    position: 'absolute',
-    top: 6,
-    width: 240,
-    height: 200,
-    borderRadius: 120,
-    backgroundColor: 'rgba(255,122,0,0.35)',
-    transform: [{ scaleX: 1.4 }],
-    shadowColor: '#FF7A00',
-    shadowOpacity: 0.9,
-    shadowRadius: 60,
-    shadowOffset: { width: 0, height: 0 },
-    elevation: 20,
+  safe: { flex: 1, paddingHorizontal: 24, paddingBottom: 20 },
+  heroLogoWrap: {
+    alignItems: 'center',
+    marginTop: 4,
+    marginBottom: -10, // slight negative — lets logo halo touch the headline
   },
-  logo: { width: 200, height: 180, marginBottom: 6 },
+  heroTextWrap: { alignItems: 'center', marginBottom: 28 },
   eyebrow: {
     fontSize: 16,
     fontWeight: '900',
-    letterSpacing: 4,
+    letterSpacing: 5,
     color: PremiumColors.orange,
-    marginTop: 2,
+    marginBottom: 4,
     fontFamily: 'Oswald_700Bold',
+    textShadowColor: 'rgba(255,122,0,0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
   },
   heroLineWhite: {
-    fontSize: 56,
+    fontSize: 78,
     fontWeight: '900',
     color: PremiumColors.white,
-    letterSpacing: 1,
-    lineHeight: 58,
+    letterSpacing: -1.5,
+    lineHeight: 78,
     textAlign: 'center',
     fontFamily: 'Oswald_700Bold',
     transform: [{ skewX: '-8deg' }],
-    textShadowColor: 'rgba(0,0,0,0.7)',
-    textShadowOffset: { width: 0, height: 4 },
-    textShadowRadius: 12,
+    textShadowColor: 'rgba(0,0,0,0.75)',
+    textShadowOffset: { width: 0, height: 6 },
+    textShadowRadius: 16,
   },
   heroLineOrange: {
-    fontSize: 68,
+    fontSize: 92,
     fontWeight: '900',
     color: PremiumColors.orange,
-    letterSpacing: 1.5,
-    lineHeight: 70,
+    letterSpacing: -2,
+    lineHeight: 90,
     textAlign: 'center',
-    marginTop: -2,
+    marginTop: -6,
     fontFamily: 'Oswald_700Bold',
     transform: [{ skewX: '-8deg' }],
-    textShadowColor: 'rgba(255,122,0,0.7)',
+    textShadowColor: 'rgba(255,122,0,0.85)',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 22,
+    textShadowRadius: 28,
   },
   boltUnderline: {
     width: 220,
     height: 3,
-    marginTop: 8,
+    marginTop: 10,
     backgroundColor: PremiumColors.orangeGlow,
     borderRadius: 2,
     shadowColor: PremiumColors.orange,
-    shadowOpacity: 0.8,
-    shadowRadius: 8,
+    shadowOpacity: 0.9,
+    shadowRadius: 10,
     shadowOffset: { width: 0, height: 0 },
   },
   featuresRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 18,
-    marginBottom: 22,
+    marginBottom: 30,
   },
   featureDivider: {
     width: 1,
-    height: 60,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    marginHorizontal: 4,
+    height: 64,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    marginHorizontal: 2,
   },
-  ctaStack: { marginTop: 6 },
-  termsWrap: { marginTop: 18, alignItems: 'center' },
+  ctaStack: { marginTop: 4 },
+  footerWrap: { marginTop: 26, alignItems: 'center', paddingBottom: 4 },
   termsText: {
     fontSize: 13,
     color: PremiumColors.textMuted,
     fontWeight: '600',
     textAlign: 'center',
+    lineHeight: 20,
   },
   termsLink: {
     color: PremiumColors.orangeGlow,
@@ -249,16 +248,17 @@ const styles = StyleSheet.create({
   boltDivider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 18,
-    marginBottom: 12,
-    width: '70%',
+    marginTop: 22,
+    marginBottom: 16,
+    width: '72%',
   },
   boltLine: { flex: 1, height: 1, backgroundColor: 'rgba(255,122,0,0.4)' },
   boltIcon: {
-    marginHorizontal: 10,
-    fontSize: 16,
+    marginHorizontal: 12,
+    fontSize: 18,
     color: PremiumColors.orangeGlow,
   },
+  loginTap: { paddingVertical: 6 },
   loginPrompt: {
     fontSize: 14,
     fontWeight: '600',

@@ -4,6 +4,45 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, Zelle payments, trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards.
 
 
+## 2026-06-02 — Iteration 90: Premium Redesign Refinement Pass ✨
+
+### Shipped
+User reviewed the iter89 premium Welcome screen and asked for a refinement pass — not a rebuild. All 6 polish points + a new logo animation + consistent treatment across all 4 pre-auth premium screens.
+
+- **New transparent logo (`rapidreps-logo-premium.png`)**: user-uploaded RR dumbbell logo with true alpha channel (70 % transparent pixels). Replaces the previous opaque RGB logo that was creating the visible "boxed" appearance on the cinematic background.
+- **New `PremiumLogo` component** (`src/components/premium/PremiumLogo.tsx`): cinematic logo treatment — NO solid background. Continuous breathing animation (scale 1.0 → 1.045 over 2.4 s sine), pulsing ember halo (shadow-only glow, no fill box), subtle tilt (±1.6° over 4.2 s), 6 drifting ember sparkles from the bottom. All GPU-accelerated (`useNativeDriver: true`).
+- **Hero typography upgrade** (Welcome): `DELIVERED` 56 → 78 / `RAPIDLY` 68 → 92, tighter `letterSpacing -1.5/-2` for premium athletic stencil feel. Stronger shadow on both lines for depth against cinematic bg.
+- **Glassmorphism feature badges**: deeper 3-stop linear-gradient glass disk (white → near-black → navy-black), 84 px outer ring up from 76, top-left specular highlight, soft 26 px ember halo behind, dual shadows (deep black + orange glow) for layered depth.
+- **Darker "BECOME A TRAINER" surface**: secondary CTA gradient swapped from `rgba(10,10,10,0.92)→rgba(9,26,58,0.85)` to `rgba(4,6,14,0.96)→rgba(8,18,42,0.92)→rgba(4,6,14,0.96)`. Outer orange ring upgraded from 1.5 px → 1.8 px with added 14 px orange shadow ring for stronger edge lighting.
+- **More footer breathing room** (all 4 screens): added `paddingBottom`, `marginTop` increments, wider login-tap targets, larger bolt divider, line-heights bumped for terms/links.
+- **Same refinement applied to Login + Signup**: both screens now use `PremiumLogo` (auto-blends), bumped hero copy (66/78 on login, 56/66 on signup), wider breathing room around the OR divider + CTA stack, footer padding boosted.
+- **New Premium Forgot Password screen** (`auth/forgot-password.premium.tsx` + switcher `auth/forgot-password.tsx`): full cinematic treatment matching the rest of the pre-auth flow — back arrow with subtle glass border, hero "RESET YOUR PASSWORD" copy, glass email input, fiery "SEND RESET LINK" CTA, success state with orange-ringed check icon + email highlight. Classic version preserved at `forgot-password.classic.tsx` for rollback.
+
+### Verified
+- TypeScript compile: no new errors introduced (pre-existing errors are unrelated to premium UI).
+- Metro bundler: clean rebundle (693 modules, no compile errors).
+- `premium-welcome-screen` testID resolves on rendered preview.
+- All asset paths now correctly resolve to `../../../assets/images/...` (3 dirs up from `src/components/premium/`).
+- Classic rollback still 100 % safe — `*.classic.tsx` byte-equivalent to pre-iter89, switchers still gate on `EXPO_PUBLIC_UI_VERSION`.
+
+### Files added
+- `src/components/premium/PremiumLogo.tsx`
+- `app/auth/forgot-password.premium.tsx`
+
+### Files modified
+- `assets/rapidreps-logo-premium.png` (replaced with transparent v2)
+- `app/index.premium.tsx` (logo treatment, typography, spacing)
+- `app/auth/login.premium.tsx` (logo treatment, typography, spacing)
+- `app/auth/signup.premium.tsx` (logo treatment, typography, spacing)
+- `app/auth/forgot-password.tsx` (now a switcher → premium/classic)
+- `src/components/premium/PremiumFeatureBadge.tsx` (deeper glassmorphism)
+- `src/components/premium/PremiumGradientButton.tsx` (darker secondary surface + stronger orange ring)
+
+### Files renamed
+- `app/auth/forgot-password.tsx` → `app/auth/forgot-password.classic.tsx` (classic baseline preserved)
+
+
+
 ## 2026-06-02 — Iteration 89 round 3: User-supplied premium assets dropped in 🎯 ✅
 
 ### Shipped

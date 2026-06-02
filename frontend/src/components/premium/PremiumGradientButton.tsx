@@ -40,7 +40,7 @@ export const PremiumGradientButton: React.FC<Props> = ({
     variant === 'login'
       ? ['#FF6A00', '#FF9B2F', '#FFB347', '#FF9B2F', '#FF6A00']
       : variant === 'secondary'
-      ? ['rgba(10,10,10,0.92)', 'rgba(9,26,58,0.85)']
+      ? ['rgba(4,6,14,0.96)', 'rgba(8,18,42,0.92)', 'rgba(4,6,14,0.96)']
       : ['#0E1F3D', '#1B2E5C', '#FF7A00', '#FFB347'];
 
   const isSecondary = variant === 'secondary';
@@ -117,8 +117,9 @@ const styles = StyleSheet.create({
   },
   wrapSecondary: {
     shadowColor: PremiumColors.orange,
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
+    shadowOpacity: 0.55,
+    shadowRadius: 22,
+    shadowOffset: { width: 0, height: 8 },
   },
   wrapLogin: {
     shadowColor: PremiumColors.orangeGlow,
@@ -174,7 +175,11 @@ const styles = StyleSheet.create({
     right: -2,
     bottom: -2,
     borderRadius: PremiumRadii.pill,
-    borderWidth: 1.5,
+    borderWidth: 1.8,
     borderColor: PremiumColors.orangeGlow,
+    shadowColor: PremiumColors.orange,
+    shadowOpacity: 0.7,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 0 },
   },
 });
