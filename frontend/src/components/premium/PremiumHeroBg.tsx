@@ -16,10 +16,10 @@ type Props = {
 };
 
 const SOURCES = {
-  welcome: require('../../assets/images/premium-welcome-bg.png'),
-  login: require('../../assets/images/premium-login-bg.png'),
+  welcome: require('../../../assets/images/premium-welcome-bg.png'),
+  login: require('../../../assets/images/premium-login-bg.png'),
   // Signup reuses welcome bg for cohesion (different hero copy will distinguish)
-  signup: require('../../assets/images/premium-welcome-bg.png'),
+  signup: require('../../../assets/images/premium-welcome-bg.png'),
 };
 
 /** Animated ember particle — drifts upward + fades */
