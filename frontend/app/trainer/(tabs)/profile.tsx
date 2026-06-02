@@ -24,7 +24,7 @@ import { streaksAPI } from '../../../src/services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { toast } from '../../../src/utils/toast';
-import { ProfileGallery, SocialLinksDisplay } from '../../../src/components/ProfileSections';
+import { SocialLinksDisplay } from '../../../src/components/ProfileSections';
 import { PersonalityTagBadge, PersonalityTagSelector } from '../../../src/components/PersonalityTagBadge';
 import { AccentColorPicker } from '../../../src/components/AccentColorPicker';
 
@@ -345,13 +345,8 @@ export default function TrainerProfileScreen() {
             </>
           )}
 
-          {/* Gallery (editable) */}
+          {/* Gallery removed per product decision (iter84) — Highlight Reel is the single media surface */}
           <View style={{ paddingHorizontal: 16 }}>
-            <ProfileGallery
-              gallery={profile?.gallery || []}
-              editable
-              onGalleryUpdated={(newGallery) => setProfile({ ...profile, gallery: newGallery })}
-            />
             <SocialLinksDisplay socialLinks={profile?.socialLinks || {}} />
 
             {/* Trainer Vibe CTA */}

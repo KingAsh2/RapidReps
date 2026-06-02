@@ -22,7 +22,7 @@ import { useAlert } from '../../src/contexts/AlertContext';
 import { Video, ResizeMode } from 'expo-av';
 import { toast } from '../../src/utils/toast';
 import { haptic } from '../../src/utils/haptics';
-import { ProfileGallery, SocialLinksDisplay } from '../../src/components/ProfileSections';
+import { SocialLinksDisplay } from '../../src/components/ProfileSections';
 import InstagramSection from '../../src/components/InstagramSection';
 import { TrainerVibePlayer } from '../../src/components/TrainerVibePlayer';
 import { HighlightReel } from '../../src/components/HighlightReel';

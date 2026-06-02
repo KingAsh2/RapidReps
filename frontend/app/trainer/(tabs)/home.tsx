@@ -804,33 +804,7 @@ export default function TrainerHomeScreen() {
                 </LinearGradient>
               </TouchableOpacity>
             </View>
-
-            {/* Second Quick Actions row — Discover Trainees */}
-            <View style={[styles.quickActionsRow, { marginTop: 12 }]}>
-              <TouchableOpacity
-                style={[styles.quickAction, { flex: 1 }]}
-                onPress={() => router.push('/trainer/discover-trainees')}
-                data-testid="discover-trainees-btn"
-                accessibilityLabel="Browse trainee profiles"
-                accessibilityRole="button"
-              >
-                <LinearGradient
-                  colors={['#E84393', '#FD79A8']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={[styles.quickActionGradient, { flexDirection: 'row', justifyContent: 'flex-start', paddingHorizontal: 18 }]}
-                >
-                  <View style={[styles.quickActionIcon, { marginBottom: 0, marginRight: 12 }]}>
-                    <Ionicons name="sparkles" size={26} color={COLORS.white} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.quickActionText, { color: COLORS.white, fontSize: 15, textAlign: 'left' }]} numberOfLines={1}>Discover Trainees</Text>
-                    <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 11, fontWeight: '600', marginTop: 2 }} numberOfLines={1}>Browse their vibe & highlights</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.7)" />
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
+            {/* Second Quick Actions row removed — user requested Discover Trainees button/banner be hidden from trainer home (route still accessible via session-prep "View Full Profile" CTA) */}
 
             {/* === GLOBAL TRAINEE SEARCH (by name / email / phone) === */}
             <PeopleSearchBar

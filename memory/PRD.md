@@ -4,6 +4,31 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, Zelle payments, trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards.
 
 
+## 2026-06-02 — Iteration 84 (in progress) — User PDF feedback round 4
+
+### Resolved this turn
+- **#1 Discover Trainees BUTTON removed**: Pink "Discover Trainees" tile deleted from trainer home (`(tabs)/home.tsx`). Cinematic `trainee-detail.tsx` showcase + route INTENTIONALLY kept — still reachable via session-prep "VIEW FULL PROFILE" CTA. Visiting a trainee profile still gives the full vibe-player/highlight-reel/accent-color experience.
+- **#5 Gallery removed everywhere**: `ProfileGallery` import + JSX deleted from:
+  - `app/trainer/(tabs)/profile.tsx`
+  - `app/trainee/(tabs)/profile.tsx`
+  - `app/trainer/trainee-profile.tsx`
+  - `app/trainee/trainer-detail.tsx` (already done in prior iter)
+  Highlight Reel is now the single media surface on every profile.
+- **#6 (partial) thumbnail backfill admin endpoint**: New `POST /api/admin/backfill-highlight-thumbnails` walks every trainer/trainee profile, generates JPEG thumbnails for any video highlight missing `thumbnailUrl`, persists to `/highlight_thumbs/...`, writes back to the highlight doc. Idempotent — skips highlights that already have a thumbnail. Tested admin-protected (403 for non-admin), returned `{success: true, thumbnailsGenerated: 0, profilesTouched: 0}` on empty test data. Run this once after Phase B deploys to legacy data.
+
+### Still to address (priority order for next turn)
+1. **#2 Notification readability**: Unread notifications are white-on-white. Need orange-tinted bg + bold dot + white text for unread, dim for read. Touches `app/notifications.tsx` or wherever the list renders.
+2. **#3 Swipe-left to delete notifications**: `react-native-swipe-list-view` is already in package.json — wire it up.
+3. **#4 Virtual session deep link**: Tap a virtual_session_request notification → route to `/trainer/trainee-detail?traineeId=X&showAcceptCTA=true`, surface sticky "ACCEPT SESSION" CTA. Backend: add `deepLink` to notification objects of that type.
+4. **#7 Intro video position + editable label**: Move intro video block ABOVE highlight reel in `app/trainer/(tabs)/profile.tsx` (and on the public view in `app/trainee/trainer-detail.tsx`). Add `introVideoTitle` + `introVideoDescription` fields to `TrainerProfile` model (default title "Intro to my profile"). Edit screen surfaces both as `<TextInput>`s. User chose option (c): customizable title AND editable description.
+5. **#8 Safety Center contrast**: Find Safety Center screen, bump text from `rgba(255,255,255,0.4)` → `rgba(255,255,255,0.85)`.
+6. **#9 Intro video won't play for admin**: RCA needed. Suspected — admin verification detail screen uses a raw `<Video>` without Range headers, or pulls from wrong URL. Reproduce: admin → verification detail → tap Play → capture network call.
+7. **#6 leftover — upload success modal**: After POST returns 200 on highlight upload, show "✓ Uploaded!" auto-dismiss modal.
+
+### Tests still passing
+- iter79 CI guards, iter81 garbage files, iter83a UI cleanup, iter83b highlight thumbnails, iter83c verification sync: **23/23 ALL GREEN** post gallery removal.
+
+
 ## 2026-06-01 (continued) — Iteration 83 Phase C: Verification Status Sync Bug Fix
 
 ### RCA

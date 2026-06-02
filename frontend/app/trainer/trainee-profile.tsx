@@ -20,7 +20,7 @@ import { trainerAPI, safetyAPI } from '../../src/services/api';
 import { useAlert } from '../../src/contexts/AlertContext';
 import { toast } from '../../src/utils/toast';
 import { haptic } from '../../src/utils/haptics';
-import { ProfileGallery, SocialLinksDisplay } from '../../src/components/ProfileSections';
+import { SocialLinksDisplay } from '../../src/components/ProfileSections';
 import InstagramSection from '../../src/components/InstagramSection';
 
 export default function TraineeProfileScreen() {
@@ -517,9 +517,8 @@ export default function TraineeProfileScreen() {
           </View>
         )}
 
-        {/* Gallery & Social Links */}
+        {/* Social Links (Gallery removed iter84 — Highlight Reel only) */}
         <View style={{ paddingHorizontal: 20, paddingBottom: 20 }}>
-          <ProfileGallery gallery={traineeData?.gallery || []} />
           <InstagramSection targetUserId={traineeId} />
           <SocialLinksDisplay socialLinks={traineeData?.socialLinks || {}} />
         </View>

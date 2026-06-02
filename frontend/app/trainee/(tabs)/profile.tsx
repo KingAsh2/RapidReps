@@ -25,7 +25,7 @@ import { useSoundEffects } from '../../../src/contexts/SoundContext';
 import { traineeAPI, streaksAPI } from '../../../src/services/api';
 import * as ImagePicker from 'expo-image-picker';
 import { toast } from '../../../src/utils/toast';
-import { ProfileGallery, SocialLinksDisplay } from '../../../src/components/ProfileSections';
+import { SocialLinksDisplay } from '../../../src/components/ProfileSections';
 import InstagramSection from '../../../src/components/InstagramSection';
 import { PersonalityTagBadge, PersonalityTagSelector } from '../../../src/components/PersonalityTagBadge';
 import { AccentColorPicker } from '../../../src/components/AccentColorPicker';
@@ -915,11 +915,7 @@ export default function TraineeProfileScreen() {
                 <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: profile?.accentColor || '#FF6A00', borderWidth: 2, borderColor: 'rgba(255,255,255,0.15)' }} />
               </TouchableOpacity>
 
-              <ProfileGallery
-                gallery={profile?.gallery || []}
-                editable
-                onGalleryUpdated={(newGallery) => setProfile({ ...profile, gallery: newGallery })}
-              />
+              {/* Gallery removed per product decision (iter84) — Highlight Reel is the single media surface */}
               <SocialLinksDisplay socialLinks={profile?.socialLinks || {}} />
             </View>
 

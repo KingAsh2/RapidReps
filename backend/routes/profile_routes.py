@@ -28,6 +28,73 @@ router = APIRouter(prefix="/api")
 
 
 # ============================================================================
+# ADMIN: Backfill highlight thumbnails for legacy videos (iter84)
+# ============================================================================
+
+@router.post("/admin/backfill-highlight-thumbnails")
+async def backfill_highlight_thumbnails(current_user: dict = Depends(get_current_user)):
+    """One-shot admin job: scan every profile, generate thumbnails for video
+    highlights that don't have one yet.
+
+    Fixes the user-reported issue: highlights uploaded before Phase B's
+    server-side thumbnail extraction landed have no thumbnailUrl, so the reel
+    renders gray placeholders for them.
+    """
+    if not current_user.get('isAdmin') and 'admin' not in (current_user.get('roles') or []):
+        raise HTTPException(403, "Admin only")
+
+    VIDEO_EXTS = {'mp4', 'mov', 'avi', 'webm', 'mkv', 'm4v'}
+
+    def _is_video(hl: dict) -> bool:
+        if hl.get('type') == 'video':
+            return True
+        url = (hl.get('url') or '').lower()
+        return any(url.endswith(f'.{e}') for e in VIDEO_EXTS)
+
+    total = 0
+    profiles_touched = 0
+    for coll_name in ('trainer_profiles', 'trainee_profiles'):
+        coll = db[coll_name]
+        async for doc in coll.find({'highlights.0': {'$exists': True}}):
+            highlights = doc.get('highlights') or []
+            user_id = doc.get('userId')
+            if not user_id:
+                continue
+            changed = False
+            for hl in highlights:
+                if not _is_video(hl) or hl.get('thumbnailUrl'):
+                    continue
+                storage_path = hl.get('storagePath')
+                if not storage_path:
+                    url = hl.get('url', '')
+                    if url.startswith('/api/files/'):
+                        storage_path = url[len('/api/files/'):]
+                if not storage_path:
+                    continue
+                try:
+                    video_bytes, _ = get_object(storage_path)
+                except Exception:
+                    continue
+                thumb_bytes = extract_video_thumbnail(video_bytes)
+                if not thumb_bytes:
+                    continue
+                thumb_path = generate_upload_path(user_id, 'jpg', folder='highlight_thumbs')
+                try:
+                    put_object(thumb_path, thumb_bytes, 'image/jpeg')
+                except Exception:
+                    continue
+                hl['thumbnailUrl'] = f"/api/files/{thumb_path}"
+                hl['thumbnailStoragePath'] = thumb_path
+                changed = True
+                total += 1
+            if changed:
+                profiles_touched += 1
+                await coll.update_one({'_id': doc['_id']}, {'$set': {'highlights': highlights}})
+
+    return {"success": True, "thumbnailsGenerated": total, "profilesTouched": profiles_touched}
+
+
+# ============================================================================
 # HIGHLIGHT HELPER
 # ============================================================================
 
