@@ -4,7 +4,38 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, Zelle payments, trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards.
 
 
-## 2026-06-02 — Iteration 88: Convenience features extracted ✅ (Refactor mission complete)
+## 2026-06-02 — Iteration 89: Premium UI redesign (Login + Welcome + Signup) ✅
+
+### Shipped
+- **RapidReps Classic vs RapidReps Premium**: User asked for a premium overhaul of 4 screens (which collapse to 3 files since Find/Become Trainer both route to `auth/signup.tsx` with `?role=`). Built as a **reversible alternate layer**, not a destructive replacement.
+- **Switcher architecture**: each entry file (`app/index.tsx`, `app/auth/login.tsx`, `app/auth/signup.tsx`) is now a 5-line module that imports both Classic & Premium variants and picks one at bundle time based on `EXPO_PUBLIC_UI_VERSION` (defaults to `premium`).
+- **Rollback in 30s**: set `EXPO_PUBLIC_UI_VERSION=classic` in `/app/frontend/.env` and `sudo supervisorctl restart expo`. Classic backups are byte-for-byte copies of the pre-iter89 code at `*.classic.tsx`.
+- **New design system** at `src/theme/premium.ts` — palette `#FF7A00 / #FF9B2F / #091A3A / #0A0A0A`, gradients, glow shadows, italic athletic type ramp. Plus 4 reusable premium components: `PremiumHeroBg`, `PremiumGradientButton` (3 variants: primary/login/secondary), `PremiumGlassInput`, `PremiumFeatureBadge`.
+- **Pixel-matched mockups**: Welcome screen ships the "YOUR WORKOUT / DELIVERED / RAPIDLY" italic stencil hero with 3 glowing feature badges (Trainers Near You · Book Instantly · Verified Pros) + navy↘orange "FIND A TRAINER" pill + matte "BECOME A TRAINER" outlined pill — matches the user's screenshot. Login ships "WELCOME BACK / LET'S GET / TO WORK" italic hero + glass email/password inputs + fiery-orange "LOG IN" pill — matches the user's second screenshot. Signup follows the same system with a role toggle pill row.
+- **All routes & business logic preserved**: AuthContext, signup/login API calls, SocialAuthButtons (Apple/Google), Stripe, AsyncStorage redirect, forgot-password, terms/privacy, onboarding routing — all untouched.
+
+### Verified
+- New CI tests: `tests/test_iteration89_premium_redesign.py` — 12 tests covering rollback safety (Classic backups exist & non-truncated), Premium screens have the right `data-testid` + hero copy + theme imports, switchers gate on `UI_VERSION`, env flag is set to a valid value, theme + 4 components all exist on disk.
+- Full regression: **65/65** across iter79/81/85/86/87/88/89.
+- Metro bundler restart clean (no compile errors in `/var/log/supervisor/expo.out.log`).
+
+### Files added
+- `src/theme/premium.ts`
+- `src/components/premium/PremiumHeroBg.tsx`
+- `src/components/premium/PremiumGradientButton.tsx`
+- `src/components/premium/PremiumGlassInput.tsx`
+- `src/components/premium/PremiumFeatureBadge.tsx`
+- `app/index.premium.tsx` + `app/index.classic.tsx`
+- `app/auth/login.premium.tsx` + `app/auth/login.classic.tsx`
+- `app/auth/signup.premium.tsx` + `app/auth/signup.classic.tsx`
+- `DESIGN_VERSIONS.md` — rollback instructions
+
+### Files modified
+- `app/index.tsx`, `app/auth/login.tsx`, `app/auth/signup.tsx` → thin 5-line switchers
+- `.env` — added `EXPO_PUBLIC_UI_VERSION=premium`
+
+
+
 
 ### Shipped
 - **server.py refactor — final P3 slice**: Extracted convenience block (`/trainee/recent-trainers`, `/trainee/streak`, `/sessions/recurring`, `/trainer/go-live`, `/trainer/go-offline`, `/trainee/toggle-favorite/{id}`, `/trainee/saved-trainers`, `/trainee/favorite-availability` + `RecurringSessionCreate` Pydantic model — 358 LOC) → `routes/convenience_routes.py` (373 lines).
