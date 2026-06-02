@@ -129,11 +129,11 @@ def test_server_py_extracted_modules_imported():
     assert 'app.include_router(notification_router)' in src
 
 
-def test_server_py_under_2600_lines():
-    """Refactor target: messaging + notifications extracted should land us under 2600 lines."""
+def test_server_py_under_2200_lines():
+    """Refactor target after iter86 location extraction: server.py should be under 2200 lines."""
     with open('/app/backend/server.py', 'r') as f:
         n = sum(1 for _ in f)
-    assert n < 2600, f"server.py is {n} lines — extraction regressed"
+    assert n < 2200, f"server.py is {n} lines — extraction regressed"
 
 
 def test_no_duplicate_messaging_routes_in_server():

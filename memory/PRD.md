@@ -4,7 +4,18 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, Zelle payments, trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards.
 
 
-## 2026-06-02 — Iteration 85: Refactor, Approve-All, Upload Progress ✅
+## 2026-06-02 — Iteration 86: Location/GPS routes extracted ✅
+
+### Shipped
+- **server.py refactor — round 2**: Extracted location & GPS routes (`PUT /api/trainer/location`, `PUT /api/trainer/availability`, `GET /api/trainer/my-location-status`, `POST /api/sessions/{id}/gps-update`, `GET /api/sessions/{id}/gps-track`, `POST /api/sessions/{id}/start-en-route`, `POST /api/sessions/{id}/start-session`, `GET /api/trainers/nearby`) + Haversine + ETA helpers + 3 Pydantic models → `routes/location_routes.py` (542 lines).
+- **server.py size**: 2535 → 2011 lines (cumulative iter85+86: 2885 → 2011, -874 lines, -30%). Goal of "under 1,000 lines" still pending — next slice: virtual-session matching (~700 lines in current server.py).
+
+### Verified
+- New CI tests: `tests/test_iteration86_location_extraction.py` — 10 tests (every extracted endpoint smoke-tested live, RBAC retained, ObjectId validation retained, static guards: location_router imported & wired, no duplicate decorators in server.py).
+- Full regression: **56/56** across iter79/81/83a/83b/83c/84/85/86 green.
+
+
+
 
 ### Shipped
 - **server.py refactor (P3)**: Extracted messaging (4 endpoints) → `routes/messaging_routes.py` and notifications/push-tokens/prefs (7 endpoints) → `routes/notification_routes.py`. server.py: 2885 → 2533 lines (-352).
