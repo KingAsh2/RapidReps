@@ -94,10 +94,11 @@ export default function PremiumLoginScreen() {
                 ]}
               >
                 <Image
-                  source={require('../../assets/rapidreps-logo.png')}
+                  source={require('../../assets/rapidreps-logo-premium.png')}
                   style={styles.logo}
                   resizeMode="contain"
                 />
+                <Text style={styles.brandWordmark}>RAPIDREPS</Text>
                 <Text style={styles.eyebrow}>WELCOME BACK</Text>
                 <Text style={styles.heroLineWhite}>LET'S GET</Text>
                 <Text style={styles.heroLineOrange}>TO WORK</Text>
@@ -187,6 +188,19 @@ const styles = StyleSheet.create({
   scroll: { paddingBottom: 30 },
   heroWrap: { alignItems: 'center', marginTop: 4, marginBottom: 18 },
   logo: { width: 200, height: 170, marginBottom: 4 },
+  brandWordmark: {
+    fontSize: 38,
+    fontWeight: '900',
+    letterSpacing: 4,
+    color: PremiumColors.white,
+    fontFamily: 'Oswald_700Bold',
+    transform: [{ skewX: '-6deg' }],
+    textShadowColor: 'rgba(255,122,0,0.6)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 14,
+    marginTop: -10,
+    marginBottom: 8,
+  },
   eyebrow: {
     fontSize: 15,
     fontWeight: '800',

@@ -113,13 +113,25 @@ def test_premium_theme_exists():
 
 
 def test_premium_background_assets_exist():
-    """Iter89 round-2: cinematic Nano Banana-generated backgrounds must be on disk."""
+    """Iter89 round-3: user-supplied cinematic backgrounds + new chrome RR logo must be on disk."""
     for p in (
         '/app/frontend/assets/images/premium-welcome-bg.png',
         '/app/frontend/assets/images/premium-login-bg.png',
+        '/app/frontend/assets/rapidreps-logo-premium.png',
     ):
-        assert os.path.exists(p), f"Missing generated bg: {p}"
-        assert os.path.getsize(p) > 50_000, f"{p} looks truncated"
+        assert os.path.exists(p), f"Missing premium asset: {p}"
+        assert os.path.getsize(p) > 100_000, f"{p} looks truncated"
+
+
+def test_premium_screens_use_new_logo():
+    for path in (
+        '/app/frontend/app/index.premium.tsx',
+        '/app/frontend/app/auth/login.premium.tsx',
+        '/app/frontend/app/auth/signup.premium.tsx',
+    ):
+        with open(path, 'r', encoding='utf-8') as f:
+            src = f.read()
+        assert 'rapidreps-logo-premium.png' in src, f"{path} not using new chrome logo"
 
 
 def test_premium_components_exist():

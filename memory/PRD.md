@@ -4,7 +4,24 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, Zelle payments, trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards.
 
 
-## 2026-06-02 — Iteration 89 round 2: Cinematic backgrounds + stencil typography + animated embers ✅
+## 2026-06-02 — Iteration 89 round 3: User-supplied premium assets dropped in 🎯 ✅
+
+### Shipped
+User provided 4 artifacts: the exact cinematic background image, two final-render Welcome + Login mockups, and the new chrome RR dumbbell+shield logo. Dropped them all directly into the app — no more Nano Banana fakes, no more guessing.
+
+- **`assets/images/premium-welcome-bg.png`** (1.9 MB) — user's exact image: top-left muscular man with dumbbell, top-right female runner, mirrored bottom corners, fiery orange embers + diagonal motion streaks, central negative space for logo & CTAs. **Replaces** the Nano Banana welcome bg.
+- **`assets/images/premium-login-bg.png`** (1.9 MB) — same composition (user's design intentionally reuses the bg for cohesion). **Replaces** the Nano Banana login bg.
+- **`assets/rapidreps-logo-premium.png`** (1.6 MB) — the new 3D chrome dumbbell + orange "RR" shield logo with ember sparkles. Wired into all 3 premium screens (Welcome, Login, Signup) replacing the older simpler `rapidreps-logo.png` (which stays on disk for Classic rollback).
+- **Login `RAPIDREPS` wordmark**: added under the logo on the login screen, white Oswald 900 with skew + orange glow — matches the mockup's hierarchy under the chrome logo.
+
+### Verified
+- Updated CI guards: `test_premium_background_assets_exist` now asserts both bg files + new logo (all > 100KB).
+- New CI guard: `test_premium_screens_use_new_logo` confirms all 3 premium screen files reference `rapidreps-logo-premium.png`.
+- Full regression: **67/67** across iter79/81/85/86/87/88/89 green.
+- Metro bundler: clean rebundle on the asset swap, no errors.
+
+
+
 
 ### Shipped (D — all three gap-closers from the user's "Do they match?" feedback)
 - **Nano Banana image generation**: `scripts/generate_premium_backgrounds.py` calls Gemini `gemini-3.1-flash-image-preview` via the Emergent LLM key to one-shot generate two cinematic hero backgrounds:

@@ -133,7 +133,7 @@ export default function PremiumSignupScreen() {
                 style={[styles.heroWrap, { opacity: fade, transform: [{ translateY: slideUp }] }]}
               >
                 <Image
-                  source={require('../../assets/rapidreps-logo.png')}
+                  source={require('../../assets/rapidreps-logo-premium.png')}
                   style={styles.logo}
                   resizeMode="contain"
                 />

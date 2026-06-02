@@ -62,7 +62,7 @@ export default function PremiumWelcomeScreen() {
             {/* Orange halo glow behind the logo */}
             <View pointerEvents="none" style={styles.logoHalo} />
             <Image
-              source={require('../assets/rapidreps-logo.png')}
+              source={require('../assets/rapidreps-logo-premium.png')}
               style={styles.logo}
               resizeMode="contain"
             />
