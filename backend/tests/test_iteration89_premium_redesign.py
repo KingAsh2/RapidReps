@@ -124,6 +124,9 @@ def test_premium_background_assets_exist():
 
 
 def test_premium_screens_use_new_logo():
+    """Premium screens must render the chrome logo — either via direct
+    require() of the PNG or via the shared `PremiumLogo` component
+    (which itself wraps that PNG)."""
     for path in (
         '/app/frontend/app/index.premium.tsx',
         '/app/frontend/app/auth/login.premium.tsx',
@@ -131,7 +134,13 @@ def test_premium_screens_use_new_logo():
     ):
         with open(path, 'r', encoding='utf-8') as f:
             src = f.read()
-        assert 'rapidreps-logo-premium.png' in src, f"{path} not using new chrome logo"
+        assert ('rapidreps-logo-premium.png' in src) or ('PremiumLogo' in src), (
+            f"{path} renders neither the chrome logo PNG nor PremiumLogo"
+        )
+    # And the PremiumLogo component itself must reference the asset
+    with open('/app/frontend/src/components/premium/PremiumLogo.tsx', 'r', encoding='utf-8') as f:
+        logo_src = f.read()
+    assert 'rapidreps-logo-premium.png' in logo_src, "PremiumLogo component must wrap chrome PNG"
 
 
 def test_premium_components_exist():
@@ -140,6 +149,7 @@ def test_premium_components_exist():
         '/app/frontend/src/components/premium/PremiumGradientButton.tsx',
         '/app/frontend/src/components/premium/PremiumGlassInput.tsx',
         '/app/frontend/src/components/premium/PremiumFeatureBadge.tsx',
+        '/app/frontend/src/components/premium/PremiumLogo.tsx',
     ):
         assert os.path.exists(p), f"Missing premium component: {p}"
         assert os.path.getsize(p) > 200

@@ -57,7 +57,7 @@ export default function PremiumLoginScreen() {
       showAlert({ title: 'Missing info', message: 'Please enter email and password.', type: 'warning' });
       return;
     }
-    haptic();
+    haptic.light();
     setLoading(true);
     try {
       await login({ email: email.trim().toLowerCase(), password });

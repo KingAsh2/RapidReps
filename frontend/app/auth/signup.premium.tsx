@@ -67,7 +67,7 @@ export default function PremiumSignupScreen() {
   const isTrainer = formData.roles.includes(UserRole.TRAINER);
 
   const toggleRole = (role: string) => {
-    haptic();
+    haptic.selection();
     setFormData(p => ({ ...p, roles: [role] }));
   };
 
@@ -82,7 +82,7 @@ export default function PremiumSignupScreen() {
     }
     if (formData.roles.length === 0) return showAlert({ title: 'Choose your path', message: 'Pick Find or Become.', type: 'warning' });
 
-    haptic();
+    haptic.medium();
     setLoading(true);
     try {
       await signup({
