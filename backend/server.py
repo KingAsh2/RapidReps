@@ -1027,15 +1027,7 @@ async def start_notification_scheduler():
         logging.info("Object storage connected")
     except Exception as e:
         logging.warning(f"Object storage init deferred: {e}")
-    # Seed default Zelle settings if not present
-    existing = await db.app_settings.find_one({"key": "zelle_config"})
-    if not existing:
-        await db.app_settings.insert_one({
-            "key": "zelle_config",
-            "zelleEmail": "ashtonbundy1@gmail.com",
-            "zellePhone": "240-281-0462",
-            "updatedAt": datetime.utcnow(),
-        })
+    # iter92: Zelle removed (was here, replaced with tier-based Stripe flow).
 
     # Idempotent admin seed — ensures admin@rapidreps.com always exists for ops + testing.
     # If the user gets deleted (e.g. dev DB wipe), this restores it on next server boot.

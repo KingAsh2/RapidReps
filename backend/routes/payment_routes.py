@@ -1,4 +1,4 @@
-"""Payment routes: Ratings, earnings, payouts, Zelle, Stripe, memberships, boosts, receipts."""
+"""Payment routes: Ratings, earnings, payouts, tier pricing, Stripe, memberships, boosts, receipts."""
 from fastapi import APIRouter, HTTPException, Depends, Request, Query
 from pydantic import BaseModel
 from typing import List, Optional
@@ -250,169 +250,283 @@ async def get_payout_requests(current_user: dict = Depends(get_current_user)):
 
 
 # ============================================================================
-# ZELLE PAYMENT SYSTEM
+# TIER PRICING SYSTEM (iter92) — replaces legacy Zelle payment flow.
 # ============================================================================
-
-class ZelleSettingsUpdate(BaseModel):
-    zelleEmail: Optional[str] = None
-    zellePhone: Optional[str] = None
-
-
-@router.get("/settings/zelle")
-async def get_zelle_settings():
-    """Get platform Zelle payment info (public - trainee needs to see this)."""
-    settings = await db.app_settings.find_one({"key": "zelle_config"}, {"_id": 0, "key": 0})
-    if not settings:
-        return {"zelleEmail": "", "zellePhone": ""}
-    return {"zelleEmail": settings.get("zelleEmail", ""), "zellePhone": settings.get("zellePhone", "")}
+from services.pricing_tiers import (  # noqa: E402
+    TrainerTierV2,
+    calculate_pricing,
+    get_rate_cap_cents,
+    get_tier_summary,
+    validate_trainer_rate_cents,
+    TIER_MATRIX,
+)
 
 
-@router.put("/admin/settings/zelle")
-async def update_zelle_settings(req: ZelleSettingsUpdate, admin_user: dict = Depends(require_admin)):
-    """Admin: Update platform Zelle payment info."""
-    update_fields = {"updatedAt": datetime.utcnow()}
-    if req.zelleEmail is not None: update_fields["zelleEmail"] = req.zelleEmail
-    if req.zellePhone is not None: update_fields["zellePhone"] = req.zellePhone
-    await db.app_settings.update_one({"key": "zelle_config"}, {"$set": update_fields}, upsert=True)
-    return {"success": True, "message": "Zelle settings updated"}
+@router.get("/pricing/tiers")
+async def get_pricing_tiers_public():
+    """Public — returns the full tier matrix so clients can render caps + service fees."""
+    return {"tiers": get_tier_summary()}
 
 
-class ZelleMarkSentRequest(BaseModel):
-    sessionId: str
-    senderName: Optional[str] = None
-    notes: Optional[str] = None
+@router.get("/pricing/quote")
+async def get_pricing_quote(
+    tier: str = Query(..., description="new | certified | specialty"),
+    modality: str = Query(..., description="in_person | virtual"),
+    duration: int = Query(..., description="30 | 60 | 90"),
+    base_cents: int = Query(..., ge=0, description="Trainer base price in cents"),
+):
+    """Compute a full pricing breakdown for the given tier/modality/duration/base."""
+    ok, err = validate_trainer_rate_cents(tier, modality, duration, base_cents)
+    if not ok:
+        raise HTTPException(status_code=400, detail=err)
+    breakdown = calculate_pricing(tier, modality, duration, base_cents)
+    return breakdown
 
 
-@router.post("/payments/zelle/mark-sent")
-async def zelle_mark_payment_sent(req: ZelleMarkSentRequest, current_user: dict = Depends(get_current_user)):
-    """Trainee marks that they have sent Zelle payment for a session."""
-    user_id = str(current_user['_id'])
-    session = await db.sessions.find_one({"_id": ObjectId(req.sessionId)})
-    if not session:
-        raise HTTPException(status_code=404, detail="Session not found")
-    if session.get('traineeId') != user_id:
-        raise HTTPException(status_code=403, detail="Not your session")
-    if session.get('sessionType') == 'outdoor':
-        if session.get('outdoorLocationStatus') != 'agreed':
-            raise HTTPException(status_code=400, detail="Both trainer and trainee must verify/agree on the outdoor location before payment can be sent.")
+class TrainerRatesPayload(BaseModel):
+    """All six rates a trainer can set: 3 durations × 2 modalities (cents)."""
+    inPerson30Cents: Optional[int] = None
+    inPerson60Cents: Optional[int] = None
+    inPerson90Cents: Optional[int] = None
+    virtual30Cents: Optional[int] = None
+    virtual60Cents: Optional[int] = None
+    virtual90Cents: Optional[int] = None
 
-    await db.sessions.update_one(
-        {"_id": ObjectId(req.sessionId)},
-        {"$set": {
-            "zellePaymentStatus": "sent", "zellePaymentSentAt": datetime.utcnow(),
-            "zellePaymentSenderName": req.senderName or current_user.get('fullName', ''),
-            "zellePaymentNotes": sanitize_text(req.notes) if req.notes else None,
-        }}
+
+@router.post("/trainer/tier-rates")
+async def save_trainer_tier_rates(req: TrainerRatesPayload, current_user: dict = Depends(get_current_user)):
+    """Trainer saves their per-tier per-session-length rates. Caps enforced server-side."""
+    profile = await db.trainer_profiles.find_one({"userId": str(current_user["_id"])})
+    if not profile:
+        raise HTTPException(status_code=404, detail="Trainer profile not found.")
+    tier = profile.get("assignedTier")
+    if tier not in TrainerTierV2.ALL:
+        raise HTTPException(
+            status_code=400,
+            detail="Your tier hasn't been assigned yet. An admin must approve your verification first.",
+        )
+
+    field_map = {
+        "inPerson30Cents": ("in_person", 30),
+        "inPerson60Cents": ("in_person", 60),
+        "inPerson90Cents": ("in_person", 90),
+        "virtual30Cents": ("virtual", 30),
+        "virtual60Cents": ("virtual", 60),
+        "virtual90Cents": ("virtual", 90),
+    }
+
+    updates: dict = {}
+    errors: list[str] = []
+    payload = req.dict(exclude_unset=True)
+    for field, value in payload.items():
+        if field not in field_map or value is None:
+            continue
+        modality, duration = field_map[field]
+        ok, err = validate_trainer_rate_cents(tier, modality, duration, int(value))
+        if not ok:
+            errors.append(f"{field}: {err}")
+            continue
+        updates[f"tierRates.{field}"] = int(value)
+
+    if errors:
+        raise HTTPException(status_code=400, detail="; ".join(errors))
+    if not updates:
+        raise HTTPException(status_code=400, detail="No rates provided.")
+
+    updates["tierRatesUpdatedAt"] = datetime.utcnow()
+    await db.trainer_profiles.update_one(
+        {"userId": str(current_user["_id"])}, {"$set": updates}
     )
-
-    admins = await db.users.find({"isAdmin": True}).to_list(10)
-    for admin in admins:
-        asyncio.create_task(create_and_send_notification(
-            str(admin['_id']), "Zelle Payment Received",
-            f"{current_user.get('fullName', 'A trainee')} marked Zelle payment as sent for session.",
-            "payment", {"sessionId": req.sessionId}
-        ))
-
-    return {"success": True, "message": "Payment marked as sent. Admin will verify shortly."}
+    saved = await db.trainer_profiles.find_one(
+        {"userId": str(current_user["_id"])}, {"_id": 0, "tierRates": 1, "assignedTier": 1}
+    )
+    return {"success": True, "tier": saved.get("assignedTier"), "tierRates": saved.get("tierRates", {})}
 
 
-@router.post("/admin/payments/verify-zelle/{session_id}")
-async def admin_verify_zelle_payment(session_id: str, admin_user: dict = Depends(require_admin)):
-    """Admin verifies that Zelle payment was received. Session becomes confirmed."""
-    session = await db.sessions.find_one({"_id": ObjectId(session_id)})
-    if not session:
-        raise HTTPException(status_code=404, detail="Session not found")
-
-    update_doc = {
-        "zellePaymentStatus": "verified", "zellePaymentVerifiedAt": datetime.utcnow(),
-        "zellePaymentVerifiedBy": str(admin_user['_id']), "paymentMethod": "zelle",
-    }
-    if session.get('status') in ['requested', 'payment_pending', 'pending']:
-        update_doc['status'] = 'confirmed'
-
-    await db.sessions.update_one({"_id": ObjectId(session_id)}, {"$set": update_doc})
-
-    amount = session.get('priceCents', 0) or session.get('totalCents', 0)
-    if amount:
-        payout_info = calculate_session_payout(amount, session.get('sessionType', 'outdoor'))
-        await db.transactions.insert_one({
-            'userId': session.get('traineeId', ''), 'sessionId': session_id,
-            'transactionType': TransactionType.SESSION_PAYMENT, 'amountCents': amount,
-            'trainerPayoutCents': payout_info['trainer_payout_cents'],
-            'platformFeeCents': payout_info['platform_fee_cents'],
-            'status': PaymentStatus.COMPLETED, 'paymentMethod': 'zelle',
-            'description': f"Zelle payment for {session.get('sessionType', 'training')} session",
-            'createdAt': datetime.utcnow(),
-        })
-
-    asyncio.create_task(create_and_send_notification(
-        session.get('traineeId', ''), "Payment Verified!",
-        "Your Zelle payment has been verified and your session is confirmed! Your receipt is ready to download.",
-        "payment", {"sessionId": session_id, "action": "view_receipt"}
-    ))
-    if session.get('trainerId'):
-        asyncio.create_task(create_and_send_notification(
-            session['trainerId'], "Session Confirmed - Receipt Ready!",
-            "Payment verified and session confirmed. Your earnings receipt is ready to download.",
-            "session_confirmed", {"sessionId": session_id, "action": "view_receipt"}
-        ))
-
-    return {"success": True, "message": "Payment verified. Session confirmed.", "newStatus": update_doc.get('status', session.get('status'))}
-
-
-@router.get("/admin/payments/pending-zelle")
-async def admin_get_pending_zelle_payments(admin_user: dict = Depends(require_admin)):
-    """Admin: Get all sessions with pending Zelle payments to verify."""
-    sessions = await db.sessions.find(
-        {"zellePaymentStatus": "sent"},
-        {"_id": 1, "traineeId": 1, "trainerId": 1, "sessionType": 1, "priceCents": 1,
-         "totalCents": 1, "zellePaymentSentAt": 1, "zellePaymentSenderName": 1,
-         "zellePaymentNotes": 1, "status": 1, "createdAt": 1}
-    ).sort("zellePaymentSentAt", -1).to_list(100)
-
-    results = []
-    for s in sessions:
-        trainee = await db.users.find_one({"_id": ObjectId(s['traineeId'])}, {"fullName": 1, "email": 1}) if s.get('traineeId') else None
-        results.append({
-            "sessionId": str(s['_id']),
-            "traineeName": trainee.get('fullName', 'Unknown') if trainee else 'Unknown',
-            "traineeEmail": trainee.get('email', '') if trainee else '',
-            "sessionType": s.get('sessionType', ''),
-            "amountCents": s.get('totalCents') or s.get('priceCents', 0),
-            "senderName": s.get('zellePaymentSenderName', ''),
-            "sentAt": s.get('zellePaymentSentAt', s.get('createdAt', '')),
-            "notes": s.get('zellePaymentNotes', ''),
-            "sessionStatus": s.get('status', ''),
-        })
-    return {"pendingPayments": results, "count": len(results)}
-
-
-class TrainerZelleInfoUpdate(BaseModel):
-    zelleEmail: Optional[str] = None
-    zellePhone: Optional[str] = None
-
-
-@router.post("/trainer/zelle-info")
-async def save_trainer_zelle_info(req: TrainerZelleInfoUpdate, current_user: dict = Depends(get_current_user)):
-    """Trainer saves their Zelle contact info for receiving payouts."""
-    update_fields = {"zelleInfoUpdatedAt": datetime.utcnow()}
-    if req.zelleEmail is not None: update_fields["zelleEmail"] = req.zelleEmail
-    if req.zellePhone is not None: update_fields["zellePhone"] = req.zellePhone
-    await db.users.update_one({"_id": current_user['_id']}, {"$set": update_fields})
-    return {"success": True, "message": "Zelle info saved"}
-
-
-@router.get("/trainer/zelle-info")
-async def get_trainer_zelle_info(current_user: dict = Depends(get_current_user)):
-    """Trainer gets their saved Zelle info."""
+@router.get("/trainer/tier-rates")
+async def get_trainer_tier_rates(current_user: dict = Depends(get_current_user)):
+    """Trainer gets their current per-session-length rates + tier caps."""
+    profile = await db.trainer_profiles.find_one(
+        {"userId": str(current_user["_id"])},
+        {"_id": 0, "assignedTier": 1, "tierRates": 1},
+    )
+    if not profile:
+        raise HTTPException(status_code=404, detail="Trainer profile not found.")
+    tier = profile.get("assignedTier")
+    caps = None
+    if tier in TrainerTierV2.ALL:
+        caps = {
+            "in_person": TIER_MATRIX[tier]["in_person"]["rate_caps_cents"],
+            "virtual": TIER_MATRIX[tier]["virtual"]["rate_caps_cents"],
+            "service_fee_in_person_cents": TIER_MATRIX[tier]["in_person"]["service_fee_cents"],
+            "service_fee_virtual_cents": TIER_MATRIX[tier]["virtual"]["service_fee_cents"],
+            "commission_percent": TIER_MATRIX[tier]["commission_percent"],
+        }
     return {
-        "zelleEmail": current_user.get("zelleEmail", ""),
-        "zellePhone": current_user.get("zellePhone", ""),
-        "hasZelleInfo": bool(current_user.get("zelleEmail") or current_user.get("zellePhone")),
+        "tier": tier,
+        "tierRates": profile.get("tierRates", {}),
+        "tierCaps": caps,
     }
+
+
+class AdminAssignTierRequest(BaseModel):
+    tier: str  # new | certified | specialty
+
+
+@router.post("/admin/trainers/{trainer_id}/assign-tier")
+async def admin_assign_tier(
+    trainer_id: str,
+    req: AdminAssignTierRequest,
+    admin_user: dict = Depends(require_admin),
+):
+    """Admin sets a trainer's tier (typically during verification approval)."""
+    if req.tier not in TrainerTierV2.ALL:
+        raise HTTPException(status_code=400, detail=f"Invalid tier '{req.tier}'.")
+    try:
+        oid = ObjectId(trainer_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid trainer id.")
+    user_doc = await db.users.find_one({"_id": oid})
+    if not user_doc:
+        raise HTTPException(status_code=404, detail="Trainer user not found.")
+
+    await db.trainer_profiles.update_one(
+        {"userId": str(oid)},
+        {"$set": {
+            "assignedTier": req.tier,
+            "tierAssignedAt": datetime.utcnow(),
+            "tierAssignedBy": str(admin_user["_id"]),
+        }},
+        upsert=True,
+    )
+    asyncio.create_task(create_and_send_notification(
+        str(oid),
+        "Tier Assigned",
+        f"You've been placed in the {TIER_MATRIX[req.tier]['label']} tier. You can now set your rates.",
+        "tier_assigned",
+        {"tier": req.tier},
+    ))
+    return {"success": True, "tier": req.tier}
+
+
+# ── Admin Payouts (manual reconciliation) ────────────────────────────
+@router.get("/admin/payouts/summary")
+async def admin_payouts_summary(admin_user: dict = Depends(require_admin)):
+    """Per-trainer totals: amount owed, amount paid, # pending sessions."""
+    pipeline = [
+        {"$match": {"status": {"$in": ["completed", "confirmed"]}, "trainerId": {"$ne": None}}},
+        {"$group": {
+            "_id": "$trainerId",
+            "totalOwedCents": {"$sum": {"$ifNull": ["$trainerPayoutCents", 0]}},
+            "totalPaidCents": {"$sum": {"$cond": [{"$eq": ["$payoutStatus", "paid"]},
+                                                   {"$ifNull": ["$trainerPayoutCents", 0]}, 0]}},
+            "sessionsCompleted": {"$sum": 1},
+            "sessionsPending": {"$sum": {"$cond": [{"$ne": ["$payoutStatus", "paid"]}, 1, 0]}},
+        }},
+    ]
+    rows = await db.sessions.aggregate(pipeline).to_list(1000)
+
+    out = []
+    for r in rows:
+        trainer_id = r["_id"]
+        try:
+            user = await db.users.find_one({"_id": ObjectId(trainer_id)},
+                                           {"fullName": 1, "email": 1})
+        except Exception:
+            user = None
+        profile = await db.trainer_profiles.find_one(
+            {"userId": trainer_id}, {"_id": 0, "assignedTier": 1}
+        )
+        owed = max(0, r["totalOwedCents"] - r["totalPaidCents"])
+        out.append({
+            "trainerId": trainer_id,
+            "trainerName": user.get("fullName", "Unknown") if user else "Unknown",
+            "trainerEmail": user.get("email", "") if user else "",
+            "tier": (profile or {}).get("assignedTier"),
+            "balanceOwedCents": owed,
+            "totalEarnedCents": r["totalOwedCents"],
+            "totalPaidCents": r["totalPaidCents"],
+            "sessionsCompleted": r["sessionsCompleted"],
+            "sessionsPending": r["sessionsPending"],
+        })
+    out.sort(key=lambda x: x["balanceOwedCents"], reverse=True)
+    return {"trainers": out, "count": len(out)}
+
+
+@router.get("/admin/payouts/{trainer_id}/sessions")
+async def admin_trainer_payout_sessions(
+    trainer_id: str,
+    paid: Optional[bool] = Query(None, description="filter by paid/unpaid; omit for all"),
+    admin_user: dict = Depends(require_admin),
+):
+    """Per-session payout breakdown for a single trainer."""
+    q: dict = {"trainerId": trainer_id, "status": {"$in": ["completed", "confirmed"]}}
+    if paid is True:
+        q["payoutStatus"] = "paid"
+    elif paid is False:
+        q["payoutStatus"] = {"$ne": "paid"}
+
+    sessions = await db.sessions.find(
+        q,
+        {"_id": 1, "sessionType": 1, "startTime": 1, "trainerPayoutCents": 1,
+         "platformFeeCents": 1, "totalCents": 1, "payoutStatus": 1, "payoutPaidAt": 1,
+         "createdAt": 1, "tier": 1, "modality": 1, "durationMin": 1},
+    ).sort("startTime", -1).to_list(500)
+
+    return {
+        "sessions": [
+            {
+                "sessionId": str(s["_id"]),
+                "sessionType": s.get("sessionType"),
+                "tier": s.get("tier"),
+                "modality": s.get("modality"),
+                "durationMin": s.get("durationMin"),
+                "startTime": s.get("startTime") or s.get("createdAt"),
+                "trainerPayoutCents": s.get("trainerPayoutCents", 0),
+                "platformFeeCents": s.get("platformFeeCents", 0),
+                "totalCents": s.get("totalCents", 0),
+                "payoutStatus": s.get("payoutStatus", "unpaid"),
+                "payoutPaidAt": s.get("payoutPaidAt"),
+            }
+            for s in sessions
+        ],
+        "count": len(sessions),
+    }
+
+
+class AdminMarkPayoutPaidRequest(BaseModel):
+    sessionIds: List[str]
+    note: Optional[str] = None
+
+
+@router.post("/admin/payouts/mark-paid")
+async def admin_mark_payouts_paid(
+    req: AdminMarkPayoutPaidRequest,
+    admin_user: dict = Depends(require_admin),
+):
+    """Bulk-mark sessions as paid out (manual Stripe reconciliation)."""
+    if not req.sessionIds:
+        raise HTTPException(status_code=400, detail="No sessions provided.")
+    object_ids = []
+    for sid in req.sessionIds:
+        try:
+            object_ids.append(ObjectId(sid))
+        except Exception:
+            raise HTTPException(status_code=400, detail=f"Invalid sessionId '{sid}'.")
+    res = await db.sessions.update_many(
+        {"_id": {"$in": object_ids}},
+        {"$set": {
+            "payoutStatus": "paid",
+            "payoutPaidAt": datetime.utcnow(),
+            "payoutPaidBy": str(admin_user["_id"]),
+            "payoutNote": sanitize_text(req.note) if req.note else None,
+        }},
+    )
+    return {"success": True, "matched": res.matched_count, "modified": res.modified_count}
 
 
 # ============================================================================
+
 # ONBOARDING STATUS / RECEIPTS
 # ============================================================================
 
