@@ -1,405 +1,260 @@
-import React, { useState, useEffect, useRef } from 'react';
+/**
+ * Trainer "Set Rates" screen (iter93) — tier-aware version.
+ *
+ * Replaces the legacy single-rate input flow. Trainers can now only set
+ * rates AFTER an admin has assigned them a tier during verification.
+ *
+ * - Reads tier + caps from GET /api/trainer/tier-rates
+ * - Live preview of take-home, customer total per rate
+ * - Client + server validation against tier caps
+ */
+import React, { useEffect, useState, useCallback } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput,
-  Switch, Animated, ActivityIndicator, ImageBackground,
+  View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity,
+  ActivityIndicator, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAuth } from '../../src/contexts/AuthContext';
-import { trainerAPI } from '../../src/services/api';
-import { useAlert } from '../../src/contexts/AlertContext';
-import { goBack } from '../../src/utils/navigation';
+import { api } from '../../src/services/api';
+import { toast } from '../../src/utils/toast';
+import { haptic } from '../../src/utils/haptics';
+import {
+  TrainerTier, Modality, Duration, calculatePricing, formatCents, TIER_MATRIX, validateRateCents,
+} from '../../src/utils/pricing';
 
-const backgroundImage = require('../../assets/images/bg-plank-ropes.png');
+interface RateState {
+  inPerson30: string; inPerson60: string; inPerson90: string;
+  virtual30: string; virtual60: string; virtual90: string;
+}
 
-const COLORS = {
-  teal: '#1a2a5e',
-  tealDark: '#0D8B88',
-  orange: '#F7931E',
-  orangeHot: '#FF6A00',
-  navy: '#1a2a5e',
-  white: '#FFFFFF',
-  gray: '#5a6785',
-  grayLight: '#F0F2F5',
-  success: '#2ECC71',
+const EMPTY_RATES: RateState = {
+  inPerson30: '', inPerson60: '', inPerson90: '',
+  virtual30: '', virtual60: '', virtual90: '',
 };
 
 export default function SetRatesScreen() {
   const router = useRouter();
-  const { user } = useAuth();
-  const { showAlert } = useAlert();
-
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [offersInPerson, setOffersInPerson] = useState(true);
-  const [offersVirtual, setOffersVirtual] = useState(false);
-  const [offersInHome, setOffersInHome] = useState(false);
-  // Per-duration pricing
-  const [outdoor30, setOutdoor30] = useState('25');
-  const [outdoor60, setOutdoor60] = useState('45');
-  const [outdoor90, setOutdoor90] = useState('60');
-  const [virtual30, setVirtual30] = useState('20');
-  const [virtual60, setVirtual60] = useState('35');
-  const [virtual90, setVirtual90] = useState('50');
-  const [inHome30, setInHome30] = useState('35');
-  const [inHome60, setInHome60] = useState('60');
-  const [inHome90, setInHome90] = useState('85');
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const [tier, setTier] = useState<TrainerTier | null>(null);
+  const [rates, setRates] = useState<RateState>(EMPTY_RATES);
 
-  useEffect(() => {
-    loadCurrentRates();
-    Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: true }).start();
-  }, []);
-
-  const loadCurrentRates = async () => {
+  const load = useCallback(async () => {
     try {
-      const profile = await trainerAPI.getMyProfile();
-      if (profile) {
-        setOffersInPerson(profile.offersInPerson ?? true);
-        setOffersVirtual(profile.offersVirtual ?? false);
-        setOffersInHome(profile.offersInHome ?? false);
-        // Load per-duration rates if available, otherwise calculate from hourly
-        const hourlyOutdoor = (profile.outdoorRateCents || 4000) / 100;
-        const hourlyVirtual = (profile.virtualRateCents || 3000) / 100;
-        const hourlyInHome = (profile.inHomeRateCents || 6000) / 100;
-        setOutdoor30(String((profile.outdoor30Cents || hourlyOutdoor * 50) / 100));
-        setOutdoor60(String((profile.outdoor60Cents || hourlyOutdoor * 100) / 100));
-        setOutdoor90(String((profile.outdoor90Cents || hourlyOutdoor * 140) / 100));
-        setVirtual30(String((profile.virtual30Cents || hourlyVirtual * 50) / 100));
-        setVirtual60(String((profile.virtual60Cents || hourlyVirtual * 100) / 100));
-        setVirtual90(String((profile.virtual90Cents || hourlyVirtual * 140) / 100));
-        setInHome30(String((profile.inHome30Cents || hourlyInHome * 50) / 100));
-        setInHome60(String((profile.inHome60Cents || hourlyInHome * 100) / 100));
-        setInHome90(String((profile.inHome90Cents || hourlyInHome * 140) / 100));
-      }
-    } catch (e) {
-      // Use defaults
+      const { data } = await api.get('/trainer/tier-rates');
+      setTier(data.tier);
+      const tr = data.tierRates || {};
+      setRates({
+        inPerson30: tr.inPerson30Cents ? String(tr.inPerson30Cents / 100) : '',
+        inPerson60: tr.inPerson60Cents ? String(tr.inPerson60Cents / 100) : '',
+        inPerson90: tr.inPerson90Cents ? String(tr.inPerson90Cents / 100) : '',
+        virtual30: tr.virtual30Cents ? String(tr.virtual30Cents / 100) : '',
+        virtual60: tr.virtual60Cents ? String(tr.virtual60Cents / 100) : '',
+        virtual90: tr.virtual90Cents ? String(tr.virtual90Cents / 100) : '',
+      });
+    } catch (e: any) {
+      toast.error('Failed to load rates');
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const updateRate = (key: keyof RateState, value: string) => {
+    const cleaned = value.replace(/[^0-9.]/g, '');
+    if ((cleaned.match(/\./g) || []).length > 1) return;
+    setRates(prev => ({ ...prev, [key]: cleaned }));
   };
 
   const handleSave = async () => {
+    if (!tier) return;
+    const dollarsToCents = (s: string) => Math.round(parseFloat(s || '0') * 100);
+    const payload: Record<string, number> = {};
+    const errors: string[] = [];
+    const fieldMap: Array<[keyof RateState, string, Modality, Duration]> = [
+      ['inPerson30', 'inPerson30Cents', 'in_person', 30],
+      ['inPerson60', 'inPerson60Cents', 'in_person', 60],
+      ['inPerson90', 'inPerson90Cents', 'in_person', 90],
+      ['virtual30', 'virtual30Cents', 'virtual', 30],
+      ['virtual60', 'virtual60Cents', 'virtual', 60],
+      ['virtual90', 'virtual90Cents', 'virtual', 90],
+    ];
+    for (const [k, apiKey, modality, duration] of fieldMap) {
+      const v = rates[k];
+      if (!v || v === '') continue;
+      const cents = dollarsToCents(v);
+      const { ok, error } = validateRateCents(tier, modality, duration, cents);
+      if (!ok) errors.push(`${apiKey}: ${error}`);
+      else payload[apiKey] = cents;
+    }
+    if (errors.length) { toast.error(errors[0]); return; }
+    if (!Object.keys(payload).length) { toast.error('Enter at least one rate.'); return; }
+
+    haptic.medium();
     setSaving(true);
     try {
-      await trainerAPI.setRates({
-        offersInPerson,
-        offersVirtual,
-        offersInHome,
-        // Legacy hourly rates (use 60min rate for backward compatibility)
-        outdoorRateCents: Math.round(parseFloat(outdoor60) * 100),
-        virtualRateCents: Math.round(parseFloat(virtual60) * 100),
-        inHomeRateCents: Math.round(parseFloat(inHome60) * 100),
-        // Per-duration rates
-        outdoor30Cents: Math.round(parseFloat(outdoor30) * 100),
-        outdoor60Cents: Math.round(parseFloat(outdoor60) * 100),
-        outdoor90Cents: Math.round(parseFloat(outdoor90) * 100),
-        virtual30Cents: Math.round(parseFloat(virtual30) * 100),
-        virtual60Cents: Math.round(parseFloat(virtual60) * 100),
-        virtual90Cents: Math.round(parseFloat(virtual90) * 100),
-        inHome30Cents: Math.round(parseFloat(inHome30) * 100),
-        inHome60Cents: Math.round(parseFloat(inHome60) * 100),
-        inHome90Cents: Math.round(parseFloat(inHome90) * 100),
-      });
-      showAlert({ title: 'Success', message: 'Your rates have been updated!', type: 'success' });
-      router.back();
+      await api.post('/trainer/tier-rates', payload);
+      haptic.success();
+      toast.success('Rates saved!');
     } catch (e: any) {
-      showAlert({ title: 'Error', message: e?.response?.data?.detail || 'Failed to save rates', type: 'error' });
+      haptic.error();
+      toast.error(e?.response?.data?.detail || 'Save failed');
     } finally {
       setSaving(false);
     }
   };
 
-  const calcEarnings = (rate: string) => {
-    const amount = parseFloat(rate) || 0;
-    return (amount * 0.80).toFixed(0);
-  };
-
   if (loading) {
+    return <SafeAreaView style={s.loader}><ActivityIndicator size="large" color="#FF7A00" /></SafeAreaView>;
+  }
+
+  if (!tier) {
     return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator size="large" color={'#FF6A00'} />
-      </View>
+      <SafeAreaView style={s.container}>
+        <LinearGradient colors={['#0A0E1A', '#141929']} style={s.header}>
+          <TouchableOpacity onPress={() => router.back()} style={s.backBtn} data-testid="set-rates-back">
+            <Ionicons name="chevron-back" size={22} color="#FFF" />
+          </TouchableOpacity>
+          <Text style={s.headerTitle}>Set Your Rates</Text>
+          <View style={{ width: 40 }} />
+        </LinearGradient>
+        <View style={s.notReadyWrap}>
+          <Ionicons name="time-outline" size={56} color="#FF7A00" />
+          <Text style={s.notReadyTitle}>Awaiting Tier Assignment</Text>
+          <Text style={s.notReadySub}>
+            An admin will assign your tier (New / Certified / Specialty) during verification.
+            Once approved, you'll be able to set your rates here within tier caps.
+          </Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
-  return (
-    <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
-      <LinearGradient colors={['rgba(10, 14, 26, 0.92)', 'rgba(17, 24, 39, 0.88)']} style={StyleSheet.absoluteFillObject} />
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => goBack('/trainer/(tabs)/home')} style={styles.backBtn} data-testid="rates-back-btn">
-            <Ionicons name="arrow-back" size={24} color={COLORS.white} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>SET YOUR RATES</Text>
-          <View style={{ width: 40 }} />
+  const tierCfg = TIER_MATRIX[tier];
+
+  const renderRateRow = (
+    key: keyof RateState,
+    modality: Modality,
+    duration: Duration,
+    label: string,
+  ) => {
+    const cap = tierCfg[modality].rate_caps_cents[duration];
+    const v = parseFloat(rates[key] || '0');
+    const cents = Math.round(v * 100);
+    const overCap = cents > cap;
+    const breakdown = !overCap && cents > 0 ? calculatePricing(tier, modality, duration, cents) : null;
+    return (
+      <View key={key} style={[s.rateRow, overCap && s.rateRowError]}>
+        <View style={{ flex: 1 }}>
+          <Text style={s.rateLabel}>{label}</Text>
+          <Text style={s.capHint}>Cap: {formatCents(cap)}</Text>
         </View>
+        <View style={s.inputWrap}>
+          <Text style={s.dollarSign}>$</Text>
+          <TextInput
+            style={s.input}
+            keyboardType="decimal-pad"
+            placeholder="0"
+            placeholderTextColor="#666"
+            value={rates[key]}
+            onChangeText={(t) => updateRate(key, t)}
+            data-testid={`rate-input-${key}`}
+          />
+        </View>
+        {breakdown ? (
+          <View style={s.previewBox}>
+            <Text style={s.previewLine}>You: {formatCents(breakdown.trainer_take_home_cents)}</Text>
+            <Text style={s.previewLineMuted}>Cust: {formatCents(breakdown.customer_total_cents)}</Text>
+          </View>
+        ) : overCap ? (
+          <Text style={s.errorBadge}>over cap</Text>
+        ) : null}
+      </View>
+    );
+  };
 
-        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          <Animated.View style={{ opacity: fadeAnim }}>
-            <Text style={styles.subtitle}>Set your hourly rates per session type. You earn 80% of each session.</Text>
+  return (
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <SafeAreaView style={s.container}>
+        <LinearGradient colors={['#0A0E1A', '#141929']} style={s.header}>
+          <TouchableOpacity onPress={() => router.back()} style={s.backBtn} data-testid="set-rates-back">
+            <Ionicons name="chevron-back" size={22} color="#FFF" />
+          </TouchableOpacity>
+          <Text style={s.headerTitle}>Set Your Rates</Text>
+          <View style={{ width: 40 }} />
+        </LinearGradient>
 
-            {/* Outdoor / In-Person */}
-            <View style={styles.rateCard}>
-              <View style={styles.rateHeader}>
-                <View style={styles.rateIconRow}>
-                  <Ionicons name="fitness" size={24} color={COLORS.orange} />
-                  <Text style={styles.rateLabel}>Outdoor / In-Person</Text>
-                </View>
-                <Switch
-                  value={offersInPerson}
-                  onValueChange={setOffersInPerson}
-                  trackColor={{ false: '#555', true: '#FF6A00' }}
-                  thumbColor={COLORS.white}
-                />
-              </View>
-              {offersInPerson && (
-                <View style={styles.durationBreakdown}>
-                  <View style={styles.durationItemEditable}>
-                    <Text style={styles.durationLabel}>30 min</Text>
-                    <View style={styles.durationInputRow}>
-                      <Text style={styles.durationDollar}>$</Text>
-                      <TextInput style={styles.durationInput} value={outdoor30} onChangeText={setOutdoor30} keyboardType="numeric" />
-                    </View>
-                    <Text style={styles.earningsSmall}>earn ${calcEarnings(outdoor30)}</Text>
-                  </View>
-                  <View style={styles.durationItemEditable}>
-                    <Text style={styles.durationLabel}>60 min</Text>
-                    <View style={styles.durationInputRow}>
-                      <Text style={styles.durationDollar}>$</Text>
-                      <TextInput style={styles.durationInput} value={outdoor60} onChangeText={setOutdoor60} keyboardType="numeric" />
-                    </View>
-                    <Text style={styles.earningsSmall}>earn ${calcEarnings(outdoor60)}</Text>
-                  </View>
-                  <View style={styles.durationItemEditable}>
-                    <Text style={styles.durationLabel}>90 min</Text>
-                    <View style={styles.durationInputRow}>
-                      <Text style={styles.durationDollar}>$</Text>
-                      <TextInput style={styles.durationInput} value={outdoor90} onChangeText={setOutdoor90} keyboardType="numeric" />
-                    </View>
-                    <Text style={styles.earningsSmall}>earn ${calcEarnings(outdoor90)}</Text>
-                  </View>
-                </View>
+        <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
+          <View style={s.tierBadge}>
+            <Text style={s.tierBadgeLabel}>YOUR TIER</Text>
+            <Text style={s.tierBadgeName}>{tierCfg.label}</Text>
+            <Text style={s.tierBadgeSplit}>
+              {tierCfg.trainer_percent}% take-home · {tierCfg.commission_percent}% commission
+            </Text>
+          </View>
+
+          <Text style={s.sectionHeader}>In-Person Sessions</Text>
+          {renderRateRow('inPerson30', 'in_person', 30, '30 minutes')}
+          {renderRateRow('inPerson60', 'in_person', 60, '60 minutes')}
+          {renderRateRow('inPerson90', 'in_person', 90, '90 minutes')}
+
+          <Text style={s.sectionHeader}>Virtual Sessions</Text>
+          {renderRateRow('virtual30', 'virtual', 30, '30 minutes')}
+          {renderRateRow('virtual60', 'virtual', 60, '60 minutes')}
+          {renderRateRow('virtual90', 'virtual', 90, '90 minutes')}
+
+          <Text style={s.disclaimer}>
+            Customer total includes a service fee of {formatCents(tierCfg.in_person.service_fee_cents)} (in-person) /{' '}
+            {formatCents(tierCfg.virtual.service_fee_cents)} (virtual). Leave a field blank to skip that length.
+          </Text>
+
+          <TouchableOpacity style={[s.saveBtn, saving && { opacity: 0.6 }]} onPress={handleSave} disabled={saving} data-testid="set-rates-save">
+            <LinearGradient colors={['#FF6A00', '#FF9B2F']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.saveBtnGrad}>
+              {saving ? <ActivityIndicator color="#FFF" /> : (
+                <>
+                  <Ionicons name="save" size={20} color="#FFF" />
+                  <Text style={s.saveBtnText}>Save Rates</Text>
+                </>
               )}
-            </View>
-
-            {/* Virtual */}
-            <View style={styles.rateCard}>
-              <View style={styles.rateHeader}>
-                <View style={styles.rateIconRow}>
-                  <Ionicons name="videocam" size={24} color={'#FF6A00'} />
-                  <Text style={styles.rateLabel}>Virtual</Text>
-                </View>
-                <Switch
-                  value={offersVirtual}
-                  onValueChange={setOffersVirtual}
-                  trackColor={{ false: '#555', true: '#FF6A00' }}
-                  thumbColor={COLORS.white}
-                />
-              </View>
-              {offersVirtual && (
-                <View style={styles.durationBreakdown}>
-                  <View style={styles.durationItemEditable}>
-                    <Text style={styles.durationLabel}>30 min</Text>
-                    <View style={styles.durationInputRow}>
-                      <Text style={styles.durationDollar}>$</Text>
-                      <TextInput style={styles.durationInput} value={virtual30} onChangeText={setVirtual30} keyboardType="numeric" />
-                    </View>
-                    <Text style={styles.earningsSmall}>earn ${calcEarnings(virtual30)}</Text>
-                  </View>
-                  <View style={styles.durationItemEditable}>
-                    <Text style={styles.durationLabel}>60 min</Text>
-                    <View style={styles.durationInputRow}>
-                      <Text style={styles.durationDollar}>$</Text>
-                      <TextInput style={styles.durationInput} value={virtual60} onChangeText={setVirtual60} keyboardType="numeric" />
-                    </View>
-                    <Text style={styles.earningsSmall}>earn ${calcEarnings(virtual60)}</Text>
-                  </View>
-                  <View style={styles.durationItemEditable}>
-                    <Text style={styles.durationLabel}>90 min</Text>
-                    <View style={styles.durationInputRow}>
-                      <Text style={styles.durationDollar}>$</Text>
-                      <TextInput style={styles.durationInput} value={virtual90} onChangeText={setVirtual90} keyboardType="numeric" />
-                    </View>
-                    <Text style={styles.earningsSmall}>earn ${calcEarnings(virtual90)}</Text>
-                  </View>
-                </View>
-              )}
-            </View>
-
-            {/* At Home */}
-            <View style={styles.rateCard}>
-              <View style={styles.rateHeader}>
-                <View style={styles.rateIconRow}>
-                  <Ionicons name="home" size={24} color={COLORS.orangeHot} />
-                  <Text style={styles.rateLabel}>At Home</Text>
-                </View>
-                <Switch
-                  value={offersInHome}
-                  onValueChange={setOffersInHome}
-                  trackColor={{ false: '#555', true: '#FF6A00' }}
-                  thumbColor={COLORS.white}
-                />
-              </View>
-              {offersInHome && (
-                <View style={styles.durationBreakdown}>
-                  <View style={styles.durationItemEditable}>
-                    <Text style={styles.durationLabel}>30 min</Text>
-                    <View style={styles.durationInputRow}>
-                      <Text style={styles.durationDollar}>$</Text>
-                      <TextInput style={styles.durationInput} value={inHome30} onChangeText={setInHome30} keyboardType="numeric" />
-                    </View>
-                    <Text style={styles.earningsSmall}>earn ${calcEarnings(inHome30)}</Text>
-                  </View>
-                  <View style={styles.durationItemEditable}>
-                    <Text style={styles.durationLabel}>60 min</Text>
-                    <View style={styles.durationInputRow}>
-                      <Text style={styles.durationDollar}>$</Text>
-                      <TextInput style={styles.durationInput} value={inHome60} onChangeText={setInHome60} keyboardType="numeric" />
-                    </View>
-                    <Text style={styles.earningsSmall}>earn ${calcEarnings(inHome60)}</Text>
-                  </View>
-                  <View style={styles.durationItemEditable}>
-                    <Text style={styles.durationLabel}>90 min</Text>
-                    <View style={styles.durationInputRow}>
-                      <Text style={styles.durationDollar}>$</Text>
-                      <TextInput style={styles.durationInput} value={inHome90} onChangeText={setInHome90} keyboardType="numeric" />
-                    </View>
-                    <Text style={styles.earningsSmall}>earn ${calcEarnings(inHome90)}</Text>
-                  </View>
-                </View>
-              )}
-            </View>
-
-            {/* Pricing Info */}
-            <View style={styles.infoCard}>
-              <Ionicons name="information-circle" size={20} color={'#FF6A00'} />
-              <Text style={styles.infoText}>
-                You receive 80% of the session rate. RapidReps retains 20% + a $2 service fee per session.
-              </Text>
-            </View>
-
-            <TouchableOpacity
-              style={styles.saveButton}
-              onPress={handleSave}
-              disabled={saving}
-              data-testid="save-rates-btn"
-            >
-              <LinearGradient colors={['#FF6A00', '#CC5500']} style={styles.saveGradient}>
-                {saving ? (
-                  <ActivityIndicator color={COLORS.white} />
-                ) : (
-                  <Text style={styles.saveText}>Save Rates</Text>
-                )}
-              </LinearGradient>
-            </TouchableOpacity>
-          </Animated.View>
+            </LinearGradient>
+          </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
-    </ImageBackground>
+    </KeyboardAvoidingView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingVertical: 12,
-  },
-  backBtn: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center',
-  },
-  headerTitle: { fontSize: 18, fontWeight: '800', color: COLORS.white, letterSpacing: 1 },
-  content: { flex: 1, paddingHorizontal: 20 },
-  subtitle: { fontSize: 14, color: 'rgba(255,255,255,0.7)', marginBottom: 24, lineHeight: 20 },
-  rateCard: {
-    backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 16,
-    padding: 18, marginBottom: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',
-  },
-  rateHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  rateIconRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  rateLabel: { fontSize: 16, fontWeight: '700', color: COLORS.white },
-  rateInputRow: {
-    flexDirection: 'row', alignItems: 'center', marginTop: 14, gap: 6,
-  },
-  dollarSign: { fontSize: 24, fontWeight: '800', color: '#FF6A00' },
-  rateInput: {
-    fontSize: 28, fontWeight: '800', color: COLORS.white,
-    borderBottomWidth: 2, borderBottomColor: '#FF6A00',
-    paddingVertical: 4, paddingHorizontal: 4, minWidth: 70, textAlign: 'center',
-  },
-  perHour: { fontSize: 14, color: 'rgba(255,255,255,0.6)', marginLeft: 2 },
-  earningsTag: {
-    backgroundColor: 'rgba(46,204,113,0.2)', borderRadius: 8,
-    paddingHorizontal: 10, paddingVertical: 4, marginLeft: 'auto',
-  },
-  earningsText: { fontSize: 13, fontWeight: '700', color: COLORS.success },
-  durationBreakdown: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 14,
-    paddingTop: 14,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.1)',
-  },
-  durationItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  durationLabel: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.75)',
-    marginBottom: 4,
-    fontWeight: '600',
-  },
-  durationPrice: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: COLORS.white,
-  },
-  durationItemEditable: {
-    alignItems: 'center',
-    flex: 1,
-    paddingHorizontal: 4,
-  },
-  durationInputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  durationDollar: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FF6A00',
-  },
-  durationInput: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: COLORS.white,
-    textAlign: 'center',
-    minWidth: 50,
-    borderBottomWidth: 2,
-    borderBottomColor: 'rgba(255,255,255,0.3)',
-    paddingVertical: 2,
-  },
-  earningsSmall: {
-    fontSize: 12,
-    color: '#00E676',
-    fontWeight: '700',
-    marginTop: 4,
-  },
-  infoCard: {
-    flexDirection: 'row', alignItems: 'flex-start', gap: 10,
-    backgroundColor: 'rgba(31,184,180,0.1)', borderRadius: 12,
-    padding: 14, marginTop: 8, marginBottom: 24,
-  },
-  infoText: { fontSize: 13, color: 'rgba(255,255,255,0.7)', flex: 1, lineHeight: 18 },
-  saveButton: { marginBottom: 40 },
-  saveGradient: {
-    paddingVertical: 16, borderRadius: 14, alignItems: 'center',
-  },
-  saveText: { fontSize: 16, fontWeight: '800', color: COLORS.white, letterSpacing: 0.5 },
+const s = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#0A0E1A' },
+  loader: { flex: 1, backgroundColor: '#0A0E1A', justifyContent: 'center', alignItems: 'center' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14 },
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.12)', justifyContent: 'center', alignItems: 'center' },
+  headerTitle: { color: '#FFF', fontSize: 18, fontWeight: '800', letterSpacing: 0.5 },
+  scroll: { padding: 18, paddingBottom: 60 },
+  tierBadge: { backgroundColor: 'rgba(255,122,0,0.12)', borderColor: 'rgba(255,122,0,0.4)', borderWidth: 1.4, borderRadius: 18, padding: 16, marginBottom: 20 },
+  tierBadgeLabel: { color: '#FF7A00', fontSize: 11, fontWeight: '900', letterSpacing: 2 },
+  tierBadgeName: { color: '#FFF', fontSize: 24, fontWeight: '900', marginTop: 4 },
+  tierBadgeSplit: { color: '#AAA', fontSize: 13, fontWeight: '600', marginTop: 6 },
+  sectionHeader: { color: '#FFF', fontSize: 16, fontWeight: '900', letterSpacing: 1, marginTop: 18, marginBottom: 8 },
+  rateRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderRadius: 14, padding: 14, marginBottom: 10, gap: 12 },
+  rateRowError: { borderColor: '#FF4444' },
+  rateLabel: { color: '#FFF', fontSize: 15, fontWeight: '700' },
+  capHint: { color: '#888', fontSize: 12, marginTop: 2 },
+  inputWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1A2030', borderRadius: 10, paddingHorizontal: 10, width: 92, height: 42 },
+  dollarSign: { color: '#AAA', fontSize: 16, fontWeight: '700' },
+  input: { flex: 1, color: '#FFF', fontSize: 16, fontWeight: '800', marginLeft: 4 },
+  previewBox: { width: 100 },
+  previewLine: { color: '#FF9B2F', fontSize: 12, fontWeight: '900' },
+  previewLineMuted: { color: '#888', fontSize: 11, marginTop: 2 },
+  errorBadge: { color: '#FF4444', fontSize: 11, fontWeight: '700', width: 100, textAlign: 'right' },
+  disclaimer: { color: '#888', fontSize: 12, marginTop: 14, lineHeight: 18 },
+  saveBtn: { marginTop: 22, borderRadius: 28, overflow: 'hidden' },
+  saveBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, gap: 8 },
+  saveBtnText: { color: '#FFF', fontSize: 16, fontWeight: '900', letterSpacing: 1 },
+  notReadyWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 28 },
+  notReadyTitle: { color: '#FFF', fontSize: 22, fontWeight: '900', marginTop: 14, textAlign: 'center' },
+  notReadySub: { color: '#AAA', fontSize: 14, fontWeight: '600', textAlign: 'center', lineHeight: 22, marginTop: 10 },
 });
