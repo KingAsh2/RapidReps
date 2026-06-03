@@ -545,6 +545,41 @@ export const traineeAPI = {
 };
 
 // Sessions API - for shared session operations
+export interface NegotiationTimeline {
+  sessionId: string;
+  negotiationStatus: string | null;
+  agreedTime: string | null;
+  agreedLocation: { address: string; lat?: number; lng?: number } | null;
+  proposedTime: string | null;
+  proposedLocation: { address: string; lat?: number; lng?: number } | null;
+  paymentReady: boolean;
+  timeline: Array<any>;
+  expiresInMinutes: number | null;
+}
+
+export const negotiationAPI = {
+  timeline: async (sessionId: string): Promise<NegotiationTimeline> => {
+    const { data } = await api.get(`/sessions/${sessionId}/negotiation/timeline`);
+    return data;
+  },
+  propose: async (sessionId: string, payload: { proposedTime: string; proposedLocation?: { address: string; lat?: number; lng?: number } | null }) => {
+    const { data } = await api.post(`/sessions/${sessionId}/negotiation/propose`, payload);
+    return data;
+  },
+  counter: async (sessionId: string, payload: { proposedTime: string; proposedLocation?: { address: string; lat?: number; lng?: number } | null }) => {
+    const { data } = await api.post(`/sessions/${sessionId}/negotiation/counter`, payload);
+    return data;
+  },
+  accept: async (sessionId: string) => {
+    const { data } = await api.post(`/sessions/${sessionId}/negotiation/accept`);
+    return data;
+  },
+  reject: async (sessionId: string, reason?: string) => {
+    const { data } = await api.post(`/sessions/${sessionId}/negotiation/reject`, { reason });
+    return data;
+  },
+};
+
 export const sessionsAPI = {
   // Get session by ID
   getSession: async (sessionId: string): Promise<any> => {

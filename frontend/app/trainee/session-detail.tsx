@@ -20,6 +20,7 @@ import { SessionStatus } from '../../src/types';
 import { toast } from '../../src/utils/toast';
 import { haptic } from '../../src/utils/haptics';
 import { SessionTimeline, SessionTimelineStatus } from '../../src/components/SessionTimeline';
+import NegotiationPanel from '../../src/components/NegotiationPanel';
 
 const COLORS = {
   teal: '#1a2a5e',
@@ -209,6 +210,16 @@ export default function SessionDetailScreen() {
               </View>
             )}
           </View>
+
+          {/* Negotiation Panel — gate payment behind mutual agreement */}
+          {session.id && session.status !== 'completed' && session.status !== 'cancelled' && session.status !== 'declined' && (
+            <NegotiationPanel
+              sessionId={String(session.id)}
+              currentUserRole="trainee"
+              isVirtual={session.sessionType === 'virtual' || session.modality === 'virtual'}
+              onAgreed={loadSession}
+            />
+          )}
 
           {/* Trainer Info */}
           <View style={styles.card}>

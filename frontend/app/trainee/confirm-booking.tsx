@@ -228,19 +228,19 @@ export default function ConfirmBookingScreen() {
             </View>
           </View>
 
-          {/* Payment Method - Zelle */}
+          {/* Payment Method - Stripe */}
           <View style={styles.card}>
             <View style={styles.paymentHeader}>
-              <Ionicons name="cash" size={20} color={'#FFFFFF'} />
-              <Text style={styles.paymentTitle}>Payment via Zelle</Text>
+              <Ionicons name="card" size={20} color={'#FFFFFF'} />
+              <Text style={styles.paymentTitle}>Payment via Stripe</Text>
             </View>
             <View style={styles.stripeRow}>
-              <View style={[styles.stripeBadge, { backgroundColor: '#6D1ED4' }]}>
-                <Ionicons name="send" size={16} color={COLORS.white} />
+              <View style={[styles.stripeBadge, { backgroundColor: '#635BFF' }]}>
+                <Ionicons name="card" size={16} color={COLORS.white} />
               </View>
               <View style={styles.stripeInfo}>
-                <Text style={styles.stripeText}>Pay via Zelle</Text>
-                <Text style={styles.stripeSubtext}>Send payment after booking confirmation</Text>
+                <Text style={styles.stripeText}>Pay securely with Stripe</Text>
+                <Text style={styles.stripeSubtext}>You won't be charged until you and the trainer agree on time & location.</Text>
               </View>
               <Ionicons name="shield-checkmark" size={20} color={COLORS.success} />
             </View>
@@ -258,7 +258,7 @@ export default function ConfirmBookingScreen() {
             </View>
             <View style={styles.policyRow}>
               <Ionicons name="lock-closed-outline" size={16} color={'#FF6A00'} />
-              <Text style={styles.policyText}>Zelle payments are sent directly to RapidReps</Text>
+              <Text style={styles.policyText}>Stripe-secured payments — protected end-to-end</Text>
             </View>
           </View>
 
@@ -287,7 +287,7 @@ export default function ConfirmBookingScreen() {
               )}
             </LinearGradient>
           </TouchableOpacity>
-          <Text style={styles.secureNote}>Pay via Zelle after confirmation</Text>
+          <Text style={styles.secureNote}>Stripe checkout opens after both parties agree on time & location</Text>
         </View>
       </SafeAreaView>
     </ImageBackground>

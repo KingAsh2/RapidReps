@@ -1,0 +1,58 @@
+{
+  "summary": "Iter95 — Live e2e backend validation of the Negotiation state machine + Tier pricing + Payment gating. 37 of 38 new live tests pass (plus all 25 pre-existing iter92/92b/93 import/static tests). One CRITICAL gap confirmed: GET /api/sessions/{id} does not surface negotiation fields, and a SECOND CRITICAL gap confirmed by code review: POST /api/payments/create-payment-intent has NO server-side gate on paymentReady/negotiationStatus — the only reason it currently returns 400 pre-agreement is an UNRELATED expired Stripe key, NOT a gate. All other flows (propose/counter/accept/reject/timeline, permissions, turn-enforcement, expiry, pricing quote, admin tier assignment) work as specified.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "GET /api/sessions/{session_id}",
+        "issue": "Response does NOT include negotiationStatus, agreedTime, agreedLocation, paymentReady. SessionResponse pydantic model at /app/backend/models.py:402 is missing these four fields, so even though the DB stores them, the API strips them. The frontend payment screen / session-detail screen will not see negotiation state via /api/sessions/{id} and must fall back to the negotiation/timeline endpoint.",
+        "priority": "CRITICAL"
+      },
+      {
+        "endpoint": "POST /api/payments/create-payment-intent",
+        "issue": "Endpoint at /app/backend/routes/payment_routes.py:908-927 has ZERO server-side gating on paymentReady / negotiationStatus=='agreed'. It only validates amount bounds (100<=amount<=500000) then calls Stripe. Any authenticated user can create a payment intent for any session_id (or no session_id) regardless of negotiation state. The auto-test 'create_payment_intent_blocked_before_agreed' superficially passes only because the live Stripe key is expired and returns 400; with a valid Stripe key the endpoint would happily charge before both parties agree. Must add: load session by session_id, require session.paymentReady is True AND current_user is the trainee on that session, else 400/403.",
+        "priority": "CRITICAL"
+      }
+    ],
+    "minor": [
+      {
+        "endpoint": "POST /api/payments/create-payment-intent",
+        "issue": "Live Stripe secret key (sk_live_...QtF7) is expired in the backend environment — even legitimate payment flows return 400 'Expired API Key'. Unrelated to negotiation but blocks any post-agreement payment e2e validation."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration95_negotiation_e2e.py",
+    "/app/test_reports/pytest/iter95_results.xml"
+  ],
+  "action_items": [
+    "Add negotiationStatus, agreedTime, agreedLocation, paymentReady to SessionResponse in /app/backend/models.py (line ~402) and ensure /api/sessions/{id} populates them from the session doc.",
+    "Add payment-gate logic to POST /api/payments/create-payment-intent in /app/backend/routes/payment_routes.py:908: if session_id provided, load session, verify current_user is the trainee on that session, and verify session.paymentReady is True / negotiationStatus == 'agreed' — else raise HTTPException(400, 'Negotiation not yet agreed').",
+    "Rotate the expired Stripe secret key in backend/.env so payment intent creation can succeed in tests post-agreement.",
+    "(Cosmetic) GET /api/sessions/{id}/negotiation/timeline still includes a hard-to-read expiresInMinutes expression (lines 321-328 of negotiation_routes.py) — works, but worth refactoring for clarity."
+  ],
+  "critical_code_review_comments": [
+    "negotiation_routes.py: state machine is clean, well-documented, and behaves exactly per spec (proposed→counter→accept→agreed; reject→rejected→re-propose; expiry after 60min). All 7 endpoint behaviours pass live e2e.",
+    "pricing_tiers.py: canonical pricing matches frontend mirror; calculate_pricing invariants hold (take_home+commission=base; customer_total=base+fee).",
+    "payment_routes.py:908 create_payment_intent — MISSING SECURITY/GATING CHECK. session_id is accepted as a query param but never used to verify negotiation state or even that the session belongs to the caller. This contradicts the entire iter93/94 negotiation contract.",
+    "models.py:402 SessionResponse — fields list is hard-coded and was not extended when iter93 added negotiationStatus/agreedTime/agreedLocation/paymentReady. Consider switching to `model_config = ConfigDict(extra='allow')` or adding the new fields explicitly.",
+    "negotiation_routes.py: timeline endpoint correctly auto-expires stale proposals on read — verified live by back-dating negotiationLastUpdatedAt 2h then GETting timeline."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration95_negotiation_e2e.py (new — 16 live e2e tests covering all review_request bullets)"
+  ],
+  "success_rate": {
+    "backend": "97.4% (37/38 live tests pass; the single failure is the SessionResponse missing-fields bug — confirmed real gap, not a flaky test). Pre-existing iter92/92b/93 static suites: 25/25 still green.",
+    "frontend": "skipped per main agent instruction (React Native Expo, not Playwright-testable)"
+  },
+  "test_credentials": "admin@rapidreps.com/admin123, test_trainee_iter25@test.com/Test123!, test_trainer_iter25@test.com/Test123! — all log in successfully against https://highlight-vibe-bugs.preview.emergentagent.com",
+  "seed_data_creation": "Each test that needed a session inserted a single sessions doc directly via MongoDB and tore it down via the fixture's finalizer (delete_one on the inserted ObjectId). No persistent pollution. Admin tier assignment leaves the trainer's trainer_profiles doc with assignedTier='certified' — harmless, and that's where the seeded trainer would end up anyway after admin verification.",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "After main agent (a) extends SessionResponse with the 4 negotiation fields and (b) adds the paymentReady gate to /api/payments/create-payment-intent, re-run `pytest /app/backend/tests/test_iteration95_negotiation_e2e.py -v` and expect 16/16 to pass. The TestPaymentGating.test_create_payment_intent_blocked_before_agreed assertion accepts 400/402/403/409 — once the gate is added, the response code can be 400 with a 'negotiation' / 'agree' / 'paymentReady' detail string and the test will still pass. Note: a valid Stripe key is also needed for the post-agreement test to truly exercise Stripe; the current test already permits Stripe-side failures as long as the failure detail does NOT mention gating.",
+  "rca of the issue": "Both critical gaps stem from the iter93 negotiation feature being wired only at the routes/negotiation_routes.py boundary without propagating the new contract into (a) the session response schema and (b) the payment intent route. SessionResponse predates iter93 and was never extended; create_payment_intent predates the negotiation gate concept entirely. Mitigation is small and surgical: add 4 Optional fields to SessionResponse, and add ~10 lines of gate logic (load session, verify trainee + paymentReady) at the top of create_payment_intent."
+}

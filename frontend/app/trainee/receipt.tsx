@@ -31,7 +31,7 @@ const COLORS = {
   gray: '#5a6785',
   grayLight: '#F5F6F8',
   success: '#00C853',
-  zellePurple: '#FF7A00',
+  accent: '#FF7A00',
 };
 
 const formatCents = (cents: number) => `$${(cents / 100).toFixed(2)}`;
@@ -239,7 +239,7 @@ export default function ReceiptScreen() {
 
               {/* Payment Method */}
               <View style={styles.paymentMethodBox}>
-                <Ionicons name="send" size={18} color={COLORS.zellePurple} />
+                <Ionicons name="send" size={18} color={COLORS.accent} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.paymentMethodText}>Paid via {receipt.paymentMethod}</Text>
                   {receipt.paymentVerifiedAt ? (
@@ -428,7 +428,7 @@ const styles = StyleSheet.create({
     padding: 12,
     marginTop: 16,
   },
-  paymentMethodText: { fontSize: 14, fontWeight: '700', color: COLORS.zellePurple },
+  paymentMethodText: { fontSize: 14, fontWeight: '700', color: COLORS.accent },
   paymentMethodSub: { fontSize: 12, color: '#8a95b0', marginTop: 2 },
 
   footer: { alignItems: 'center', marginTop: 24, paddingTop: 20, borderTopWidth: 1, borderTopColor: '#E8ECF0' },

@@ -26,7 +26,7 @@ const COLORS = {
   gray: '#5a6785',
   grayLight: '#F5F6F8',
   success: '#00C853',
-  zellePurple: '#6D1ED4',
+  zellePurple: '#635BFF',
 };
 
 const formatCents = (cents: number) => `$${(cents / 100).toFixed(2)}`;
@@ -112,8 +112,8 @@ export default function TraineeReceiptsTab() {
             <Text style={styles.headerSub}>{total} payment{total !== 1 ? 's' : ''} verified</Text>
           </View>
           <View style={styles.zelleTag}>
-            <Ionicons name="send" size={14} color={COLORS.zellePurple} />
-            <Text style={styles.zelleTagText}>Zelle</Text>
+            <Ionicons name="card" size={14} color={COLORS.zellePurple} />
+            <Text style={styles.zelleTagText}>Stripe</Text>
           </View>
         </View>
 

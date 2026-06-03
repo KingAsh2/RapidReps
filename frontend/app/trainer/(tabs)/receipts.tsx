@@ -26,7 +26,7 @@ const COLORS = {
   gray: '#5a6785',
   grayLight: '#F5F6F8',
   success: '#00C853',
-  zellePurple: '#6D1ED4',
+  zellePurple: '#635BFF',
 };
 
 const formatCents = (cents: number) => `$${(cents / 100).toFixed(2)}`;

@@ -74,7 +74,8 @@ export default function TrainerHomeScreen() {
   const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [locationPermission, setLocationPermission] = useState<boolean | null>(null);
   const [menuVisible, setMenuVisible] = useState(false);
-  const [needsZelleSetup, setNeedsZelleSetup] = useState(false);
+  // Stripe payout banner — replaces legacy Zelle setup gate
+  const [needsPayoutSetup, setNeedsPayoutSetup] = useState(false);
   // One-time post-approval celebratory modal — fires when canGoLive becomes true and never been shown
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const APPROVAL_SEEN_KEY = '@rapidreps_trainer_approval_modal_seen';
@@ -317,11 +318,12 @@ export default function TrainerHomeScreen() {
         }
       }
       
-      // Check Zelle setup
+      // Stripe payout banner — show until trainer-side payout is configured
+      // (legacy Zelle endpoint stays available for back-compat; we just gate the banner on it for now)
       try {
         const zelleInfo = await trainerAPI.getZelleInfo();
-        setNeedsZelleSetup(!zelleInfo.hasZelleInfo);
-      } catch { setNeedsZelleSetup(true); }
+        setNeedsPayoutSetup(!zelleInfo.hasZelleInfo);
+      } catch { setNeedsPayoutSetup(true); }
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -549,19 +551,19 @@ export default function TrainerHomeScreen() {
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.white} />
             }
           >
-            {/* Zelle Setup Banner */}
-            {needsZelleSetup && (
+            {/* Stripe Payouts Setup Banner */}
+            {needsPayoutSetup && (
               <TouchableOpacity
-                style={{ backgroundColor: '#6D1ED4', borderRadius: 14, padding: 16, marginHorizontal: 16, marginBottom: 12, flexDirection: 'row', alignItems: 'center', gap: 12 }}
+                style={{ backgroundColor: '#635BFF', borderRadius: 14, padding: 16, marginHorizontal: 16, marginBottom: 12, flexDirection: 'row', alignItems: 'center', gap: 12 }}
                 onPress={() => router.push('/trainer/connect-bank')}
-                data-testid="zelle-setup-banner"
+                data-testid="payout-setup-banner"
               >
                 <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' }}>
-                  <Ionicons name="cash" size={22} color={COLORS.white} />
+                  <Ionicons name="card" size={22} color={COLORS.white} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 15, fontWeight: '800', color: COLORS.white }}>Set Up Zelle Payments</Text>
-                  <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>Add your Zelle info to receive payouts</Text>
+                  <Text style={{ fontSize: 15, fontWeight: '800', color: COLORS.white }}>Set Up Stripe Payouts</Text>
+                  <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>Get paid your tier % on every completed session.</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.6)" />
               </TouchableOpacity>
