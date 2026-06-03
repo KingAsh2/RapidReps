@@ -91,14 +91,16 @@ export const PremiumHeroBg: React.FC<Props> = ({ variant = 'welcome', children }
   return (
     <View style={styles.root}>
       <ImageBackground source={SOURCES[variant]} style={StyleSheet.absoluteFill} resizeMode="cover">
+        {/* Subtle global dimmer — softens athlete imagery so headline/CTAs pop */}
+        <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(2,4,12,0.18)' }]} />
         {/* Top vignette — keeps hero copy crisp */}
         <LinearGradient
-          colors={['rgba(10,10,10,0.45)', 'rgba(10,10,10,0)']}
-          style={[StyleSheet.absoluteFill, { height: '40%' }]}
+          colors={['rgba(10,10,10,0.42)', 'rgba(10,10,10,0)']}
+          style={[StyleSheet.absoluteFill, { height: '42%' }]}
         />
         {/* Bottom vignette — keeps CTAs/forms legible */}
         <LinearGradient
-          colors={['rgba(10,10,10,0)', 'rgba(10,10,10,0.78)', 'rgba(10,10,10,0.95)']}
+          colors={['rgba(10,10,10,0)', 'rgba(10,10,10,0.72)', 'rgba(8,8,8,0.94)']}
           style={[StyleSheet.absoluteFill, { top: '45%' }]}
           start={{ x: 0.5, y: 0 }}
           end={{ x: 0.5, y: 1 }}

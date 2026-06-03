@@ -94,7 +94,7 @@ export default function PremiumLoginScreen() {
                   { opacity: fade, transform: [{ translateY: slideUp }, { scale: heroScale }] },
                 ]}
               >
-                <PremiumLogo size={190} testID="premium-login-logo" />
+                <PremiumLogo size={212} testID="premium-login-logo" />
                 <Text style={styles.brandWordmark} numberOfLines={1}>RAPIDREPS</Text>
                 <Text style={styles.eyebrow} numberOfLines={1}>WELCOME BACK</Text>
                 <Text

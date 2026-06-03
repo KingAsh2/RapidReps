@@ -68,7 +68,7 @@ export default function PremiumWelcomeScreen() {
               { opacity: fade, transform: [{ translateY: slideUp }] },
             ]}
           >
-            <PremiumLogo size={200} testID="premium-welcome-logo" />
+            <PremiumLogo size={224} testID="premium-welcome-logo" />
           </Animated.View>
 
           {/* ── Hero typography — larger, tighter, athletic ─── */}
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
     marginTop: 0,
     marginBottom: -6, // slight negative — lets logo halo touch the headline
   },
-  heroTextWrap: { alignItems: 'center', marginBottom: 18, alignSelf: 'stretch' },
+  heroTextWrap: { alignItems: 'center', marginBottom: 26, alignSelf: 'stretch' },
   eyebrow: {
     fontSize: 14,
     fontWeight: '900',
@@ -228,20 +228,21 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   boltUnderline: {
-    width: 200,
+    width: 210,
     height: 3,
-    marginTop: 8,
+    marginTop: 14,
     backgroundColor: PremiumColors.orangeGlow,
     borderRadius: 2,
     shadowColor: PremiumColors.orange,
     shadowOpacity: 0.9,
-    shadowRadius: 10,
+    shadowRadius: 12,
     shadowOffset: { width: 0, height: 0 },
   },
   featuresRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
+    marginTop: 6,
+    marginBottom: 22,
   },
   featureDivider: {
     width: 1,

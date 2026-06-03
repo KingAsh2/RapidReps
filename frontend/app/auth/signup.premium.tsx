@@ -133,7 +133,7 @@ export default function PremiumSignupScreen() {
               <Animated.View
                 style={[styles.heroWrap, { opacity: fade, transform: [{ translateY: slideUp }] }]}
               >
-                <PremiumLogo size={160} haloIntensity={0.85} testID="premium-signup-logo" />
+                <PremiumLogo size={180} haloIntensity={0.85} testID="premium-signup-logo" />
                 <Text style={styles.eyebrow} numberOfLines={1}>
                   {isTrainer ? 'JOIN THE ELITE' : 'LET\u2019S GET YOU MOVING'}
                 </Text>

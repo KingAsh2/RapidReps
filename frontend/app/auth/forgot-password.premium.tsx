@@ -106,7 +106,7 @@ export default function PremiumForgotPasswordScreen() {
               <Animated.View
                 style={[styles.heroWrap, { opacity: fade, transform: [{ translateY: slideUp }] }]}
               >
-                <PremiumLogo size={160} haloIntensity={0.8} testID="premium-forgot-logo" />
+                <PremiumLogo size={180} haloIntensity={0.8} testID="premium-forgot-logo" />
                 <Text style={styles.eyebrow} numberOfLines={1}>
                   {emailSent ? 'CHECK YOUR INBOX' : 'PASSWORD RESET'}
                 </Text>

@@ -40,7 +40,7 @@ export const PremiumGradientButton: React.FC<Props> = ({
     variant === 'login'
       ? ['#FF6A00', '#FF9B2F', '#FFB347', '#FF9B2F', '#FF6A00']
       : variant === 'secondary'
-      ? ['rgba(4,6,14,0.96)', 'rgba(8,18,42,0.92)', 'rgba(4,6,14,0.96)']
+      ? ['rgba(2,4,12,0.97)', 'rgba(6,14,30,0.93)', 'rgba(3,6,16,0.96)']
       : ['#0E1F3D', '#1B2E5C', '#FF7A00', '#FFB347'];
 
   const isSecondary = variant === 'secondary';
@@ -71,6 +71,8 @@ export const PremiumGradientButton: React.FC<Props> = ({
         >
           {/* Subtle inner glass highlight */}
           <View pointerEvents="none" style={styles.innerHighlight} />
+          {/* Secondary: top-edge specular hairline for premium glass feel */}
+          {isSecondary && <View pointerEvents="none" style={styles.secondaryEdgeHighlight} />}
 
           {leftIcon && (
             <View style={styles.leftIconWrap}>
@@ -117,9 +119,9 @@ const styles = StyleSheet.create({
   },
   wrapSecondary: {
     shadowColor: PremiumColors.orange,
-    shadowOpacity: 0.55,
-    shadowRadius: 22,
-    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.7,
+    shadowRadius: 28,
+    shadowOffset: { width: 0, height: 10 },
   },
   wrapLogin: {
     shadowColor: PremiumColors.orangeGlow,
@@ -144,6 +146,15 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     backgroundColor: 'rgba(255,255,255,0.18)',
     opacity: 0.5,
+  },
+  secondaryEdgeHighlight: {
+    position: 'absolute',
+    top: 0,
+    left: 14,
+    right: 14,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.28)',
+    opacity: 0.9,
   },
   leftIconWrap: {
     flexDirection: 'row',
@@ -175,11 +186,11 @@ const styles = StyleSheet.create({
     right: -2,
     bottom: -2,
     borderRadius: PremiumRadii.pill,
-    borderWidth: 1.8,
+    borderWidth: 2.2,
     borderColor: PremiumColors.orangeGlow,
     shadowColor: PremiumColors.orange,
-    shadowOpacity: 0.7,
-    shadowRadius: 14,
+    shadowOpacity: 0.85,
+    shadowRadius: 18,
     shadowOffset: { width: 0, height: 0 },
   },
 });
