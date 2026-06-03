@@ -210,3 +210,27 @@ def send_admin_alert_email(to_email: str, alert_type: str, details: str) -> bool
         <p style="color:#8892b0;font-size:13px;">This is an automated alert from the RapidReps system.</p>
     """)
     return _send(to_email, f'{APP_NAME} Admin Alert — {alert_type}', html)
+
+
+
+# 9. Trainer Tier Assigned
+def send_tier_assigned_email(to_email: str, trainer_name: str, tier: str, tier_label: str, take_home_pct: int) -> bool:
+    """Notify a trainer that admin placed them in a pricing tier (new/certified/specialty)."""
+    accent = {
+        'new': '#FF7A00', 'certified': '#3B82F6', 'specialty': '#22C55E',
+    }.get(tier, '#FF7A00')
+    html = _wrap(f"""
+        <h2 style="color:#1a2a5e;margin:0 0 12px;">You're In: {tier_label} Tier</h2>
+        <p style="color:#4a5568;line-height:1.6;">Hi {trainer_name},</p>
+        <p style="color:#4a5568;line-height:1.6;">
+          Admin has placed you in the <strong style="color:{accent};">{tier_label}</strong> tier on RapidReps.
+        </p>
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin:20px 0;">
+          <p style="margin:4px 0;color:#4a5568;"><strong>Your take-home:</strong>
+            <span style="color:{accent};font-weight:700;font-size:18px;">{take_home_pct}%</span> per completed session
+          </p>
+          <p style="margin:4px 0;color:#4a5568;">You can now set your rates inside the trainer dashboard.</p>
+        </div>
+        <p style="color:#4a5568;line-height:1.6;">Head into <strong>Trainer → Set Rates</strong> to update your hourly rates and start accepting bookings.</p>
+    """)
+    return _send(to_email, f'{APP_NAME} — Welcome to the {tier_label} Tier', html)

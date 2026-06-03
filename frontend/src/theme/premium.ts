@@ -155,3 +155,13 @@ export const UI_VERSION: 'classic' | 'premium' =
   (process.env.EXPO_PUBLIC_UI_VERSION as 'classic' | 'premium') || 'premium';
 
 export const isPremium = () => UI_VERSION === 'premium';
+
+/**
+ * Welcome A/B test variant — only consulted when UI_VERSION === 'premium'.
+ *   'A' (default) → the iter89 cinematic "DELIVERED RAPIDLY" hero.
+ *   'B'           → the iter95 community-first "TRAINERS NEAR YOU" hero.
+ * Flip via /app/frontend/.env (EXPO_PUBLIC_WELCOME_VARIANT=B) and restart Expo.
+ */
+export const WELCOME_VARIANT: 'A' | 'B' =
+  (process.env.EXPO_PUBLIC_WELCOME_VARIANT as 'A' | 'B') || 'A';
+

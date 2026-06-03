@@ -4,6 +4,39 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-06-03 — Iteration 95b: Trainer Session Detail + Welcome A/B + Tier Email 📧 ✅
+
+### Shipped
+- **Trainer Session Detail screen** (`app/trainer/session-detail.tsx`) — counterpart to the trainee detail screen. Embeds the shared `NegotiationPanel` (so trainers can Propose/Counter/Accept time+location), shows trainee avatar + Message/Call quick-actions, scheduled time, take-home earnings preview, and post-confirmation quick-links (En route / GPS check-in / Start Session). Fully styled with `DS` (designSystem) tokens.
+- **Trainer Sessions tab → detail navigation** (`app/trainer/(tabs)/sessions.tsx`): session cards are now `TouchableOpacity` routing to `/trainer/session-detail?sessionId=…`.
+- **Welcome A/B harness** (`src/theme/premium.ts`): added `WELCOME_VARIANT: 'A'|'B'` driven by `EXPO_PUBLIC_WELCOME_VARIANT`. New `app/index.premium-b.tsx` placeholder ready for divergent hero/messaging. `app/index.tsx` switcher now routes premium→A or premium→B based on the flag (classic still wins when `EXPO_PUBLIC_UI_VERSION=classic`).
+- **Tier-assigned email** (`backend/email_service.py:send_tier_assigned_email`): SendGrid HTML email when admin assigns a trainer to a tier (shows tier label + take-home %). Wired into `routes/payment_routes.py::admin_assign_tier` as fire-and-forget. No-ops cleanly when `SENDGRID_API_KEY` is unset (logs an `[EMAIL-NOOP]` line).
+
+### Verified
+- ✅ **50/50 backend pytest guards green** (iter92+92b+93+94+95+95b). New iter95b suite (`test_iteration95b_trainer_detail_and_ab.py`) adds 9 fresh guards covering trainer session-detail, A/B harness wiring, tier-assigned email helper + route wiring, payment-gating preservation, and SessionResponse field surfacing.
+- ✅ Metro bundler clean rebundle on every file change.
+- ✅ Backend hot-reload picked up `email_service.py` + `payment_routes.py` cleanly.
+
+### Files added
+- `frontend/app/trainer/session-detail.tsx` (new trainer-side detail screen)
+- `frontend/app/index.premium-b.tsx` (A/B Variant B stub)
+- `backend/tests/test_iteration95b_trainer_detail_and_ab.py` (9 new static guards)
+
+### Files modified
+- `frontend/app/trainer/(tabs)/sessions.tsx` — cards now navigate to detail
+- `frontend/app/index.tsx` — switcher consults `WELCOME_VARIANT`
+- `frontend/src/theme/premium.ts` — exported `WELCOME_VARIANT`
+- `backend/email_service.py` — added `send_tier_assigned_email`
+- `backend/routes/payment_routes.py` — `admin_assign_tier` sends email
+
+### Outstanding (carryover)
+- 🟠 **P1 (still pending)**: Apply `designSystem.ts` tokens to top-10 screens (Discover, Trainee/Trainer Home, Profile, Settings, Sessions list, Messages, Booking, Admin Dashboard). Trainer session-detail.tsx is the first screen to fully adopt DS — pattern to replicate.
+- 🟡 P2: Chunked multipart uploads for Highlight Reels (still pending).
+- 🟢 P3: B2B corporate wellness onboarding.
+- ⛔ Blocked on user: Instagram Graph API key, SendGrid API key.
+- ⛔ Stripe live key in backend/.env is expired (`sk_live_…QtF7`) — replace before going live.
+
+
 ## 2026-06-03 — Iteration 95: Negotiation UI + Frontend Zelle Strip + Payment Gating 🔒 ✅
 
 ### Shipped

@@ -145,7 +145,13 @@ export default function TrainerSessionsScreen() {
             </View>
           ) : (
             filteredSessions.map((session, idx) => (
-              <View key={session.id || idx} style={styles.sessionCard} data-testid={`session-card-${idx}`}>
+              <TouchableOpacity
+                key={session.id || idx}
+                style={styles.sessionCard}
+                data-testid={`session-card-${idx}`}
+                onPress={() => session.id && router.push(`/trainer/session-detail?sessionId=${session.id}`)}
+                activeOpacity={0.85}
+              >
                 <View style={styles.sessionHeader}>
                   <View style={[styles.sessionIconBg, { backgroundColor: `${getStatusColor(session.status)}20` }]}>
                     <Ionicons name={getSessionIcon(session.sessionType) as any} size={20} color={getStatusColor(session.status)} />
@@ -209,7 +215,7 @@ export default function TrainerSessionsScreen() {
                     <Text style={styles.receiptBtnText}>Download Receipt</Text>
                   </TouchableOpacity>
                 )}
-              </View>
+              </TouchableOpacity>
             ))
           )}
 

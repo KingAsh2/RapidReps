@@ -406,6 +406,21 @@ async def admin_assign_tier(
         "tier_assigned",
         {"tier": req.tier},
     ))
+
+    # Fire-and-forget email so the trainer knows even if they're offline.
+    try:
+        from email_service import send_tier_assigned_email
+        take_home_pct = 100 - TIER_MATRIX[req.tier]["commission_percent"]
+        send_tier_assigned_email(
+            to_email=user_doc.get("email", ""),
+            trainer_name=user_doc.get("fullName") or user_doc.get("displayName") or "Trainer",
+            tier=req.tier,
+            tier_label=TIER_MATRIX[req.tier]["label"],
+            take_home_pct=take_home_pct,
+        )
+    except Exception as e:
+        logging.warning(f"tier_assigned_email failed: {e}")
+
     return {"success": True, "tier": req.tier}
 
 
