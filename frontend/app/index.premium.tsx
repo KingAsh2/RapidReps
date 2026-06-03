@@ -27,7 +27,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '../src/contexts/AuthContext';
 import { PremiumColors } from '../src/theme/premium';
 import { PremiumHeroBg } from '../src/components/premium/PremiumHeroBg';
 import { PremiumGradientButton } from '../src/components/premium/PremiumGradientButton';
@@ -36,15 +36,25 @@ import { PremiumLogo } from '../src/components/premium/PremiumLogo';
 
 export default function PremiumWelcomeScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const fade = useRef(new Animated.Value(0)).current;
   const slideUp = useRef(new Animated.Value(28)).current;
 
+  // If user is already authenticated when they land here, route them
+  // to the correct dashboard (matches login.premium.tsx routing).
   useEffect(() => {
-    (async () => {
-      const token = await AsyncStorage.getItem('@rapidreps_token');
-      if (token) router.replace('/auth/login');
-    })();
+    if (user) {
+      if (user.isAdmin || user.roles?.includes('admin')) {
+        router.replace('/admin/dashboard');
+      } else if (user.roles?.includes('trainer')) {
+        router.replace('/trainer/(tabs)/home');
+      } else if (user.roles?.includes('trainee')) {
+        router.replace('/trainee/(tabs)/home');
+      }
+    }
+  }, [user]);
 
+  useEffect(() => {
     Animated.parallel([
       Animated.timing(fade, { toValue: 1, duration: 700, useNativeDriver: true }),
       Animated.timing(slideUp, {
