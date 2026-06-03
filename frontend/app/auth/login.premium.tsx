@@ -61,7 +61,7 @@ export default function PremiumLoginScreen() {
     haptic.light();
     setLoading(true);
     try {
-      await login({ email: email.trim().toLowerCase(), password });
+      await login(email.trim().toLowerCase(), password);
     } catch (err: any) {
       showAlert({
         title: 'Login failed',
