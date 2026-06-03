@@ -26,6 +26,7 @@ import { PremiumHeroBg } from '../../src/components/premium/PremiumHeroBg';
 import { PremiumGlassInput } from '../../src/components/premium/PremiumGlassInput';
 import { PremiumGradientButton } from '../../src/components/premium/PremiumGradientButton';
 import { PremiumLogo } from '../../src/components/premium/PremiumLogo';
+import { formatApiError } from '../../src/utils/formatApiError';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -70,7 +71,7 @@ export default function PremiumForgotPasswordScreen() {
     } catch (err: any) {
       showAlert({
         title: 'Error',
-        message: err?.response?.data?.detail || 'Something went wrong. Try again.',
+        message: formatApiError(err, 'Something went wrong. Try again.'),
         type: 'error',
       });
     } finally {

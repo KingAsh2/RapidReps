@@ -31,6 +31,7 @@ import { PremiumHeroBg } from '../../src/components/premium/PremiumHeroBg';
 import { PremiumGlassInput } from '../../src/components/premium/PremiumGlassInput';
 import { PremiumGradientButton } from '../../src/components/premium/PremiumGradientButton';
 import { PremiumLogo } from '../../src/components/premium/PremiumLogo';
+import { formatApiError } from '../../src/utils/formatApiError';
 
 export default function PremiumSignupScreen() {
   const router = useRouter();
@@ -97,7 +98,7 @@ export default function PremiumSignupScreen() {
       if (formData.roles.includes(UserRole.TRAINER)) router.replace('/auth/onboarding-trainer');
       else router.replace('/auth/onboarding-trainee');
     } catch (err: any) {
-      showAlert({ title: 'Signup failed', message: err?.response?.data?.detail || 'Try again.', type: 'error' });
+      showAlert({ title: 'Signup failed', message: formatApiError(err, 'Try again.'), type: 'error' });
     } finally {
       setLoading(false);
     }

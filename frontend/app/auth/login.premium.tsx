@@ -29,6 +29,7 @@ import { PremiumHeroBg } from '../../src/components/premium/PremiumHeroBg';
 import { PremiumGlassInput } from '../../src/components/premium/PremiumGlassInput';
 import { PremiumGradientButton } from '../../src/components/premium/PremiumGradientButton';
 import { PremiumLogo } from '../../src/components/premium/PremiumLogo';
+import { formatApiError } from '../../src/utils/formatApiError';
 
 export default function PremiumLoginScreen() {
   const router = useRouter();
@@ -64,7 +65,7 @@ export default function PremiumLoginScreen() {
     } catch (err: any) {
       showAlert({
         title: 'Login failed',
-        message: err?.response?.data?.detail || 'Check your credentials and try again.',
+        message: formatApiError(err, 'Check your credentials and try again.'),
         type: 'error',
       });
     } finally {
