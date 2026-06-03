@@ -443,6 +443,20 @@ class SessionResponse(BaseModel):
     traineePhone: Optional[str] = None
     isGroupSession: bool = False
     zellePaymentStatus: Optional[str] = None
+    # Negotiation state machine (iter93+) — surface to clients so payment screens
+    # know whether to allow checkout and which time/location was agreed.
+    negotiationStatus: Optional[str] = None
+    agreedTime: Optional[datetime] = None
+    agreedLocation: Optional[dict] = None
+    paymentReady: Optional[bool] = None
+    proposedTime: Optional[datetime] = None
+    proposedLocation: Optional[dict] = None
+    # Tier-aware pricing fields (iter92)
+    tier: Optional[str] = None
+    modality: Optional[str] = None
+    durationMin: Optional[int] = None
+    baseCents: Optional[int] = None
+    totalCents: Optional[int] = None
 
 class RatingCreate(BaseModel):
     sessionId: str

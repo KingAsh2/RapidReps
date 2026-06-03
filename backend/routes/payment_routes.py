@@ -912,11 +912,35 @@ async def create_payment_intent(
     session_id: Optional[str] = None, description: str = "RapidReps Session",
     current_user: dict = Depends(get_current_user)
 ):
-    """Create a Stripe payment intent for a session"""
+    """Create a Stripe payment intent for a session.
+
+    Negotiation gate (iter95): when a session_id is supplied, the session MUST
+    have negotiationStatus == 'agreed' (paymentReady=True) and the current user
+    MUST be the trainee on that session. Charges before mutual agreement are
+    explicitly rejected to honor the iter93+ contract.
+    """
     if amount_cents < 100:
         raise HTTPException(status_code=400, detail="Minimum payment amount is $1.00")
     if amount_cents > 500000:
         raise HTTPException(status_code=400, detail="Amount exceeds maximum allowed ($5,000)")
+
+    # Negotiation / ownership gate
+    if session_id:
+        try:
+            session_oid = ObjectId(session_id)
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid session id.")
+        session_doc = await db.sessions.find_one({"_id": session_oid})
+        if not session_doc:
+            raise HTTPException(status_code=404, detail="Session not found.")
+        if str(current_user['_id']) != session_doc.get('traineeId'):
+            raise HTTPException(status_code=403, detail="Only the trainee on this session can pay.")
+        if not session_doc.get('paymentReady') or session_doc.get('negotiationStatus') != 'agreed':
+            raise HTTPException(
+                status_code=400,
+                detail="Payment unlocks after both parties agree on time and location. Negotiation not yet agreed.",
+            )
+
     try:
         intent = stripe.PaymentIntent.create(
             amount=amount_cents, currency='usd',

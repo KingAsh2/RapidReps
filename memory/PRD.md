@@ -1,7 +1,55 @@
 # RapidReps PRD
 
 ## Original Problem Statement
-RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, Zelle payments, trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards.
+RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
+
+
+## 2026-06-03 — Iteration 95: Negotiation UI + Frontend Zelle Strip + Payment Gating 🔒 ✅
+
+### Shipped
+Closed the last open seams in the Stripe-only / negotiation-gated payment flow that iter93/94 only handled at the backend boundary.
+
+- **NegotiationPanel component** (`src/components/NegotiationPanel.tsx`): reusable propose/counter/accept/reject UI with time+location editor (native datetime picker), turn-based gating, status badges, expiry countdown, and on-agreed callback. Wired into trainee `session-detail.tsx` immediately after the status timeline — gates the Pay CTA until both parties confirm.
+- **`negotiationAPI` helper** in `src/services/api.ts`: typed wrappers around `/api/sessions/{id}/negotiation/{propose,counter,accept,reject,timeline}` plus a `NegotiationTimeline` interface.
+- **Server-side payment gate** (`backend/routes/payment_routes.py:create_payment_intent`): when a `session_id` is supplied, the endpoint now (a) resolves the session, (b) verifies the caller is the trainee on that session, (c) requires `negotiationStatus == 'agreed'` AND `paymentReady == True`, else 400 with "Negotiation not yet agreed". Closes a critical loophole where any logged-in user could create payment intents for any session pre-agreement.
+- **`SessionResponse` schema extended** (`backend/models.py`): now surfaces `negotiationStatus`, `agreedTime`, `agreedLocation`, `paymentReady`, `proposedTime`, `proposedLocation`, plus iter92 tier-aware fields (`tier`, `modality`, `durationMin`, `baseCents`, `totalCents`). Frontend payment screen no longer needs a separate timeline call to know if checkout is allowed.
+- **Frontend Zelle strip** (in-progress carryover from iter94):
+  - `app/trainee/confirm-booking.tsx`: "Payment via Zelle" card → "Payment via Stripe", policy line + secure-note updated. Stripe-secured copy throughout.
+  - `app/trainer/(tabs)/home.tsx`: `needsZelleSetup` banner → `needsPayoutSetup` with Stripe purple (#635BFF) + card icon + "Set Up Stripe Payouts" copy.
+  - `app/trainer/(tabs)/earnings.tsx`: "Set Up Zelle Account" → "Set Up Stripe Payouts"; "Zelle account connected" → "Stripe payouts enabled".
+  - `src/components/admin/PayoutsTab.tsx`: full Stripe rewrite — "Mark All Paid via Stripe", tier badge replaces email/phone, "via Stripe" labels in history.
+  - `app/trainee/receipt.tsx`, `app/trainer/receipt.tsx`, `app/trainee/(tabs)/receipts.tsx`, `app/trainer/(tabs)/receipts.tsx`: legacy `zellePurple` accent renamed to `accent`/Stripe blue; "Zelle" badge → "Stripe" badge.
+
+### Verified
+- ✅ **41 backend pytest guards green** (iter92 + 92b + 93 + 94 + new iter95 e2e) — including 16 fresh live e2e tests covering propose→counter→accept happy path, reject + re-propose, non-participant 403, turn enforcement, 1h expiry auto-flip, pricing-quote matrix, admin tier assignment, **AND payment-intent gating both pre- and post-agreement**.
+- ✅ TypeScript: zero new errors in NegotiationPanel.tsx, session-detail.tsx, services/api.ts, payment.tsx, connect-bank.tsx. Pre-existing repo-wide TS errors are unchanged.
+- ✅ Metro bundler: 739-module rebundle clean (`Web Bundled 432ms`), no compile errors.
+- ✅ Backend hot-reload picked up models + payment_routes changes cleanly.
+
+### Files added
+- `frontend/src/components/NegotiationPanel.tsx` (new — reusable propose/counter/accept UI)
+- `backend/tests/test_iteration95_negotiation_e2e.py` (added by testing subagent — 16 live e2e tests)
+
+### Files modified
+- `backend/models.py` — `SessionResponse` now surfaces negotiation + tier fields
+- `backend/routes/payment_routes.py` — `create_payment_intent` enforces paymentReady gate
+- `frontend/src/services/api.ts` — added `negotiationAPI` + `NegotiationTimeline` interface
+- `frontend/app/trainee/session-detail.tsx` — embedded `<NegotiationPanel />` after status card
+- `frontend/app/trainee/confirm-booking.tsx` — Stripe payment card
+- `frontend/app/trainer/(tabs)/home.tsx` — Stripe payouts banner
+- `frontend/app/trainer/(tabs)/earnings.tsx` — Stripe payouts CTA
+- `frontend/src/components/admin/PayoutsTab.tsx` — Stripe-only admin UI
+- `frontend/app/trainee/receipt.tsx`, `frontend/app/trainer/receipt.tsx`, `frontend/app/trainee/(tabs)/receipts.tsx`, `frontend/app/trainer/(tabs)/receipts.tsx` — accent rename, Stripe labels
+
+### Outstanding (carryover)
+- 🟠 P1: `designSystem.ts` global polish pass on top-10 screens (Discover, Trainee/Trainer Home, Profile, Settings, Sessions list, Messages, Booking, Admin Dashboard) — strictly visual, no logic changes.
+- 🟠 P1: Trainer-side session-detail screen + NegotiationPanel embed (trainer currently can only counter/accept from a trainee-initiated proposal via API; no dedicated screen).
+- 🟡 P2: Resend email to trainers on tier assignment.
+- 🟡 P2: A/B harness for Welcome variants (`EXPO_PUBLIC_WELCOME_VARIANT=A|B`).
+- 🟡 P2: Chunked multipart uploads for Highlight Reels.
+- 🟢 P3: B2B corporate wellness onboarding.
+- ⛔ Blocked on user: Instagram Graph API key, SendGrid API key.
+- ⛔ Stripe live key in backend/.env is expired (sk_live_…QtF7) — replace before going live.
 
 
 ## 2026-06-02 — Iteration 90: Premium Redesign Refinement Pass ✨
