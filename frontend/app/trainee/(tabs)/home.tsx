@@ -936,7 +936,11 @@ export default function TraineeHomeScreen() {
           <TrainerBottomSheet
             trainers={bottomSheetTrainers}
             selectedTrainerId={selectedTrainerId}
-            onSelectTrainer={(trainer) => setSelectedTrainerId(trainer.id)}
+            onSelectTrainer={(trainer) => {
+              setSelectedTrainerId(trainer.id);
+              // Navigate immediately to the trainer's profile so user can see full details.
+              router.push(`/trainee/trainer-detail?trainerId=${trainer.id}`);
+            }}
             onBookTrainer={handleBottomSheetBook}
             isVisible={bottomSheetTrainers.length > 0}
           />
