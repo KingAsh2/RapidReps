@@ -4,6 +4,70 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-06-03 — Iteration 96: DS Sweep Closure + B2B Corporate Wellness 🚀 ✅
+
+### Shipped
+
+**P1 — Design System Token Sweep Closure**
+- Verified the prior bulk search/replace on 5 frontend files was syntactically clean (TS parses with zero TS1xxx errors)
+- Applied DS token mapping to all remaining tabs/screens:
+  - `app/trainer/(tabs)/home.tsx` (already in flight)
+  - `app/trainee/(tabs)/messages.tsx` — COLORS map now sources from `DS.colors`
+  - `app/trainer/(tabs)/messages.tsx` — COLORS map now sources from `DS.colors`
+  - `app/trainee/confirm-booking.tsx` — COLORS map now sources from `DS.colors`
+  - `app/trainer/(tabs)/profile.tsx` — COLORS map now sources from `DS.colors`
+  - `src/components/admin/AdminShared.tsx` — the central `C = {...}` palette used by the entire admin dashboard now routes through `DS.colors`, unifying every admin tab in one move
+
+**P3 — B2B Corporate Wellness Onboarding (Full Scope)**
+- **Backend** (`/app/backend/routes/corporate_routes.py`, 12 endpoints under `/api/corporate/*`):
+  - `POST /companies` — self-serve signup; creator auto-promoted to company admin; slug uniqueness enforced
+  - `GET /companies` (platform admin only) · `GET /companies/{id}` · `PATCH /companies/{id}` (company admin gated)
+  - `POST /companies/{id}/credit-pool` — top-up with ledger row in `corporate_credit_ledger`
+  - `POST /companies/{id}/invites` — generates an 8-char alphanumeric invite code with `maxUses`, `creditAllowanceCents`, `expiresInDays`
+  - `GET /companies/{id}/invites` · `GET /companies/{id}/employees` (enriches with user.fullName/email) · `GET /companies/{id}/usage`
+  - `POST /redeem` — trainee enters code, creates `corporate_memberships` row, increments invite + employee counters, denormalizes `corporateCompanyId` on the user doc
+  - `GET /me/company` — current user's affiliation
+  - `GET /landing/{slug}` — **public, no auth**; deliberately strips `creditPoolCents`, `adminUserIds`, `contactEmail` from the response
+- **Frontend** (5 new screens):
+  - `app/corporate/index.tsx` — smart router (employee → company card, admin → dashboard, else → signup/redeem)
+  - `app/corporate/signup.tsx` — company self-signup with slug preview ("rapidreps.com/c/<slug>")
+  - `app/corporate/dashboard.tsx` — three tabs: Overview (credit pool hero + stat tiles), Invites (generate + list with active/used status), Employees (avatar list + allowance/used)
+  - `app/corporate/redeem.tsx` — employee code redemption + success screen with allowance reveal
+  - `app/corporate/c/[slug].tsx` — public branded landing page (employer brand color, tagline, feature grid, dual CTAs)
+- **API client**: new `corporateAPI` object in `src/services/api.ts` exposes all 12 methods
+- **Data models**: `corporate_companies`, `corporate_invites`, `corporate_memberships`, `corporate_credit_ledger`
+
+### Verified
+- ✅ **61/61 backend pytest guards pass** (15 new iter96 + 46 carried iter95). Testing agent v3 confirmed 100% pass rate, zero issues, no action items.
+- ✅ Public landing endpoint correctly hides sensitive fields (validated with explicit pytest assertions)
+- ✅ Role gating: trainee 403s on admin-only routes, outsiders 403 on company-scoped routes
+- ✅ Double-enrollment guard (409), expired invite (410), invalid code (404), negative top-up (422)
+- ✅ DS token sweep static guards confirm DS.colors in all 6 target files
+
+### Files added
+- `backend/routes/corporate_routes.py` (480 lines, 12 endpoints)
+- `backend/tests/test_iteration96_corporate.py` (20 guards — 15 live API + 5 static)
+- `frontend/app/corporate/index.tsx`
+- `frontend/app/corporate/signup.tsx`
+- `frontend/app/corporate/redeem.tsx`
+- `frontend/app/corporate/dashboard.tsx`
+- `frontend/app/corporate/c/[slug].tsx`
+
+### Files modified
+- `backend/server.py` — wires `corporate_router` with `/api` prefix
+- `frontend/src/services/api.ts` — appends `corporateAPI` object
+- `frontend/app/trainer/(tabs)/home.tsx`, `trainee/(tabs)/messages.tsx`, `trainer/(tabs)/messages.tsx`, `trainee/confirm-booking.tsx`, `trainer/(tabs)/profile.tsx`, `src/components/admin/AdminShared.tsx` — DS token adoption
+
+### Still blocked
+- SendGrid email — awaiting `SENDGRID_API_KEY` (currently logs to console only)
+- Instagram Graph API — awaiting `Instagram App ID` + Secret
+
+### Next up
+- Hash-based A/B Welcome variant assignment (currently env-flag controlled via `EXPO_PUBLIC_WELCOME_VARIANT`)
+- Wire corporate credit pool into the payment flow so employee bookings actually debit from `creditPoolCents` and `creditUsedCents`
+- "Open Corporate" CTA from the auth/welcome screens for inbound B2B traffic
+
+
 ## 2026-06-03 — Iteration 95c: Variant B + Tier Celebration + Chunked Reels + DS Sweep 🎯 ✅
 
 ### Shipped (all 4 parts of the batch)
