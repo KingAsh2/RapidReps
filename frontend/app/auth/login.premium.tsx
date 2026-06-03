@@ -61,8 +61,17 @@ export default function PremiumLoginScreen() {
     haptic.light();
     setLoading(true);
     try {
-      await login(email.trim().toLowerCase(), password);
+      const loggedInUser = await login(email.trim().toLowerCase(), password);
+      haptic.success();
+      if (loggedInUser.isAdmin || loggedInUser.roles?.includes('admin')) {
+        router.replace('/admin/dashboard');
+      } else if (loggedInUser.roles?.includes('trainer')) {
+        router.replace('/trainer/(tabs)/home');
+      } else {
+        router.replace('/trainee/(tabs)/home');
+      }
     } catch (err: any) {
+      haptic.error();
       showAlert({
         title: 'Login failed',
         message: formatApiError(err, 'Check your credentials and try again.'),
