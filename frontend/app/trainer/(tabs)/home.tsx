@@ -31,27 +31,28 @@ import { useNotifications } from '../../../src/contexts/NotificationContext';
 import { toast } from '../../../src/utils/toast';
 import { haptic } from '../../../src/utils/haptics';
 import PeopleSearchBar from '../../../src/components/PeopleSearchBar';
+import { DS } from '../../../src/theme/designSystem';
 
 const { width } = Dimensions.get('window');
 
-// Brand colors
+// Brand colors — iter95d: sourced from unified DS tokens
 const COLORS = {
   teal: '#1a2a5e',
   tealLight: '#2a3a6e',
-  orange: '#F7931E',
-  orangeHot: '#FF6A00',
-  orangeLight: '#FF9F1C',
-  orangeGlow: '#FFB347',
+  orange: DS.colors.orange,
+  orangeHot: DS.colors.orangeDeep,
+  orangeLight: DS.colors.orangeGlow,
+  orangeGlow: DS.colors.orangeEmber,
   yellow: '#FDBB2D',
   navy: '#1a2a5e',
   navyLight: '#2a3a6e',
-  white: '#FFFFFF',
+  white: DS.colors.textPrimary,
   offWhite: '#FAFBFC',
-  gray: '#5a6785',
-  grayLight: '#E8ECF0',
-  success: '#00C853',
+  gray: DS.colors.textSecondary,
+  grayLight: DS.colors.borderStrong,
+  success: DS.colors.success,
   successDark: '#00A844',
-  error: '#FF4757',
+  error: DS.colors.error,
 };
 
 // Location update interval in ms (30 seconds)
