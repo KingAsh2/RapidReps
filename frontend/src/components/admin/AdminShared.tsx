@@ -12,23 +12,24 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import Svg, { Circle, G, Rect, Text as SvgText, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
+import { DS } from '../../theme/designSystem';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
 export const C = {
-  orange: '#FF6A00',
-  teal: '#FF6A00',
-  navy: '#0A0E1A',
-  navyLight: '#141929',
-  white: '#FFFFFF',
-  gray: '#8a95b0',
-  grayLight: 'rgba(255,255,255,0.06)',
+  orange: DS.colors.orange,
+  teal: DS.colors.orange,
+  navy: DS.colors.bg,
+  navyLight: DS.colors.bgRaised,
+  white: DS.colors.textPrimary,
+  gray: DS.colors.textMuted,
+  grayLight: DS.colors.surface,
   grayDark: 'rgba(255,255,255,0.7)',
-  success: '#00D68F',
-  error: '#FF4757',
-  warning: '#FFB300',
-  bg: '#0A0E1A',
-  card: '#141929',
+  success: DS.colors.success,
+  error: DS.colors.error,
+  warning: DS.colors.warning,
+  bg: DS.colors.bg,
+  card: DS.colors.bgRaised,
 };
 
 export const PAGE_SIZE = 20;

@@ -17,18 +17,19 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { chatAPI } from '../../../src/services/api';
+import { DS } from '../../../src/theme/designSystem';
 
-// Brand colors
+// Brand colors — iter95d: sourced from unified DS tokens
 const COLORS = {
-  orange: '#FF7F00',
-  orangeLight: '#FFA526',
+  orange: DS.colors.orange,
+  orangeLight: DS.colors.orangeGlow,
   teal: '#1a2a5e',
   tealLight: '#2a3a6e',
   navy: '#1a2a5e',
-  white: '#FFFFFF',
+  white: DS.colors.textPrimary,
   offWhite: '#FAFBFC',
-  gray: '#5a6785',
-  grayLight: '#E8ECF0',
+  gray: DS.colors.textSecondary,
+  grayLight: DS.colors.borderStrong,
 };
 
 // Background image

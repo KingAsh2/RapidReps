@@ -27,18 +27,19 @@ import { toast } from '../../../src/utils/toast';
 import { SocialLinksDisplay } from '../../../src/components/ProfileSections';
 import { PersonalityTagBadge, PersonalityTagSelector } from '../../../src/components/PersonalityTagBadge';
 import { AccentColorPicker } from '../../../src/components/AccentColorPicker';
+import { DS } from '../../../src/theme/designSystem';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 const COLORS = {
-  orange: '#FF7F00',
+  orange: DS.colors.orange,
   teal: '#1a2a5e',
   navy: '#1a2a5e',
-  white: '#FFFFFF',
-  gray: '#5a6785',
+  white: DS.colors.textPrimary,
+  gray: DS.colors.textSecondary,
   grayLight: '#F5F6F8',
-  success: '#00C853',
-  error: '#FF4757',
+  success: DS.colors.success,
+  error: DS.colors.error,
 };
 
 const backgroundImage = require('../../../assets/images/bg-spin-class.png');

@@ -125,6 +125,7 @@ from routes.location_routes import router as location_router
 from routes.matching_routes import router as engine_router
 from routes.convenience_routes import router as convenience_router
 from routes.negotiation_routes import router as negotiation_router
+from routes.corporate_routes import router as corporate_router
 
 
 # Auth routes extracted to routes/auth_routes.py
@@ -977,6 +978,7 @@ app.include_router(api_router)
 app.include_router(auth_router)
 app.include_router(session_router)
 app.include_router(negotiation_router, prefix="/api")
+app.include_router(corporate_router, prefix="/api")
 app.include_router(admin_router)
 app.include_router(profile_router)
 app.include_router(streak_router)

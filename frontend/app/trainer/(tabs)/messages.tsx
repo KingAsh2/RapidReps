@@ -17,14 +17,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { chatAPI } from '../../../src/services/api';
+import { DS } from '../../../src/theme/designSystem';
 
 const COLORS = {
-  orange: '#FF7F00',
+  orange: DS.colors.orange,
   teal: '#1a2a5e',
   tealLight: '#2a3a6e',
   navy: '#1a2a5e',
-  white: '#FFFFFF',
-  gray: '#5a6785',
+  white: DS.colors.textPrimary,
+  gray: DS.colors.textSecondary,
 };
 
 const backgroundImage = require('../../../assets/images/bg-gym-blue.png');

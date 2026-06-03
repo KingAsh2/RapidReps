@@ -985,3 +985,67 @@ export const safetyCheckAPI = {
   },
 };
 
+
+// ── Corporate Wellness (iter96) ─────────────────────────────────────
+export const corporateAPI = {
+  createCompany: async (data: {
+    name: string;
+    slug: string;
+    contactEmail: string;
+    brandColor?: string;
+    logoUrl?: string;
+    brandTagline?: string;
+  }): Promise<any> => {
+    const r = await api.post('/corporate/companies', data);
+    return r.data;
+  },
+  listCompanies: async (): Promise<any[]> => {
+    const r = await api.get('/corporate/companies');
+    return r.data;
+  },
+  getCompany: async (id: string): Promise<any> => {
+    const r = await api.get(`/corporate/companies/${id}`);
+    return r.data;
+  },
+  updateCompany: async (id: string, patch: Record<string, any>): Promise<any> => {
+    const r = await api.patch(`/corporate/companies/${id}`, patch);
+    return r.data;
+  },
+  topupCreditPool: async (id: string, amountCents: number, note?: string): Promise<any> => {
+    const r = await api.post(`/corporate/companies/${id}/credit-pool`, { amountCents, note });
+    return r.data;
+  },
+  createInvite: async (id: string, opts: {
+    maxUses?: number;
+    creditAllowanceCents?: number;
+    expiresInDays?: number;
+  }): Promise<any> => {
+    const r = await api.post(`/corporate/companies/${id}/invites`, opts);
+    return r.data;
+  },
+  listInvites: async (id: string): Promise<any[]> => {
+    const r = await api.get(`/corporate/companies/${id}/invites`);
+    return r.data;
+  },
+  listEmployees: async (id: string): Promise<any[]> => {
+    const r = await api.get(`/corporate/companies/${id}/employees`);
+    return r.data;
+  },
+  usage: async (id: string): Promise<any> => {
+    const r = await api.get(`/corporate/companies/${id}/usage`);
+    return r.data;
+  },
+  redeem: async (code: string): Promise<any> => {
+    const r = await api.post('/corporate/redeem', { code });
+    return r.data;
+  },
+  myCompany: async (): Promise<{ membership: any; company: any }> => {
+    const r = await api.get('/corporate/me/company');
+    return r.data;
+  },
+  publicLanding: async (slug: string): Promise<any> => {
+    const r = await api.get(`/corporate/landing/${slug}`);
+    return r.data;
+  },
+};
+

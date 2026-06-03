@@ -20,21 +20,22 @@ import axios from 'axios';
 import { toast } from '../../src/utils/toast';
 import { haptic } from '../../src/utils/haptics';
 import { useNotifications } from '../../src/contexts/NotificationContext';
+import { DS } from '../../src/theme/designSystem';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 // Stripe native SDK removed - payments handled via backend payment intent
 
 const COLORS = {
-  orange: '#FF7F00',
-  orangeLight: '#FFA526',
+  orange: DS.colors.orange,
+  orangeLight: DS.colors.orangeGlow,
   teal: '#1a2a5e',
   navy: '#1a2a5e',
-  white: '#FFFFFF',
-  gray: '#5a6785',
+  white: DS.colors.textPrimary,
+  gray: DS.colors.textSecondary,
   grayLight: '#F5F6F8',
-  success: '#00C853',
-  error: '#FF4757',
+  success: DS.colors.success,
+  error: DS.colors.error,
 };
 
 const backgroundImage = require('../../assets/images/bg-battle-ropes.png');
