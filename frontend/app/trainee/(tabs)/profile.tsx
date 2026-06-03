@@ -38,20 +38,25 @@ const { width } = Dimensions.get('window');
 const backgroundImage = require('../../../assets/images/bg-box-jumps.png');
 
 // Brand colors - UNIFIED DESIGN SYSTEM
+import { DS } from '../../../src/theme/designSystem';
+
+// iter95c — Aligned with the unified DS tokens.
+// Local COLORS map retained for backward-compat but populated from DS.colors
+// so the screen automatically inherits any future theme refresh.
 const COLORS = {
   teal: '#1a2a5e',
   tealLight: '#2a3a6e',
   tealDark: '#0D8B88',
-  orange: '#F7931E',
-  orangeHot: '#FF6A00',
-  orangeLight: '#FF9F1C',
+  orange: DS.colors.orange,
+  orangeHot: DS.colors.orangeDeep,
+  orangeLight: DS.colors.orangeGlow,
   navy: '#1a2a5e',
   navyLight: '#2a3a6e',
-  white: '#FFFFFF',
+  white: DS.colors.textPrimary,
   offWhite: '#FAFBFC',
-  gray: '#5a6785',
-  grayLight: '#E8ECF0',
-  error: '#FF4757',
+  gray: DS.colors.textSecondary,
+  grayLight: DS.colors.borderStrong,
+  error: DS.colors.error,
   // Glass card colors
   cardBg: 'rgba(255,255,255,0.12)',
   cardBorder: 'rgba(255,255,255,0.2)',

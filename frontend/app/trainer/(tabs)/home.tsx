@@ -18,6 +18,8 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { trainerAPI } from '../../../src/services/api';
+import api from '../../../src/services/api';
+import TierCelebrationSheet from '../../../src/components/TierCelebrationSheet';
 import { Session, SessionStatus } from '../../../src/types';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -76,6 +78,8 @@ export default function TrainerHomeScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
   // Stripe payout banner — replaces legacy Zelle setup gate
   const [needsPayoutSetup, setNeedsPayoutSetup] = useState(false);
+  // Tier celebration (iter95c) — one-shot on first launch after admin assigns tier
+  const [tierCelebration, setTierCelebration] = useState<null | { tier: string; tierLabel: string; takeHomePct: number }>(null);
   // One-time post-approval celebratory modal — fires when canGoLive becomes true and never been shown
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const APPROVAL_SEEN_KEY = '@rapidreps_trainer_approval_modal_seen';
@@ -324,6 +328,18 @@ export default function TrainerHomeScreen() {
         const zelleInfo = await trainerAPI.getZelleInfo();
         setNeedsPayoutSetup(!zelleInfo.hasZelleInfo);
       } catch { setNeedsPayoutSetup(true); }
+
+      // Tier celebration — fire-and-forget; show once if admin recently assigned a tier.
+      try {
+        const { data: cel } = await api.get('/trainer/tier-celebration');
+        if (cel?.shouldShow) {
+          setTierCelebration({
+            tier: cel.tier,
+            tierLabel: cel.tierLabel,
+            takeHomePct: cel.takeHomePct,
+          });
+        }
+      } catch { /* non-blocking */ }
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -478,6 +494,16 @@ export default function TrainerHomeScreen() {
 
   return (
     <>
+      {/* Tier celebration sheet — fires once when admin assigns the trainer a tier */}
+      {tierCelebration && (
+        <TierCelebrationSheet
+          visible
+          tier={tierCelebration.tier}
+          tierLabel={tierCelebration.tierLabel}
+          takeHomePct={tierCelebration.takeHomePct}
+          onClose={() => setTierCelebration(null)}
+        />
+      )}
       <Stack.Screen options={{ headerShown: false }} />
       <ImageBackground 
         source={heroBackground} 

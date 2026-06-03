@@ -21,28 +21,30 @@ import { useAlert } from '../../../src/contexts/AlertContext';
 import { useNotifications } from '../../../src/contexts/NotificationContext';
 import { traineeAPI } from '../../../src/services/api';
 import { SessionCountdown } from '../../../src/components/SessionCountdown';
+import { DS } from '../../../src/theme/designSystem';
 
 const { width } = Dimensions.get('window');
 
 // Background image
 const backgroundImage = require('../../../assets/images/bg-spin-class.png');
 
-// Brand colors - UNIFIED DESIGN SYSTEM
+// Brand colors — iter95c: derived from the unified DS tokens so any future
+// theme refresh propagates automatically across all sessions UI.
 const COLORS = {
   teal: '#1a2a5e',
   tealLight: '#2a3a6e',
   tealDark: '#0D8B88',
-  orange: '#F7931E',
-  orangeHot: '#FF6A00',
-  orangeLight: '#FF9F1C',
-  orangeGlow: '#FFB347',
+  orange: DS.colors.orange,
+  orangeHot: DS.colors.orangeDeep,
+  orangeLight: DS.colors.orangeGlow,
+  orangeGlow: DS.colors.orangeEmber,
   yellow: '#FDBB2D',
   navy: '#1a2a5e',
   navyLight: '#2a3a6e',
-  white: '#FFFFFF',
+  white: DS.colors.textPrimary,
   offWhite: '#FAFBFC',
-  gray: '#5a6785',
-  grayLight: '#E8ECF0',
+  gray: DS.colors.textSecondary,
+  grayLight: DS.colors.borderStrong,
   success: '#00C853',
   error: '#FF4757',
   warning: '#FFA502',

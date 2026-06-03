@@ -938,6 +938,204 @@ async def upload_highlight_base64(user_id: str, body: dict, current_user: dict =
     return {"success": True, "highlight": highlight}
 
 
+# ─────────────────────────────────────────────────────────────────────
+# CHUNKED HIGHLIGHT UPLOADS (iter95c)
+#
+# Protocol — three endpoints:
+#   POST .../highlights/chunked/init     → {uploadId} (server creates a temp
+#                                            slot in /tmp/rapidreps_chunks)
+#   POST .../highlights/chunked/append   → append a single chunk (≤2 MB)
+#   POST .../highlights/chunked/commit   → reassemble + run normal
+#                                            _store_highlight pipeline
+#
+# Why? Reels are increasingly 30–80 MB on modern phones; ingress proxies often
+# drop multipart >20 MB. Small chunks (~2 MB) bypass that ceiling reliably.
+# ─────────────────────────────────────────────────────────────────────
+import os as _os
+import uuid as _uuid
+import base64 as _b64
+import shutil as _shutil
+
+CHUNK_DIR = "/tmp/rapidreps_chunks"
+CHUNK_MAX_BYTES = 2 * 1024 * 1024            # 2 MB / chunk
+CHUNK_MAX_TOTAL = 100 * 1024 * 1024          # 100 MB / reel
+CHUNK_TTL_SECONDS = 60 * 60                  # 1h before stale sessions are GC'd
+
+
+def _chunk_session_dir(upload_id: str) -> str:
+    safe = "".join(c for c in upload_id if c.isalnum() or c in "-_")
+    if not safe:
+        raise HTTPException(400, "Invalid uploadId")
+    return _os.path.join(CHUNK_DIR, safe)
+
+
+def _gc_stale_chunks():
+    """Best-effort cleanup of upload sessions older than CHUNK_TTL_SECONDS."""
+    try:
+        if not _os.path.isdir(CHUNK_DIR):
+            return
+        now = datetime.utcnow().timestamp()
+        for name in _os.listdir(CHUNK_DIR):
+            p = _os.path.join(CHUNK_DIR, name)
+            try:
+                if now - _os.path.getmtime(p) > CHUNK_TTL_SECONDS:
+                    _shutil.rmtree(p, ignore_errors=True)
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+
+class ChunkedInitRequest(BaseModel):
+    filename: str
+    contentType: Optional[str] = None
+    totalBytes: int
+    caption: Optional[str] = ""
+
+
+@router.post("/trainer-profiles/{user_id}/highlights/chunked/init")
+async def highlight_chunked_init(user_id: str, req: ChunkedInitRequest, current_user: dict = Depends(get_current_user)):
+    """Create a fresh upload session. Returns the uploadId the client uses for
+    every subsequent /append + /commit call."""
+    if str(current_user['_id']) != user_id:
+        raise HTTPException(403, "Can only update your own highlights")
+    if req.totalBytes <= 0 or req.totalBytes > CHUNK_MAX_TOTAL:
+        raise HTTPException(400, f"Reel size must be 1 byte to {CHUNK_MAX_TOTAL // (1024*1024)}MB")
+    if not req.filename:
+        raise HTTPException(400, "filename required")
+
+    _gc_stale_chunks()
+    _os.makedirs(CHUNK_DIR, exist_ok=True)
+    upload_id = _uuid.uuid4().hex
+    sess_dir = _chunk_session_dir(upload_id)
+    _os.makedirs(sess_dir, exist_ok=True)
+
+    # Persist session metadata so commit knows filename / caption / expected size
+    meta = {
+        "userId": user_id,
+        "filename": req.filename,
+        "contentType": req.contentType or "application/octet-stream",
+        "totalBytes": req.totalBytes,
+        "caption": req.caption or "",
+        "receivedBytes": 0,
+        "createdAt": datetime.utcnow().isoformat(),
+    }
+    with open(_os.path.join(sess_dir, "_meta.json"), "w") as f:
+        import json as _json
+        _json.dump(meta, f)
+    return {"uploadId": upload_id, "chunkSize": CHUNK_MAX_BYTES, "expiresInSeconds": CHUNK_TTL_SECONDS}
+
+
+class ChunkedAppendRequest(BaseModel):
+    uploadId: str
+    chunkIndex: int
+    dataBase64: str      # base64-encoded chunk bytes
+
+
+@router.post("/trainer-profiles/{user_id}/highlights/chunked/append")
+async def highlight_chunked_append(user_id: str, req: ChunkedAppendRequest, current_user: dict = Depends(get_current_user)):
+    """Append a single base64-encoded chunk. Idempotent on chunkIndex —
+    repeating the same index simply overwrites."""
+    if str(current_user['_id']) != user_id:
+        raise HTTPException(403, "Can only update your own highlights")
+    sess_dir = _chunk_session_dir(req.uploadId)
+    if not _os.path.isdir(sess_dir):
+        raise HTTPException(404, "Upload session not found or expired")
+    if req.chunkIndex < 0 or req.chunkIndex > 10_000:
+        raise HTTPException(400, "Invalid chunkIndex")
+
+    try:
+        chunk = _b64.b64decode(req.dataBase64, validate=True)
+    except Exception:
+        raise HTTPException(400, "Invalid base64 payload")
+    if len(chunk) == 0:
+        raise HTTPException(400, "Empty chunk")
+    if len(chunk) > CHUNK_MAX_BYTES:
+        raise HTTPException(400, f"Chunk exceeds {CHUNK_MAX_BYTES} bytes")
+
+    chunk_path = _os.path.join(sess_dir, f"{req.chunkIndex:06d}.part")
+    with open(chunk_path, "wb") as f:
+        f.write(chunk)
+
+    # Update receivedBytes (approximate — based on sum of part files)
+    total_received = 0
+    for name in _os.listdir(sess_dir):
+        if name.endswith(".part"):
+            total_received += _os.path.getsize(_os.path.join(sess_dir, name))
+    return {"received": True, "chunkIndex": req.chunkIndex, "receivedBytes": total_received}
+
+
+class ChunkedCommitRequest(BaseModel):
+    uploadId: str
+    totalChunks: int
+
+
+@router.post("/trainer-profiles/{user_id}/highlights/chunked/commit")
+async def highlight_chunked_commit(user_id: str, req: ChunkedCommitRequest, current_user: dict = Depends(get_current_user)):
+    """Reassemble chunks 0..totalChunks-1 in order, run the standard
+    _store_highlight pipeline, push onto trainer_profiles.highlights, and
+    clean up the temp session."""
+    if str(current_user['_id']) != user_id:
+        raise HTTPException(403, "Can only update your own highlights")
+    sess_dir = _chunk_session_dir(req.uploadId)
+    if not _os.path.isdir(sess_dir):
+        raise HTTPException(404, "Upload session not found or expired")
+    meta_path = _os.path.join(sess_dir, "_meta.json")
+    if not _os.path.exists(meta_path):
+        raise HTTPException(404, "Upload session metadata missing")
+
+    import json as _json
+    with open(meta_path, "r") as f:
+        meta = _json.load(f)
+    if meta.get("userId") != user_id:
+        raise HTTPException(403, "Upload session does not belong to this user")
+
+    # Validate every required chunk is present
+    missing = []
+    for i in range(req.totalChunks):
+        if not _os.path.exists(_os.path.join(sess_dir, f"{i:06d}.part")):
+            missing.append(i)
+    if missing:
+        raise HTTPException(400, f"Missing chunks: {missing[:10]}{'…' if len(missing) > 10 else ''}")
+
+    # Reassemble
+    buf = bytearray()
+    for i in range(req.totalChunks):
+        with open(_os.path.join(sess_dir, f"{i:06d}.part"), "rb") as f:
+            buf.extend(f.read())
+        if len(buf) > CHUNK_MAX_TOTAL:
+            _shutil.rmtree(sess_dir, ignore_errors=True)
+            raise HTTPException(400, "Reassembled size exceeds maximum")
+    content = bytes(buf)
+    if len(content) != meta["totalBytes"]:
+        # Soft-warn: continue with actual reassembled size (clients sometimes
+        # under-report due to compression mid-upload). We just trust the bytes.
+        logging.info(f"chunked commit size mismatch: meta={meta['totalBytes']} actual={len(content)}")
+
+    ext = (meta.get("filename") or "clip.mp4").split(".")[-1].lower()
+    content_type_str = MIME_TYPES.get(ext, meta.get("contentType", "application/octet-stream"))
+    try:
+        highlight = await _store_highlight(content, ext, content_type_str, user_id, meta.get("caption", ""))
+        await db.trainer_profiles.update_one({'userId': user_id}, {'$push': {'highlights': highlight}})
+    finally:
+        # Always clean up the temp session
+        _shutil.rmtree(sess_dir, ignore_errors=True)
+    return {"success": True, "highlight": highlight, "uploadedBytes": len(content)}
+
+
+@router.delete("/trainer-profiles/{user_id}/highlights/chunked/{upload_id}")
+async def highlight_chunked_abort(user_id: str, upload_id: str, current_user: dict = Depends(get_current_user)):
+    """Client cancelled — wipe the temp session."""
+    if str(current_user['_id']) != user_id:
+        raise HTTPException(403, "Can only update your own highlights")
+    sess_dir = _chunk_session_dir(upload_id)
+    if _os.path.isdir(sess_dir):
+        _shutil.rmtree(sess_dir, ignore_errors=True)
+    return {"success": True}
+
+
+
+
 
 @router.delete("/trainer-profiles/{user_id}/highlights/{index}")
 async def delete_highlight(user_id: str, index: int, current_user: dict = Depends(get_current_user)):

@@ -8,6 +8,7 @@ import { Video, ResizeMode } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { toast } from '../../src/utils/toast';
+import { uploadHighlightChunked } from '../../src/utils/uploadHighlightChunked';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 const { width } = Dimensions.get('window');
@@ -117,6 +118,28 @@ export default function HighlightUpload() {
         }
       }
       
+      // For large videos, use chunked upload (bypasses 20–30 MB proxy ceilings).
+      if (mediaType === 'video' && user?.id) {
+        try {
+          const ext = asset.uri.split('.').pop() || 'mp4';
+          await uploadHighlightChunked({
+            userId: user.id,
+            uri: asset.uri,
+            filename: `highlight.${ext}`,
+            contentType: 'video/mp4',
+            caption: '',
+            onProgress: (pct) => setUploadProgress(pct),
+          });
+          showSuccessModal();
+          loadHighlights();
+          return;
+        } catch (chunkErr: any) {
+          // Fall through to FormData path if chunked init/append failed
+          // (legacy small-clip path is still reliable for ≤20 MB files).
+          console.warn('[highlight-upload] chunked failed, falling back to FormData:', chunkErr?.message);
+        }
+      }
+
       // Fallback to FormData upload (videos use this path directly)
       const formData = new FormData();
       const ext = asset.uri.split('.').pop() || (mediaType === 'video' ? 'mp4' : 'jpg');

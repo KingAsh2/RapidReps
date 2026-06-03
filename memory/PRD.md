@@ -4,6 +4,65 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-06-03 — Iteration 95c: Variant B + Tier Celebration + Chunked Reels + DS Sweep 🎯 ✅
+
+### Shipped (all 4 parts of the batch)
+**(b) Welcome Variant B** — real differentiated hero in `app/index.premium-b.tsx`:
+  - Community-first headline "TRAINERS / NEAR YOU" (vs. A's "DELIVERED RAPIDLY")
+  - Live social-proof strip: pulsing green dot + 5 colored avatars + "237 trainers in your area"
+  - Stat tiles (4.9 avg rating, 12k+ sessions, <10m avg match)
+  - Reordered CTAs ("MATCH WITH A TRAINER" / "I'M A TRAINER")
+  - **Same testIDs as A** so funnel analytics deltas are clean
+
+**(c) Tier Celebration Sheet** — one-shot confetti modal:
+  - New backend endpoints: `GET /api/trainer/tier-celebration` (returns shouldShow/tier/takeHomePct) and `POST .../acknowledge` (persists `tierCelebrationAck` on `trainer_profiles`)
+  - New component `src/components/TierCelebrationSheet.tsx` — CSS-only confetti, gradient crest, tier label + take-home % stat row, "Set My Rates" primary CTA
+  - Wired into `app/trainer/(tabs)/home.tsx`: fires once on first launch after tier assignment, never again
+
+**(d) Chunked Highlight Reel Uploads** — bypasses proxy multipart ceilings:
+  - 4 new backend endpoints under `/api/trainer-profiles/{user_id}/highlights/chunked/`: `init` → `append` → `commit` (or `DELETE` to abort)
+  - 2 MB chunks (configurable), 100 MB ceiling per reel, 1h session TTL with auto-GC of stale sessions
+  - Backend reuses the existing `_store_highlight` pipeline so thumbnails/storage just work
+  - Frontend helper `src/utils/uploadHighlightChunked.ts` (200 lines) drives the protocol with progress callbacks + abort signal support
+  - Trainer highlight upload screen auto-uses chunked for video paths, falls back to FormData on failure
+
+**(a) DS Token Sweep** — proof-of-concept on top-traffic screens:
+  - Added `orangeDeep` and `orangeEmber` semantic tokens to `designSystem.ts`
+  - `trainer/session-detail.tsx` — full DS adoption (already shipped iter95b)
+  - `trainee/(tabs)/profile.tsx` — local COLORS map now sources from `DS.colors`
+  - `trainee/(tabs)/sessions.tsx` — local COLORS map now sources from `DS.colors`
+  - Pattern established for the remaining 7 high-traffic screens (Discover, both Homes, Settings, Messages, Booking, Admin Dashboard)
+
+### Verified
+- ✅ **66/66 pytest guards green** (iter92+92b+93+94+95+95b+95c). New iter95c suite (`test_iteration95c_batch_all.py`) adds 16 fresh guards including live E2E for:
+  - Tier celebration shouldShow / acknowledge / never-show-again lifecycle
+  - Chunked upload init → append → commit → highlight stored
+  - Chunked init rejects 200 MB declared size
+  - Chunked abort cleanup makes subsequent append return 404
+- ✅ Variant B differentiation guard ensures B is NOT a re-export of A
+- ✅ Live backend logs confirm celebration ack + chunked uploads round-trip cleanly
+
+### Files added
+- `frontend/src/components/TierCelebrationSheet.tsx` (new — confetti tier sheet)
+- `frontend/src/utils/uploadHighlightChunked.ts` (new — chunked uploader)
+- `backend/tests/test_iteration95c_batch_all.py` (16 new guards)
+
+### Files modified
+- `frontend/app/index.premium-b.tsx` — full Variant B rewrite (no longer a re-export)
+- `frontend/app/trainer/(tabs)/home.tsx` — fetches + renders TierCelebrationSheet
+- `frontend/app/trainer/highlight-upload.tsx` — uses chunked path for videos
+- `frontend/app/trainee/(tabs)/profile.tsx`, `frontend/app/trainee/(tabs)/sessions.tsx` — DS color tokens
+- `frontend/src/theme/designSystem.ts` — added `orangeDeep`, `orangeEmber`
+- `backend/routes/payment_routes.py` — added tier-celebration GET + acknowledge endpoints
+- `backend/routes/profile_routes.py` — added 4 chunked upload endpoints + GC
+
+### Outstanding (carryover)
+- 🟠 P1: Continue DS token sweep on remaining 7 screens (Discover, both Homes, Settings, Messages, Booking, Admin Dashboard) — pattern proven on 4 screens
+- 🟠 P1: Rotate the expired Stripe live key (`sk_live_…QtF7`)
+- 🟢 P3: B2B corporate wellness onboarding
+- ⛔ Blocked on user: Instagram Graph API key, SendGrid API key
+
+
 ## 2026-06-03 — Iteration 95b: Trainer Session Detail + Welcome A/B + Tier Email 📧 ✅
 
 ### Shipped

@@ -424,6 +424,45 @@ async def admin_assign_tier(
     return {"success": True, "tier": req.tier}
 
 
+
+@router.get("/trainer/tier-celebration")
+async def get_tier_celebration(current_user: dict = Depends(get_current_user)):
+    """One-shot endpoint: returns the celebration payload if a trainer was just
+    placed in a tier and hasn't acknowledged the in-app celebration yet.
+    Once `shouldShow` is True, the client should call POST .../acknowledge so
+    we never bother the trainer again."""
+    profile = await db.trainer_profiles.find_one(
+        {"userId": str(current_user["_id"])},
+        {"_id": 0, "assignedTier": 1, "tierAssignedAt": 1, "tierCelebrationAck": 1},
+    )
+    if not profile or not profile.get("assignedTier"):
+        return {"shouldShow": False}
+    tier = profile["assignedTier"]
+    if tier not in TIER_MATRIX:
+        return {"shouldShow": False}
+    if profile.get("tierCelebrationAck"):
+        return {"shouldShow": False, "tier": tier}
+    return {
+        "shouldShow": True,
+        "tier": tier,
+        "tierLabel": TIER_MATRIX[tier]["label"],
+        "takeHomePct": 100 - TIER_MATRIX[tier]["commission_percent"],
+        "commissionPct": TIER_MATRIX[tier]["commission_percent"],
+    }
+
+
+@router.post("/trainer/tier-celebration/acknowledge")
+async def acknowledge_tier_celebration(current_user: dict = Depends(get_current_user)):
+    """Trainer dismissed the celebration sheet — never show it again."""
+    await db.trainer_profiles.update_one(
+        {"userId": str(current_user["_id"])},
+        {"$set": {"tierCelebrationAck": True, "tierCelebrationAckAt": datetime.utcnow()}},
+        upsert=True,
+    )
+    return {"success": True}
+
+
+
 # ── Admin Payouts (manual reconciliation) ────────────────────────────
 @router.get("/admin/payouts/summary")
 async def admin_payouts_summary(admin_user: dict = Depends(require_admin)):

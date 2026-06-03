@@ -25,6 +25,8 @@ export const DSColors = {
   // Brand
   orange: '#FF7A00',
   orangeGlow: '#FF9B2F',
+  orangeDeep: '#E55A00',
+  orangeEmber: '#FFB347',
   orangeSoft: 'rgba(255,122,0,0.12)',
   orangeRing: 'rgba(255,155,47,0.4)',
 
