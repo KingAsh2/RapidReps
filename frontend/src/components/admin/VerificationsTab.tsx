@@ -111,11 +111,19 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
     }
   };
 
-  const handleApproveVerification = async (trainerId: string) => {
+  const handleApproveVerification = async (trainerId: string, tier?: string) => {
     try {
       const headers = await getAuthHeader();
+      // If admin selected a tier, assign it first (so the trainer can start setting rates).
+      if (tier) {
+        await api.post(`/admin/trainers/${trainerId}/assign-tier`, { tier }, { headers });
+      }
       await api.post(`/admin/verifications/${trainerId}/approve`, {}, { headers });
-      toast.success('Trainer approved! They will receive a notification.');
+      toast.success(
+        tier
+          ? `Trainer approved as ${tier.charAt(0).toUpperCase() + tier.slice(1)} tier! They've been notified.`
+          : 'Trainer approved! They will receive a notification.',
+      );
       setVerificationDetailVisible(false);
       setVerificationDetail(null);
       fetchVerifications();
@@ -652,17 +660,38 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                       </View>
                     </View>
                   ) : (
-                    <View style={s.verifyActions}>
+                    <View style={{ gap: 8 }}>
+                      <Text style={{ fontSize: 13, fontWeight: '700', color: C.gray, textAlign: 'center', marginTop: 4 }}>
+                        Approve & assign tier:
+                      </Text>
+                      <View style={s.verifyActions}>
+                        <TouchableOpacity
+                          style={[s.actionBtn, { flex: 1, backgroundColor: '#7E85A0' }]}
+                          onPress={() => handleApproveVerification(verificationDetail.profile?.userId, 'new')}
+                          data-testid="approve-tier-new-btn"
+                        >
+                          <Ionicons name="ribbon" size={18} color={C.white} />
+                          <Text style={s.actionBtnText}>New</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[s.actionBtn, { flex: 1, backgroundColor: '#FF7A00' }]}
+                          onPress={() => handleApproveVerification(verificationDetail.profile?.userId, 'certified')}
+                          data-testid="approve-tier-certified-btn"
+                        >
+                          <Ionicons name="checkmark-circle" size={18} color={C.white} />
+                          <Text style={s.actionBtnText}>Certified</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[s.actionBtn, { flex: 1, backgroundColor: '#9C27B0' }]}
+                          onPress={() => handleApproveVerification(verificationDetail.profile?.userId, 'specialty')}
+                          data-testid="approve-tier-specialty-btn"
+                        >
+                          <Ionicons name="star" size={18} color={C.white} />
+                          <Text style={s.actionBtnText}>Specialty</Text>
+                        </TouchableOpacity>
+                      </View>
                       <TouchableOpacity
-                        style={[s.actionBtn, { flex: 1, backgroundColor: C.success }]}
-                        onPress={() => handleApproveVerification(verificationDetail.profile?.userId)}
-                        data-testid="approve-verification-btn"
-                      >
-                        <Ionicons name="checkmark-circle" size={20} color={C.white} />
-                        <Text style={s.actionBtnText}>Approve Trainer</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[s.actionBtn, { flex: 1, backgroundColor: C.error }]}
+                        style={[s.actionBtn, { backgroundColor: C.error, marginTop: 4 }]}
                         onPress={() => { setRejectTrainerId(verificationDetail.profile?.userId); setRejectReason(''); setShowRejectInput(true); }}
                         data-testid="reject-verification-btn"
                       >
