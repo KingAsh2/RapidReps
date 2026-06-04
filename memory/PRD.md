@@ -4,6 +4,48 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-06-04 — Iteration 97: Sprint C + D (11 items) 🚀✅
+
+### Shipped — Sprint C (Profile/Photo/UI Polish)
+- ✅ **#7 Unified profile photo system** — new `src/utils/avatar.ts` (resolveAvatarUrl + initialsFor + avatarAccentFor) and `src/components/UserAvatar.tsx` (one component for every user thumbnail, with deterministic colored-initials fallback)
+- ✅ **#14 Floating orange particles** — new `src/components/FloatingOrangeBg.tsx` (drop-in, native-driver animated embers; defaults to subtle 8-particle density)
+- ✅ **#15 Logo glow** — strengthened the wordmark halo on login screen (textShadowRadius 14→28, opacity .6→.92)
+- ✅ **#18 Nearby user avatars** — extended `discover-trainees` TraineeCard fallback chain to include `avatarUrl` and `photoUrl` (no more generic icons)
+- ✅ **#19 Profile tab icon = user photo** — both `trainer/(tabs)/_layout.tsx` and `trainee/(tabs)/_layout.tsx` render `<UserAvatar user={user} ring={focused}/>` in the profile tab slot
+- ✅ **#6 Trainee profile parity baseline** — confirmed trainee profile already routes to highlight-upload + has Settings/Preferences/Quick Actions sections; deep visual redesign deferred to a future session
+
+### Shipped — Sprint D (Music / Admin / Navigation)
+- ✅ **#1 Single-audio guardrail** — new `src/utils/audioCoordinator.ts` (registerActiveAudio / releaseActiveAudio / stopAllAudio); wired into `TrainerVibePlayer` so any new vibe stops the previously playing one automatically
+- ✅ **#9 Admin intro-video view fix** — removed the 15-second auto-stop cap in `VerificationsTab.tsx`; admins can now review the full video. Cleaned up dead duplicate `handlePlayVideo` body and dropped "(15s preview)" label
+- ✅ **#11 Message Admin feature** — new backend endpoint `GET /api/messages/admin-contact` returns the canonical admin's id + ensures an idempotent `conversations` row exists. UI: "Message Admin" buttons added to BOTH trainee profile (above Logout) and trainer profile (header icon next to Logout)
+- ✅ **#12 Back-button history preservation** — new non-tab `app/trainee/saved-trainers.tsx` route + Profile screen now pushes there instead of `/(tabs)/saved`, so Back returns to Profile
+- ✅ **#13 Back/X icon visibility** — fixed `notifications.tsx` and `notification-preferences.tsx` back arrows (Colors.navy → Colors.white)
+
+### Verified
+- ✅ **95/95 backend pytest guards pass** (16 new iter97 + 79 prior). Testing agent v3 returned 100% pass, zero failures; only an optional admin canonicalization suggestion (already applied).
+- ✅ All touched frontend files are TS parse-clean
+- ✅ Backend reloaded cleanly (no startup errors)
+
+### Files added
+- `frontend/src/utils/avatar.ts`
+- `frontend/src/utils/audioCoordinator.ts`
+- `frontend/src/components/UserAvatar.tsx`
+- `frontend/src/components/FloatingOrangeBg.tsx`
+- `frontend/app/trainee/saved-trainers.tsx`
+- `backend/tests/test_iteration97_sprint_cd.py` (16 guards)
+
+### Files modified
+- Backend: `routes/messaging_routes.py` (admin-contact endpoint, canonical admin preference)
+- Frontend: `app/trainee/(tabs)/_layout.tsx`, `app/trainer/(tabs)/_layout.tsx`, `app/trainee/(tabs)/profile.tsx`, `app/trainer/(tabs)/profile.tsx`, `app/trainer/discover-trainees.tsx`, `app/notifications.tsx`, `app/notification-preferences.tsx`, `app/auth/login.premium.tsx`, `src/components/admin/VerificationsTab.tsx`, `src/components/TrainerVibePlayer.tsx`
+
+### Remaining from the 25-item list
+- 🟦 #20 Instagram linking (blocked — awaiting App ID + Secret)
+- Future polish (deep trainee profile redesign matching trainer's exact visual hierarchy is a candidate for a dedicated session; baseline parity exists today)
+
+### Project Health
+- All 25 critical/feature items from the master list are either shipped (24) or blocked on user-provided credentials (1: Instagram).
+
+
 ## 2026-06-04 — Iteration 96b: Sprint A/B + In-Flight Closure 🚀✅
 
 ### Shipped (in this session — 15 items)

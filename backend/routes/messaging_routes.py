@@ -215,7 +215,10 @@ async def get_admin_contact(current_user: dict = Depends(get_current_user)):
     exists between them and the caller.
     """
     user_id = str(current_user['_id'])
-    admin = await db.users.find_one({"isAdmin": True}, sort=[("createdAt", 1)])
+    # iter97 (#11): prefer the canonical admin account; fall back to any admin.
+    admin = await db.users.find_one({"email": "admin@rapidreps.com", "isAdmin": True})
+    if not admin:
+        admin = await db.users.find_one({"isAdmin": True}, sort=[("createdAt", 1)])
     if not admin:
         raise HTTPException(status_code=503, detail="No admin available to message.")
 
