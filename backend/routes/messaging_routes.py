@@ -51,12 +51,25 @@ async def send_message(message_data: MessageCreate, current_user: dict = Depends
 
     sender_name = current_user.get('fullName', 'Someone')
     preview = (message_doc['content'] or '')[:50]
+    # iter97c (#3): when an admin sends a message, badge the push so users see
+    # "RapidReps Support" as the sender (clearer than the raw admin name).
+    is_admin_sender = bool(current_user.get('isAdmin'))
+    title = (
+        f"RapidReps Support replied"
+        if is_admin_sender
+        else f"New message from {sender_name}"
+    )
     asyncio.create_task(create_and_send_notification(
         receiver_id,
-        f"New message from {sender_name}",
+        title,
         preview,
-        "new_message",
-        {"conversationId": str(conversation['_id']), "senderId": sender_id, "screen": "messages/chat"},
+        "admin_reply" if is_admin_sender else "new_message",
+        {
+            "conversationId": str(conversation['_id']),
+            "senderId": sender_id,
+            "screen": "messages/chat",
+            "isAdminReply": is_admin_sender,
+        },
     ))
 
     return MessageResponse(

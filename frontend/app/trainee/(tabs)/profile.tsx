@@ -28,6 +28,8 @@ import { toast } from '../../../src/utils/toast';
 import { SocialLinksDisplay } from '../../../src/components/ProfileSections';
 import InstagramSection from '../../../src/components/InstagramSection';
 import { PersonalityTagBadge, PersonalityTagSelector } from '../../../src/components/PersonalityTagBadge';
+import { UserAvatar } from '../../../src/components/UserAvatar';
+import FloatingOrangeBg from '../../../src/components/FloatingOrangeBg';
 import { AccentColorPicker } from '../../../src/components/AccentColorPicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
@@ -356,6 +358,9 @@ export default function TraineeProfileScreen() {
         style={StyleSheet.absoluteFill}
       />
 
+      {/* iter97c (#2): subtle floating ember ambience throughout interior screens */}
+      <FloatingOrangeBg density={6} intensity={0.35} />
+
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -376,17 +381,16 @@ export default function TraineeProfileScreen() {
                 },
               ]}
             >
-              <TouchableOpacity onPress={pickImage} style={styles.avatarContainer}>
-                {formData.profilePhoto ? (
-                  <Image source={{ uri: formData.profilePhoto }} style={styles.avatar} />
-                ) : (
-                  <LinearGradient
-                    colors={[COLORS.orange, COLORS.orangeLight]}
-                    style={styles.avatarPlaceholder}
-                  >
-                    <Ionicons name="person" size={50} color={COLORS.white} />
-                  </LinearGradient>
-                )}
+              <TouchableOpacity onPress={pickImage} style={styles.avatarContainer} data-testid="trainee-avatar-tap">
+                {/* iter97c: UserAvatar gives deterministic colored-initial fallback (parity with trainer hero) */}
+                <UserAvatar
+                  user={{
+                    avatarUrl: formData.profilePhoto,
+                    fullName: user?.fullName,
+                    email: user?.email,
+                  }}
+                  size={110}
+                />
                 <View style={styles.editBadge}>
                   <Ionicons name="camera" size={16} color={COLORS.white} />
                 </View>

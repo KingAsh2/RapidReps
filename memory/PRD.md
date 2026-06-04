@@ -4,6 +4,26 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-06-04 — Iteration 97c: Trainee profile parity, FloatingOrangeBg propagation, admin-reply push ✅
+
+### Shipped
+- **Trainee profile hero parity** — replaced legacy `<Image>` + LinearGradient placeholder with the unified `<UserAvatar>` (deterministic colored-initial fallback, matches trainer profile hero visually)
+- **FloatingOrangeBg propagation** — dropped subtle ember ambience onto Trainee Profile and Leaderboard (low density 6, intensity 0.3–0.35 — barely-there but unifies the aesthetic across interior screens). Component is intentionally `pointerEvents="none"` so it never blocks taps.
+- **Admin-reply push hook** — when a platform admin sends a message, the push notification title is now "RapidReps Support replied" (was raw admin name) and the type is `admin_reply` with `isAdminReply: true` in the payload, so clients can badge the row in the chat list
+
+### Verified
+- ✅ **105/105 backend pytest guards pass** (5 new iter97c + 100 prior)
+- ✅ End-to-end push pipeline test: admin login → trainee initiates `/api/messages/admin-contact` → admin POSTs `/api/messages` → 200, push task scheduled
+- ✅ Touched frontend files (trainee profile, leaderboard) are TS parse-clean
+- ✅ Backend reloaded cleanly after `messaging_routes.py` change
+
+### Files modified
+- Backend: `routes/messaging_routes.py` (admin-reply badge on push)
+- Frontend: `app/trainee/(tabs)/profile.tsx` (UserAvatar in hero + FloatingOrangeBg), `app/trainee/leaderboard.tsx` (FloatingOrangeBg)
+- Tests: `tests/test_iteration97c_polish.py` (5 new guards)
+
+
+
 ## 2026-06-04 — Iteration 97b: Polish pass (avatar propagation + parity + Stripe resilience) 🚀✅
 
 ### Shipped

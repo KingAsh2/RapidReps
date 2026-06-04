@@ -17,6 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { streaksAPI } from '../../src/services/api';
 import { UserAvatar } from '../../src/components/UserAvatar';
+import FloatingOrangeBg from '../../src/components/FloatingOrangeBg';
 
 const backgroundImage = require('../../assets/images/bg-group-gym.png');
 
@@ -123,6 +124,8 @@ export default function LeaderboardScreen() {
 
   return (
     <ImageBackground source={backgroundImage} style={s.container} resizeMode="cover">
+      {/* iter97c: subtle ember ambience */}
+      <FloatingOrangeBg density={6} intensity={0.3} />
       <LinearGradient colors={[C.navy, '#1e3470']} style={s.header}>
         <SafeAreaView edges={['top']}>
           <View style={s.headerRow}>
