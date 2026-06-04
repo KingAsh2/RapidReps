@@ -4,6 +4,60 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-06-04 — Iteration 96b: Sprint A/B + In-Flight Closure 🚀✅
+
+### Shipped (in this session — 15 items)
+
+**In-flight (from prior message):**
+- ✅ Corporate credit auto-debit in `create-payment-intent`: full subsidy short-circuits Stripe; partial reduces Stripe amount; writes audit row in `corporate_credit_ledger`
+- ✅ New endpoint `POST /api/corporate/sessions/quote` — pre-flight subsidy preview (returns subsidyCents/traineePaysCents/companyName)
+- ✅ Hash-based A/B variant assignment (`src/utils/abVariant.ts` — FNV-1a over per-device UUID stored in AsyncStorage; env override still wins for QA)
+- ✅ "For Teams → Corporate Wellness" CTA on welcome screens (variant A + variant B)
+
+**Sprint A — Critical bugs (9 of 9):**
+- ✅ #2 Message timestamps — local TZ + locale-aware (dropped hardcoded 'en-US', fixed calendar-day diff in `messages/{index,chat}.tsx`, `trainer/(tabs)/messages.tsx`, `trainee/(tabs)/messages.tsx`)
+- ✅ #3 View Full Profile — wrapped `ProfilePreviewCard` body in `TouchableWithoutFeedback` to stop overlay tap-through swallowing inner taps
+- ✅ #4 Admin logout — wired to `AuthContext.logout()` + clears all keys (was only removing 2 of 4 AsyncStorage keys)
+- ✅ #5 Trainer visibility gate — new shared `trainer_visibility_filter()` in `deps.py` enforces `verificationStatus=='verified' AND tier set AND isAvailable=true` across `matching.py`, `matching_routes.py`, `location_routes.py /trainers/nearby`, `profile_routes.py /trainers/search`, and `server.py /sessions/match-virtual`. Server-side ONLY per user spec.
+- ✅ #8 Highlight reel thumbnails — grid tiles now render poster Image when `thumbnailUrl` exists (avoids mounting Video for each cell)
+- ✅ #10 Admin user-row → profile — new `handleOpenUserProfile()` routes to `/trainee/trainer-detail` or `/trainer/trainee-detail` based on role; "Open Full Profile" button added to admin user modal
+- ✅ #16 Removed "Set Up Stripe Payouts" banner from trainer home
+- ✅ #17 Removed "NEW TRAINERS" section from trainee home
+- ✅ #25 Book Session pricing — replaced buggy `(perHourRate * duration/60 + 2)` with trainer's actual per-duration `tierRates[modality{N}Cents]` lookup (in `trainee/trainer-detail.tsx`)
+
+**Sprint B — Pricing overhaul (5 of 5):**
+- ✅ #21 Added 45-min sessions everywhere (backend `TIER_MATRIX`, frontend `TIER_MATRIX`, `set-rates.tsx` rate rows, `payment_routes.py` rate save endpoint, `Duration` type union)
+- ✅ #22 Hidden customer pricing from trainer's rate-set screen (removed "Cust: $X" line, "Customer Total" labels)
+- ✅ #23 Flat **$2.99 service fee** ON TOP of trainer rate across ALL tiers/modalities/durations. Single constant `FLAT_SERVICE_FEE_CENTS = 299` in both backend pricing_tiers.py and frontend pricing.ts
+- ✅ #24 Pricing sync — `TIER_MATRIX` is now the single source of truth; `confirm-booking.tsx` reads `priceCents` from upstream (no hardcoded numbers); `trainer-detail.tsx` reads trainer's `tierRates` directly
+- ✅ #25 verified end-to-end (see Sprint A entry above)
+
+### Verified
+- ✅ **84/84 backend pytest guards pass** (15 new iter96b sprint + 23 iter96 corporate + 41 iter95 regression + 5 ingress smoke tests)
+- ✅ Testing agent v3 returned 100% pass, only optional action items (none required for completion)
+- ✅ TypeScript parse-clean on all touched frontend files (no TS1xxx errors)
+
+### Files modified
+- Backend: `deps.py`, `services/pricing_tiers.py`, `routes/payment_routes.py`, `routes/corporate_routes.py`, `routes/matching.py`, `routes/matching_routes.py`, `routes/location_routes.py`, `routes/profile_routes.py`, `server.py`
+- Frontend: `app/index.tsx`, `app/index.premium.tsx`, `app/index.premium-b.tsx`, `app/admin/dashboard.tsx`, `app/trainee/trainer-detail.tsx`, `app/trainee/confirm-booking.tsx`, `app/trainee/(tabs)/{home,messages}.tsx`, `app/trainer/(tabs)/{home,messages}.tsx`, `app/trainer/set-rates.tsx`, `app/messages/{index,chat}.tsx`, `app/trainee/highlight-upload.tsx`, `app/trainer/highlight-upload.tsx`, `src/components/ProfilePreviewCard.tsx`, `src/utils/pricing.ts`, `src/utils/abVariant.ts`
+- Tests: `tests/test_iteration96b_sprint_ab.py` (new — 15 guards), `tests/test_iteration96_corporate.py` (+3 credit-application live tests), `tests/test_iteration95_negotiation_e2e.py` (updated to expect flat 299 fee)
+
+### Not yet started (from your 25-item list)
+- 🟧 #1 Profile music auto-play/stop (Sprint D)
+- 🟧 #6 Trainee profile redesign for parity (Sprint C — full day)
+- 🟧 #7 Unified profile photo system (Sprint C)
+- 🟧 #9 Admin intro-video view fix (Sprint D)
+- 🟧 #11 Message Admin feature (Sprint D)
+- 🟧 #12 Back-button navigation history preservation (Sprint D)
+- 🟧 #13 Back/X icon visibility pass (Sprint D)
+- 🟧 #14 Floating orange particles app-wide (Sprint C)
+- 🟧 #15 Logo glow on login/signup (Sprint C)
+- 🟧 #18 Nearby user real avatars (Sprint C)
+- 🟧 #19 Profile tab icon = user photo (Sprint C)
+- 🟧 #20 Instagram linking (hidden until keys provided)
+
+
+
 ## 2026-06-03 — Iteration 96: DS Sweep Closure + B2B Corporate Wellness 🚀 ✅
 
 ### Shipped
