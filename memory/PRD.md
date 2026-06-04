@@ -4,6 +4,34 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-06-04 — Iteration 98a: Premium Admin Dashboard + CSV Export 📊
+
+### Shipped
+- **Premium Overview redesign** — new `PremiumOverviewTab.tsx` replaces cluttered cards with glass-morphism KPI tiles on a dark gradient. Hero card surfaces "This Month" revenue + session count + platform earnings at a glance.
+- **11 configurable KPI tiles** — Total Revenue, Service Fees, Commission, Trainer Payouts, Avg Session Value, Sessions (month/all), Trainers/Trainees, Corporate Pool, Pending Reviews, Top 5 Trainers leaderboard, Recent Sessions feed. Customize modal lets each admin toggle individual tiles on/off (persisted via AsyncStorage per device under `admin_overview_tiles_v1`).
+- **CSV Export (sorted by trainer)** — new `GET /api/admin/payments/csv-export?period=this_month|last_month|all_time` (also accepts `start_date`/`end_date` ISO). Returns CSV with `Content-Disposition: attachment` and these 12 columns: Trainer Name · Trainer Email · Session Date · Customer · Gross ($) · Commission % · Commission ($) · Service Fee ($) · Trainer Payout ($) · Corporate Subsidy ($) · Stripe Intent ID · Status. Rows alphabetised by trainer (case-insensitive) then session date.
+- **Direct download UX** — modal-driven download from the dashboard hero (web uses Blob/URL.createObjectURL; native uses expo-file-system + expo-sharing). Filename includes the selected period for accounting clarity.
+- **New dashboard KPIs** — `/api/admin/dashboard` now returns `avgSessionValueCents`, `sessionsThisMonth`, `monthRevenueCents`, `monthPlatformRevenueCents`, `commissionRevenueCents`, `corporatePoolTotalCents`, `corporatePoolSpentCents`, `corporatePoolRemainingCents`, `corporateCompaniesCount`.
+- **`/api/admin/recent-sessions`** — new feed endpoint (limit, defaults to 10) for the Recent Sessions tile, enriched with trainer/trainee names + per-session monetary breakdown.
+
+### Verified
+- ✅ All **88 backend pytest guards pass** in regression batch (iter96 + 97 + 97c + 97d + 98 + 99 + admin_panel_v2).
+- ✅ 6 new iter98 tests + 12 supplementary iter99 tests confirm CSV contract (header columns, alphabetical sort, filename per period, 400/401/403 paths) — 0 defects found by testing agent.
+- ✅ ESLint clean on new frontend file; backend reloads cleanly.
+
+### Files modified / added
+- `/app/backend/routes/admin_routes.py` — extended `get_admin_dashboard` + new `/admin/recent-sessions` + new `/admin/payments/csv-export` endpoints (csv + io stdlib imports).
+- `/app/frontend/src/components/admin/PremiumOverviewTab.tsx` — NEW glass-morphism tab.
+- `/app/frontend/app/admin/dashboard.tsx` — swapped OverviewTab → PremiumOverviewTab.
+- `/app/backend/tests/test_iteration98_admin_dashboard.py` — NEW (6 guards).
+- `/app/backend/tests/test_iteration99_csv_export_extras.py` — NEW (12 supplementary guards, added by testing agent).
+
+### Code review notes (deferred — not blockers)
+- `admin_routes.py` is now ~1530 lines; should be split into modules (dashboard/verifications/payouts/refunds/messaging) when convenient.
+- `get_admin_dashboard` could use `asyncio.gather` to parallelise its 6 sequential DB calls.
+- CSV export currently loads all completed sessions into memory; switch to a streaming cursor when row counts grow.
+
+
 ## 2026-06-04 — Iteration 97e: Stripe Sandbox Live 🎉
 
 ### Shipped
