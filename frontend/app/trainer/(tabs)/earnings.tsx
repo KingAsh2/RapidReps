@@ -180,8 +180,10 @@ export default function TrainerEarningsScreen() {
               </View>
             </LinearGradient>
 
-            {/* Stripe Payout Status / Setup */}
-            {connectStatus.onboarded ? (
+            {/* iter98b: "Set Up Stripe Payouts" banner removed per user request.
+                The Stripe Connect onboarding remains accessible from the Profile / Settings tab —
+                here we only confirm payouts are enabled (no upsell prompt). */}
+            {connectStatus.onboarded && (
               <View style={styles.connectedBanner}>
                 <Ionicons name="checkmark-circle" size={18} color={COLORS.success} />
                 <Text style={styles.connectedText}>Stripe payouts enabled</Text>
@@ -189,20 +191,6 @@ export default function TrainerEarningsScreen() {
                   <Text style={[styles.connectedText, { color: '#FFFFFF', fontWeight: '700' }]}>Manage</Text>
                 </TouchableOpacity>
               </View>
-            ) : (
-              <TouchableOpacity
-                style={styles.payoutButton}
-                onPress={() => router.push('/trainer/connect-bank')}
-                data-testid="connect-bank-btn"
-              >
-                <LinearGradient
-                  colors={['#635BFF', '#7A6CFF']}
-                  style={styles.payoutButtonGradient}
-                >
-                  <Ionicons name="card" size={20} color={COLORS.white} />
-                  <Text style={styles.payoutButtonText}>Set Up Stripe Payouts</Text>
-                </LinearGradient>
-              </TouchableOpacity>
             )}
 
             {/* Period Toggle */}

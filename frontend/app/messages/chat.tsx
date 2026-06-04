@@ -100,11 +100,45 @@ export default function ChatScreen() {
   };
 
   const formatTime = (dateStr: string) => {
-    // iter96b: render in user's local timezone (drop hardcoded 'en-US' locale)
-    const date = new Date(dateStr);
+    // iter98b: backend stores datetime.utcnow() (naive) — ISO has no 'Z'.
+    // Append 'Z' when missing so JS parses it as UTC, then renders in the
+    // device's local timezone via toLocaleTimeString(undefined, ...).
+    const iso = dateStr && /[Z]|[+-]\d\d:?\d\d$/.test(dateStr) ? dateStr : `${dateStr}Z`;
+    const date = new Date(iso);
     if (isNaN(date.getTime())) return '';
     return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
   };
+
+  // iter98b: format a day-separator header (e.g., "Today", "Yesterday", "Wed, Jun 4")
+  const formatDayHeader = (dateStr: string) => {
+    const iso = dateStr && /[Z]|[+-]\d\d:?\d\d$/.test(dateStr) ? dateStr : `${dateStr}Z`;
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    const now = new Date();
+    const startOfDay = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+    const diffDays = Math.round((startOfDay(now) - startOfDay(d)) / 86400000);
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays > 0 && diffDays < 7) return d.toLocaleDateString(undefined, { weekday: 'long' });
+    return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+  };
+
+  // Group messages by local day for separator rendering
+  const messagesWithSeparators = React.useMemo(() => {
+    const out: any[] = [];
+    let lastKey = '';
+    for (const m of messages) {
+      const iso = m.createdAt && /[Z]|[+-]\d\d:?\d\d$/.test(m.createdAt) ? m.createdAt : `${m.createdAt}Z`;
+      const d = new Date(iso);
+      const key = isNaN(d.getTime()) ? '' : `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      if (key && key !== lastKey) {
+        out.push({ __sep: true, id: `sep-${key}`, label: formatDayHeader(m.createdAt) });
+        lastKey = key;
+      }
+      out.push(m);
+    }
+    return out;
+  }, [messages]);
 
   const headerTranslateY = headerAnim.interpolate({
     inputRange: [0, 1],
@@ -112,6 +146,16 @@ export default function ChatScreen() {
   });
 
   const renderMessage = ({ item }: { item: any }) => {
+    // iter98b: day separator rows
+    if (item?.__sep) {
+      return (
+        <View style={styles.dayHeaderRow} data-testid="day-separator">
+          <View style={styles.dayHeaderLine} />
+          <Text style={styles.dayHeaderText}>{item.label}</Text>
+          <View style={styles.dayHeaderLine} />
+        </View>
+      );
+    }
     const isMyMessage = item.senderId === user?.id;
 
     return (
@@ -222,7 +266,7 @@ export default function ChatScreen() {
           >
             <FlatList
               ref={flatListRef}
-              data={messages}
+              data={messagesWithSeparators}
               renderItem={renderMessage}
               keyExtractor={(item) => item.id}
               contentContainerStyle={styles.messagesList}
@@ -486,5 +530,25 @@ const styles = StyleSheet.create({
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  // iter98b: day-separator styles
+  dayHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 12,
+    paddingHorizontal: 12,
+    gap: 10,
+  },
+  dayHeaderLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(10, 14, 26, 0.08)',
+  },
+  dayHeaderText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: 'rgba(10, 14, 26, 0.55)',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
   },
 });
