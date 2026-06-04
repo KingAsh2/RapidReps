@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from bson import ObjectId
 import logging
 
-from deps import db, get_current_user, calculate_distance, create_and_send_notification
+from deps import db, get_current_user, calculate_distance, create_and_send_notification, trainer_visibility_filter
 from models import MembershipStatus, PricingRules
 
 router = APIRouter(prefix="/api")
@@ -126,8 +126,9 @@ async def run_matching_engine(
     })
     is_member = trainee_membership is not None
 
-    # Build query — only available, qualified trainers
+    # Build query — only available, qualified, ADMIN-APPROVED trainers
     query = {"isAvailable": True, "userId": {"$nin": rejected}}
+    query.update(trainer_visibility_filter())
     if session_type == "virtual":
         query["offersVirtual"] = True
     else:

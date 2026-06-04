@@ -77,7 +77,8 @@ export default function ConfirmBookingScreen() {
   const [showBookingModal, setShowBookingModal] = useState(false);
 
   const sessionPriceCents = Number(params.priceCents) || getMinPrice(sessionType);
-  const serviceFeeCents = 200; // $2.00 flat service fee
+  // iter96b (#23): flat $2.99 service fee — applied ON TOP of trainer's rate
+  const serviceFeeCents = 299;
   const trainerEarnings = Math.round(sessionPriceCents * 0.80);
   const platformFeeCents = sessionPriceCents - trainerEarnings;
   const totalCents = sessionPriceCents + serviceFeeCents;

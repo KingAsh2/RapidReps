@@ -319,6 +319,98 @@ def test_ds_token_sweep_complete_on_remaining_screens():
         assert "DS.colors" in text, f"{f} not yet on DS token sweep"
 
 
+# ══════════════════════════════════════════════════════════════════════
+#  Iter96b — Corporate credit application live tests
+# ══════════════════════════════════════════════════════════════════════
+def test_quote_for_non_enrolled_user(trainee_token):
+    """Cleanup any prior enrollment first, then quote should show zero subsidy."""
+    import asyncio, os
+    from pathlib import Path as _P2
+    from dotenv import load_dotenv
+    from motor.motor_asyncio import AsyncIOMotorClient
+    load_dotenv(_P2("/app/backend/.env"))
+    client = AsyncIOMotorClient(os.environ["MONGO_URL"])
+    db2 = client[os.environ["DB_NAME"]]
+    me = requests.get(f"{API_BASE}/api/auth/me", headers={"Authorization": f"Bearer {trainee_token}"}, timeout=5)
+    tid = me.json()["id"]
+
+    async def _purge():
+        await db2.corporate_memberships.delete_many({"userId": tid})
+        await db2.users.update_one(
+            {"_id": __import__("bson").ObjectId(tid)},
+            {"$unset": {"corporateCompanyId": ""}},
+        )
+    asyncio.get_event_loop().run_until_complete(_purge())
+
+    r = requests.post(
+        f"{API_BASE}/api/corporate/sessions/quote",
+        headers={"Authorization": f"Bearer {trainee_token}"},
+        json={"amountCents": 6000},
+        timeout=10,
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["subsidyCents"] == 0
+    assert body["traineePaysCents"] == 6000
+    assert body["hasCorporateCoverage"] is False
+
+
+def test_quote_after_enrollment_shows_subsidy(admin_token, trainee_token, company_state):
+    """Top up pool, create invite, redeem, then quote should subsidize up to allowance."""
+    # Top up so pool has room
+    requests.post(
+        f"{API_BASE}/api/corporate/companies/{company_state['id']}/credit-pool",
+        headers={"Authorization": f"Bearer {admin_token}"},
+        json={"amountCents": 100000},
+        timeout=10,
+    )
+    inv = requests.post(
+        f"{API_BASE}/api/corporate/companies/{company_state['id']}/invites",
+        headers={"Authorization": f"Bearer {admin_token}"},
+        json={"maxUses": 1, "creditAllowanceCents": 4000, "expiresInDays": 7},
+        timeout=10,
+    )
+    code = inv.json()["code"]
+
+    # Trainee redeems
+    rr = requests.post(
+        f"{API_BASE}/api/corporate/redeem",
+        headers={"Authorization": f"Bearer {trainee_token}"},
+        json={"code": code},
+        timeout=10,
+    )
+    assert rr.status_code == 200, rr.text
+
+    # Quote: charge is $60, allowance is $40 → trainee pays $20
+    q = requests.post(
+        f"{API_BASE}/api/corporate/sessions/quote",
+        headers={"Authorization": f"Bearer {trainee_token}"},
+        json={"amountCents": 6000},
+        timeout=10,
+    )
+    assert q.status_code == 200, q.text
+    body = q.json()
+    assert body["subsidyCents"] == 4000
+    assert body["traineePaysCents"] == 2000
+    assert body["hasCorporateCoverage"] is True
+    assert body["companySlug"] == company_state["slug"]
+
+
+def test_quote_caps_at_amount_when_allowance_exceeds(admin_token, trainee_token, company_state):
+    """If allowance > amount, subsidy = amount and trainee pays 0."""
+    q = requests.post(
+        f"{API_BASE}/api/corporate/sessions/quote",
+        headers={"Authorization": f"Bearer {trainee_token}"},
+        json={"amountCents": 1500},
+        timeout=10,
+    )
+    assert q.status_code == 200, q.text
+    body = q.json()
+    # remaining allowance after prior 0-debit redeem is 4000; charge is 1500 → fully covered
+    assert body["subsidyCents"] == 1500
+    assert body["traineePaysCents"] == 0
+
+
 
 # ── Public branded landing ────────────────────────────────────────────
 def test_public_landing_returns_safe_fields(company_state):

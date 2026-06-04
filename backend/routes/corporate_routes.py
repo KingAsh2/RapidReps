@@ -478,3 +478,122 @@ async def public_landing(slug: str):
         "brandTagline": company.get("brandTagline"),
         "employeeCount": int(company.get("employeeCount", 0)),
     }
+
+
+
+# ══════════════════════════════════════════════════════════════════════
+#  Credit application helpers (used by payment_routes)
+# ══════════════════════════════════════════════════════════════════════
+async def compute_corporate_subsidy(user_id: str, amount_cents: int) -> dict:
+    """Compute the subsidy a corporate employee receives for `amount_cents`.
+
+    Returns a dict with: subsidyCents, traineePaysCents, companyId, membershipId,
+    membershipRemaining, companyPoolRemaining. If the user has no eligible
+    membership, subsidyCents will be 0.
+    """
+    if amount_cents <= 0:
+        return {"subsidyCents": 0, "traineePaysCents": amount_cents}
+
+    membership = await db.corporate_memberships.find_one({"userId": user_id})
+    if not membership:
+        return {"subsidyCents": 0, "traineePaysCents": amount_cents}
+
+    try:
+        company_oid = ObjectId(membership["companyId"])
+    except Exception:
+        return {"subsidyCents": 0, "traineePaysCents": amount_cents}
+    company = await db.corporate_companies.find_one({"_id": company_oid})
+    if not company or not company.get("isActive", True):
+        return {"subsidyCents": 0, "traineePaysCents": amount_cents}
+
+    membership_remaining = max(
+        0,
+        int(membership.get("creditAllowanceCents", 0)) - int(membership.get("creditUsedCents", 0)),
+    )
+    pool_remaining = max(
+        0,
+        int(company.get("creditPoolCents", 0)) - int(company.get("totalSpentCents", 0)),
+    )
+    subsidy = min(amount_cents, membership_remaining, pool_remaining)
+
+    return {
+        "subsidyCents": subsidy,
+        "traineePaysCents": amount_cents - subsidy,
+        "companyId": str(company["_id"]),
+        "companyName": company.get("name", ""),
+        "companySlug": company.get("slug", ""),
+        "membershipId": str(membership["_id"]),
+        "membershipRemainingCents": membership_remaining,
+        "companyPoolRemainingCents": pool_remaining,
+    }
+
+
+async def commit_corporate_subsidy(
+    *,
+    user_id: str,
+    quote: dict,
+    session_id: Optional[str],
+    payment_intent_id: Optional[str],
+) -> None:
+    """Persist the subsidy debit. Call this ONLY after Stripe intent succeeds.
+
+    Updates the membership (creditUsedCents++), company totals (totalSpentCents++),
+    and writes a debit row in corporate_credit_ledger for audit.
+    """
+    subsidy = int(quote.get("subsidyCents", 0))
+    if subsidy <= 0:
+        return
+
+    membership_id = quote.get("membershipId")
+    company_id = quote.get("companyId")
+    if not membership_id or not company_id:
+        return
+
+    try:
+        await db.corporate_memberships.update_one(
+            {"_id": ObjectId(membership_id)},
+            {"$inc": {"creditUsedCents": subsidy}},
+        )
+        await db.corporate_companies.update_one(
+            {"_id": ObjectId(company_id)},
+            {"$inc": {"totalSpentCents": subsidy}, "$set": {"updatedAt": _utcnow()}},
+        )
+        await db.corporate_credit_ledger.insert_one({
+            "companyId": company_id,
+            "userId": user_id,
+            "amountCents": subsidy,
+            "direction": "debit",
+            "note": "Session subsidy",
+            "sessionId": session_id,
+            "paymentIntentId": payment_intent_id,
+            "createdAt": _utcnow(),
+        })
+    except Exception:
+        # Best-effort — debit failure must never break the intent return.
+        pass
+
+
+class QuoteRequest(BaseModel):
+    amountCents: int = Field(..., gt=0, le=10_000_000)
+    sessionId: Optional[str] = Field(None, max_length=64)
+
+
+@router.post("/sessions/quote")
+async def quote_session(
+    payload: QuoteRequest,
+    current_user: dict = Depends(get_current_user),
+):
+    """Pre-flight quote: how much will corporate cover for this booking?
+
+    Used by the booking confirmation screen to show the employee the subsidy
+    line and the out-of-pocket total before they hit "Pay".
+    """
+    quote = await compute_corporate_subsidy(str(current_user["_id"]), payload.amountCents)
+    return {
+        "amountCents": payload.amountCents,
+        "subsidyCents": int(quote.get("subsidyCents", 0)),
+        "traineePaysCents": int(quote.get("traineePaysCents", payload.amountCents)),
+        "hasCorporateCoverage": int(quote.get("subsidyCents", 0)) > 0,
+        "companyName": quote.get("companyName"),
+        "companySlug": quote.get("companySlug"),
+    }

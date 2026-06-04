@@ -578,23 +578,8 @@ export default function TrainerHomeScreen() {
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.white} />
             }
           >
-            {/* Stripe Payouts Setup Banner */}
-            {needsPayoutSetup && (
-              <TouchableOpacity
-                style={{ backgroundColor: '#635BFF', borderRadius: 14, padding: 16, marginHorizontal: 16, marginBottom: 12, flexDirection: 'row', alignItems: 'center', gap: 12 }}
-                onPress={() => router.push('/trainer/connect-bank')}
-                data-testid="payout-setup-banner"
-              >
-                <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' }}>
-                  <Ionicons name="card" size={22} color={COLORS.white} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 15, fontWeight: '800', color: COLORS.white }}>Set Up Stripe Payouts</Text>
-                  <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>Get paid your tier % on every completed session.</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.6)" />
-              </TouchableOpacity>
-            )}
+            {/* iter96b: Stripe Payouts Setup Banner removed per user request.
+                Onboarding to Stripe is now reachable via Earnings tab. */}
 
             {/* Hero Banner */}
             <Animated.View

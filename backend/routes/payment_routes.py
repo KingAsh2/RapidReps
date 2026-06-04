@@ -284,11 +284,13 @@ async def get_pricing_quote(
 
 
 class TrainerRatesPayload(BaseModel):
-    """All six rates a trainer can set: 3 durations × 2 modalities (cents)."""
+    """Rates a trainer can set: 4 durations × 2 modalities (cents). iter96b adds 45-min."""
     inPerson30Cents: Optional[int] = None
+    inPerson45Cents: Optional[int] = None
     inPerson60Cents: Optional[int] = None
     inPerson90Cents: Optional[int] = None
     virtual30Cents: Optional[int] = None
+    virtual45Cents: Optional[int] = None
     virtual60Cents: Optional[int] = None
     virtual90Cents: Optional[int] = None
 
@@ -308,9 +310,11 @@ async def save_trainer_tier_rates(req: TrainerRatesPayload, current_user: dict =
 
     field_map = {
         "inPerson30Cents": ("in_person", 30),
+        "inPerson45Cents": ("in_person", 45),
         "inPerson60Cents": ("in_person", 60),
         "inPerson90Cents": ("in_person", 90),
         "virtual30Cents": ("virtual", 30),
+        "virtual45Cents": ("virtual", 45),
         "virtual60Cents": ("virtual", 60),
         "virtual90Cents": ("virtual", 90),
     }
@@ -996,11 +1000,54 @@ async def create_payment_intent(
             )
 
     try:
+        # iter96: apply corporate subsidy if the trainee is enrolled with an employer
+        from routes.corporate_routes import compute_corporate_subsidy, commit_corporate_subsidy
+        user_id = str(current_user['_id'])
+        subsidy_quote = await compute_corporate_subsidy(user_id, amount_cents)
+        trainee_pays_cents = int(subsidy_quote.get("traineePaysCents", amount_cents))
+        subsidy_cents = int(subsidy_quote.get("subsidyCents", 0))
+
+        # Stripe minimum is $0.50; if subsidy fully covers, skip the gateway entirely.
+        if trainee_pays_cents < 50:
+            intent_id = f"corp_full_subsidy_{ObjectId()}"
+            await commit_corporate_subsidy(
+                user_id=user_id, quote=subsidy_quote,
+                session_id=session_id, payment_intent_id=intent_id,
+            )
+            return {
+                "clientSecret": None,
+                "paymentIntentId": intent_id,
+                "amountCents": amount_cents,
+                "traineePaysCents": trainee_pays_cents,
+                "corporateSubsidyCents": subsidy_cents,
+                "fullySubsidized": True,
+                "companyName": subsidy_quote.get("companyName"),
+            }
+
         intent = stripe.PaymentIntent.create(
-            amount=amount_cents, currency='usd',
-            metadata={'user_id': str(current_user['_id']), 'session_id': session_id or '', 'description': description}
+            amount=trainee_pays_cents, currency='usd',
+            metadata={
+                'user_id': user_id,
+                'session_id': session_id or '',
+                'description': description,
+                'original_amount_cents': str(amount_cents),
+                'corporate_subsidy_cents': str(subsidy_cents),
+                'company_id': subsidy_quote.get('companyId') or '',
+            }
         )
-        return {"clientSecret": intent.client_secret, "paymentIntentId": intent.id}
+        await commit_corporate_subsidy(
+            user_id=user_id, quote=subsidy_quote,
+            session_id=session_id, payment_intent_id=intent.id,
+        )
+        return {
+            "clientSecret": intent.client_secret,
+            "paymentIntentId": intent.id,
+            "amountCents": amount_cents,
+            "traineePaysCents": trainee_pays_cents,
+            "corporateSubsidyCents": subsidy_cents,
+            "fullySubsidized": False,
+            "companyName": subsidy_quote.get("companyName"),
+        }
     except stripe.error.StripeError as e:
         raise HTTPException(status_code=400, detail=str(e))
 

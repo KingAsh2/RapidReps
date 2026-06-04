@@ -1,0 +1,53 @@
+{
+  "summary": "Iter96b Sprint A/B + in-flight items backend tested end-to-end. All 79 pytest guards pass (15 new iter96b sprint + 23 iter96 corporate + 41 iter95 regression) AND 5 additional live public-ingress smoke tests pass (84/84 total). Corporate quote endpoint, flat $2.99 service fee across all tier x modality x duration combos, 45-min duration support, payment-intent corporate hooks, and trainer visibility filter all verified.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "trainer-facing listings (matching/search/nearby)",
+        "issue": "Visibility filter now requires verificationStatus=='verified' AND tier set AND isAvailable=true. In this pod, 93 trainers exist but ZERO are verified+tiered+available, so trainee discovery endpoints return empty arrays. This is correct per spec but means no trainers will surface for demo/QA. Recommend seeding at least one verified trainer with a tier."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration96b_sprint_ab.py",
+    "/app/backend/tests/test_iteration96b_public_ingress.py",
+    "/app/backend/tests/test_iteration96_corporate.py",
+    "/app/backend/tests/test_iteration95_negotiation_e2e.py",
+    "/app/backend/tests/test_iteration95b_trainer_detail_and_ab.py",
+    "/app/backend/tests/test_iteration95c_batch_all.py",
+    "/app/test_reports/pytest/iter96b_results.xml",
+    "/app/test_reports/pytest/iter96b_public_ingress.xml"
+  ],
+  "action_items": [
+    "(Optional) Seed at least one trainer with verificationStatus='verified', tier set, isAvailable=true so trainee-facing discovery endpoints surface results in this preview env. Without it, /api/trainers/search and friends correctly return [] under the new gate.",
+    "(Optional) Resolve Stripe live key expiry pre-production (out of scope for this iteration per instructions)."
+  ],
+  "critical_code_review_comments": [
+    "POST /api/corporate/sessions/quote: clean Pydantic gating (amountCents > 0, <= 10M), correctly returns 0 subsidy for non-enrolled trainees, caps subsidy at amountCents when allowance > amount, and surfaces companySlug/companyName when enrolled. No DB mutation in pre-flight — correct design.",
+    "FLAT_SERVICE_FEE_CENTS = 299 is the single source of truth in /app/backend/services/pricing_tiers.py and applied uniformly in TIER_MATRIX for all 3 tiers × 2 modalities. Verified live: 24/24 combos (3 tiers × 2 modalities × 4 durations) return service_fee_cents=299.",
+    "Duration 45 is a first-class member of Duration union; pricing/quote accepts duration=45 with proper tier caps (e.g., new in_person 45min cap $50, certified in_person 45min cap $70).",
+    "payment_routes.py create-payment-intent correctly imports compute_corporate_subsidy + commit_corporate_subsidy and surfaces corporateSubsidyCents + traineePaysCents in the response shape (verified via static + grep).",
+    "trainer_visibility_filter centralized in deps.py and applied across 4 listings modules (matching, matching_routes, location_routes, profile_routes) — guard test passes. Filter is strict: {verificationStatus:'verified', tier: not null/empty, isAvailable:true}.",
+    "Corporate quote endpoint is properly auth-gated (403 without token) and rejects amountCents <= 0 with 422.",
+    "Static frontend guards confirm: pricing.ts mirrors backend (FLAT_SERVICE_FEE_CENTS=299, Duration union 30/45/60/90), trainer set-rates screen has 45-min rows + 'Cust:' line removed, trainer-detail uses tierRates per-duration (no per-hour math), confirm-booking uses serviceFeeCents=299, Stripe and 'NEW TRAINERS' banners removed, AB variant hook + welcome router wired, admin dashboard uses AuthContext logout + Open Full Profile flow, messages drop hardcoded 'en-US'."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration96b_public_ingress.py (NEW — 5 live ingress smoke tests; corrected base_cents=1000 to fit smallest tier cap)"
+  ],
+  "success_rate": {
+    "backend": "100% (84/84: 15 iter96b sprint + 23 iter96 corporate + 41 iter95 regression + 5 new public ingress)",
+    "frontend": "not tested (backend-only review requested)"
+  },
+  "test_credentials": "admin@rapidreps.com / admin123; test_trainer_iter25@test.com / Test123!; test_trainee_iter25@test.com / Test123! (from /app/memory/test_credentials.md — all functional)",
+  "seed_data_creation": "5 new public-ingress smoke tests are stateless reads against /api/pricing/quote and /api/corporate/sessions/quote — they create no data. The iter96 corporate fixture continues to create ephemeral ACME-{hex} companies per test session. The pre-existing leftover ACME enrollment on the test trainee is exercised by test_public_corporate_quote_responds_for_trainee but the assertions are robust to both enrolled and non-enrolled states.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iter96b complete. Canonical regression set is 84 tests across 6 files: test_iteration96b_sprint_ab.py (15), test_iteration96b_public_ingress.py (5 NEW), test_iteration96_corporate.py (23), test_iteration95_negotiation_e2e.py (16), test_iteration95b_trainer_detail_and_ab.py (9), test_iteration95c_batch_all.py (16). Stripe key is expired by design (do not flag). The trainer visibility filter is strict — no verified trainers exist in this env so discovery endpoints return []. Frontend Playwright still pending: priority screens are /trainee/confirm-booking (verify $2.99 fee line + 45-min duration option), /trainer/set-rates (45-min input rows), /admin/dashboard (Open Full Profile, AuthContext logout). data-testids already in place per iter96 handoff.",
+  "rca_of_the_issue": "N/A — no issues found. All 84 guards pass. One environmental note: visibility filter correctly returns [] in this pod because no trainer satisfies verified+tier+available (93 trainers exist, 0 verified). Main agent should seed a verified+tiered trainer if E2E demo needed."
+}

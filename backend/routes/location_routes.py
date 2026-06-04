@@ -6,7 +6,7 @@ from typing import List, Optional
 from datetime import datetime, timedelta
 from bson import ObjectId
 
-from deps import db, get_current_user, calculate_distance, create_and_send_notification
+from deps import db, get_current_user, calculate_distance, create_and_send_notification, trainer_visibility_filter
 from models import UserRole, SessionStatus, PricingRules, MembershipStatus
 
 router = APIRouter(prefix="/api")
@@ -426,11 +426,12 @@ async def get_nearby_trainers(
 ):
     """Get all available trainers near a location with distance and ETA"""
     
-    # Get all available trainers with valid locations
+    # Get all available, ADMIN-APPROVED trainers with valid locations
     trainers = await db.trainer_profiles.find({
         'isAvailable': True,
         'latitude': {'$exists': True, '$ne': None},
-        'longitude': {'$exists': True, '$ne': None}
+        'longitude': {'$exists': True, '$ne': None},
+        **trainer_visibility_filter(),
     }).to_list(100)
     
     # First pass: filter trainers within radius

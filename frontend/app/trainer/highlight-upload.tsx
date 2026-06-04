@@ -19,6 +19,7 @@ interface Highlight {
   type: 'video' | 'photo';
   caption?: string;
   createdAt?: string;
+  thumbnailUrl?: string;
 }
 
 export default function HighlightUpload() {
@@ -183,7 +184,12 @@ export default function HighlightUpload() {
   const renderHighlight = ({ item, index }: { item: Highlight; index: number }) => (
     <View style={s.highlightCard}>
       {item.type === 'video' ? (
-        <Video source={{ uri: item.url }} style={s.highlightMedia} resizeMode={ResizeMode.COVER} shouldPlay={false} isMuted />
+        item.thumbnailUrl ? (
+          // iter96b: poster image instead of mounting a Video for each grid tile
+          <Image source={{ uri: item.thumbnailUrl }} style={s.highlightMedia} />
+        ) : (
+          <Video source={{ uri: item.url }} style={s.highlightMedia} resizeMode={ResizeMode.COVER} shouldPlay={false} isMuted />
+        )
       ) : (
         <Image source={{ uri: item.url }} style={s.highlightMedia} />
       )}

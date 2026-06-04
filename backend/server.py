@@ -40,6 +40,7 @@ from deps import (
     get_minimum_price, calculate_session_pricing,
     send_push_notification, send_push_to_many,
     VALID_PERSONALITY_TAGS, EXPO_PUSH_URL,
+    trainer_visibility_filter,
 )
 
 ROOT_DIR = Path(__file__).parent
@@ -392,7 +393,8 @@ async def request_virtual_session(
     """
     # Find available virtual trainers (only fields needed for matching + response)
     available_trainers = await db.trainer_profiles.find(
-        {'isAvailable': True, 'isVirtualTrainingAvailable': True, 'offersVirtual': True},
+        {'isAvailable': True, 'isVirtualTrainingAvailable': True, 'offersVirtual': True,
+         **trainer_visibility_filter()},
         {'_id': 0, 'userId': 1, 'averageRating': 1, 'totalSessionsCompleted': 1, 'zoomMeetingLink': 1, 'bio': 1}
     ).to_list(100)
     

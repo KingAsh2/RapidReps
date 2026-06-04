@@ -25,13 +25,13 @@ import {
 } from '../../src/utils/pricing';
 
 interface RateState {
-  inPerson30: string; inPerson60: string; inPerson90: string;
-  virtual30: string; virtual60: string; virtual90: string;
+  inPerson30: string; inPerson45: string; inPerson60: string; inPerson90: string;
+  virtual30: string; virtual45: string; virtual60: string; virtual90: string;
 }
 
 const EMPTY_RATES: RateState = {
-  inPerson30: '', inPerson60: '', inPerson90: '',
-  virtual30: '', virtual60: '', virtual90: '',
+  inPerson30: '', inPerson45: '', inPerson60: '', inPerson90: '',
+  virtual30: '', virtual45: '', virtual60: '', virtual90: '',
 };
 
 export default function SetRatesScreen() {
@@ -48,9 +48,11 @@ export default function SetRatesScreen() {
       const tr = data.tierRates || {};
       setRates({
         inPerson30: tr.inPerson30Cents ? String(tr.inPerson30Cents / 100) : '',
+        inPerson45: tr.inPerson45Cents ? String(tr.inPerson45Cents / 100) : '',
         inPerson60: tr.inPerson60Cents ? String(tr.inPerson60Cents / 100) : '',
         inPerson90: tr.inPerson90Cents ? String(tr.inPerson90Cents / 100) : '',
         virtual30: tr.virtual30Cents ? String(tr.virtual30Cents / 100) : '',
+        virtual45: tr.virtual45Cents ? String(tr.virtual45Cents / 100) : '',
         virtual60: tr.virtual60Cents ? String(tr.virtual60Cents / 100) : '',
         virtual90: tr.virtual90Cents ? String(tr.virtual90Cents / 100) : '',
       });
@@ -76,9 +78,11 @@ export default function SetRatesScreen() {
     const errors: string[] = [];
     const fieldMap: Array<[keyof RateState, string, Modality, Duration]> = [
       ['inPerson30', 'inPerson30Cents', 'in_person', 30],
+      ['inPerson45', 'inPerson45Cents', 'in_person', 45 as Duration],
       ['inPerson60', 'inPerson60Cents', 'in_person', 60],
       ['inPerson90', 'inPerson90Cents', 'in_person', 90],
       ['virtual30', 'virtual30Cents', 'virtual', 30],
+      ['virtual45', 'virtual45Cents', 'virtual', 45 as Duration],
       ['virtual60', 'virtual60Cents', 'virtual', 60],
       ['virtual90', 'virtual90Cents', 'virtual', 90],
     ];
@@ -166,8 +170,8 @@ export default function SetRatesScreen() {
         </View>
         {breakdown ? (
           <View style={s.previewBox}>
+            {/* iter96b (#22): trainer only sees their take-home; customer total is hidden */}
             <Text style={s.previewLine}>You: {formatCents(breakdown.trainer_take_home_cents)}</Text>
-            <Text style={s.previewLineMuted}>Cust: {formatCents(breakdown.customer_total_cents)}</Text>
           </View>
         ) : overCap ? (
           <Text style={s.errorBadge}>over cap</Text>
@@ -198,17 +202,20 @@ export default function SetRatesScreen() {
 
           <Text style={s.sectionHeader}>In-Person Sessions</Text>
           {renderRateRow('inPerson30', 'in_person', 30, '30 minutes')}
+          {renderRateRow('inPerson45', 'in_person', 45 as Duration, '45 minutes')}
           {renderRateRow('inPerson60', 'in_person', 60, '60 minutes')}
           {renderRateRow('inPerson90', 'in_person', 90, '90 minutes')}
 
           <Text style={s.sectionHeader}>Virtual Sessions</Text>
           {renderRateRow('virtual30', 'virtual', 30, '30 minutes')}
+          {renderRateRow('virtual45', 'virtual', 45 as Duration, '45 minutes')}
           {renderRateRow('virtual60', 'virtual', 60, '60 minutes')}
           {renderRateRow('virtual90', 'virtual', 90, '90 minutes')}
 
           <Text style={s.disclaimer}>
-            Customer total includes a service fee of {formatCents(tierCfg.in_person.service_fee_cents)} (in-person) /{' '}
-            {formatCents(tierCfg.virtual.service_fee_cents)} (virtual). Leave a field blank to skip that length.
+            {/* iter96b (#22 + #23): hide customer-facing fee math from trainer.
+                Customer is charged a flat $2.99 service fee on top of your rate. */}
+            Leave a field blank to skip that session length. Your take-home shown above.
           </Text>
 
           <TouchableOpacity style={[s.saveBtn, saving && { opacity: 0.6 }]} onPress={handleSave} disabled={saving} data-testid="set-rates-save">

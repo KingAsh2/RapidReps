@@ -99,8 +99,10 @@ export default function ChatScreen() {
   };
 
   const formatTime = (dateStr: string) => {
+    // iter96b: render in user's local timezone (drop hardcoded 'en-US' locale)
     const date = new Date(dateStr);
-    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    if (isNaN(date.getTime())) return '';
+    return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
   };
 
   const headerTranslateY = headerAnim.interpolate({

@@ -3,6 +3,7 @@ import {
   View,
   Text,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   Image,
   Animated,
   StyleSheet,
@@ -68,15 +69,18 @@ export const ProfilePreviewCard: React.FC<ProfilePreviewProps> = ({
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
       <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onClose} data-testid="profile-preview-overlay">
-        <Animated.View
-          style={[
-            styles.card,
-            {
-              opacity: opacityAnim,
-              transform: [{ scale: scaleAnim }],
-            },
-          ]}
-        >
+        {/* iter96b: wrap card in TouchableWithoutFeedback so taps on the card
+            don't bubble up to the overlay (which would dismiss before navigating). */}
+        <TouchableWithoutFeedback>
+          <Animated.View
+            style={[
+              styles.card,
+              {
+                opacity: opacityAnim,
+                transform: [{ scale: scaleAnim }],
+              },
+            ]}
+          >
           <LinearGradient colors={['#1A2035', '#141929']} style={styles.cardGradient}>
             {/* Accent glow */}
             <View style={styles.glowOrb} />
@@ -150,6 +154,7 @@ export const ProfilePreviewCard: React.FC<ProfilePreviewProps> = ({
             </TouchableOpacity>
           </LinearGradient>
         </Animated.View>
+        </TouchableWithoutFeedback>
       </TouchableOpacity>
     </Modal>
   );

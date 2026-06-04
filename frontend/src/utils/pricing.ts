@@ -9,7 +9,10 @@
 
 export type TrainerTier = 'new' | 'certified' | 'specialty';
 export type Modality = 'in_person' | 'virtual';
-export type Duration = 30 | 60 | 90;
+export type Duration = 30 | 45 | 60 | 90;
+
+// iter96b: flat $2.99 service fee across all tiers/modalities/durations
+export const FLAT_SERVICE_FEE_CENTS = 299;
 
 export interface TierConfig {
   label: string;
@@ -46,12 +49,12 @@ export const TIER_MATRIX: Record<TrainerTier, TierConfig> = {
     commission_percent: 25,
     trainer_percent: 75,
     in_person: {
-      service_fee_cents: 499,
-      rate_caps_cents: { 30: 3500, 60: 6500, 90: 9500 },
+      service_fee_cents: FLAT_SERVICE_FEE_CENTS,
+      rate_caps_cents: { 30: 3500, 45: 5000, 60: 6500, 90: 9500 },
     },
     virtual: {
-      service_fee_cents: 399,
-      rate_caps_cents: { 30: 3000, 60: 5500, 90: 8000 },
+      service_fee_cents: FLAT_SERVICE_FEE_CENTS,
+      rate_caps_cents: { 30: 3000, 45: 4250, 60: 5500, 90: 8000 },
     },
   },
   certified: {
@@ -59,12 +62,12 @@ export const TIER_MATRIX: Record<TrainerTier, TierConfig> = {
     commission_percent: 20,
     trainer_percent: 80,
     in_person: {
-      service_fee_cents: 599,
-      rate_caps_cents: { 30: 5000, 60: 9000, 90: 13000 },
+      service_fee_cents: FLAT_SERVICE_FEE_CENTS,
+      rate_caps_cents: { 30: 5000, 45: 7000, 60: 9000, 90: 13000 },
     },
     virtual: {
-      service_fee_cents: 499,
-      rate_caps_cents: { 30: 4500, 60: 8000, 90: 11500 },
+      service_fee_cents: FLAT_SERVICE_FEE_CENTS,
+      rate_caps_cents: { 30: 4500, 45: 6250, 60: 8000, 90: 11500 },
     },
   },
   specialty: {
@@ -72,12 +75,12 @@ export const TIER_MATRIX: Record<TrainerTier, TierConfig> = {
     commission_percent: 15,
     trainer_percent: 85,
     in_person: {
-      service_fee_cents: 799,
-      rate_caps_cents: { 30: 7500, 60: 14000, 90: 20000 },
+      service_fee_cents: FLAT_SERVICE_FEE_CENTS,
+      rate_caps_cents: { 30: 7500, 45: 10750, 60: 14000, 90: 20000 },
     },
     virtual: {
-      service_fee_cents: 599,
-      rate_caps_cents: { 30: 6500, 60: 12000, 90: 17500 },
+      service_fee_cents: FLAT_SERVICE_FEE_CENTS,
+      rate_caps_cents: { 30: 6500, 45: 9250, 60: 12000, 90: 17500 },
     },
   },
 };

@@ -8,6 +8,7 @@ import asyncio
 import math
 
 from routes import db, get_current_user, serialize_doc, haversine_miles
+from deps import trainer_visibility_filter
 
 router = APIRouter(prefix="/api", tags=["matching"])
 
@@ -77,6 +78,7 @@ async def ranked_trainer_search(
 ):
     """Search trainers using ETA-weighted composite scoring."""
     query = {"isAvailable": True}
+    query.update(trainer_visibility_filter())
     if session_type == "virtual":
         query["offersVirtual"] = True
     else:
@@ -165,8 +167,10 @@ async def instant_workout_match(
         raise HTTPException(status_code=403, detail="Only trainees can request instant matches")
 
     query = {"isAvailable": True, "offersInPerson": True}
+    query.update(trainer_visibility_filter())
     if req.sessionType == "virtual":
         query = {"isAvailable": True, "offersVirtual": True}
+        query.update(trainer_visibility_filter())
 
     profiles = await db.trainer_profiles.find(query).to_list(100)
 
@@ -404,7 +408,8 @@ async def virtual_instant_match(
         raise HTTPException(status_code=403, detail="Only trainees can request virtual sessions")
 
     trainers = await db.trainer_profiles.find({
-        "isAvailable": True, "offersVirtual": True
+        "isAvailable": True, "offersVirtual": True,
+        **trainer_visibility_filter(),
     }).sort([("averageRating", -1), ("totalSessionsCompleted", -1)]).to_list(20)
 
     if not trainers:

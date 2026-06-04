@@ -32,23 +32,27 @@ class TrainerTierV2:
 
 
 Modality = Literal["in_person", "virtual"]
-Duration = Literal[30, 60, 90]
+Duration = Literal[30, 45, 60, 90]
 
 
 # ── Tier matrix (single source of truth) ───────────────────────────────
+# iter96b: Service fee is now a flat $2.99 across ALL tiers/modalities
+# (per user spec). 45-min rate caps interpolated between 30-min and 60-min.
 # All money values in CENTS (int). All percentages as int (0–100).
+FLAT_SERVICE_FEE_CENTS = 299  # $2.99 — applies to every paid session
+
 TIER_MATRIX = {
     TrainerTierV2.NEW: {
         "label": "New Trainer",
         "commission_percent": 25,
         "trainer_percent": 75,
         "in_person": {
-            "service_fee_cents": 499,
-            "rate_caps_cents": {30: 3500, 60: 6500, 90: 9500},
+            "service_fee_cents": FLAT_SERVICE_FEE_CENTS,
+            "rate_caps_cents": {30: 3500, 45: 5000, 60: 6500, 90: 9500},
         },
         "virtual": {
-            "service_fee_cents": 399,
-            "rate_caps_cents": {30: 3000, 60: 5500, 90: 8000},
+            "service_fee_cents": FLAT_SERVICE_FEE_CENTS,
+            "rate_caps_cents": {30: 3000, 45: 4250, 60: 5500, 90: 8000},
         },
     },
     TrainerTierV2.CERTIFIED: {
@@ -56,12 +60,12 @@ TIER_MATRIX = {
         "commission_percent": 20,
         "trainer_percent": 80,
         "in_person": {
-            "service_fee_cents": 599,
-            "rate_caps_cents": {30: 5000, 60: 9000, 90: 13000},
+            "service_fee_cents": FLAT_SERVICE_FEE_CENTS,
+            "rate_caps_cents": {30: 5000, 45: 7000, 60: 9000, 90: 13000},
         },
         "virtual": {
-            "service_fee_cents": 499,
-            "rate_caps_cents": {30: 4500, 60: 8000, 90: 11500},
+            "service_fee_cents": FLAT_SERVICE_FEE_CENTS,
+            "rate_caps_cents": {30: 4500, 45: 6250, 60: 8000, 90: 11500},
         },
     },
     TrainerTierV2.SPECIALTY: {
@@ -69,12 +73,12 @@ TIER_MATRIX = {
         "commission_percent": 15,
         "trainer_percent": 85,
         "in_person": {
-            "service_fee_cents": 799,
-            "rate_caps_cents": {30: 7500, 60: 14000, 90: 20000},
+            "service_fee_cents": FLAT_SERVICE_FEE_CENTS,
+            "rate_caps_cents": {30: 7500, 45: 10750, 60: 14000, 90: 20000},
         },
         "virtual": {
-            "service_fee_cents": 599,
-            "rate_caps_cents": {30: 6500, 60: 12000, 90: 17500},
+            "service_fee_cents": FLAT_SERVICE_FEE_CENTS,
+            "rate_caps_cents": {30: 6500, 45: 9250, 60: 12000, 90: 17500},
         },
     },
 }
@@ -107,8 +111,8 @@ def get_rate_cap_cents(tier: str, modality: str, duration_min: int) -> int:
     cfg = get_tier_config(tier)
     if modality not in ("in_person", "virtual"):
         raise ValueError(f"Invalid modality '{modality}'. Must be 'in_person' or 'virtual'.")
-    if duration_min not in (30, 60, 90):
-        raise ValueError(f"Invalid duration '{duration_min}'. Must be 30, 60, or 90.")
+    if duration_min not in (30, 45, 60, 90):
+        raise ValueError(f"Invalid duration '{duration_min}'. Must be 30, 45, 60, or 90.")
     return cfg[modality]["rate_caps_cents"][duration_min]
 
 
@@ -149,7 +153,7 @@ def calculate_pricing(
     cfg = get_tier_config(tier)
     if modality not in ("in_person", "virtual"):
         raise ValueError(f"Invalid modality '{modality}'.")
-    if duration_min not in (30, 60, 90):
+    if duration_min not in (30, 45, 60, 90):
         raise ValueError(f"Invalid duration '{duration_min}'.")
     if trainer_base_cents < 0:
         raise ValueError("trainer_base_cents must be non-negative.")

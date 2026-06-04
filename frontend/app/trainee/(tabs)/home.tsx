@@ -824,18 +824,7 @@ export default function TraineeHomeScreen() {
                 </>
               )}
 
-              {/* New Trainers */}
-              {displayedTrainers.filter((t: any) => (t.totalSessionsCompleted || 0) < 5).length > 0 && (
-                <>
-                  <View style={styles.sectionHeader}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <Ionicons name="sparkles" size={18} color="#00D68F" />
-                      <Text style={styles.sectionTitle}>NEW TRAINERS</Text>
-                    </View>
-                    <Text style={styles.trainerCount}>{displayedTrainers.filter((t: any) => (t.totalSessionsCompleted || 0) < 5).length}</Text>
-                  </View>
-                </>
-              )}
+              {/* iter96b: "NEW TRAINERS" banner removed per user request. */}
 
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>ALL AVAILABLE TRAINERS</Text>

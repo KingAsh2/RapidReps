@@ -182,6 +182,18 @@ export default function PremiumWelcomeScreen() {
                 Already have an account? <Text style={styles.loginLink}>Log In</Text>
               </Text>
             </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => router.push('/corporate')}
+              testID="premium-corporate-link"
+              accessibilityRole="button"
+              accessibilityLabel="Open corporate wellness"
+              style={styles.loginTap}
+            >
+              <Text style={styles.loginPrompt}>
+                <Text style={styles.loginLink}>For Teams →</Text> Corporate Wellness
+              </Text>
+            </TouchableOpacity>
           </Animated.View>
         </SafeAreaView>
       </PremiumHeroBg>

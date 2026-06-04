@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { toast } from '../../src/utils/toast';
+import { useAuth } from '../../src/contexts/AuthContext';
 
 // Shared utilities & styles
 import { C, s, api, getAuthHeader, formatCents, PAGE_SIZE } from '../../src/components/admin/AdminShared';
@@ -37,6 +38,7 @@ type Tab = 'overview' | 'users' | 'verifications' | 'sessions' | 'subscriptions'
 
 export default function AdminDashboard() {
   const router = useRouter();
+  const { logout: authLogout } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -225,6 +227,19 @@ export default function AdminDashboard() {
     } catch { toast.error('Failed to load user details'); }
   };
 
+  /** iter96b: open the user's actual profile screen (not just the admin modal). */
+  const handleOpenUserProfile = (user: any) => {
+    if (!user) return;
+    const roles: string[] = user.roles || [];
+    if (roles.includes('trainer')) {
+      router.push(`/trainee/trainer-detail?trainerId=${user.id}` as any);
+    } else if (roles.includes('trainee')) {
+      router.push(`/trainer/trainee-detail?traineeId=${user.id}` as any);
+    } else {
+      toast.error('No profile available for this user');
+    }
+  };
+
   const handleRemoveUser = (userId: string, userName: string) => {
     Alert.alert('Remove User', `Permanently remove ${userName} and all their data?`, [
       { text: 'Cancel', style: 'cancel' },
@@ -306,8 +321,12 @@ export default function AdminDashboard() {
   };
 
   const handleLogout = async () => {
-    await AsyncStorage.removeItem('auth_token');
-    await AsyncStorage.removeItem('active_role');
+    // iter96b: must clear AuthContext state — otherwise the user object remains
+    // in-memory and tab-bar redirects bounce admin back to dashboard.
+    try {
+      await authLogout();
+    } catch { /* fallthrough */ }
+    await AsyncStorage.multiRemove(['auth_token', 'active_role', 'user', 'currentUser']);
     router.replace('/');
   };
 
@@ -381,6 +400,19 @@ export default function AdminDashboard() {
               <Ionicons name="close" size={24} color={'#0A0E1A'} />
             </TouchableOpacity>
           </View>
+          {selectedUser && (
+            <TouchableOpacity
+              onPress={() => {
+                setUserDetailVisible(false);
+                handleOpenUserProfile(selectedUser.user);
+              }}
+              style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#FF7A00', padding: 12, marginHorizontal: 16, marginTop: 12, borderRadius: 10, gap: 8 }}
+              data-testid="open-user-profile-btn"
+            >
+              <Ionicons name="person-circle" size={18} color="#fff" />
+              <Text style={{ color: '#fff', fontWeight: '800' }}>Open Full Profile</Text>
+            </TouchableOpacity>
+          )}
           {selectedUser && (
             <ScrollView style={s.modalBody}>
               <View style={s.modalSection}>

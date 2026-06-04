@@ -168,37 +168,45 @@ export default function TrainerDetailScreen() {
   const [selectedSessionType, setSelectedSessionType] = useState<'virtual' | 'outdoor' | 'in_home'>('outdoor');
 
   const calculatePrice = () => {
-    if (!trainer) return { sessionRate: 0, serviceFee: 2, totalCharged: 2, trainerEarnings: 0, platformEarnings: 2, perHourRate: 0 };
-    
-    // Get trainer's per-hour earnings rate (what they set = their 80% cut)
-    let trainerHourlyCents: number;
-    switch (selectedSessionType) {
-      case 'virtual':
-        trainerHourlyCents = trainer.virtualRateCents || 3000;
-        break;
-      case 'in_home':
-        trainerHourlyCents = trainer.inHomeRateCents || 6000;
-        break;
-      default:
-        trainerHourlyCents = trainer.outdoorRateCents || 4000;
+    // iter96b (#23, #24, #25): Use trainer's per-duration tierRates as the
+    // single source of truth. Service fee is a flat $2.99 added ON TOP.
+    if (!trainer) return { sessionRate: 0, serviceFee: 2.99, totalCharged: 2.99, trainerEarnings: 0, platformEarnings: 2.99, perHourRate: 0 };
+
+    const tr: any = (trainer as any).tierRates || {};
+    const modality: 'inPerson' | 'virtual' = selectedSessionType === 'virtual' ? 'virtual' : 'inPerson';
+    // Resolve the rate (cents) for the selected duration. Trainer's tierRates is
+    // the source of truth; if missing, fall back to legacy per-hour rate.
+    const ratesByDuration: Record<number, number | undefined> = {
+      30: tr[`${modality}30Cents`],
+      45: tr[`${modality}45Cents`],
+      60: tr[`${modality}60Cents`],
+      90: tr[`${modality}90Cents`],
+    };
+    const exactCents = ratesByDuration[selectedDuration];
+    let sessionPriceCents: number;
+    if (typeof exactCents === 'number' && exactCents > 0) {
+      sessionPriceCents = exactCents;
+    } else {
+      // Legacy fallback: derive from hourly rate when tierRates is empty.
+      let hourlyCents: number;
+      switch (selectedSessionType) {
+        case 'virtual': hourlyCents = trainer.virtualRateCents || 3000; break;
+        case 'in_home': hourlyCents = trainer.inHomeRateCents || 6000; break;
+        default: hourlyCents = trainer.outdoorRateCents || 4000;
+      }
+      const fullHourly = Math.round(hourlyCents / 0.80);
+      sessionPriceCents = Math.round(fullHourly * (selectedDuration / 60));
     }
-    
-    // Full price = trainer rate / 0.80 (trainer gets 80%, platform gets 20%)
-    const fullHourlyCents = Math.round(trainerHourlyCents / 0.80);
-    const perHourRate = fullHourlyCents / 100;
-    const sessionRate = (fullHourlyCents / 100) * (selectedDuration / 60);
+
+    const perHourRate = sessionPriceCents / 100 / (selectedDuration / 60);
+    const sessionRate = sessionPriceCents / 100;
     const travelFee = selectedSessionType === 'in_home' ? Math.min(15, Math.max(0, 5)) : 0;
-    
-    // Pricing model:
-    // User pays: full session rate + travel fee + $2 service fee
-    // Trainer gets 80% of (session rate + travel fee)
-    // Platform gets 20% of (session rate + travel fee) + $2 service fee
-    const serviceFee = 2.00;
+    const serviceFee = 2.99;  // iter96b (#23): flat fee
     const trainerEarnings = (sessionRate + travelFee) * 0.80;
     const platformEarnings = (sessionRate + travelFee) * 0.20 + serviceFee;
     const totalCharged = sessionRate + travelFee + serviceFee;
-    
-    return { 
+
+    return {
       sessionRate,
       travelFee,
       serviceFee,
@@ -829,37 +837,45 @@ export default function TrainerDetailScreen() {
                 </View>
               )}
 
-              {/* Duration Selection */}
+              {/* Duration Selection — iter96b (#21, #25): 30/45/60/90, each price from trainer tierRates */}
               <Text style={styles.sectionLabel}>SESSION DURATION</Text>
               <View style={styles.durationRow}>
-                {(trainer.sessionDurationsOffered || [30, 45, 60]).map((duration) => (
-                  <TouchableOpacity
-                    key={duration}
-                    onPress={() => setSelectedDuration(duration)}
-                    style={[
-                      styles.durationChip,
-                      selectedDuration === duration && styles.durationChipSelected,
-                    ]}
-                    data-testid={`duration-${duration}`}
-                  >
-                    <Text
+                {(trainer.sessionDurationsOffered || [30, 45, 60, 90]).map((duration) => {
+                  const tr: any = (trainer as any).tierRates || {};
+                  const modality: 'inPerson' | 'virtual' = selectedSessionType === 'virtual' ? 'virtual' : 'inPerson';
+                  const cents = tr[`${modality}${duration}Cents`];
+                  const labelPrice = typeof cents === 'number' && cents > 0
+                    ? (cents / 100).toFixed(2)
+                    : '—';
+                  return (
+                    <TouchableOpacity
+                      key={duration}
+                      onPress={() => setSelectedDuration(duration)}
                       style={[
-                        styles.durationText,
-                        selectedDuration === duration && styles.durationTextSelected,
+                        styles.durationChip,
+                        selectedDuration === duration && styles.durationChipSelected,
                       ]}
+                      data-testid={`duration-${duration}`}
                     >
-                      {duration} min
-                    </Text>
-                    <Text
-                      style={[
-                        styles.durationPrice,
-                        selectedDuration === duration && styles.durationPriceSelected,
-                      ]}
-                    >
-                      ${((prices.perHourRate || 0) * (duration / 60) + 2).toFixed(2)}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                      <Text
+                        style={[
+                          styles.durationText,
+                          selectedDuration === duration && styles.durationTextSelected,
+                        ]}
+                      >
+                        {duration} min
+                      </Text>
+                      <Text
+                        style={[
+                          styles.durationPrice,
+                          selectedDuration === duration && styles.durationPriceSelected,
+                        ]}
+                      >
+                        ${labelPrice}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
 
               {/* Price Summary — Trainee View (clean, no fee breakdown) */}

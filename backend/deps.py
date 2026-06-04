@@ -157,6 +157,26 @@ def calculate_trainer_tier(total_reviews: int, average_rating: float, certs_veri
         return TrainerTier.PRO
     return TrainerTier.BASIC
 
+def trainer_visibility_filter() -> dict:
+    """
+    Returns a MongoDB query fragment that limits a `trainer_profiles` query
+    to ONLY trainers that are safe to surface in any trainee-facing area.
+
+    A trainer is publicly visible only when ALL of:
+      1. `verificationStatus` == 'verified'  (admin approved)
+      2. `tier` is set (tier assignment by admin or auto-tier completed)
+      3. `isAvailable` is True  (trainer has flipped Go Live)
+
+    This is the single source of truth — use it in discovery, nearby search,
+    ranked search, and any new trainer-listing endpoint.
+    """
+    return {
+        "verificationStatus": "verified",
+        "tier": {"$exists": True, "$nin": [None, ""]},
+        "isAvailable": True,
+    }
+
+
 def check_trainer_can_go_live(profile: dict) -> tuple:
     if profile.get('verificationStatus') == VerificationStatus.VERIFIED:
         return (True, [])

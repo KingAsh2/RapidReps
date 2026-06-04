@@ -93,19 +93,22 @@ export default function MessagesTab() {
   };
 
   const formatTime = (dateStr: string) => {
+    // iter96b: use LOCAL calendar-day diff (not elapsed-time / 86400000)
+    // and trust the device's locale + timezone for rendering.
     const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return '';
     const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    
-    if (days === 0) {
-      return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-    } else if (days === 1) {
+    const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const dayDiff = Math.round((startOfDay(now).getTime() - startOfDay(date).getTime()) / 86400000);
+
+    if (dayDiff === 0) {
+      return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+    } else if (dayDiff === 1) {
       return 'Yesterday';
-    } else if (days < 7) {
-      return date.toLocaleDateString('en-US', { weekday: 'short' });
+    } else if (dayDiff > 1 && dayDiff < 7) {
+      return date.toLocaleDateString(undefined, { weekday: 'short' });
     } else {
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
     }
   };
 

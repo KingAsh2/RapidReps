@@ -69,14 +69,16 @@ export default function TrainerMessagesTab() {
   const getOtherParticipant = (conv: any) => conv.participantDetails?.find((p: any) => p.id !== user?.id);
 
   const formatTime = (dateStr: string) => {
+    // iter96b: calendar-day diff in local TZ, locale-aware rendering
     const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return '';
     const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    if (days === 0) return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const days = Math.round((startOfDay(now).getTime() - startOfDay(date).getTime()) / 86400000);
+    if (days === 0) return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
     if (days === 1) return 'Yesterday';
-    if (days < 7) return date.toLocaleDateString('en-US', { weekday: 'short' });
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    if (days < 7) return date.toLocaleDateString(undefined, { weekday: 'short' });
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
   };
 
   const renderConversation = ({ item }: { item: any }) => {

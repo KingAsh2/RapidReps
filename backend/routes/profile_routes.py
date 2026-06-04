@@ -15,6 +15,7 @@ from deps import (
     db, get_current_user, serialize_doc, sanitize_text,
     check_trainer_can_go_live, calculate_distance, calculate_trainer_tier,
     VALID_PERSONALITY_TAGS,
+    trainer_visibility_filter as _visibility_filter,
 )
 from models import (
     TrainerProfileCreate, TrainerProfileResponse,
@@ -678,7 +679,7 @@ async def search_trainers(
             'videoCallPreference': 1, 'createdAt': 1,
         }
         trainers_q = await db.trainer_profiles.find(
-            {'userId': {'$in': user_ids}}, trainer_projection
+            {'userId': {'$in': user_ids}, **_visibility_filter()}, trainer_projection
         ).to_list(50)
         for t in trainers_q:
             t['fullName'] = names_map.get(t['userId'], 'Unknown Trainer')
@@ -686,7 +687,7 @@ async def search_trainers(
             t['matchType'] = 'direct-search'
         return [TrainerProfileResponse(**serialize_doc(t)) for t in trainers_q]
 
-    query = {'isAvailable': True}
+    query = {'isAvailable': True, **_visibility_filter()}
     if styles:
         query['trainingStyles'] = {'$in': styles.split(',')}
     if minPrice is not None:

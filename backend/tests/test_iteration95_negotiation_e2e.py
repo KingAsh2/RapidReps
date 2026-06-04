@@ -147,8 +147,9 @@ class TestPricingQuote:
         assert r.status_code == 200, r.text
         b = r.json()
         assert b["base_price_cents"] == 6500
-        assert b["service_fee_cents"] == 499
-        assert b["customer_total_cents"] == 6500 + 499
+        # iter96b: service fee is now flat $2.99 across all tiers/modalities
+        assert b["service_fee_cents"] == 299
+        assert b["customer_total_cents"] == 6500 + 299
         assert b["commission_percent"] == 25
         # 25% of 6500 = 1625; trainer take home 4875
         assert b["commission_cents"] == 1625
@@ -164,8 +165,8 @@ class TestPricingQuote:
         assert r.status_code == 200, r.text
         b = r.json()
         assert b["commission_percent"] == 20
-        assert b["service_fee_cents"] == 499  # certified/virtual fee
-        assert b["customer_total_cents"] == 8499
+        assert b["service_fee_cents"] == 299  # iter96b: flat fee
+        assert b["customer_total_cents"] == 8000 + 299
 
     def test_quote_specialty_in_person_60_14000(self, tokens):
         r = requests.get(
@@ -177,8 +178,8 @@ class TestPricingQuote:
         assert r.status_code == 200, r.text
         b = r.json()
         assert b["commission_percent"] == 15
-        assert b["service_fee_cents"] == 799
-        assert b["customer_total_cents"] == 14799
+        assert b["service_fee_cents"] == 299  # iter96b: flat fee
+        assert b["customer_total_cents"] == 14000 + 299
 
 
 # ════════════════════════════════════════════════════════════════════════
