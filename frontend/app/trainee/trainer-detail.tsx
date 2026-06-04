@@ -986,7 +986,13 @@ export default function TrainerDetailScreen() {
               style={styles.quickActionButton}
               onPress={() => router.push({
                 pathname: '/trainee/recurring-sessions',
-                params: { trainerName: trainer?.fullName, trainerId: trainerId }
+                params: {
+                  trainerName: trainer?.fullName,
+                  trainerId: trainerId,
+                  // iter98b (#25): pass full tierRates so recurring-sessions can pick per-duration price
+                  tierRates: JSON.stringify(trainer?.tierRates || {}),
+                  rateCents: String(trainer?.tierRates?.inPerson60Cents || trainer?.outdoor60Cents || trainer?.outdoorRateCents || 4000),
+                }
               })}
               data-testid="recurring-sessions-btn"
             >

@@ -4,6 +4,31 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-06-04 — Iteration 98b: 25-item audit fixes 🔧
+
+### Shipped
+- **Chat timestamps (#2)** — `/app/frontend/app/messages/chat.tsx` now appends `Z` to naive UTC ISO strings (regex `/[Z]|[+-]\d\d:?\d\d$/`) so JS `Date()` interprets them as UTC and `toLocaleTimeString` renders in the device's local timezone. Added day-separator headers between messages from different local days with `Today` / `Yesterday` / weekday name (last 7 days) / `Mon, Jun 4` (older) labels.
+- **Stripe upsell removed (#16)** — `/app/frontend/app/trainer/(tabs)/earnings.tsx`: the purple "Set Up Stripe Payouts" CTA is gone. Only the green "Stripe payouts enabled" confirmation pill renders when onboarded.
+- **Nearby Trainees avatar fix (#18)** — `/app/frontend/app/trainer/(tabs)/home.tsx`: replaced generic person-icon fallback with `<UserAvatar>` so initials show when `profilePhoto` is missing.
+- **Recurring sessions pricing (#25 + #23)** — `/app/frontend/app/trainee/recurring-sessions.tsx`: now reads per-duration `tierRates` (inPerson30/45/60/90Cents, virtual30/45/60/90Cents) from URL params and selects the correct price for the chosen duration. Service fee corrected from hardcoded `$2.00` → shared `FLAT_SERVICE_FEE_CENTS` ($2.99) and now charged per session × number of sessions. `/app/frontend/app/trainee/trainer-detail.tsx` forwards full `tierRates` to the recurring screen.
+
+### Verified
+- ✅ Testing agent ran focused QA sweep (iter100): **9/11 PASS, 1 partial (#18), 1 mixed (#25)** — both now resolved by this commit.
+- ✅ Backend regression: **100/100 passing** (96/97/97c/97d/98/99 + admin_panel_v2).
+- ✅ ESLint clean on all 4 modified frontend files.
+
+### Items still BLOCKED (unchanged)
+- #20 Instagram linking — awaiting Instagram App ID + Secret.
+- SendGrid transactional emails — awaiting `SENDGRID_API_KEY`.
+
+### Files modified
+- `app/messages/chat.tsx`, `app/trainer/(tabs)/earnings.tsx`, `app/trainer/(tabs)/home.tsx`, `app/trainee/recurring-sessions.tsx`, `app/trainee/trainer-detail.tsx`
+
+### Backlog / Potential improvements (saved per user request)
+- **Auto-email monthly CSV** — when SendGrid key arrives, schedule the CSV export to email admin on the 1st of each month with platform totals + per-trainer breakdown attached. Reduces manual dashboard visits and seals the year-end 1099 prep loop.
+- **"Top Earner" leaderboard tile** — surface the highest-grossing trainer of the month directly on the dashboard with a gold-frame highlight (engagement + admin awareness).
+
+
 ## 2026-06-04 — Iteration 98a: Premium Admin Dashboard + CSV Export 📊
 
 ### Shipped

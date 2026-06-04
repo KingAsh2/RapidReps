@@ -20,6 +20,7 @@ import { useAuth } from '../../../src/contexts/AuthContext';
 import { trainerAPI } from '../../../src/services/api';
 import api from '../../../src/services/api';
 import TierCelebrationSheet from '../../../src/components/TierCelebrationSheet';
+import { UserAvatar } from '../../../src/components/UserAvatar';
 import { Session, SessionStatus } from '../../../src/types';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -1039,16 +1040,11 @@ export default function TrainerHomeScreen() {
                 <View style={styles.traineeThumbnailGrid}>
                   {nearbyTrainees.slice(0, 8).map((trainee, index) => (
                     <TouchableOpacity key={index} style={styles.traineeThumbnail} onPress={() => router.push(`/trainer/trainee-profile?userId=${trainee.userId || trainee.id}`)} data-testid={`nearby-trainee-${index}`}>
-                      {trainee.profilePhoto ? (
-                        <Image source={{ uri: trainee.profilePhoto }} style={styles.traineeThumbnailAvatar} />
-                      ) : (
-                        <LinearGradient
-                          colors={['#0A0E1A', '#141929']}
-                          style={styles.traineeThumbnailAvatarPlaceholder}
-                        >
-                          <Ionicons name="person" size={20} color={COLORS.white} />
-                        </LinearGradient>
-                      )}
+                      {/* iter98b (#18): unified UserAvatar with initials fallback (was generic person icon) */}
+                      <UserAvatar
+                        user={{ avatarUrl: trainee.profilePhoto || trainee.avatarUrl, fullName: trainee.fullName }}
+                        size={56}
+                      />
                       <Text style={styles.traineeThumbnailName} numberOfLines={1}>
                         {trainee.fullName?.split(' ')[0]}
                       </Text>

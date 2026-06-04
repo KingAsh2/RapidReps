@@ -15,6 +15,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { traineeAPI } from '../../src/services/api';
 import { toast } from '../../src/utils/toast';
 import { haptic } from '../../src/utils/haptics';
+import { FLAT_SERVICE_FEE_CENTS } from '../../src/utils/pricing';
 
 const COLORS = {
   orange: '#FF7F00',
@@ -48,13 +49,32 @@ export default function RecurringSessionScreen() {
   const [duration, setDuration] = useState(60);
   const [loading, setLoading] = useState(false);
 
-  // Get trainer rate from params (in cents per hour)
+  // iter98b (#25): per-duration tier-aware pricing.
+  // tierRates JSON is forwarded by trainer-detail.tsx; fallback to hourly rateCents
+  // multiplied by duration when tier breakdown isn't available.
+  let tierRates: any = {};
+  try {
+    tierRates = params.tierRates ? JSON.parse(params.tierRates as string) : {};
+  } catch { tierRates = {}; }
   const trainerRateCentsPerHour = parseInt(params.rateCents as string) || 4000;
-  
-  // Price = trainer rate × sessions per week × duration (per week cost)
-  const sessionPriceDollars = (trainerRateCentsPerHour / 100) * (duration / 60);
+
+  // Select per-duration trainer rate for the chosen locationType + duration
+  const getSessionPriceCents = (): number => {
+    const isVirtual = locationType === 'virtual';
+    const prefix = isVirtual ? 'virtual' : 'inPerson';
+    const tierKey = `${prefix}${duration}Cents`;
+    if (tierRates && typeof tierRates[tierKey] === 'number' && tierRates[tierKey] > 0) {
+      return tierRates[tierKey];
+    }
+    // Legacy hourly fallback (rateCents is the hourly equivalent)
+    return Math.round(trainerRateCentsPerHour * (duration / 60));
+  };
+
+  // iter98b (#23): use the flat $2.99 service fee (shared constant) — was hardcoded $2.
+  const sessionPriceCents = getSessionPriceCents();
+  const sessionPriceDollars = sessionPriceCents / 100;
   const totalSessions = sessionsPerWeek * 4; // 4 weeks default billing cycle
-  const serviceFee = 2.00; // Flat $2 service fee total
+  const serviceFee = (FLAT_SERVICE_FEE_CENTS * totalSessions) / 100; // service fee charged per session
   const totalBeforeFee = sessionPriceDollars * totalSessions;
   const totalWithFee = totalBeforeFee + serviceFee;
 
