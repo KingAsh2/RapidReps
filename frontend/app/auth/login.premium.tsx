@@ -217,9 +217,10 @@ const styles = StyleSheet.create({
     color: PremiumColors.white,
     fontFamily: 'Oswald_700Bold',
     transform: [{ skewX: '-6deg' }],
-    textShadowColor: 'rgba(255,122,0,0.6)',
+    // iter97 (#15): stronger orange halo around the wordmark
+    textShadowColor: 'rgba(255,122,0,0.92)',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 14,
+    textShadowRadius: 28,
     marginTop: -8,
     marginBottom: 8,
   },

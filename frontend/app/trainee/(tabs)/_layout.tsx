@@ -3,6 +3,8 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import { useNotifications } from '../../../src/contexts/NotificationContext';
+import { useAuth } from '../../../src/contexts/AuthContext';
+import { UserAvatar } from '../../../src/components/UserAvatar';
 
 // Brand Colors — Premium Dark
 const BRAND = {
@@ -15,6 +17,7 @@ const BRAND = {
 
 export default function TabLayout() {
   const { unreadMessageCount, pendingSessionCount } = useNotifications();
+  const { user } = useAuth();
 
   return (
     <Tabs
@@ -134,14 +137,9 @@ export default function TabLayout() {
         options={{
           title: 'Profile',
           tabBarAccessibilityLabel: 'My profile tab',
-          tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconContainer : null}>
-              <Ionicons 
-                name={focused ? "person" : "person-outline"} 
-                size={24} 
-                color={color} 
-              />
-            </View>
+          tabBarIcon: ({ focused }) => (
+            // iter97 (#19): user's real avatar in the bottom tab bar
+            <UserAvatar user={user} size={26} ring={focused} />
           ),
         }}
       />

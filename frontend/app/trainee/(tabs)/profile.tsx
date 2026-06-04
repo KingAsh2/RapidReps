@@ -731,7 +731,7 @@ export default function TraineeProfileScreen() {
 
                 <TouchableOpacity 
                   style={styles.actionItem}
-                  onPress={() => router.push('/trainee/(tabs)/saved')}
+                  onPress={() => router.push('/trainee/saved-trainers')}
                 >
                   <View style={[styles.actionIconBg, { backgroundColor: 'rgba(31, 184, 180, 0.2)' }]}>
                     <Ionicons name="heart" size={22} color={'#FF6A00'} />
@@ -923,6 +923,27 @@ export default function TraineeProfileScreen() {
               {/* Gallery removed per product decision (iter84) — Highlight Reel is the single media surface */}
               <SocialLinksDisplay socialLinks={profile?.socialLinks || {}} />
             </View>
+
+            {/* iter97 (#11): Message Admin */}
+            <TouchableOpacity
+              style={styles.logoutButton}
+              onPress={async () => {
+                try {
+                  const token = await AsyncStorage.getItem('auth_token');
+                  const url = `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/messages/admin-contact`;
+                  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+                  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                  const data = await res.json();
+                  router.push(`/messages/chat?conversationId=${data.conversationId}&otherUserId=${data.admin.id}&otherUserName=${encodeURIComponent(data.admin.fullName || 'RapidReps Admin')}` as any);
+                } catch (e: any) {
+                  toast.error('Could not reach admin', 'Try again later');
+                }
+              }}
+              data-testid="message-admin-btn"
+            >
+              <Ionicons name="chatbubble-ellipses-outline" size={20} color={COLORS.white} />
+              <Text style={styles.logoutButtonText}>Message Admin</Text>
+            </TouchableOpacity>
 
             {/* Logout Button */}
             <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>

@@ -78,7 +78,7 @@ export default function NotificationPreferencesScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} data-testid="notif-prefs-back-btn">
-          <Ionicons name="arrow-back" size={26} color={Colors.navy} />
+          <Ionicons name="arrow-back" size={26} color={Colors.white} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Notification Settings</Text>
         <TouchableOpacity onPress={handleSave} disabled={saving} data-testid="notif-prefs-save-btn">

@@ -141,9 +141,14 @@ export default function DiscoverTraineesScreen() {
 
 function TraineeFeedCard({ trainee, onPress }: { trainee: TraineeCard; onPress: () => void }) {
   const accent = trainee.accentColor || COLORS.orangeHot;
+  // iter97 (#18): include avatarUrl + photoUrl in fallback chain, not just firstHighlight
+  const fallbackPhoto = (trainee as any).avatarUrl
+    || (trainee as any).profilePhotoUrl
+    || trainee.profilePhoto
+    || null;
   const heroUri = trainee.firstHighlight?.url
     ? `${API_URL}${trainee.firstHighlight.url}`
-    : trainee.profilePhoto;
+    : (fallbackPhoto || null);
 
   return (
     <TouchableOpacity

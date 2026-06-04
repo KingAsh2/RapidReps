@@ -164,7 +164,7 @@ export default function NotificationsScreen() {
       <SafeAreaView style={{ flex: 1 }}>
         <View style={s.header}>
           <TouchableOpacity onPress={() => router.back()} data-testid="notifications-back-btn">
-            <Ionicons name="arrow-back" size={26} color={Colors.navy} />
+            <Ionicons name="arrow-back" size={26} color={Colors.white} />
           </TouchableOpacity>
           <Text style={s.headerTitle}>Notifications</Text>
           <View style={s.headerRight}>

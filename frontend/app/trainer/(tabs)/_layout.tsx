@@ -3,6 +3,8 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Platform, View, Text, StyleSheet } from 'react-native';
 import { useNotifications } from '../../../src/contexts/NotificationContext';
+import { useAuth } from '../../../src/contexts/AuthContext';
+import { UserAvatar } from '../../../src/components/UserAvatar';
 
 const COLORS = {
   accent: '#FF6A00',
@@ -14,6 +16,7 @@ const COLORS = {
 
 export default function TrainerTabsLayout() {
   const { unreadMessageCount, pendingSessionCount } = useNotifications();
+  const { user } = useAuth();
 
   return (
     <Tabs
@@ -99,8 +102,9 @@ export default function TrainerTabsLayout() {
         options={{
           title: 'Profile',
           tabBarAccessibilityLabel: 'Trainer profile tab',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-circle" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            // iter97 (#19): render user's real avatar in the tab bar
+            <UserAvatar user={user} size={Math.max(22, size - 2)} ring={focused} />
           ),
         }}
       />

@@ -204,3 +204,46 @@ async def get_or_create_conversation(receiver_id: str, current_user: dict = Depe
     await db.conversations.insert_one(conversation_doc)
 
     return {'conversationId': str(conversation_doc['_id'])}
+
+
+
+@router.get("/messages/admin-contact")
+async def get_admin_contact(current_user: dict = Depends(get_current_user)):
+    """
+    iter97 (#11): returns the admin user the trainee/trainer can message.
+    Resolves the first active platform admin and ensures a conversation row
+    exists between them and the caller.
+    """
+    user_id = str(current_user['_id'])
+    admin = await db.users.find_one({"isAdmin": True}, sort=[("createdAt", 1)])
+    if not admin:
+        raise HTTPException(status_code=503, detail="No admin available to message.")
+
+    admin_id = str(admin['_id'])
+    if admin_id == user_id:
+        raise HTTPException(status_code=400, detail="Admins cannot message themselves.")
+
+    conversation = await db.conversations.find_one({
+        'participants': {'$all': [user_id, admin_id]}
+    })
+    if not conversation:
+        conversation_doc = {
+            '_id': str(uuid.uuid4()),
+            'participants': [user_id, admin_id],
+            'createdAt': datetime.utcnow(),
+            'updatedAt': datetime.utcnow(),
+        }
+        await db.conversations.insert_one(conversation_doc)
+        conv_id = conversation_doc['_id']
+    else:
+        conv_id = str(conversation['_id'])
+
+    return {
+        "conversationId": conv_id,
+        "admin": {
+            "id": admin_id,
+            "fullName": admin.get('fullName', 'RapidReps Admin'),
+            "email": admin.get('email', ''),
+            "avatarUrl": admin.get('avatarUrl'),
+        },
+    }

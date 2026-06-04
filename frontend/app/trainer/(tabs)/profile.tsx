@@ -174,9 +174,30 @@ export default function TrainerProfileScreen() {
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Profile</Text>
-          <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn} data-testid="trainer-profile-logout" accessibilityLabel="Log out" accessibilityRole="button">
-            <Ionicons name="log-out-outline" size={22} color={COLORS.white} />
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <TouchableOpacity
+              onPress={async () => {
+                try {
+                  const token = await AsyncStorage.getItem('auth_token');
+                  const url = `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/messages/admin-contact`;
+                  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+                  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                  const data = await res.json();
+                  router.push(`/messages/chat?conversationId=${data.conversationId}&otherUserId=${data.admin.id}&otherUserName=${encodeURIComponent(data.admin.fullName || 'RapidReps Admin')}` as any);
+                } catch (e: any) {
+                  toast.error('Could not reach admin', 'Try again later');
+                }
+              }}
+              style={styles.logoutBtn}
+              data-testid="trainer-message-admin-btn"
+              accessibilityLabel="Message admin"
+            >
+              <Ionicons name="chatbubble-ellipses-outline" size={22} color={COLORS.white} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn} data-testid="trainer-profile-logout" accessibilityLabel="Log out" accessibilityRole="button">
+              <Ionicons name="log-out-outline" size={22} color={COLORS.white} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <ScrollView

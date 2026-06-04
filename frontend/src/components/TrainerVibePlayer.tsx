@@ -4,6 +4,7 @@ import { Audio } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { registerActiveAudio, releaseActiveAudio } from '../utils/audioCoordinator';
 
 interface VibeData {
   vibeTrackTitle?: string | null;
@@ -85,7 +86,7 @@ export const TrainerVibePlayer = ({ vibe, autoPlay = true, compact = false }: Pr
 
   const cleanupSound = async () => {
     if (sound) {
-      try { await sound.stopAsync(); await sound.unloadAsync(); } catch { /* ignore */ }
+      try { await releaseActiveAudio(sound); } catch { /* ignore */ }
     }
   };
 
@@ -113,6 +114,8 @@ export const TrainerVibePlayer = ({ vibe, autoPlay = true, compact = false }: Pr
           }
         }
       );
+      // iter97 (#1): register globally so any prior playing audio stops first
+      await registerActiveAudio(newSound);
       if (mountedRef.current) {
         setSound(newSound);
         setIsPlaying(true);

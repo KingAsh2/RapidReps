@@ -45,18 +45,10 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
   }, []);
 
   const handlePlayVideo = (url: string) => {
-    const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
-    const fullUrl = url.startsWith('http') ? url : `${API_URL}${url}`;
+    // iter97 (#9): Admin reviews need FULL video playback (no 15s cap).
+    const fullUrl = url.startsWith('http') ? url : `${process.env.EXPO_PUBLIC_BACKEND_URL}${url}`;
     setVideoUrl(fullUrl);
     setShowVideoModal(true);
-    // Auto-stop after 15 seconds
-    videoTimerRef.current = setTimeout(() => {
-      if (!isMountedRef.current) return;
-      if (videoRef.current) {
-        videoRef.current.stopAsync().catch(() => {});
-      }
-      toast.info('Video preview limited to 15 seconds');
-    }, 15000);
   };
 
   const handleCloseVideo = () => {
@@ -712,7 +704,7 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
         <View style={s.modalOverlay}>
           <View style={{ backgroundColor: '#000', borderRadius: 16, padding: 4, width: '90%', maxWidth: 400 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 12 }}>
-              <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>Intro Video (15s preview)</Text>
+              <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>Intro Video</Text>
               <TouchableOpacity onPress={handleCloseVideo} data-testid="close-video-modal" accessibilityLabel="Close video preview" accessibilityRole="button">
                 <Ionicons name="close-circle" size={28} color="#fff" />
               </TouchableOpacity>
@@ -734,11 +726,8 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                   onLoad={() => {
                     console.log('Video loaded successfully');
                   }}
-                  onPlaybackStatusUpdate={(status) => {
-                    if (status.isLoaded && status.positionMillis >= 15000) {
-                      videoRef.current?.stopAsync();
-                      toast.info('Video preview limited to 15 seconds');
-                    }
+                  onPlaybackStatusUpdate={(_status) => {
+                    // iter97 (#9): no 15s cap — admin can review full video
                   }}
                 />
               </View>
