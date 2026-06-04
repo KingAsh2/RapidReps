@@ -11,6 +11,7 @@ import { corporateAPI } from '../../src/services/api';
 import { toast } from '../../src/utils/toast';
 import { haptic } from '../../src/utils/haptics';
 import { DS } from '../../src/theme/designSystem';
+import FloatingOrangeBg from '../../src/components/FloatingOrangeBg';
 
 type Tab = 'overview' | 'invites' | 'employees';
 
@@ -135,6 +136,8 @@ export default function CorporateDashboardScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <LinearGradient colors={[DS.colors.bg, DS.colors.bgRaised]} style={StyleSheet.absoluteFill} />
+      {/* iter97d: subtle ember ambience */}
+      <FloatingOrangeBg density={6} intensity={0.3} />
 
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} data-testid="corp-dash-back">

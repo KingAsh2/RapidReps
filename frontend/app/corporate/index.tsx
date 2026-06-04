@@ -7,6 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { corporateAPI } from '../../src/services/api';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { DS } from '../../src/theme/designSystem';
+import FloatingOrangeBg from '../../src/components/FloatingOrangeBg';
 
 /**
  * Corporate entry point.
@@ -52,6 +53,7 @@ export default function CorporateIndexScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <LinearGradient colors={[DS.colors.bg, DS.colors.bgRaised]} style={StyleSheet.absoluteFill} />
+      <FloatingOrangeBg density={6} intensity={0.3} />
 
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} data-testid="corp-idx-back">

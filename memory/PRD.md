@@ -4,6 +4,25 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-06-04 — Iteration 97d: FloatingOrangeBg propagation + Support badge UI ✅
+
+### Shipped
+- **FloatingOrangeBg propagated** to 4 more interior screens: `trainee/achievements.tsx`, `corporate/dashboard.tsx`, `corporate/index.tsx`, `notification-preferences.tsx` (low density 6, intensity 0.3 — unified ambience across the app's interior)
+- **"SUPPORT" badge on chat list** — orange pill with shield-checkmark icon renders next to admin participant names on the conversations list. Backend now exposes `participantDetails[].isAdmin` so the client can render the badge purely from API data.
+
+### Verified
+- ✅ **111/111 backend pytest guards pass** (6 new iter97d + 105 prior)
+- ✅ Backend `/api/conversations` now returns `isAdmin` per participant — verified live with trainee token
+- ✅ Touched frontend files are TS parse-clean
+- ✅ Backend reloaded cleanly
+
+### Files modified
+- Backend: `routes/messaging_routes.py` (added `isAdmin` to participantDetails)
+- Frontend: `app/trainee/achievements.tsx`, `app/corporate/dashboard.tsx`, `app/corporate/index.tsx`, `app/notification-preferences.tsx`, `app/messages/index.tsx` (Support badge + supporting styles)
+- Tests: `tests/test_iteration97d_polish.py` (6 new guards)
+
+
+
 ## 2026-06-04 — Iteration 97c: Trainee profile parity, FloatingOrangeBg propagation, admin-reply push ✅
 
 ### Shipped

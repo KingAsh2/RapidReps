@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { notificationsAPI } from '../src/services/api';
 import { Colors } from '../src/utils/colors';
 import { toast } from '../src/utils/toast';
+import FloatingOrangeBg from '../src/components/FloatingOrangeBg';
 
 const PREF_ITEMS: { key: string; label: string; description: string; icon: string }[] = [
   { key: 'pushEnabled', label: 'Push Notifications', description: 'Receive push notifications on your device', icon: 'notifications' },
@@ -76,6 +77,7 @@ export default function NotificationPreferencesScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <FloatingOrangeBg density={6} intensity={0.3} />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} data-testid="notif-prefs-back-btn">
           <Ionicons name="arrow-back" size={26} color={Colors.white} />

@@ -161,7 +161,16 @@ export default function MessagesScreen() {
           
           <View style={styles.conversationContent}>
             <View style={styles.conversationHeader}>
-              <Text style={styles.userName}>{otherUser.fullName}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 }}>
+                <Text style={styles.userName} numberOfLines={1}>{otherUser.fullName}</Text>
+                {/* iter97d: badge admin support conversations */}
+                {otherUser.isAdmin && (
+                  <View style={styles.supportBadge} data-testid={`support-badge-${otherUser.id}`}>
+                    <Ionicons name="shield-checkmark" size={10} color="#fff" />
+                    <Text style={styles.supportBadgeText}>SUPPORT</Text>
+                  </View>
+                )}
+              </View>
               {item.lastMessage && (
                 <Text style={styles.time}>
                   {formatTime(item.lastMessage.createdAt)}
@@ -374,6 +383,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: '#FFFFFF',
+  },
+  // iter97d: admin support conversation badge
+  supportBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 3,
+    backgroundColor: '#FF7A00',
+    paddingHorizontal: 6, paddingVertical: 2,
+    borderRadius: 8,
+  },
+  supportBadgeText: {
+    fontSize: 9, fontWeight: '900', color: '#fff', letterSpacing: 0.8,
   },
   time: {
     fontSize: 13,

@@ -18,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useAlert } from '../../src/contexts/AlertContext';
 import { streaksAPI } from '../../src/services/api';
+import FloatingOrangeBg from '../../src/components/FloatingOrangeBg';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -436,6 +437,8 @@ export default function TrainerAchievementsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
+      {/* iter97d: subtle ember ambience */}
+      <FloatingOrangeBg density={6} intensity={0.3} />
       {/* Header */}
       <LinearGradient
         colors={[Colors.warning, '#FFA500']}

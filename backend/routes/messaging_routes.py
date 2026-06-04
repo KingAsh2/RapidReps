@@ -139,6 +139,8 @@ async def get_conversations(current_user: dict = Depends(get_current_user)):
                     'fullName': user.get('fullName', 'Unknown'),
                     'avatarUrl': profile.get('avatarUrl') or profile.get('profilePhoto') if profile else None,
                     'roles': user.get('roles', []),
+                    # iter97d: expose isAdmin so the chat list can badge support conversations
+                    'isAdmin': bool(user.get('isAdmin', False)),
                 })
 
         conv_id_str = str(conv['_id'])
