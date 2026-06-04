@@ -37,10 +37,21 @@ def _stripe_key_ready() -> bool:
 @router.get("/payments/config")
 async def payments_config():
     """iter97b: lightweight readiness probe — lets the frontend show a clear
-    "Payments unavailable" state instead of a generic 400 from Stripe."""
+    "Payments unavailable" state instead of a generic 400 from Stripe.
+    iter97e: also surface the publishable key so the mobile client can confirm
+    Stripe Elements is wired without bundling the key in a second place."""
+    pub = (
+        os.environ.get('STRIPE_PUBLISHABLE_KEY')
+        or os.environ.get('EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY')
+        or ''
+    )
     return {
         "stripeKeyConfigured": _stripe_key_ready(),
-        "publishableKeyHint": bool(os.environ.get('STRIPE_PUBLISHABLE_KEY') or os.environ.get('EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY')),
+        "stripeMode": ("test" if (stripe.api_key or '').startswith('sk_test_')
+                       else "live" if (stripe.api_key or '').startswith('sk_live_')
+                       else "unknown"),
+        "publishableKey": pub if pub.startswith(('pk_test_', 'pk_live_')) else None,
+        "publishableKeyHint": bool(pub),
     }
 
 PAYOUT_MINIMUM_CENTS = 3500  # $35.00

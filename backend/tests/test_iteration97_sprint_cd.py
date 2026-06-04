@@ -153,6 +153,13 @@ def test_payments_config_endpoint_live():
     body = r.json()
     assert "stripeKeyConfigured" in body
     assert isinstance(body["stripeKeyConfigured"], bool)
+    # iter97e: mode field present and publishable key surfaced for the client
+    assert body.get("stripeMode") in ("test", "live", "unknown")
+    if body["stripeKeyConfigured"]:
+        # publishable key is optional but, when present, must be of the matching kind
+        pub = body.get("publishableKey")
+        if pub:
+            assert pub.startswith(("pk_test_", "pk_live_"))
 
 
 def test_chat_header_uses_user_avatar():
@@ -168,6 +175,42 @@ def test_admin_users_tab_uses_user_avatar():
 def test_leaderboard_uses_user_avatar():
     src = (FRONTEND / "app/trainee/leaderboard.tsx").read_text()
     assert "UserAvatar" in src
+
+
+# ── iter97e: Stripe sandbox end-to-end ──────────────────────────────
+def test_stripe_test_mode_payment_intent_succeeds():
+    """With sk_test_ keys in env, /create-payment-intent should now return a
+    real Stripe client_secret (not 503 / 401)."""
+    r0 = requests.post(
+        f"{API_BASE}/api/auth/login",
+        json={"email": "test_trainee_iter25@test.com", "password": "Test123!"},
+        timeout=10,
+    )
+    tok = (r0.json().get("access_token") or r0.json().get("token"))
+    r = requests.post(
+        f"{API_BASE}/api/payments/create-payment-intent",
+        params={"amount_cents": 5000, "session_id": "", "description": "Pytest sandbox"},
+        headers={"Authorization": f"Bearer {tok}"},
+        timeout=15,
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    # Either a Stripe client_secret OR full corporate subsidy (no gateway needed)
+    if body.get("fullySubsidized"):
+        assert body["traineePaysCents"] < 50
+    else:
+        cs = body.get("clientSecret") or ""
+        assert cs.startswith("pi_") and "_secret_" in cs, f"clientSecret malformed: {cs!r}"
+
+
+def test_stripe_mode_is_test():
+    r = requests.get(f"{API_BASE}/api/payments/config", timeout=10)
+    assert r.status_code == 200
+    body = r.json()
+    # Sandbox environment expects test mode
+    assert body["stripeMode"] == "test"
+    assert body["publishableKey"] and body["publishableKey"].startswith("pk_test_")
+
 
 
 def test_trainee_profile_parity_share_button():

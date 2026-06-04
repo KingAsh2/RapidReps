@@ -4,6 +4,31 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-06-04 — Iteration 97e: Stripe Sandbox Live 🎉
+
+### Shipped
+- **Stripe test mode active** — `STRIPE_SECRET_KEY` and `STRIPE_PUBLISHABLE_KEY` swapped to `sk_test_` / `pk_test_` in `/app/backend/.env`; `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY` updated in `/app/frontend/.env`
+- **`/api/payments/config` upgraded** to expose `stripeMode: "test" | "live" | "unknown"` and the publishable key (auto-prefixed validation, `pk_test_`/`pk_live_`) so the mobile client doesn't have to bundle Stripe.js config in a second place
+- **End-to-end Stripe call verified** — `POST /api/payments/create-payment-intent` returns a real Stripe client_secret (e.g. `pi_3TefQS3ne0EWr4Eq0mYaGvFS_secret_PVO...`). Corporate subsidy still applied correctly: $50 charge → ACME pool covers $40 → only $10 sent to Stripe.
+
+### Verified
+- ✅ **113/113 backend pytest guards pass** (2 new iter97e Stripe sandbox tests + 111 prior)
+- ✅ Curl test confirms HTTP 200 from Stripe + valid `pi_*_secret_*` returned
+- ✅ Backend logs show `Stripe API response code=200` (was `401 api_key_expired` before this change)
+
+### Test Cards (use these for sandbox checkout)
+- **Success**: `4242 4242 4242 4242` · any future expiry · any CVC · any ZIP
+- **Requires authentication (3DS)**: `4000 0025 0000 3155`
+- **Declined**: `4000 0000 0000 9995`
+
+### Files modified
+- `/app/backend/.env` — `STRIPE_SECRET_KEY` + added `STRIPE_PUBLISHABLE_KEY`
+- `/app/frontend/.env` — `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY`
+- `routes/payment_routes.py` — `/payments/config` now returns `stripeMode` + `publishableKey`
+- `tests/test_iteration97_sprint_cd.py` — +2 sandbox guards (test_stripe_test_mode_payment_intent_succeeds, test_stripe_mode_is_test)
+
+
+
 ## 2026-06-04 — Iteration 97d: FloatingOrangeBg propagation + Support badge UI ✅
 
 ### Shipped
