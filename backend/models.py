@@ -45,7 +45,9 @@ class TrainerTier:
 class PricingRules:
     TRAINER_REVENUE_PERCENT = 80
     PLATFORM_REVENUE_PERCENT = 20
-    SERVICE_FEE_CENTS = 200
+    # iter97f: flat $2.99 service fee — single source of truth across the app.
+    # Frontend `src/utils/pricing.ts` also has FLAT_SERVICE_FEE_CENTS = 299.
+    SERVICE_FEE_CENTS = 299
     VIRTUAL_MIN_CENTS = 3000
     OUTDOOR_MIN_CENTS = 4000
     IN_HOME_MIN_CENTS = 6000

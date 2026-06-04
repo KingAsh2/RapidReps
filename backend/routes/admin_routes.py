@@ -40,10 +40,21 @@ async def get_admin_dashboard(admin_user: dict = Depends(require_admin)):
     completed_sessions = await db.sessions.count_documents({'status': SessionStatus.COMPLETED})
     
     # Calculate revenue (from completed sessions)
-    sessions = await db.sessions.find({'status': SessionStatus.COMPLETED}).to_list(None)
+    # iter97f: use the session document's stored platformFeeCents / trainerEarningsCents
+    # (which already include the $2.99 service fee + tier-based commission), instead
+    # of recomputing with a flat 20% on the gross. Service fee broken out separately.
+    sessions = await db.sessions.find(
+        {'status': SessionStatus.COMPLETED},
+        {'finalSessionPriceCents': 1, 'platformFeeCents': 1, 'trainerEarningsCents': 1, 'serviceFeeCents': 1},
+    ).to_list(None)
     total_revenue = sum(s.get('finalSessionPriceCents', 0) for s in sessions)
-    platform_revenue = int(total_revenue * PricingRules.PLATFORM_REVENUE_PERCENT / 100)
-    trainer_payouts = total_revenue - platform_revenue
+    platform_revenue = sum(s.get('platformFeeCents', 0) for s in sessions)
+    trainer_payouts = sum(s.get('trainerEarningsCents', 0) for s in sessions)
+    service_fee_revenue = sum(s.get('serviceFeeCents', 0) for s in sessions)
+    # Fallback for legacy session docs that never persisted the split fields.
+    if platform_revenue == 0 and total_revenue > 0:
+        platform_revenue = int(total_revenue * PricingRules.PLATFORM_REVENUE_PERCENT / 100)
+        trainer_payouts = total_revenue - platform_revenue
     
     # Count memberships and boosts
     active_memberships = await db.memberships.count_documents({'status': MembershipStatus.ACTIVE})
@@ -64,6 +75,9 @@ async def get_admin_dashboard(admin_user: dict = Depends(require_admin)):
         "totalRevenueDollars": total_revenue / 100,
         "platformRevenueCents": platform_revenue,
         "platformRevenueDollars": platform_revenue / 100,
+        # iter97f: surface service fee revenue separately for admin clarity
+        "serviceFeeRevenueCents": service_fee_revenue,
+        "serviceFeeRevenueDollars": service_fee_revenue / 100,
         "trainerPayoutsCents": trainer_payouts,
         "trainerPayoutsDollars": trainer_payouts / 100,
         "activeMemberships": active_memberships,

@@ -74,3 +74,36 @@ def test_send_message_to_user_creates_push(monkeypatch=None):
     body = r.json()
     assert body["content"]
     assert body["senderId"]
+
+
+
+# ── iter97f: admin dashboard accurate revenue/payouts ───────────────
+def test_admin_dashboard_exposes_revenue_breakdown():
+    a = requests.post(
+        f"{API_BASE}/api/auth/login",
+        json={"email": "admin@rapidreps.com", "password": "admin123"},
+        timeout=10,
+    ).json()
+    tok = a.get("access_token") or a.get("token")
+    r = requests.get(
+        f"{API_BASE}/api/admin/dashboard",
+        headers={"Authorization": f"Bearer {tok}"},
+        timeout=10,
+    )
+    assert r.status_code == 200, r.text
+    b = r.json()
+    for field in (
+        "totalRevenueCents", "platformRevenueCents",
+        "serviceFeeRevenueCents", "trainerPayoutsCents",
+    ):
+        assert field in b, f"missing {field}"
+    # invariant: platform + trainer payouts == total gross (within rounding)
+    diff = b["totalRevenueCents"] - (b["platformRevenueCents"] + b["trainerPayoutsCents"])
+    assert abs(diff) <= 5, f"split mismatch: {b}"
+
+
+def test_pricing_rules_service_fee_is_299():
+    import sys
+    sys.path.insert(0, '/app/backend')
+    from models import PricingRules
+    assert PricingRules.SERVICE_FEE_CENTS == 299
