@@ -1,5 +1,6 @@
 """Admin routes: dashboard, users, sessions, transactions, verifications, payouts, refunds, messages"""
 from fastapi import APIRouter, HTTPException, Depends, Request, Body
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 from datetime import datetime, timedelta
@@ -7,6 +8,8 @@ from bson import ObjectId
 import stripe
 import uuid
 import os
+import csv
+import io
 
 from deps import (
     db, get_current_user, require_admin, serialize_doc, sanitize_text,
@@ -65,6 +68,33 @@ async def get_admin_dashboard(admin_user: dict = Depends(require_admin)):
         'verificationStatus': VerificationStatus.PENDING
     })
     
+    # iter98a: Premium dashboard tiles — additional KPIs
+    # Avg session value (only completed)
+    avg_session_value_cents = int(total_revenue / max(completed_sessions, 1)) if completed_sessions else 0
+
+    # This-month metrics
+    now = datetime.utcnow()
+    month_start = datetime(now.year, now.month, 1)
+    sessions_this_month = await db.sessions.count_documents({
+        'status': SessionStatus.COMPLETED,
+        'createdAt': {'$gte': month_start},
+    })
+    month_sessions_docs = await db.sessions.find(
+        {'status': SessionStatus.COMPLETED, 'createdAt': {'$gte': month_start}},
+        {'finalSessionPriceCents': 1, 'platformFeeCents': 1, 'serviceFeeCents': 1},
+    ).to_list(None)
+    month_revenue = sum(s.get('finalSessionPriceCents', 0) for s in month_sessions_docs)
+    month_platform_revenue = sum(s.get('platformFeeCents', 0) for s in month_sessions_docs)
+
+    # Corporate credit pool — sum of remaining (creditPoolCents - totalSpentCents) across companies
+    corporate_companies = await db.corporate_companies.find({}, {
+        'creditPoolCents': 1, 'totalSpentCents': 1, 'companyName': 1
+    }).to_list(None) if 'corporate_companies' in await db.list_collection_names() else []
+    corporate_pool_total = sum(int(c.get('creditPoolCents', 0)) for c in corporate_companies)
+    corporate_pool_spent = sum(int(c.get('totalSpentCents', 0)) for c in corporate_companies)
+    corporate_pool_remaining = max(0, corporate_pool_total - corporate_pool_spent)
+    corporate_companies_count = len(corporate_companies)
+
     return {
         "totalUsers": total_users,
         "totalTrainers": total_trainers,
@@ -75,15 +105,200 @@ async def get_admin_dashboard(admin_user: dict = Depends(require_admin)):
         "totalRevenueDollars": total_revenue / 100,
         "platformRevenueCents": platform_revenue,
         "platformRevenueDollars": platform_revenue / 100,
-        # iter97f: surface service fee revenue separately for admin clarity
         "serviceFeeRevenueCents": service_fee_revenue,
         "serviceFeeRevenueDollars": service_fee_revenue / 100,
+        "commissionRevenueCents": max(0, platform_revenue - service_fee_revenue),
         "trainerPayoutsCents": trainer_payouts,
         "trainerPayoutsDollars": trainer_payouts / 100,
         "activeMemberships": active_memberships,
         "activeBoosts": active_boosts,
-        "pendingVerifications": pending_verifications
+        "pendingVerifications": pending_verifications,
+        # iter98a additions
+        "avgSessionValueCents": avg_session_value_cents,
+        "sessionsThisMonth": sessions_this_month,
+        "monthRevenueCents": month_revenue,
+        "monthPlatformRevenueCents": month_platform_revenue,
+        "corporatePoolTotalCents": corporate_pool_total,
+        "corporatePoolSpentCents": corporate_pool_spent,
+        "corporatePoolRemainingCents": corporate_pool_remaining,
+        "corporateCompaniesCount": corporate_companies_count,
     }
+
+
+# iter98a: Recent completed sessions feed for premium dashboard tile
+@router.get("/admin/recent-sessions")
+async def admin_recent_sessions(limit: int = 10, admin_user: dict = Depends(require_admin)):
+    """Return the most recent completed sessions, enriched with trainer/trainee names."""
+    sessions = await db.sessions.find(
+        {'status': SessionStatus.COMPLETED}
+    ).sort('createdAt', -1).limit(limit).to_list(limit)
+
+    user_ids = set()
+    for s in sessions:
+        if s.get('trainerId'): user_ids.add(s['trainerId'])
+        if s.get('traineeId'): user_ids.add(s['traineeId'])
+
+    users_map: dict = {}
+    if user_ids:
+        oids = []
+        for uid in user_ids:
+            try:
+                oids.append(ObjectId(uid))
+            except Exception:
+                pass
+        if oids:
+            users = await db.users.find({'_id': {'$in': oids}}, {'fullName': 1}).to_list(len(oids))
+            users_map = {str(u['_id']): u.get('fullName', 'Unknown') for u in users}
+
+    out = []
+    for s in sessions:
+        out.append({
+            'id': str(s.get('_id')),
+            'trainerName': users_map.get(s.get('trainerId', ''), 'Unknown'),
+            'traineeName': users_map.get(s.get('traineeId', ''), 'Unknown'),
+            'sessionType': s.get('sessionType', 'session'),
+            'finalSessionPriceCents': s.get('finalSessionPriceCents', 0),
+            'platformFeeCents': s.get('platformFeeCents', 0),
+            'trainerEarningsCents': s.get('trainerEarningsCents', 0),
+            'serviceFeeCents': s.get('serviceFeeCents', 0),
+            'createdAt': s.get('createdAt').isoformat() if s.get('createdAt') else None,
+        })
+
+    return {'sessions': out, 'count': len(out)}
+
+
+# iter98a: CSV export — per-session payment breakdown, sorted by trainer name
+@router.get("/admin/payments/csv-export")
+async def admin_payments_csv_export(
+    start_date: Optional[str] = None,   # ISO YYYY-MM-DD
+    end_date: Optional[str] = None,
+    period: Optional[str] = None,        # 'this_month' | 'last_month' | 'all_time'
+    admin_user: dict = Depends(require_admin),
+):
+    """Export per-session payment breakdown as CSV, sorted by trainer name.
+
+    Columns: Trainer Name, Session Date, Customer, Gross, Commission %, Commission $,
+    Service Fee, Trainer Payout, Corporate Subsidy, Stripe Intent ID, Status.
+    """
+    now = datetime.utcnow()
+    query: dict = {'status': SessionStatus.COMPLETED}
+
+    # Resolve date range
+    range_start: Optional[datetime] = None
+    range_end: Optional[datetime] = None
+    if period == 'this_month':
+        range_start = datetime(now.year, now.month, 1)
+        range_end = now
+    elif period == 'last_month':
+        if now.month == 1:
+            range_start = datetime(now.year - 1, 12, 1)
+            range_end = datetime(now.year, 1, 1)
+        else:
+            range_start = datetime(now.year, now.month - 1, 1)
+            range_end = datetime(now.year, now.month, 1)
+    elif period == 'all_time':
+        range_start = None
+        range_end = None
+    else:
+        if start_date:
+            try:
+                range_start = datetime.fromisoformat(start_date)
+            except ValueError:
+                raise HTTPException(400, "start_date must be ISO YYYY-MM-DD")
+        if end_date:
+            try:
+                range_end = datetime.fromisoformat(end_date) + timedelta(days=1)
+            except ValueError:
+                raise HTTPException(400, "end_date must be ISO YYYY-MM-DD")
+
+    if range_start or range_end:
+        date_filter: dict = {}
+        if range_start: date_filter['$gte'] = range_start
+        if range_end: date_filter['$lt'] = range_end
+        query['createdAt'] = date_filter
+
+    sessions = await db.sessions.find(query).to_list(None)
+
+    # Batch fetch users for names
+    user_ids = set()
+    for s in sessions:
+        if s.get('trainerId'): user_ids.add(s['trainerId'])
+        if s.get('traineeId'): user_ids.add(s['traineeId'])
+    users_map: dict = {}
+    if user_ids:
+        oids = []
+        for uid in user_ids:
+            try: oids.append(ObjectId(uid))
+            except Exception: pass
+        if oids:
+            users = await db.users.find({'_id': {'$in': oids}}, {'fullName': 1, 'email': 1}).to_list(len(oids))
+            users_map = {str(u['_id']): u for u in users}
+
+    # Build rows
+    rows = []
+    for s in sessions:
+        trainer = users_map.get(s.get('trainerId', ''), {})
+        trainee = users_map.get(s.get('traineeId', ''), {})
+        gross = s.get('finalSessionPriceCents', 0)
+        platform_fee = s.get('platformFeeCents', 0)
+        service_fee = s.get('serviceFeeCents', 0)
+        commission_cents = max(0, platform_fee - service_fee)
+        # Commission base = gross - service_fee (i.e. the trainer rate portion)
+        commission_base = max(0, gross - service_fee)
+        commission_pct = round((commission_cents / commission_base) * 100, 1) if commission_base else 0
+        rows.append({
+            'trainer_name': trainer.get('fullName', 'Unknown'),
+            'trainer_email': trainer.get('email', ''),
+            'session_date': (s.get('createdAt').strftime('%Y-%m-%d %H:%M') if s.get('createdAt') else ''),
+            'customer': trainee.get('fullName', 'Unknown'),
+            'gross_dollars': f"{gross / 100:.2f}",
+            'commission_pct': f"{commission_pct}%",
+            'commission_dollars': f"{commission_cents / 100:.2f}",
+            'service_fee_dollars': f"{service_fee / 100:.2f}",
+            'trainer_payout_dollars': f"{s.get('trainerEarningsCents', 0) / 100:.2f}",
+            'corporate_subsidy_dollars': f"{s.get('corporateSubsidyCents', 0) / 100:.2f}",
+            'stripe_intent_id': s.get('paymentIntentId', ''),
+            'status': s.get('status', ''),
+        })
+
+    # Sort by trainer name (case-insensitive), then session date asc
+    rows.sort(key=lambda r: (r['trainer_name'].lower(), r['session_date']))
+
+    # Write CSV
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow([
+        'Trainer Name', 'Trainer Email', 'Session Date', 'Customer',
+        'Gross ($)', 'Commission %', 'Commission ($)', 'Service Fee ($)',
+        'Trainer Payout ($)', 'Corporate Subsidy ($)', 'Stripe Intent ID', 'Status',
+    ])
+    for r in rows:
+        writer.writerow([
+            r['trainer_name'], r['trainer_email'], r['session_date'], r['customer'],
+            r['gross_dollars'], r['commission_pct'], r['commission_dollars'],
+            r['service_fee_dollars'], r['trainer_payout_dollars'], r['corporate_subsidy_dollars'],
+            r['stripe_intent_id'], r['status'],
+        ])
+
+    csv_text = buf.getvalue()
+    buf.close()
+
+    # Filename includes range for clarity
+    if period:
+        fname_suffix = period
+    elif start_date or end_date:
+        fname_suffix = f"{start_date or 'start'}_to_{end_date or 'end'}"
+    else:
+        fname_suffix = 'all'
+    filename = f"rapidreps_payments_{fname_suffix}.csv"
+
+    return StreamingResponse(
+        iter([csv_text]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
 
 @router.get("/admin/top-trainers")
 async def admin_top_trainers(days: int = 7, limit: int = 5, admin_user: dict = Depends(require_admin)):

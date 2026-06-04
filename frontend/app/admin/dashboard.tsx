@@ -24,7 +24,7 @@ import { useAuth } from '../../src/contexts/AuthContext';
 import { C, s, api, getAuthHeader, formatCents, PAGE_SIZE } from '../../src/components/admin/AdminShared';
 
 // Tab components
-import { OverviewTab } from '../../src/components/admin/OverviewTab';
+import { PremiumOverviewTab } from '../../src/components/admin/PremiumOverviewTab';
 import { UsersTab } from '../../src/components/admin/UsersTab';
 import { VerificationsTab } from '../../src/components/admin/VerificationsTab';
 import { SessionsTab } from '../../src/components/admin/SessionsTab';
@@ -598,7 +598,7 @@ export default function AdminDashboard() {
           <View style={s.loadingBox}><ActivityIndicator size="large" color={'#FF6A00'} /><Text style={s.loadingText}>Loading...</Text></View>
         ) : (
           <>
-            {activeTab === 'overview' && <OverviewTab dashboard={dashboard} leaderboard={leaderboard} earningsSummary={earningsSummary} setActiveTab={setActiveTab} />}
+            {activeTab === 'overview' && <PremiumOverviewTab dashboard={dashboard} leaderboard={leaderboard} setActiveTab={setActiveTab} />}
             {activeTab === 'users' && (
               <UsersTab
                 users={users} usersTotal={usersTotal} usersPage={usersPage}
