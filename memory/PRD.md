@@ -4,6 +4,31 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-06-04 — Iteration 97b: Polish pass (avatar propagation + parity + Stripe resilience) 🚀✅
+
+### Shipped
+- **Trainee profile parity bump** — added status row (active dot) and "Share Profile" CTA mirroring trainer profile's hierarchy
+- **UserAvatar propagation** to all major list/header surfaces:
+  - Chat header (`messages/chat.tsx`)
+  - Admin Users tab (`components/admin/UsersTab.tsx`)
+  - Leaderboard rows (`trainee/leaderboard.tsx`)
+- **Stripe key resilience** — new `_stripe_key_ready()` helper + `GET /api/payments/config` probe endpoint + 503 with clear message from `/payments/create-payment-intent` when key is unconfigured/expired (instead of opaque 400)
+
+### Stripe key rotation status ⚠️
+The current `STRIPE_SECRET_KEY` in `/app/backend/.env` is `sk_live_*****nmQtF7` and is reported by Stripe as **expired**. Code is wired correctly through env vars — paste a fresh `sk_live_...` (or `sk_test_...`) into `/app/backend/.env` and restart backend. No code change required.
+
+### Verified
+- ✅ **100/100 backend pytest guards pass** (5 new iter97b polish + 95 prior)
+- ✅ `/api/payments/config` returns `{"stripeKeyConfigured": true, "publishableKeyHint": false}` — endpoint live
+- ✅ All touched frontend files are TS parse-clean
+
+### Files modified
+- Backend: `routes/payment_routes.py` (Stripe readiness helpers + config endpoint + 503 guard)
+- Frontend: `app/trainee/(tabs)/profile.tsx` (status row + Share Profile), `app/messages/chat.tsx`, `src/components/admin/UsersTab.tsx`, `app/trainee/leaderboard.tsx` (all now use UserAvatar)
+- Tests: `tests/test_iteration97_sprint_cd.py` (+5 guards)
+
+
+
 ## 2026-06-04 — Iteration 97: Sprint C + D (11 items) 🚀✅
 
 ### Shipped — Sprint C (Profile/Photo/UI Polish)

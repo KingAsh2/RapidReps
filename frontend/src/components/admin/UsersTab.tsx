@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { C, s, PAGE_SIZE, PaginationBar, FilterPills, SearchBar } from './AdminShared';
+import { UserAvatar } from '../UserAvatar';
 
 interface Props {
   users: any[];
@@ -50,16 +51,8 @@ export const UsersTab = ({
             onPress={() => onViewUser(user.id)}
             data-testid={`admin-user-${user.id}`}
           >
-            {user.avatarUrl ? (
-              <Image source={{ uri: user.avatarUrl }} style={s.userAvatar} />
-            ) : (
-              <View style={[s.listCardIcon, { backgroundColor: user.isAdmin ? C.error : user.roles?.includes('trainer') ? C.orange : '#FF6A00' }]}>
-                <Ionicons
-                  name={user.isAdmin ? 'shield' : user.roles?.includes('trainer') ? 'fitness' : 'person'}
-                  size={18} color={C.white}
-                />
-              </View>
-            )}
+            {/* iter97b: unified avatar with deterministic colored-initials fallback (was role-coded icon) */}
+            <UserAvatar user={user} size={40} />
             <View style={{ flex: 1 }}>
               <Text style={s.listCardTitle}>{user.fullName}</Text>
               <Text style={s.listCardSub}>{user.email}</Text>

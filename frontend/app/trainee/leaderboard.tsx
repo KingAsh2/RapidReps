@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { streaksAPI } from '../../src/services/api';
+import { UserAvatar } from '../../src/components/UserAvatar';
 
 const backgroundImage = require('../../assets/images/bg-group-gym.png');
 
@@ -230,13 +231,11 @@ export default function LeaderboardScreen() {
             >
               <Text style={s.listRank}>#{entry.rank}</Text>
               <View style={s.listAvatar}>
-                {entry.avatar ? (
-                  <Image source={{ uri: entry.avatar }} style={s.listAvatarImg} />
-                ) : (
-                  <LinearGradient colors={[C.teal, C.navy]} style={s.listAvatarFallback}>
-                    <Text style={s.listInitial}>{entry.fullName?.charAt(0) || '?'}</Text>
-                  </LinearGradient>
-                )}
+                {/* iter97b: unified avatar with deterministic colored-initial fallback */}
+                <UserAvatar
+                  user={{ avatarUrl: entry.avatar, fullName: entry.fullName }}
+                  size={40}
+                />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={s.listName}>{entry.fullName}</Text>

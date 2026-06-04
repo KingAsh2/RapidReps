@@ -143,3 +143,34 @@ def test_back_arrows_white_on_navy():
     for f in ("app/notifications.tsx", "app/notification-preferences.tsx"):
         src = (FRONTEND / f).read_text()
         assert "Colors.navy" not in src or "color={Colors.white}" in src, f
+
+
+
+# ── iter97b polish: Stripe readiness probe + extra UserAvatar applications ──
+def test_payments_config_endpoint_live():
+    r = requests.get(f"{API_BASE}/api/payments/config", timeout=10)
+    assert r.status_code == 200
+    body = r.json()
+    assert "stripeKeyConfigured" in body
+    assert isinstance(body["stripeKeyConfigured"], bool)
+
+
+def test_chat_header_uses_user_avatar():
+    src = (FRONTEND / "app/messages/chat.tsx").read_text()
+    assert "UserAvatar" in src
+
+
+def test_admin_users_tab_uses_user_avatar():
+    src = (FRONTEND / "src/components/admin/UsersTab.tsx").read_text()
+    assert "UserAvatar" in src
+
+
+def test_leaderboard_uses_user_avatar():
+    src = (FRONTEND / "app/trainee/leaderboard.tsx").read_text()
+    assert "UserAvatar" in src
+
+
+def test_trainee_profile_parity_share_button():
+    src = (FRONTEND / "app/trainee/(tabs)/profile.tsx").read_text()
+    assert "trainee-share-profile-btn" in src
+    assert "Share Profile" in src

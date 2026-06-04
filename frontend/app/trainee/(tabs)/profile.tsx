@@ -394,12 +394,35 @@ export default function TraineeProfileScreen() {
               <Text style={styles.userName}>{user?.fullName || 'Athlete'}</Text>
               <Text style={styles.userEmail}>{user?.email}</Text>
 
+              {/* iter97b: status row to match trainer profile hierarchy */}
+              <View style={styles.statusRow}>
+                <View style={[styles.statusDot, { backgroundColor: '#22c55e' }]} />
+                <Text style={styles.statusText}>Active</Text>
+              </View>
+
               {/* Personality Tag Display */}
               {profile?.personalityTag && (
                 <View style={{ marginTop: 10 }}>
                   <PersonalityTagBadge tag={profile.personalityTag} onPress={() => setShowTagSelector(true)} />
                 </View>
               )}
+
+              {/* iter97b: Share Profile button — mirrors trainer profile CTA */}
+              <TouchableOpacity
+                onPress={async () => {
+                  try {
+                    const { Share } = await import('react-native');
+                    await Share.share({
+                      message: `Check out my training profile on RapidReps! ${user?.fullName || ''}`,
+                    });
+                  } catch { /* user cancelled */ }
+                }}
+                style={styles.shareProfileBtn}
+                data-testid="trainee-share-profile-btn"
+              >
+                <Ionicons name="share-social" size={18} color={COLORS.white} />
+                <Text style={styles.shareProfileBtnText}>Share Profile</Text>
+              </TouchableOpacity>
             </Animated.View>
 
             {/* Stats Card */}
@@ -1058,6 +1081,20 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: 'rgba(255,255,255,0.8)',
   },
+  // iter97b: parity with trainer profile hierarchy
+  statusRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8,
+  },
+  statusDot: { width: 8, height: 8, borderRadius: 4 },
+  statusText: { fontSize: 12, color: 'rgba(255,255,255,0.8)', fontWeight: '600' },
+  shareProfileBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)',
+    paddingHorizontal: 18, paddingVertical: 10,
+    borderRadius: 22, marginTop: 14,
+  },
+  shareProfileBtnText: { color: COLORS.white, fontWeight: '700', fontSize: 14 },
   // Stats Card
   statsCard: {
     marginBottom: 16,

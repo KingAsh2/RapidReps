@@ -18,6 +18,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { chatAPI } from '../../src/services/api';
+import { UserAvatar } from '../../src/components/UserAvatar';
 
 // Brand colors
 const COLORS = {
@@ -196,13 +197,11 @@ export default function ChatScreen() {
             style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}
             data-testid="chat-profile-link"
           >
-            {userPhoto ? (
-              <Image source={{ uri: userPhoto as string }} style={styles.headerPhoto} />
-            ) : (
-              <View style={styles.headerPhotoPlaceholder}>
-                <Ionicons name="person" size={20} color={COLORS.white} />
-              </View>
-            )}
+            {/* iter97b: unified avatar with initials fallback (was generic person icon) */}
+            <UserAvatar
+              user={{ avatarUrl: userPhoto, fullName: userName as string }}
+              size={40}
+            />
             <View style={styles.headerInfo}>
               <Text style={styles.headerTitle}>{userName}</Text>
               <Text style={styles.headerStatus}>Online</Text>

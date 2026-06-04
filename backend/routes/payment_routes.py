@@ -23,8 +23,25 @@ from models import (
 
 router = APIRouter(prefix="/api")
 
-# Stripe configuration
+# Stripe configuration — fail-soft on missing/expired key so the rest of the
+# API keeps serving traffic (iter97b). The /create-payment-intent endpoint will
+# return a 503 with a clear message instead of crashing the worker.
 stripe.api_key = os.environ.get('STRIPE_SECRET_KEY', '')
+
+
+def _stripe_key_ready() -> bool:
+    key = stripe.api_key or ''
+    return key.startswith('sk_live_') or key.startswith('sk_test_')
+
+
+@router.get("/payments/config")
+async def payments_config():
+    """iter97b: lightweight readiness probe — lets the frontend show a clear
+    "Payments unavailable" state instead of a generic 400 from Stripe."""
+    return {
+        "stripeKeyConfigured": _stripe_key_ready(),
+        "publishableKeyHint": bool(os.environ.get('STRIPE_PUBLISHABLE_KEY') or os.environ.get('EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY')),
+    }
 
 PAYOUT_MINIMUM_CENTS = 3500  # $35.00
 
@@ -981,6 +998,13 @@ async def create_payment_intent(
         raise HTTPException(status_code=400, detail="Minimum payment amount is $1.00")
     if amount_cents > 500000:
         raise HTTPException(status_code=400, detail="Amount exceeds maximum allowed ($5,000)")
+
+    # iter97b: clear 503 if Stripe is unconfigured/expired instead of opaque 400
+    if not _stripe_key_ready():
+        raise HTTPException(
+            status_code=503,
+            detail="Payments are temporarily unavailable. Please contact support.",
+        )
 
     # Negotiation / ownership gate
     if session_id:
