@@ -241,13 +241,7 @@ const VERIFICATION_STEPS = [
   },
   // iter98g: 'Profile Photo' step removed from verification flow.
   // Photos go live immediately — no admin gating in either trainer view or admin checklist.
-  {
-    id: 'video',
-    title: 'Intro Video',
-    description: 'Record a 30-60 second introduction video',
-    icon: 'videocam',
-    required: true,
-  },
+  // iter98h: 'Intro Video' step removed — not required for admin verification.
 ];
 
 type StepStatus = 'pending' | 'uploading' | 'submitted' | 'approved' | 'rejected';

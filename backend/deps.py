@@ -191,8 +191,7 @@ def check_trainer_can_go_live(profile: dict) -> tuple:
         missing.append('Sex offender screening')
     if not profile.get('cprAedCertUploaded', False):
         missing.append('CPR/AED certification')
-    if not profile.get('introVideoUploaded', False):
-        missing.append('Intro video (10-30 seconds)')
+    # iter98h: intro video is no longer required to go live.
     if not profile.get('bio') or len(profile.get('bio', '')) < 50:
         missing.append('Complete bio (min 50 characters)')
     if not profile.get('trainingStyles') or len(profile.get('trainingStyles', [])) == 0:

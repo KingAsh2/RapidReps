@@ -808,7 +808,7 @@ async def admin_get_verification_detail(trainer_id: str, admin_user: dict = Depe
         {'id': 'insurance', 'label': 'Insurance', 'field': 'insuranceUploaded', 'submitted': bool(profile.get('insuranceUploaded')), 'url': profile.get('insuranceFileUri')},
         # iter98d (Task 9): profile photo removed from verification checklist —
         # photos go live immediately without admin gating.
-        {'id': 'video', 'label': 'Intro Video', 'field': 'introVideoUploaded', 'submitted': bool(profile.get('introVideoUploaded')), 'url': profile.get('introVideoUrl') or profile.get('videoFileUri')},
+        # iter98h: intro video removed from admin verification — not required for approval.
     ]
     
     # Get background check request info if submitted
@@ -1014,7 +1014,7 @@ async def admin_approve_verification_step(
         'certification': 'Fitness Certification',
         'cpr': 'CPR/AED Certification',
         'insurance': 'Liability Insurance',
-        'video': 'Intro Video',
+        # iter98h: 'video' removed — intro video not required for admin verification.
     }
     step_name = step_names.get(step_id, step_id)
     
@@ -1068,7 +1068,7 @@ async def admin_reject_verification_step(
         'certification': 'Fitness Certification',
         'cpr': 'CPR/AED Certification',
         'insurance': 'Liability Insurance',
-        'video': 'Intro Video',
+        # iter98h: 'video' removed — intro video not required for admin verification.
     }
     step_name = step_names.get(step_id, step_id)
     
@@ -1097,7 +1097,7 @@ async def admin_approve_all_steps(
         ('cpr', 'cprAedCertUploaded', profile.get('cprFileUri')),
         ('insurance', 'insuranceUploaded', profile.get('insuranceFileUri')),
         # iter98d (Task 9): photo step removed — profile photos go live without admin review.
-        ('video', 'introVideoUploaded', profile.get('introVideoUrl') or profile.get('videoFileUri')),
+        # iter98h: video step removed — intro video not required for verification.
     ]
 
     now = datetime.utcnow()

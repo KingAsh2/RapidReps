@@ -386,9 +386,10 @@ async def get_verification_status(current_user: dict = Depends(get_current_user)
     field_map = {
         'identity': 'governmentIdUploaded', 'background': 'backgroundCheckPassed',
         'certification': 'fitnessCertUploaded', 'cpr': 'cprAedCertUploaded',
-        'insurance': 'insuranceUploaded', 'video': 'introVideoUploaded',
+        'insurance': 'insuranceUploaded',
     }
     # iter98g: 'photo' step removed from verification flow entirely (Task 9 cleanup).
+    # iter98h: 'video' step removed — intro video is no longer a verification requirement.
     # Profile photos go live without admin gating; never appear in trainer's checklist.
     verification_status = profile.get('verificationStatus', 'pending')
 
