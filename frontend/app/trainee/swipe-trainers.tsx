@@ -93,15 +93,20 @@ export default function SwipeTrainersScreen() {
 
   // Load nearby + filter by availability. Uses last known coords from AsyncStorage
   // (set by the home screen) so we don't have to re-request geolocation here.
+  // iter102h: honor the trainee's chosen proximity (saved by the home screen)
+  // instead of the previous hardcoded 25 mi default.
   useEffect(() => {
     (async () => {
       try {
         const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
         const latStr = await AsyncStorage.getItem('user_latitude');
         const lngStr = await AsyncStorage.getItem('user_longitude');
+        const radiusStr = await AsyncStorage.getItem('trainee_proximity_miles');
         const lat = latStr ? parseFloat(latStr) : 40.7128;   // NYC fallback
         const lng = lngStr ? parseFloat(lngStr) : -74.0060;
-        const res = await traineeAPI.getNearbyTrainers(lat, lng, 25);
+        const parsed = radiusStr ? parseInt(radiusStr, 10) : NaN;
+        const radius = Number.isFinite(parsed) && parsed > 0 ? parsed : 10;
+        const res = await traineeAPI.getNearbyTrainers(lat, lng, radius);
         const list: Trainer[] = (res?.trainers || []).filter(
           (t: Trainer) => t.isAvailable !== false
         );

@@ -42,6 +42,11 @@ import { haptic } from '../../../src/utils/haptics';
 import TrainerBottomSheet from '../../../src/components/TrainerBottomSheet';
 import PeopleSearchBar from '../../../src/components/PeopleSearchBar';
 import FloatingOrangeBg from '../../../src/components/FloatingOrangeBg';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// iter102h: persist trainee's proximity preference so other screens
+// (e.g. /trainee/swipe-trainers) can honor the same radius.
+const PROXIMITY_STORAGE_KEY = 'trainee_proximity_miles';
 
 const { width, height } = Dimensions.get('window');
 
@@ -98,6 +103,21 @@ export default function TraineeHomeScreen() {
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [travelProximity, setTravelProximity] = useState(10);
   const [showProximityPicker, setShowProximityPicker] = useState(false);
+
+  // iter102h: hydrate proximity from AsyncStorage on mount and persist on change
+  // so the Tinder-swipe screen reads the same value the user picked here.
+  useEffect(() => {
+    (async () => {
+      try {
+        const v = await AsyncStorage.getItem(PROXIMITY_STORAGE_KEY);
+        const n = v ? parseInt(v, 10) : NaN;
+        if (Number.isFinite(n) && n > 0) setTravelProximity(n);
+      } catch { /* ignore */ }
+    })();
+  }, []);
+  useEffect(() => {
+    AsyncStorage.setItem(PROXIMITY_STORAGE_KEY, String(travelProximity)).catch(() => {});
+  }, [travelProximity]);
   const [menuVisible, setMenuVisible] = useState(false);
   const [selectedTrainerId, setSelectedTrainerId] = useState<string | undefined>(undefined);
   const [previewUser, setPreviewUser] = useState<any>(null);

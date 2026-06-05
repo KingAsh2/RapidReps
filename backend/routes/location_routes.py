@@ -459,10 +459,21 @@ async def get_nearby_trainers(
         # Calculate distance
         distance = calculate_distance_miles(latitude, longitude, trainer_lat, trainer_lng)
         
-        # Filter by radius
+        # Filter by trainee's requested radius
         if distance > radius_miles:
             continue
-        
+
+        # iter102h: also honor the trainer's own willing-to-travel radius. If
+        # the trainee is further than the trainer's `travelRadiusMiles`, the
+        # trainer is hidden — a trainer who only wants to travel 5 mi should
+        # never be shown to a trainee 12 mi away. Default 10 mi mirrors the
+        # schema default in TrainerProfile.travelRadiusMiles.
+        trainer_radius = trainer.get('travelRadiusMiles')
+        if trainer_radius is None:
+            trainer_radius = 10
+        if distance > trainer_radius:
+            continue
+
         nearby_trainers_data.append({
             'trainer': trainer,
             'distance': distance
