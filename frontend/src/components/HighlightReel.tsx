@@ -180,14 +180,21 @@ export const HighlightReel = ({ highlights, trainerName }: Props) => {
 
           {highlights[viewerIdx]?.type === 'video' ? (
             <Video
+              key={`viewer-video-${viewerIdx}`}
               source={{ uri: resolveUrl(highlights[viewerIdx].url) }}
               style={styles.viewerMedia}
               resizeMode={ResizeMode.CONTAIN}
               shouldPlay
               isLooping
+              isMuted={false}
               useNativeControls
-              posterSource={highlights[viewerIdx].thumbnailUrl ? { uri: resolveUrl(highlights[viewerIdx].thumbnailUrl as string) } : undefined}
-              usePoster={!!highlights[viewerIdx].thumbnailUrl}
+              // iter102p: `usePoster` + `useNativeControls` causes the poster
+              // <Image> overlay to intercept taps on web/iOS Safari when
+              // autoplay is briefly blocked — the native play button visibly
+              // does nothing. The modal backdrop is already fullscreen black
+              // and the user just saw the thumbnail on the tile, so the poster
+              // is redundant here. Remounting per `viewerIdx` (via `key`)
+              // ensures the source actually changes when navigating clips.
             />
           ) : (
             <Image
