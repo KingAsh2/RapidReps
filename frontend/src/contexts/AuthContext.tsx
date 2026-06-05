@@ -15,6 +15,8 @@ interface AuthContextType {
   logout: () => Promise<void>;
   setActiveRole: (role: string) => Promise<void>;
   setDemoMode: (role: 'trainee' | 'trainer') => void;
+  // iter98e: pull latest /auth/me so UI reflects fresh name/photo/accent
+  refreshUser: () => Promise<User | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -102,6 +104,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // iter98e: re-fetch /auth/me and update cached user (used after rename / accent change)
+  const refreshUser = async (): Promise<User | null> => {
+    try {
+      const fresh = await authAPI.getMe();
+      if (fresh && typeof fresh === 'object' && fresh.roles) {
+        setUser(fresh);
+        return fresh;
+      }
+    } catch (e) {
+      console.error('refreshUser failed:', e);
+    }
+    return null;
+  };
+
   const setDemoMode = async (role: 'trainee' | 'trainer') => {
     setIsDemoMode(true);
     setActiveRoleState(role);
@@ -126,7 +142,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsDemoMode(false);
     setToken(response.access_token);
     setUser(response.user);
-    
     // Set initial active role
     if (response.user.roles.length > 0) {
       const initialRole = response.user.roles[0];
@@ -223,6 +238,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logout,
         setActiveRole,
         setDemoMode,
+        refreshUser,
       }}
     >
       {children}
@@ -246,6 +262,7 @@ export const useAuth = () => {
       logout: async () => {},
       setActiveRole: async () => {},
       setDemoMode: () => {},
+      refreshUser: async () => null,
     };
   }
   return context;

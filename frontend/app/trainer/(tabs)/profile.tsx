@@ -29,6 +29,8 @@ import { PersonalityTagBadge, PersonalityTagSelector } from '../../../src/compon
 // iter98d (Task 5): mount own-profile vibe player + stop on unmount
 import { TrainerVibePlayer } from '../../../src/components/TrainerVibePlayer';
 import { stopAllAudio } from '../../../src/utils/audioCoordinator';
+// iter98e: tap-to-edit display name
+import EditableName from '../../../src/components/EditableName';
 import { AccentColorPicker } from '../../../src/components/AccentColorPicker';
 import { DS } from '../../../src/theme/designSystem';
 import FloatingOrangeBg from '../../../src/components/FloatingOrangeBg';
@@ -225,7 +227,18 @@ export default function TrainerProfileScreen() {
             <>
               {/* Avatar + Name */}
               <Animated.View style={[styles.avatarSection, { opacity: heroOpacityAnim, transform: [{ scale: heroScaleAnim }] }]}>
-                <View style={styles.avatarContainer}>
+                {/* iter98e: accent-color halo + ring on own avatar */}
+                <View style={[styles.avatarContainer, {
+                  shadowColor: profile?.accentColor || '#FF6A00',
+                  shadowOpacity: 0.55,
+                  shadowRadius: 22,
+                  shadowOffset: { width: 0, height: 0 },
+                  elevation: 8,
+                  borderRadius: 70,
+                  padding: 3,
+                  borderWidth: 2.5,
+                  borderColor: profile?.accentColor || '#FF6A00',
+                }]}>
                   {profile?.avatarUrl ? (
                     <Image source={{ uri: profile.avatarUrl }} style={styles.avatar} />
                   ) : (
@@ -237,7 +250,15 @@ export default function TrainerProfileScreen() {
                     <Ionicons name={profile?.isVerified ? 'checkmark' : 'time'} size={14} color={COLORS.white} />
                   </View>
                 </View>
-                <Text style={styles.name}>{user?.fullName || 'Trainer'}</Text>
+                {/* iter98e: tap-to-edit display name */}
+                <View style={{ marginTop: 14, marginBottom: 4, alignItems: 'center' }}>
+                  <EditableName
+                    value={user?.fullName || 'Trainer'}
+                    accent={profile?.accentColor || '#FF6A00'}
+                    nameStyle={styles.name}
+                    testIdPrefix="trainer-name"
+                  />
+                </View>
                 <Text style={styles.email}>{user?.email || ''}</Text>
                 <View style={styles.statusRow}>
                   <View style={[styles.statusDot, { backgroundColor: profile?.isAvailable ? COLORS.success : COLORS.error }]} />

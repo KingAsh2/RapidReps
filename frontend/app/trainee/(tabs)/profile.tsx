@@ -31,6 +31,8 @@ import { PersonalityTagBadge, PersonalityTagSelector } from '../../../src/compon
 // iter98d (Task 5): mount vibe player so users hear their own music on their profile
 import { TrainerVibePlayer } from '../../../src/components/TrainerVibePlayer';
 import { stopAllAudio } from '../../../src/utils/audioCoordinator';
+// iter98e: tap-to-edit display name component
+import EditableName from '../../../src/components/EditableName';
 import { UserAvatar } from '../../../src/components/UserAvatar';
 import FloatingOrangeBg from '../../../src/components/FloatingOrangeBg';
 import { AccentColorPicker } from '../../../src/components/AccentColorPicker';
@@ -394,20 +396,41 @@ export default function TraineeProfileScreen() {
               ]}
             >
               <TouchableOpacity onPress={pickImage} style={styles.avatarContainer} data-testid="trainee-avatar-tap">
-                {/* iter97c: UserAvatar gives deterministic colored-initial fallback (parity with trainer hero) */}
-                <UserAvatar
-                  user={{
-                    avatarUrl: formData.profilePhoto,
-                    fullName: user?.fullName,
-                    email: user?.email,
-                  }}
-                  size={110}
-                />
+                {/* iter98e: accent-color halo + ring on own avatar */}
+                <View style={{
+                  shadowColor: profile?.accentColor || '#FF6A00',
+                  shadowOpacity: 0.55,
+                  shadowRadius: 22,
+                  shadowOffset: { width: 0, height: 0 },
+                  elevation: 8,
+                  borderRadius: 70,
+                  padding: 3,
+                  borderWidth: 2.5,
+                  borderColor: profile?.accentColor || '#FF6A00',
+                }}>
+                  <UserAvatar
+                    user={{
+                      avatarUrl: formData.profilePhoto,
+                      fullName: user?.fullName,
+                      email: user?.email,
+                    }}
+                    size={110}
+                  />
+                </View>
                 <View style={styles.editBadge}>
                   <Ionicons name="camera" size={16} color={COLORS.white} />
                 </View>
               </TouchableOpacity>
-              <Text style={styles.userName}>{user?.fullName || 'Athlete'}</Text>
+
+              {/* iter98e: tap-to-edit display name (free-form, audit-logged) */}
+              <View style={{ marginTop: 14, marginBottom: 4, alignItems: 'center' }}>
+                <EditableName
+                  value={user?.fullName || 'Athlete'}
+                  accent={profile?.accentColor || '#FF6A00'}
+                  nameStyle={styles.userName}
+                  testIdPrefix="trainee-name"
+                />
+              </View>
               <Text style={styles.userEmail}>{user?.email}</Text>
 
               {/* iter97b: status row to match trainer profile hierarchy */}

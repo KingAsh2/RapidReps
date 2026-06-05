@@ -77,6 +77,12 @@ export const authAPI = {
     return response.data;
   },
 
+  // iter98e: free-form name editing — backend logs every change to name_change_audit
+  updateMe: async (payload: { displayName?: string; phone?: string }): Promise<{ success: boolean; updates?: any; noop?: boolean }> => {
+    const response = await api.put('/auth/me', payload);
+    return response.data;
+  },
+
   deleteMe: async (): Promise<{ success: boolean }> => {
     const response = await api.delete('/auth/me');
     return response.data;
