@@ -17,6 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { chatAPI } from '../../src/services/api';
+import FloatingOrangeBg from '../../src/components/FloatingOrangeBg';
 
 // Brand colors
 const COLORS = {
@@ -223,6 +224,7 @@ export default function MessagesScreen() {
       />
 
       <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <FloatingOrangeBg />
         {/* Header with back button */}
         <Animated.View
           style={[

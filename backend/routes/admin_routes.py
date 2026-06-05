@@ -806,7 +806,8 @@ async def admin_get_verification_detail(trainer_id: str, admin_user: dict = Depe
         {'id': 'certification', 'label': 'Fitness Certification', 'field': 'fitnessCertUploaded', 'submitted': bool(profile.get('fitnessCertUploaded')), 'url': profile.get('certificationFileUri')},
         {'id': 'cpr', 'label': 'CPR/AED Certification', 'field': 'cprAedCertUploaded', 'submitted': bool(profile.get('cprAedCertUploaded')), 'url': profile.get('cprFileUri')},
         {'id': 'insurance', 'label': 'Insurance', 'field': 'insuranceUploaded', 'submitted': bool(profile.get('insuranceUploaded')), 'url': profile.get('insuranceFileUri')},
-        {'id': 'photo', 'label': 'Profile Photo', 'field': 'profilePhotoUploaded', 'submitted': bool(profile.get('profilePhotoUploaded')), 'url': profile.get('avatarUrl') or profile.get('photoFileUri')},
+        # iter98d (Task 9): profile photo removed from verification checklist —
+        # photos go live immediately without admin gating.
         {'id': 'video', 'label': 'Intro Video', 'field': 'introVideoUploaded', 'submitted': bool(profile.get('introVideoUploaded')), 'url': profile.get('introVideoUrl') or profile.get('videoFileUri')},
     ]
     
@@ -1097,7 +1098,7 @@ async def admin_approve_all_steps(
         ('certification', 'fitnessCertUploaded', profile.get('certificationFileUri')),
         ('cpr', 'cprAedCertUploaded', profile.get('cprFileUri')),
         ('insurance', 'insuranceUploaded', profile.get('insuranceFileUri')),
-        ('photo', 'profilePhotoUploaded', profile.get('avatarUrl') or profile.get('photoFileUri')),
+        # iter98d (Task 9): photo step removed — profile photos go live without admin review.
         ('video', 'introVideoUploaded', profile.get('introVideoUrl') or profile.get('videoFileUri')),
     ]
 

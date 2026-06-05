@@ -41,6 +41,7 @@ import { TrainerCard } from '../../../src/components/trainee-home/TrainerCard';
 import { haptic } from '../../../src/utils/haptics';
 import TrainerBottomSheet from '../../../src/components/TrainerBottomSheet';
 import PeopleSearchBar from '../../../src/components/PeopleSearchBar';
+import FloatingOrangeBg from '../../../src/components/FloatingOrangeBg';
 
 const { width, height } = Dimensions.get('window');
 
@@ -512,6 +513,7 @@ export default function TraineeHomeScreen() {
         />
         
         <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <FloatingOrangeBg />
           {/* Header with Logo and Actions */}
           <View style={styles.header}>
             <View style={styles.headerLogo}>
@@ -570,23 +572,8 @@ export default function TraineeHomeScreen() {
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FFFFFF" />
             }
           >
-            {/* Address Setup Banner */}
-            {needsAddress && (
-              <TouchableOpacity
-                style={{ backgroundColor: '#0A0E1A', borderRadius: 14, padding: 16, marginHorizontal: 16, marginBottom: 12, flexDirection: 'row', alignItems: 'center', gap: 12 }}
-                onPress={() => router.push('/trainee/(tabs)/profile?editAddress=true')}
-                data-testid="address-setup-banner"
-              >
-                <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center' }}>
-                  <Ionicons name="home" size={22} color="#FFFFFF" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 15, fontWeight: '800', color: '#FFFFFF' }}>Add Your Address</Text>
-                  <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>Set your home address for trainer navigation</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.6)" />
-              </TouchableOpacity>
-            )}
+            {/* iter98d (Task 11): "Add Your Address" banner removed per user request.
+                Address is still editable from the Profile tab (Edit Profile flow). */}
 
             {/* Hero Banner - Motivational Greeting */}
             <Animated.View
@@ -698,6 +685,30 @@ export default function TraineeHomeScreen() {
                 onTrainerPress={(id) => router.push({ pathname: '/trainee/trainer-detail', params: { trainerId: id } })}
               />
             )}
+
+            {/* iter98d (Task 6): Tinder-style swipe discovery CTA — full profile, accent colored */}
+            <TouchableOpacity
+              style={swipeCtaStyles.cta}
+              onPress={() => router.push('/trainee/swipe-trainers')}
+              data-testid="open-swipe-discover"
+              activeOpacity={0.85}
+            >
+              <LinearGradient
+                colors={['#FF6A00', '#FF3D00']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={swipeCtaStyles.gradient}
+              >
+                <View style={swipeCtaStyles.iconWrap}>
+                  <Ionicons name="flame" size={22} color="#FFF" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={swipeCtaStyles.title}>Swipe to Discover Trainers</Text>
+                  <Text style={swipeCtaStyles.sub}>Browse nearby pros card-by-card</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={22} color="#FFF" />
+              </LinearGradient>
+            </TouchableOpacity>
 
             {/* MAP - Trainers Near You — strictly filtered by Trainer Proximity */}
             <NearbyTrainersMap
@@ -2134,4 +2145,36 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: 'rgba(255,255,255,0.5)',
   },
+});
+
+// iter98d (Task 6): Swipe-Discover CTA styles
+const swipeCtaStyles = StyleSheet.create({
+  cta: {
+    marginHorizontal: 16,
+    marginBottom: 14,
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#FF6A00',
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
+  },
+  gradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+  },
+  iconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  title: { fontSize: 15, fontWeight: '900', color: '#FFF', letterSpacing: 0.2 },
+  sub: { fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 1, fontWeight: '500' },
 });

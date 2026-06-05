@@ -1,0 +1,51 @@
+{
+  "summary": "Iter101 — twelve-task post-deployment cleanup. Backend contracts fully validated via new pytest suite (/app/backend/tests/test_iteration101_cleanup.py, 10 passed / 1 skipped) + previously-passing iter96–99 + admin_panel_v2 regression suite (100 passed / 3 skipped / 0 failed). Frontend: live web UI still un-renderable on preview URL (Expo default 'Welcome to Expo' shell — same env-level issue flagged in iter100, NOT introduced by this change-set), so frontend verification was done via source-code audit confirming required data-testids, route targets, and component imports exist for every item listed in the request.",
+  "items_verified": {
+    "auth_me_trainee_photo_fields": {"status": "PASS", "evidence": "GET /api/auth/me as trainee returns profilePhoto, avatarUrl, legalName, displayName keys (test_me_trainee_has_photo_fields)"},
+    "auth_me_trainer_photo_fields": {"status": "PASS", "evidence": "Same on trainer side (test_me_trainer_has_photo_and_name_fields)"},
+    "put_auth_me_displayname_preserves_legalname": {"status": "PASS", "evidence": "PUT /api/auth/me {displayName} → 200; GET /me reflects new fullName; legalName preserved when originally set (test_put_me_updates_display_name_and_preserves_legal_name)"},
+    "admin_name_change_audit_admin_200": {"status": "PASS", "evidence": "GET /api/admin/name-change-audit → 200 with entries[] (test_admin_can_access)"},
+    "admin_name_change_audit_non_admin_403": {"status": "PASS", "evidence": "Same endpoint as trainee → 403 (test_non_admin_forbidden)"},
+    "trainers_nearby_enriched_fields": {"status": "PASS", "evidence": "Seeded test_trainer_iter25 with verificationStatus=verified, tier=standard, isAvailable=True + NYC coords. GET /api/trainers/nearby returned object with all required keys: profilePhoto, accentColor, personalityTag, vibeTrackTitle, vibePreviewUrl, vibeTrackId, specialties, outdoor60Cents, distance, distanceMiles, isAvailable=bool, rating. (test_nearby_returns_enriched_fields)"},
+    "availability_saved_coords_fallback_or_400": {"status": "PASS", "evidence": "PUT /api/trainer/availability {isAvailable:true} with no body coords → 200 when trainer has saved coords; 400 with detail mentioning 'location/home address/coord' when none. (test_toggle_on_uses_saved_coords_or_400s_clearly)"},
+    "availability_toggle_off_always_works": {"status": "PASS", "evidence": "PUT /api/trainer/availability {isAvailable:false} → 200 always"},
+    "admin_verifications_pending_no_photo": {"status": "PASS (skipped on /pending, confirmed via detail)", "evidence": "test on /admin/verifications/pending skipped (no pending docs in DB), but GET /api/admin/verifications/{trainer_id}/detail returns steps[] of exactly [identity, background, certification, cpr, insurance, video] — no 'photo' entry. Source code confirms: /app/backend/routes/admin_routes.py L803-812 steps list, L1095-1103 step_definitions both exclude photo with iter98d Task 9 comments."},
+    "admin_payments_csv_export_regression": {"status": "PASS", "evidence": "GET /api/admin/payments/csv-export → 200 with csv content-type (test_csv_export_still_works)"},
+    "backend_regression_96_99_plus_admin_v2": {"status": "PASS", "evidence": "100 passed / 3 skipped / 0 failed across test_iteration96_corporate, 97_sprint_cd, 97c_polish, 97d_polish, 98_admin_dashboard, 99_csv_export_extras, admin_panel_v2. XML: /app/test_reports/pytest/iter101_regression.xml"},
+    "frontend_logout_route": {"status": "PASS (code-audit)", "evidence": "router.replace('/auth/login') confirmed at trainee/(tabs)/profile.tsx L266 & L288, trainer/(tabs)/profile.tsx L126, admin/dashboard.tsx L331. No intermediate /welcome route."},
+    "frontend_swipe_trainers_screen_exists": {"status": "PASS (code-audit)", "evidence": "/app/frontend/app/trainee/swipe-trainers.tsx exists (19.8KB). home.tsx L692-693 has router.push('/trainee/swipe-trainers') wired to data-testid='open-swipe-discover'."},
+    "frontend_add_your_address_banner_removed": {"status": "PASS (code-audit)", "evidence": "home.tsx L575 documents removal with iter98d Task 11 comment. No <AddressBanner> or text 'Add Your Address' present in JSX."},
+    "frontend_floating_orange_bg_on_key_screens": {"status": "PASS (code-audit)", "evidence": "FloatingOrangeBg imported and rendered in trainee/(tabs)/home.tsx, trainer/trainee-detail.tsx L159, trainee/trainer-detail.tsx L451."},
+    "frontend_back_verify_modal_testid": {"status": "PASS (code-audit)", "evidence": "VerificationsTab.tsx L352 has data-testid='back-verify-modal'. L768 has 'Open in browser' fallback link."},
+    "frontend_intro_video_cta_in_trainee_detail": {"status": "PASS (code-audit)", "evidence": "trainer/trainee-detail.tsx L344-371 conditionally renders 'Watch Intro Video' CTA when (trainee as any).introVideoUrl is set."}
+  },
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration101_cleanup.py",
+    "/app/test_reports/pytest/iter101_cleanup.xml",
+    "/app/test_reports/pytest/iter101_regression.xml"
+  ],
+  "action_items": [
+    "(Optional) Live web UI testing of swipe gestures, FloatingOrangeBg particles, vibe music auto-play, and logout route navigation requires either fixing the Expo web entry (the preview URL still returns the default 'Welcome to Expo' shell — same as iter100) or running on a device/simulator. Backend contracts are all confirmed; only the visual layer remains unverified by automation."
+  ],
+  "critical_code_review_comments": [
+    "admin_routes.py L1017 & L1072 still contain a 'photo': 'Profile Photo' key inside step_names label-translation dicts used only by /approve-step and /reject-step endpoints. These do NOT surface a photo step in any list returned to the UI — the actual document list (L803-812 steps[] and L1095-1103 step_definitions) excludes it. The leftover dict entries are dead branches (the photo stepId can never be sent by the UI anymore), so functionally benign, but worth cleaning up for clarity.",
+    "Test trainer test_trainer_iter25 has verificationStatus='rejected' and tier=None in DB, so without the new test's direct-DB seed mutation, the trainer is invisible to /trainers/nearby. Real users would expect an admin to approve. Not a bug, just a seeding observation.",
+    "Preview web URL (https://highlight-vibe-bugs.preview.emergentagent.com/) continues to serve the Expo default Welcome page. Until the expo web entry is fixed, no Playwright-based UI verification is possible against the preview host. Suggest E1 investigate /app/frontend/index.js / app/_layout.tsx web-entry resolution and/or expo router web build config."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration101_cleanup.py (NEW)"
+  ],
+  "success_rate": {"backend": "100% (10/10 non-skipped on new suite + 100/100 non-skipped on regression)", "frontend": "Code-audit only — all required hooks present; visual fidelity unverified due to preview env"},
+  "test_credentials": "From /app/memory/test_credentials.md — admin@rapidreps.com/admin123, test_trainee_iter25@test.com/Test123!, test_trainer_iter25@test.com/Test123!",
+  "seed_data_creation": "Temporary direct-DB mutation of trainer_profiles for test_trainer_iter25 (verificationStatus, tier, isAvailable, lat/lng) during /trainers/nearby test; restored in test finally block.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All 7 backend contracts from this iter are validated by /app/backend/tests/test_iteration101_cleanup.py. The 1 skipped sub-test (test_documents_does_not_contain_photo on /pending) is skipped only because there are no pending verifications in this DB; equivalent assertion runs against /admin/verifications/{tid}/detail and PASSES. Regression suite is clean. The Expo web preview shell renders Welcome to Expo only — needs E1 to investigate the web-entry resolution to enable Playwright UI testing.",
+  "rca of the issue": "N/A — no failures detected."
+}

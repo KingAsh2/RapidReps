@@ -19,6 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { chatAPI } from '../../src/services/api';
 import { UserAvatar } from '../../src/components/UserAvatar';
+import FloatingOrangeBg from '../../src/components/FloatingOrangeBg';
 
 // Brand colors
 const COLORS = {
@@ -215,6 +216,7 @@ export default function ChatScreen() {
       />
 
       <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <FloatingOrangeBg />
         {/* Header */}
         <Animated.View
           style={[

@@ -17,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../../src/contexts/AuthContext';
+import FloatingOrangeBg from '../../../src/components/FloatingOrangeBg';
 import { useAlert } from '../../../src/contexts/AlertContext';
 import { useNotifications } from '../../../src/contexts/NotificationContext';
 import { traineeAPI } from '../../../src/services/api';
@@ -227,6 +228,9 @@ export default function SessionsScreen() {
         end={{ x: 0, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
+
+      {/* iter98d (Task 12): floating orange embers */}
+      <FloatingOrangeBg />
 
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         {/* Header */}

@@ -16,6 +16,8 @@ import {
   Animated,
   Image,
   Dimensions,
+  Platform,
+  Linking,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { traineeAPI, chatAPI } from '../../src/services/api';
@@ -30,6 +32,7 @@ import { TrainerVibePlayer } from '../../src/components/TrainerVibePlayer';
 import { HighlightReel } from '../../src/components/HighlightReel';
 import { TrainerHeroVideoPreview } from '../../src/components/TrainerHeroVideoPreview';
 import { PersonalityTagBadge } from '../../src/components/PersonalityTagBadge';
+import FloatingOrangeBg from '../../src/components/FloatingOrangeBg';
 
 const { width } = Dimensions.get('window');
 
@@ -153,6 +156,7 @@ export default function TraineeDetailScreen() {
       <View style={styles.container}>
         <LinearGradient colors={['#0A0E1A', '#141929']} style={StyleSheet.absoluteFill} />
         <SafeAreaView style={styles.safeArea}>
+      <FloatingOrangeBg />
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={COLORS.orangeHot} />
             <Text style={styles.loadingText}>Loading profile...</Text>
@@ -335,6 +339,42 @@ export default function TraineeDetailScreen() {
                 <HighlightReel highlights={highlights} trainerName={fullName} />
               </View>
             )}
+
+            {/* iter98d (Task 10): Intro video — visible to admin + any trainer viewing */}
+            {(trainee as any).introVideoUrl ? (
+              <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
+                <TouchableOpacity
+                  onPress={() => {
+                    const url = (trainee as any).introVideoUrl;
+                    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                      window.open(url, '_blank', 'noopener,noreferrer');
+                    } else {
+                      Linking.openURL(url).catch(() => {});
+                    }
+                  }}
+                  data-testid="open-intro-video"
+                  style={{
+                    flexDirection: 'row', alignItems: 'center', gap: 10,
+                    paddingHorizontal: 14, paddingVertical: 12, borderRadius: 14,
+                    backgroundColor: 'rgba(255,106,0,0.15)',
+                    borderWidth: 1, borderColor: 'rgba(255,106,0,0.4)',
+                  }}
+                >
+                  <View style={{
+                    width: 36, height: 36, borderRadius: 18,
+                    backgroundColor: '#FF6A00',
+                    justifyContent: 'center', alignItems: 'center',
+                  }}>
+                    <Ionicons name="play" size={18} color="#FFFFFF" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 14, fontWeight: '800', color: '#FFFFFF' }}>Watch Intro Video</Text>
+                    <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginTop: 1 }}>Personal intro from {fullName.split(' ')[0]}</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color="#FF6A00" />
+                </TouchableOpacity>
+              </View>
+            ) : null}
 
             {/* Instagram */}
             <View style={{ paddingHorizontal: 20, marginBottom: 4 }}>

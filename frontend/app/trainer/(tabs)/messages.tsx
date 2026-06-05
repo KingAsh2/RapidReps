@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { chatAPI } from '../../../src/services/api';
 import { DS } from '../../../src/theme/designSystem';
+import FloatingOrangeBg from '../../../src/components/FloatingOrangeBg';
 
 const COLORS = {
   orange: DS.colors.orange,
@@ -143,6 +144,7 @@ export default function TrainerMessagesTab() {
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
       <LinearGradient colors={['rgba(247,147,30,0.9)', 'rgba(247,147,30,0.8)', 'rgba(255,165,38,0.75)']} style={StyleSheet.absoluteFill} />
       <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <FloatingOrangeBg />
         <Animated.View style={[styles.header, { opacity: headerAnim, transform: [{ translateY: headerAnim.interpolate({ inputRange: [0, 1], outputRange: [-30, 0] }) }] }]}>
           <Text style={styles.headerTitle}>MESSAGES</Text>
           <Text style={styles.countText}>{conversations.length} conversation{conversations.length !== 1 ? 's' : ''}</Text>

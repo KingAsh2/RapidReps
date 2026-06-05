@@ -343,8 +343,25 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
         <View style={s.modalOverlay}>
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={s.modalContent}>
             <ScrollView showsVerticalScrollIndicator={false}>
-              <View style={s.modalTop}>
-                <Text style={s.modalTitle}>Verification Review</Text>
+              {/* iter98d (Task 8): explicit back arrow at left of modal header so admins
+                  can return to the verifications list with a familiar back gesture.
+                  Functionally same as close-X but visibly anchored to the left. */}
+              <View style={[s.modalTop, { gap: 8 }]}>
+                <TouchableOpacity
+                  onPress={() => { setVerificationDetailVisible(false); setShowRejectInput(false); setVerificationDetail(null); }}
+                  data-testid="back-verify-modal"
+                  accessibilityLabel="Back to verifications list"
+                  accessibilityRole="button"
+                  style={{
+                    width: 40, height: 40, borderRadius: 20,
+                    backgroundColor: 'rgba(255,255,255,0.08)',
+                    borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',
+                    justifyContent: 'center', alignItems: 'center',
+                  }}
+                >
+                  <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+                </TouchableOpacity>
+                <Text style={[s.modalTitle, { flex: 1, textAlign: 'center', color: '#FFFFFF' }]}>Verification Review</Text>
                 <TouchableOpacity onPress={() => { setVerificationDetailVisible(false); setShowRejectInput(false); setVerificationDetail(null); }} data-testid="close-verify-modal">
                   <Ionicons name="close-circle" size={28} color={C.gray} />
                 </TouchableOpacity>

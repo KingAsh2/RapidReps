@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { chatAPI } from '../../../src/services/api';
 import { DS } from '../../../src/theme/designSystem';
+import FloatingOrangeBg from '../../../src/components/FloatingOrangeBg';
 
 // Brand colors — iter95d: sourced from unified DS tokens
 const COLORS = {
@@ -207,6 +208,7 @@ export default function MessagesTab() {
       />
 
       <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <FloatingOrangeBg />
         {/* Header */}
         <Animated.View
           style={[

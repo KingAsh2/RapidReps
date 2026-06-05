@@ -28,6 +28,7 @@ import { TrainerVibePlayer } from '../../src/components/TrainerVibePlayer';
 import { HighlightReel } from '../../src/components/HighlightReel';
 import { TrainerHeroVideoPreview } from '../../src/components/TrainerHeroVideoPreview';
 import { PersonalityTagBadge } from '../../src/components/PersonalityTagBadge';
+import FloatingOrangeBg from '../../src/components/FloatingOrangeBg';
 
 const { width, height: screenHeight } = Dimensions.get('window');
 const LOGO = require('../../assets/images/rapidreps-logo.png');
@@ -447,6 +448,7 @@ export default function TrainerDetailScreen() {
       />
 
       <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <FloatingOrangeBg />
         {/* Header */}
         <Animated.View style={[styles.header, { opacity: headerOpacity }]}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>

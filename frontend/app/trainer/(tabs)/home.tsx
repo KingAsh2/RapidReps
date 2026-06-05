@@ -33,6 +33,7 @@ import { toast } from '../../../src/utils/toast';
 import { haptic } from '../../../src/utils/haptics';
 import PeopleSearchBar from '../../../src/components/PeopleSearchBar';
 import { DS } from '../../../src/theme/designSystem';
+import FloatingOrangeBg from '../../../src/components/FloatingOrangeBg';
 
 const { width } = Dimensions.get('window');
 
@@ -521,6 +522,7 @@ export default function TrainerHomeScreen() {
         />
 
         <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <FloatingOrangeBg />
           {/* Header with Logo and Actions — matching trainee */}
           <View style={styles.header}>
             <View style={styles.headerLogo}>

@@ -102,33 +102,53 @@ async def update_trainer_availability(
     update: AvailabilityUpdate,
     current_user: dict = Depends(get_current_user)
 ):
-    """Toggle trainer availability status"""
+    """Toggle trainer availability status.
+
+    iter98d (Task 7): When toggling ON, if the request doesn't include fresh
+    coords, fall back to the trainer's stored profile coords (set via Update
+    Location or geocoded from their saved address) so they actually show up in
+    proximity search for trainees. Without this, trainers who mark themselves
+    available without sending location are silently invisible.
+    """
     if UserRole.TRAINER not in current_user.get('roles', []):
         raise HTTPException(status_code=403, detail="Trainer access required")
-    
+
     user_id = str(current_user['_id'])
-    
+
     update_data = {
         'isAvailable': update.isAvailable,
         'lastAvailabilityChange': datetime.utcnow()
     }
-    
-    # If going available and location provided, update that too
-    if update.isAvailable and update.latitude and update.longitude:
-        update_data['latitude'] = update.latitude
-        update_data['longitude'] = update.longitude
-        update_data['lastLocationUpdate'] = datetime.utcnow()
-    
+
+    if update.isAvailable:
+        # Prefer fresh coords from the request; otherwise use stored ones
+        if update.latitude and update.longitude:
+            update_data['latitude'] = update.latitude
+            update_data['longitude'] = update.longitude
+            update_data['lastLocationUpdate'] = datetime.utcnow()
+        else:
+            existing = await db.trainer_profiles.find_one(
+                {'userId': user_id},
+                {'latitude': 1, 'longitude': 1}
+            )
+            if not existing or existing.get('latitude') is None or existing.get('longitude') is None:
+                # Trainer has no location at all → tell them what to do
+                raise HTTPException(
+                    status_code=400,
+                    detail="Please enable location or set your home address before going available — trainees can't find you on the map without it."
+                )
+            # Stored coords exist → keep them, just set availability
+
     result = await db.trainer_profiles.update_one(
         {'userId': user_id},
         {'$set': update_data}
     )
-    
+
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Trainer profile not found")
-    
+
     return {
-        "success": True, 
+        "success": True,
         "isAvailable": update.isAvailable,
         "message": "You are now available for sessions" if update.isAvailable else "You are now offline"
     }
@@ -512,8 +532,28 @@ async def get_nearby_trainers(
         nearby_trainers.append({
             'id': str(trainer['_id']),
             'trainerId': trainer['userId'],
+            'userId': trainer['userId'],
             'fullName': full_name,
             'avatarUrl': trainer.get('avatarUrl'),
+            # iter98d (Task 7): expose richer fields so the swipe-discover screen
+            # can render full profiles without a 2nd round-trip per card.
+            'profilePhoto': trainer.get('profilePhoto') or trainer.get('avatarUrl'),
+            'accentColor': trainer.get('accentColor'),
+            'accentColorAuto': trainer.get('accentColorAuto'),
+            'personalityTag': trainer.get('personalityTag'),
+            'vibeTrackTitle': trainer.get('vibeTrackTitle'),
+            'vibeArtistName': trainer.get('vibeArtistName'),
+            'vibePreviewUrl': trainer.get('vibePreviewUrl'),
+            'vibeTrackId': trainer.get('vibeTrackId'),
+            'vibeArtworkUrl': trainer.get('vibeArtworkUrl'),
+            'specialties': trainer.get('specialties') or trainer.get('trainingStyles') or [],
+            'outdoor60Cents': trainer.get('outdoor60Cents'),
+            'outdoorRateCents': trainer.get('outdoorRateCents'),
+            'rating': trainer.get('averageRating', 0.0),
+            'totalSessions': trainer.get('totalSessionsCompleted', 0),
+            # Convenience aliases used by the swipe-discover card
+            'distance': round(distance, 1),
+            # Existing fields preserved for the map view
             'latitude': trainer.get('latitude'),
             'longitude': trainer.get('longitude'),
             'isAvailable': True,

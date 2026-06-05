@@ -31,6 +31,7 @@ import { TrainerVibePlayer } from '../../../src/components/TrainerVibePlayer';
 import { stopAllAudio } from '../../../src/utils/audioCoordinator';
 import { AccentColorPicker } from '../../../src/components/AccentColorPicker';
 import { DS } from '../../../src/theme/designSystem';
+import FloatingOrangeBg from '../../../src/components/FloatingOrangeBg';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -178,6 +179,7 @@ export default function TrainerProfileScreen() {
       <LinearGradient colors={['rgba(10, 14, 26, 0.92)', 'rgba(17, 24, 39, 0.88)']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} />
 
       <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <FloatingOrangeBg />
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Profile</Text>
           <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -235,6 +237,26 @@ export default function TrainerProfileScreen() {
                   <View style={[styles.statusDot, { backgroundColor: profile?.isAvailable ? COLORS.success : COLORS.error }]} />
                   <Text style={styles.statusText}>{profile?.isAvailable ? 'Available' : 'Unavailable'}</Text>
                 </View>
+
+                {/* iter98d (Task 7): warn trainer when they're "Available" but invisible
+                    to trainees because their location wasn't shared / saved. */}
+                {profile?.isAvailable && (profile?.latitude === null || profile?.latitude === undefined) ? (
+                  <TouchableOpacity
+                    onPress={() => router.push('/trainer/edit-profile')}
+                    style={{
+                      marginTop: 10, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10,
+                      backgroundColor: 'rgba(255,179,0,0.14)', borderWidth: 1, borderColor: 'rgba(255,179,0,0.45)',
+                      flexDirection: 'row', alignItems: 'center', gap: 6,
+                    }}
+                    data-testid="location-required-warning"
+                  >
+                    <Ionicons name="warning" size={14} color="#FFB300" />
+                    <Text style={{ flex: 1, fontSize: 11, fontWeight: '700', color: '#FFB300' }}>
+                      Enable location to appear in nearby search
+                    </Text>
+                    <Ionicons name="chevron-forward" size={14} color="#FFB300" />
+                  </TouchableOpacity>
+                ) : null}
 
                 {/* Personality Tag Display */}
                 {profile?.personalityTag && (

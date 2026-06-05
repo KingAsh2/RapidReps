@@ -20,6 +20,7 @@ import axios from 'axios';
 import { useRouter } from 'expo-router';
 import { toast } from '../../../src/utils/toast';
 import { trainerAPI } from '../../../src/services/api';
+import FloatingOrangeBg from '../../../src/components/FloatingOrangeBg';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BAR_MAX_HEIGHT = 100;
@@ -138,6 +139,7 @@ export default function TrainerEarningsScreen() {
       <LinearGradient colors={['rgba(10, 14, 26, 0.92)', 'rgba(17, 24, 39, 0.88)']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} />
 
       <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <FloatingOrangeBg />
         <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
           {/* Header */}
           <View style={styles.header}>
