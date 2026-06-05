@@ -386,27 +386,25 @@ async def get_verification_status(current_user: dict = Depends(get_current_user)
     field_map = {
         'identity': 'governmentIdUploaded', 'background': 'backgroundCheckPassed',
         'certification': 'fitnessCertUploaded', 'cpr': 'cprAedCertUploaded',
-        'insurance': 'insuranceUploaded', 'photo': 'profilePhotoUploaded', 'video': 'introVideoUploaded',
+        'insurance': 'insuranceUploaded', 'video': 'introVideoUploaded',
     }
+    # iter98g: 'photo' step removed from verification flow entirely (Task 9 cleanup).
+    # Profile photos go live without admin gating; never appear in trainer's checklist.
     verification_status = profile.get('verificationStatus', 'pending')
 
-    # Per-step status derivation:
-    #  - verified profile → every UPLOADED step shows as 'approved'
-    #  - rejected profile → every UPLOADED step shows as 'rejected' (so trainer knows to re-submit)
-    #  - otherwise (pending/under_review) → 'submitted' if uploaded, else 'pending'
-    # This was the root cause of "stuck on Under Review after admin approves" — the old
-    # implementation always returned 'submitted' for uploaded docs, never reading
-    # verificationStatus to bubble approval down to per-step badges.
+    # iter98g: admin's overall verification decision is the SINGLE SOURCE OF TRUTH.
+    # When admin marks the profile 'verified', every step is treated as 'approved' —
+    # even ones the trainer never uploaded — because admin's holistic approval
+    # supersedes per-doc tracking. Old behavior left un-uploaded steps stuck on
+    # "Not Started" and trainers thought they were still incomplete after admin verified.
     if verification_status == 'verified':
-        uploaded_state = 'approved'
+        steps = {step_id: 'approved' for step_id in field_map.keys()}
     elif verification_status == 'rejected':
-        uploaded_state = 'rejected'
+        # On rejection, uploaded steps reflect 'rejected' so trainer knows to resubmit
+        steps = {step_id: ('rejected' if profile.get(field, False) else 'pending') for step_id, field in field_map.items()}
     else:
-        uploaded_state = 'submitted'
-
-    steps = {}
-    for step_id, field in field_map.items():
-        steps[step_id] = uploaded_state if profile.get(field, False) else 'pending'
+        # Pending / under_review — uploaded ⇒ 'submitted', else 'pending'
+        steps = {step_id: ('submitted' if profile.get(field, False) else 'pending') for step_id, field in field_map.items()}
 
     can_go_live, missing = check_trainer_can_go_live(profile)
     rejection_reason = profile.get('rejectionReason')
@@ -414,6 +412,9 @@ async def get_verification_status(current_user: dict = Depends(get_current_user)
     return {
         'steps': steps, 'canGoLive': can_go_live, 'missingRequirements': missing,
         'verificationStatus': verification_status, 'rejectionReason': rejection_reason,
+        # iter98g: surface boolean overall flag for frontend short-circuit
+        'profileApproved': verification_status == 'verified',
+        'overallStatus': verification_status,
         'rejectedAt': profile.get('rejectedAt'), 'verifiedAt': profile.get('verifiedAt'),
     }
 

@@ -239,13 +239,8 @@ const VERIFICATION_STEPS = [
     icon: 'document-text',
     required: false,
   },
-  {
-    id: 'photo',
-    title: 'Profile Photo',
-    description: 'Upload a professional headshot for your profile',
-    icon: 'camera',
-    required: true,
-  },
+  // iter98g: 'Profile Photo' step removed from verification flow.
+  // Photos go live immediately — no admin gating in either trainer view or admin checklist.
   {
     id: 'video',
     title: 'Intro Video',
@@ -260,6 +255,9 @@ type StepStatus = 'pending' | 'uploading' | 'submitted' | 'approved' | 'rejected
 export default function TrainerVerificationScreen() {
   const router = useRouter();
   const [verificationStatus, setVerificationStatus] = useState<Record<string, StepStatus>>({});
+  // iter98g: admin's overall decision is the source of truth — overrides per-doc statuses
+  const [overallApproved, setOverallApproved] = useState(false);
+  const [overallStatus, setOverallStatus] = useState<string>('pending');
   const [expandedStep, setExpandedStep] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [holdProgress] = useState(new Animated.Value(0));
@@ -284,6 +282,16 @@ export default function TrainerVerificationScreen() {
       const response = await api.get('/trainer/verification-status');
       const steps = response.data.steps || {};
       setVerificationStatus(steps);
+
+      // iter98g: Admin's overall verification is source of truth.
+      // Surface it regardless of per-document granular states.
+      const rawStatus = response.data.verificationStatus || response.data.overallStatus || '';
+      const isApproved = response.data.profileApproved === true
+        || rawStatus === 'verified'
+        || rawStatus === 'approved';
+      setOverallStatus(rawStatus || 'pending');
+      setOverallApproved(isApproved);
+
       // Check if user has previously submitted
       const anySubmitted = Object.values(steps).some((s: any) => s === 'submitted' || s === 'approved');
       if (anySubmitted) setHasEverSubmitted(true);
@@ -596,32 +604,49 @@ export default function TrainerVerificationScreen() {
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <Animated.View style={{ opacity: fadeAnim }}>
-            {/* Progress Card */}
-            <View style={styles.progressCard}>
-              <View style={styles.progressHeader}>
-                <Ionicons name="shield-checkmark" size={32} color={'#FF6A00'} />
-                <View style={styles.progressTextContainer}>
-                  <Text style={styles.progressTitle}>Verification Progress</Text>
-                  <Text style={styles.progressSubtitle}>
-                    {completedCount} of {VERIFICATION_STEPS.length} steps completed
+            {/* iter98g: Admin verification = single source of truth.
+                When approved, surface a hero approval card and hide the
+                "% complete" hint that would otherwise confuse the trainer. */}
+            {overallApproved ? (
+              <View style={[styles.progressCard, { borderWidth: 1, borderColor: 'rgba(0,214,143,0.55)', backgroundColor: 'rgba(0,214,143,0.10)' }]}>
+                <View style={styles.progressHeader}>
+                  <Ionicons name="shield-checkmark" size={32} color={'#00D68F'} />
+                  <View style={styles.progressTextContainer}>
+                    <Text style={[styles.progressTitle, { color: '#00D68F' }]}>Verified by Admin</Text>
+                    <Text style={styles.progressSubtitle}>
+                      You're cleared to accept clients. You'll appear in nearby search whenever you mark yourself Available.
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            ) : (
+              /* Progress Card */
+              <View style={styles.progressCard}>
+                <View style={styles.progressHeader}>
+                  <Ionicons name="shield-checkmark" size={32} color={'#FF6A00'} />
+                  <View style={styles.progressTextContainer}>
+                    <Text style={styles.progressTitle}>Verification Progress</Text>
+                    <Text style={styles.progressSubtitle}>
+                      {completedCount} of {VERIFICATION_STEPS.length} steps completed
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.progressBarContainer}>
+                  <View style={styles.progressBarBg}>
+                    <View style={[styles.progressBarFill, { width: `${progress}%` }]} />
+                  </View>
+                  <Text style={styles.progressPercent}>{Math.round(progress)}%</Text>
+                </View>
+
+                <View style={styles.infoBox}>
+                  <Ionicons name="information-circle" size={20} color={'#FF6A00'} />
+                  <Text style={styles.infoText}>
+                    Complete all required steps to start accepting clients. Verification typically takes 1-3 business days.
                   </Text>
                 </View>
               </View>
-
-              <View style={styles.progressBarContainer}>
-                <View style={styles.progressBarBg}>
-                  <View style={[styles.progressBarFill, { width: `${progress}%` }]} />
-                </View>
-                <Text style={styles.progressPercent}>{Math.round(progress)}%</Text>
-              </View>
-
-              <View style={styles.infoBox}>
-                <Ionicons name="information-circle" size={20} color={'#FF6A00'} />
-                <Text style={styles.infoText}>
-                  Complete all required steps to start accepting clients. Verification typically takes 1-3 business days.
-                </Text>
-              </View>
-            </View>
+            )}
 
             <Text style={styles.sectionTitle}>Required Documents</Text>
 
