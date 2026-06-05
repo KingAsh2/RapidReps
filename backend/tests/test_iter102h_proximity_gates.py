@@ -91,3 +91,49 @@ def test_trainer_travel_radius_excludes_far_trainees():
 
     # Reset trainer back to 25 mi so other tests aren't affected
     _set_test_trainer_travel_radius(25)
+
+
+def test_unset_trainer_travel_radius_is_unlimited():
+    """iter102i: if a trainer never set `travelRadiusMiles`, the field is
+    treated as unlimited (no restriction). This prevents the regression where
+    pre-existing trainers were silently capped at 10 mi.
+    """
+    import asyncio
+    from motor.motor_asyncio import AsyncIOMotorClient
+    client = AsyncIOMotorClient(os.environ["MONGO_URL"])
+    db = client[os.environ["DB_NAME"]]
+
+    async def _unset():
+        u = await db.users.find_one({"email": "test_trainer_iter25@test.com"})
+        await db.trainer_profiles.update_one(
+            {"userId": str(u["_id"])},
+            {
+                "$unset": {"travelRadiusMiles": ""},
+                "$set": {
+                    "isAvailable": True,
+                    "latitude": 33.749,
+                    "longitude": -84.388,
+                    "isVerified": True,
+                    "verificationStatus": "verified",
+                    "canBeListed": True,
+                    "canGoLive": True,
+                },
+            },
+        )
+    asyncio.run(_unset())
+    time.sleep(0.2)
+
+    # Trainee ~10 mi away — should STILL see the trainer because travelRadiusMiles is unset
+    r = requests.get(
+        f"{BASE_URL}/api/trainers/nearby?latitude=33.7&longitude=-84.50&radius_miles=25",
+        headers=_trainee_headers(),
+        timeout=15,
+    )
+    assert r.status_code == 200, r.text
+    names = [t.get("fullName") for t in r.json().get("trainers", [])]
+    assert "Test Trainer" in names, (
+        f"trainer with unset travelRadiusMiles should be unlimited, but was hidden: {names}"
+    )
+
+    # restore the field
+    _set_test_trainer_travel_radius(25)

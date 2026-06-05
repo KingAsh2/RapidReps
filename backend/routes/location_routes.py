@@ -463,16 +463,16 @@ async def get_nearby_trainers(
         if distance > radius_miles:
             continue
 
-        # iter102h: also honor the trainer's own willing-to-travel radius. If
-        # the trainee is further than the trainer's `travelRadiusMiles`, the
-        # trainer is hidden — a trainer who only wants to travel 5 mi should
-        # never be shown to a trainee 12 mi away. Default 10 mi mirrors the
-        # schema default in TrainerProfile.travelRadiusMiles.
+        # iter102h (refined iter102i): honor the trainer's own willing-to-travel
+        # radius ONLY when they've explicitly set one. Many existing trainer
+        # profiles have `travelRadiusMiles` missing/None — treating that as a
+        # 10 mi cap silently hid every such trainer from trainees outside
+        # ~10 mi (root cause of the "trainee can't see my Available trainer"
+        # regression). Missing/None → unlimited; explicit value → enforced.
         trainer_radius = trainer.get('travelRadiusMiles')
-        if trainer_radius is None:
-            trainer_radius = 10
-        if distance > trainer_radius:
-            continue
+        if isinstance(trainer_radius, (int, float)) and trainer_radius > 0:
+            if distance > trainer_radius:
+                continue
 
         nearby_trainers_data.append({
             'trainer': trainer,
@@ -587,3 +587,92 @@ async def get_nearby_trainers(
         "radiusMiles": radius_miles
     }
 
+
+@router.get("/trainer/visibility-status")
+async def trainer_visibility_status(current_user: dict = Depends(get_current_user)):
+    """iter102i: 'Why am I hidden?' diagnostic for trainers.
+
+    Returns the 5 visibility gates with pass/fail + a short reason for each.
+    Used by the trainer-side UI card so trainers can self-diagnose why they
+    aren't appearing in trainees' Nearby/Map/Swipe surfaces.
+    """
+    if UserRole.TRAINER not in current_user.get('roles', []):
+        raise HTTPException(status_code=403, detail="Trainer access required")
+
+    user_id = str(current_user['_id'])
+    p = await db.trainer_profiles.find_one({'userId': user_id})
+    if not p:
+        raise HTTPException(status_code=404, detail="Trainer profile not found")
+
+    gates = []
+
+    # 1) Available
+    is_avail = bool(p.get('isAvailable'))
+    gates.append({
+        'id': 'available',
+        'label': 'Available',
+        'pass': is_avail,
+        'detail': 'You are currently Available.' if is_avail
+                  else 'Toggle Available on your home screen so trainees can find you.',
+    })
+
+    # 2) Live GPS coords
+    has_gps = p.get('latitude') is not None and p.get('longitude') is not None
+    gates.append({
+        'id': 'gps',
+        'label': 'Live location',
+        'pass': has_gps,
+        'detail': 'Live GPS is stored.' if has_gps
+                  else 'No live GPS on file. Toggle Available with Location permission granted to RapidReps.',
+    })
+
+    # 3) Admin-verified
+    is_verified = bool(p.get('isVerified')) or p.get('verificationStatus') == 'verified'
+    gates.append({
+        'id': 'verified',
+        'label': 'Admin verified',
+        'pass': is_verified,
+        'detail': 'Approved by Admin.' if is_verified
+                  else 'Awaiting Admin verification — complete the Verification flow and wait for review.',
+    })
+
+    # 4) Listable & live (admin approval also flips these)
+    can_listed = bool(p.get('canBeListed'))
+    can_live = bool(p.get('canGoLive'))
+    listed_pass = can_listed and can_live
+    gates.append({
+        'id': 'listable',
+        'label': 'Listed in search',
+        'pass': listed_pass,
+        'detail': 'Listing flags are on.' if listed_pass
+                  else 'Listing/live flags are off — usually flips automatically once Admin verifies.',
+    })
+
+    # 5) Travel radius — refined iter102i: missing/None = unlimited (no restriction)
+    travel = p.get('travelRadiusMiles')
+    if isinstance(travel, (int, float)) and travel > 0:
+        travel_detail = (
+            f'You travel up to {int(travel)} mi. Trainees farther than this won\'t see you '
+            f'— increase your travel radius in Edit Profile to expand reach.'
+        )
+    else:
+        travel_detail = 'No travel limit set — you appear for any trainee inside their own radius.'
+    gates.append({
+        'id': 'travel_radius',
+        'label': 'Travel radius',
+        'pass': True,  # informational, never blocks
+        'detail': travel_detail,
+        'value': travel,
+        'isInformational': True,
+    })
+
+    visible = all(g['pass'] for g in gates if not g.get('isInformational'))
+
+    return {
+        'visible': visible,
+        'gates': gates,
+        'summary': (
+            'You are visible to nearby trainees.' if visible
+            else 'You are currently hidden. Fix the failing checks below.'
+        ),
+    }
