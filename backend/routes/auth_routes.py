@@ -133,7 +133,6 @@ async def signup(request: Request, user_data: UserSignUp):
 @limiter.limit("60/minute")
 async def login(request: Request, credentials: UserLogin):
     """Login user"""
-    import logging
     logging.info(f"LOGIN ATTEMPT: email='{credentials.email}' from={request.client.host if request.client else 'unknown'}")
     
     # Find user
@@ -176,25 +175,43 @@ async def get_me(current_user: dict = Depends(get_current_user)):
     # icon shows their actual thumbnail instead of falling back to initials.
     avatar_url = current_user.get('avatarUrl')
     profile_photo = current_user.get('profilePhoto')
+    accent_color = None  # iter102k: surface brand accent for the global glow overlay
     roles = current_user.get('roles') or []
     if not avatar_url and 'trainer' in roles:
         tp = await db.trainer_profiles.find_one(
             {'userId': str(current_user['_id'])},
-            {'avatarUrl': 1, 'profilePhoto': 1}
+            {'avatarUrl': 1, 'profilePhoto': 1, 'accentColor': 1, 'accentColorAuto': 1}
         )
         if tp:
             avatar_url = tp.get('avatarUrl') or tp.get('profilePhoto')
             if not profile_photo:
                 profile_photo = tp.get('profilePhoto') or tp.get('avatarUrl')
+            accent_color = tp.get('accentColor') or tp.get('accentColorAuto')
+    elif 'trainer' in roles:
+        tp = await db.trainer_profiles.find_one(
+            {'userId': str(current_user['_id'])},
+            {'accentColor': 1, 'accentColorAuto': 1}
+        )
+        if tp:
+            accent_color = tp.get('accentColor') or tp.get('accentColorAuto')
     if not avatar_url and 'trainee' in roles:
         tp = await db.trainee_profiles.find_one(
             {'userId': str(current_user['_id'])},
-            {'avatarUrl': 1, 'profilePhoto': 1}
+            {'avatarUrl': 1, 'profilePhoto': 1, 'accentColor': 1, 'accentColorAuto': 1}
         )
         if tp:
             avatar_url = tp.get('avatarUrl') or tp.get('profilePhoto')
             if not profile_photo:
                 profile_photo = tp.get('profilePhoto') or tp.get('avatarUrl')
+            if not accent_color:
+                accent_color = tp.get('accentColor') or tp.get('accentColorAuto')
+    elif 'trainee' in roles and not accent_color:
+        tp = await db.trainee_profiles.find_one(
+            {'userId': str(current_user['_id'])},
+            {'accentColor': 1, 'accentColorAuto': 1}
+        )
+        if tp:
+            accent_color = tp.get('accentColor') or tp.get('accentColorAuto')
     return UserResponse(
         id=str(current_user['_id']),
         fullName=current_user['fullName'],
@@ -208,6 +225,8 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         # iter98c: surface legal vs display name for own-profile editor
         legalName=current_user.get('legalName') or current_user['fullName'],
         displayName=current_user.get('displayName') or current_user['fullName'],
+        # iter102k: global accent for app-wide glow overlay
+        accentColor=accent_color,
     )
 
 

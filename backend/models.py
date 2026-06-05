@@ -199,6 +199,11 @@ class UserResponse(BaseModel):
     # iter98c: separate legal vs display names
     legalName: Optional[str] = None     # Original verified legal name (admin-visible only). Never overwritten.
     displayName: Optional[str] = None   # User-editable public name. Mirrors fullName when set.
+    # iter102k: brand accent color used to paint the global app-glow overlay.
+    # Sourced from the user's trainer_profile / trainee_profile (manual pick or
+    # auto-extracted from the avatar). Defaults to RapidReps orange on the FE
+    # if absent.
+    accentColor: Optional[str] = None
 
 class TokenResponse(BaseModel):
     access_token: str

@@ -11,6 +11,8 @@ import { ErrorBoundary } from '../src/components/ErrorBoundary';
 import IntroVideoSplash from '../src/components/IntroVideoSplash';
 // iter102f: floating orange embers on every screen globally
 import FloatingOrangeBg from '../src/components/FloatingOrangeBg';
+// iter102k: user-chosen brand color glow around every screen + menu
+import AccentGlowOverlay from '../src/components/AccentGlowOverlay';
 import Toast, { BaseToast } from 'react-native-toast-message';
 import * as Sentry from '@sentry/react-native';
 import { useFonts, Oswald_700Bold, Oswald_600SemiBold, Oswald_400Regular } from '@expo-google-fonts/oswald';
@@ -114,6 +116,10 @@ function RootLayout() {
                       <FloatingOrangeBg />
                     </View>
                   )}
+                  {/* iter102k: user-chosen brand accent painted as a soft glow
+                      around all four edges + the bottom menu. Reads
+                      user.accentColor from AuthContext — defaults to orange. */}
+                  {introDone && <AccentGlowOverlay />}
                 </AlertProvider>
               </SoundProvider>
             </NotificationProvider>

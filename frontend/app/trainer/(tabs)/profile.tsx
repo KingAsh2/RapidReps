@@ -52,7 +52,7 @@ const backgroundImage = require('../../../assets/images/bg-spin-class.png');
 
 export default function TrainerProfileScreen() {
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -175,6 +175,9 @@ export default function TrainerProfileScreen() {
       );
       setProfile({ ...profile, accentColor: color });
       setShowColorPicker(false);
+      // iter102k: refresh AuthContext.user so the global AccentGlowOverlay
+      // re-paints in the new color immediately.
+      try { await refreshUser?.(); } catch { /* non-blocking */ }
       toast.success('Brand color updated');
     } catch (e) {
       console.error('Color update error:', e);
