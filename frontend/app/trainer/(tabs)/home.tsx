@@ -20,6 +20,7 @@ import { useAuth } from '../../../src/contexts/AuthContext';
 import { trainerAPI } from '../../../src/services/api';
 import api from '../../../src/services/api';
 import TierCelebrationSheet from '../../../src/components/TierCelebrationSheet';
+import VisibilityStatusCard from '../../../src/components/VisibilityStatusCard';
 import { UserAvatar } from '../../../src/components/UserAvatar';
 import { Session, SessionStatus } from '../../../src/types';
 import { Ionicons } from '@expo/vector-icons';
@@ -730,6 +731,14 @@ export default function TrainerHomeScreen() {
                 </LinearGradient>
               </Animated.View>
             )}
+
+            {/* iter102i: visibility diagnostic — auto-expands when hidden */}
+            <VisibilityStatusCard
+              refreshKey={isAvailable ? 1 : 0}
+              onFixAvailability={() => {/* lives on this same screen */}}
+              onFixVerification={() => router.push('/trainer/verification')}
+              onOpenEditProfile={() => router.push('/trainer/edit-profile')}
+            />
 
             {/* Quick Actions */}
             <View style={styles.quickActionsRow}>

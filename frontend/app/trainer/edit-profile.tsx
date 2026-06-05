@@ -72,7 +72,7 @@ export default function EditTrainerProfileScreen() {
     offersInPerson: true,
     offersVirtual: false,
     sessionDurations: [30, 45, 60],
-    travelRadiusMiles: '10',
+    travelRadiusMiles: '',
     profilePhoto: '',
     cancellationPolicy: 'Free cancellation before 24 hours',
     latitude: null as number | null,
@@ -125,7 +125,7 @@ export default function EditTrainerProfileScreen() {
           offersInPerson: data.offersInPerson ?? true,
           offersVirtual: data.offersVirtual ?? false,
           sessionDurations: data.sessionDurationsOffered || [30, 45, 60],
-          travelRadiusMiles: data.travelRadiusMiles?.toString() || '10',
+          travelRadiusMiles: typeof data.travelRadiusMiles === 'number' && data.travelRadiusMiles > 0 ? String(data.travelRadiusMiles) : '',
           profilePhoto: data.profilePhoto || data.avatarUrl || '',
           cancellationPolicy: data.cancellationPolicy || 'Free cancellation before 24 hours',
           latitude: data.latitude || null,
@@ -234,7 +234,11 @@ export default function EditTrainerProfileScreen() {
         offersInPerson: formData.offersInPerson,
         offersVirtual: formData.offersVirtual,
         sessionDurationsOffered: formData.sessionDurations,
-        travelRadiusMiles: parseInt(formData.travelRadiusMiles) || 10,
+        // iter102i: empty string = unlimited (no restriction). Backend treats
+        // null/missing as no cap. Any positive int is enforced.
+        travelRadiusMiles: formData.travelRadiusMiles && parseInt(formData.travelRadiusMiles) > 0
+          ? parseInt(formData.travelRadiusMiles)
+          : null,
         // Backend Pydantic model only accepts `avatarUrl`; legacy `profilePhoto` field was silently dropped, hence avatar never persisted.
         avatarUrl: formData.profilePhoto || undefined,
         profilePhoto: formData.profilePhoto || undefined,
@@ -428,28 +432,64 @@ export default function EditTrainerProfileScreen() {
                     <View style={styles.inputGroup}>
                       <Text style={styles.inputLabel}>Travel Radius</Text>
                       <View style={styles.sliderContainer}>
-                        <View style={styles.sliderValueRow}>
-                          <Ionicons name="location" size={16} color={COLORS.orange} />
-                          <Text style={styles.sliderValueText}>
-                            {formData.travelRadiusMiles} {parseInt(formData.travelRadiusMiles) === 1 ? 'mile' : 'miles'}
+                        {/* iter102i: opt-in cap. Empty value = no limit (default).
+                            Trainers can flip on a cap if they don't want to travel far. */}
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+                            <Ionicons
+                              name={formData.travelRadiusMiles ? 'location' : 'infinite'}
+                              size={16}
+                              color={COLORS.orange}
+                            />
+                            <Text style={styles.sliderValueText}>
+                              {formData.travelRadiusMiles
+                                ? `${formData.travelRadiusMiles} ${parseInt(formData.travelRadiusMiles) === 1 ? 'mile' : 'miles'}`
+                                : 'No limit'}
+                            </Text>
+                          </View>
+                          <TouchableOpacity
+                            onPress={() => setFormData({
+                              ...formData,
+                              travelRadiusMiles: formData.travelRadiusMiles ? '' : '10',
+                            })}
+                            style={{
+                              paddingHorizontal: 10,
+                              paddingVertical: 5,
+                              borderRadius: 999,
+                              borderWidth: 1,
+                              borderColor: 'rgba(255,106,0,0.4)',
+                            }}
+                            data-testid="travel-radius-toggle-cap"
+                          >
+                            <Text style={{ fontSize: 11, fontWeight: '700', color: COLORS.orange }}>
+                              {formData.travelRadiusMiles ? 'Remove limit' : 'Set limit'}
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                        {formData.travelRadiusMiles ? (
+                          <>
+                            <Slider
+                              style={{ width: '100%', height: 40 }}
+                              minimumValue={1}
+                              maximumValue={30}
+                              step={1}
+                              value={parseInt(formData.travelRadiusMiles) || 10}
+                              onValueChange={(val: number) => setFormData({ ...formData, travelRadiusMiles: val.toString() })}
+                              minimumTrackTintColor={COLORS.orange}
+                              maximumTrackTintColor="rgba(26,42,94,0.2)"
+                              thumbTintColor={COLORS.orange}
+                              data-testid="radius-slider-inline"
+                            />
+                            <View style={styles.sliderLabelsRow}>
+                              <Text style={styles.sliderLabel}>1 mi</Text>
+                              <Text style={styles.sliderLabel}>30 mi</Text>
+                            </View>
+                          </>
+                        ) : (
+                          <Text style={{ fontSize: 11, color: 'rgba(26,42,94,0.55)', marginTop: 4 }}>
+                            You'll appear for any trainee inside their own search radius.
                           </Text>
-                        </View>
-                        <Slider
-                          style={{ width: '100%', height: 40 }}
-                          minimumValue={1}
-                          maximumValue={30}
-                          step={1}
-                          value={parseInt(formData.travelRadiusMiles) || 10}
-                          onValueChange={(val: number) => setFormData({ ...formData, travelRadiusMiles: val.toString() })}
-                          minimumTrackTintColor={COLORS.orange}
-                          maximumTrackTintColor="rgba(26,42,94,0.2)"
-                          thumbTintColor={COLORS.orange}
-                          data-testid="radius-slider-inline"
-                        />
-                        <View style={styles.sliderLabelsRow}>
-                          <Text style={styles.sliderLabel}>1 mi</Text>
-                          <Text style={styles.sliderLabel}>30 mi</Text>
-                        </View>
+                        )}
                       </View>
                     </View>
                   </View>

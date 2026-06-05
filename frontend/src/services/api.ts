@@ -132,6 +132,16 @@ export const trainerAPI = {
     }
   },
 
+  // iter102i: 'Why am I hidden?' diagnostic
+  getVisibilityStatus: async (): Promise<{
+    visible: boolean;
+    gates: Array<{ id: string; label: string; pass: boolean; detail: string; value?: any; isInformational?: boolean }>;
+    summary: string;
+  }> => {
+    const response = await api.get('/trainer/visibility-status');
+    return response.data;
+  },
+
   searchTrainers: async (filters: any): Promise<TrainerProfile[]> => {
     const response = await api.get('/trainers/search', { params: filters });
     return response.data;
