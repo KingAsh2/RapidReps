@@ -559,7 +559,11 @@ async def get_nearby_trainers(
             'sessionDurationsOffered': trainer.get('sessionDurationsOffered', [30, 45, 60]),
             'bio': trainer.get('bio', ''),
             'experienceYears': trainer.get('experienceYears', 0),
-            'totalSessionsCompleted': trainer.get('totalSessionsCompleted', 0)
+            'totalSessionsCompleted': trainer.get('totalSessionsCompleted', 0),
+            # iter102g: ship a small slice of highlight media + intro video so
+            # the swipe-discover card can show a true full-profile preview.
+            'highlights': (trainer.get('highlights') or [])[:6],
+            'introVideoUrl': trainer.get('introVideoUrl'),
         })
     
     # Sort by distance

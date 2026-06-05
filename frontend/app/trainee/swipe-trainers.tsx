@@ -68,7 +68,18 @@ interface Trainer {
   vibeArtworkUrl?: string;
   isAvailable?: boolean;
   specialties?: string[];
+  // iter102g: full-profile preview fields
+  highlights?: Array<{ url: string; thumbnailUrl?: string; type: 'photo' | 'video' }>;
+  introVideoUrl?: string;
 }
+
+// iter102g: backend serves /api/files/... relative paths — Image needs absolute URL
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+const resolveUrl = (u?: string) => {
+  if (!u) return '';
+  if (u.startsWith('http://') || u.startsWith('https://')) return u;
+  return `${API_URL}${u}`;
+};
 
 export default function SwipeTrainersScreen() {
   const router = useRouter();
@@ -272,6 +283,7 @@ export default function SwipeTrainersScreen() {
 // Card component — full-bleed profile, accent-color theming
 // ============================================================
 const TrainerSwipeCard = ({ trainer, isTop }: { trainer: Trainer; isTop: boolean }) => {
+  const router = useRouter();
   const accent = trainer.accentColor || trainer.accentColorAuto || '#FF6A00';
   const fullName = trainer.fullName || 'Trainer';
   const photo = trainer.profilePhoto || trainer.avatarUrl;
@@ -370,6 +382,43 @@ const TrainerSwipeCard = ({ trainer, isTop }: { trainer: Trainer; isTop: boolean
                 <Text style={cardStyles.specChipText}>{s}</Text>
               </View>
             ))}
+          </View>
+        ) : null}
+
+        {/* iter102g: Highlight strip — shows the trainer's first ≤6 highlights
+            so the swipe card feels like a true profile preview. Tapping a
+            thumbnail jumps to the full trainer-detail screen (with the entire
+            HighlightReel). */}
+        {trainer.highlights && trainer.highlights.length > 0 ? (
+          <View style={cardStyles.highlightStrip}>
+            {trainer.highlights.slice(0, 6).map((h, i) => {
+              const thumb = h.thumbnailUrl ? resolveUrl(h.thumbnailUrl) : (h.type === 'photo' ? resolveUrl(h.url) : '');
+              return (
+                <TouchableOpacity
+                  key={i}
+                  onPress={() => {
+                    const tid = trainer.trainerId || trainer.userId || trainer.id;
+                    router.push(`/trainee/trainer-detail?trainerId=${tid}`);
+                  }}
+                  activeOpacity={0.85}
+                  style={cardStyles.highlightThumb}
+                  data-testid={`swipe-highlight-thumb-${i}`}
+                >
+                  {thumb ? (
+                    <Image source={{ uri: thumb }} style={{ width: '100%', height: '100%' }} />
+                  ) : (
+                    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#141929' }}>
+                      <Ionicons name="play" size={14} color="rgba(255,255,255,0.6)" />
+                    </View>
+                  )}
+                  {h.type === 'video' ? (
+                    <View style={cardStyles.highlightPlayBadge}>
+                      <Ionicons name="play" size={8} color="#FFF" />
+                    </View>
+                  ) : null}
+                </TouchableOpacity>
+              );
+            })}
           </View>
         ) : null}
       </View>
@@ -515,4 +564,19 @@ const cardStyles = StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
   },
   specChipText: { fontSize: 10, fontWeight: '600', color: 'rgba(255,255,255,0.85)' },
+
+  // iter102g: highlight strip on swipe card
+  highlightStrip: { flexDirection: 'row', gap: 6, marginTop: 10 },
+  highlightThumb: {
+    width: 46, height: 46, borderRadius: 8, overflow: 'hidden',
+    backgroundColor: '#141929',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
+    position: 'relative',
+  },
+  highlightPlayBadge: {
+    position: 'absolute', bottom: 2, left: 2,
+    width: 14, height: 14, borderRadius: 7,
+    backgroundColor: '#FF6A00',
+    alignItems: 'center', justifyContent: 'center',
+  },
 });

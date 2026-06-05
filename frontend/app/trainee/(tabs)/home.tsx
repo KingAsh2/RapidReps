@@ -836,58 +836,11 @@ export default function TraineeHomeScreen() {
               )}
 
               {/* iter96b: "NEW TRAINERS" banner removed per user request. */}
-
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>ALL AVAILABLE TRAINERS</Text>
-                <Text style={styles.trainerCount}>{displayedTrainers.length} ready</Text>
-              </View>
-              
-              {displayedTrainers.length === 0 ? (
-                <View style={styles.emptyCard} data-testid="trainee-no-trainers-empty">
-                  <LinearGradient
-                    colors={['#141929', '#1A2035']}
-                    style={styles.emptyGradient}
-                  >
-                    <Ionicons name="location-outline" size={48} color="rgba(255,255,255,0.25)" />
-                    <Text style={styles.emptyTitle}>No trainers within {travelProximity} mi</Text>
-                    <Text style={styles.emptySubtitle}>Try widening your search radius</Text>
-                    <TouchableOpacity
-                      style={styles.emptyButton}
-                      onPress={() => setShowProximityPicker(true)}
-                      data-testid="trainee-expand-radius-btn"
-                      accessibilityLabel="Expand search radius"
-                      accessibilityRole="button"
-                    >
-                      <View style={[styles.emptyButtonGradient, { borderWidth: 1.5, borderColor: 'rgba(255,106,0,0.4)', backgroundColor: 'transparent' }]}>
-                        <Text style={[styles.emptyButtonText, { color: '#FF6A00' }]}>Adjust Radius</Text>
-                      </View>
-                    </TouchableOpacity>
-                  </LinearGradient>
-                </View>
-              ) : (
-                displayedTrainers.map((trainer, index) => (
-                  <TrainerCard
-                    key={trainer.id}
-                    trainer={trainer}
-                    cardAnim={cardAnims[index] || new Animated.Value(1)}
-                    onViewProfile={(id) => router.push(`/trainee/trainer-detail?trainerId=${id}`)}
-                    onAvatarLongPress={(t) => {
-                      setPreviewUser({
-                        id: t.userId,
-                        fullName: t.fullName,
-                        avatarUrl: t.avatarUrl,
-                        role: 'trainer',
-                        specialties: t.specialties || t.trainingStyles,
-                        averageRating: t.averageRating,
-                        totalSessionsCompleted: t.totalSessionsCompleted,
-                        bio: t.bio,
-                        isAvailable: t.isAvailable,
-                      });
-                      setShowPreview(true);
-                    }}
-                  />
-                ))
-              )}
+              {/* iter102g: "ALL AVAILABLE TRAINERS" list removed.
+                  Trainees discover available trainers via:
+                    1. NearbyTrainersMap above (tap a pin → trainer profile)
+                    2. "Swipe to Discover Trainers" CTA → /trainee/swipe-trainers
+                  This eliminates the redundant feed and keeps discovery map-first. */}
             </View>
 
             {/* Bottom Spacer for FAB */}
