@@ -19,6 +19,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import RapidBg from '../../src/components/RapidBg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { toast } from '../../src/utils/toast';
@@ -97,7 +98,7 @@ export default function DiscoverTraineesScreen() {
   };
 
   return (
-    <LinearGradient colors={['#0A0E1A', '#141929']} style={s.container}>
+    <RapidBg variant="trainer-discover-trainees" style={s.container}>
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
         {/* Header */}
         <View style={s.header}>
@@ -135,7 +136,7 @@ export default function DiscoverTraineesScreen() {
           </Animated.View>
         )}
       </SafeAreaView>
-    </LinearGradient>
+    </RapidBg>
   );
 }
 

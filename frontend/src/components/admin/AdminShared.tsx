@@ -221,7 +221,7 @@ export const SearchBar = ({ value, onChangeText, onSubmit, placeholder }: { valu
 
 // --- Styles ---
 export const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0E1A' },
+  container: { flex: 1, backgroundColor: 'transparent' },
   header: { paddingHorizontal: 20, paddingVertical: 16 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   headerBackBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.12)', justifyContent: 'center', alignItems: 'center', marginRight: 12 },

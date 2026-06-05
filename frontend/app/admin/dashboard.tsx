@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import RapidBg from '../../src/components/RapidBg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { toast } from '../../src/utils/toast';
 import { useAuth } from '../../src/contexts/AuthContext';
@@ -549,8 +550,9 @@ export default function AdminDashboard() {
   );
 
   return (
-    <SafeAreaView style={s.container} edges={['top']}>
-      <LinearGradient colors={['#0A0E1A', '#141929']} style={s.header}>
+    <RapidBg variant="admin-dashboard" style={{ flex: 1 }}>
+      <SafeAreaView style={s.container} edges={['top']}>
+        <LinearGradient colors={['rgba(10,14,26,0.85)', 'rgba(20,25,41,0.82)']} style={s.header}>
         <View style={s.headerRow}>
           <TouchableOpacity
             onPress={() => {
@@ -697,6 +699,7 @@ export default function AdminDashboard() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
-    </SafeAreaView>
+      </SafeAreaView>
+    </RapidBg>
   );
 }

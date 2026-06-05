@@ -10,6 +10,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import RapidBg from '../../src/components/RapidBg';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
@@ -27,8 +28,9 @@ const C = {
 export default function ConnectBankScreen() {
   const router = useRouter();
   return (
+    <RapidBg variant="trainer-connect-bank" style={{ flex: 1 }}>
     <SafeAreaView style={s.container}>
-      <LinearGradient colors={['#0A0E1A', '#141929']} style={s.header}>
+      <LinearGradient colors={['rgba(10,14,26,0.85)', 'rgba(20,25,41,0.82)']} style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn} data-testid="connect-bank-back">
           <Ionicons name="chevron-back" size={22} color={C.text} />
         </TouchableOpacity>
@@ -76,11 +78,12 @@ export default function ConnectBankScreen() {
         </View>
       </ScrollView>
     </SafeAreaView>
+    </RapidBg>
   );
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: C.bg },
+  container: { flex: 1, backgroundColor: 'transparent' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14 },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.12)', justifyContent: 'center', alignItems: 'center' },
   headerTitle: { color: C.text, fontSize: 18, fontWeight: '800' },

@@ -409,11 +409,12 @@ const styles = StyleSheet.create({
   previewText: {
     flex: 1,
     fontSize: 14,
-    color: 'rgba(255,255,255,0.5)',
+    // iter102t: bumped from rgba 0.5 (~4:1, sub-AA) → rgba 0.78 (~7:1, passes AA).
+    color: 'rgba(255,255,255,0.78)',
     marginRight: 8,
   },
   unreadText: {
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
   unreadBadge: {
@@ -424,11 +425,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 8,
+    // iter102t: subtle outline so the badge stands off the hero background on light frames.
+    borderWidth: 1,
+    borderColor: 'rgba(10,14,26,0.85)',
   },
   unreadCount: {
     fontSize: 13,
-    fontWeight: '700',
-    color: COLORS.white,
+    fontWeight: '900',
+    // iter102t: white-on-orange fails WCAG AA (~2.5:1). Dark navy on orange is ~7:1.
+    color: '#0A0E1A',
   },
   emptyCard: {
     marginTop: 40,

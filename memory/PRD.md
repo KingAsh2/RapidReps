@@ -4,6 +4,41 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-02-XX — Iter102t: Safety Center + Unread Badge + 508 hardening 🛡️
+
+### Bugs reported by user
+1. **Safety Center text invisible** — the `<Animated.View style={{ opacity: fadeAnim }}>` wrapping Safety Tips + Share kept the section at opacity 0 on web/Expo because `useNativeDriver: true` for opacity sometimes never fires the start frame. Rebuilt the screen without `fadeAnim` — everything renders at full opacity from frame one. Bonus: swapped background to `<RapidBg variant="trainee-safety-center">` so the hero photo now shows behind a 0.85 navy scrim with ≥7:1 contrast for body text.
+2. **Unread message badge unreadable** — white text on `#F7931E` orange ≈ 2.5:1 contrast (fails WCAG AA). Changed badge text to `#0A0E1A` dark navy → ~7:1 contrast (passes). Also bumped `previewText` from `rgba(255,255,255,0.5)` (~4:1) to `0.78` (~7:1).
+
+### Accessibility hardening on `RapidBg`
+- Default scrim bumped 0.78 → **0.85** so foreground text is always ≥WCAG AA.
+- Hero photo marked `accessible={false}` + `accessibilityElementsHidden` + `importantForAccessibility="no-hide-descendants"` so screen readers skip the decorative image entirely.
+- Added `accessibilityIgnoresInvertColors` so "Invert Colors" accessibility setting doesn't blow out the hero.
+- New `noScrim` prop for callers that want to draw their own overlay.
+
+### True-flat-navy screens migrated (5)
+- `admin/dashboard.tsx` (+ `AdminShared.tsx` container made transparent)
+- `trainee/payment.tsx`
+- `trainer/connect-bank.tsx`
+- `trainer/discover-trainees.tsx`
+- (already migrated in iter102s: `trainee/session-detail`, `trainee/trainer-detail`, `trainee/trainer-en-route`, `trainer/session-detail`, `trainer/trainee-detail`)
+
+### Skipped
+- `trainer/set-rates.tsx`: container had to be reverted to solid navy. The screen has two `return` blocks (loading state + main) and the wrap-with-RapidBg refactor needs more careful handling. Marked as P2 follow-up.
+- The 14 "already-hero" screens with heavy overlays remain as-is — they already use `<ImageBackground>` and just need lighter overlays. Will need a separate pass.
+
+### Files touched
+- `/app/frontend/src/components/RapidBg.tsx` (508 hardening)
+- `/app/frontend/app/trainee/safety-center.tsx` (full rebuild — fadeAnim killed, RapidBg adopted)
+- `/app/frontend/app/messages/index.tsx` (badge + preview contrast fix)
+- `/app/frontend/app/admin/dashboard.tsx` (RapidBg wrap)
+- `/app/frontend/src/components/admin/AdminShared.tsx` (container transparent)
+- `/app/frontend/app/trainee/payment.tsx` (RapidBg wrap)
+- `/app/frontend/app/trainer/connect-bank.tsx` (RapidBg wrap)
+- `/app/frontend/app/trainer/discover-trainees.tsx` (LG → RapidBg root swap)
+
+
+
 ## 2026-02-XX — Iter102r: Replace flat-navy screen backgrounds with 4 RapidReps hero photos 🌆
 
 User asked for the 29 flat-navy screens to use one of 4 brand hero images (orange-lit gym scenes: box-jump, battle ropes ×2, kettlebell) as their background.
