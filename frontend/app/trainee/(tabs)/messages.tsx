@@ -19,7 +19,6 @@ import { useAuth } from '../../../src/contexts/AuthContext';
 import { chatAPI } from '../../../src/services/api';
 import { DS } from '../../../src/theme/designSystem';
 import FloatingOrangeBg from '../../../src/components/FloatingOrangeBg';
-import RapidBg from '../../../src/components/RapidBg';
 
 // Brand colors — iter95d: sourced from unified DS tokens
 const COLORS = {
@@ -145,7 +144,10 @@ export default function MessagesTab() {
             {otherUser.avatarUrl ? (
               <Image source={{ uri: otherUser.avatarUrl }} style={styles.avatar} />
             ) : (
-              <RapidBg variant="trainee-(tabs)-messages" style={styles.avatarPlaceholder}>
+              <LinearGradient
+                colors={['#0A0E1A', '#141929']}
+                style={styles.avatarPlaceholder}
+              >
                 <Ionicons name="person" size={24} color={COLORS.white} />
               </LinearGradient>
             )}
@@ -192,7 +194,7 @@ export default function MessagesTab() {
         >
           <ActivityIndicator size="large" color={COLORS.white} />
           <Text style={styles.loadingText}>Loading messages...</Text>
-        </RapidBg>
+        </LinearGradient>
       </ImageBackground>
     );
   }

@@ -14,6 +14,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import RapidBg from '../../src/components/RapidBg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { traineeAPI, sessionsAPI } from '../../src/services/api';
 import { SessionStatus } from '../../src/types';
@@ -22,7 +23,6 @@ import { haptic } from '../../src/utils/haptics';
 import { SessionTimeline, SessionTimelineStatus } from '../../src/components/SessionTimeline';
 import NegotiationPanel from '../../src/components/NegotiationPanel';
 import { ScreenHeader } from '../../src/components/ScreenShell';
-import RapidBg from '../../src/components/RapidBg';
 
 const COLORS = {
   teal: '#1a2a5e',
@@ -145,7 +145,7 @@ export default function SessionDetailScreen() {
 
   if (loading) {
     return (
-      <RapidBg variant="trainee-session-detail" style={styles.loadingContainer}>
+      <LinearGradient colors={['#0A0E1A', '#141929']} style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={COLORS.white} />
         <Text style={styles.loadingText}>Loading session...</Text>
       </LinearGradient>
@@ -155,7 +155,7 @@ export default function SessionDetailScreen() {
   if (!session) {
     return (
       <View style={styles.container}>
-        <LinearGradient colors={['#0A0E1A', '#141929']} style={StyleSheet.absoluteFill} />
+        <RapidBg variant="trainee-session-detail" style={StyleSheet.absoluteFill} />
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.header}>
             <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -187,7 +187,7 @@ export default function SessionDetailScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={['#0A0E1A', '#141929']} style={StyleSheet.absoluteFill} />
+      <RapidBg variant="trainee-session-detail" style={StyleSheet.absoluteFill} />
       
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         {/* iter102n Wave 3: unified ScreenHeader */}
@@ -423,7 +423,7 @@ export default function SessionDetailScreen() {
                 </View>
                 <Text style={styles.safetyPinNote}>Share with trainer to start session</Text>
               </View>
-            </RapidBg>
+            </LinearGradient>
           )}
 
           <View style={{ height: 40 }} />

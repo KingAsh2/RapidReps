@@ -16,6 +16,7 @@ import { trainerAPI, traineeAPI, chatAPI, safetyAPI } from '../../src/services/a
 import { TrainerProfile } from '../../src/types';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import RapidBg from '../../src/components/RapidBg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useAlert } from '../../src/contexts/AlertContext';
@@ -29,7 +30,6 @@ import { HighlightReel } from '../../src/components/HighlightReel';
 import { TrainerHeroVideoPreview } from '../../src/components/TrainerHeroVideoPreview';
 import { PersonalityTagBadge } from '../../src/components/PersonalityTagBadge';
 import FloatingOrangeBg from '../../src/components/FloatingOrangeBg';
-import RapidBg from '../../src/components/RapidBg';
 
 const { width, height: screenHeight } = Dimensions.get('window');
 const LOGO = require('../../assets/images/rapidreps-logo.png');
@@ -1168,7 +1168,7 @@ export default function TrainerDetailScreen() {
                 style={styles.consentAgreeGradient}
               >
                 <Text style={styles.consentAgreeText}>Let's Go</Text>
-              </RapidBg>
+              </LinearGradient>
             </TouchableOpacity>
 
             <TouchableOpacity

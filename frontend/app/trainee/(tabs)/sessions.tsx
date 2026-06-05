@@ -23,7 +23,6 @@ import { useNotifications } from '../../../src/contexts/NotificationContext';
 import { traineeAPI } from '../../../src/services/api';
 import { SessionCountdown } from '../../../src/components/SessionCountdown';
 import { DS } from '../../../src/theme/designSystem';
-import RapidBg from '../../../src/components/RapidBg';
 
 const { width } = Dimensions.get('window');
 
@@ -437,7 +436,10 @@ export default function SessionsScreen() {
                       {session.trainerPhoto ? (
                         <Image source={{ uri: session.trainerPhoto }} style={styles.trainerAvatar} />
                       ) : (
-                        <RapidBg variant="trainee-(tabs)-sessions" style={styles.trainerAvatarPlaceholder}>
+                        <LinearGradient
+                          colors={['#0A0E1A', '#141929']}
+                          style={styles.trainerAvatarPlaceholder}
+                        >
                           <Ionicons name="person" size={22} color={COLORS.white} />
                         </LinearGradient>
                       )}
@@ -523,7 +525,7 @@ export default function SessionsScreen() {
                         >
                           <Ionicons name="star" size={18} color={COLORS.white} />
                           <Text style={styles.rateButtonText}>Rate Session</Text>
-                        </RapidBg>
+                        </LinearGradient>
                       </TouchableOpacity>
                     )}
 

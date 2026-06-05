@@ -12,7 +12,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import RapidBg from '../../src/components/RapidBg';
 
 const C = {
   bg: '#06080F',
@@ -29,13 +28,13 @@ export default function ConnectBankScreen() {
   const router = useRouter();
   return (
     <SafeAreaView style={s.container}>
-      <RapidBg variant="trainer-connect-bank" style={s.header}>
+      <LinearGradient colors={['#0A0E1A', '#141929']} style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn} data-testid="connect-bank-back">
           <Ionicons name="chevron-back" size={22} color={C.text} />
         </TouchableOpacity>
         <Text style={s.headerTitle}>Payouts</Text>
         <View style={{ width: 40 }} />
-      </RapidBg>
+      </LinearGradient>
 
       <ScrollView contentContainerStyle={s.scroll}>
         <View style={s.heroIconWrap}>

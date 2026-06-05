@@ -23,6 +23,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { traineeAPI, chatAPI } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import RapidBg from '../../src/components/RapidBg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useAlert } from '../../src/contexts/AlertContext';
@@ -33,7 +34,6 @@ import { HighlightReel } from '../../src/components/HighlightReel';
 import { TrainerHeroVideoPreview } from '../../src/components/TrainerHeroVideoPreview';
 import { PersonalityTagBadge } from '../../src/components/PersonalityTagBadge';
 import FloatingOrangeBg from '../../src/components/FloatingOrangeBg';
-import RapidBg from '../../src/components/RapidBg';
 
 const { width } = Dimensions.get('window');
 
@@ -155,7 +155,7 @@ export default function TraineeDetailScreen() {
   if (loading) {
     return (
       <View style={styles.container}>
-        <RapidBg variant="trainer-trainee-detail" style={StyleSheet.absoluteFill} />
+        <LinearGradient colors={['#0A0E1A', '#141929']} style={StyleSheet.absoluteFill} />
         <SafeAreaView style={styles.safeArea}>
       <FloatingOrangeBg />
           <View style={styles.loadingContainer}>
@@ -190,7 +190,7 @@ export default function TraineeDetailScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={['#0A0E1A', '#141929']} style={styles.headerGradient} />
+      <RapidBg variant="trainer-trainee-detail" style={styles.headerGradient} />
 
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <Animated.View style={[styles.header, { opacity: headerOpacity }]}>
@@ -479,7 +479,7 @@ export default function TraineeDetailScreen() {
             >
               <Ionicons name="flash" size={18} color="#FFF" />
               <Text style={styles.stickyAcceptText}>ACCEPT SESSION</Text>
-            </RapidBg>
+            </LinearGradient>
           </TouchableOpacity>
         </View>
       )}

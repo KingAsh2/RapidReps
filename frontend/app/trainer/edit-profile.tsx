@@ -28,7 +28,6 @@ import * as Location from 'expo-location';
 import { toast } from '../../src/utils/toast';
 import Slider from '@react-native-community/slider';
 import * as ImagePicker from 'expo-image-picker';
-import RapidBg from '../../src/components/RapidBg';
 
 const backgroundImage = require('../../assets/images/bg-box-jumps-orange.jpg');
 
@@ -636,7 +635,10 @@ export default function EditTrainerProfileScreen() {
                     onPress={getCurrentLocation}
                     disabled={gettingLocation}
                   >
-                    <RapidBg variant="trainer-edit-profile" style={styles.locationButtonGradient}>
+                    <LinearGradient
+                      colors={['#0A0E1A', '#141929']}
+                      style={styles.locationButtonGradient}
+                    >
                       {gettingLocation ? (
                         <ActivityIndicator size="small" color={COLORS.white} />
                       ) : (
@@ -715,7 +717,7 @@ export default function EditTrainerProfileScreen() {
                       <Text style={styles.saveButtonText}>Save Changes</Text>
                     </>
                   )}
-                </RapidBg>
+                </LinearGradient>
               </TouchableOpacity>
 
               <View style={{ height: 40 }} />

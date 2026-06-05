@@ -19,7 +19,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { traineeAPI } from '../../../src/services/api';
 import { toast } from '../../../src/utils/toast';
-import RapidBg from '../../../src/components/RapidBg';
 
 const { width } = Dimensions.get('window');
 
@@ -161,7 +160,10 @@ export default function SavedTrainersScreen() {
           {trainer.profilePhoto ? (
             <Image source={{ uri: trainer.profilePhoto }} style={styles.thumbnailAvatar} />
           ) : (
-            <RapidBg variant="trainee-(tabs)-saved" style={styles.thumbnailAvatarPlaceholder}>
+            <LinearGradient
+              colors={['#0A0E1A', '#141929']}
+              style={styles.thumbnailAvatarPlaceholder}
+            >
               <Text style={styles.thumbnailInitials}>
                 {trainer.name.split(' ').map((n: string) => n[0]).join('')}
               </Text>
@@ -280,7 +282,7 @@ export default function SavedTrainersScreen() {
                 >
                   <Ionicons name="search" size={20} color={COLORS.white} />
                   <Text style={styles.exploreButtonText}>Explore Trainers</Text>
-                </RapidBg>
+                </LinearGradient>
               </TouchableOpacity>
             </Animated.View>
           ) : (

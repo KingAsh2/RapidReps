@@ -33,7 +33,6 @@ import { PayoutsTab } from '../../src/components/admin/PayoutsTab';
 import { ProfileTab } from '../../src/components/admin/ProfileTab';
 import { SafetyTab } from '../../src/components/admin/SafetyTab';
 import { SubscriptionsTab } from '../../src/components/admin/SubscriptionsTab';
-import RapidBg from '../../src/components/RapidBg';
 
 type Tab = 'overview' | 'users' | 'verifications' | 'sessions' | 'subscriptions' | 'payments' | 'payouts' | 'safety' | 'profile';
 
@@ -551,7 +550,7 @@ export default function AdminDashboard() {
 
   return (
     <SafeAreaView style={s.container} edges={['top']}>
-      <RapidBg variant="admin-dashboard" style={s.header}>
+      <LinearGradient colors={['#0A0E1A', '#141929']} style={s.header}>
         <View style={s.headerRow}>
           <TouchableOpacity
             onPress={() => {
@@ -573,7 +572,7 @@ export default function AdminDashboard() {
             <Ionicons name="log-out-outline" size={22} color={C.white} />
           </TouchableOpacity>
         </View>
-      </RapidBg>
+      </LinearGradient>
 
       <View style={s.tabBar}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tabBarScroll}>

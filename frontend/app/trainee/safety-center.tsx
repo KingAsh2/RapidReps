@@ -13,7 +13,6 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import RapidBg from '../../src/components/RapidBg';
 
 const COLORS = {
   navy: '#1a2a5e',
@@ -62,11 +61,11 @@ export default function SafetyCenterScreen() {
 
         <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
           {/* Hero Banner */}
-          <RapidBg variant="trainee-safety-center" style={styles.heroBanner}>
+          <LinearGradient colors={['#0A0E1A', '#141929']} style={styles.heroBanner}>
             <Ionicons name="shield-checkmark" size={48} color={COLORS.orange} />
             <Text style={styles.heroTitle}>Your Safety Matters</Text>
             <Text style={styles.heroSub}>RapidReps is committed to providing a safe training environment for everyone.</Text>
-          </RapidBg>
+          </LinearGradient>
 
           {/* Emergency Actions */}
           <Text style={styles.sectionTitle}>Emergency Actions</Text>
