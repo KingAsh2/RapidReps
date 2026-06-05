@@ -28,6 +28,9 @@ import { toast } from '../../../src/utils/toast';
 import { SocialLinksDisplay } from '../../../src/components/ProfileSections';
 import InstagramSection from '../../../src/components/InstagramSection';
 import { PersonalityTagBadge, PersonalityTagSelector } from '../../../src/components/PersonalityTagBadge';
+// iter98d (Task 5): mount vibe player so users hear their own music on their profile
+import { TrainerVibePlayer } from '../../../src/components/TrainerVibePlayer';
+import { stopAllAudio } from '../../../src/utils/audioCoordinator';
 import { UserAvatar } from '../../../src/components/UserAvatar';
 import FloatingOrangeBg from '../../../src/components/FloatingOrangeBg';
 import { AccentColorPicker } from '../../../src/components/AccentColorPicker';
@@ -122,6 +125,8 @@ export default function TraineeProfileScreen() {
   useEffect(() => {
     loadProfile();
     loadStreaks();
+    // iter98d (Task 5): stop any audio when the user navigates AWAY from their profile
+    return () => { try { stopAllAudio(); } catch { /* no-op */ } };
   }, []);
 
   useEffect(() => {
@@ -257,7 +262,8 @@ export default function TraineeProfileScreen() {
           style: 'destructive',
           onPress: () => {
             logout();
-            router.replace('/');
+            // iter98d (Task 2): go straight to sign-in, not Welcome splash
+            router.replace('/auth/login');
           },
         },
       ],
@@ -279,7 +285,7 @@ export default function TraineeProfileScreen() {
               const { authAPI } = await import('../../../src/services/api');
               await authAPI.deleteMe();
               logout();
-              router.replace('/');
+              router.replace('/auth/login');
             } catch (error: any) {
               showAlert({
                 title: 'Error',
@@ -886,6 +892,15 @@ export default function TraineeProfileScreen() {
                 </View>
                 <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.3)" />
               </TouchableOpacity>
+
+              {/* iter98d (Task 5): mount the vibe player so user hears
+                  their own music when visiting their own profile.
+                  Auto-stops on unmount (leaving the screen). */}
+              {profile?.vibeTrackTitle && (profile?.vibePreviewUrl || profile?.vibeTrackId) ? (
+                <View style={{ marginBottom: 14 }} data-testid="own-vibe-player">
+                  <TrainerVibePlayer vibe={profile as any} autoPlay={true} />
+                </View>
+              ) : null}
 
               {/* Trainee Vibe CTA */}
               <TouchableOpacity

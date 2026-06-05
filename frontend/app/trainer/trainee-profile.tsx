@@ -1,34 +1,108 @@
-import React, { useState, useEffect } from 'react';
+/**
+ * Trainer's view of a Trainee Profile — iter98d full redesign.
+ * - Dark navy theme + FloatingOrangeBg (no more bland orange screen)
+ * - Full media: UserAvatar with accent-color ring, vibe music auto-play,
+ *   highlight reel, social links, instagram. Auto-stops music on unmount.
+ * - Preserves all original session-request logic (accept/decline, propose
+ *   location, confirm arrival) at the bottom.
+ */
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  Image,
   TouchableOpacity,
   Linking,
   TextInput,
   Modal,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Colors } from '../../src/utils/colors';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Video, ResizeMode } from 'expo-av';
 import { trainerAPI, safetyAPI } from '../../src/services/api';
 import { useAlert } from '../../src/contexts/AlertContext';
 import { toast } from '../../src/utils/toast';
 import { haptic } from '../../src/utils/haptics';
 import { SocialLinksDisplay } from '../../src/components/ProfileSections';
 import InstagramSection from '../../src/components/InstagramSection';
+import { UserAvatar } from '../../src/components/UserAvatar';
+import { TrainerVibePlayer } from '../../src/components/TrainerVibePlayer';
+import { HighlightReel } from '../../src/components/HighlightReel';
+import FloatingOrangeBg from '../../src/components/FloatingOrangeBg';
+import { stopAllAudio } from '../../src/utils/audioCoordinator';
 
 export default function TraineeProfileScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { showAlert } = useAlert();
 
+  const sessionId = params.sessionId as string;
+  const traineeId = params.traineeId as string;
+  const traineeName = params.traineeName as string;
+  const traineePhoto = params.traineePhoto as string;
+  const sessionDetails = params.sessionDetails as string;
 
+  const [session, setSession] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [showVideoModal, setShowVideoModal] = useState(false);
+  const [proposedLocation, setProposedLocation] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [traineeData, setTraineeData] = useState<any>(null);
+  const [highlights, setHighlights] = useState<any[]>([]);
+
+  // Parse session details from params
+  useEffect(() => {
+    if (sessionDetails) {
+      try { setSession(JSON.parse(sessionDetails)); }
+      catch (e) { console.error('parse session:', e); }
+    }
+  }, [sessionDetails]);
+
+  // Fetch trainee profile + highlights
+  useEffect(() => {
+    if (!traineeId) return;
+    const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+    (async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/trainee-profiles/${traineeId}`);
+        if (res.ok) setTraineeData(await res.json());
+      } catch (e) { console.error('load trainee profile:', e); }
+      try {
+        const h = await fetch(`${API_URL}/api/trainee-profiles/${traineeId}/highlights`);
+        if (h.ok) {
+          const j = await h.json();
+          setHighlights(j?.highlights || j || []);
+        }
+      } catch { /* highlights optional */ }
+    })();
+  }, [traineeId]);
+
+  // iter98d: stop any audio when leaving the profile (Task 5)
+  const stopAudioOnLeave = useRef(false);
+  useEffect(() => {
+    stopAudioOnLeave.current = true;
+    return () => {
+      // Guarantee music stops when leaving this profile
+      try { stopAllAudio(); } catch { /* no-op */ }
+    };
+  }, []);
+
+  const reloadSession = async () => {
+    try {
+      const sessions = await trainerAPI.getSessions();
+      const found = sessions.find((s: any) => s.id === sessionId);
+      if (found) setSession(found);
+    } catch (e) { console.error('reload session:', e); }
+  };
+
+  // ---------------- Safety / actions ----------------
   const handleReportTrainee = () => {
     showAlert({
       title: 'Report',
@@ -36,22 +110,10 @@ export default function TraineeProfileScreen() {
       type: 'warning',
       buttons: [
         { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Report',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await safetyAPI.reportUser({
-                reportedUserId: traineeId as string,
-                reason: 'Reported from trainee profile',
-                contentType: 'profile',
-              });
-              // Silent success - no popup
-            } catch (e: any) {
-              showAlert({ title: 'Error', message: e?.message || 'Unable to submit report.', type: 'error' });
-            }
-          },
-        },
+        { text: 'Report', style: 'destructive', onPress: async () => {
+          try { await safetyAPI.reportUser({ reportedUserId: traineeId, reason: 'Reported from trainee profile', contentType: 'profile' }); }
+          catch (e: any) { showAlert({ title: 'Error', message: e?.message || 'Unable to submit report.', type: 'error' }); }
+        } },
       ],
     });
   };
@@ -63,79 +125,16 @@ export default function TraineeProfileScreen() {
       type: 'warning',
       buttons: [
         { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Block',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await safetyAPI.blockUser(traineeId as string);
-              // Navigate back silently
-              router.back();
-            } catch (e: any) {
-              showAlert({ title: 'Error', message: e?.message || 'Unable to block user.', type: 'error' });
-            }
-          },
-        },
+        { text: 'Block', style: 'destructive', onPress: async () => {
+          try { await safetyAPI.blockUser(traineeId); router.back(); }
+          catch (e: any) { showAlert({ title: 'Error', message: e?.message || 'Unable to block user.', type: 'error' }); }
+        } },
       ],
     });
   };
-  
-  const sessionId = params.sessionId as string;
-  const traineeId = params.traineeId as string;
-  const traineeName = params.traineeName as string;
-  const traineePhoto = params.traineePhoto as string;
-  const sessionDetails = params.sessionDetails as string;
-
-  const [session, setSession] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [showLocationModal, setShowLocationModal] = useState(false);
-  const [proposedLocation, setProposedLocation] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [traineeData, setTraineeData] = useState<any>(null);
-
-  useEffect(() => {
-    if (sessionDetails) {
-      try {
-        setSession(JSON.parse(sessionDetails));
-      } catch (e) {
-        console.error('Error parsing session details:', e);
-      }
-    }
-  }, [sessionDetails]);
-
-  useEffect(() => {
-    if (traineeId) {
-      const loadTraineeData = async () => {
-        try {
-          const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
-          const res = await fetch(`${API_URL}/api/trainee-profiles/${traineeId}`);
-          if (res.ok) {
-            const data = await res.json();
-            setTraineeData(data);
-          }
-        } catch (e) {
-          console.error('Error loading trainee data:', e);
-        }
-      };
-      loadTraineeData();
-    }
-  }, [traineeId]);
-
-  const reloadSession = async () => {
-    try {
-      const sessions = await trainerAPI.getSessions();
-      const found = sessions.find((s: any) => s.id === sessionId);
-      if (found) setSession(found);
-    } catch (e) {
-      console.error('Error reloading session:', e);
-    }
-  };
 
   const handleProposeLocation = async () => {
-    if (!proposedLocation.trim()) {
-      toast.error('Please enter a location');
-      return;
-    }
+    if (!proposedLocation.trim()) { toast.error('Please enter a location'); return; }
     setSubmitting(true);
     try {
       await trainerAPI.proposeLocation(session.id, proposedLocation.trim());
@@ -144,122 +143,69 @@ export default function TraineeProfileScreen() {
       setShowLocationModal(false);
       setProposedLocation('');
       reloadSession();
-    } catch (error: any) {
-      toast.error(error?.response?.data?.detail || 'Failed to send proposal');
-    } finally {
-      setSubmitting(false);
-    }
+    } catch (e: any) { toast.error(e?.response?.data?.detail || 'Failed to send proposal'); }
+    finally { setSubmitting(false); }
   };
 
   const handleConfirmArrival = async () => {
     setSubmitting(true);
     try {
-      const result = await trainerAPI.confirmArrival(session.id);
+      const r = await trainerAPI.confirmArrival(session.id);
       haptic.success();
-      toast.success(result.message);
+      toast.success(r.message);
       reloadSession();
-    } catch (error: any) {
-      toast.error(error?.response?.data?.detail || 'Failed to confirm arrival');
-    } finally {
-      setSubmitting(false);
-    }
+    } catch (e: any) { toast.error(e?.response?.data?.detail || 'Failed to confirm arrival'); }
+    finally { setSubmitting(false); }
   };
 
-  const handleAccept = async () => {
+  const handleAccept = () => {
     showAlert({
       title: 'Accept Session Request',
       message: 'Are you sure you want to accept this session?',
       type: 'info',
       buttons: [
         { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Accept',
-          onPress: async () => {
-            setLoading(true);
-            try {
-              await trainerAPI.acceptSession(sessionId);
-              
-              // Show success with payment notification
-              showAlert({
-                title: 'Session Accepted! 🎉',
-                message: 'The trainee has been notified and will process payment. You\'ll receive location details once confirmed.',
-                type: 'success',
-                buttons: [
-                  {
-                    text: 'OK',
-                    onPress: () => router.back(),
-                  },
-                ],
-              });
-            } catch (error: any) {
-              console.error('Error accepting session:', error);
-              showAlert({
-                title: 'Accept Failed',
-                message: 'Failed to accept session. Please try again.',
-                type: 'error',
-              });
-            } finally {
-              setLoading(false);
-            }
-          },
-        },
+        { text: 'Accept', onPress: async () => {
+          setLoading(true);
+          try {
+            await trainerAPI.acceptSession(sessionId);
+            showAlert({
+              title: 'Session Accepted!', message: 'The trainee has been notified and will process payment.', type: 'success',
+              buttons: [{ text: 'OK', onPress: () => router.back() }],
+            });
+          } catch { showAlert({ title: 'Accept Failed', message: 'Failed to accept session.', type: 'error' }); }
+          finally { setLoading(false); }
+        } },
       ],
     });
   };
 
-  const handleDeny = async () => {
+  const handleDeny = () => {
     showAlert({
       title: 'Decline Session Request',
-      message: 'Are you sure you want to decline this session? The trainee will be notified.',
+      message: 'Are you sure you want to decline this session?',
       type: 'warning',
       buttons: [
         { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Decline',
-          style: 'destructive',
-          onPress: async () => {
-            setLoading(true);
-            try {
-              await trainerAPI.declineSession(sessionId);
-              
-              showAlert({
-                title: 'Session Declined',
-                message: 'The trainee has been notified that you are unavailable.',
-                type: 'info',
-                buttons: [
-                  {
-                    text: 'OK',
-                    onPress: () => router.back(),
-                  },
-                ],
-              });
-            } catch (error) {
-              console.error('Error declining session:', error);
-              showAlert({
-                title: 'Decline Failed',
-                message: 'Failed to decline session. Please try again.',
-                type: 'error',
-              });
-            } finally {
-              setLoading(false);
-            }
-          },
-        },
+        { text: 'Decline', style: 'destructive', onPress: async () => {
+          setLoading(true);
+          try {
+            await trainerAPI.declineSession(sessionId);
+            showAlert({ title: 'Session Declined', message: 'The trainee has been notified.', type: 'info',
+              buttons: [{ text: 'OK', onPress: () => router.back() }] });
+          } catch { showAlert({ title: 'Decline Failed', message: 'Failed to decline session.', type: 'error' }); }
+          finally { setLoading(false); }
+        } },
       ],
     });
   };
 
   const handleNavigate = () => {
-    // Use trainee's home address if available, otherwise use session location
     const address = session?.traineeHomeAddress || session?.locationNameOrAddress || '';
-    
-    // Open en-route screen with GPS tracking instead of raw maps link
     router.push({
       pathname: '/trainer/en-route',
       params: {
-        sessionId,
-        traineeName,
-        traineeId,
+        sessionId, traineeName, traineeId,
         traineeAddress: address,
         traineeLat: session?.traineeLatitude?.toString() || '',
         traineeLng: session?.traineeLongitude?.toString() || '',
@@ -268,710 +214,406 @@ export default function TraineeProfileScreen() {
     });
   };
 
-  const handleMessage = () => {
-    router.push({
-      pathname: '/messages/chat',
-      params: { userId: traineeId, userName: traineeName },
-    });
+  const handleMessage = async () => {
+    try {
+      const { chatAPI } = await import('../../src/services/api');
+      const result = await chatAPI.getOrCreateConversation(traineeId || '');
+      router.push(`/messages/chat?conversationId=${result.conversationId}&userId=${traineeId}&userName=${traineeName}`);
+    } catch (e) { console.error('open chat:', e); }
   };
 
   const handleCall = () => {
     const phone = session?.traineePhone || params.traineePhone;
-    if (phone) {
-      Linking.openURL(`tel:${phone}`);
-    } else {
-      showAlert({
-        title: 'Contact Unavailable',
-        message: 'Contact information will be shared after session is confirmed.',
-        type: 'info',
-      });
-    }
+    if (phone) Linking.openURL(`tel:${phone}`);
+    else showAlert({ title: 'Contact Unavailable', message: 'Contact info shared after session is confirmed.', type: 'info' });
   };
 
+  // ---------------- Derived display values ----------------
+  const accent = traineeData?.accentColor || traineeData?.accentColorAuto || '#FF6A00';
+  const fullName = traineeData?.fullName || traineeName || 'Trainee';
+  const avatarUrl = traineeData?.profilePhoto || traineeData?.avatarUrl || traineePhoto;
+  const introVideoUrl = traineeData?.introVideoUrl;
+  const personalityTag = traineeData?.personalityTag;
+
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <LinearGradient
-        colors={Colors.gradientOrangeStart}
-        style={StyleSheet.absoluteFillObject}
-      />
+    <View style={styles.root}>
+      <FloatingOrangeBg />
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.iconBtn} data-testid="back-btn">
+            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>{fullName.split(' ')[0]}'s Profile</Text>
+          <TouchableOpacity onPress={handleReportTrainee} style={styles.iconBtn} data-testid="more-btn">
+            <Ionicons name="flag-outline" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
 
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={28} color={Colors.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Trainee Profile</Text>
-        <View style={{ width: 48 }} />
-      </View>
-
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Profile Section */}
-        <View style={styles.profileCard}>
-          <View style={styles.avatarContainer}>
-            {traineePhoto ? (
-              <Image
-                source={{ uri: traineePhoto }}
-                style={styles.avatar}
-              />
-            ) : (
-              <View style={styles.avatarPlaceholder}>
-                <Ionicons name="person" size={60} color={Colors.primary} />
-              </View>
-            )}
-          </View>
-          
-          <Text style={styles.traineeName}>{traineeName || 'Trainee'}</Text>
-          
-          {session?.traineeGoals && (
-            <View style={styles.goalsContainer}>
-              <Text style={styles.goalsLabel}>Goals:</Text>
-              <Text style={styles.goalsText}>{session.traineeGoals}</Text>
-            </View>
-          )}
-
-          {/* View Full Profile (vibrant showcase) */}
-          <TouchableOpacity
-            onPress={() => router.push({ pathname: '/trainer/trainee-detail', params: { traineeId } })}
-            data-testid="view-trainee-showcase-btn"
-            accessibilityLabel="View full trainee profile with highlights and vibe"
-            accessibilityRole="button"
-            style={{ marginTop: 14, borderRadius: 14, overflow: 'hidden' }}
-          >
+        <ScrollView style={styles.scroll} contentContainerStyle={{ paddingBottom: 140 }} showsVerticalScrollIndicator={false}>
+          {/* Hero card */}
+          <View style={[styles.heroCard, { borderColor: `${accent}40` }]}>
             <LinearGradient
-              colors={['#FF6A00', '#FF3D00']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 12, gap: 8 }}
-            >
-              <Ionicons name="sparkles" size={16} color="#FFF" />
-              <Text style={{ fontSize: 13, fontFamily: 'Oswald_700Bold', color: '#FFF', letterSpacing: 1.5 }}>VIEW FULL PROFILE</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-
-        {/* Session Details Card */}
-        {session && (
-          <View style={styles.detailsCard}>
-            <Text style={styles.cardTitle}>Session Details</Text>
-            
-            <View style={styles.detailRow}>
-              <Ionicons name="calendar-outline" size={20} color={Colors.navy} />
-              <Text style={styles.detailText}>
-                {new Date(session.sessionDateTimeStart).toLocaleDateString('en-US', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}
-              </Text>
+              colors={[`${accent}22`, 'rgba(20,25,41,0.0)']}
+              start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
+              style={StyleSheet.absoluteFillObject}
+            />
+            <View style={[styles.avatarRing, { borderColor: accent }]}>
+              <UserAvatar
+                user={{ avatarUrl, fullName, profilePhoto: avatarUrl }}
+                size={120}
+              />
             </View>
-
-            <View style={styles.detailRow}>
-              <Ionicons name="time-outline" size={20} color={Colors.navy} />
-              <Text style={styles.detailText}>
-                {new Date(session.sessionDateTimeStart).toLocaleTimeString('en-US', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
-              </Text>
-            </View>
-
-            <View style={styles.detailRow}>
-              <Ionicons name="hourglass-outline" size={20} color={Colors.navy} />
-              <Text style={styles.detailText}>{session.durationMinutes} minutes</Text>
-            </View>
-
-            <View style={styles.detailRow}>
-              <Ionicons name="location-outline" size={20} color={Colors.navy} />
-              <Text style={styles.detailText}>{session.locationType || 'In-Person'}</Text>
-            </View>
-
-            <View style={styles.detailRow}>
-              <Ionicons name="cash-outline" size={20} color={Colors.navy} />
-              <Text style={styles.detailText}>
-                ${((session.finalSessionPriceCents || 0) / 100).toFixed(2)}
-              </Text>
-            </View>
-
-            {session.notes && (
-              <View style={styles.notesContainer}>
-                <Text style={styles.notesLabel}>Notes:</Text>
-                <Text style={styles.notesText}>{session.notes}</Text>
-              </View>
-            )}
-          </View>
-        )}
-
-        {/* Quick Actions */}
-        <View style={styles.actionsCard}>
-          <Text style={styles.cardTitle}>Quick Actions</Text>
-          
-          <TouchableOpacity 
-            onPress={async () => {
-              try {
-                const { chatAPI } = await import('../../src/services/api');
-                const result = await chatAPI.getOrCreateConversation(session?.traineeId || '');
-                router.push(`/messages/chat?conversationId=${result.conversationId}&userId=${session?.traineeId}&userName=${traineeName}`);
-              } catch (error) {
-                console.error('Error creating conversation:', error);
-              }
-            }}
-            style={styles.actionButton}
-          >
-            <Ionicons name="chatbubble" size={24} color={Colors.secondary} />
-            <Text style={styles.actionButtonText}>Message Trainee</Text>
-            <Ionicons name="chevron-forward" size={20} color={Colors.textLight} />
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={handleNavigate} style={styles.actionButton}>
-            <Ionicons name="navigate" size={24} color={Colors.primary} />
-            <Text style={styles.actionButtonText}>Navigate to Trainee</Text>
-            <Ionicons name="chevron-forward" size={20} color={Colors.textLight} />
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={handleCall} style={styles.actionButton}>
-            <Ionicons name="call" size={24} color={Colors.success} />
-            <Text style={styles.actionButtonText}>Call Trainee</Text>
-            <Ionicons name="chevron-forward" size={20} color={Colors.textLight} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Location Management for Outdoor Sessions */}
-        {session && session.sessionType === 'outdoor' && (session.status === 'confirmed' || session.status === 'en_route') && (
-          <View style={styles.detailsCard}>
-            <Text style={styles.cardTitle}>Meeting Location</Text>
-            
-            {/* Current Location */}
-            <View style={styles.detailRow}>
-              <Ionicons name="location" size={20} color={Colors.primary} />
-              <Text style={styles.detailText}>
-                {session.locationNameOrAddress || session.outdoorLocationTrainerProposal || 'Not set'}
-              </Text>
-            </View>
-
-            {/* Location Agreement Status */}
-            {session.outdoorLocationAgreed ? (
-              <View style={styles.agreedBadge}>
-                <Ionicons name="checkmark-circle" size={18} color={Colors.success} />
-                <Text style={styles.agreedText}>Location Confirmed</Text>
-              </View>
-            ) : session.outdoorLocationTrainerProposal ? (
-              <View style={styles.pendingBadge}>
-                <Ionicons name="time" size={18} color={Colors.warning} />
-                <Text style={styles.pendingText}>Waiting for trainee to confirm</Text>
+            <Text style={styles.heroName}>{fullName}</Text>
+            {personalityTag ? (
+              <View style={[styles.tagPill, { backgroundColor: `${accent}25`, borderColor: accent }]}>
+                <Ionicons name="sparkles" size={12} color={accent} />
+                <Text style={[styles.tagPillText, { color: accent }]}>{personalityTag}</Text>
               </View>
             ) : null}
-
-            {/* Propose/Change Location Button */}
-            <TouchableOpacity
-              style={styles.proposeLocationBtn}
-              onPress={() => setShowLocationModal(true)}
-              data-testid="propose-location-btn"
-            >
-              <Ionicons name="create" size={20} color={Colors.white} />
-              <Text style={styles.proposeLocationText}>
-                {session.outdoorLocationTrainerProposal ? 'Change Location' : 'Propose Meeting Spot'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* Arrival Confirmation */}
-        {session && (session.status === 'confirmed' || session.status === 'en_route') && !session.trainerArrivedConfirmed && (
-          <TouchableOpacity
-            style={styles.arrivalCard}
-            onPress={handleConfirmArrival}
-            disabled={submitting}
-            data-testid="confirm-arrival-btn"
-          >
-            <LinearGradient colors={[Colors.secondary, Colors.primary]} style={styles.arrivalGradient}>
-              {submitting ? (
-                <ActivityIndicator size="small" color={Colors.white} />
-              ) : (
-                <>
-                  <Ionicons name="location" size={24} color={Colors.white} />
-                  <View style={styles.arrivalContent}>
-                    <Text style={styles.arrivalTitle}>I Have Arrived</Text>
-                    <Text style={styles.arrivalSubtitle}>Tap to notify the trainee</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={24} color={Colors.white} />
-                </>
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
-        )}
-
-        {/* Arrival Status */}
-        {session?.trainerArrivedConfirmed && (
-          <View style={styles.arrivalStatus}>
-            <Ionicons name="checkmark-circle" size={20} color={Colors.success} />
-            <Text style={styles.arrivalStatusText}>You have confirmed arrival</Text>
-            {session.traineeArrivedConfirmed ? (
-              <View style={styles.bothArrivedBadge}>
-                <Ionicons name="people" size={16} color={Colors.white} />
-                <Text style={styles.bothArrivedText}>Both Ready!</Text>
+            {session?.traineeGoals ? (
+              <View style={styles.goalsRow}>
+                <Ionicons name="flag" size={14} color={accent} />
+                <Text style={styles.goalsText} numberOfLines={3}>{session.traineeGoals}</Text>
               </View>
-            ) : (
-              <Text style={styles.waitingText}>Waiting for trainee...</Text>
-            )}
+            ) : null}
+            {introVideoUrl ? (
+              <TouchableOpacity
+                onPress={() => {
+                  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                    window.open(introVideoUrl, '_blank');
+                  } else {
+                    setShowVideoModal(true);
+                  }
+                }}
+                style={[styles.introVideoBtn, { backgroundColor: accent }]}
+                data-testid="play-intro-video"
+              >
+                <Ionicons name="play" size={16} color="#FFFFFF" />
+                <Text style={styles.introVideoText}>Watch Intro Video</Text>
+              </TouchableOpacity>
+            ) : null}
           </View>
-        )}
 
-        {/* Social Links (Gallery removed iter84 — Highlight Reel only) */}
-        <View style={{ paddingHorizontal: 20, paddingBottom: 20 }}>
-          <InstagramSection targetUserId={traineeId} />
-          <SocialLinksDisplay socialLinks={traineeData?.socialLinks || {}} />
-        </View>
-      </ScrollView>
+          {/* Vibe music — auto-plays via TrainerVibePlayer */}
+          {traineeData?.profileMusicUrl || traineeData?.musicTrackUrl || traineeData?.vibeMusic ? (
+            <View style={styles.sectionCard}>
+              <TrainerVibePlayer vibe={traineeData as any} autoPlay={true} />
+            </View>
+          ) : null}
 
-      {/* Location Proposal Modal */}
-      <Modal visible={showLocationModal} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Propose Meeting Location</Text>
-              <TouchableOpacity onPress={() => setShowLocationModal(false)} data-testid="close-location-modal">
-                <Ionicons name="close" size={24} color={Colors.textLight} />
+          {/* Highlight reel */}
+          {highlights && highlights.length > 0 ? (
+            <View style={styles.sectionCard}>
+              <HighlightReel highlights={highlights as any} trainerName={fullName} />
+            </View>
+          ) : null}
+
+          {/* Session details */}
+          {session ? (
+            <View style={styles.sectionCard}>
+              <Text style={styles.sectionTitle}>Session Details</Text>
+              <Row icon="calendar-outline" text={new Date(session.sessionDateTimeStart).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} />
+              <Row icon="time-outline" text={new Date(session.sessionDateTimeStart).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })} />
+              <Row icon="hourglass-outline" text={`${session.durationMinutes} minutes`} />
+              <Row icon="location-outline" text={session.locationType || 'In-Person'} />
+              <Row icon="cash-outline" text={`$${((session.finalSessionPriceCents || 0) / 100).toFixed(2)}`} />
+              {session.notes ? (
+                <View style={styles.notesBox}>
+                  <Text style={styles.notesLabel}>Notes</Text>
+                  <Text style={styles.notesText}>{session.notes}</Text>
+                </View>
+              ) : null}
+            </View>
+          ) : null}
+
+          {/* Quick actions */}
+          <View style={styles.sectionCard}>
+            <Text style={styles.sectionTitle}>Quick Actions</Text>
+            <ActionRow icon="chatbubble-ellipses" color="#5EC8FF" label={`Message ${fullName.split(' ')[0]}`} onPress={handleMessage} testId="action-message" />
+            <ActionRow icon="navigate" color={accent} label="Navigate to Trainee" onPress={handleNavigate} testId="action-navigate" />
+            <ActionRow icon="call" color="#00D68F" label="Call Trainee" onPress={handleCall} testId="action-call" last />
+          </View>
+
+          {/* Location management */}
+          {session && session.sessionType === 'outdoor' && (session.status === 'confirmed' || session.status === 'en_route') ? (
+            <View style={styles.sectionCard}>
+              <Text style={styles.sectionTitle}>Meeting Location</Text>
+              <Row icon="location" text={session.locationNameOrAddress || session.outdoorLocationTrainerProposal || 'Not set'} />
+              {session.outdoorLocationAgreed ? (
+                <View style={[styles.statusPill, { backgroundColor: 'rgba(0,214,143,0.12)' }]}>
+                  <Ionicons name="checkmark-circle" size={16} color="#00D68F" />
+                  <Text style={[styles.statusPillText, { color: '#00D68F' }]}>Location Confirmed</Text>
+                </View>
+              ) : session.outdoorLocationTrainerProposal ? (
+                <View style={[styles.statusPill, { backgroundColor: 'rgba(255,179,0,0.12)' }]}>
+                  <Ionicons name="time" size={16} color="#FFB300" />
+                  <Text style={[styles.statusPillText, { color: '#FFB300' }]}>Waiting for trainee to confirm</Text>
+                </View>
+              ) : null}
+              <TouchableOpacity style={[styles.proposeBtn, { backgroundColor: accent }]} onPress={() => setShowLocationModal(true)} data-testid="propose-location-btn">
+                <Ionicons name="create" size={18} color="#FFF" />
+                <Text style={styles.proposeBtnText}>{session.outdoorLocationTrainerProposal ? 'Change Location' : 'Propose Meeting Spot'}</Text>
               </TouchableOpacity>
             </View>
-            <Text style={styles.modalSubtitle}>Enter the address or description of where you will meet:</Text>
-            <TextInput
-              style={styles.locationInput}
-              placeholder="e.g., Central Park near 72nd St entrance"
-              placeholderTextColor={Colors.textLight}
-              value={proposedLocation}
-              onChangeText={setProposedLocation}
-              multiline
-              data-testid="location-proposal-input"
-            />
-            <TouchableOpacity
-              style={[styles.modalBtn, !proposedLocation.trim() && styles.modalBtnDisabled]}
-              onPress={handleProposeLocation}
-              disabled={submitting || !proposedLocation.trim()}
-              data-testid="submit-location-proposal-btn"
-            >
-              {submitting ? (
-                <ActivityIndicator size="small" color={Colors.white} />
-              ) : (
-                <Text style={styles.modalBtnText}>Send to Trainee</Text>
-              )}
+          ) : null}
+
+          {/* Arrival CTA */}
+          {session && (session.status === 'confirmed' || session.status === 'en_route') && !session.trainerArrivedConfirmed ? (
+            <TouchableOpacity style={styles.arrivalCard} onPress={handleConfirmArrival} disabled={submitting} data-testid="confirm-arrival-btn">
+              <LinearGradient colors={[accent, '#FF3D00']} style={styles.arrivalGrad}>
+                {submitting ? <ActivityIndicator size="small" color="#FFF" /> : (
+                  <>
+                    <Ionicons name="location" size={22} color="#FFF" />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.arrivalTitle}>I Have Arrived</Text>
+                      <Text style={styles.arrivalSub}>Tap to notify the trainee</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={22} color="#FFF" />
+                  </>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+          ) : null}
+
+          {session?.trainerArrivedConfirmed ? (
+            <View style={[styles.sectionCard, { flexDirection: 'row', alignItems: 'center', gap: 8 }]}>
+              <Ionicons name="checkmark-circle" size={18} color="#00D68F" />
+              <Text style={[styles.statusPillText, { color: '#00D68F' }]}>You have confirmed arrival</Text>
+              {session.traineeArrivedConfirmed ? (
+                <View style={styles.bothReady}>
+                  <Ionicons name="people" size={14} color="#FFF" />
+                  <Text style={styles.bothReadyText}>Both Ready!</Text>
+                </View>
+              ) : <Text style={styles.waiting}>Waiting for trainee…</Text>}
+            </View>
+          ) : null}
+
+          {/* Social + Instagram */}
+          <View style={styles.sectionCard}>
+            <Text style={styles.sectionTitle}>Connect</Text>
+            <InstagramSection targetUserId={traineeId} />
+            <SocialLinksDisplay socialLinks={traineeData?.socialLinks || {}} />
+          </View>
+
+          {/* Safety footer */}
+          <TouchableOpacity style={styles.dangerRow} onPress={handleBlockTrainee} data-testid="block-trainee-btn">
+            <Ionicons name="ban-outline" size={16} color="#FF6B6B" />
+            <Text style={styles.dangerText}>Block this trainee</Text>
+          </TouchableOpacity>
+        </ScrollView>
+
+        {/* Bottom Accept/Decline */}
+        {session?.status === 'requested' ? (
+          <View style={styles.bottomActions}>
+            <TouchableOpacity onPress={handleDeny} disabled={loading} style={[styles.bottomBtn, styles.denyBtn]} data-testid="decline-session-btn">
+              <Ionicons name="close-circle" size={22} color="#FFF" />
+              <Text style={styles.bottomBtnText}>Decline</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleAccept} disabled={loading} style={styles.bottomBtn} data-testid="accept-session-btn">
+              <LinearGradient colors={['#FF6A00', '#FF3D00']} style={styles.acceptGrad}>
+                <Ionicons name="checkmark-circle" size={22} color="#FFF" />
+                <Text style={styles.bottomBtnText}>{loading ? 'Accepting...' : 'Accept'}</Text>
+              </LinearGradient>
             </TouchableOpacity>
           </View>
-        </View>
-      </Modal>
+        ) : null}
 
-      {/* Bottom Action Buttons */}
-      {session?.status === 'requested' && (
-        <View style={styles.bottomActions}>
-          <TouchableOpacity
-            onPress={handleDeny}
-            disabled={loading}
-            style={[styles.actionButtonLarge, styles.denyButton]}
-          >
-            <Ionicons name="close-circle" size={24} color={Colors.white} />
-            <Text style={styles.actionButtonLargeText}>Decline</Text>
-          </TouchableOpacity>
+        {/* Location proposal modal */}
+        <Modal visible={showLocationModal} animationType="slide" transparent>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHead}>
+                <Text style={styles.modalTitle}>Propose Meeting Location</Text>
+                <TouchableOpacity onPress={() => setShowLocationModal(false)} data-testid="close-location-modal">
+                  <Ionicons name="close" size={24} color="#FFFFFF" />
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.modalHint}>Enter the address or description of where you will meet:</Text>
+              <TextInput
+                style={styles.locationInput}
+                placeholder="e.g., Central Park near 72nd St entrance"
+                placeholderTextColor="rgba(255,255,255,0.4)"
+                value={proposedLocation}
+                onChangeText={setProposedLocation}
+                multiline
+                data-testid="location-proposal-input"
+              />
+              <TouchableOpacity
+                style={[styles.modalBtn, { backgroundColor: accent, opacity: proposedLocation.trim() ? 1 : 0.5 }]}
+                onPress={handleProposeLocation}
+                disabled={submitting || !proposedLocation.trim()}
+                data-testid="submit-location-proposal-btn"
+              >
+                {submitting ? <ActivityIndicator size="small" color="#FFF" /> : <Text style={styles.modalBtnText}>Send to Trainee</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
 
-          <TouchableOpacity
-            onPress={handleAccept}
-            disabled={loading}
-            style={[styles.actionButtonLarge, styles.acceptButton]}
-          >
-            <LinearGradient
-              colors={[Colors.secondary, Colors.primary]}
-              style={styles.acceptButtonGradient}
-            >
-              <Ionicons name="checkmark-circle" size={24} color={Colors.white} />
-              <Text style={styles.actionButtonLargeText}>
-                {loading ? 'Accepting...' : 'Accept'}
-              </Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-      )}
-    </SafeAreaView>
+        {/* Intro video modal (native) */}
+        <Modal visible={showVideoModal} animationType="fade" transparent onRequestClose={() => setShowVideoModal(false)}>
+          <View style={styles.videoOverlay}>
+            <TouchableOpacity style={styles.videoClose} onPress={() => setShowVideoModal(false)} data-testid="close-video-modal">
+              <Ionicons name="close" size={28} color="#FFF" />
+            </TouchableOpacity>
+            {introVideoUrl ? (
+              <Video
+                source={{ uri: introVideoUrl }}
+                style={styles.videoPlayer}
+                useNativeControls
+                resizeMode={ResizeMode.CONTAIN}
+                shouldPlay
+              />
+            ) : null}
+          </View>
+        </Modal>
+      </SafeAreaView>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  backButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: Colors.white,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 24,
-  },
-  profileCard: {
-    backgroundColor: '#141929',
-    borderRadius: 20,
-    borderWidth: 4,
-    borderColor: Colors.navy,
-    padding: 24,
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  avatarContainer: {
-    marginBottom: 16,
-  },
-  avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 4,
-    borderColor: Colors.navy,
-  },
-  avatarPlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 4,
-    borderColor: Colors.navy,
-    backgroundColor: '#0F1526',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  traineeName: {
-    fontSize: 24,
-    fontWeight: '900',
-    color: '#FFFFFF',
-    marginBottom: 8,
-  },
-  goalsContainer: {
-    marginTop: 12,
-    width: '100%',
-  },
-  goalsLabel: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginBottom: 4,
-  },
-  goalsText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.text,
-    lineHeight: 20,
-  },
-  detailsCard: {
-    backgroundColor: '#141929',
-    borderRadius: 20,
-    borderWidth: 4,
-    borderColor: Colors.navy,
-    padding: 24,
-    marginBottom: 16,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: '#FFFFFF',
-    marginBottom: 16,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 12,
-  },
-  detailText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.text,
-  },
-  notesContainer: {
-    marginTop: 12,
-    padding: 12,
-    backgroundColor: '#0F1526',
-    borderRadius: 12,
-  },
-  notesLabel: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginBottom: 4,
-  },
-  notesText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.text,
-    lineHeight: 20,
-  },
-  actionsCard: {
-    backgroundColor: '#141929',
-    borderRadius: 20,
-    borderWidth: 4,
-    borderColor: Colors.navy,
-    padding: 24,
-    marginBottom: 100,
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.08)',
-  },
-  actionButtonText: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  bottomActions: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    padding: 24,
-    gap: 12,
-    backgroundColor: '#141929',
-    borderTopWidth: 3,
-    borderTopColor: Colors.navy,
-  },
-  actionButtonLarge: {
-    flex: 1,
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  denyButton: {
-    backgroundColor: Colors.danger,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 18,
-    gap: 8,
-  },
-  acceptButton: {
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  acceptButtonGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 18,
-    gap: 8,
-  },
-  actionButtonLargeText: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: Colors.white,
-  },
+// ---------- Small subcomponents ----------
+const Row = ({ icon, text }: { icon: any; text: string }) => (
+  <View style={styles.row}>
+    <Ionicons name={icon} size={18} color="rgba(255,255,255,0.65)" />
+    <Text style={styles.rowText}>{text}</Text>
+  </View>
+);
 
-  section: {
-    marginTop: 20,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+const ActionRow = ({ icon, color, label, onPress, testId, last }: any) => (
+  <TouchableOpacity style={[styles.actionRow, last && { borderBottomWidth: 0 }]} onPress={onPress} data-testid={testId}>
+    <View style={[styles.actionIcon, { backgroundColor: `${color}22`, borderColor: `${color}55` }]}>
+      <Ionicons name={icon} size={18} color={color} />
+    </View>
+    <Text style={styles.actionLabel}>{label}</Text>
+    <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.35)" />
+  </TouchableOpacity>
+);
+
+// ---------- Styles ----------
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: '#0A0E1A' },
+  safe: { flex: 1 },
+  header: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingVertical: 12,
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: Colors.textPrimary,
-    marginBottom: 8,
+  iconBtn: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
+    justifyContent: 'center', alignItems: 'center',
   },
+  headerTitle: { fontSize: 16, fontWeight: '800', color: '#FFFFFF', letterSpacing: 0.3 },
+  scroll: { flex: 1, paddingHorizontal: 16 },
+
+  // Hero
+  heroCard: {
+    backgroundColor: 'rgba(20,25,41,0.85)',
+    borderRadius: 22, padding: 22, marginTop: 8, marginBottom: 14,
+    borderWidth: 1, alignItems: 'center', overflow: 'hidden',
+  },
+  avatarRing: {
+    width: 132, height: 132, borderRadius: 66,
+    borderWidth: 3, alignItems: 'center', justifyContent: 'center',
+    marginBottom: 14,
+  },
+  heroName: { fontSize: 24, fontWeight: '900', color: '#FFFFFF', letterSpacing: -0.3 },
+  tagPill: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    paddingHorizontal: 10, paddingVertical: 5, borderRadius: 14,
+    borderWidth: 1, marginTop: 10,
+  },
+  tagPillText: { fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.8 },
+  goalsRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    marginTop: 14, paddingHorizontal: 14, paddingVertical: 10,
+    borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
+  },
+  goalsText: { flex: 1, fontSize: 13, color: 'rgba(255,255,255,0.85)', lineHeight: 18 },
+  introVideoBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: 16, paddingVertical: 10, borderRadius: 22, marginTop: 14,
+  },
+  introVideoText: { fontSize: 13, fontWeight: '800', color: '#FFFFFF', letterSpacing: 0.4 },
+
+  // Sections
+  sectionCard: {
+    backgroundColor: 'rgba(20,25,41,0.85)',
+    borderRadius: 18, padding: 16, marginBottom: 12,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
+  },
+  sectionTitle: { fontSize: 14, fontWeight: '800', color: '#FFFFFF', marginBottom: 12, letterSpacing: 0.3 },
+
+  row: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6 },
+  rowText: { fontSize: 14, color: 'rgba(255,255,255,0.85)', flex: 1 },
+
+  notesBox: { marginTop: 10, padding: 12, backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 10 },
+  notesLabel: { fontSize: 11, fontWeight: '800', color: '#FF6A00', textTransform: 'uppercase', marginBottom: 4 },
+  notesText: { fontSize: 13, color: 'rgba(255,255,255,0.85)', lineHeight: 18 },
+
+  // Action rows
   actionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    backgroundColor: Colors.surface,
-    marginTop: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    paddingVertical: 12,
+    borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.04)',
   },
-  actionText: {
-    color: Colors.textPrimary,
-    fontSize: 16,
-    fontWeight: '700',
+  actionIcon: { width: 36, height: 36, borderRadius: 12, justifyContent: 'center', alignItems: 'center', borderWidth: 1 },
+  actionLabel: { flex: 1, fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
+
+  statusPill: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14,
+    alignSelf: 'flex-start', marginTop: 10,
   },
-  dangerRow: {
-    borderColor: Colors.error,
+  statusPillText: { fontSize: 12, fontWeight: '700' },
+  proposeBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, borderRadius: 12, marginTop: 12 },
+  proposeBtnText: { fontSize: 14, fontWeight: '800', color: '#FFFFFF' },
+
+  arrivalCard: { borderRadius: 14, overflow: 'hidden', marginBottom: 12 },
+  arrivalGrad: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 18 },
+  arrivalTitle: { fontSize: 15, fontWeight: '800', color: '#FFFFFF' },
+  arrivalSub: { fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 2 },
+  bothReady: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#00D68F', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
+  bothReadyText: { fontSize: 11, fontWeight: '800', color: '#FFFFFF' },
+  waiting: { fontSize: 12, color: 'rgba(255,255,255,0.5)', fontStyle: 'italic' },
+
+  dangerRow: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, justifyContent: 'center' },
+  dangerText: { fontSize: 12, fontWeight: '600', color: '#FF6B6B' },
+
+  // Bottom Accept/Decline
+  bottomActions: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    flexDirection: 'row', gap: 10, padding: 16,
+    backgroundColor: 'rgba(10,14,26,0.97)',
+    borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)',
   },
-  dangerText: {
-    color: Colors.error,
+  bottomBtn: { flex: 1, borderRadius: 14, overflow: 'hidden' },
+  denyBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    paddingVertical: 16, backgroundColor: '#1F2436',
+    borderWidth: 1, borderColor: 'rgba(255,107,107,0.4)',
   },
-  // Location proposal styles
-  agreedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: 'rgba(0, 200, 83, 0.1)',
-    borderRadius: 20,
-    alignSelf: 'flex-start',
-  },
-  agreedText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.success,
-  },
-  pendingBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: 'rgba(255, 170, 0, 0.1)',
-    borderRadius: 20,
-    alignSelf: 'flex-start',
-  },
-  pendingText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.warning,
-  },
-  proposeLocationBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: Colors.secondary,
-    paddingVertical: 14,
-    borderRadius: 12,
-    marginTop: 16,
-  },
-  proposeLocationText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: Colors.white,
-  },
-  // Arrival styles
-  arrivalCard: {
-    marginBottom: 16,
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  arrivalGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 20,
-    gap: 16,
-  },
-  arrivalContent: {
-    flex: 1,
-  },
-  arrivalTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: Colors.white,
-  },
-  arrivalSubtitle: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.8)',
-    marginTop: 2,
-  },
-  arrivalStatus: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 8,
-    backgroundColor: '#141929',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-  },
-  arrivalStatusText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.success,
-  },
-  waitingText: {
-    fontSize: 13,
-    color: Colors.textLight,
-    fontStyle: 'italic',
-  },
-  bothArrivedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: Colors.success,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  bothArrivedText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: Colors.white,
-  },
-  // Modal styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: '#141929',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 24,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  modalSubtitle: {
-    fontSize: 14,
-    color: Colors.textLight,
-    marginBottom: 12,
-  },
+  acceptGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 16 },
+  bottomBtnText: { fontSize: 15, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.4 },
+
+  // Modals
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.65)', justifyContent: 'flex-end' },
+  modalContent: { backgroundColor: '#141929', borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 22 },
+  modalHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  modalTitle: { fontSize: 17, fontWeight: '800', color: '#FFFFFF' },
+  modalHint: { fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 12 },
   locationInput: {
-    backgroundColor: Colors.surface,
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    color: Colors.textPrimary,
-    minHeight: 80,
-    textAlignVertical: 'top',
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 14,
+    fontSize: 15, color: '#FFFFFF', minHeight: 80, textAlignVertical: 'top',
+    marginBottom: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
   },
-  modalBtn: {
-    backgroundColor: Colors.secondary,
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  modalBtnDisabled: {
-    opacity: 0.5,
-  },
-  modalBtnText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: Colors.white,
-  },
+  modalBtn: { paddingVertical: 14, borderRadius: 12, alignItems: 'center' },
+  modalBtnText: { fontSize: 15, fontWeight: '800', color: '#FFFFFF' },
+
+  videoOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center', alignItems: 'center' },
+  videoClose: { position: 'absolute', top: 48, right: 16, zIndex: 10, padding: 8 },
+  videoPlayer: { width: '100%', height: '70%' },
 });

@@ -26,6 +26,9 @@ import axios from 'axios';
 import { toast } from '../../../src/utils/toast';
 import { SocialLinksDisplay } from '../../../src/components/ProfileSections';
 import { PersonalityTagBadge, PersonalityTagSelector } from '../../../src/components/PersonalityTagBadge';
+// iter98d (Task 5): mount own-profile vibe player + stop on unmount
+import { TrainerVibePlayer } from '../../../src/components/TrainerVibePlayer';
+import { stopAllAudio } from '../../../src/utils/audioCoordinator';
 import { AccentColorPicker } from '../../../src/components/AccentColorPicker';
 import { DS } from '../../../src/theme/designSystem';
 
@@ -60,6 +63,8 @@ export default function TrainerProfileScreen() {
   useEffect(() => {
     loadProfile();
     loadStreaks();
+    // iter98d (Task 5): stop audio on profile-tab unmount
+    return () => { try { stopAllAudio(); } catch { /* no-op */ } };
   }, []);
 
   useEffect(() => {
@@ -116,7 +121,8 @@ export default function TrainerProfileScreen() {
           style: 'destructive',
           onPress: async () => {
             await logout();
-            router.replace('/');
+            // iter98d (Task 2): go straight to sign-in, not Welcome splash
+            router.replace('/auth/login');
           },
         },
       ]
@@ -370,6 +376,13 @@ export default function TrainerProfileScreen() {
           {/* Gallery removed per product decision (iter84) — Highlight Reel is the single media surface */}
           <View style={{ paddingHorizontal: 16 }}>
             <SocialLinksDisplay socialLinks={profile?.socialLinks || {}} />
+
+            {/* iter98d (Task 5): own-profile vibe player — auto-plays user's anthem */}
+            {profile?.vibeTrackTitle && (profile?.vibePreviewUrl || profile?.vibeTrackId) ? (
+              <View style={{ marginTop: 16 }} data-testid="own-vibe-player">
+                <TrainerVibePlayer vibe={profile as any} autoPlay={true} />
+              </View>
+            ) : null}
 
             {/* Trainer Vibe CTA */}
             <TouchableOpacity

@@ -93,6 +93,14 @@ export default function TrainerDetailScreen() {
 
   useEffect(() => {
     loadTrainerDetails();
+    // iter98d (Task 5): stop any vibe audio when leaving this profile
+    return () => {
+      try {
+        // dynamic require to avoid pulling expo-av into web fallback bundles unnecessarily
+        const { stopAllAudio } = require('../../src/utils/audioCoordinator');
+        stopAllAudio();
+      } catch { /* no-op */ }
+    };
   }, [trainerId]);
 
   useEffect(() => {

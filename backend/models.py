@@ -196,6 +196,9 @@ class UserResponse(BaseModel):
     createdAt: datetime
     profilePhoto: Optional[str] = None  # Exposed so /auth/me reflects the synced trainer profile photo
     avatarUrl: Optional[str] = None     # Canonical alias kept in sync via /trainer-profiles POST
+    # iter98c: separate legal vs display names
+    legalName: Optional[str] = None     # Original verified legal name (admin-visible only). Never overwritten.
+    displayName: Optional[str] = None   # User-editable public name. Mirrors fullName when set.
 
 class TokenResponse(BaseModel):
     access_token: str

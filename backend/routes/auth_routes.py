@@ -171,11 +171,23 @@ async def login(request: Request, credentials: UserLogin):
 @router.get("/auth/me", response_model=UserResponse)
 async def get_me(current_user: dict = Depends(get_current_user)):
     """Get current user profile"""
-    # If trainer, pull avatarUrl from trainer_profiles as the authoritative source
+    # iter98d (Task 3): mirror trainer logic — trainees also need their
+    # profile photo synced into /auth/me so the bottom-nav Profile tab
+    # icon shows their actual thumbnail instead of falling back to initials.
     avatar_url = current_user.get('avatarUrl')
     profile_photo = current_user.get('profilePhoto')
-    if not avatar_url and 'trainer' in (current_user.get('roles') or []):
+    roles = current_user.get('roles') or []
+    if not avatar_url and 'trainer' in roles:
         tp = await db.trainer_profiles.find_one(
+            {'userId': str(current_user['_id'])},
+            {'avatarUrl': 1, 'profilePhoto': 1}
+        )
+        if tp:
+            avatar_url = tp.get('avatarUrl') or tp.get('profilePhoto')
+            if not profile_photo:
+                profile_photo = tp.get('profilePhoto') or tp.get('avatarUrl')
+    if not avatar_url and 'trainee' in roles:
+        tp = await db.trainee_profiles.find_one(
             {'userId': str(current_user['_id'])},
             {'avatarUrl': 1, 'profilePhoto': 1}
         )
@@ -193,8 +205,77 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         createdAt=current_user['createdAt'],
         profilePhoto=profile_photo,
         avatarUrl=avatar_url,
+        # iter98c: surface legal vs display name for own-profile editor
+        legalName=current_user.get('legalName') or current_user['fullName'],
+        displayName=current_user.get('displayName') or current_user['fullName'],
     )
 
+
+# iter98c: free-form display name editing (#A. every user can rename themselves any time).
+# - Trainers: legalName is preserved on first edit (snapshot of the original verified name).
+#   Public-facing fullName + displayName get the new value. Admin can still see legalName.
+# - Trainees: no legal-name concept; both fullName + displayName update.
+# - Every rename writes a row to db.name_change_audit for admin audit log.
+class UpdateMeRequest(BaseModel):
+    displayName: Optional[str] = None
+    phone: Optional[str] = None
+
+
+@router.put("/auth/me")
+async def update_me(payload: UpdateMeRequest, current_user: dict = Depends(get_current_user)):
+    """Update current user's display name (free-form, audit-logged) and/or phone."""
+    updates: dict = {}
+    audit_entry: Optional[dict] = None
+
+    if payload.displayName is not None:
+        new_name = payload.displayName.strip()
+        if not new_name:
+            raise HTTPException(status_code=400, detail="Display name cannot be empty")
+        if len(new_name) > 80:
+            raise HTTPException(status_code=400, detail="Display name must be 80 characters or less")
+        old_name = current_user.get('fullName', '')
+        if new_name != old_name:
+            # Preserve original legal name for trainers if not already snapshotted
+            is_trainer = 'trainer' in (current_user.get('roles') or [])
+            if is_trainer and not current_user.get('legalName'):
+                updates['legalName'] = old_name
+            updates['fullName'] = new_name
+            updates['displayName'] = new_name
+            audit_entry = {
+                'userId': str(current_user['_id']),
+                'email': current_user.get('email', ''),
+                'roles': current_user.get('roles', []),
+                'oldName': old_name,
+                'newName': new_name,
+                'legalNamePreserved': updates.get('legalName'),
+                'changedAt': datetime.utcnow(),
+            }
+
+    if payload.phone is not None:
+        phone = payload.phone.strip()
+        if phone:
+            updates['phone'] = phone
+
+    if not updates:
+        # No-op (idempotent) — still 200 to keep client UX simple
+        return {'success': True, 'noop': True}
+
+    updates['updatedAt'] = datetime.utcnow()
+    await db.users.update_one({'_id': current_user['_id']}, {'$set': updates})
+
+    if audit_entry:
+        await db.name_change_audit.insert_one(audit_entry)
+        # Mirror the new displayName into trainer_profiles / trainee_profiles so cards refresh
+        await db.trainer_profiles.update_one(
+            {'userId': str(current_user['_id'])},
+            {'$set': {'fullName': updates['fullName'], 'updatedAt': datetime.utcnow()}},
+        )
+        await db.trainee_profiles.update_one(
+            {'userId': str(current_user['_id'])},
+            {'$set': {'fullName': updates['fullName'], 'updatedAt': datetime.utcnow()}},
+        )
+
+    return {'success': True, 'updates': {k: v for k, v in updates.items() if k != 'updatedAt'}}
 
 
 @router.delete("/auth/me")

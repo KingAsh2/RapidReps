@@ -45,10 +45,22 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
   }, []);
 
   const handlePlayVideo = (url: string) => {
-    // iter97 (#9): Admin reviews need FULL video playback (no 15s cap).
+    // iter98d (Task 4): Admin reviews need FULL video playback.
+    // expo-av <Video> on web frequently renders audio-only (no <video> element).
+    // Open the file in a new browser tab on web so the native player handles it.
     const fullUrl = url.startsWith('http') ? url : `${process.env.EXPO_PUBLIC_BACKEND_URL}${url}`;
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      window.open(fullUrl, '_blank', 'noopener,noreferrer');
+      return;
+    }
     setVideoUrl(fullUrl);
     setShowVideoModal(true);
+  };
+
+  // iter98d: also expose an "Open in browser" escape hatch from the native modal
+  const handleOpenInBrowser = () => {
+    if (!videoUrl) return;
+    Linking.openURL(videoUrl).catch(() => toast.error('Unable to open browser'));
   };
 
   const handleCloseVideo = () => {
@@ -721,20 +733,23 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                   isLooping={false}
                   onError={(error) => {
                     console.error('Video playback error:', error);
-                    toast.error('Video playback failed. The file may be corrupted or use an unsupported format.');
+                    toast.error('Video playback failed. Tap "Open in browser" below.');
                   }}
-                  onLoad={() => {
-                    console.log('Video loaded successfully');
-                  }}
-                  onPlaybackStatusUpdate={(_status) => {
-                    // iter97 (#9): no 15s cap — admin can review full video
-                  }}
+                  onLoad={() => { console.log('Video loaded successfully'); }}
                 />
               </View>
             )}
-            <Text style={{ color: '#999', fontSize: 12, textAlign: 'center', padding: 8 }}>
-              Preview auto-stops after 15 seconds
-            </Text>
+            {/* iter98d (Task 4): always-available escape hatch — opens video in OS browser */}
+            <TouchableOpacity
+              onPress={handleOpenInBrowser}
+              style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, marginTop: 6 }}
+              data-testid="open-video-in-browser"
+              accessibilityLabel="Open video in browser"
+              accessibilityRole="button"
+            >
+              <Ionicons name="open-outline" size={16} color="#FF6A00" />
+              <Text style={{ color: '#FF6A00', fontSize: 13, fontWeight: '700' }}>Open in browser</Text>
+            </TouchableOpacity>
             <Text style={{ color: '#666', fontSize: 10, textAlign: 'center', paddingBottom: 8 }}>
               If video doesn't display, the file may need re-encoding (MP4/H.264 recommended)
             </Text>

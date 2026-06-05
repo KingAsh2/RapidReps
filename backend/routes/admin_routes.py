@@ -125,6 +125,27 @@ async def get_admin_dashboard(admin_user: dict = Depends(require_admin)):
     }
 
 
+
+
+# iter98c: Admin audit log for user display-name changes
+@router.get("/admin/name-change-audit")
+async def admin_name_change_audit(
+    limit: int = 100,
+    user_id: Optional[str] = None,
+    admin_user: dict = Depends(require_admin),
+):
+    """Return the most recent display-name changes (admin-only audit trail)."""
+    query: dict = {}
+    if user_id:
+        query['userId'] = user_id
+    rows = await db.name_change_audit.find(query, {'_id': 0}).sort('changedAt', -1).limit(limit).to_list(limit)
+    for r in rows:
+        if r.get('changedAt') and hasattr(r['changedAt'], 'isoformat'):
+            r['changedAt'] = r['changedAt'].isoformat()
+    return {'entries': rows, 'count': len(rows)}
+
+
+
 # iter98a: Recent completed sessions feed for premium dashboard tile
 @router.get("/admin/recent-sessions")
 async def admin_recent_sessions(limit: int = 10, admin_user: dict = Depends(require_admin)):

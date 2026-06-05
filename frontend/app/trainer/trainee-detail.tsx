@@ -76,6 +76,13 @@ export default function TraineeDetailScreen() {
 
   useEffect(() => {
     loadTraineeDetails();
+    // iter98d (Task 5): stop any vibe audio when leaving this profile
+    return () => {
+      try {
+        const { stopAllAudio } = require('../../src/utils/audioCoordinator');
+        stopAllAudio();
+      } catch { /* no-op */ }
+    };
   }, [traineeId]);
 
   useEffect(() => {

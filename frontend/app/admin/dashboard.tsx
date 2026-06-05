@@ -327,7 +327,8 @@ export default function AdminDashboard() {
       await authLogout();
     } catch { /* fallthrough */ }
     await AsyncStorage.multiRemove(['auth_token', 'active_role', 'user', 'currentUser']);
-    router.replace('/');
+    // iter98d (Task 2): go straight to sign-in, not the Welcome A/B splash
+    router.replace('/auth/login');
   };
 
   const handleChangePassword = async () => {
