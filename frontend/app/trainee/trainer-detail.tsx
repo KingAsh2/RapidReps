@@ -744,98 +744,122 @@ export default function TrainerDetailScreen() {
 
               {/* Session Type Selection - NEW PRD */}
               <Text style={styles.sectionLabel}>SESSION TYPE</Text>
-              <View style={styles.sessionTypeRow}>
-                {trainer.offersVirtual && (
-                  <TouchableOpacity
-                    onPress={() => setSelectedSessionType('virtual')}
-                    style={[
-                      styles.sessionTypeChip,
-                      selectedSessionType === 'virtual' && styles.sessionTypeChipSelected,
-                    ]}
-                    data-testid="session-type-virtual"
-                  >
-                    <Ionicons 
-                      name="videocam" 
-                      size={18} 
-                      color={selectedSessionType === 'virtual' ? COLORS.white : COLORS.orange} 
-                    />
-                    <Text style={[
-                      styles.sessionTypeText,
-                      selectedSessionType === 'virtual' && styles.sessionTypeTextSelected
-                    ]}>
-                      Virtual
-                    </Text>
-                    <Text style={[
-                      styles.sessionTypePrice,
-                      selectedSessionType === 'virtual' && styles.sessionTypePriceSelected
-                    ]}>
-                      from ${trainer.virtualRateCents ? Math.round(trainer.virtualRateCents / 0.80 / 100) : 38}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-                {(trainer.offersInPerson || trainer.offersOutdoor) && (
-                  <TouchableOpacity
-                    onPress={() => setSelectedSessionType('outdoor')}
-                    style={[
-                      styles.sessionTypeChip,
-                      selectedSessionType === 'outdoor' && styles.sessionTypeChipSelected,
-                    ]}
-                    data-testid="session-type-outdoor"
-                  >
-                    <Ionicons 
-                      name="sunny" 
-                      size={18} 
-                      color={selectedSessionType === 'outdoor' ? COLORS.white : COLORS.orange} 
-                    />
-                    <Text style={[
-                      styles.sessionTypeText,
-                      selectedSessionType === 'outdoor' && styles.sessionTypeTextSelected
-                    ]}>
-                      Outdoor
-                    </Text>
-                    <Text style={[
-                      styles.sessionTypePrice,
-                      selectedSessionType === 'outdoor' && styles.sessionTypePriceSelected
-                    ]}>
-                      from ${trainer.outdoorRateCents ? Math.round(trainer.outdoorRateCents / 0.80 / 100) : 50}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-                {trainer.offersInHome && (
-                  <TouchableOpacity
-                    onPress={() => {
-                      if (!traineeHomeConsented) {
-                        setShowTraineeHomeConsent(true);
-                      } else {
-                        setSelectedSessionType('in_home');
-                      }
-                    }}
-                    style={[
-                      styles.sessionTypeChip,
-                      selectedSessionType === 'in_home' && styles.sessionTypeChipSelected,
-                    ]}
-                    data-testid="session-type-at-home"
-                  >
-                    <Ionicons 
-                      name="home" 
-                      size={18} 
-                      color={selectedSessionType === 'in_home' ? COLORS.white : COLORS.orange} 
-                    />
-                    <Text style={[
-                      styles.sessionTypeText,
-                      selectedSessionType === 'in_home' && styles.sessionTypeTextSelected
-                    ]}>
-                      At Home
-                    </Text>
-                    <Text style={[
-                      styles.sessionTypePrice,
-                      selectedSessionType === 'in_home' && styles.sessionTypePriceSelected
-                    ]}>
-                      from ${trainer.inHomeRateCents ? Math.round(trainer.inHomeRateCents / 0.80 / 100) : 75}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </View>
+              {/* iter102d: "from $X" labels reflect ONLY what the trainer set in
+                  tierRates. If no rate exists for a modality we hide the label
+                  entirely (no hardcoded $38/$50/$75 fallbacks). */}
+              {(() => null)()}
+              {(() => {
+                const tr: any = (trainer as any).tierRates || {};
+                const durations = (trainer.sessionDurationsOffered || [30, 45, 60, 90]) as number[];
+                const minRate = (modality: 'inPerson' | 'virtual'): number | null => {
+                  const vals = durations
+                    .map((d) => tr[`${modality}${d}Cents`])
+                    .filter((v: any) => typeof v === 'number' && v > 0);
+                  return vals.length ? Math.min(...vals) : null;
+                };
+                const minVirtualCents = minRate('virtual');
+                const minInPersonCents = minRate('inPerson');
+                return (
+                  <View style={styles.sessionTypeRow}>
+                    {trainer.offersVirtual && (
+                      <TouchableOpacity
+                        onPress={() => setSelectedSessionType('virtual')}
+                        style={[
+                          styles.sessionTypeChip,
+                          selectedSessionType === 'virtual' && styles.sessionTypeChipSelected,
+                        ]}
+                        data-testid="session-type-virtual"
+                      >
+                        <Ionicons
+                          name="videocam"
+                          size={18}
+                          color={selectedSessionType === 'virtual' ? COLORS.white : COLORS.orange}
+                        />
+                        <Text style={[
+                          styles.sessionTypeText,
+                          selectedSessionType === 'virtual' && styles.sessionTypeTextSelected,
+                        ]}>
+                          Virtual
+                        </Text>
+                        {minVirtualCents != null && (
+                          <Text style={[
+                            styles.sessionTypePrice,
+                            selectedSessionType === 'virtual' && styles.sessionTypePriceSelected,
+                          ]}>
+                            from ${Math.round(minVirtualCents / 100)}
+                          </Text>
+                        )}
+                      </TouchableOpacity>
+                    )}
+                    {(trainer.offersInPerson || trainer.offersOutdoor) && (
+                      <TouchableOpacity
+                        onPress={() => setSelectedSessionType('outdoor')}
+                        style={[
+                          styles.sessionTypeChip,
+                          selectedSessionType === 'outdoor' && styles.sessionTypeChipSelected,
+                        ]}
+                        data-testid="session-type-outdoor"
+                      >
+                        <Ionicons
+                          name="sunny"
+                          size={18}
+                          color={selectedSessionType === 'outdoor' ? COLORS.white : COLORS.orange}
+                        />
+                        <Text style={[
+                          styles.sessionTypeText,
+                          selectedSessionType === 'outdoor' && styles.sessionTypeTextSelected,
+                        ]}>
+                          Outdoor
+                        </Text>
+                        {minInPersonCents != null && (
+                          <Text style={[
+                            styles.sessionTypePrice,
+                            selectedSessionType === 'outdoor' && styles.sessionTypePriceSelected,
+                          ]}>
+                            from ${Math.round(minInPersonCents / 100)}
+                          </Text>
+                        )}
+                      </TouchableOpacity>
+                    )}
+                    {trainer.offersInHome && (
+                      <TouchableOpacity
+                        onPress={() => {
+                          if (!traineeHomeConsented) {
+                            setShowTraineeHomeConsent(true);
+                          } else {
+                            setSelectedSessionType('in_home');
+                          }
+                        }}
+                        style={[
+                          styles.sessionTypeChip,
+                          selectedSessionType === 'in_home' && styles.sessionTypeChipSelected,
+                        ]}
+                        data-testid="session-type-at-home"
+                      >
+                        <Ionicons
+                          name="home"
+                          size={18}
+                          color={selectedSessionType === 'in_home' ? COLORS.white : COLORS.orange}
+                        />
+                        <Text style={[
+                          styles.sessionTypeText,
+                          selectedSessionType === 'in_home' && styles.sessionTypeTextSelected,
+                        ]}>
+                          At Home
+                        </Text>
+                        {minInPersonCents != null && (
+                          <Text style={[
+                            styles.sessionTypePrice,
+                            selectedSessionType === 'in_home' && styles.sessionTypePriceSelected,
+                          ]}>
+                            from ${Math.round(minInPersonCents / 100)}
+                          </Text>
+                        )}
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                );
+              })()}
 
               {/* Safety PIN Notice for In-Home */}
               {selectedSessionType === 'in_home' && (
