@@ -49,7 +49,7 @@ const COLORS = {
 
 export default function EditTrainerProfileScreen() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { showAlert } = useAlert();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -253,6 +253,9 @@ export default function EditTrainerProfileScreen() {
       } else {
         await trainerAPI.createProfile(profileData);
       }
+
+      // iter102: refresh auth user so bottom-tab avatar reflects new photo immediately
+      try { await refreshUser?.(); } catch {}
 
       router.back();
     } catch (error: any) {

@@ -331,8 +331,9 @@ class TestVerificationsPhotoRemoved:
         steps = r.json().get("steps") or []
         step_ids = [s.get("id") for s in steps]
         assert "photo" not in step_ids, f"photo step still present in verification detail: {step_ids}"
-        # Should contain the documented 6
-        for expected in ["identity", "background", "certification", "cpr", "insurance", "video"]:
+        assert "video" not in step_ids, f"video step still present in verification detail: {step_ids}"
+        # Should contain the documented 5 (photo + video were removed per iter98g/98h)
+        for expected in ["identity", "background", "certification", "cpr", "insurance"]:
             assert expected in step_ids, f"missing step {expected}; got {step_ids}"
 
 

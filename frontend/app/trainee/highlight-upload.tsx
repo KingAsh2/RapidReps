@@ -13,6 +13,13 @@ const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 const { width } = Dimensions.get('window');
 const THUMB_SIZE = (width - 52) / 2;
 
+// iter102b: server stores `/api/files/...` paths; RN Image/Video need absolute URLs.
+const resolveUrl = (u?: string) => {
+  if (!u) return '';
+  if (u.startsWith('http://') || u.startsWith('https://')) return u;
+  return `${API_URL}${u}`;
+};
+
 interface Highlight {
   url: string;
   type: 'video' | 'photo';
@@ -162,12 +169,12 @@ export default function TraineeHighlightUpload() {
         item.thumbnailUrl ? (
           // iter96b: show poster image immediately; avoid mounting Video for
           // the grid view, which previously left tiles blank until tapped.
-          <Image source={{ uri: item.thumbnailUrl }} style={s.highlightMedia} />
+          <Image source={{ uri: resolveUrl(item.thumbnailUrl) }} style={s.highlightMedia} />
         ) : (
-          <Video source={{ uri: item.url }} style={s.highlightMedia} resizeMode={ResizeMode.COVER} shouldPlay={false} isMuted />
+          <Video source={{ uri: resolveUrl(item.url) }} style={s.highlightMedia} resizeMode={ResizeMode.COVER} shouldPlay={false} isMuted />
         )
       ) : (
-        <Image source={{ uri: item.url }} style={s.highlightMedia} />
+        <Image source={{ uri: resolveUrl(item.url) }} style={s.highlightMedia} />
       )}
       <LinearGradient colors={['transparent', 'rgba(0,0,0,0.6)']} style={s.highlightOverlay}>
         {item.type === 'video' && (

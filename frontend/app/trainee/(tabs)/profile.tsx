@@ -79,7 +79,7 @@ const US_STATES = [
 export default function TraineeProfileScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
   const { showAlert } = useAlert();
   const { soundEnabled, setSoundEnabled, playTap } = useSoundEffects();
   const [loading, setLoading] = useState(true);
@@ -246,6 +246,8 @@ export default function TraineeProfileScreen() {
       };
       await traineeAPI.updateProfile(profileData);
       setIsEditing(false);
+      // iter102: refresh auth user so bottom-tab avatar reflects new photo immediately
+      try { await refreshUser?.(); } catch {}
       loadProfile();
     } catch (error: any) {
       showAlert({
@@ -395,7 +397,7 @@ export default function TraineeProfileScreen() {
                 },
               ]}
             >
-              <TouchableOpacity onPress={pickImage} style={styles.avatarContainer} data-testid="trainee-avatar-tap">
+              <TouchableOpacity onPress={isEditing ? pickImage : undefined} disabled={!isEditing} activeOpacity={isEditing ? 0.7 : 1} style={styles.avatarContainer} data-testid="trainee-avatar-tap">
                 {/* iter98e: accent-color halo + ring on own avatar */}
                 <View style={{
                   shadowColor: profile?.accentColor || '#FF6A00',
@@ -417,9 +419,11 @@ export default function TraineeProfileScreen() {
                     size={110}
                   />
                 </View>
-                <View style={styles.editBadge}>
-                  <Ionicons name="camera" size={16} color={COLORS.white} />
-                </View>
+                {isEditing && (
+                  <View style={styles.editBadge}>
+                    <Ionicons name="camera" size={16} color={COLORS.white} />
+                  </View>
+                )}
               </TouchableOpacity>
 
               {/* iter98e: tap-to-edit display name (free-form, audit-logged) */}

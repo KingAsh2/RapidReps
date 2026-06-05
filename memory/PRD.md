@@ -4,6 +4,28 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-06-05 — Iteration 102: Centralized Profile Photo Uploads 📸
+
+User instruction: "The only place that Profile photos should be uploaded, changed or removed is Profile → Edit Profile. That same profile photo should serve as the icon for the profile button on the bottom app menu."
+
+### Shipped
+1. **Trainer verification.tsx** — Removed dead `stepId === 'photo'` and `stepId === 'video'` upload branches in `handleUploadDocument`. Both steps had already been pulled from `VERIFICATION_STEPS` in iter98g/98h, so the orphaned upload logic is gone. Updated the upload-button label switch to match.
+2. **Trainee profile tab** — Avatar tap is now gated behind `isEditing`. Users must press "Edit Profile" before they can change their photo. The camera "edit badge" only appears in edit mode. Trainer profile tab was already read-only (uses dedicated `/trainer/edit-profile`).
+3. **Bottom-tab refresh** — `trainer/edit-profile.tsx` and `trainee/(tabs)/profile.tsx` now call `refreshUser()` after `handleSave()` so the bottom-tab `UserAvatar` reflects the new photo immediately without an app reload.
+4. **Backend regression test updated** — `tests/test_iteration101_cleanup.py::test_verification_detail_steps_excludes_photo` now also asserts `video` is absent from admin verification detail steps; expected step list reduced to the 5 documented ones.
+
+### Verified
+- ✅ `/app/backend/tests/test_iteration101_cleanup.py` — 10 passed / 1 skipped
+- ✅ ESLint clean on all 3 frontend files modified
+- ✅ Backend `/api/health` returns 200
+
+### Files touched
+- `/app/frontend/app/trainer/verification.tsx`
+- `/app/frontend/app/trainer/edit-profile.tsx`
+- `/app/frontend/app/trainee/(tabs)/profile.tsx`
+- `/app/backend/tests/test_iteration101_cleanup.py`
+
+
 ## 2026-06-05 — Iteration 98d: 12-task post-deployment cleanup 🔧
 
 User reported claimed-fixed items were still broken in production. Resolved all 12 one-at-a-time with explicit per-task verification.

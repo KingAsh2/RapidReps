@@ -404,37 +404,9 @@ export default function TrainerVerificationScreen() {
         } else {
           setVerificationStatus(prev => ({ ...prev, [stepId]: 'pending' }));
         }
-      } else if (stepId === 'photo') {
-        const result = await ImagePicker.launchImageLibraryAsync({
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          allowsEditing: true,
-          aspect: [1, 1],
-          quality: 0.8,
-        });
-        if (!result.canceled && result.assets?.[0]) {
-          const asset = result.assets[0];
-          await submitStepToBackend(stepId, asset.uri, 'profile_photo.jpg');
-          setVerificationStatus(prev => ({ ...prev, [stepId]: 'submitted' }));
-          toast.success( 'Profile photo uploaded successfully!');
-        } else {
-          setVerificationStatus(prev => ({ ...prev, [stepId]: 'pending' }));
-        }
-      } else if (stepId === 'video') {
-        const result = await ImagePicker.launchImageLibraryAsync({
-          mediaTypes: ImagePicker.MediaTypeOptions.Videos,
-          allowsEditing: true,
-          quality: 0.8,
-          videoMaxDuration: 60,
-        });
-        if (!result.canceled && result.assets?.[0]) {
-          const asset = result.assets[0];
-          await submitStepToBackend(stepId, asset.uri, 'intro_video.mp4');
-          setVerificationStatus(prev => ({ ...prev, [stepId]: 'submitted' }));
-          toast.success( 'Intro video uploaded successfully!');
-        } else {
-          setVerificationStatus(prev => ({ ...prev, [stepId]: 'pending' }));
-        }
       } else {
+        // iter102: 'photo' and 'video' upload paths removed.
+        // Profile photo is managed exclusively from Profile → Edit Profile.
         const result = await DocumentPicker.getDocumentAsync({
           type: ['application/pdf', 'image/*'],
           copyToCacheDirectory: true,
@@ -720,7 +692,7 @@ export default function TrainerVerificationScreen() {
                                 {status === 'submitted' ? 'Re-upload' :
                                  step.id === 'identity' ? 'Scan ID' :
                                  step.id === 'background' ? 'Provide Information' :
-                                 step.id === 'photo' || step.id === 'video' ? 'Select File' : 'Upload Document'}
+                                 'Upload Document'}
                               </Text>
                             </LinearGradient>
                           </TouchableOpacity>
