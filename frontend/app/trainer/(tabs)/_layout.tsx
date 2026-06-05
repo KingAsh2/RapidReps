@@ -1,19 +1,22 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Platform, View, Text, StyleSheet } from 'react-native';
+import { View } from 'react-native';
 import { useNotifications } from '../../../src/contexts/NotificationContext';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { UserAvatar } from '../../../src/components/UserAvatar';
+import {
+  TAB_COLORS,
+  TAB_BAR_STYLE,
+  TAB_LABEL_STYLE,
+  TAB_ICON_STYLE,
+  TAB_BADGE_STYLE,
+  tabSharedStyles,
+} from '../../../src/components/tabBarStyles';
 
-const COLORS = {
-  accent: '#FF6A00',
-  navy: '#0A0E1A',
-  white: '#FFFFFF',
-  gray: 'rgba(255,255,255,0.4)',
-  tabBg: '#0D1117',
-};
-
+// iter102m: trainer tabs share the exact same visual tokens as the trainee
+// tabs (outline→solid icon swap, accent focus pill, label weight, badge style,
+// shadow, height, padding). Only the role-specific tab "Funds" differs.
 export default function TrainerTabsLayout() {
   const { unreadMessageCount, pendingSessionCount } = useNotifications();
   const { user } = useAuth();
@@ -22,34 +25,22 @@ export default function TrainerTabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarStyle: {
-          backgroundColor: COLORS.tabBg,
-          borderTopWidth: 1,
-          borderTopColor: 'rgba(255,255,255,0.06)',
-          elevation: 12,
-          shadowColor: '#FF6A00',
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.08,
-          shadowRadius: 16,
-          height: Platform.OS === 'ios' ? 88 : 70,
-          paddingBottom: Platform.OS === 'ios' ? 28 : 10,
-          paddingTop: 10,
-        },
-        tabBarActiveTintColor: COLORS.accent,
-        tabBarInactiveTintColor: COLORS.gray,
-        tabBarLabelStyle: {
-          fontSize: 13,
-          fontWeight: '700',
-        },
+        tabBarActiveTintColor: TAB_COLORS.accent,
+        tabBarInactiveTintColor: TAB_COLORS.gray,
+        tabBarStyle: TAB_BAR_STYLE,
+        tabBarLabelStyle: TAB_LABEL_STYLE,
+        tabBarIconStyle: TAB_ICON_STYLE,
       }}
     >
       <Tabs.Screen
         name="home"
         options={{
           title: 'Home',
-          tabBarAccessibilityLabel: 'Trainer home tab',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home" size={size} color={color} />
+          tabBarAccessibilityLabel: 'Home tab',
+          tabBarIcon: ({ color, focused }) => (
+            <View style={focused ? tabSharedStyles.activeIconContainer : null}>
+              <Ionicons name={focused ? 'home' : 'home-outline'} size={24} color={color} />
+            </View>
           ),
         }}
       />
@@ -59,9 +50,11 @@ export default function TrainerTabsLayout() {
           title: 'Sessions',
           tabBarAccessibilityLabel: 'My sessions tab',
           tabBarBadge: pendingSessionCount > 0 ? pendingSessionCount : undefined,
-          tabBarBadgeStyle: { backgroundColor: '#FF6A00', fontSize: 13, fontWeight: '700' },
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar" size={size} color={color} />
+          tabBarBadgeStyle: TAB_BADGE_STYLE,
+          tabBarIcon: ({ color, focused }) => (
+            <View style={focused ? tabSharedStyles.activeIconContainer : null}>
+              <Ionicons name={focused ? 'calendar' : 'calendar-outline'} size={24} color={color} />
+            </View>
           ),
         }}
       />
@@ -70,8 +63,10 @@ export default function TrainerTabsLayout() {
         options={{
           title: 'Receipts',
           tabBarAccessibilityLabel: 'Payment receipts tab',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="receipt" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <View style={focused ? tabSharedStyles.activeIconContainer : null}>
+              <Ionicons name={focused ? 'receipt' : 'receipt-outline'} size={24} color={color} />
+            </View>
           ),
         }}
       />
@@ -81,19 +76,24 @@ export default function TrainerTabsLayout() {
           title: 'Chat',
           tabBarAccessibilityLabel: 'Chat tab',
           tabBarBadge: unreadMessageCount > 0 ? unreadMessageCount : undefined,
-          tabBarBadgeStyle: { backgroundColor: COLORS.accent, fontSize: 13, fontWeight: '700' },
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="chatbubbles" size={size} color={color} />
+          tabBarBadgeStyle: TAB_BADGE_STYLE,
+          tabBarIcon: ({ color, focused }) => (
+            <View style={focused ? tabSharedStyles.activeIconContainer : null}>
+              <Ionicons name={focused ? 'chatbubbles' : 'chatbubbles-outline'} size={24} color={color} />
+            </View>
           ),
         }}
       />
+      {/* Role-specific tab: Funds (wallet) — preserves trainer-only flow */}
       <Tabs.Screen
         name="earnings"
         options={{
           title: 'Funds',
           tabBarAccessibilityLabel: 'Funds tab',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="wallet" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <View style={focused ? tabSharedStyles.activeIconContainer : null}>
+              <Ionicons name={focused ? 'wallet' : 'wallet-outline'} size={24} color={color} />
+            </View>
           ),
         }}
       />
@@ -101,10 +101,9 @@ export default function TrainerTabsLayout() {
         name="profile"
         options={{
           title: 'Profile',
-          tabBarAccessibilityLabel: 'Trainer profile tab',
-          tabBarIcon: ({ color, size, focused }) => (
-            // iter97 (#19): render user's real avatar in the tab bar
-            <UserAvatar user={user} size={Math.max(22, size - 2)} ring={focused} />
+          tabBarAccessibilityLabel: 'My profile tab',
+          tabBarIcon: ({ focused }) => (
+            <UserAvatar user={user} size={26} ring={focused} />
           ),
         }}
       />

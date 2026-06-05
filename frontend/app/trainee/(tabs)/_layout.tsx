@@ -1,20 +1,23 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import { View } from 'react-native';
 import { useNotifications } from '../../../src/contexts/NotificationContext';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { UserAvatar } from '../../../src/components/UserAvatar';
+import {
+  TAB_COLORS,
+  TAB_BAR_STYLE,
+  TAB_LABEL_STYLE,
+  TAB_ICON_STYLE,
+  TAB_BADGE_STYLE,
+  tabSharedStyles,
+} from '../../../src/components/tabBarStyles';
 
-// Brand Colors — Premium Dark
-const BRAND = {
-  accent: '#FF6A00',
-  navy: '#0A0E1A',
-  white: '#FFFFFF',
-  gray: 'rgba(255,255,255,0.4)',
-  tabBg: '#0D1117',
-};
-
+// iter102m: trainee tabs now consume the shared style tokens so visual behavior
+// (icon outline→solid on focus, accent focus pill, label weight, badge style,
+// shadow, height, padding) is identical to the trainer side. Only the *content*
+// of each tab differs by role.
 export default function TabLayout() {
   const { unreadMessageCount, pendingSessionCount } = useNotifications();
   const { user } = useAuth();
@@ -23,43 +26,21 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: BRAND.accent,
-        tabBarInactiveTintColor: BRAND.gray,
-        tabBarStyle: {
-          backgroundColor: BRAND.tabBg,
-          borderTopWidth: 1,
-          borderTopColor: 'rgba(255,255,255,0.06)',
-          height: Platform.OS === 'ios' ? 88 : 70,
-          paddingBottom: Platform.OS === 'ios' ? 28 : 10,
-          paddingTop: 10,
-          shadowColor: '#FF6A00',
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.08,
-          shadowRadius: 16,
-          elevation: 12,
-        },
-        tabBarLabelStyle: {
-          fontSize: 13,
-          fontWeight: '600',
-          marginTop: 2,
-        },
-        tabBarIconStyle: {
-          marginBottom: -2,
-        },
+        tabBarActiveTintColor: TAB_COLORS.accent,
+        tabBarInactiveTintColor: TAB_COLORS.gray,
+        tabBarStyle: TAB_BAR_STYLE,
+        tabBarLabelStyle: TAB_LABEL_STYLE,
+        tabBarIconStyle: TAB_ICON_STYLE,
       }}
     >
       <Tabs.Screen
         name="home"
         options={{
-          title: 'Discover',
-          tabBarAccessibilityLabel: 'Discover trainers tab',
+          title: 'Home',
+          tabBarAccessibilityLabel: 'Home tab',
           tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconContainer : null}>
-              <Ionicons 
-                name={focused ? "search" : "search-outline"} 
-                size={24} 
-                color={color} 
-              />
+            <View style={focused ? tabSharedStyles.activeIconContainer : null}>
+              <Ionicons name={focused ? 'home' : 'home-outline'} size={24} color={color} />
             </View>
           ),
         }}
@@ -70,14 +51,10 @@ export default function TabLayout() {
           title: 'Sessions',
           tabBarAccessibilityLabel: 'My sessions tab',
           tabBarBadge: pendingSessionCount > 0 ? pendingSessionCount : undefined,
-          tabBarBadgeStyle: { backgroundColor: BRAND.accent, fontSize: 13, fontWeight: '700' },
+          tabBarBadgeStyle: TAB_BADGE_STYLE,
           tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconContainer : null}>
-              <Ionicons 
-                name={focused ? "calendar" : "calendar-outline"} 
-                size={24} 
-                color={color} 
-              />
+            <View style={focused ? tabSharedStyles.activeIconContainer : null}>
+              <Ionicons name={focused ? 'calendar' : 'calendar-outline'} size={24} color={color} />
             </View>
           ),
         }}
@@ -88,12 +65,8 @@ export default function TabLayout() {
           title: 'Receipts',
           tabBarAccessibilityLabel: 'Payment receipts tab',
           tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconContainer : null}>
-              <Ionicons 
-                name={focused ? "receipt" : "receipt-outline"} 
-                size={24} 
-                color={color} 
-              />
+            <View style={focused ? tabSharedStyles.activeIconContainer : null}>
+              <Ionicons name={focused ? 'receipt' : 'receipt-outline'} size={24} color={color} />
             </View>
           ),
         }}
@@ -104,30 +77,23 @@ export default function TabLayout() {
           title: 'Chat',
           tabBarAccessibilityLabel: 'Chat tab',
           tabBarBadge: unreadMessageCount > 0 ? unreadMessageCount : undefined,
-          tabBarBadgeStyle: { backgroundColor: BRAND.accent, fontSize: 13, fontWeight: '700' },
+          tabBarBadgeStyle: TAB_BADGE_STYLE,
           tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconContainer : null}>
-              <Ionicons 
-                name={focused ? "chatbubbles" : "chatbubbles-outline"} 
-                size={24} 
-                color={color} 
-              />
+            <View style={focused ? tabSharedStyles.activeIconContainer : null}>
+              <Ionicons name={focused ? 'chatbubbles' : 'chatbubbles-outline'} size={24} color={color} />
             </View>
           ),
         }}
       />
+      {/* Role-specific tab: Saved (heart) — preserves trainee-only flow */}
       <Tabs.Screen
         name="saved"
         options={{
           title: 'Saved',
           tabBarAccessibilityLabel: 'Saved trainers tab',
           tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconContainer : null}>
-              <Ionicons 
-                name={focused ? "heart" : "heart-outline"} 
-                size={24} 
-                color={color} 
-              />
+            <View style={focused ? tabSharedStyles.activeIconContainer : null}>
+              <Ionicons name={focused ? 'heart' : 'heart-outline'} size={24} color={color} />
             </View>
           ),
         }}
@@ -138,7 +104,6 @@ export default function TabLayout() {
           title: 'Profile',
           tabBarAccessibilityLabel: 'My profile tab',
           tabBarIcon: ({ focused }) => (
-            // iter97 (#19): user's real avatar in the bottom tab bar
             <UserAvatar user={user} size={26} ring={focused} />
           ),
         }}
@@ -146,11 +111,3 @@ export default function TabLayout() {
     </Tabs>
   );
 }
-
-const styles = StyleSheet.create({
-  activeIconContainer: {
-    backgroundColor: 'rgba(255, 106, 0, 0.12)',
-    borderRadius: 12,
-    padding: 4,
-  },
-});
