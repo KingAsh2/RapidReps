@@ -770,9 +770,13 @@ export default function TrainerHomeScreen() {
                   <Text style={styles.quickActionText}>Verification</Text>
                 </LinearGradient>
               </TouchableOpacity>
-              {/* iter102c: Set Rates is gated on admin verification. Pre-approval,
-                  trainers should focus on getting verified instead. */}
-              {trainerProfile?.isVerified ? (
+              {/* iter102c (refined iter102j): Set Rates unlocked when EITHER
+                  isVerified is true OR verificationStatus is 'verified'.
+                  Some admin approval paths only flip one of the two fields,
+                  so checking only `isVerified` was leaving legitimately-
+                  approved trainers locked out of pricing (e.g. Sir Big Dawg). */}
+              {(trainerProfile?.isVerified === true ||
+                (trainerProfile as any)?.verificationStatus === 'verified') ? (
                 <TouchableOpacity
                   style={styles.quickAction}
                   onPress={() => router.push('/trainer/set-rates')}

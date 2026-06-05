@@ -226,6 +226,22 @@ async def get_trainer_profile(user_id: str):
                     {'$set': {'introVideoUrl': subs['fileUri']}}
                 )
 
+    # iter102j: data-consistency normalizer. Some legacy admin approval paths
+    # only set one of (isVerified, verificationStatus). Surface the strongest
+    # truth to the client AND self-heal in Mongo so future reads are consistent.
+    vs = profile.get('verificationStatus')
+    iv = bool(profile.get('isVerified'))
+    if vs == 'verified' and not iv:
+        profile['isVerified'] = True
+        await db.trainer_profiles.update_one(
+            {'userId': user_id}, {'$set': {'isVerified': True}}
+        )
+    elif iv and vs != 'verified':
+        profile['verificationStatus'] = 'verified'
+        await db.trainer_profiles.update_one(
+            {'userId': user_id}, {'$set': {'verificationStatus': 'verified'}}
+        )
+
     return TrainerProfileResponse(**serialize_doc(profile))
 
 

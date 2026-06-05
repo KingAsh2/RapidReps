@@ -246,9 +246,17 @@ export default function TrainerProfileScreen() {
                       <Ionicons name="person" size={40} color={COLORS.gray} />
                     </View>
                   )}
-                  <View style={[styles.verifiedBadge, { backgroundColor: profile?.isVerified ? COLORS.success : COLORS.gray }]}>
-                    <Ionicons name={profile?.isVerified ? 'checkmark' : 'time'} size={14} color={COLORS.white} />
-                  </View>
+                  {/* iter102j: any-of (isVerified OR verificationStatus==='verified')
+                      matches what /api/trainer/visibility-status uses, so the
+                      badge can't lag behind the rest of the app. */}
+                  {(() => {
+                    const isApproved = profile?.isVerified === true || (profile as any)?.verificationStatus === 'verified';
+                    return (
+                      <View style={[styles.verifiedBadge, { backgroundColor: isApproved ? COLORS.success : COLORS.gray }]}>
+                        <Ionicons name={isApproved ? 'checkmark' : 'time'} size={14} color={COLORS.white} />
+                      </View>
+                    );
+                  })()}
                 </View>
                 {/* iter98e: tap-to-edit display name */}
                 <View style={{ marginTop: 14, marginBottom: 4, alignItems: 'center' }}>
