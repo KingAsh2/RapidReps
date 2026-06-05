@@ -6,6 +6,8 @@ import { NotificationProvider } from '../src/contexts/NotificationContext';
 import { SoundProvider } from '../src/contexts/SoundContext';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ErrorBoundary } from '../src/components/ErrorBoundary';
+// iter98f: full-screen intro video on every cold launch
+import IntroVideoSplash from '../src/components/IntroVideoSplash';
 import Toast, { BaseToast } from 'react-native-toast-message';
 import * as Sentry from '@sentry/react-native';
 import { useFonts, Oswald_700Bold, Oswald_600SemiBold, Oswald_400Regular } from '@expo-google-fonts/oswald';
@@ -84,6 +86,9 @@ function RootLayout() {
     Oswald_400Regular,
   });
 
+  // iter98f: show intro video on every cold launch, then hand off to app
+  const [introDone, setIntroDone] = React.useState(false);
+
   React.useEffect(() => {
     if (fontsLoaded) SplashScreen.hideAsync().catch(() => {});
   }, [fontsLoaded]);
@@ -103,6 +108,8 @@ function RootLayout() {
           </StripeProviderComponent>
         </AuthProvider>
         <Toast config={toastConfig} />
+        {/* Intro video overlays everything on cold start; unmounts on finish/skip/timeout. */}
+        {!introDone ? <IntroVideoSplash onFinish={() => setIntroDone(true)} /> : null}
       </GestureHandlerRootView>
     </ErrorBoundary>
   );
