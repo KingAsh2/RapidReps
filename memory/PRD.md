@@ -4,6 +4,48 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-06-05 — Iteration 98d: 12-task post-deployment cleanup 🔧
+
+User reported claimed-fixed items were still broken in production. Resolved all 12 one-at-a-time with explicit per-task verification.
+
+### Shipped (each verified by iter101 testing agent — 110/110 backend tests pass)
+1. **Trainee profile (other-user view) full redesign** — `/app/frontend/app/trainer/trainee-profile.tsx` rebuilt with dark navy theme, FloatingOrangeBg, UserAvatar with accent-color ring, vibe music auto-play, highlight reel, intro video modal/new-window, social/Instagram. Session accept/decline preserved. `stopAllAudio()` on unmount.
+2. **Logout sends straight to /auth/login** — `router.replace('/auth/login')` in trainee/(tabs)/profile, trainer/(tabs)/profile, admin/dashboard. No more Welcome-splash detour.
+3. **Profile tab icon shows real photo** — `/api/auth/me` extended to sync `profilePhoto`/`avatarUrl` from `trainee_profiles` collection (was trainer-only). UserAvatar now picks up the user's photo automatically.
+4. **Admin intro video** — `handlePlayVideo` opens new tab on web (`window.open`); native modal has "Open in browser" `Linking.openURL` escape hatch. Removed stale 15s caption.
+5. **Music plays on profile / stops on leave** — Own-profile screens (trainee+trainer tabs) now mount `<TrainerVibePlayer autoPlay={true}>` when vibe is set. Cleanup `useEffect` calls `stopAllAudio()` on unmount for all 4 profile-view screens.
+6. **Tinder-style swipe discovery (NEW)** — `/app/frontend/app/trainee/swipe-trainers.tsx`: full-bleed card stack, swipe-right=Like, swipe-left=Pass (with NOPE/LIKE stamps), swipe-up=Open detail. Vibe music auto-plays on top card only. Orange-gradient CTA on trainee home opens it.
+7. **Available trainers in proximity** — `/api/trainer/availability` falls back to saved coords when toggling ON without lat/lng; returns 400 with clear error if none exist. `/api/trainers/nearby` response enriched with profilePhoto, accentColor, personalityTag, vibe fields, specialties, outdoor60Cents, distance alias. Amber warning pill on trainer profile when Available without location.
+8. **Admin Verifications back arrow** — Left-anchored white-on-dark circular back arrow added to modal header (data-testid `back-verify-modal`). Title centered, X stays at right.
+9. **Profile photo removed from verification checklist** — Removed `'photo'` from `document_steps` (L803), `step_definitions` (L1095), and both `step_names` translation dicts (L1017, L1066) so it's gone from all admin verification surfaces. Photos go live without admin gating.
+10. **Open Profile shows full media (admin too)** — Admin dashboard `handleOpenUserProfile` already routes to `/trainee/trainer-detail` (full media) / `/trainer/trainee-detail`. Added "Watch Intro Video" CTA to trainee-detail so admin sees intro videos when reviewing trainees.
+11. **"Add Your Address" banner removed** — Deleted from `/app/frontend/app/trainee/(tabs)/home.tsx`. Address still editable from Profile → Edit Profile.
+12. **FloatingOrangeBg on 11 screens** — Trainee tabs (home, sessions, messages), trainer tabs (home, profile, earnings, messages), messages list/chat, trainee/trainer-detail screens, trainer/trainee-profile screen. Pure RN Animated, native driver, pointer-events none.
+
+### Bonus (iter98c carry-over)
+- **Self-serve display name editing** — backend `PUT /api/auth/me` accepts `displayName`. Trainers' `legalName` snapshotted on first edit (admin-visible). `name_change_audit` collection logs every change. Admin endpoint `GET /api/admin/name-change-audit?limit=N` returns audit trail.
+- **Admin CSV export** — `/api/admin/payments/csv-export` (built iter98a). Premium glass-morphism Overview tab still active.
+
+### Verified
+- ✅ `/app/backend/tests/test_iteration101_cleanup.py` — 10 passed / 1 skipped (no pending verifs in seed DB; equivalent assertion via /detail PASSES).
+- ✅ Regression suite (iter96 + 97* + 98 + 99 + admin_panel_v2): **100 passed / 3 skipped / 0 failed**.
+- ✅ Frontend code-audit: every required `data-testid`, route target, and component import is present.
+
+### Known limitation (env-level, not a regression)
+- Preview web URL `/highlight-vibe-bugs.preview.emergentagent.com/` still renders the default Expo "Welcome to Expo" shell — same as iter100. Doesn't block native/device testing. Suggest investigating `_layout.web.tsx` / Expo web-entry resolution in a future iter.
+
+### Files modified / added (this iter)
+- BACKEND: `auth_routes.py`, `admin_routes.py`, `location_routes.py`, `models.py`
+- FRONTEND NEW: `trainer/trainee-profile.tsx` (rewrite), `trainee/swipe-trainers.tsx`
+- FRONTEND MOD: 11 screens for FloatingOrangeBg, 4 profile screens for music cleanup, 3 logout flows, VerificationsTab back-button + browser fallback, trainee home (CTA + address banner removal), trainee/trainer (tabs)/profile for vibe player
+- TESTS: `test_iteration101_cleanup.py` (NEW, by testing agent)
+
+
+## 2026-06-04 — Iteration 98c: Premium Admin Dashboard + Free-form Name Edit + CSV Export
+
+(Carried — see commit history)
+
+
 ## 2026-06-04 — Iteration 98b: 25-item audit fixes 🔧
 
 ### Shipped

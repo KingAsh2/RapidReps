@@ -1014,7 +1014,6 @@ async def admin_approve_verification_step(
         'certification': 'Fitness Certification',
         'cpr': 'CPR/AED Certification',
         'insurance': 'Liability Insurance',
-        'photo': 'Profile Photo',
         'video': 'Intro Video',
     }
     step_name = step_names.get(step_id, step_id)
@@ -1069,7 +1068,6 @@ async def admin_reject_verification_step(
         'certification': 'Fitness Certification',
         'cpr': 'CPR/AED Certification',
         'insurance': 'Liability Insurance',
-        'photo': 'Profile Photo',
         'video': 'Intro Video',
     }
     step_name = step_names.get(step_id, step_id)
