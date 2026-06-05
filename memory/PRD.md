@@ -4,6 +4,38 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-02-XX — Iter102o: Collapse paired trainee/trainer screens 📦
+
+Refactor follow-up to Wave 3. Three trainee/trainer screen pairs that diverged only in API path / data-test prefixes were collapsed into single shared components, with each `app/<role>/<name>.tsx` reduced to a 6-line wrapper.
+
+### Shipped
+1. **`src/screens/VibeSetupScreen.tsx`** — Single component, `role: 'trainee' | 'trainer'` prop picks the profile API + API path (`trainee-profiles` vs `trainer-profiles`).
+2. **`src/screens/HighlightUploadScreen.tsx`** — Same pattern. Backend chunked-upload endpoints currently only exist on `trainer-profiles`; the shared screen gates the chunked path on `role === 'trainer'` and trainees automatically fall back to FormData (no regression).
+3. **`src/screens/AchievementsScreen.tsx`** — Combined badge dictionary covers both role badge keys. Streak banner + `<FloatingOrangeBg>` render only when `role === 'trainee'`. Stat strip now uses the user's accent gradient (Wave 3 carry-over).
+4. **Six app/* files** (`{trainee,trainer}/{vibe-setup,highlight-upload,achievements}.tsx`) reduced to 6-line wrappers that render `<ScreenName role="..." />`.
+
+### Impact
+- **2961 → 1210 lines** across the 6 paired files (~59% reduction, ~1751 lines deleted).
+- Future tweaks to vibe / highlight / achievements only need to be made in one place.
+- Trainee achievements now consistently picks up the user's accent gradient on the stat header.
+
+### Verified
+- ✅ ESLint clean on all 3 new shared screens.
+- ✅ Backend untouched.
+
+### Files touched
+- `/app/frontend/src/screens/VibeSetupScreen.tsx` (new)
+- `/app/frontend/src/screens/HighlightUploadScreen.tsx` (new)
+- `/app/frontend/src/screens/AchievementsScreen.tsx` (new)
+- `/app/frontend/app/trainee/vibe-setup.tsx` (wrapper)
+- `/app/frontend/app/trainer/vibe-setup.tsx` (wrapper)
+- `/app/frontend/app/trainee/highlight-upload.tsx` (wrapper)
+- `/app/frontend/app/trainer/highlight-upload.tsx` (wrapper)
+- `/app/frontend/app/trainee/achievements.tsx` (wrapper)
+- `/app/frontend/app/trainer/achievements.tsx` (wrapper)
+
+
+
 ## 2026-02-XX — Iter102n Wave 3: Shared `ScreenShell` + Brand-Color CTAs 🎨
 
 User instruction: "Go with wave 3" — migrate remaining paired trainee/trainer screens to the shared `<ScreenShell>` / `<ScreenHeader>` primitives, and shift primary CTAs to the user's chosen accent (brand) color so they match the global glow.
