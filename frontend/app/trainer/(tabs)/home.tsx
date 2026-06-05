@@ -404,13 +404,18 @@ export default function TrainerHomeScreen() {
         // Stop location tracking
         stopLocationTracking();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error toggling availability:', error);
+      const apiMsg = error?.response?.data?.detail;
       showAlert({
         type: 'error',
-        title: 'Error',
-        message: 'Could not update your availability. Please try again.',
+        title: 'Location Required',
+        message: apiMsg || 'Could not update your availability. Please try again.',
       });
+      // iter102e: never leave the UI in an "Available" state if the server
+      // rejected the toggle — keep it visibly OFF until live GPS is granted.
+      setIsAvailable(false);
+      stopLocationTracking();
     } finally {
       setAvailabilityLoading(false);
     }

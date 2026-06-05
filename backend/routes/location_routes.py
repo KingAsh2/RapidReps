@@ -104,11 +104,11 @@ async def update_trainer_availability(
 ):
     """Toggle trainer availability status.
 
-    iter98d (Task 7): When toggling ON, if the request doesn't include fresh
-    coords, fall back to the trainer's stored profile coords (set via Update
-    Location or geocoded from their saved address) so they actually show up in
-    proximity search for trainees. Without this, trainers who mark themselves
-    available without sending location are silently invisible.
+    iter102e: Toggling ON REQUIRES fresh live GPS coords. There is no
+    fallback to stored profile coords — trainees pin proximity to the
+    trainer's real-time location, so allowing a stale address to keep them
+    on the map would mislead users. Without live coords the API returns 400
+    and the client must surface the permission prompt to the trainer.
     """
     if UserRole.TRAINER not in current_user.get('roles', []):
         raise HTTPException(status_code=403, detail="Trainer access required")
@@ -121,23 +121,15 @@ async def update_trainer_availability(
     }
 
     if update.isAvailable:
-        # Prefer fresh coords from the request; otherwise use stored ones
-        if update.latitude and update.longitude:
-            update_data['latitude'] = update.latitude
-            update_data['longitude'] = update.longitude
-            update_data['lastLocationUpdate'] = datetime.utcnow()
-        else:
-            existing = await db.trainer_profiles.find_one(
-                {'userId': user_id},
-                {'latitude': 1, 'longitude': 1}
+        # Live GPS is mandatory when going Available — no profile-coord fallback.
+        if not (update.latitude and update.longitude):
+            raise HTTPException(
+                status_code=400,
+                detail="Live GPS is required to go Available. Please enable Location for RapidReps in your phone settings and try again."
             )
-            if not existing or existing.get('latitude') is None or existing.get('longitude') is None:
-                # Trainer has no location at all → tell them what to do
-                raise HTTPException(
-                    status_code=400,
-                    detail="Please enable location or set your home address before going available — trainees can't find you on the map without it."
-                )
-            # Stored coords exist → keep them, just set availability
+        update_data['latitude'] = update.latitude
+        update_data['longitude'] = update.longitude
+        update_data['lastLocationUpdate'] = datetime.utcnow()
 
     result = await db.trainer_profiles.update_one(
         {'userId': user_id},
@@ -255,7 +247,6 @@ async def session_gps_update(session_id: str, latitude: float, longitude: float,
 
     # Check distance between parties if both have recent GPS
     other_role = "trainee" if is_trainer else "trainer"
-    other_id = session.get('traineeId') if is_trainer else session.get('trainerId')
     other_gps = await db.session_gps_tracks.find_one(
         {"sessionId": session_id, "role": other_role},
         sort=[("timestamp", -1)]

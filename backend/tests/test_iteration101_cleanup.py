@@ -6,7 +6,7 @@ Covers items from the review_request features_or_bugs_to_test focused on backend
 - PUT /api/auth/me updates fullName + preserves legalName for trainers
 - /api/admin/name-change-audit returns 200 for admin, 401/403 for non-admin
 - /api/trainers/nearby returns enriched fields
-- /api/trainer/availability uses saved coords as fallback / 400s if none
+- /api/trainer/availability requires live GPS coords; no fallback to saved coords
 - /api/admin/verifications/pending — documents must NOT include photo/Profile Photo
 - /api/admin/payments/csv-export still works (regression)
 """
@@ -243,23 +243,35 @@ class TestTrainersNearby:
 
 # ---------- /api/trainer/availability ----------
 class TestTrainerAvailability:
-    def test_toggle_on_uses_saved_coords_or_400s_clearly(self, trainer_token):
-        # Try toggling without lat/lng
+    def test_toggle_on_without_coords_always_400s(self, trainer_token):
+        """iter102e: Live GPS is mandatory when going Available — no
+        fallback to stored profile coords. Toggling ON without coords MUST 400.
+        """
         r = requests.put(
             f"{BASE_URL}/api/trainer/availability",
             headers=auth_headers(trainer_token),
             json={"isAvailable": True},
             timeout=20,
         )
-        # Accept either:
-        #   200 — saved coords were used as fallback
-        #   400 — no coords saved; helpful detail
-        assert r.status_code in (200, 400), f"unexpected status {r.status_code}: {r.text}"
-        if r.status_code == 400:
-            detail = (r.json().get("detail") or "").lower()
-            assert ("location" in detail) or ("home address" in detail) or ("coord" in detail), (
-                f"400 detail not helpful: {detail}"
-            )
+        assert r.status_code == 400, f"expected 400 (live GPS required) got {r.status_code}: {r.text}"
+        detail = (r.json().get("detail") or "").lower()
+        assert "gps" in detail or "location" in detail, f"400 detail not helpful: {detail}"
+        # cleanup — turn back off
+        requests.put(
+            f"{BASE_URL}/api/trainer/availability",
+            headers=auth_headers(trainer_token),
+            json={"isAvailable": False},
+            timeout=20,
+        )
+
+    def test_toggle_on_with_coords_succeeds(self, trainer_token):
+        r = requests.put(
+            f"{BASE_URL}/api/trainer/availability",
+            headers=auth_headers(trainer_token),
+            json={"isAvailable": True, "latitude": 33.749, "longitude": -84.388},
+            timeout=20,
+        )
+        assert r.status_code == 200, f"toggle-on with coords failed: {r.status_code} {r.text}"
         # cleanup — turn back off
         requests.put(
             f"{BASE_URL}/api/trainer/availability",
