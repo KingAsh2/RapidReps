@@ -582,35 +582,21 @@ export default function TrainerOnboardingScreen() {
             </View>
             <Text style={styles.modalTitle}>Profile Created!</Text>
             <Text style={styles.modalSubtitle}>
-              Your trainer profile is set up. Next, set your session rates so clients know your pricing.
+              Your trainer profile is set up. Next, complete verification — once an admin approves you, you'll be able to set your session rates.
             </Text>
 
             <TouchableOpacity
               style={styles.modalPrimaryBtn}
               onPress={() => {
                 setShowVerificationModal(false);
-                router.replace('/trainer/set-rates');
-              }}
-              data-testid="set-rates-btn-onboarding"
-            >
-              <LinearGradient colors={['#FF6A00', '#FF9F1C']} style={styles.modalPrimaryGradient}>
-                <Ionicons name="cash" size={20} color="#FFFFFF" />
-                <Text style={styles.modalPrimaryText}>Set Your Rates</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.modalSecondaryBtn, { borderWidth: 1.5, borderColor: 'rgba(26,42,94,0.4)', borderRadius: 14, paddingVertical: 14 }]}
-              onPress={() => {
-                setShowVerificationModal(false);
                 router.replace('/trainer/verification');
               }}
               data-testid="start-verification-btn"
             >
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                <Ionicons name="shield-checkmark" size={18} color="#1a2a5e" />
-                <Text style={[styles.modalSecondaryText, { color: '#1a2a5e', fontWeight: '700' }]}>Start Verification</Text>
-              </View>
+              <LinearGradient colors={['#FF6A00', '#FF9F1C']} style={styles.modalPrimaryGradient}>
+                <Ionicons name="shield-checkmark" size={20} color="#FFFFFF" />
+                <Text style={styles.modalPrimaryText}>Start Verification</Text>
+              </LinearGradient>
             </TouchableOpacity>
 
             <TouchableOpacity

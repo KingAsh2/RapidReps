@@ -756,21 +756,41 @@ export default function TrainerHomeScreen() {
                   <Text style={styles.quickActionText}>Verification</Text>
                 </LinearGradient>
               </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.quickAction}
-                onPress={() => router.push('/trainer/set-rates')}
-                data-testid="set-rates-btn"
-              >
-                <LinearGradient
-                  colors={['#141929', '#1A2035']}
-                  style={styles.quickActionGradient}
+              {/* iter102c: Set Rates is gated on admin verification. Pre-approval,
+                  trainers should focus on getting verified instead. */}
+              {trainerProfile?.isVerified ? (
+                <TouchableOpacity
+                  style={styles.quickAction}
+                  onPress={() => router.push('/trainer/set-rates')}
+                  data-testid="set-rates-btn"
                 >
-                  <View style={styles.quickActionIcon}>
-                    <Ionicons name="cash" size={28} color={COLORS.success} />
-                  </View>
-                  <Text style={styles.quickActionText}>Set Rates</Text>
-                </LinearGradient>
-              </TouchableOpacity>
+                  <LinearGradient
+                    colors={['#141929', '#1A2035']}
+                    style={styles.quickActionGradient}
+                  >
+                    <View style={styles.quickActionIcon}>
+                      <Ionicons name="cash" size={28} color={COLORS.success} />
+                    </View>
+                    <Text style={styles.quickActionText}>Set Rates</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={styles.quickAction}
+                  onPress={() => router.push('/trainer/verification')}
+                  data-testid="set-rates-btn-locked"
+                >
+                  <LinearGradient
+                    colors={['#141929', '#1A2035']}
+                    style={styles.quickActionGradient}
+                  >
+                    <View style={[styles.quickActionIcon, { opacity: 0.45 }]}>
+                      <Ionicons name="lock-closed" size={26} color={'rgba(255,255,255,0.5)'} />
+                    </View>
+                    <Text style={[styles.quickActionText, { color: 'rgba(255,255,255,0.55)' }]}>Set Rates</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              )}
             </View>
 
             {/* Trainer Feature Actions */}
