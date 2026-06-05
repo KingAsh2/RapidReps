@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { groupSessionAPI } from '../../src/services/api';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { toast } from '../../src/utils/toast';
+import { ScreenHeader } from '../../src/components/ScreenShell';
 
 const backgroundImage = require('../../assets/images/bg-group-gym.png');
 
@@ -157,15 +158,17 @@ export default function TrainerGroupSessionsScreen() {
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
       <LinearGradient colors={['rgba(20, 25, 41, 0.95)', 'rgba(20, 25, 41, 0.90)']} style={StyleSheet.absoluteFillObject} />
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color={COLORS.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>My Group Sessions</Text>
-        <TouchableOpacity onPress={() => setShowCreate(true)} style={styles.addBtn} data-testid="create-group-session-btn">
-          <Ionicons name="add" size={24} color={COLORS.white} />
-        </TouchableOpacity>
-      </View>
+      {/* iter102n Wave 3: unified ScreenHeader with right-slot "+" action */}
+      <ScreenHeader
+        title="My Group Sessions"
+        onBack={() => router.back()}
+        testID="trainer-group-sessions-header"
+        right={
+          <TouchableOpacity onPress={() => setShowCreate(true)} data-testid="create-group-session-btn" style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
+            <Ionicons name="add" size={22} color="#FFF" />
+          </TouchableOpacity>
+        }
+      />
 
       {/* Tabs */}
       <View style={styles.tabRow}>

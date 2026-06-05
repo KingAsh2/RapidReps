@@ -18,6 +18,7 @@ import { Audio } from 'expo-av';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { traineeAPI } from '../../src/services/api';
 import { toast } from '../../src/utils/toast';
+import { ScreenHeader } from '../../src/components/ScreenShell';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 const { width } = Dimensions.get('window');
@@ -190,16 +191,13 @@ export default function TraineeVibeSetup() {
   return (
     <LinearGradient colors={['#0A0E1A', '#141929']} style={s.container}>
       <SafeAreaView style={{ flex: 1 }}>
-        <View style={s.header}>
-          <TouchableOpacity onPress={() => router.back()} style={s.backBtn} accessibilityLabel="Back" accessibilityRole="button" data-testid="trainee-vibe-back">
-            <Ionicons name="arrow-back" size={22} color="#FFF" />
-          </TouchableOpacity>
-          <View>
-            <Text style={s.headerTitle}>Your Vibe</Text>
-            <Text style={s.headerSub}>Choose your profile anthem</Text>
-          </View>
-          <View style={{ width: 44 }} />
-        </View>
+        {/* iter102n Wave 3: unified ScreenHeader */}
+        <ScreenHeader
+          title="Your Vibe"
+          subtitle="Choose your profile anthem"
+          onBack={() => router.back()}
+          testID="trainee-vibe-header"
+        />
 
         {currentVibe && (
           <View style={s.currentVibe} data-testid="trainee-current-vibe-card">

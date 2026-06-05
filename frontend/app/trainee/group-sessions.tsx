@@ -8,6 +8,7 @@ import { groupSessionAPI } from '../../src/services/api';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { haptic } from '../../src/utils/haptics';
 import { goBack } from '../../src/utils/navigation';
+import { ScreenHeader } from '../../src/components/ScreenShell';
 
 const COLORS = { orange: '#FF6A00', teal: '#1a2a5e', navy: '#1a2a5e', white: '#FFFFFF', gray: '#8a95b0', success: '#00D26A' };
 
@@ -80,13 +81,12 @@ export default function GroupSessionsScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <LinearGradient colors={['rgba(20, 25, 41, 0.95)', 'rgba(20, 25, 41, 0.90)']} style={StyleSheet.absoluteFillObject} />
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => goBack('/trainee/(tabs)/home')} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color={COLORS.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Group Workouts</Text>
-        <View style={{ width: 40 }} />
-      </View>
+      {/* iter102n Wave 3: unified ScreenHeader */}
+      <ScreenHeader
+        title="Group Workouts"
+        onBack={() => goBack('/trainee/(tabs)/home')}
+        testID="trainee-group-sessions-header"
+      />
       <FlatList
         data={sessions}
         renderItem={renderSession}
