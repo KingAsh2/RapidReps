@@ -33,6 +33,7 @@ import { HighlightReel } from '../../src/components/HighlightReel';
 import { TrainerHeroVideoPreview } from '../../src/components/TrainerHeroVideoPreview';
 import { PersonalityTagBadge } from '../../src/components/PersonalityTagBadge';
 import FloatingOrangeBg from '../../src/components/FloatingOrangeBg';
+import RapidBg from '../../src/components/RapidBg';
 
 const { width } = Dimensions.get('window');
 
@@ -154,7 +155,7 @@ export default function TraineeDetailScreen() {
   if (loading) {
     return (
       <View style={styles.container}>
-        <LinearGradient colors={['#0A0E1A', '#141929']} style={StyleSheet.absoluteFill} />
+        <RapidBg variant="trainer-trainee-detail" style={StyleSheet.absoluteFill} />
         <SafeAreaView style={styles.safeArea}>
       <FloatingOrangeBg />
           <View style={styles.loadingContainer}>
@@ -478,7 +479,7 @@ export default function TraineeDetailScreen() {
             >
               <Ionicons name="flash" size={18} color="#FFF" />
               <Text style={styles.stickyAcceptText}>ACCEPT SESSION</Text>
-            </LinearGradient>
+            </RapidBg>
           </TouchableOpacity>
         </View>
       )}

@@ -8,6 +8,7 @@ import * as Location from 'expo-location';
 import { instantMatchAPI } from '../../src/services/api';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { haptic } from '../../src/utils/haptics';
+import RapidBg from '../../src/components/RapidBg';
 
 const backgroundImage = require('../../assets/images/bg-jump-rope.jpg');
 const { width } = Dimensions.get('window');
@@ -146,10 +147,10 @@ export default function InstantMatchScreen() {
 
         {status === 'matched' && (
           <TouchableOpacity onPress={handleGoToSession} style={styles.goBtn} data-testid="go-to-session-btn">
-            <LinearGradient colors={['#0A0E1A', '#141929']} style={styles.goBtnGrad}>
+            <RapidBg variant="trainee-instant-match" style={styles.goBtnGrad}>
               <Text style={styles.goBtnText}>Go to Session</Text>
               <Ionicons name="arrow-forward" size={20} color={COLORS.white} />
-            </LinearGradient>
+            </RapidBg>
           </TouchableOpacity>
         )}
 

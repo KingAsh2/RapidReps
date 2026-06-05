@@ -24,6 +24,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AnimatedPillButton } from '../../src/components/AnimatedPillButton';
 import { haptic } from '../../src/utils/haptics';
 import { SocialAuthButtons } from '../../src/components/SocialAuthButtons';
+import RapidBg from '../../src/components/RapidBg';
 
 const { width, height: screenHeight } = Dimensions.get('window');
 
@@ -401,10 +402,7 @@ export default function SignupScreen() {
                 },
               ]}
             >
-              <LinearGradient
-                colors={['#0A0E1A', '#141929']}
-                style={styles.formCardGradient}
-              >
+              <RapidBg variant="auth-signup.classic" style={styles.formCardGradient}>
                 {/* Name Input */}
                 <View style={styles.inputGroup}>
                   <Text style={styles.inputLabel}>What should we call you?</Text>
@@ -632,7 +630,7 @@ export default function SignupScreen() {
                         <Ionicons name="checkmark-circle" size={24} color={COLORS.white} />
                       </View>
                     )}
-                  </LinearGradient>
+                  </RapidBg>
                 </TouchableOpacity>
               </Animated.View>
 

@@ -10,6 +10,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import RapidBg from '../../src/components/RapidBg';
 import { Ionicons } from '@expo/vector-icons';
 import { sessionTrackingAPI } from '../../src/services/api';
 import { useAlert } from '../../src/contexts/AlertContext';
@@ -144,7 +145,7 @@ export default function TrainerEnRouteScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <LinearGradient colors={['#0A0E1A', '#141929']} style={StyleSheet.absoluteFillObject} />
+      <RapidBg variant="trainee-trainer-en-route" style={StyleSheet.absoluteFillObject} />
 
       {/* Header */}
       <View style={styles.header}>

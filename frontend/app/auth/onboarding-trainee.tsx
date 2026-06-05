@@ -26,6 +26,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
+import RapidBg from '../../src/components/RapidBg';
 
 const { width } = Dimensions.get('window');
 
@@ -246,10 +247,7 @@ export default function TraineeOnboardingScreen() {
               {formData.profilePhoto ? (
                 <Image source={{ uri: formData.profilePhoto }} style={styles.photo} />
               ) : (
-                <LinearGradient
-                  colors={['#0A0E1A', '#141929']}
-                  style={styles.photoPlaceholder}
-                >
+                <RapidBg variant="auth-onboarding-trainee" style={styles.photoPlaceholder}>
                   <Ionicons name="camera" size={40} color={COLORS.white} />
                   <Text style={styles.photoText}>Add Photo</Text>
                 </LinearGradient>
@@ -543,7 +541,7 @@ export default function TraineeOnboardingScreen() {
               >
                 <Text style={styles.modalButtonText}>Got it!</Text>
               </TouchableOpacity>
-            </LinearGradient>
+            </RapidBg>
           </View>
         </TouchableOpacity>
       </Modal>

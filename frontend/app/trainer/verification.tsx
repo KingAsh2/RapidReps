@@ -25,6 +25,7 @@ import * as ImagePicker from 'expo-image-picker';
 import api from '../../src/services/api';
 import { toast } from '../../src/utils/toast';
 import { haptic } from '../../src/utils/haptics';
+import RapidBg from '../../src/components/RapidBg';
 
 const COLORS = {
   orange: '#FF7F00',
@@ -913,9 +914,9 @@ export default function TrainerVerificationScreen() {
               style={modalStyles.btn}
               data-testid="verification-modal-ok-btn"
             >
-              <LinearGradient colors={['#0A0E1A', '#141929']} style={modalStyles.btnGradient}>
+              <RapidBg variant="trainer-verification" style={modalStyles.btnGradient}>
                 <Text style={modalStyles.btnText}>Got it</Text>
-              </LinearGradient>
+              </RapidBg>
             </TouchableOpacity>
           </View>
         </View>

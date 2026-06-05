@@ -15,6 +15,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import RapidBg from '../../src/components/RapidBg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { sessionsAPI } from '../../src/services/api';
 import NegotiationPanel from '../../src/components/NegotiationPanel';
@@ -67,7 +68,7 @@ export default function TrainerSessionDetailScreen() {
   if (!session) {
     return (
       <SafeAreaView style={s.container} edges={['top']}>
-        <LinearGradient colors={['#0A0E1A', '#141929']} style={StyleSheet.absoluteFillObject} />
+        <RapidBg variant="trainer-session-detail" style={StyleSheet.absoluteFillObject} />
         <ScreenHeader
           title="Session Not Found"
           onBack={() => router.back()}
@@ -83,7 +84,7 @@ export default function TrainerSessionDetailScreen() {
 
   return (
     <SafeAreaView style={s.container} edges={['top']}>
-      <LinearGradient colors={['#0A0E1A', '#141929']} style={StyleSheet.absoluteFillObject} />
+      <RapidBg variant="trainer-session-detail" style={StyleSheet.absoluteFillObject} />
       <ScreenHeader
         title="Session"
         onBack={() => router.back()}

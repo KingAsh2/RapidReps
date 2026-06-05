@@ -18,6 +18,7 @@ import { sessionTrackingAPI } from '../../src/services/api';
 import { useAlert } from '../../src/contexts/AlertContext';
 import { SessionTimeline, SessionTimelineStatus } from '../../src/components/SessionTimeline';
 import { QuickActions } from '../../src/components/QuickActions';
+import RapidBg from '../../src/components/RapidBg';
 
 const { width } = Dimensions.get('window');
 
@@ -281,7 +282,7 @@ export default function TrainerEnRouteScreen() {
 
         {/* Action Buttons */}
         <TouchableOpacity onPress={openNavigation} style={styles.navButton} data-testid="open-navigation-btn">
-          <LinearGradient colors={['#0A0E1A', '#141929']} style={styles.navButtonGradient}>
+          <RapidBg variant="trainer-en-route" style={styles.navButtonGradient}>
             <Ionicons name="navigate" size={24} color={COLORS.white} />
             <Text style={styles.navButtonText}>Open Maps</Text>
           </LinearGradient>
@@ -323,7 +324,7 @@ export default function TrainerEnRouteScreen() {
             <TouchableOpacity onPress={handleStartSession} style={styles.modalPrimaryBtn} data-testid="start-session-from-modal-btn">
               <LinearGradient colors={[COLORS.orange, COLORS.orangeLight]} style={styles.modalBtnGradient}>
                 <Text style={styles.modalBtnText}>Start Session</Text>
-              </LinearGradient>
+              </RapidBg>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setShowArrivedModal(false)} style={styles.modalSecondaryBtn}>
               <Text style={styles.modalSecondaryText}>Wait a moment</Text>

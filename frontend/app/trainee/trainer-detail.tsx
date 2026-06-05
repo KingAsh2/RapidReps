@@ -29,6 +29,7 @@ import { HighlightReel } from '../../src/components/HighlightReel';
 import { TrainerHeroVideoPreview } from '../../src/components/TrainerHeroVideoPreview';
 import { PersonalityTagBadge } from '../../src/components/PersonalityTagBadge';
 import FloatingOrangeBg from '../../src/components/FloatingOrangeBg';
+import RapidBg from '../../src/components/RapidBg';
 
 const { width, height: screenHeight } = Dimensions.get('window');
 const LOGO = require('../../assets/images/rapidreps-logo.png');
@@ -442,10 +443,7 @@ export default function TrainerDetailScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={['#0A0E1A', '#141929']}
-        style={styles.headerGradient}
-      />
+      <RapidBg variant="trainee-trainer-detail" style={styles.headerGradient} />
 
       <SafeAreaView style={styles.safeArea} edges={['top']}>
       <FloatingOrangeBg />
@@ -1170,7 +1168,7 @@ export default function TrainerDetailScreen() {
                 style={styles.consentAgreeGradient}
               >
                 <Text style={styles.consentAgreeText}>Let's Go</Text>
-              </LinearGradient>
+              </RapidBg>
             </TouchableOpacity>
 
             <TouchableOpacity

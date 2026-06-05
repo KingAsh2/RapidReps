@@ -22,6 +22,7 @@ import { toast } from '../../src/utils/toast';
 import { haptic } from '../../src/utils/haptics';
 import { formatCents } from '../../src/utils/pricing';
 import { formatApiError } from '../../src/utils/formatApiError';
+import RapidBg from '../../src/components/RapidBg';
 
 const C = {
   bg: '#06080F',
@@ -121,7 +122,7 @@ export default function PaymentScreen() {
 
   return (
     <SafeAreaView style={s.container}>
-      <LinearGradient colors={['#0A0E1A', '#141929']} style={s.header}>
+      <RapidBg variant="trainee-payment" style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn} data-testid="payment-back">
           <Ionicons name="chevron-back" size={22} color={C.text} />
         </TouchableOpacity>
@@ -183,7 +184,7 @@ export default function PaymentScreen() {
                 </Text>
               </>
             )}
-          </LinearGradient>
+          </RapidBg>
         </TouchableOpacity>
 
         <Text style={s.disclaimer}>

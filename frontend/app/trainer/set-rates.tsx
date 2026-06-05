@@ -21,6 +21,7 @@ import { api } from '../../src/services/api';
 import { toast } from '../../src/utils/toast';
 import { haptic } from '../../src/utils/haptics';
 import {
+import RapidBg from '../../src/components/RapidBg';
   TrainerTier, Modality, Duration, calculatePricing, formatCents, TIER_MATRIX, validateRateCents,
 } from '../../src/utils/pricing';
 
@@ -118,7 +119,7 @@ export default function SetRatesScreen() {
   if (!tier) {
     return (
       <SafeAreaView style={s.container}>
-        <LinearGradient colors={['#0A0E1A', '#141929']} style={s.header}>
+        <RapidBg variant="trainer-set-rates" style={s.header}>
           <TouchableOpacity onPress={() => router.back()} style={s.backBtn} data-testid="set-rates-back">
             <Ionicons name="chevron-back" size={22} color="#FFF" />
           </TouchableOpacity>
@@ -226,7 +227,7 @@ export default function SetRatesScreen() {
                   <Text style={s.saveBtnText}>Save Rates</Text>
                 </>
               )}
-            </LinearGradient>
+            </RapidBg>
           </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>

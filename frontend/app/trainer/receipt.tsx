@@ -18,6 +18,7 @@ import axios from 'axios';
 import { toast } from '../../src/utils/toast';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import RapidBg from '../../src/components/RapidBg';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 const backgroundImage = require('../../assets/images/bg-battle-ropes.png');
@@ -245,7 +246,7 @@ export default function TrainerReceiptScreen() {
             </View>
 
             <TouchableOpacity onPress={generatePDF} disabled={generating} style={styles.pdfBtn} data-testid="trainer-download-pdf-btn">
-              <LinearGradient colors={['#0A0E1A', '#141929']} style={styles.pdfBtnGradient}>
+              <RapidBg variant="trainer-receipt" style={styles.pdfBtnGradient}>
                 {generating ? (
                   <ActivityIndicator size="small" color={COLORS.white} />
                 ) : (
@@ -254,7 +255,7 @@ export default function TrainerReceiptScreen() {
                     <Text style={styles.pdfBtnText}>Download / Share PDF</Text>
                   </>
                 )}
-              </LinearGradient>
+              </RapidBg>
             </TouchableOpacity>
           </ScrollView>
         </SafeAreaView>

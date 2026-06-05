@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { chatAPI } from '../../src/services/api';
 import FloatingOrangeBg from '../../src/components/FloatingOrangeBg';
+import RapidBg from '../../src/components/RapidBg';
 
 // Brand colors
 const COLORS = {
@@ -149,10 +150,7 @@ export default function MessagesScreen() {
             {otherUser.avatarUrl ? (
               <Image source={{ uri: otherUser.avatarUrl }} style={styles.avatar} />
             ) : (
-              <LinearGradient
-                colors={['#0A0E1A', '#141929']}
-                style={styles.avatarPlaceholder}
-              >
+              <RapidBg variant="messages-index" style={styles.avatarPlaceholder}>
                 <Ionicons name="person" size={24} color={COLORS.white} />
               </LinearGradient>
             )}
@@ -210,7 +208,7 @@ export default function MessagesScreen() {
         >
           <ActivityIndicator size="large" color={COLORS.white} />
           <Text style={styles.loadingText}>Loading messages...</Text>
-        </LinearGradient>
+        </RapidBg>
       </ImageBackground>
     );
   }

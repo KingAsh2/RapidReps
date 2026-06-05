@@ -22,6 +22,7 @@ import { haptic } from '../../src/utils/haptics';
 import { SessionTimeline, SessionTimelineStatus } from '../../src/components/SessionTimeline';
 import NegotiationPanel from '../../src/components/NegotiationPanel';
 import { ScreenHeader } from '../../src/components/ScreenShell';
+import RapidBg from '../../src/components/RapidBg';
 
 const COLORS = {
   teal: '#1a2a5e',
@@ -144,7 +145,7 @@ export default function SessionDetailScreen() {
 
   if (loading) {
     return (
-      <LinearGradient colors={['#0A0E1A', '#141929']} style={styles.loadingContainer}>
+      <RapidBg variant="trainee-session-detail" style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={COLORS.white} />
         <Text style={styles.loadingText}>Loading session...</Text>
       </LinearGradient>
@@ -422,7 +423,7 @@ export default function SessionDetailScreen() {
                 </View>
                 <Text style={styles.safetyPinNote}>Share with trainer to start session</Text>
               </View>
-            </LinearGradient>
+            </RapidBg>
           )}
 
           <View style={{ height: 40 }} />

@@ -4,6 +4,33 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-02-XX — Iter102r: Replace flat-navy screen backgrounds with 4 RapidReps hero photos 🌆
+
+User asked for the 29 flat-navy screens to use one of 4 brand hero images (orange-lit gym scenes: box-jump, battle ropes ×2, kettlebell) as their background.
+
+### Shipped
+1. **`src/components/RapidBg.tsx`** (new) — Drop-in replacement for `<LinearGradient colors={['#0A0E1A','#141929']}>`. Renders an `<ImageBackground>` with one of the 4 hero photos and a navy scrim overlay (default 78% opacity) to keep foreground text legible. `variant` prop deterministically picks 1 of 4 images via a stable string hash so each screen always shows the same image rather than flickering on re-mount.
+2. **`scripts/migrate_navy_bg.py`** — Migration script that rewrote the LinearGradient navy roots → `<RapidBg variant="<route>">` and auto-injected the import statement.
+3. **24 screens migrated** to use hero photo backgrounds:
+   - **Admin (1):** `admin/dashboard.tsx`
+   - **Messages (1):** `messages/index.tsx`
+   - **Trainee (10):** `(tabs)/sessions`, `(tabs)/messages`, `(tabs)/saved`, `payment`, `session-detail`, `receipt`, `instant-match`, `safety-center`, `trainer-detail`, `trainer-en-route`
+   - **Trainer (10):** `set-rates`, `connect-bank`, `session-detail`, `receipt`, `edit-profile`, `verification`, `en-route`, `(tabs)/messages`, `trainee-detail`, `discover-trainees`
+   - **Auth + referral (2):** `signup.classic`, `onboarding-trainee`, `referral/index` (uses RapidBg on an internal element)
+4. **5 files reverted** as false positives — they were ALREADY using `<ImageBackground>` with hero photos; the script just matched a secondary navy gradient inside CTAs/cards (`messages/chat`, `trainee/(tabs)/profile`, `trainer/(tabs)/home`, `trainer/home`, original `referral/index` left to navy gradient header).
+
+### Verified
+- ✅ ESLint clean across all migrated files.
+- ✅ Web bundle compiles successfully (Expo bundler logs show successful re-bundle).
+- ✅ Backend untouched.
+
+### Files touched
+- `/app/frontend/src/components/RapidBg.tsx` (new)
+- `/app/scripts/migrate_navy_bg.py` (new, migration tool — keep for reuse)
+- 24 screen files in `/app/frontend/app/**/*.tsx`
+
+
+
 ## 2026-02-XX — Iter102o: Collapse paired trainee/trainer screens 📦
 
 Refactor follow-up to Wave 3. Three trainee/trainer screen pairs that diverged only in API path / data-test prefixes were collapsed into single shared components, with each `app/<role>/<name>.tsx` reduced to a 6-line wrapper.

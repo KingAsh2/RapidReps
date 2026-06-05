@@ -23,6 +23,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { toast } from '../../src/utils/toast';
 import { PersonalityTagBadge } from '../../src/components/PersonalityTagBadge';
+import RapidBg from '../../src/components/RapidBg';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 const { width } = Dimensions.get('window');
@@ -97,7 +98,7 @@ export default function DiscoverTraineesScreen() {
   };
 
   return (
-    <LinearGradient colors={['#0A0E1A', '#141929']} style={s.container}>
+    <RapidBg variant="trainer-discover-trainees" style={s.container}>
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
         {/* Header */}
         <View style={s.header}>
@@ -135,7 +136,7 @@ export default function DiscoverTraineesScreen() {
           </Animated.View>
         )}
       </SafeAreaView>
-    </LinearGradient>
+    </RapidBg>
   );
 }
 
