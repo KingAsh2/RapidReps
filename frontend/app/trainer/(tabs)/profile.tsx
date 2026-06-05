@@ -14,7 +14,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -64,9 +64,15 @@ export default function TrainerProfileScreen() {
   useEffect(() => {
     loadProfile();
     loadStreaks();
-    // iter98d (Task 5): stop audio on profile-tab unmount
-    return () => { try { stopAllAudio(); } catch { /* no-op */ } };
   }, []);
+
+  // iter98d (Task 5 hardening): tab screens don't unmount on tab-switch,
+  // so use useFocusEffect to stop audio when the user blurs this tab.
+  useFocusEffect(
+    React.useCallback(() => {
+      return () => { try { stopAllAudio(); } catch { /* no-op */ } };
+    }, [])
+  );
 
   useEffect(() => {
     if (!loading) {

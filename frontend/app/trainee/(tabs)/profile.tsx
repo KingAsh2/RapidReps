@@ -15,7 +15,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -125,9 +125,15 @@ export default function TraineeProfileScreen() {
   useEffect(() => {
     loadProfile();
     loadStreaks();
-    // iter98d (Task 5): stop any audio when the user navigates AWAY from their profile
-    return () => { try { stopAllAudio(); } catch { /* no-op */ } };
   }, []);
+
+  // iter98d (Task 5 hardening): tab screens don't unmount on tab-switch,
+  // so use useFocusEffect to stop audio when the user blurs this tab.
+  useFocusEffect(
+    React.useCallback(() => {
+      return () => { try { stopAllAudio(); } catch { /* no-op */ } };
+    }, [])
+  );
 
   useEffect(() => {
     if (!loading) {
