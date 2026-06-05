@@ -663,31 +663,8 @@ export default function EditTrainerProfileScreen() {
                 </LinearGradient>
               </Animated.View>
 
-              {/* Media Upload Section — file-based only */}
-              <Animated.View
-                style={[
-                  styles.card,
-                  {
-                    opacity: cardAnims[4],
-                    transform: [{
-                      translateY: cardAnims[4].interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [30, 0],
-                      }),
-                    }],
-                  },
-                ]}
-              >
-                <LinearGradient colors={['#141929', '#1A2035']} style={styles.cardGradient}>
-                  <View style={styles.cardHeader}>
-                    <Ionicons name="image" size={22} color={'#FF6A00'} />
-                    <Text style={styles.cardTitle}>Media</Text>
-                  </View>
-                  <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 12 }}>
-                    Tap your profile photo above to change it. Add more photos and videos to your gallery from your Profile tab.
-                  </Text>
-                </LinearGradient>
-              </Animated.View>
+              {/* iter102q: Media info card removed per user request — the helper text
+                  was redundant once the profile photo flow was centralized. */}
 
               {/* Social Links */}
               <Animated.View style={{ opacity: 1 }}>

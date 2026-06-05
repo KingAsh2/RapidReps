@@ -1068,35 +1068,8 @@ export default function TrainerHomeScreen() {
               )}
             </View>
 
-            {/* Nearby Trainees - Thumbnail Grid */}
-            {nearbyTrainees.length > 0 && (
-              <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionTitle}>📍 NEARBY TRAINEES</Text>
-                  <View style={styles.countBadge}>
-                    <Text style={styles.countBadgeText}>{nearbyTrainees.length}</Text>
-                  </View>
-                </View>
-                <View style={styles.traineeThumbnailGrid}>
-                  {nearbyTrainees.slice(0, 8).map((trainee, index) => (
-                    <TouchableOpacity key={index} style={styles.traineeThumbnail} onPress={() => router.push(`/trainer/trainee-profile?userId=${trainee.userId || trainee.id}`)} data-testid={`nearby-trainee-${index}`}>
-                      {/* iter98b (#18): unified UserAvatar with initials fallback (was generic person icon) */}
-                      <UserAvatar
-                        user={{ avatarUrl: trainee.profilePhoto || trainee.avatarUrl, fullName: trainee.fullName }}
-                        size={56}
-                      />
-                      <Text style={styles.traineeThumbnailName} numberOfLines={1}>
-                        {trainee.fullName?.split(' ')[0]}
-                      </Text>
-                      <View style={styles.traineeThumbnailDistance}>
-                        <Ionicons name="location" size={10} color={COLORS.orange} />
-                        <Text style={styles.traineeThumbnailDistanceText}>{trainee.distance} mi</Text>
-                      </View>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-            )}
+            {/* iter102q: NEARBY TRAINEES section removed per user request — trainers
+                should focus on their own bookings/availability, not see trainees as a list. */}
 
             <View style={{ height: 40 }} />
           </ScrollView>
