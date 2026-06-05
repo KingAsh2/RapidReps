@@ -16,6 +16,7 @@ const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
 type AvatarBearer = {
   avatarUrl?: string | null;
+  profilePhoto?: string | null;       // iter102l: canonical field returned by /auth/me — must be checked
   profilePhotoUrl?: string | null;
   photoUrl?: string | null;
   profilePicture?: string | null;
@@ -32,6 +33,7 @@ export function resolveAvatarUrl(u?: AvatarBearer | null): string | null {
   if (!u) return null;
   const raw =
     u.avatarUrl ||
+    u.profilePhoto ||           // iter102l — was missing; caused Profile tab to show initials when only profilePhoto was set
     u.profilePhotoUrl ||
     u.photoUrl ||
     u.profilePicture ||
