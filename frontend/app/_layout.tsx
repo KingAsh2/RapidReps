@@ -1,4 +1,5 @@
 import React from 'react';
+import { View } from 'react-native';
 import { Slot } from 'expo-router';
 import { AuthProvider } from '../src/contexts/AuthContext';
 import { AlertProvider } from '../src/contexts/AlertContext';
@@ -8,6 +9,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ErrorBoundary } from '../src/components/ErrorBoundary';
 // iter98f: full-screen intro video on every cold launch
 import IntroVideoSplash from '../src/components/IntroVideoSplash';
+// iter102f: floating orange embers on every screen globally
+import FloatingOrangeBg from '../src/components/FloatingOrangeBg';
 import Toast, { BaseToast } from 'react-native-toast-message';
 import * as Sentry from '@sentry/react-native';
 import { useFonts, Oswald_700Bold, Oswald_600SemiBold, Oswald_400Regular } from '@expo-google-fonts/oswald';
@@ -102,6 +105,15 @@ function RootLayout() {
               <SoundProvider>
                 <AlertProvider>
                   <Slot />
+                  {/* iter102f: global firefly orange embers — visible on EVERY
+                      screen. pointerEvents=none so touches pass through. Hidden
+                      while intro splash is on screen so they don't fight the
+                      video. */}
+                  {introDone && (
+                    <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+                      <FloatingOrangeBg />
+                    </View>
+                  )}
                 </AlertProvider>
               </SoundProvider>
             </NotificationProvider>
