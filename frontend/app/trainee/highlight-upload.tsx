@@ -8,6 +8,7 @@ import { Video, ResizeMode } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { toast } from '../../src/utils/toast';
+import { ScreenHeader } from '../../src/components/ScreenShell';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 const { width } = Dimensions.get('window');
@@ -192,16 +193,13 @@ export default function TraineeHighlightUpload() {
   return (
     <LinearGradient colors={['#0A0E1A', '#141929']} style={s.container}>
       <SafeAreaView style={{ flex: 1 }}>
-        <View style={s.header}>
-          <TouchableOpacity onPress={() => router.back()} style={s.backBtn} accessibilityLabel="Back" accessibilityRole="button" data-testid="trainee-highlight-back">
-            <Ionicons name="arrow-back" size={22} color="#FFF" />
-          </TouchableOpacity>
-          <View>
-            <Text style={s.headerTitle}>Highlight Reel</Text>
-            <Text style={s.headerSub}>Showcase your fitness journey</Text>
-          </View>
-          <View style={{ width: 44 }} />
-        </View>
+        {/* iter102n: unified ScreenHeader — same pattern as trainer side */}
+        <ScreenHeader
+          title="Highlight Reel"
+          subtitle="Showcase your fitness journey"
+          onBack={() => router.back()}
+          testID="trainee-highlight-header"
+        />
 
         <View style={s.uploadRow}>
           <TouchableOpacity style={s.uploadBtn} onPress={() => pickAndUpload('video')} disabled={uploading} data-testid="trainee-upload-video-btn" accessibilityLabel="Upload a video highlight" accessibilityRole="button">

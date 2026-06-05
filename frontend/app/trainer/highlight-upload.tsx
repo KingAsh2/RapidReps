@@ -9,6 +9,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { toast } from '../../src/utils/toast';
 import { uploadHighlightChunked } from '../../src/utils/uploadHighlightChunked';
+import { ScreenHeader } from '../../src/components/ScreenShell';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 const { width } = Dimensions.get('window');
@@ -216,16 +217,13 @@ export default function HighlightUpload() {
   return (
     <LinearGradient colors={['#0A0E1A', '#141929']} style={s.container}>
       <SafeAreaView style={{ flex: 1 }}>
-        <View style={s.header}>
-          <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
-            <Ionicons name="arrow-back" size={22} color="#FFF" />
-          </TouchableOpacity>
-          <View>
-            <Text style={s.headerTitle}>Highlight Reel</Text>
-            <Text style={s.headerSub}>Showcase your training style</Text>
-          </View>
-          <View style={{ width: 44 }} />
-        </View>
+        {/* iter102n: unified ScreenHeader — same back/title pattern as trainee side */}
+        <ScreenHeader
+          title="Highlight Reel"
+          subtitle="Showcase your training style"
+          onBack={() => router.back()}
+          testID="trainer-highlight-header"
+        />
 
         {/* Upload Buttons */}
         <View style={s.uploadRow}>
