@@ -4,6 +4,40 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-02-XX — Iter102n Wave 3: Shared `ScreenShell` + Brand-Color CTAs 🎨
+
+User instruction: "Go with wave 3" — migrate remaining paired trainee/trainer screens to the shared `<ScreenShell>` / `<ScreenHeader>` primitives, and shift primary CTAs to the user's chosen accent (brand) color so they match the global glow.
+
+### Shipped
+1. **`src/utils/accentColor.ts`** — Centralised accent-color hook: `useAccentColor()` returns `{ accent, accentDeep, gradient, soft, ring, glow }` derived from `user.accentColor` (defaults to brand orange). Pure helpers `hexToRgba()` and `darken()` are exported for non-React call-sites. `paletteFor(hex)` for prop-driven accents.
+2. **`AccentGlowOverlay.tsx`** now imports `hexToRgba` from the shared util (dedup).
+3. **`ScreenShell.PrimaryButton` + `SecondaryButton`** — both now consume `useAccentColor()`. Every CTA built through these primitives automatically renders in the user's chosen accent (gradient pill, accent ring on outlined, accent-tinted shadow on primary).
+4. **Paired-screen migration to `ScreenShell` / `ScreenHeader`**:
+   - `app/trainee/achievements.tsx` — moved from custom `SafeAreaView` + orange `LinearGradient` header to `<ScreenShell title="Achievements" onBack…>` with the stat strip (Total Sessions / Badges Earned / Discounts Left) now rendered in the user's accent gradient as a content card.
+   - `app/trainer/achievements.tsx` — same migration, identical stat-card pattern.
+   - `app/trainee/session-detail.tsx` — replaced custom in-screen header with `<ScreenHeader title="Session Details" onBack…>`.
+   - `app/trainer/session-detail.tsx` — replaced both error-state and main header with `<ScreenHeader title="Session"…>`.
+5. **Already migrated in earlier waves (verified clean)**: `vibe-setup.tsx` (both), `group-sessions.tsx` (both), `highlight-upload.tsx`.
+
+### Verified
+- ✅ ESLint clean on all 6 modified frontend files (no blocking issues, 0 advisory).
+- ✅ Backend untouched; supervisor logs show backend still serving 200 on `/api/auth/me`, `/api/trainers/nearby`, `/api/trainer/availability`.
+
+### Files touched
+- `/app/frontend/src/utils/accentColor.ts` (new)
+- `/app/frontend/src/components/AccentGlowOverlay.tsx`
+- `/app/frontend/src/components/ScreenShell.tsx`
+- `/app/frontend/app/trainee/achievements.tsx`
+- `/app/frontend/app/trainer/achievements.tsx`
+- `/app/frontend/app/trainee/session-detail.tsx`
+- `/app/frontend/app/trainer/session-detail.tsx`
+
+### Known
+- Expo Web preview remains unreliable for visual smoke tests (environmental). Device / physical iOS build is the source of truth.
+- Backend pytest test_change_password fixture credentials don't match seed data (pre-existing); proximity tests need `MONGO_URL` env (pre-existing).
+
+
+
 ## 2026-06-05 — Iteration 102: Centralized Profile Photo Uploads 📸
 
 User instruction: "The only place that Profile photos should be uploaded, changed or removed is Profile → Edit Profile. That same profile photo should serve as the icon for the profile button on the bottom app menu."

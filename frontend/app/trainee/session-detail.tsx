@@ -21,6 +21,7 @@ import { toast } from '../../src/utils/toast';
 import { haptic } from '../../src/utils/haptics';
 import { SessionTimeline, SessionTimelineStatus } from '../../src/components/SessionTimeline';
 import NegotiationPanel from '../../src/components/NegotiationPanel';
+import { ScreenHeader } from '../../src/components/ScreenShell';
 
 const COLORS = {
   teal: '#1a2a5e',
@@ -188,14 +189,12 @@ export default function SessionDetailScreen() {
       <LinearGradient colors={['#0A0E1A', '#141929']} style={StyleSheet.absoluteFill} />
       
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={COLORS.white} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>SESSION DETAILS</Text>
-          <View style={{ width: 44 }} />
-        </View>
+        {/* iter102n Wave 3: unified ScreenHeader */}
+        <ScreenHeader
+          title="Session Details"
+          onBack={() => router.back()}
+          testID="trainee-session-detail-header"
+        />
 
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
           {/* Status Card with Timeline */}

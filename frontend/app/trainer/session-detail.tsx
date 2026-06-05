@@ -66,14 +66,13 @@ export default function TrainerSessionDetailScreen() {
   }
   if (!session) {
     return (
-      <SafeAreaView style={s.container}>
-        <LinearGradient colors={['#0A0E1A', '#141929']} style={s.header}>
-          <TouchableOpacity onPress={() => router.back()} style={s.backBtn} data-testid="trainer-session-back">
-            <Ionicons name="chevron-back" size={22} color={DS.colors.textPrimary} />
-          </TouchableOpacity>
-          <Text style={s.headerTitle}>Session Not Found</Text>
-          <View style={{ width: 40 }} />
-        </LinearGradient>
+      <SafeAreaView style={s.container} edges={['top']}>
+        <LinearGradient colors={['#0A0E1A', '#141929']} style={StyleSheet.absoluteFillObject} />
+        <ScreenHeader
+          title="Session Not Found"
+          onBack={() => router.back()}
+          testID="trainer-session-detail-header"
+        />
       </SafeAreaView>
     );
   }
@@ -84,13 +83,12 @@ export default function TrainerSessionDetailScreen() {
 
   return (
     <SafeAreaView style={s.container} edges={['top']}>
-      <LinearGradient colors={['#0A0E1A', '#141929']} style={s.header}>
-        <TouchableOpacity onPress={() => router.back()} style={s.backBtn} data-testid="trainer-session-back">
-          <Ionicons name="chevron-back" size={22} color={DS.colors.textPrimary} />
-        </TouchableOpacity>
-        <Text style={s.headerTitle}>SESSION</Text>
-        <View style={{ width: 40 }} />
-      </LinearGradient>
+      <LinearGradient colors={['#0A0E1A', '#141929']} style={StyleSheet.absoluteFillObject} />
+      <ScreenHeader
+        title="Session"
+        onBack={() => router.back()}
+        testID="trainer-session-detail-header"
+      />
 
       <ScrollView
         contentContainerStyle={s.scroll}
@@ -246,6 +244,12 @@ const s = StyleSheet.create({
   priceLabel: { ...DS.text.caption, color: DS.colors.textSecondary, fontSize: 14 },
   priceValue: { fontSize: 28, fontWeight: '900', color: DS.colors.success, letterSpacing: -0.5 },
   priceRowSub: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 },
+  priceLabelSub: { ...DS.text.caption },
+  priceValueSub: { color: DS.colors.textPrimary, fontWeight: '700', fontSize: 14 },
+  linkRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, borderTopWidth: 1, borderTopColor: DS.colors.border },
+  linkText: { ...DS.text.bodyStrong, flex: 1 },
+});
+on: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 },
   priceLabelSub: { ...DS.text.caption },
   priceValueSub: { color: DS.colors.textPrimary, fontWeight: '700', fontSize: 14 },
   linkRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, borderTopWidth: 1, borderTopColor: DS.colors.border },

@@ -18,23 +18,7 @@ import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated, Easing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../contexts/AuthContext';
-
-/** Convert "#RRGGBB" → "rgba(r,g,b,alpha)". Falls back to RapidReps orange. */
-const hexToRgba = (hex: string | undefined, alpha: number): string => {
-  const fallback = '255,106,0';
-  if (!hex || typeof hex !== 'string') return `rgba(${fallback},${alpha})`;
-  let h = hex.trim().replace('#', '');
-  if (h.length === 3) {
-    h = h.split('').map((c) => c + c).join('');
-  }
-  if (h.length !== 6 || /[^0-9a-f]/i.test(h)) {
-    return `rgba(${fallback},${alpha})`;
-  }
-  const r = parseInt(h.slice(0, 2), 16);
-  const g = parseInt(h.slice(2, 4), 16);
-  const b = parseInt(h.slice(4, 6), 16);
-  return `rgba(${r},${g},${b},${alpha})`;
-};
+import { hexToRgba } from '../utils/accentColor';
 
 const EDGE = 70;        // px of glow falloff from each edge
 const BOTTOM_EDGE = 110; // wider glow at the bottom so the tab bar feels wrapped

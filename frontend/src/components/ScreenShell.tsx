@@ -21,6 +21,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform } from '
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAccentColor } from '../utils/accentColor';
 
 const COLORS = {
   bg0: '#0A0E1A',
@@ -58,6 +59,26 @@ export const ScreenHeader: React.FC<{
   </View>
 );
 
+/**
+ * iter102n Wave 5 — TabScreenHeader: variant for top-level tab screens that
+ * don't have a back button. Title is left-aligned (more app-like, less modal-like)
+ * and a right slot is reserved for primary tab actions (filters, search, +).
+ */
+export const TabScreenHeader: React.FC<{
+  title: string;
+  subtitle?: string;
+  right?: React.ReactNode;
+  testID?: string;
+}> = ({ title, subtitle, right, testID }) => (
+  <View style={styles.tabHeader} data-testid={testID || 'tab-screen-header'}>
+    <View style={{ flex: 1 }}>
+      <Text style={styles.tabHeaderTitle}>{title}</Text>
+      {subtitle ? <Text style={styles.tabHeaderSubtitle}>{subtitle}</Text> : null}
+    </View>
+    {right}
+  </View>
+);
+
 interface ShellProps {
   title?: string;
   subtitle?: string;
@@ -87,7 +108,7 @@ export const ScreenShell: React.FC<ShellProps> = ({
   );
 };
 
-/** Consistent primary CTA — full-width orange gradient pill. */
+/** Consistent primary CTA — full-width accent gradient pill (uses user's brand color). */
 export const PrimaryButton: React.FC<{
   label: string;
   onPress: () => void;
@@ -96,27 +117,30 @@ export const PrimaryButton: React.FC<{
   loading?: boolean;
   testID?: string;
   style?: any;
-}> = ({ label, onPress, icon, disabled, loading, testID, style }) => (
-  <TouchableOpacity
-    onPress={onPress}
-    disabled={disabled || loading}
-    activeOpacity={0.85}
-    style={[styles.primaryWrap, disabled && { opacity: 0.45 }, style]}
-    data-testid={testID || 'primary-btn'}
-  >
-    <LinearGradient
-      colors={['#FF6A00', '#FF9F1C']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.primaryGrad}
+}> = ({ label, onPress, icon, disabled, loading, testID, style }) => {
+  const { gradient, glow } = useAccentColor();
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      disabled={disabled || loading}
+      activeOpacity={0.85}
+      style={[styles.primaryWrap, { shadowColor: gradient[0] }, disabled && { opacity: 0.45 }, style]}
+      data-testid={testID || 'primary-btn'}
     >
-      {icon ? <Ionicons name={icon} size={18} color="#FFF" /> : null}
-      <Text style={styles.primaryText}>{loading ? 'Please wait…' : label}</Text>
-    </LinearGradient>
-  </TouchableOpacity>
-);
+      <LinearGradient
+        colors={gradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.primaryGrad}
+      >
+        {icon ? <Ionicons name={icon} size={18} color="#FFF" /> : null}
+        <Text style={styles.primaryText}>{loading ? 'Please wait…' : label}</Text>
+      </LinearGradient>
+    </TouchableOpacity>
+  );
+};
 
-/** Consistent secondary CTA — outlined pill, transparent fill. */
+/** Consistent secondary CTA — outlined pill, transparent fill, accent border. */
 export const SecondaryButton: React.FC<{
   label: string;
   onPress: () => void;
@@ -124,18 +148,21 @@ export const SecondaryButton: React.FC<{
   disabled?: boolean;
   testID?: string;
   style?: any;
-}> = ({ label, onPress, icon, disabled, testID, style }) => (
-  <TouchableOpacity
-    onPress={onPress}
-    disabled={disabled}
-    activeOpacity={0.85}
-    style={[styles.secondaryWrap, disabled && { opacity: 0.45 }, style]}
-    data-testid={testID || 'secondary-btn'}
-  >
-    {icon ? <Ionicons name={icon} size={18} color="#FF9F1C" /> : null}
-    <Text style={styles.secondaryText}>{label}</Text>
-  </TouchableOpacity>
-);
+}> = ({ label, onPress, icon, disabled, testID, style }) => {
+  const { accent, ring } = useAccentColor();
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      disabled={disabled}
+      activeOpacity={0.85}
+      style={[styles.secondaryWrap, { borderColor: ring }, disabled && { opacity: 0.45 }, style]}
+      data-testid={testID || 'secondary-btn'}
+    >
+      {icon ? <Ionicons name={icon} size={18} color={accent} /> : null}
+      <Text style={[styles.secondaryText, { color: accent }]}>{label}</Text>
+    </TouchableOpacity>
+  );
+};
 
 /** Uniform card surface — use for any "section card" on either side. */
 export const Card: React.FC<{ children: React.ReactNode; style?: any }> = ({ children, style }) => (

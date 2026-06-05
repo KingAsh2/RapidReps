@@ -19,6 +19,8 @@ import { useAuth } from '../../src/contexts/AuthContext';
 import { useAlert } from '../../src/contexts/AlertContext';
 import { streaksAPI } from '../../src/services/api';
 import FloatingOrangeBg from '../../src/components/FloatingOrangeBg';
+import { ScreenShell } from '../../src/components/ScreenShell';
+import { useAccentColor } from '../../src/utils/accentColor';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -327,6 +329,7 @@ export default function TrainerAchievementsScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const { showAlert } = useAlert();
+  const accent = useAccentColor();
   const [loading, setLoading] = useState(true);
   const [badges, setBadges] = useState<Badge[]>([]);
   const [totalSessions, setTotalSessions] = useState(0);
@@ -436,52 +439,46 @@ export default function TrainerAchievementsScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <ScreenShell
+      title="Achievements"
+      onBack={() => router.back()}
+      testID="trainee-achievements-screen"
+    >
       {/* iter97d: subtle ember ambience */}
       <FloatingOrangeBg density={6} intensity={0.3} />
-      {/* Header */}
-      <LinearGradient
-        colors={[Colors.warning, '#FFA500']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.header}
-      >
-        <View style={styles.headerTop}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={Colors.white} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Achievements</Text>
-          <View style={styles.headerSpacer} />
-        </View>
 
-        <View style={styles.statsContainer}>
-          <View style={styles.statBox}>
-            <Text style={styles.statValue}>{totalSessions}</Text>
-            <Text style={styles.statLabel}>Total Sessions</Text>
+      {/* Stats header (accent-colored) */}
+      <View style={styles.statsHeader}>
+        <LinearGradient
+          colors={accent.gradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.statsHeaderGrad}
+        >
+          <View style={styles.statsContainer}>
+            <View style={styles.statBox}>
+              <Text style={styles.statValue}>{totalSessions}</Text>
+              <Text style={styles.statLabel}>Total Sessions</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statBox}>
+              <Text style={styles.statValue}>{unlockedCount}/{totalBadges}</Text>
+              <Text style={styles.statLabel}>Badges Earned</Text>
+            </View>
+            {discountRemaining > 0 && (
+              <>
+                <View style={styles.statDivider} />
+                <View style={styles.statBox}>
+                  <Text style={styles.statValue}>{discountRemaining}</Text>
+                  <Text style={styles.statLabel}>Discounts Left</Text>
+                </View>
+              </>
+            )}
           </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statBox}>
-            <Text style={styles.statValue}>{unlockedCount}/{totalBadges}</Text>
-            <Text style={styles.statLabel}>Badges Earned</Text>
-          </View>
-          {discountRemaining > 0 && (
-            <>
-              <View style={styles.statDivider} />
-              <View style={styles.statBox}>
-                <Text style={styles.statValue}>{discountRemaining}</Text>
-                <Text style={styles.statLabel}>Discounts Left</Text>
-              </View>
-            </>
-          )}
-        </View>
-      </LinearGradient>
+        </LinearGradient>
+      </View>
 
-      {/* Badges Grid */}
-      <ScrollView
-        style={styles.content}
-        contentContainerStyle={styles.contentContainer}
-        showsVerticalScrollIndicator={false}
-      >
+      <View style={styles.contentContainer}>
         {/* Streak Banner */}
         {streakData && (
           <View style={styles.streakBanner} data-testid="streak-banner">
@@ -580,7 +577,7 @@ export default function TrainerAchievementsScreen() {
         )}
 
         <View style={{ height: 40 }} />
-      </ScrollView>
+      </View>
 
       {/* Badge Unlock Modal */}
       <BadgeUnlockModal
@@ -588,7 +585,7 @@ export default function TrainerAchievementsScreen() {
         badge={selectedBadge}
         onClose={() => setShowUnlockModal(false)}
       />
-    </SafeAreaView>
+    </ScreenShell>
   );
 }
 
@@ -608,34 +605,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.textLight,
   },
-  header: {
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 24,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+  header: { display: 'none' },
+  headerTop: { display: 'none' },
+  backButton: { display: 'none' },
+  headerTitle: { display: 'none' },
+  headerSpacer: { display: 'none' },
+  statsHeader: {
+    marginHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 12,
+    borderRadius: 18,
+    overflow: 'hidden',
   },
-  headerTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '900',
-    color: Colors.white,
-  },
-  headerSpacer: {
-    width: 40,
+  statsHeaderGrad: {
+    paddingHorizontal: 18,
+    paddingVertical: 18,
   },
   statsContainer: {
     flexDirection: 'row',
