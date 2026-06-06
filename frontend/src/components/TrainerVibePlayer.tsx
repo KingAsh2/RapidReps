@@ -4,6 +4,7 @@ import { Audio } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from 'expo-router';
 import { registerActiveAudio, releaseActiveAudio } from '../utils/audioCoordinator';
 
 interface VibeData {
@@ -49,6 +50,41 @@ export const TrainerVibePlayer = ({ vibe, autoPlay = true, compact = false }: Pr
     };
   }, []);
 
+  // ────────────────────────────────────────────────────────────────────
+  // iter102af — Tab/screen focus loop:
+  //   - On BLUR  → stop & unload audio so it doesn't bleed across screens.
+  //   - On RE-FOCUS → reset replay-guards and let the autoplay effect below
+  //                   restart the preview from the top.
+  //
+  // This makes the contract you asked for hold on every surface:
+  //   "song plays when in profile tab and stops when leaving — autoplay then
+  //    autostop — same for visitors viewing your profile."
+  //
+  // useFocusEffect is a no-op on screens not wrapped in a navigator (e.g.
+  // unit tests rendering this component bare), so we don't need a try/catch.
+  // ────────────────────────────────────────────────────────────────────
+  useFocusEffect(
+    React.useCallback(() => {
+      // Returning to focus: clear the "already played this mount" guard so
+      // the autoplay effect below fires again on this fresh visit.
+      setHasPlayed(false);
+      setPreviewEnded(false);
+      return () => {
+        // Losing focus: stop and unload the current preview.
+        if (sound) {
+          (async () => {
+            try { await releaseActiveAudio(sound); } catch { /* ignore */ }
+          })();
+          if (mountedRef.current) {
+            setSound(null);
+            setIsPlaying(false);
+          }
+        }
+        playLockRef.current = false;
+      };
+    }, [sound])
+  );
+
   const initAutoPlay = async () => {
     // Load mute preference first
     try {
@@ -82,7 +118,7 @@ export const TrainerVibePlayer = ({ vibe, autoPlay = true, compact = false }: Pr
     if (autoPlay && !hasPlayed && !isMuted && getPreviewUrl()) {
       playPreview();
     }
-  }, [isMuted, freshPreviewUrl]);
+  }, [isMuted, freshPreviewUrl, hasPlayed]);
 
   const cleanupSound = async () => {
     if (sound) {
