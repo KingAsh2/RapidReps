@@ -235,14 +235,18 @@ const s = StyleSheet.create({
 
   notifCard: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#141929', borderRadius: 14, padding: 14,
+    backgroundColor: 'rgba(20,25,41,0.92)', borderRadius: 14, padding: 14,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
   },
-  // Orange-tinted background + LEFT border for unread state — addresses the
-  // "white-on-white unreadable unread notification" bug from PDF RR_4-6 #2.
+  // iter102y: previously the unread card used a faint orange tint
+  // (rgba(255,106,0,0.12)) which combined with the orange hero background
+  // behind the page to create a near-white card — making the white title
+  // text illegible. Fix: keep unread cards on a DARK base so white text
+  // always pops, and surface the "unread" signal via a strong orange left
+  // border + orange title color + unread dot instead.
   unreadCard: {
-    backgroundColor: 'rgba(255,106,0,0.12)',
-    borderColor: 'rgba(255,106,0,0.4)',
+    backgroundColor: 'rgba(10,14,26,0.96)',
+    borderColor: 'rgba(255,106,0,0.55)',
     borderLeftWidth: 4,
     borderLeftColor: Colors.primary,
   },
@@ -253,9 +257,9 @@ const s = StyleSheet.create({
   },
   notifContent: { flex: 1 },
   notifTitle: { fontSize: 15, fontWeight: '700', color: '#FFFFFF', marginBottom: 2 },
-  notifTitleUnread: { color: '#FFFFFF', fontWeight: '900' },
+  notifTitleUnread: { color: Colors.primary, fontWeight: '900' },
   notifBody: { fontSize: 13, color: 'rgba(255,255,255,0.65)', lineHeight: 18 },
-  notifBodyUnread: { color: 'rgba(255,255,255,0.92)' },
+  notifBodyUnread: { color: '#FFFFFF' },
   notifTime: { fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 4 },
   unreadDot: {
     width: 10, height: 10, borderRadius: 5,
