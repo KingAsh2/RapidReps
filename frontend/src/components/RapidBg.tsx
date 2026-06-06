@@ -22,6 +22,7 @@
  */
 import React from 'react';
 import { ImageBackground, View, StyleSheet, StyleProp, ViewStyle, Platform } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const IMAGES = [
   // 1. Box jump w/ orange laser tunnel
@@ -44,17 +45,21 @@ const hashVariant = (key?: string): number => {
 interface Props {
   /** Stable key (route name) — deterministically picks one of the 4 images. */
   variant?: string;
-  /** Override scrim opacity (defaults to 0.85 for WCAG AA white-on-bg contrast). */
+  /** Override scrim opacity (defaults to 0.92 — bumped from 0.85 in iter102ab
+   *  per user feedback: edge orange glow was bleeding into screen content and
+   *  hurting text legibility). */
   scrim?: number;
   /** Set to true to skip scrim entirely (only when caller draws their own overlay). */
   noScrim?: boolean;
+  /** Set to true to also skip the edge vignette (rarely needed). */
+  noVignette?: boolean;
   style?: StyleProp<ViewStyle>;
   children?: React.ReactNode;
   testID?: string;
 }
 
 export const RapidBg: React.FC<Props> = ({
-  variant, scrim = 0.85, noScrim, style, children, testID,
+  variant, scrim = 0.92, noScrim, noVignette, style, children, testID,
 }) => {
   const idx = hashVariant(variant);
   return (
@@ -80,6 +85,35 @@ export const RapidBg: React.FC<Props> = ({
             { backgroundColor: `rgba(10,14,26,${scrim})` },
           ]}
         />
+      )}
+      {/* iter102ab: edge vignette to suppress the orange hero glow at the
+          screen edges so it doesn't compete with text legibility. Two stacked
+          linear gradients (top→middle and bottom→middle) plus a horizontal
+          one approximate a radial darkening without needing react-native-svg. */}
+      {!noVignette && (
+        <>
+          <LinearGradient
+            pointerEvents="none"
+            colors={['rgba(10,14,26,0.55)', 'rgba(10,14,26,0)']}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 0.4 }}
+            style={StyleSheet.absoluteFillObject}
+          />
+          <LinearGradient
+            pointerEvents="none"
+            colors={['rgba(10,14,26,0)', 'rgba(10,14,26,0.55)']}
+            start={{ x: 0.5, y: 0.6 }}
+            end={{ x: 0.5, y: 1 }}
+            style={StyleSheet.absoluteFillObject}
+          />
+          <LinearGradient
+            pointerEvents="none"
+            colors={['rgba(10,14,26,0.35)', 'rgba(10,14,26,0)', 'rgba(10,14,26,0.35)']}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={StyleSheet.absoluteFillObject}
+          />
+        </>
       )}
       {children}
     </ImageBackground>
