@@ -23,7 +23,97 @@ from email_service import send_payout_notification_email
 
 stripe.api_key = os.environ.get('STRIPE_SECRET_KEY', '')
 
+
 router = APIRouter(prefix="/api")
+
+
+# ────────────────────────────────────────────────────────────────────
+# iter102z: One-shot data migration for the trainer-visibility disconnect.
+# Safe to run repeatedly — only touches profiles that don't already have
+# the required fields. Intended to be hit once against production after
+# deploying the iter102z code fixes, to retro-fix legacy verified trainers
+# whose `assignedTier` was never written.
+# ────────────────────────────────────────────────────────────────────
+@router.post("/admin/backfill-trainer-visibility")
+async def backfill_trainer_visibility(
+    default_tier: str = "new",
+    dry_run: bool = False,
+    admin_user: dict = Depends(require_admin),
+):
+    """Retro-apply iter102z fixes to legacy trainer profiles in the DB the
+    backend is currently connected to.
+
+    Specifically, for every trainer where `verificationStatus == 'verified'`
+    but `assignedTier` is unset/empty, write:
+      - assignedTier = default_tier (default 'new')
+      - tierAssignedAt = now
+      - tierAutoAssignedOnApproval = True
+      - tierAutoAssignedReason = 'iter102z_backfill'
+      - canBeListed = True (if missing)
+      - canGoLive = True (if missing)
+
+    Use `?dry_run=true` to preview the count without mutating anything.
+    """
+    allowed = {"new", "certified", "specialty"}
+    if default_tier not in allowed:
+        raise HTTPException(400, f"default_tier must be one of {sorted(allowed)}")
+
+    needs_tier = {
+        'verificationStatus': 'verified',
+        '$or': [
+            {'assignedTier': {'$exists': False}},
+            {'assignedTier': None},
+            {'assignedTier': ''},
+        ],
+    }
+    affected = await db.trainer_profiles.count_documents(needs_tier)
+    if dry_run:
+        return {
+            "dryRun": True,
+            "wouldAssignTierTo": affected,
+            "defaultTier": default_tier,
+        }
+
+    now = datetime.utcnow()
+    tier_result = await db.trainer_profiles.update_many(
+        needs_tier,
+        {'$set': {
+            'assignedTier': default_tier,
+            'tierAssignedAt': now,
+            'tierAssignedBy': str(admin_user['_id']),
+            'tierAutoAssignedOnApproval': True,
+            'tierAutoAssignedReason': 'iter102z_backfill',
+        }},
+    )
+
+    # Belt-and-suspenders: ensure legacy flags are coherent for verified
+    # trainers (so the visibility-status diagnostic shows green).
+    listed_result = await db.trainer_profiles.update_many(
+        {'verificationStatus': 'verified',
+         '$or': [{'canBeListed': {'$exists': False}}, {'canBeListed': None}, {'canBeListed': False}]},
+        {'$set': {'canBeListed': True}},
+    )
+    live_result = await db.trainer_profiles.update_many(
+        {'verificationStatus': 'verified',
+         '$or': [{'canGoLive': {'$exists': False}}, {'canGoLive': None}, {'canGoLive': False}]},
+        {'$set': {'canGoLive': True}},
+    )
+
+    visible_now = await db.trainer_profiles.count_documents({
+        'verificationStatus': 'verified',
+        'assignedTier': {'$exists': True, '$nin': [None, '']},
+        'isAvailable': True,
+    })
+
+    return {
+        "dryRun": False,
+        "tierAssignedCount": tier_result.modified_count,
+        "canBeListedSetCount": listed_result.modified_count,
+        "canGoLiveSetCount": live_result.modified_count,
+        "currentlyVisibleToTrainees": visible_now,
+        "defaultTier": default_tier,
+    }
+
 
 # ============================================================================
 # ADMIN ENDPOINTS
