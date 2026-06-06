@@ -57,15 +57,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const storedToken = await AsyncStorage.getItem('auth_token');
       const savedRole = await AsyncStorage.getItem('active_role');
-      
+
       if (storedToken) {
         setToken(storedToken);
+
+        // iter102aa: hydrate user from AsyncStorage cache FIRST so the avatar /
+        // name / accent color render instantly on cold start. The /auth/me
+        // network call below then silently refreshes the cache in the
+        // background. Without this, the user object stayed null for the full
+        // network round-trip (200-2000ms), causing the Profile tab to flash
+        // initials before snapping to the real photo — the exact delay the
+        // user reported.
+        try {
+          const cachedJson = await AsyncStorage.getItem('cached_user');
+          if (cachedJson) {
+            const cached = JSON.parse(cachedJson);
+            if (cached && typeof cached === 'object' && cached.roles) {
+              setUser(cached);
+              if (savedRole && Array.isArray(cached.roles) && cached.roles.includes(savedRole)) {
+                setActiveRoleState(savedRole);
+              } else if (Array.isArray(cached.roles) && cached.roles.length > 0) {
+                setActiveRoleState(cached.roles[0]);
+              }
+            }
+          }
+        } catch {
+          /* corrupt cache — ignore, network refresh below will overwrite it */
+        }
+
         try {
           const userData = await authAPI.getMe();
           // Defensive check - make sure userData is valid
           if (userData && typeof userData === 'object' && userData.roles) {
             setUser(userData);
-            
+            // Persist fresh user JSON so the next cold start can hydrate instantly.
+            try { await AsyncStorage.setItem('cached_user', JSON.stringify(userData)); } catch {}
+
             if (savedRole && Array.isArray(userData.roles) && userData.roles.includes(savedRole)) {
               setActiveRoleState(savedRole);
             } else if (Array.isArray(userData.roles) && userData.roles.length > 0) {
@@ -75,6 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Invalid user data, clear token
             console.error('Invalid user data received, clearing auth');
             await AsyncStorage.removeItem('auth_token');
+            await AsyncStorage.removeItem('cached_user');
             setToken(null);
           }
         } catch (apiError: any) {
@@ -82,6 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (apiError?.response?.status === 401) {
             console.error('Token expired or invalid, clearing auth');
             await AsyncStorage.removeItem('auth_token');
+            await AsyncStorage.removeItem('cached_user');
             setToken(null);
           } else {
             console.error('Transient error fetching user (keeping token):', apiError?.message);
@@ -110,6 +139,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const fresh = await authAPI.getMe();
       if (fresh && typeof fresh === 'object' && fresh.roles) {
         setUser(fresh);
+        // iter102aa: keep AsyncStorage cache in sync so cold-start hydration
+        // never serves a stale photo/name after the user updates their profile.
+        try { await AsyncStorage.setItem('cached_user', JSON.stringify(fresh)); } catch {}
         return fresh;
       }
     } catch (e) {
@@ -142,6 +174,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsDemoMode(false);
     setToken(response.access_token);
     setUser(response.user);
+    // iter102aa: persist for instant cold-start hydration
+    try { await AsyncStorage.setItem('cached_user', JSON.stringify(response.user)); } catch {}
     // Set initial active role
     if (response.user.roles.length > 0) {
       const initialRole = response.user.roles[0];
@@ -171,7 +205,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsDemoMode(false);
     setToken(response.access_token);
     setUser(response.user);
-    
+    // iter102aa: persist for instant cold-start hydration
+    try { await AsyncStorage.setItem('cached_user', JSON.stringify(response.user)); } catch {}
+
     try {
       const savedRole = await AsyncStorage.getItem('active_role');
       if (savedRole && response.user.roles?.includes(savedRole)) {
@@ -210,6 +246,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await AsyncStorage.removeItem('auth_token');
     await AsyncStorage.removeItem('active_role');
     await AsyncStorage.removeItem('demo_role');
+    await AsyncStorage.removeItem('cached_user');  // iter102aa
     setUser(null);
     setToken(null);
     setActiveRoleState(null);

@@ -394,16 +394,17 @@ export default function TraineeProfileScreen() {
               ]}
             >
               <TouchableOpacity onPress={isEditing ? pickImage : undefined} disabled={!isEditing} activeOpacity={isEditing ? 0.7 : 1} style={styles.avatarContainer} data-testid="trainee-avatar-tap">
-                {/* iter98e: accent-color halo + ring on own avatar */}
+                {/* iter98e: accent-color halo + ring on own avatar.
+                    iter102aa: glow toned down (22→12, 0.55→0.32, border 2.5→2). */}
                 <View style={{
                   shadowColor: profile?.accentColor || '#FF6A00',
-                  shadowOpacity: 0.55,
-                  shadowRadius: 22,
+                  shadowOpacity: 0.32,
+                  shadowRadius: 12,
                   shadowOffset: { width: 0, height: 0 },
-                  elevation: 8,
+                  elevation: 6,
                   borderRadius: 70,
                   padding: 3,
-                  borderWidth: 2.5,
+                  borderWidth: 2,
                   borderColor: profile?.accentColor || '#FF6A00',
                 }}>
                   <UserAvatar

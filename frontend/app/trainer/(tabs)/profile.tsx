@@ -207,11 +207,13 @@ export default function TrainerProfileScreen() {
                   toast.error('Could not reach admin', 'Try again later');
                 }
               }}
-              style={styles.logoutBtn}
+              style={[styles.logoutBtn, { flexDirection: 'row', gap: 4, paddingHorizontal: 12, width: 'auto', minWidth: 38 }]}
               data-testid="trainer-message-admin-btn"
-              accessibilityLabel="Message admin"
+              accessibilityLabel="Message RapidReps Admin"
+              accessibilityHint="Opens a direct chat with the RapidReps admin team for support."
             >
-              <Ionicons name="chatbubble-ellipses-outline" size={22} color={COLORS.white} />
+              <Ionicons name="chatbubble-ellipses-outline" size={20} color={COLORS.white} />
+              <Text style={{ color: COLORS.white, fontSize: 11, fontWeight: '700', letterSpacing: 0.4 }}>ADMIN</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn} data-testid="trainer-profile-logout" accessibilityLabel="Log out" accessibilityRole="button">
               <Ionicons name="log-out-outline" size={22} color={COLORS.white} />
@@ -230,16 +232,19 @@ export default function TrainerProfileScreen() {
             <>
               {/* Avatar + Name */}
               <Animated.View style={[styles.avatarSection, { opacity: heroOpacityAnim, transform: [{ scale: heroScaleAnim }] }]}>
-                {/* iter98e: accent-color halo + ring on own avatar */}
+                {/* iter98e: accent-color halo + ring on own avatar.
+                    iter102aa: glow toned down (shadowRadius 22→12, opacity
+                    0.55→0.32, border 2.5→2) so it no longer competes with
+                    surrounding text legibility per user feedback. */}
                 <View style={[styles.avatarContainer, {
                   shadowColor: profile?.accentColor || '#FF6A00',
-                  shadowOpacity: 0.55,
-                  shadowRadius: 22,
+                  shadowOpacity: 0.32,
+                  shadowRadius: 12,
                   shadowOffset: { width: 0, height: 0 },
-                  elevation: 8,
+                  elevation: 6,
                   borderRadius: 70,
                   padding: 3,
-                  borderWidth: 2.5,
+                  borderWidth: 2,
                   borderColor: profile?.accentColor || '#FF6A00',
                 }]}>
                   {profile?.avatarUrl ? (
