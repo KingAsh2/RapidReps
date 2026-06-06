@@ -24,6 +24,7 @@ from models import (
 )
 from storage import init_storage, put_object, get_object, generate_upload_path, MIME_TYPES
 from video_thumbnails import extract_video_thumbnail
+from video_transcode import transcode_to_web_mp4
 
 router = APIRouter(prefix="/api")
 
@@ -95,6 +96,80 @@ async def backfill_highlight_thumbnails(current_user: dict = Depends(get_current
     return {"success": True, "thumbnailsGenerated": total, "profilesTouched": profiles_touched}
 
 
+@router.post("/admin/backfill-highlight-transcodes")
+async def backfill_highlight_transcodes(current_user: dict = Depends(get_current_user), limit: int = 50):
+    """One-shot admin job: re-encode existing highlight videos to web-optimized
+    H.264 mp4 with +faststart so they start playing instantly.
+
+    Bounded by `limit` (default 50) so a single invocation can't spin for
+    hours on a large catalog — re-run until `processed` returns < limit.
+    """
+    if not current_user.get('isAdmin') and 'admin' not in (current_user.get('roles') or []):
+        raise HTTPException(403, "Admin only")
+
+    VIDEO_EXTS = {'mp4', 'mov', 'avi', 'webm', 'mkv', 'm4v'}
+
+    def _is_video(hl: dict) -> bool:
+        if hl.get('type') == 'video':
+            return True
+        url = (hl.get('url') or '').lower()
+        return any(url.endswith(f'.{e}') for e in VIDEO_EXTS)
+
+    processed = 0
+    skipped = 0
+    profiles_touched = 0
+    for coll_name in ('trainer_profiles', 'trainee_profiles'):
+        if processed >= limit:
+            break
+        coll = db[coll_name]
+        async for doc in coll.find({'highlights.0': {'$exists': True}}).limit(limit):
+            if processed >= limit:
+                break
+            highlights = doc.get('highlights') or []
+            user_id = doc.get('userId')
+            if not user_id:
+                continue
+            changed = False
+            for hl in highlights:
+                if processed >= limit:
+                    break
+                if not _is_video(hl) or hl.get('transcoded'):
+                    continue
+                storage_path = hl.get('storagePath')
+                if not storage_path:
+                    url = hl.get('url', '')
+                    if url.startswith('/api/files/'):
+                        storage_path = url[len('/api/files/'):]
+                if not storage_path:
+                    skipped += 1
+                    continue
+                try:
+                    video_bytes, _ = get_object(storage_path)
+                except Exception:
+                    skipped += 1
+                    continue
+                optimized = transcode_to_web_mp4(video_bytes)
+                if not optimized:
+                    skipped += 1
+                    continue
+                new_path = generate_upload_path(user_id, 'mp4', folder='highlights')
+                try:
+                    put_object(new_path, optimized, 'video/mp4')
+                except Exception:
+                    skipped += 1
+                    continue
+                hl['url'] = f"/api/files/{new_path}"
+                hl['storagePath'] = new_path
+                hl['transcoded'] = True
+                changed = True
+                processed += 1
+            if changed:
+                profiles_touched += 1
+                await coll.update_one({'_id': doc['_id']}, {'$set': {'highlights': highlights}})
+
+    return {"success": True, "processed": processed, "skipped": skipped, "profilesTouched": profiles_touched, "limit": limit}
+
+
 # ============================================================================
 # HIGHLIGHT HELPER
 # ============================================================================
@@ -110,6 +185,23 @@ async def _store_highlight(content: bytes, ext: str, content_type: str, user_id:
     is_video = ext in ('mp4', 'mov', 'avi', 'webm', 'mkv', 'm4v')
     media_type = 'video' if is_video else 'photo'
 
+    # ────────────────────────────────────────────────────────────────────
+    # iter102x: Re-encode videos to 720p H.264 mp4 with +faststart so the
+    # client can begin playback before the whole file is downloaded. The
+    # original bytes are kept ONLY in memory (we don't persist them) — we
+    # write the optimized version to storage as the canonical clip. On
+    # failure, fall back to the original upload so a flaky encode never
+    # blocks publishing.
+    # ────────────────────────────────────────────────────────────────────
+    transcoded = False
+    if is_video:
+        optimized = transcode_to_web_mp4(content)
+        if optimized:
+            content = optimized
+            ext = 'mp4'
+            content_type = 'video/mp4'
+            transcoded = True
+
     storage_path = generate_upload_path(user_id, ext, folder="highlights")
     try:
         put_object(storage_path, content, content_type)
@@ -121,6 +213,8 @@ async def _store_highlight(content: bytes, ext: str, content_type: str, user_id:
         'url': url, 'storagePath': storage_path, 'type': media_type,
         'caption': caption, 'createdAt': datetime.utcnow().isoformat(),
     }
+    if transcoded:
+        highlight['transcoded'] = True
 
     # Try to extract a poster frame for videos. Failure is non-fatal — the
     # upload still succeeds and the reel falls back to its old behavior.
