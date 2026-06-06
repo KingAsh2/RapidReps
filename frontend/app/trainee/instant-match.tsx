@@ -9,6 +9,7 @@ import { instantMatchAPI } from '../../src/services/api';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { haptic } from '../../src/utils/haptics';
 
+import RapidBg from '../../src/components/RapidBg';
 const backgroundImage = require('../../assets/images/bg-jump-rope.jpg');
 const { width } = Dimensions.get('window');
 const COLORS = { orange: '#FF6A00', orangeLight: '#FF9F1C', teal: '#1a2a5e', navy: '#1a2a5e', white: '#FFFFFF', gray: '#5a6785', success: '#00D26A', error: '#FF4757' };
@@ -94,7 +95,7 @@ export default function InstantMatchScreen() {
   const spin = rotateAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
 
   return (
-    <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
+    <RapidBg variant="trainee-instant-match" style={styles.container} noScrim>
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
       <LinearGradient colors={['rgba(255, 127, 0, 0.92)', 'rgba(255, 106, 0, 0.88)']} style={StyleSheet.absoluteFillObject} />
 
@@ -166,7 +167,7 @@ export default function InstantMatchScreen() {
         )}
       </View>
       </SafeAreaView>
-    </ImageBackground>
+    </RapidBg>
   );
 }
 

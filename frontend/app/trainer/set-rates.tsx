@@ -118,8 +118,9 @@ export default function SetRatesScreen() {
 
   if (!tier) {
     return (
+      <RapidBg variant="trainer-set-rates" style={{ flex: 1 }}>
       <SafeAreaView style={s.container}>
-        <LinearGradient colors={['#0A0E1A', '#141929']} style={s.header}>
+        <LinearGradient colors={['rgba(10,14,26,0.85)', 'rgba(20,25,41,0.82)']} style={s.header}>
           <TouchableOpacity onPress={() => router.back()} style={s.backBtn} data-testid="set-rates-back">
             <Ionicons name="chevron-back" size={22} color="#FFF" />
           </TouchableOpacity>
@@ -135,6 +136,7 @@ export default function SetRatesScreen() {
           </Text>
         </View>
       </SafeAreaView>
+      </RapidBg>
     );
   }
 
@@ -183,8 +185,9 @@ export default function SetRatesScreen() {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <RapidBg variant="trainer-set-rates" style={{ flex: 1 }}>
       <SafeAreaView style={s.container}>
-        <LinearGradient colors={['#0A0E1A', '#141929']} style={s.header}>
+        <LinearGradient colors={['rgba(10,14,26,0.85)', 'rgba(20,25,41,0.82)']} style={s.header}>
           <TouchableOpacity onPress={() => router.back()} style={s.backBtn} data-testid="set-rates-back">
             <Ionicons name="chevron-back" size={22} color="#FFF" />
           </TouchableOpacity>
@@ -231,12 +234,13 @@ export default function SetRatesScreen() {
           </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
+      </RapidBg>
     </KeyboardAvoidingView>
   );
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0E1A' },
+  container: { flex: 1, backgroundColor: 'transparent' },
   loader: { flex: 1, backgroundColor: '#0A0E1A', justifyContent: 'center', alignItems: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14 },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.12)', justifyContent: 'center', alignItems: 'center' },

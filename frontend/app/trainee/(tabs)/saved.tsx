@@ -39,6 +39,7 @@ const COLORS = {
 };
 
 // Background image
+import RapidBg from '../../../src/components/RapidBg';
 const backgroundImage = require('../../../assets/images/bg-battle-ropes.png');
 
 export default function SavedTrainersScreen() {
@@ -203,7 +204,7 @@ export default function SavedTrainersScreen() {
 
   if (loading) {
     return (
-      <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
+    <RapidBg variant="trainee-saved-loading" style={styles.container} noScrim>
         <LinearGradient
           colors={['rgba(10, 14, 26, 0.92)', 'rgba(17, 24, 39, 0.88)']}
           style={styles.loadingContainer}
@@ -211,12 +212,12 @@ export default function SavedTrainersScreen() {
           <ActivityIndicator size="large" color={COLORS.white} />
           <Text style={styles.loadingText}>Loading saved trainers...</Text>
         </LinearGradient>
-      </ImageBackground>
+      </RapidBg>
     );
   }
 
   return (
-    <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
+    <RapidBg variant="trainee-saved" style={styles.container} noScrim>
       {/* Orange overlay */}
       <LinearGradient
         colors={['rgba(10, 14, 26, 0.92)', 'rgba(17, 24, 39, 0.88)']}
@@ -294,7 +295,7 @@ export default function SavedTrainersScreen() {
           <View style={{ height: 100 }} />
         </ScrollView>
       </SafeAreaView>
-    </ImageBackground>
+    </RapidBg>
   );
 }
 

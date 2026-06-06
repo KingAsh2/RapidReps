@@ -42,6 +42,7 @@ import axios from 'axios';
 const { width } = Dimensions.get('window');
 
 // Background image
+import RapidBg from '../../../src/components/RapidBg';
 const backgroundImage = require('../../../assets/images/bg-box-jumps.png');
 
 // Brand colors - UNIFIED DESIGN SYSTEM
@@ -361,10 +362,10 @@ export default function TraineeProfileScreen() {
   }
 
   return (
-    <ImageBackground 
-      source={backgroundImage} 
+    <RapidBg
+      variant="trainee-profile"
       style={styles.container}
-      resizeMode="cover"
+      noScrim
     >
       {/* Orange overlay for consistency */}
       <LinearGradient
@@ -1051,7 +1052,7 @@ export default function TraineeProfileScreen() {
         onSelect={handleSelectAccentColor}
         currentColor={profile?.accentColor}
       />
-    </ImageBackground>
+    </RapidBg>
   );
 }
 

@@ -30,6 +30,7 @@ import * as Location from 'expo-location';
 const { width } = Dimensions.get('window');
 
 // Background image
+import RapidBg from '../../src/components/RapidBg';
 const backgroundImage = require('../../assets/images/bg-box-jumps.png');
 
 // Brand colors
@@ -447,7 +448,7 @@ export default function TraineeOnboardingScreen() {
   };
 
   return (
-    <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
+    <RapidBg variant="auth-onboarding-trainee" style={styles.container} noScrim>
       <LinearGradient
         colors={['rgba(10, 14, 26, 0.95)', 'rgba(17, 24, 39, 0.90)']}
         start={{ x: 0, y: 0 }}
@@ -547,7 +548,7 @@ export default function TraineeOnboardingScreen() {
           </View>
         </TouchableOpacity>
       </Modal>
-    </ImageBackground>
+    </RapidBg>
   );
 }
 

@@ -4,6 +4,48 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-02-XX — Iter102u: Finish set-rates + selective hero-photo migration 🎬
+
+Completed the 3-step plan agreed with the user.
+
+### Step 1 — set-rates done
+- `trainer/set-rates.tsx` now properly wrapped in `<RapidBg variant="trainer-set-rates">` (both the loading/no-tier early-return AND the main render path). Container backgroundColor set to `transparent` so the hero photo shows through; the navy header strip kept as a translucent overlay.
+- All true-flat-navy screens are now on RapidBg hero photos. Goal complete.
+
+### Step 2 — Audit of the 14 "already-hero" screens
+Categorized each into "swap to RapidBg (one of the 4 brand photos)" vs "keep current data-focused layout":
+
+**Swapped to RapidBg (5):**
+- `auth/signup.classic.tsx` — onboarding brand moment
+- `auth/onboarding-trainee.tsx` — onboarding
+- `trainee/(tabs)/saved.tsx` — discovery vibe
+- `trainee/(tabs)/profile.tsx` — personal hero
+- `trainee/instant-match.tsx` — anticipation moment
+
+**Kept as-is (data-focused screens — photo would distract from content):**
+- `trainee/(tabs)/sessions.tsx`, `trainee/(tabs)/messages.tsx`
+- `trainer/(tabs)/messages.tsx`
+- `trainee/receipt.tsx`, `trainer/receipt.tsx`
+- `messages/index.tsx`, `messages/chat.tsx`
+
+### Step 3 — Batch applied
+All 5 swaps used `<RapidBg variant="..." style={styles.container} noScrim>` because each screen already has its own custom gradient overlay. The `noScrim` prop preserves existing overlay logic; the hero photo just replaces the static background asset.
+
+### Verified
+- ✅ ESLint clean on all 6 touched files (set-rates + the 5 swaps).
+- ✅ Web bundler running (per supervisor logs).
+- ✅ Backend untouched.
+
+### Files touched
+- `/app/frontend/app/trainer/set-rates.tsx`
+- `/app/frontend/app/auth/signup.classic.tsx`
+- `/app/frontend/app/auth/onboarding-trainee.tsx`
+- `/app/frontend/app/trainee/(tabs)/saved.tsx`
+- `/app/frontend/app/trainee/(tabs)/profile.tsx`
+- `/app/frontend/app/trainee/instant-match.tsx`
+
+
+
 ## 2026-02-XX — Iter102t: Safety Center + Unread Badge + 508 hardening 🛡️
 
 ### Bugs reported by user

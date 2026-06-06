@@ -28,6 +28,7 @@ import { SocialAuthButtons } from '../../src/components/SocialAuthButtons';
 const { width, height: screenHeight } = Dimensions.get('window');
 
 // Background image - Box jumps (high energy, getting started)
+import RapidBg from '../../src/components/RapidBg';
 const backgroundImage = require('../../assets/images/bg-box-jumps.png');
 
 // Brand colors
@@ -291,7 +292,7 @@ export default function SignupScreen() {
   });
 
   return (
-    <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
+    <RapidBg variant="auth-signup-classic" style={styles.container} noScrim>
       {/* Orange overlay */}
       <LinearGradient
         colors={['rgba(255, 127, 0, 0.97)', 'rgba(255, 127, 0, 0.96)', 'rgba(255, 165, 38, 0.95)']}
@@ -718,7 +719,7 @@ export default function SignupScreen() {
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
-    </ImageBackground>
+    </RapidBg>
   );
 }
 
