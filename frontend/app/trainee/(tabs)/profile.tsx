@@ -349,15 +349,10 @@ export default function TraineeProfileScreen() {
 
   if (loading) {
     return (
-      <LinearGradient
-        colors={['#0A0E1A', '#141929']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.loadingContainer}
-      >
+      <RapidBg variant="trainee-profile" style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={COLORS.white} />
         <Text style={styles.loadingText}>Loading profile...</Text>
-      </LinearGradient>
+      </RapidBg>
     );
   }
 

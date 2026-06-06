@@ -145,10 +145,10 @@ export default function SessionDetailScreen() {
 
   if (loading) {
     return (
-      <LinearGradient colors={['#0A0E1A', '#141929']} style={styles.loadingContainer}>
+      <RapidBg variant="trainee-session-detail" style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={COLORS.white} />
         <Text style={styles.loadingText}>Loading session...</Text>
-      </LinearGradient>
+      </RapidBg>
     );
   }
 

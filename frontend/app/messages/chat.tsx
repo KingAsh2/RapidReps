@@ -20,6 +20,7 @@ import { useAuth } from '../../src/contexts/AuthContext';
 import { chatAPI } from '../../src/services/api';
 import { UserAvatar } from '../../src/components/UserAvatar';
 import FloatingOrangeBg from '../../src/components/FloatingOrangeBg';
+import { RapidBg } from '../../src/components/RapidBg';
 
 // Brand colors
 const COLORS = {
@@ -206,10 +207,10 @@ export default function ChatScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <RapidBg variant="messages-chat" style={styles.container}>
       {/* Gradient header area */}
       <LinearGradient
-        colors={['#0A0E1A', '#141929']}
+        colors={['rgba(10,14,26,0.95)', 'rgba(20,25,41,0.85)']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.headerGradient}
@@ -323,14 +324,13 @@ export default function ChatScreen() {
           </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
-    </View>
+    </RapidBg>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#141929',
   },
   headerGradient: {
     position: 'absolute',

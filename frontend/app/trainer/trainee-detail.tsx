@@ -155,7 +155,7 @@ export default function TraineeDetailScreen() {
   if (loading) {
     return (
       <View style={styles.container}>
-        <LinearGradient colors={['#0A0E1A', '#141929']} style={StyleSheet.absoluteFill} />
+        <RapidBg variant="trainer-trainee-detail" style={StyleSheet.absoluteFill} />
         <SafeAreaView style={styles.safeArea}>
       <FloatingOrangeBg />
           <View style={styles.loadingContainer}>
@@ -170,7 +170,7 @@ export default function TraineeDetailScreen() {
   if (!trainee) {
     return (
       <View style={styles.container}>
-        <LinearGradient colors={['#0A0E1A', '#141929']} style={StyleSheet.absoluteFill} />
+        <RapidBg variant="trainer-trainee-detail" style={StyleSheet.absoluteFill} />
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.loadingContainer}>
             <Ionicons name="person-circle-outline" size={64} color="rgba(255,255,255,0.2)" />
