@@ -389,11 +389,10 @@ export default function TraineeProfileScreen() {
             </View>
           ) : null}
 
-          {/* Social + Instagram */}
+          {/* Social + Instagram (iter102ac: SocialLinksDisplay removed) */}
           <View style={styles.sectionCard}>
             <Text style={styles.sectionTitle}>Connect</Text>
             <InstagramSection targetUserId={traineeId} />
-            <SocialLinksDisplay socialLinks={traineeData?.socialLinks || {}} />
           </View>
 
           {/* Safety footer */}

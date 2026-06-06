@@ -251,21 +251,11 @@ export default function TrainerOnboardingScreen() {
         return (
           <View style={styles.stepContent}>
             <Text style={styles.stepTitle}>Tell us about yourself</Text>
-            
-            {/* Profile Photo */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Profile Photo</Text>
-              <TouchableOpacity style={styles.photoContainer} onPress={pickImage}>
-                {formData.profilePhoto ? (
-                  <Image source={{ uri: formData.profilePhoto }} style={styles.photo} />
-                ) : (
-                  <View style={styles.photoPlaceholder}>
-                    <Ionicons name="camera" size={40} color={Colors.textLight} />
-                    <Text style={styles.photoPlaceholderText}>Tap to add photo</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            </View>
+
+            {/* iter102ac: Profile Photo upload removed from onboarding —
+                it's handled in the Edit Profile screen post-signup so users
+                aren't blocked here by a camera permission they don't yet
+                trust the app with. */}
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Bio</Text>
@@ -582,7 +572,7 @@ export default function TrainerOnboardingScreen() {
             </View>
             <Text style={styles.modalTitle}>Profile Created!</Text>
             <Text style={styles.modalSubtitle}>
-              Your trainer profile is set up. Next, complete verification — once an admin approves you, you'll be able to set your session rates.
+              Your trainer profile is set up. Next, complete verification — once an admin approves you, you&apos;ll be able to set your session rates.
             </Text>
 
             <TouchableOpacity
@@ -607,7 +597,7 @@ export default function TrainerOnboardingScreen() {
               }}
               data-testid="skip-verification-btn"
             >
-              <Text style={styles.modalSecondaryText}>I'll do this later</Text>
+              <Text style={styles.modalSecondaryText}>I&apos;ll do this later</Text>
             </TouchableOpacity>
           </View>
         </View>

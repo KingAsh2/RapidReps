@@ -487,7 +487,7 @@ export default function EditTrainerProfileScreen() {
                           </>
                         ) : (
                           <Text style={{ fontSize: 11, color: 'rgba(26,42,94,0.55)', marginTop: 4 }}>
-                            You'll appear for any trainee inside their own search radius.
+                            You&apos;ll appear for any trainee inside their own search radius.
                           </Text>
                         )}
                       </View>
@@ -666,38 +666,10 @@ export default function EditTrainerProfileScreen() {
               {/* iter102q: Media info card removed per user request — the helper text
                   was redundant once the profile photo flow was centralized. */}
 
-              {/* Social Links */}
-              <Animated.View style={{ opacity: 1 }}>
-                <LinearGradient colors={['rgba(255,255,255,0.12)', 'rgba(255,255,255,0.06)']} style={styles.sectionCard}>
-                  <Text style={styles.sectionTitle}>Social Media Links</Text>
-                  {[
-                    { key: 'instagram', icon: 'logo-instagram', label: 'Instagram', placeholder: 'username' },
-                    { key: 'tiktok', icon: 'logo-tiktok', label: 'TikTok', placeholder: '@username' },
-                    { key: 'youtube', icon: 'logo-youtube', label: 'YouTube', placeholder: '@channel' },
-                    { key: 'twitter', icon: 'logo-twitter', label: 'X / Twitter', placeholder: '@handle' },
-                    { key: 'website', icon: 'globe-outline', label: 'Website', placeholder: 'https://...' },
-                  ].map((platform) => (
-                    <View key={platform.key} style={styles.inputGroup}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                        <Ionicons name={platform.icon as any} size={16} color={COLORS.orange} />
-                        <Text style={styles.inputLabel}>{platform.label}</Text>
-                      </View>
-                      <TextInput
-                        style={styles.input}
-                        value={formData.socialLinks[platform.key] || ''}
-                        onChangeText={(text) => setFormData({
-                          ...formData,
-                          socialLinks: { ...formData.socialLinks, [platform.key]: text },
-                        })}
-                        placeholder={platform.placeholder}
-                        placeholderTextColor={COLORS.gray}
-                        autoCapitalize="none"
-                        data-testid={`social-${platform.key}-input`}
-                      />
-                    </View>
-                  ))}
-                </LinearGradient>
-              </Animated.View>
+              {/* iter102ac: Social Media Links section removed per user
+                  request — feature is paused until further notice. The
+                  `socialLinks` field on the profile model is kept (won't
+                  show up as null) but no UI surfaces it. */}
 
               {/* Save Button */}
               <TouchableOpacity

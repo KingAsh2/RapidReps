@@ -440,7 +440,7 @@ export default function TrainerProfileScreen() {
 
           {/* Gallery removed per product decision (iter84) — Highlight Reel is the single media surface */}
           <View style={{ paddingHorizontal: 16 }}>
-            <SocialLinksDisplay socialLinks={profile?.socialLinks || {}} />
+            {/* iter102ac: SocialLinksDisplay removed per product request — social links paused. */}
 
             {/* iter98d (Task 5): own-profile vibe player — auto-plays user's anthem */}
             {profile?.vibeTrackTitle && (profile?.vibePreviewUrl || profile?.vibeTrackId) ? (

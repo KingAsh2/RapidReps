@@ -1100,10 +1100,7 @@ export default function TrainerDetailScreen() {
             </Animated.View>
           )}
 
-          {/* Social Links */}
-          <View style={{ paddingHorizontal: 20 }}>
-            <SocialLinksDisplay socialLinks={(trainer as any)?.socialLinks || {}} />
-          </View>
+          {/* iter102ac: Social Links removed per product request — paused for now. */}
 
           {/* RapidReps logo watermark */}
           <View style={styles.logoWatermark} data-testid="rapidreps-logo-watermark">

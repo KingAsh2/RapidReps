@@ -993,7 +993,7 @@ export default function TraineeProfileScreen() {
               </TouchableOpacity>
 
               {/* Gallery removed per product decision (iter84) — Highlight Reel is the single media surface */}
-              <SocialLinksDisplay socialLinks={profile?.socialLinks || {}} />
+              {/* iter102ac: SocialLinksDisplay removed per product request — social links paused. */}
             </View>
 
             {/* iter97 (#11): Message Admin */}

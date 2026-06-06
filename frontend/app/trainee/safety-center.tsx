@@ -137,15 +137,16 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 20, fontWeight: '800', color: '#FFFFFF' },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 40 },
+  // iter102ac: bumped all card opacities so text legibility no longer fights the
+  // hero photo + orange edge glow behind RapidBg.
   heroBanner: {
     borderRadius: 20, padding: 28, alignItems: 'center', marginBottom: 24, gap: 10,
-    backgroundColor: 'rgba(10,14,26,0.55)', // solid-ish card so hero photo doesn't fight the headline
-    borderWidth: 1, borderColor: 'rgba(255,106,0,0.35)',
+    backgroundColor: 'rgba(10,14,26,0.92)',
+    borderWidth: 1, borderColor: 'rgba(255,106,0,0.55)',
   },
   heroTitle: { fontSize: 24, fontWeight: '800', color: '#FFFFFF', textAlign: 'center' },
   heroSub: {
-    // 508/WCAG AA: white-95 over rgba(10,14,26,0.55) on top of dark hero ≥ 12:1.
-    fontSize: 14, color: 'rgba(255,255,255,0.95)', textAlign: 'center', lineHeight: 20,
+    fontSize: 14, color: '#FFFFFF', textAlign: 'center', lineHeight: 20,
   },
   sectionTitle: { fontSize: 16, fontWeight: '800', color: '#FFFFFF', marginBottom: 14, marginTop: 8 },
   emergencyRow: { flexDirection: 'row', gap: 12, marginBottom: 24 },
@@ -156,23 +157,22 @@ const styles = StyleSheet.create({
   emergencyBtnText: { fontSize: 15, fontWeight: '800', color: '#FFFFFF' },
   tipCard: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
-    backgroundColor: 'rgba(10,14,26,0.78)', borderRadius: 14, padding: 16,
-    marginBottom: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.22)',
+    backgroundColor: 'rgba(10,14,26,0.95)', borderRadius: 14, padding: 16,
+    marginBottom: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)',
   },
   tipIcon: {
     width: 44, height: 44, borderRadius: 22,
-    backgroundColor: 'rgba(255,106,0,0.22)',
+    backgroundColor: 'rgba(255,106,0,0.28)',
     justifyContent: 'center', alignItems: 'center',
-    borderWidth: 1, borderColor: 'rgba(255,106,0,0.45)',
+    borderWidth: 1, borderColor: 'rgba(255,106,0,0.55)',
   },
   tipTitle: { fontSize: 15, fontWeight: '800', color: '#FFFFFF', marginBottom: 4 },
-  // Bumped from rgba 0.88 → 0.95 to guarantee ≥4.5:1 over the rgba(10,14,26,0.78) card.
-  tipDesc: { fontSize: 13, color: 'rgba(255,255,255,0.95)', lineHeight: 18 },
+  tipDesc: { fontSize: 13, color: '#FFFFFF', lineHeight: 18 },
   shareCard: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: 'rgba(247,147,30,0.22)', borderRadius: 14, padding: 18,
-    marginTop: 16, borderWidth: 1, borderColor: 'rgba(247,147,30,0.6)',
+    backgroundColor: 'rgba(10,14,26,0.95)', borderRadius: 14, padding: 18,
+    marginTop: 16, borderWidth: 1.5, borderColor: 'rgba(247,147,30,0.7)',
   },
   shareTitle: { fontSize: 15, fontWeight: '800', color: '#FFFFFF', marginBottom: 4 },
-  shareSub: { fontSize: 13, color: 'rgba(255,255,255,0.95)', lineHeight: 18 },
+  shareSub: { fontSize: 13, color: '#FFFFFF', lineHeight: 18 },
 });
