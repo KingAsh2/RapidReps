@@ -250,9 +250,3 @@ const s = StyleSheet.create({
   linkRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, borderTopWidth: 1, borderTopColor: DS.colors.border },
   linkText: { ...DS.text.bodyStrong, flex: 1 },
 });
-on: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 },
-  priceLabelSub: { ...DS.text.caption },
-  priceValueSub: { color: DS.colors.textPrimary, fontWeight: '700', fontSize: 14 },
-  linkRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, borderTopWidth: 1, borderTopColor: DS.colors.border },
-  linkText: { ...DS.text.bodyStrong, flex: 1 },
-});
