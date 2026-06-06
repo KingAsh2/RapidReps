@@ -317,7 +317,7 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
                 </View>
               </View>
               <View style={s.verifyChecks}>
-                {['governmentIdUploaded', 'backgroundCheckPassed', 'fitnessCertUploaded', 'cprAedCertUploaded', 'introVideoUploaded'].map((field) => (
+                {['governmentIdUploaded', 'fitnessCertUploaded', 'cprAedCertUploaded'].map((field) => (
                   <View key={field} style={s.checkRow}>
                     <Ionicons
                       name={item.profile?.[field] ? 'checkmark-circle' : 'ellipse-outline'}
@@ -768,7 +768,7 @@ export const VerificationsTab = ({ verifications, fetchVerifications }: Props) =
               <Text style={{ color: '#FF6A00', fontSize: 13, fontWeight: '700' }}>Open in browser</Text>
             </TouchableOpacity>
             <Text style={{ color: '#666', fontSize: 10, textAlign: 'center', paddingBottom: 8 }}>
-              If video doesn't display, the file may need re-encoding (MP4/H.264 recommended)
+              If video doesn&apos;t display, the file may need re-encoding (MP4/H.264 recommended)
             </Text>
           </View>
         </View>

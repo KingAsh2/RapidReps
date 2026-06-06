@@ -164,7 +164,10 @@ def trainer_visibility_filter() -> dict:
 
     A trainer is publicly visible only when ALL of:
       1. `verificationStatus` == 'verified'  (admin approved)
-      2. `tier` is set (tier assignment by admin or auto-tier completed)
+      2. `assignedTier` is set (admin tier assignment completed — written by
+         `POST /api/admin/trainers/{id}/assign-tier`). NOTE: previously this
+         filter checked a `tier` field that the admin code path never writes,
+         which meant zero verified trainers were ever visible. iter102z.
       3. `isAvailable` is True  (trainer has flipped Go Live)
 
     This is the single source of truth — use it in discovery, nearby search,
@@ -172,7 +175,7 @@ def trainer_visibility_filter() -> dict:
     """
     return {
         "verificationStatus": "verified",
-        "tier": {"$exists": True, "$nin": [None, ""]},
+        "assignedTier": {"$exists": True, "$nin": [None, ""]},
         "isAvailable": True,
     }
 

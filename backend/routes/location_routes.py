@@ -636,16 +636,31 @@ async def trainer_visibility_status(current_user: dict = Depends(get_current_use
                   else 'Awaiting Admin verification — complete the Verification flow and wait for review.',
     })
 
-    # 4) Listable & live (admin approval also flips these)
-    can_listed = bool(p.get('canBeListed'))
-    can_live = bool(p.get('canGoLive'))
-    listed_pass = can_listed and can_live
+    # 4) Listed in search — mirrors the REAL `trainer_visibility_filter()`
+    # in deps.py. The actual filter requires: verified + assignedTier set +
+    # isAvailable. Verified and Available are already covered by gates #1
+    # and #3 above, so this gate is specifically about tier assignment.
+    # (Previously checked legacy `canBeListed`/`canGoLive` flags that were
+    # never written by the admin flow — a perpetual false negative.)
+    tier_val = p.get('assignedTier') or p.get('tier')
+    has_tier = bool(tier_val) and tier_val not in (None, '')
+    can_listed_raw = p.get('canBeListed')
+    can_live_raw = p.get('canGoLive')
+    explicit_listing_block = (can_listed_raw is False) or (can_live_raw is False)
+    listed_pass = has_tier and is_verified and not explicit_listing_block
+    if explicit_listing_block:
+        listed_detail = 'Listing/live flags are explicitly off — contact support to re-enable.'
+    elif not is_verified:
+        listed_detail = 'Listing unlocks automatically once Admin verifies your account.'
+    elif not has_tier:
+        listed_detail = 'Awaiting tier assignment from Admin — listing unlocks once your tier is set.'
+    else:
+        listed_detail = f'Listed in search (tier: {tier_val}).'
     gates.append({
         'id': 'listable',
         'label': 'Listed in search',
         'pass': listed_pass,
-        'detail': 'Listing flags are on.' if listed_pass
-                  else 'Listing/live flags are off — usually flips automatically once Admin verifies.',
+        'detail': listed_detail,
     })
 
     # 5) Travel radius — refined iter102i: missing/None = unlimited (no restriction)

@@ -802,7 +802,10 @@ async def admin_get_verification_detail(trainer_id: str, admin_user: dict = Depe
     
     steps = [
         {'id': 'identity', 'label': 'Government ID', 'field': 'governmentIdUploaded', 'submitted': bool(profile.get('governmentIdUploaded')), 'url': profile.get('identityFileUri')},
-        {'id': 'background', 'label': 'Background Check', 'field': 'backgroundCheckPassed', 'submitted': bool(profile.get('backgroundCheckPassed')), 'url': profile.get('backgroundFileUri')},
+        # iter102z: Background Check step removed from the per-step Approve/Reject
+        # checklist — admins already control pass/pending/failed via the dedicated
+        # "Background Check Info" panel (set-background-check-status endpoint). The
+        # duplicate Approve/Reject row here was confusing and effectively dead UI.
         {'id': 'certification', 'label': 'Fitness Certification', 'field': 'fitnessCertUploaded', 'submitted': bool(profile.get('fitnessCertUploaded')), 'url': profile.get('certificationFileUri')},
         {'id': 'cpr', 'label': 'CPR/AED Certification', 'field': 'cprAedCertUploaded', 'submitted': bool(profile.get('cprAedCertUploaded')), 'url': profile.get('cprFileUri')},
         {'id': 'insurance', 'label': 'Insurance', 'field': 'insuranceUploaded', 'submitted': bool(profile.get('insuranceUploaded')), 'url': profile.get('insuranceFileUri')},
@@ -841,6 +844,22 @@ async def admin_approve_verification(
     admin_user: dict = Depends(require_admin)
 ):
     """Approve trainer verification"""
+    # iter102z: Auto-assign a default tier on approval if one isn't already
+    # set. The visibility filter requires `assignedTier`, and admins were
+    # forgetting the separate "Assign Tier" step — leaving verified trainers
+    # invisible. Default 'new' tier is the safe baseline (lowest rate caps);
+    # admin can still bump them to 'certified'/'specialty' afterward via the
+    # dedicated tier-assignment endpoint.
+    existing = await db.trainer_profiles.find_one({'userId': trainer_id})
+    default_tier_set = {}
+    if existing and not existing.get('assignedTier'):
+        default_tier_set = {
+            'assignedTier': 'new',
+            'tierAssignedAt': datetime.utcnow(),
+            'tierAssignedBy': str(admin_user['_id']),
+            'tierAutoAssignedOnApproval': True,
+        }
+
     result = await db.trainer_profiles.update_one(
         {'userId': trainer_id},
         {
@@ -848,10 +867,16 @@ async def admin_approve_verification(
                 'verificationStatus': VerificationStatus.VERIFIED,
                 'isVerified': True,
                 'canGoLive': True,
+                # iter102z: also flip `canBeListed` on approval. Previously this
+                # flag was never written anywhere, so the trainer's "Listed in
+                # search" diagnostic always reported a false negative even
+                # though the trainer was actually visible to trainees.
+                'canBeListed': True,
                 'verifiedAt': datetime.utcnow(),
                 'verifiedBy': str(admin_user['_id']),
                 'rejectionReason': None,
                 'rejectedAt': None,
+                **default_tier_set,
             }
         }
     )

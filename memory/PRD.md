@@ -4,6 +4,38 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-02-XX — Iter102z: Trainer-visibility disconnect FIXED 🎯
+
+### Root cause (the real one)
+Admin tier-assignment writes `assignedTier` to the trainer profile, but the MongoDB visibility filter (`deps.trainer_visibility_filter`) was querying a `tier` field — **a field that no production code path ever writes**. Result: 10 verified trainers in the DB, 0 of them visible to trainees. The "Listed in search" diagnostic on the trainer's own visibility card was also lying (checking `canBeListed`/`canGoLive` flags, neither of which were ever set).
+
+### Fixes applied (all backend, except the admin checklist UI)
+1. **`deps.py`** — Visibility filter now queries `assignedTier` (the field actually written). Removed the dead `tier` lookup.
+2. **`admin_routes.py` (verification approval)** — Now auto-assigns `assignedTier='new'` when an admin approves a trainer whose tier isn't already set. Also writes `canBeListed=True` + `canGoLive=True` for downstream code reading those flags.
+3. **`admin_routes.py` (verification detail)** — Removed the redundant "Background Check" step row from the per-step Approve/Reject checklist. Pass/Pending/Failed is already controlled by the dedicated Background-Info panel.
+4. **`location_routes.py` (visibility-status diagnostic)** — "Listed in search" gate now mirrors the real filter: requires `verified + assignedTier set`. No more false-negative reds.
+5. **`VerificationsTab.tsx`** — Removed `backgroundCheckPassed` from the inline status chips on each verification card (stale field reference).
+
+### One-shot data backfill (already run on the live sandbox DB)
+```
+Backfilled assignedTier='new' on 10 verified-but-tier-less trainer profiles
+Backfilled canBeListed=True / canGoLive=True on the same 10 profiles
+```
+**Visibility audit:** Before — 0 visible. After — 10 visible. (Trainees can now actually see trainers.)
+
+### Regression test
+`backend/tests/test_iter102z_visibility_wiring.py` — **8 assertions, all passing.**
+The key one asserts the filter uses `assignedTier` (not `tier`); if anyone reintroduces the disconnect, this test will catch it immediately.
+
+### Files touched
+- `/app/backend/deps.py` (visibility filter)
+- `/app/backend/routes/admin_routes.py` (approval flow + verification steps)
+- `/app/backend/routes/location_routes.py` (visibility-status diagnostic)
+- `/app/frontend/src/components/admin/VerificationsTab.tsx` (chip row)
+- `/app/backend/tests/test_iter102z_visibility_wiring.py` (new)
+
+
+
 ## 2026-02-XX — Iter102x: Server-side video transcode pipeline 🎬⚡
 
 ### What shipped
