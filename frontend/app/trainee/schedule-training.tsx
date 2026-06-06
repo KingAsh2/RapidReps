@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { resolveSessionPriceCents } from '../../src/utils/sessionPricing';
 
 // Brand colors
 const COLORS = {
@@ -56,12 +58,13 @@ const TIME_SLOTS = [
   { id: '8pm', label: '8:00 PM', period: 'Evening' },
 ];
 
-// Duration options
-const DURATION_OPTIONS = [
-  { id: '30', label: '30 min', price: '$30+' },
-  { id: '45', label: '45 min', price: '$45+' },
-  { id: '60', label: '1 hour', price: '$60+', popular: true },
-  { id: '90', label: '1.5 hrs', price: '$90+' },
+// Duration options (labels only; prices computed at render time from the
+// trainer's actual rates via `resolveSessionPriceCents`).
+const DURATION_OPTIONS: { id: '30' | '45' | '60' | '90'; label: string; popular?: boolean }[] = [
+  { id: '30', label: '30 min' },
+  { id: '45', label: '45 min' },
+  { id: '60', label: '1 hour', popular: true },
+  { id: '90', label: '1.5 hrs' },
 ];
 
 export default function ScheduleTrainingScreen() {
@@ -73,6 +76,38 @@ export default function ScheduleTrainingScreen() {
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [selectedDuration, setSelectedDuration] = useState('60');
   const [step, setStep] = useState(1);
+
+  // iter102ag: fetch trainer's actual rates so duration tiles + summary
+  // show real prices instead of the legacy hardcoded "$30+/$45+/$60+/$90+"
+  // ladder.
+  const [trainerProfile, setTrainerProfile] = useState<any>(null);
+  const sessionType = (params.sessionType as string) || 'outdoor';
+  useEffect(() => {
+    if (!params.trainerId) return;
+    (async () => {
+      try {
+        const token = await AsyncStorage.getItem('auth_token');
+        const res = await fetch(
+          `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/trainer-profiles/${params.trainerId}`,
+          { headers: token ? { Authorization: `Bearer ${token}` } : {} },
+        );
+        if (res.ok) setTrainerProfile(await res.json());
+      } catch { /* keep tiles as label-only if fetch fails */ }
+    })();
+  }, [params.trainerId]);
+
+  const priceLabelFor = (durationId: '30' | '45' | '60' | '90') => {
+    const modality: 'outdoor' | 'virtual' | 'in_home' =
+      sessionType === 'virtual' ? 'virtual'
+      : sessionType === 'in_home' ? 'in_home'
+      : 'outdoor';
+    const cents = resolveSessionPriceCents(
+      trainerProfile,
+      modality,
+      parseInt(durationId, 10) as 30 | 45 | 60 | 90,
+    );
+    return cents !== null ? `$${(cents / 100).toFixed(2)}` : '—';
+  };
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   React.useEffect(() => {
@@ -311,7 +346,7 @@ export default function ScheduleTrainingScreen() {
                       ]}>
                         {option.label}
                       </Text>
-                      <Text style={styles.durationPrice}>{option.price}</Text>
+                      <Text style={styles.durationPrice}>{priceLabelFor(option.id)}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>

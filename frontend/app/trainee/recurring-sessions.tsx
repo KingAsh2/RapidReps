@@ -16,6 +16,7 @@ import { traineeAPI } from '../../src/services/api';
 import { toast } from '../../src/utils/toast';
 import { haptic } from '../../src/utils/haptics';
 import { FLAT_SERVICE_FEE_CENTS } from '../../src/utils/pricing';
+import { resolveSessionPriceCents } from '../../src/utils/sessionPricing';
 
 const COLORS = {
   orange: '#FF7F00',
@@ -45,35 +46,45 @@ export default function RecurringSessionScreen() {
   const [selectedTime, setSelectedTime] = useState('07:00');
   const [recurrenceType, setRecurrenceType] = useState<'weekly' | 'biweekly'>('weekly');
   const [sessionsPerWeek, setSessionsPerWeek] = useState(2);
+  // iter102ag: user-controlled number of weeks instead of the hardcoded x4
+  // monthly multiplier. Defaults to 1 week so the cart only charges for what
+  // the trainee actually picks; they can crank it up to 12 weeks for a
+  // longer block-booking.
+  const [numberOfWeeks, setNumberOfWeeks] = useState(1);
   const [locationType, setLocationType] = useState('outdoor');
   const [duration, setDuration] = useState(60);
   const [loading, setLoading] = useState(false);
 
-  // iter98b (#25): per-duration tier-aware pricing.
-  // tierRates JSON is forwarded by trainer-detail.tsx; fallback to hourly rateCents
-  // multiplied by duration when tier breakdown isn't available.
-  let tierRates: any = {};
-  try {
-    tierRates = params.tierRates ? JSON.parse(params.tierRates as string) : {};
-  } catch { tierRates = {}; }
-  const trainerRateCentsPerHour = parseInt(params.rateCents as string) || 4000;
-
-  // Select per-duration trainer rate for the chosen locationType + duration
-  const getSessionPriceCents = (): number => {
-    const isVirtual = locationType === 'virtual';
-    const prefix = isVirtual ? 'virtual' : 'inPerson';
-    const tierKey = `${prefix}${duration}Cents`;
-    if (tierRates && typeof tierRates[tierKey] === 'number' && tierRates[tierKey] > 0) {
-      return tierRates[tierKey];
-    }
-    // Legacy hourly fallback (rateCents is the hourly equivalent)
-    return Math.round(trainerRateCentsPerHour * (duration / 60));
+  // iter102ag: use the shared price resolver instead of the local ad-hoc one.
+  // Single source of truth across booking / schedule / recurring screens.
+  const trainerProfileFromParams: any = {
+    tierRates: (() => {
+      try { return params.tierRates ? JSON.parse(params.tierRates as string) : {}; }
+      catch { return {}; }
+    })(),
+    // The booking flow forwards the trainer's hourly outdoor rate as `rateCents`.
+    // We mirror it onto the three modality fields so the resolver can fall back
+    // proportionally for non-60-minute durations.
+    outdoorRateCents: parseInt((params.rateCents as string) || '0', 10) || undefined,
+    virtualRateCents: parseInt((params.rateCents as string) || '0', 10) || undefined,
+    inHomeRateCents: parseInt((params.rateCents as string) || '0', 10) || undefined,
   };
 
-  // iter98b (#23): use the flat $2.99 service fee (shared constant) — was hardcoded $2.
+  const getSessionPriceCents = (): number => {
+    const modality: 'outdoor' | 'virtual' | 'in_home' =
+      locationType === 'virtual' ? 'virtual'
+      : locationType === 'in_home' ? 'in_home'
+      : 'outdoor';
+    const cents = resolveSessionPriceCents(trainerProfileFromParams, modality, duration as 30 | 45 | 60 | 90);
+    return cents ?? 0;
+  };
+
   const sessionPriceCents = getSessionPriceCents();
   const sessionPriceDollars = sessionPriceCents / 100;
-  const totalSessions = sessionsPerWeek * 4; // 4 weeks default billing cycle
+  // iter102ag: trainee-controlled multiplier — was hardcoded `sessionsPerWeek * 4`
+  // which silently charged for a full month even when the user expected to pay
+  // for one week. Now: total = sessions/week × number of weeks the user picks.
+  const totalSessions = sessionsPerWeek * numberOfWeeks;
   const serviceFee = (FLAT_SERVICE_FEE_CENTS * totalSessions) / 100; // service fee charged per session
   const totalBeforeFee = sessionPriceDollars * totalSessions;
   const totalWithFee = totalBeforeFee + serviceFee;
@@ -202,6 +213,25 @@ export default function RecurringSessionScreen() {
                 data-testid={`sessions-${n}`}
               >
                 <Text style={[styles.toggleText, sessionsPerWeek === n && styles.toggleTextActive]}>{n}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* iter102ag: Number of weeks selector — was hardcoded to 4 ("monthly")
+              which silently quadrupled the trainee's total. Defaults to 1 week
+              so the cart only charges for what they actually picked. */}
+          <Text style={styles.label}>Number of Weeks</Text>
+          <View style={styles.toggleRow}>
+            {[1, 2, 4, 8, 12].map((n) => (
+              <TouchableOpacity
+                key={n}
+                style={[styles.toggleBtn, numberOfWeeks === n && styles.toggleBtnActive]}
+                onPress={() => setNumberOfWeeks(n)}
+                data-testid={`weeks-${n}`}
+              >
+                <Text style={[styles.toggleText, numberOfWeeks === n && styles.toggleTextActive]}>
+                  {n}{n === 1 ? ' wk' : ' wks'}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>

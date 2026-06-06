@@ -24,6 +24,7 @@ import { Video, ResizeMode } from 'expo-av';
 import { toast } from '../../src/utils/toast';
 import { haptic } from '../../src/utils/haptics';
 import { SocialLinksDisplay } from '../../src/components/ProfileSections';
+import { resolveSessionPriceCents } from '../../src/utils/sessionPricing';
 import InstagramSection from '../../src/components/InstagramSection';
 import { TrainerVibePlayer } from '../../src/components/TrainerVibePlayer';
 import { HighlightReel } from '../../src/components/HighlightReel';
@@ -864,7 +865,7 @@ export default function TrainerDetailScreen() {
                 <View style={styles.safetyNotice}>
                   <Ionicons name="shield-checkmark" size={18} color={accent} />
                   <Text style={styles.safetyNoticeText}>
-                    You'll receive a 4-digit safety PIN to verify your trainer
+                    You&apos;ll receive a 4-digit safety PIN to verify your trainer
                   </Text>
                 </View>
               )}
@@ -873,12 +874,16 @@ export default function TrainerDetailScreen() {
               <Text style={styles.sectionLabel}>SESSION DURATION</Text>
               <View style={styles.durationRow}>
                 {(trainer.sessionDurationsOffered || [30, 45, 60, 90]).map((duration) => {
-                  const tr: any = (trainer as any).tierRates || {};
-                  const modality: 'inPerson' | 'virtual' = selectedSessionType === 'virtual' ? 'virtual' : 'inPerson';
-                  const cents = tr[`${modality}${duration}Cents`];
-                  const labelPrice = typeof cents === 'number' && cents > 0
-                    ? (cents / 100).toFixed(2)
-                    : '—';
+                  // iter102ag: use the shared price resolver so the tiles
+                  // honor the same fallback chain as the rest of the screen
+                  // (tierRates → flat alias → hourly fields → per-minute).
+                  // Previously the tiles ONLY looked at tierRates and showed
+                  // `$—` for every other field type, even when the trainer
+                  // had set hourly rates that the booking summary would happily
+                  // display below.
+                  const modality: 'outdoor' | 'virtual' = selectedSessionType === 'virtual' ? 'virtual' : 'outdoor';
+                  const cents = resolveSessionPriceCents(trainer, modality, duration as 30 | 45 | 60 | 90);
+                  const labelPrice = cents !== null ? (cents / 100).toFixed(2) : '—';
                   return (
                     <TouchableOpacity
                       key={duration}
@@ -1143,7 +1148,7 @@ export default function TrainerDetailScreen() {
             
             <View style={styles.consentItem}>
               <Ionicons name="time" size={22} color={'#FF6A00'} />
-              <Text style={styles.consentText}>Trainer's time at your location is tracked and monitored for safety</Text>
+              <Text style={styles.consentText}>Trainer&apos;s time at your location is tracked and monitored for safety</Text>
             </View>
             
             <View style={styles.consentItem}>
@@ -1164,7 +1169,7 @@ export default function TrainerDetailScreen() {
                 colors={[accent, `${accent}CC`]}
                 style={styles.consentAgreeGradient}
               >
-                <Text style={styles.consentAgreeText}>Let's Go</Text>
+                <Text style={styles.consentAgreeText}>Let&apos;s Go</Text>
               </LinearGradient>
             </TouchableOpacity>
 

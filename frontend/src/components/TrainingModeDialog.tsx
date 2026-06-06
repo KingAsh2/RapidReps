@@ -84,7 +84,7 @@ export default function TrainingModeDialog({
                   Train from anywhere, instantly
                 </Text>
                 <View style={[styles.optionBadge, styles.optionBadgeVirtual]}>
-                  <Text style={styles.optionBadgeText}>$18 / 30 min</Text>
+                  <Text style={styles.optionBadgeText}>Live & remote</Text>
                 </View>
               </TouchableOpacity>
             </View>
