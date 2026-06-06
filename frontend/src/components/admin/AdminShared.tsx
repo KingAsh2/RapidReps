@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -198,26 +198,44 @@ export const FilterPills = ({ options, selected, onSelect, testIdPrefix }: { opt
 );
 
 // --- SearchBar ---
-export const SearchBar = ({ value, onChangeText, onSubmit, placeholder }: { value: string; onChangeText: (t: string) => void; onSubmit: () => void; placeholder: string }) => (
-  <View style={s.searchBar} data-testid="admin-search-bar">
-    <Ionicons name="search" size={18} color={C.gray} />
-    <TextInput
-      style={s.searchInput}
-      value={value}
-      onChangeText={onChangeText}
-      onSubmitEditing={onSubmit}
-      placeholder={placeholder}
-      placeholderTextColor={C.gray}
-      returnKeyType="search"
-      data-testid="admin-search-input"
-    />
-    {value ? (
-      <TouchableOpacity onPress={() => { onChangeText(''); onSubmit(); }} data-testid="admin-search-clear">
-        <Ionicons name="close-circle" size={18} color={C.gray} />
-      </TouchableOpacity>
-    ) : null}
-  </View>
-);
+// iter102ae: now auto-fires `onSubmit` after 350ms of typing idle so results
+// appear live as the admin types. Pressing Enter still triggers immediately.
+export const SearchBar = ({ value, onChangeText, onSubmit, placeholder }: { value: string; onChangeText: (t: string) => void; onSubmit: () => void; placeholder: string }) => {
+  const onSubmitRef = useRef(onSubmit);
+  onSubmitRef.current = onSubmit;
+  // Track the previous value so we only re-fire when the user actually edits.
+  // (Not when the parent re-renders for unrelated reasons.)
+  const lastFiredRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (lastFiredRef.current === value) return;
+    const timer = setTimeout(() => {
+      lastFiredRef.current = value;
+      onSubmitRef.current();
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [value]);
+
+  return (
+    <View style={s.searchBar} data-testid="admin-search-bar">
+      <Ionicons name="search" size={18} color={C.gray} />
+      <TextInput
+        style={s.searchInput}
+        value={value}
+        onChangeText={onChangeText}
+        onSubmitEditing={onSubmit}
+        placeholder={placeholder}
+        placeholderTextColor={C.gray}
+        returnKeyType="search"
+        data-testid="admin-search-input"
+      />
+      {value ? (
+        <TouchableOpacity onPress={() => { onChangeText(''); onSubmit(); }} data-testid="admin-search-clear">
+          <Ionicons name="close-circle" size={18} color={C.gray} />
+        </TouchableOpacity>
+      ) : null}
+    </View>
+  );
+};
 
 // --- Styles ---
 export const s = StyleSheet.create({

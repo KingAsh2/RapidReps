@@ -297,7 +297,7 @@ class TrainerProfileResponse(BaseModel):
     introVideoTitle: Optional[str] = None  # iter84 — editable section heading (default "Intro to my profile")
     introVideoDescription: Optional[str] = None  # iter84 — editable description below the video
     gallery: List[dict] = []
-    socialLinks: Optional[dict] = None
+    # iter102ad: socialLinks dropped from API response — UI surfaces removed.
     canGoLive: bool = False
     availability: Optional[dict] = None
     latitude: Optional[float] = None
@@ -383,7 +383,7 @@ class TraineeProfileResponse(BaseModel):
     locationAddress: Optional[str] = None
     personalityTag: Optional[str] = None
     gallery: List[dict] = []
-    socialLinks: Optional[dict] = None
+    # iter102ad: socialLinks dropped from API response — UI surfaces removed.
     highlights: List[dict] = []
     # Vibe / showcase fields (parity with TrainerProfile)
     vibeTrackTitle: Optional[str] = None

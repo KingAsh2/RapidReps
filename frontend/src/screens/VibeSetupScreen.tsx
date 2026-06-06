@@ -8,7 +8,7 @@
  *   <VibeSetupScreen role="trainee" />
  *   <VibeSetupScreen role="trainer" />
  */
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, TextInput, TouchableOpacity, Image, FlatList, ActivityIndicator,
 } from 'react-native';
@@ -81,11 +81,15 @@ export const VibeSetupScreen: React.FC<Props> = ({ role }) => {
     }
   };
 
-  const searchTracks = useCallback(async () => {
-    if (query.length < 2) return;
+  const searchTracks = useCallback(async (q?: string) => {
+    const term = (q ?? query).trim();
+    if (term.length < 2) {
+      setResults([]);
+      return;
+    }
     setSearching(true);
     try {
-      const res = await fetch(`${API_URL}/api/music/search?q=${encodeURIComponent(query)}&limit=15`);
+      const res = await fetch(`${API_URL}/api/music/search?q=${encodeURIComponent(term)}&limit=15`);
       const data = await res.json();
       setResults(data.results || []);
     } catch {
@@ -93,6 +97,36 @@ export const VibeSetupScreen: React.FC<Props> = ({ role }) => {
     } finally {
       setSearching(false);
     }
+  }, [query]);
+
+  // iter102ae: debounced live search — songs appear dynamically as the user
+  // types (350ms idle) instead of requiring them to fully type out the song
+  // and hit Enter. Race-condition safe via the abort token: if a newer
+  // keystroke fires while the prior request is still in-flight, the stale
+  // response is silently discarded.
+  const lastSearchTokenRef = useRef(0);
+  useEffect(() => {
+    const term = query.trim();
+    if (term.length < 2) {
+      setResults([]);
+      setSearching(false);
+      return;
+    }
+    const token = ++lastSearchTokenRef.current;
+    const timer = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const res = await fetch(`${API_URL}/api/music/search?q=${encodeURIComponent(term)}&limit=15`);
+        if (token !== lastSearchTokenRef.current) return; // stale response — discard
+        const data = await res.json();
+        setResults(data.results || []);
+      } catch {
+        if (token === lastSearchTokenRef.current) toast.error('Search failed. Try again.');
+      } finally {
+        if (token === lastSearchTokenRef.current) setSearching(false);
+      }
+    }, 350);
+    return () => clearTimeout(timer);
   }, [query]);
 
   const previewTrack = async (track: Track) => {
