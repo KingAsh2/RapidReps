@@ -1401,10 +1401,20 @@ async def create_trainee_profile(profile: TraineeProfileCreate, current_user: di
 
 @router.get("/trainee-profiles/{user_id}", response_model=TraineeProfileResponse)
 async def get_trainee_profile(user_id: str):
-    """Get trainee profile by user ID"""
+    """Get trainee profile by user ID — enriched with user data (fullName, profilePhoto)"""
     profile = await db.trainee_profiles.find_one({'userId': user_id})
     if not profile:
         raise HTTPException(status_code=404, detail="Trainee profile not found")
+
+    try:
+        user = await db.users.find_one({'_id': ObjectId(user_id)}, {'fullName': 1, 'profilePhoto': 1})
+    except Exception:
+        user = None
+    if user:
+        profile['fullName'] = user.get('fullName') or profile.get('fullName') or 'Athlete'
+        if not profile.get('profilePhoto') and user.get('profilePhoto'):
+            profile['profilePhoto'] = user['profilePhoto']
+
     return TraineeProfileResponse(**serialize_doc(profile))
 
 

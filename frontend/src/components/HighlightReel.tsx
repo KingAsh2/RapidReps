@@ -37,6 +37,7 @@ export const HighlightReel = ({ highlights, trainerName }: Props) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [viewerVisible, setViewerVisible] = useState(false);
   const [viewerIdx, setViewerIdx] = useState(0);
+  const [viewerLoading, setViewerLoading] = useState(false);
   const fadeAnims = useRef(highlights.map(() => new Animated.Value(0))).current;
 
   useEffect(() => {
@@ -50,6 +51,7 @@ export const HighlightReel = ({ highlights, trainerName }: Props) => {
 
   const openViewer = (idx: number) => {
     setViewerIdx(idx);
+    setViewerLoading(true);
     setViewerVisible(true);
   };
 
@@ -179,23 +181,35 @@ export const HighlightReel = ({ highlights, trainerName }: Props) => {
           </TouchableOpacity>
 
           {highlights[viewerIdx]?.type === 'video' ? (
-            <Video
-              key={`viewer-video-${viewerIdx}`}
-              source={{ uri: resolveUrl(highlights[viewerIdx].url) }}
-              style={styles.viewerMedia}
-              resizeMode={ResizeMode.CONTAIN}
-              shouldPlay
-              isLooping
-              isMuted={false}
-              useNativeControls
-              // iter102p: `usePoster` + `useNativeControls` causes the poster
-              // <Image> overlay to intercept taps on web/iOS Safari when
-              // autoplay is briefly blocked — the native play button visibly
-              // does nothing. The modal backdrop is already fullscreen black
-              // and the user just saw the thumbnail on the tile, so the poster
-              // is redundant here. Remounting per `viewerIdx` (via `key`)
-              // ensures the source actually changes when navigating clips.
-            />
+            <View style={styles.viewerMediaWrap}>
+              {viewerLoading && (
+                <View style={styles.viewerLoader} pointerEvents="none">
+                  <ActivityIndicator size="large" color="#FF6A00" />
+                  <Text style={styles.viewerLoaderText}>Loading clip…</Text>
+                </View>
+              )}
+              <Video
+                key={`viewer-video-${viewerIdx}`}
+                source={{ uri: resolveUrl(highlights[viewerIdx].url) }}
+                style={styles.viewerMedia}
+                resizeMode={ResizeMode.CONTAIN}
+                shouldPlay
+                isLooping
+                isMuted={false}
+                useNativeControls
+                onLoadStart={() => setViewerLoading(true)}
+                onLoad={() => setViewerLoading(false)}
+                onReadyForDisplay={() => setViewerLoading(false)}
+                onError={() => setViewerLoading(false)}
+                // iter102p: `usePoster` + `useNativeControls` causes the poster
+                // <Image> overlay to intercept taps on web/iOS Safari when
+                // autoplay is briefly blocked — the native play button visibly
+                // does nothing. The modal backdrop is already fullscreen black
+                // and the user just saw the thumbnail on the tile, so the poster
+                // is redundant here. Remounting per `viewerIdx` (via `key`)
+                // ensures the source actually changes when navigating clips.
+              />
+            </View>
           ) : (
             <Image
               source={{ uri: resolveUrl(highlights[viewerIdx].url) }}
@@ -212,12 +226,12 @@ export const HighlightReel = ({ highlights, trainerName }: Props) => {
 
           {/* Nav arrows */}
           {viewerIdx > 0 && (
-            <TouchableOpacity style={[styles.navArrow, styles.navLeft]} onPress={() => setViewerIdx(viewerIdx - 1)}>
+            <TouchableOpacity style={[styles.navArrow, styles.navLeft]} onPress={() => { setViewerLoading(true); setViewerIdx(viewerIdx - 1); }}>
               <Ionicons name="chevron-back" size={28} color="#FFF" />
             </TouchableOpacity>
           )}
           {viewerIdx < highlights.length - 1 && (
-            <TouchableOpacity style={[styles.navArrow, styles.navRight]} onPress={() => setViewerIdx(viewerIdx + 1)}>
+            <TouchableOpacity style={[styles.navArrow, styles.navRight]} onPress={() => { setViewerLoading(true); setViewerIdx(viewerIdx + 1); }}>
               <Ionicons name="chevron-forward" size={28} color="#FFF" />
             </TouchableOpacity>
           )}
@@ -248,6 +262,9 @@ const styles = StyleSheet.create({
   viewer: { flex: 1, backgroundColor: 'rgba(0,0,0,0.97)', justifyContent: 'center', alignItems: 'center' },
   viewerClose: { position: 'absolute', top: 54, right: 20, zIndex: 10, width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center' },
   viewerMedia: { width: width, height: width * 1.5 },
+  viewerMediaWrap: { width: width, height: width * 1.5, justifyContent: 'center', alignItems: 'center' },
+  viewerLoader: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', gap: 12, zIndex: 5 },
+  viewerLoaderText: { fontSize: 13, fontWeight: '700', color: 'rgba(255,255,255,0.75)', letterSpacing: 0.5 },
   viewerCaptionBar: { position: 'absolute', bottom: 60, left: 20, right: 20 },
   viewerCaption: { fontSize: 16, fontWeight: '700', color: '#FFFFFF', textAlign: 'center' },
   navArrow: { position: 'absolute', top: '50%', width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' },

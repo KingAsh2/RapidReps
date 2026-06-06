@@ -4,6 +4,23 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-02-XX — Iter102w: Trainee fullName fix + Highlight viewer loader 🐛
+
+### Bugs fixed
+1. **"ATHLETE" fallback on trainee profile pages** — Root cause: `GET /api/trainee-profiles/{user_id}` returned ONLY the `trainee_profiles` document (which doesn't store `fullName`/`profilePhoto`). The trainer-profiles endpoint had been enriching via a `users` lookup since iter95+ but the trainee endpoint was never updated. Fix: added the same `users` collection join — populates `fullName` (and falls back `profilePhoto`) before returning. Verified via curl: trainee profile now correctly returns `fullName: "Test Trainee"`.
+2. **Video playback feels stuck after pressing Play** — In the highlight full-screen viewer, the network buffer between mount and first frame had zero visual feedback, making the user think the player was broken. Fix: added an `ActivityIndicator` + "Loading clip…" label overlay on top of the `<Video>` while `onLoadStart` → `onLoad/onReadyForDisplay` is pending. Also wired the loader to the prev/next nav arrows so it reappears when switching clips.
+
+### Files touched
+- `/app/backend/routes/profile_routes.py` (line 1402, `get_trainee_profile`)
+- `/app/frontend/src/components/HighlightReel.tsx`
+
+### Verified
+- ✅ curl: `/api/trainee-profiles/{id}` now returns `fullName`.
+- ✅ ESLint clean on HighlightReel.
+- ✅ Backend hot-reloaded with no startup errors.
+
+
+
 ## 2026-02-XX — Iter102v: Final RapidBg sweep + deployment audit 🎬✅
 
 ### What shipped
