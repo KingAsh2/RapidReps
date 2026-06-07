@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, Dimensions } from 'react-native';
+import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -25,10 +26,37 @@ interface AccentColorPickerProps {
   onClose: () => void;
   onSelect: (color: string) => void;
   currentColor?: string | null;
+  // iter102aj: optional intensity slider (0.0 = no glow, 1.0 = max brightness)
+  currentIntensity?: number;
+  onIntensityCommit?: (intensity: number) => void;
 }
 
-export const AccentColorPicker = ({ visible, onClose, onSelect, currentColor }: AccentColorPickerProps) => {
+export const AccentColorPicker = ({
+  visible,
+  onClose,
+  onSelect,
+  currentColor,
+  currentIntensity,
+  onIntensityCommit,
+}: AccentColorPickerProps) => {
   const selected = currentColor || DEFAULT_ACCENT;
+  // Local optimistic state — the slider updates instantly while only the final
+  // value (onSlidingComplete) hits the network. Default to Max (1.0) when no
+  // intensity has been persisted yet.
+  const [intensity, setIntensity] = useState<number>(
+    typeof currentIntensity === 'number' ? currentIntensity : 1,
+  );
+  useEffect(() => {
+    if (visible) {
+      setIntensity(typeof currentIntensity === 'number' ? currentIntensity : 1);
+    }
+  }, [visible, currentIntensity]);
+
+  // Apply intensity to the preview tint exactly the same way AccentGlowOverlay does.
+  const intensityHex = (() => {
+    const pct = Math.round(intensity * 0x20); // 0x20 = same alpha base used in preview
+    return pct.toString(16).padStart(2, '0').toUpperCase();
+  })();
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -43,18 +71,50 @@ export const AccentColorPicker = ({ visible, onClose, onSelect, currentColor }: 
             </View>
             <Text style={styles.subtitle}>Pick a color that tints your card, hero, and vibe</Text>
 
-            {/* Preview */}
-            <View style={[styles.preview, { borderColor: `${selected}30` }]}>
+            {/* Preview — alpha scaled by current intensity so the swatch
+                feels dimmer/brighter live as the user drags the slider. */}
+            <View style={[styles.preview, { borderColor: `${selected}${intensityHex}` }]}>
               <LinearGradient
-                colors={[`${selected}20`, `${selected}05`]}
+                colors={[`${selected}${intensityHex}`, `${selected}05`]}
                 style={styles.previewGradient}
               >
-                <View style={[styles.previewDot, { backgroundColor: selected }]} />
+                <View style={[styles.previewDot, { backgroundColor: selected, opacity: Math.max(0.3, intensity) }]} />
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.previewName, { color: selected }]}>YOUR PROFILE</Text>
+                  <Text style={[styles.previewName, { color: selected, opacity: Math.max(0.4, intensity) }]}>YOUR PROFILE</Text>
                   <Text style={styles.previewDesc}>This is how your accent color will look</Text>
                 </View>
               </LinearGradient>
+            </View>
+
+            {/* iter102aj: Brightness slider — None (0.0) to Bright/Max (1.0).
+                Updates instantly while dragging; only persists on release. */}
+            <View style={styles.sliderBlock}>
+              <View style={styles.sliderHeaderRow}>
+                <Text style={styles.sliderLabel}>BRIGHTNESS</Text>
+                <Text style={[styles.sliderValue, { color: selected }]}>
+                  {intensity <= 0.001 ? 'None' : intensity >= 0.999 ? 'Max' : `${Math.round(intensity * 100)}%`}
+                </Text>
+              </View>
+              <Slider
+                style={{ width: '100%', height: 36 }}
+                minimumValue={0}
+                maximumValue={1}
+                step={0.05}
+                value={intensity}
+                onValueChange={setIntensity}
+                onSlidingComplete={(v) => {
+                  setIntensity(v);
+                  onIntensityCommit?.(v);
+                }}
+                minimumTrackTintColor={selected}
+                maximumTrackTintColor="rgba(255,255,255,0.15)"
+                thumbTintColor={selected}
+                data-testid="accent-brightness-slider"
+              />
+              <View style={styles.sliderEndsRow}>
+                <Text style={styles.sliderEnd}>None</Text>
+                <Text style={styles.sliderEnd}>Bright</Text>
+              </View>
             </View>
 
             {/* Color grid */}
@@ -172,5 +232,39 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: 'rgba(255,255,255,0.5)',
     textAlign: 'center',
+  },
+  sliderBlock: {
+    marginTop: 18,
+    marginBottom: 4,
+  },
+  sliderHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  sliderLabel: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1.5,
+    color: 'rgba(255,255,255,0.6)',
+  },
+  sliderValue: {
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  sliderEndsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 2,
+    marginTop: -4,
+  },
+  sliderEnd: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.4)',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    fontWeight: '700',
   },
 });

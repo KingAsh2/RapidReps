@@ -43,8 +43,15 @@ export const AccentGlowOverlay: React.FC = () => {
   // No user signed in? Don't draw the glow — keep auth/onboarding screens clean.
   if (!user) return null;
 
-  const c80 = hexToRgba(accent, 0.55);
-  const c40 = hexToRgba(accent, 0.18);
+  // iter102aj: brightness slider — user can dim the glow from None (0) to
+  // Max (1, default). Null/undefined = legacy users default to Max.
+  const rawIntensity = (user as any)?.accentIntensity;
+  const intensity = typeof rawIntensity === 'number' ? Math.max(0, Math.min(1, rawIntensity)) : 1;
+  // When the user picks None, hide the overlay entirely (no faint ghost).
+  if (intensity <= 0.001) return null;
+
+  const c80 = hexToRgba(accent, 0.55 * intensity);
+  const c40 = hexToRgba(accent, 0.18 * intensity);
   const c00 = hexToRgba(accent, 0);
 
   return (

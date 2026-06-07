@@ -204,6 +204,8 @@ class UserResponse(BaseModel):
     # auto-extracted from the avatar). Defaults to RapidReps orange on the FE
     # if absent.
     accentColor: Optional[str] = None
+    # iter102aj: brightness slider value (0.0=None … 1.0=Bright/Max). Null = default Max.
+    accentIntensity: Optional[float] = None
 
 class TokenResponse(BaseModel):
     access_token: str

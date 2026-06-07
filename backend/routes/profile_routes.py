@@ -962,11 +962,21 @@ async def update_trainer_accent_color(user_id: str, body: dict = Body(...), curr
         color = None  # normalize empty string to null (clear)
     if color and color not in VALID_ACCENT_COLORS:
         raise HTTPException(400, f"Invalid accent color. Must be one of: {VALID_ACCENT_COLORS}")
+    update: dict = {'accentColor': color, 'updatedAt': datetime.utcnow()}
+    # iter102aj: optional brightness slider — 0.0 (None) … 1.0 (Bright/Max).
+    if 'accentIntensity' in body:
+        try:
+            intensity = float(body.get('accentIntensity'))
+        except (TypeError, ValueError):
+            raise HTTPException(400, 'accentIntensity must be a number between 0 and 1')
+        if not 0.0 <= intensity <= 1.0:
+            raise HTTPException(400, 'accentIntensity must be between 0 and 1')
+        update['accentIntensity'] = intensity
     await db.trainer_profiles.update_one(
         {'userId': user_id},
-        {'$set': {'accentColor': color, 'updatedAt': datetime.utcnow()}}
+        {'$set': update}
     )
-    return {"success": True, "accentColor": color}
+    return {"success": True, "accentColor": color, "accentIntensity": update.get('accentIntensity')}
 
 
 @router.get("/music/search")
@@ -1661,11 +1671,21 @@ async def update_trainee_accent_color(user_id: str, body: dict = Body(...), curr
         color = None  # normalize empty string to null (clear)
     if color and color not in VALID_ACCENT_COLORS:
         raise HTTPException(400, f"Invalid accent color. Must be one of: {VALID_ACCENT_COLORS}")
+    update: dict = {'accentColor': color, 'updatedAt': datetime.utcnow()}
+    # iter102aj: optional brightness slider — 0.0 (None) … 1.0 (Bright/Max).
+    if 'accentIntensity' in body:
+        try:
+            intensity = float(body.get('accentIntensity'))
+        except (TypeError, ValueError):
+            raise HTTPException(400, 'accentIntensity must be a number between 0 and 1')
+        if not 0.0 <= intensity <= 1.0:
+            raise HTTPException(400, 'accentIntensity must be between 0 and 1')
+        update['accentIntensity'] = intensity
     await db.trainee_profiles.update_one(
         {'userId': user_id},
-        {'$set': {'accentColor': color, 'updatedAt': datetime.utcnow()}}
+        {'$set': update}
     )
-    return {"success": True, "accentColor": color}
+    return {"success": True, "accentColor": color, "accentIntensity": update.get('accentIntensity')}
 
 
 @router.put("/trainee-profiles/{user_id}/bio")

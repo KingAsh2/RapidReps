@@ -335,10 +335,27 @@ export default function TraineeProfileScreen() {
       );
       setProfile({ ...profile, accentColor: color });
       setShowColorPicker(false);
+      try { await refreshUser?.(); } catch { /* non-blocking */ }
       toast.success('Brand color updated');
     } catch (e) {
       console.error('Color update error:', e);
       toast.error('Failed to update brand color');
+    }
+  };
+
+  // iter102aj: persist brightness slider (does not close the picker).
+  const handleAccentIntensityCommit = async (intensity: number) => {
+    try {
+      const token = await AsyncStorage.getItem('auth_token');
+      await axios.put(`${API_URL}/api/trainee-profiles/${user?.id}/accent-color`,
+        { accentColor: profile?.accentColor ?? null, accentIntensity: intensity },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setProfile({ ...profile, accentIntensity: intensity });
+      try { await refreshUser?.(); } catch { /* non-blocking */ }
+    } catch (e) {
+      console.error('Intensity update error:', e);
+      toast.error('Failed to update brightness');
     }
   };
 
@@ -1047,6 +1064,8 @@ export default function TraineeProfileScreen() {
         onClose={() => setShowColorPicker(false)}
         onSelect={handleSelectAccentColor}
         currentColor={profile?.accentColor}
+        currentIntensity={profile?.accentIntensity}
+        onIntensityCommit={handleAccentIntensityCommit}
       />
     </RapidBg>
   );

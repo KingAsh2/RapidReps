@@ -185,6 +185,22 @@ export default function TrainerProfileScreen() {
     }
   };
 
+  // iter102aj: persist brightness slider (does not close the picker).
+  const handleAccentIntensityCommit = async (intensity: number) => {
+    try {
+      const token = await AsyncStorage.getItem('auth_token');
+      await axios.put(`${API_URL}/api/trainer-profiles/${user?.id}/accent-color`,
+        { accentColor: profile?.accentColor ?? null, accentIntensity: intensity },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setProfile({ ...profile, accentIntensity: intensity });
+      try { await refreshUser?.(); } catch { /* non-blocking */ }
+    } catch (e) {
+      console.error('Intensity update error:', e);
+      toast.error('Failed to update brightness');
+    }
+  };
+
   return (
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
       <LinearGradient colors={['rgba(10, 14, 26, 0.92)', 'rgba(17, 24, 39, 0.88)']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} />
@@ -542,6 +558,8 @@ export default function TrainerProfileScreen() {
         onClose={() => setShowColorPicker(false)}
         onSelect={handleSelectAccentColor}
         currentColor={profile?.accentColor}
+        currentIntensity={profile?.accentIntensity}
+        onIntensityCommit={handleAccentIntensityCommit}
       />
     </ImageBackground>
   );
