@@ -16,7 +16,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Contacts from 'expo-contacts';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { toast } from '../../src/utils/toast';
+
+// iter102am: stored key for the user's emergency-contact list. Previously the
+// screen seeded two fake contacts ("Mom", "John Smith") on every mount, which
+// felt broken on a real device. Now the list starts empty and is persisted to
+// device storage between sessions.
+const EMERGENCY_CONTACTS_KEY = '@rapidreps:emergency_contacts';
 
 // Brand colors
 const COLORS = {
@@ -73,11 +80,25 @@ export default function ShareSessionStatusScreen() {
   }, []);
 
   const loadSavedContacts = async () => {
-    // In a real app, load from AsyncStorage
-    setContacts([
-      { id: '1', name: 'Mom', phone: '+1 555-123-4567', initials: 'M' },
-      { id: '2', name: 'John Smith', phone: '+1 555-987-6543', initials: 'JS' },
-    ]);
+    // iter102am: load real user-saved contacts from device storage. No more
+    // hardcoded "Mom" / "John Smith" placeholders on first launch.
+    try {
+      const raw = await AsyncStorage.getItem(EMERGENCY_CONTACTS_KEY);
+      if (raw) {
+        const parsed: EmergencyContact[] = JSON.parse(raw);
+        if (Array.isArray(parsed)) setContacts(parsed);
+      }
+    } catch (e) {
+      console.error('Failed to load emergency contacts:', e);
+    }
+  };
+
+  const persistContacts = async (next: EmergencyContact[]) => {
+    try {
+      await AsyncStorage.setItem(EMERGENCY_CONTACTS_KEY, JSON.stringify(next));
+    } catch (e) {
+      console.error('Failed to persist emergency contacts:', e);
+    }
   };
 
   const getInitials = (name: string) => {
@@ -105,10 +126,21 @@ export default function ShareSessionStatusScreen() {
       initials: getInitials(newContactName),
     };
 
-    setContacts(prev => [...prev, newContact]);
+    const next = [...contacts, newContact];
+    setContacts(next);
+    persistContacts(next);
     setNewContactName('');
     setNewContactPhone('');
     setShowAddContact(false);
+  };
+
+  // iter102am: long-press a contact to remove it (now that the list is
+  // user-managed, they need a way to delete).
+  const handleRemoveContact = (contactId: string) => {
+    const next = contacts.filter(c => c.id !== contactId);
+    setContacts(next);
+    setSelectedContacts(prev => prev.filter(id => id !== contactId));
+    persistContacts(next);
   };
 
   const handleShareStatus = async () => {
@@ -236,6 +268,8 @@ I'll let you know when I'm done. Track my session in the RapidReps app.
                     selectedContacts.includes(contact.id) && styles.contactItemSelected
                   ]}
                   onPress={() => toggleContact(contact.id)}
+                  onLongPress={() => handleRemoveContact(contact.id)}
+                  delayLongPress={500}
                 >
                   <View style={[
                     styles.contactAvatar,
@@ -251,6 +285,9 @@ I'll let you know when I'm done. Track my session in the RapidReps app.
                 </TouchableOpacity>
               ))}
             </View>
+            {contacts.length > 0 && (
+              <Text style={styles.helperHint}>Long-press a contact to remove it.</Text>
+            )}
 
             {/* Add Contact Form */}
             {showAddContact && (
@@ -542,10 +579,15 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
   infoCard: {
-    backgroundColor: 'rgba(255,255,255,0.95)',
+    // iter102am: was rgba(255,255,255,0.95) which made the white title and
+    // grey-on-white items invisible against the rest of the dark UI.
+    // Match the dark glass treatment used by other cards on this screen.
+    backgroundColor: '#141929',
     borderRadius: 16,
     padding: 20,
     marginBottom: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   infoTitle: {
     fontSize: 16,
@@ -561,7 +603,15 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 14,
-    color: 'rgba(255,255,255,0.5)',
+    color: 'rgba(255,255,255,0.85)',
+    fontWeight: '500',
+  },
+  helperHint: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.55)',
+    marginTop: -8,
+    marginBottom: 20,
+    fontStyle: 'italic',
   },
   bottomContainer: {
     padding: 16,
