@@ -26,7 +26,6 @@ import { haptic } from '../../src/utils/haptics';
 import { SocialLinksDisplay } from '../../src/components/ProfileSections';
 import { resolveSessionPriceCents } from '../../src/utils/sessionPricing';
 import InstagramSection from '../../src/components/InstagramSection';
-import { TrainerVibePlayer } from '../../src/components/TrainerVibePlayer';
 import { HighlightReel } from '../../src/components/HighlightReel';
 import { TrainerHeroVideoPreview } from '../../src/components/TrainerHeroVideoPreview';
 import { PersonalityTagBadge } from '../../src/components/PersonalityTagBadge';
@@ -595,10 +594,11 @@ export default function TrainerDetailScreen() {
                 </View>
               </Animated.View>
 
-              {/* Trainer Vibe Player */}
-              <Animated.View style={{ transform: [{ translateY: vibeSlideAnim }], opacity: headerAnim }}>
-                <TrainerVibePlayer vibe={trainer as any} autoPlay={true} />
-              </Animated.View>
+              {/* iter102ak: removed the duplicate Trainer Vibe player from
+                  this screen. The home-card / swipe / bottom-sheet already
+                  carries the vibe audio; mounting a second instance here
+                  caused two tracks to play simultaneously when navigating in
+                  from the home tab. Single source of truth = no overlap. */}
 
               {/* CTA Row */}
               <Animated.View style={[styles.heroCTARow, { transform: [{ translateY: ctaSlideAnim }], opacity: headerAnim }]}>
