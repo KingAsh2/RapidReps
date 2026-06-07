@@ -200,7 +200,7 @@ export default function TraineeOnboardingScreen() {
     try {
       await traineeAPI.createProfile({
         userId: user.id,
-        profilePhoto: formData.profilePhoto,
+        // iter102al: profilePhoto removed from onboarding — managed via edit-profile only.
         fitnessGoals: formData.fitnessGoals,
         experienceLevel: formData.experienceLevel,
         currentFitnessLevel: formData.currentFitnessLevel,
@@ -239,26 +239,11 @@ export default function TraineeOnboardingScreen() {
       case 1:
         return (
           <View style={styles.stepContent}>
-            <Text style={styles.stepTitle}>Let's set you up! 📍</Text>
-            <Text style={styles.stepSubtitle}>Add your photo and location</Text>
-
-            {/* Photo */}
-            <TouchableOpacity style={styles.photoContainer} onPress={pickImage}>
-              {formData.profilePhoto ? (
-                <Image source={{ uri: formData.profilePhoto }} style={styles.photo} />
-              ) : (
-                <LinearGradient
-                  colors={['#0A0E1A', '#141929']}
-                  style={styles.photoPlaceholder}
-                >
-                  <Ionicons name="camera" size={40} color={COLORS.white} />
-                  <Text style={styles.photoText}>Add Photo</Text>
-                </LinearGradient>
-              )}
-              <View style={styles.editBadge}>
-                <Ionicons name="pencil" size={16} color={COLORS.white} />
-              </View>
-            </TouchableOpacity>
+            <Text style={styles.stepTitle}>Let&apos;s set you up! 📍</Text>
+            {/* iter102al: trainees no longer add a profile photo during
+                onboarding. They manage photos exclusively from edit-profile.
+                Step 1 is now just a location step. */}
+            <Text style={styles.stepSubtitle}>Share your location so we can match nearby trainers</Text>
 
             {/* Location */}
             <View style={styles.locationCard}>
