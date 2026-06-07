@@ -483,9 +483,11 @@ async def get_nearby_trainers(
     # OPTIMIZATION: Batch fetch all user details in a single query
     users_map = {}
     if trainer_user_ids:
-        users_cursor = db.users.find({'_id': {'$in': trainer_user_ids}}, {'fullName': 1})
+        users_cursor = db.users.find({'_id': {'$in': trainer_user_ids}}, {'fullName': 1, 'profilePhoto': 1})
         users_list = await users_cursor.to_list(len(trainer_user_ids))
-        users_map = {str(u['_id']): u.get('fullName', 'Trainer') for u in users_list}
+        # iter102ai: store both name + profilePhoto so the response can fall back
+        # to the user-level photo when trainer_profiles.avatarUrl is empty.
+        users_map = {str(u['_id']): {'fullName': u.get('fullName', 'Trainer'), 'profilePhoto': u.get('profilePhoto')} for u in users_list}
 
     # Batch fetch active boosts and memberships
     now = datetime.utcnow()
@@ -514,7 +516,9 @@ async def get_nearby_trainers(
         distance = item['distance']
         
         # Get trainer's user name from batch-fetched map
-        full_name = users_map.get(trainer['userId'], 'Trainer')
+        user_entry = users_map.get(trainer['userId'], {'fullName': 'Trainer', 'profilePhoto': None})
+        full_name = user_entry['fullName']
+        user_profile_photo = user_entry.get('profilePhoto')
         
         # Calculate ETA
         eta = estimate_eta_minutes(distance)
@@ -536,7 +540,11 @@ async def get_nearby_trainers(
             'trainerId': trainer['userId'],
             'userId': trainer['userId'],
             'fullName': full_name,
-            'avatarUrl': trainer.get('avatarUrl'),
+            # iter102ai: avatarUrl falls back to profilePhoto so the "Available Now"
+            # diamond shows a real photo even when the trainer uploaded via the
+            # central user-photo flow (which writes to users.profilePhoto, not
+            # trainer_profiles.avatarUrl).
+            'avatarUrl': trainer.get('avatarUrl') or trainer.get('profilePhoto') or user_profile_photo,
             # iter98d (Task 7): expose richer fields so the swipe-discover screen
             # can render full profiles without a 2nd round-trip per card.
             'profilePhoto': trainer.get('profilePhoto') or trainer.get('avatarUrl'),

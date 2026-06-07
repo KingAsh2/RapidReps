@@ -218,9 +218,17 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
             <View style={[s.popupBar, { backgroundColor: getColor(selected.averageRating) }]} />
             <View style={s.popupBody}>
               <View style={s.popupLeft}>
-                {/* Diamond avatar */}
+                {/* Diamond avatar — real profile photo when present */}
                 <View style={[s.popupAvatar, { borderColor: getColor(selected.averageRating) }]}>
-                  <Text style={[s.popupAvatarInit, { color: getColor(selected.averageRating) }]}>{initials(selected.fullName)}</Text>
+                  {selected.avatarUrl ? (
+                    <Image
+                      source={{ uri: selected.avatarUrl }}
+                      style={s.popupAvatarPhoto}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <Text style={[s.popupAvatarInit, { color: getColor(selected.averageRating) }]}>{initials(selected.fullName)}</Text>
+                  )}
                 </View>
               </View>
               <View style={s.popupInfo}>
@@ -278,9 +286,17 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
                   onPress={() => { tap(t); router.push(`/trainee/trainer-detail?trainerId=${t.trainerId}`); }}
                   data-testid={`avail-card-${i}`}
                 >
-                  {/* Diamond initial */}
+                  {/* Diamond avatar — show real photo when available, fall back to initials */}
                   <View style={[s.availDiamond, { borderColor: c, shadowColor: c }]}>
-                    <Text style={[s.availInit, { color: c }]}>{initials(t.fullName)}</Text>
+                    {t.avatarUrl ? (
+                      <Image
+                        source={{ uri: t.avatarUrl }}
+                        style={s.availDiamondPhoto}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <Text style={[s.availInit, { color: c }]}>{initials(t.fullName)}</Text>
+                    )}
                   </View>
                   <Text style={s.availName} numberOfLines={1}>{t.fullName.split(' ')[0]}</Text>
                   <View style={s.availRatingRow}>
@@ -348,8 +364,9 @@ const s = StyleSheet.create({
   popupBar: { height: 3, width: '100%' },
   popupBody: { flexDirection: 'row', alignItems: 'center', paddingTop: 14, paddingBottom: 10, paddingLeft: 16, paddingRight: 12 },
   popupLeft: { marginRight: 14 },
-  popupAvatar: { width: 42, height: 42, borderWidth: 1.5, backgroundColor: N.bg, transform: [{ rotate: '45deg' }], justifyContent: 'center', alignItems: 'center' },
+  popupAvatar: { width: 42, height: 42, borderWidth: 1.5, backgroundColor: N.bg, transform: [{ rotate: '45deg' }], justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
   popupAvatarInit: { fontSize: 16, fontWeight: '900', transform: [{ rotate: '-45deg' }] },
+  popupAvatarPhoto: { width: 60, height: 60, transform: [{ rotate: '-45deg' }] },
   popupInfo: { flex: 1 },
   popupName: { fontSize: 15, fontWeight: '800', color: N.white, letterSpacing: -0.3 },
   popupMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
@@ -376,7 +393,8 @@ const s = StyleSheet.create({
     borderLeftWidth: 2, borderTopWidth: 1, borderRightWidth: 0, borderBottomWidth: 0,
     borderColor: N.borderSubtle,
   },
-  availDiamond: { width: 40, height: 40, borderWidth: 1.5, backgroundColor: N.bg, transform: [{ rotate: '45deg' }], justifyContent: 'center', alignItems: 'center', marginBottom: 12, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.5, shadowRadius: 10, elevation: 6 },
+  availDiamond: { width: 40, height: 40, borderWidth: 1.5, backgroundColor: N.bg, transform: [{ rotate: '45deg' }], justifyContent: 'center', alignItems: 'center', marginBottom: 12, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.5, shadowRadius: 10, elevation: 6, overflow: 'hidden' },
+  availDiamondPhoto: { width: 56, height: 56, transform: [{ rotate: '-45deg' }] },
   availInit: { fontSize: 14, fontWeight: '900', transform: [{ rotate: '-45deg' }], letterSpacing: 0.5 },
   availName: { fontSize: 13, fontWeight: '700', color: N.white, marginBottom: 4, letterSpacing: 0.3 },
   availRatingRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginBottom: 3 },

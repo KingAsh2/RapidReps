@@ -4,6 +4,45 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-02-XX — Iter102ah: Rate/Pricing Discrepancies FIXED 💰
+
+### User-reported bugs
+1. Trainee's session-detail screen showed `$—` for every duration tile but `$50.00` in the summary (math fabricated from default seed).
+2. The hero "/30 min" badge always showed `$30` because it multiplied `ratePerMinuteCents` (defaults to $1/min × 30) — completely disconnected from the trainer's actual tier rates.
+3. Service Fee row hardcoded `$2.00` while the total used `$2.99` — discrepancy of $0.99 (and much worse in recurring).
+4. Recurring sessions multiplied by 4 silently (was hardcoded `sessionsPerWeek * 4` monthly multiplier; UI labeled "weekly" so trainee thought they were buying for 1 week).
+5. Service-fee display on recurring showed `$2.00` while the real charge was `$2.99 × N` (≈$24 for 8 sessions).
+6. All map/card surfaces (`TrainerCard`, `NearbyTrainersMap.web`, `NearbyTrainersMap.native`, home sort) used `ratePerMinuteCents` for display → always showed the default $1/min.
+
+### Root cause
+Backend's `TrainerProfileResponse`, `/api/trainers/nearby`, `/api/trainers/ranked-search`, and `/api/trainers/search` did NOT ship `tierRates` to the client. The frontend resolver (`sessionPricing.ts.resolveSessionPriceCents`) was correctly built but had nothing to resolve against, so it fell back to legacy hourly fields (which themselves seed to $40/hr) — hence the fake `$50` everywhere. The duration tiles correctly returned `null` ("—") but the summary used a different fallback chain that fabricated a price. Two sources of truth = inevitable drift.
+
+### Fixes applied
+**Backend (single source of truth contract):**
+- `models.py:283-284` — `TrainerProfileResponse` now exposes `tierRates` + `assignedTier`.
+- `routes/location_routes.py:553-563` — Nearby trainers endpoint now ships `tierRates`, `assignedTier`, `virtualRateCents`, `inHomeRateCents` so the discover/map shows real prices.
+- `routes/matching.py:135-145` — `ranked-search` payload now includes the same.
+- `routes/profile_routes.py:791,824` — `search` projection adds `tierRates`/`assignedTier`.
+
+**Frontend (UI now ALWAYS uses the resolver):**
+- `trainee/trainer-detail.tsx` — `calculatePrice()` now goes through `resolveSessionPriceCents` (no more hardcoded default fallback). Hero `/30 min` badge resolves via the same function. Service Fee row shows the real `$2.99` (was hardcoded `$2.00`). New "Rates not set" placeholder when the trainer hasn't entered prices.
+- `trainee/recurring-sessions.tsx` — Service Fee row shows `$2.99 × N` correctly (was hardcoded `$2.00`). Disabled Create button + warning copy when trainer rates are unset. Defaults `numberOfWeeks=1` (existing fix from iter102ag, retained).
+- `components/trainee-home/TrainerCard.tsx` — Price chip now shows "from $X / 30 min" via the resolver (was `$1/min` default).
+- `components/NearbyTrainersMap.web.tsx` + `.native.tsx` — Both map cards/popups go through the resolver.
+- `trainee/(tabs)/home.tsx` — Sort-by-price and bottom-sheet `price` use the resolver.
+
+### Regression tests
+- `backend/tests/test_iter102ah_pricing_consistency.py` — 4 contract-locking tests passing. Verified end-to-end that POST `/api/trainer/tier-rates` writes propagate to `GET /api/trainer-profiles/{id}` with the resolver-critical keys present.
+- Pre-existing failures in `test_iteration92_tier_pricing.py` are unrelated ($499 vs $299 fee assertion + 45-min duration cap additions, both predate this iteration).
+
+### Files touched
+- `backend/models.py`, `backend/routes/location_routes.py`, `backend/routes/matching.py`, `backend/routes/profile_routes.py`
+- `frontend/app/trainee/trainer-detail.tsx`, `frontend/app/trainee/recurring-sessions.tsx`, `frontend/app/trainee/(tabs)/home.tsx`
+- `frontend/src/components/trainee-home/TrainerCard.tsx`, `frontend/src/components/NearbyTrainersMap.web.tsx`, `frontend/src/components/NearbyTrainersMap.native.tsx`
+- `backend/tests/test_iter102ah_pricing_consistency.py` (new)
+
+
+
 ## 2026-02-XX — Iter102z: Trainer-visibility disconnect FIXED 🎯
 
 ### Root cause (the real one)
