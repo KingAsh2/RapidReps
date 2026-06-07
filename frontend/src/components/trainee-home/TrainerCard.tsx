@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { TrainerVibePlayer } from '../TrainerVibePlayer';
 import { PersonalityTagBadge } from '../PersonalityTagBadge';
+import { resolveSessionPriceCents } from '../../utils/sessionPricing';
 
 const { width } = Dimensions.get('window');
 
@@ -175,9 +176,22 @@ export const TrainerCard = ({ trainer, cardAnim, onViewProfile, onAvatarLongPres
               {/* Price + distance */}
               <View style={styles.metaRow}>
                 <View style={styles.priceChip}>
-                  <Text style={styles.priceText}>
-                    ${(trainer.ratePerMinuteCents / 100).toFixed(0)}<Text style={styles.priceUnit}>/min</Text>
-                  </Text>
+                  {(() => {
+                    // iter102ah: show the canonical 30-min outdoor rate so
+                    // every card shows a consistent "from $X / 30 min" badge
+                    // sourced from `tierRates` (the same resolver that drives
+                    // the detail screen). Replaces the `ratePerMinuteCents/min`
+                    // formula that always rendered "$1/min" placeholder.
+                    const cents = resolveSessionPriceCents(trainer, 'outdoor', 30);
+                    return (
+                      <Text style={styles.priceText}>
+                        {cents !== null && cents > 0
+                          ? `$${(cents / 100).toFixed(0)}`
+                          : '—'}
+                        <Text style={styles.priceUnit}>/30 min</Text>
+                      </Text>
+                    );
+                  })()}
                 </View>
                 {trainer.distance !== null && trainer.distance !== undefined && (
                   <View style={styles.distanceChip}>

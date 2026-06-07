@@ -6,6 +6,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import { resolveSessionPriceCents } from '../utils/sessionPricing';
 
 const { width: W, height: H } = Dimensions.get('window');
 const MAP_H = H * 0.54;
@@ -234,7 +235,14 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
                 </View>
               </View>
               <View style={s.popupPrice}>
-                <Text style={s.popupPriceVal}>${((selected.ratePerMinuteCents * 30) / 100).toFixed(0)}</Text>
+                {(() => {
+                  // iter102ah: canonical 30-min outdoor rate via resolver.
+                  const cents = resolveSessionPriceCents(selected as any, 'outdoor', 30);
+                  if (!cents || cents <= 0) {
+                    return <Text style={s.popupPriceVal}>—</Text>;
+                  }
+                  return <Text style={s.popupPriceVal}>${(cents / 100).toFixed(0)}</Text>;
+                })()}
                 <Text style={s.popupPriceUnit}>/30m</Text>
               </View>
             </View>

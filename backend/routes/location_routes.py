@@ -551,6 +551,13 @@ async def get_nearby_trainers(
             'specialties': trainer.get('specialties') or trainer.get('trainingStyles') or [],
             'outdoor60Cents': trainer.get('outdoor60Cents'),
             'outdoorRateCents': trainer.get('outdoorRateCents'),
+            'virtualRateCents': trainer.get('virtualRateCents'),
+            'inHomeRateCents': trainer.get('inHomeRateCents'),
+            # iter102ah: include per-duration `tierRates` so the frontend
+            # resolver shows the trainer's actual rates instead of falling back
+            # to the default $40 seed.
+            'tierRates': trainer.get('tierRates', {}),
+            'assignedTier': trainer.get('assignedTier'),
             'rating': trainer.get('averageRating', 0.0),
             'totalSessions': trainer.get('totalSessionsCompleted', 0),
             # Convenience aliases used by the swipe-discover card

@@ -278,8 +278,10 @@ class TrainerProfileResponse(BaseModel):
     outdoorRateCents: int = PricingRules.OUTDOOR_MIN_CENTS
     inHomeRateCents: int = PricingRules.IN_HOME_MIN_CENTS
     ratePerMinuteCents: int = 100
-    travelRadiusMiles: Optional[int] = 10
-    cancellationPolicy: Optional[str] = None
+    # iter102ah: ship per-duration tier rates + assigned tier so the frontend
+    # resolver can show the trainer's actual per-30/45/60/90 prices.
+    tierRates: Optional[dict] = None
+    assignedTier: Optional[str] = None
     averageRating: float = 0.0
     totalReviews: int = 0
     totalSessionsCompleted: int = 0

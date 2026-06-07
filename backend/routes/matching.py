@@ -133,6 +133,13 @@ async def ranked_trainer_search(
             "totalSessions": p.get("totalSessionsCompleted", 0),
             "distanceMiles": round(dist, 1),
             "rateCents": p.get(rate_key, 0),
+            # iter102ah: include per-duration rates so the client-side resolver
+            # shows the trainer's real per-session price across every surface.
+            "tierRates": p.get("tierRates", {}),
+            "assignedTier": p.get("assignedTier"),
+            "outdoorRateCents": p.get("outdoorRateCents"),
+            "virtualRateCents": p.get("virtualRateCents"),
+            "inHomeRateCents": p.get("inHomeRateCents"),
             **score_data,
         })
 

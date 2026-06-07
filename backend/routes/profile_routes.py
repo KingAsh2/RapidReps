@@ -789,6 +789,8 @@ async def search_trainers(
             'verificationStatus': 1, 'canGoLive': 1, 'latitude': 1, 'longitude': 1,
             'locationAddress': 1, 'isAvailable': 1, 'isVirtualTrainingAvailable': 1,
             'videoCallPreference': 1, 'createdAt': 1,
+            # iter102ah: include per-duration rates for the client-side resolver.
+            'tierRates': 1, 'assignedTier': 1,
         }
         trainers_q = await db.trainer_profiles.find(
             {'userId': {'$in': user_ids}, **_visibility_filter()}, trainer_projection
@@ -822,6 +824,8 @@ async def search_trainers(
         'totalSessionsCompleted': 1, 'isVerified': 1, 'trainerTier': 1, 'verificationStatus': 1,
         'canGoLive': 1, 'latitude': 1, 'longitude': 1, 'locationAddress': 1, 'isAvailable': 1,
         'isVirtualTrainingAvailable': 1, 'videoCallPreference': 1, 'createdAt': 1, 'profilePhoto': 1,
+        # iter102ah: include per-duration rates for the client-side resolver.
+        'tierRates': 1, 'assignedTier': 1,
     }
     trainers = await db.trainer_profiles.find(query, trainer_projection).to_list(100)
 

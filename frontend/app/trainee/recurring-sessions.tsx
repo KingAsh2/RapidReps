@@ -81,11 +81,16 @@ export default function RecurringSessionScreen() {
 
   const sessionPriceCents = getSessionPriceCents();
   const sessionPriceDollars = sessionPriceCents / 100;
+  const ratesSet = sessionPriceCents > 0;
   // iter102ag: trainee-controlled multiplier — was hardcoded `sessionsPerWeek * 4`
   // which silently charged for a full month even when the user expected to pay
   // for one week. Now: total = sessions/week × number of weeks the user picks.
   const totalSessions = sessionsPerWeek * numberOfWeeks;
-  const serviceFee = (FLAT_SERVICE_FEE_CENTS * totalSessions) / 100; // service fee charged per session
+  // iter102ah: service fee is charged per session (matches checkout). The
+  // display now reflects the real per-session × N math instead of a hardcoded
+  // "$2.00" that didn't match the total being charged.
+  const serviceFeeCentsTotal = FLAT_SERVICE_FEE_CENTS * totalSessions;
+  const serviceFee = serviceFeeCentsTotal / 100;
   const totalBeforeFee = sessionPriceDollars * totalSessions;
   const totalWithFee = totalBeforeFee + serviceFee;
 
@@ -277,32 +282,47 @@ export default function RecurringSessionScreen() {
           <View style={styles.summaryCard}>
             <Text style={styles.summaryTitle}>Pricing Summary</Text>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
-              <Text style={styles.summaryText}>{totalSessions} sessions x ${sessionPriceDollars.toFixed(2)}</Text>
-              <Text style={styles.summaryText}>${totalBeforeFee.toFixed(2)}</Text>
+              <Text style={styles.summaryText}>
+                {totalSessions} {totalSessions === 1 ? 'session' : 'sessions'} × {ratesSet ? `$${sessionPriceDollars.toFixed(2)}` : '—'}
+              </Text>
+              <Text style={styles.summaryText}>
+                {ratesSet ? `$${totalBeforeFee.toFixed(2)}` : '—'}
+              </Text>
             </View>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
-              <Text style={styles.summaryText}>Service fee (flat)</Text>
-              <Text style={styles.summaryText}>$2.00</Text>
+              <Text style={styles.summaryText}>
+                Service fee {totalSessions > 1 ? `($${(FLAT_SERVICE_FEE_CENTS/100).toFixed(2)} × ${totalSessions})` : '(per session)'}
+              </Text>
+              <Text style={styles.summaryText}>${serviceFee.toFixed(2)}</Text>
             </View>
             <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.2)', marginVertical: 8 }} />
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
               <Text style={[styles.summaryText, { fontWeight: '800', color: COLORS.white }]}>Total</Text>
-              <Text style={[styles.summaryText, { fontWeight: '800', color: '#FF6A00' }]}>${totalWithFee.toFixed(2)}</Text>
+              <Text style={[styles.summaryText, { fontWeight: '800', color: '#FF6A00' }]}>
+                {ratesSet ? `$${totalWithFee.toFixed(2)}` : '—'}
+              </Text>
             </View>
             <Text style={styles.summaryNote}>
-              {selectedDays.map(d => DAYS[d].slice(0, 3)).join(', ')} at {selectedTime.replace(':00', '')}:00 | {sessionsPerWeek}x/week | {duration} min each
+              {selectedDays.map(d => DAYS[d].slice(0, 3)).join(', ')} at {selectedTime.replace(':00', '')}:00 | {sessionsPerWeek}x/week × {numberOfWeeks} {numberOfWeeks === 1 ? 'wk' : 'wks'} | {duration} min each
             </Text>
+            {!ratesSet && (
+              <Text style={[styles.summaryNote, { color: '#FFB300', marginTop: 6 }]}>
+                This trainer hasn&apos;t set their rates yet.
+              </Text>
+            )}
           </View>
 
           {/* Create Button */}
-          <TouchableOpacity onPress={handleCreate} disabled={loading || selectedDays.length === 0} style={styles.createBtn} data-testid="create-recurring-btn">
+          <TouchableOpacity onPress={handleCreate} disabled={loading || selectedDays.length === 0 || !ratesSet} style={[styles.createBtn, (!ratesSet || selectedDays.length === 0) && { opacity: 0.5 }]} data-testid="create-recurring-btn">
             <LinearGradient colors={[COLORS.orange, '#FF9F43']} style={styles.createBtnGradient}>
               {loading ? (
                 <ActivityIndicator size="small" color={COLORS.white} />
               ) : (
                 <>
                   <Ionicons name="repeat" size={20} color={COLORS.white} />
-                  <Text style={styles.createBtnText}>Pay ${totalWithFee.toFixed(2)} for {totalSessions} Sessions</Text>
+                  <Text style={styles.createBtnText}>
+                    {ratesSet ? `Pay $${totalWithFee.toFixed(2)} for ${totalSessions} ${totalSessions === 1 ? 'Session' : 'Sessions'}` : 'Rates not set'}
+                  </Text>
                 </>
               )}
             </LinearGradient>

@@ -40,6 +40,7 @@ import { FavoriteAvailability } from '../../../src/components/trainee-home/Favor
 import { TrainerCard } from '../../../src/components/trainee-home/TrainerCard';
 import { haptic } from '../../../src/utils/haptics';
 import TrainerBottomSheet from '../../../src/components/TrainerBottomSheet';
+import { resolveSessionPriceCents } from '../../../src/utils/sessionPricing';
 import PeopleSearchBar from '../../../src/components/PeopleSearchBar';
 import FloatingOrangeBg from '../../../src/components/FloatingOrangeBg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -418,7 +419,14 @@ export default function TraineeHomeScreen() {
     } else if (sortBy === 'rating') {
       filtered.sort((a, b) => (b.averageRating || 0) - (a.averageRating || 0));
     } else if (sortBy === 'price') {
-      filtered.sort((a, b) => (a.ratePerMinuteCents || 99999) - (b.ratePerMinuteCents || 99999));
+      // iter102ah: sort by the canonical 30-min outdoor price (matches the
+      // badge users actually see). Previously sorted by `ratePerMinuteCents`
+      // which was a hidden default of $1/min for every trainer.
+      filtered.sort((a, b) => {
+        const ac = resolveSessionPriceCents(a, 'outdoor', 30) ?? 999999;
+        const bc = resolveSessionPriceCents(b, 'outdoor', 30) ?? 999999;
+        return ac - bc;
+      });
     }
 
     return filtered;
@@ -428,18 +436,24 @@ export default function TraineeHomeScreen() {
   const pendingSessions = sessions.filter((s: any) => s.status === 'requested');
 
   // Map trainers to bottom sheet format
-  const bottomSheetTrainers = displayedTrainers.map((t: any) => ({
-    id: t.id,
-    name: t.fullName || t.name || 'Trainer',
-    photo: t.avatarUrl || t.profilePhoto,
-    rating: t.averageRating || 0,
-    reviewCount: t.reviewCount || 0,
-    distance: t.distance ?? undefined,
-    eta: t.distance ? `${Math.max(1, Math.round(t.distance * 3))} min` : undefined,
-    price: t.ratePerMinuteCents ? Math.round((t.ratePerMinuteCents * 60) / 100) : undefined,
-    specialty: (t.trainingStyles || [])[0],
-    isAvailable: t.isAvailable,
-  }));
+  const bottomSheetTrainers = displayedTrainers.map((t: any) => {
+    // iter102ah: bottom-sheet price uses the same resolver so it agrees with
+    // the cards. `price` is the dollar value for a 30-min outdoor session
+    // (the canonical "from" rate).
+    const cents = resolveSessionPriceCents(t, 'outdoor', 30);
+    return {
+      id: t.id,
+      name: t.fullName || t.name || 'Trainer',
+      photo: t.avatarUrl || t.profilePhoto,
+      rating: t.averageRating || 0,
+      reviewCount: t.reviewCount || 0,
+      distance: t.distance ?? undefined,
+      eta: t.distance ? `${Math.max(1, Math.round(t.distance * 3))} min` : undefined,
+      price: cents !== null && cents > 0 ? Math.round(cents / 100) : undefined,
+      specialty: (t.trainingStyles || [])[0],
+      isAvailable: t.isAvailable,
+    };
+  });
 
   const handleBottomSheetBook = (trainer: any) => {
     router.push(`/trainee/trainer-detail?trainerId=${trainer.id}`);

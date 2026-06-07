@@ -179,35 +179,20 @@ export default function TrainerDetailScreen() {
   const [selectedSessionType, setSelectedSessionType] = useState<'virtual' | 'outdoor' | 'in_home'>('outdoor');
 
   const calculatePrice = () => {
-    // iter96b (#23, #24, #25): Use trainer's per-duration tierRates as the
-    // single source of truth. Service fee is a flat $2.99 added ON TOP.
-    if (!trainer) return { sessionRate: 0, serviceFee: 2.99, totalCharged: 2.99, trainerEarnings: 0, platformEarnings: 2.99, perHourRate: 0 };
+    // iter102ah: SINGLE source of truth. resolveSessionPriceCents is the only
+    // place that decides what a session costs. If the trainer hasn't set any
+    // rates we return 0 so the UI shows "—" instead of fabricating a price
+    // from default seeds (which previously caused buttons to show "$—" while
+    // the summary showed "$50" from the seed default).
+    if (!trainer) return { sessionRate: 0, serviceFee: 2.99, totalCharged: 2.99, trainerEarnings: 0, platformEarnings: 2.99, perHourRate: 0, travelFee: 0, ratesSet: false };
 
-    const tr: any = (trainer as any).tierRates || {};
-    const modality: 'inPerson' | 'virtual' = selectedSessionType === 'virtual' ? 'virtual' : 'inPerson';
-    // Resolve the rate (cents) for the selected duration. Trainer's tierRates is
-    // the source of truth; if missing, fall back to legacy per-hour rate.
-    const ratesByDuration: Record<number, number | undefined> = {
-      30: tr[`${modality}30Cents`],
-      45: tr[`${modality}45Cents`],
-      60: tr[`${modality}60Cents`],
-      90: tr[`${modality}90Cents`],
-    };
-    const exactCents = ratesByDuration[selectedDuration];
-    let sessionPriceCents: number;
-    if (typeof exactCents === 'number' && exactCents > 0) {
-      sessionPriceCents = exactCents;
-    } else {
-      // Legacy fallback: derive from hourly rate when tierRates is empty.
-      let hourlyCents: number;
-      switch (selectedSessionType) {
-        case 'virtual': hourlyCents = trainer.virtualRateCents || 3000; break;
-        case 'in_home': hourlyCents = trainer.inHomeRateCents || 6000; break;
-        default: hourlyCents = trainer.outdoorRateCents || 4000;
-      }
-      const fullHourly = Math.round(hourlyCents / 0.80);
-      sessionPriceCents = Math.round(fullHourly * (selectedDuration / 60));
-    }
+    const modality: 'outdoor' | 'in_home' | 'virtual' =
+      selectedSessionType === 'virtual' ? 'virtual'
+      : selectedSessionType === 'in_home' ? 'in_home'
+      : 'outdoor';
+    const cents = resolveSessionPriceCents(trainer as any, modality, selectedDuration as 30 | 45 | 60 | 90);
+    const ratesSet = cents !== null && cents > 0;
+    const sessionPriceCents = ratesSet ? (cents as number) : 0;
 
     const perHourRate = sessionPriceCents / 100 / (selectedDuration / 60);
     const sessionRate = sessionPriceCents / 100;
@@ -225,6 +210,7 @@ export default function TrainerDetailScreen() {
       perHourRate,
       trainerEarnings,
       platformEarnings,
+      ratesSet,
     };
   };
 
@@ -565,9 +551,15 @@ export default function TrainerDetailScreen() {
                 <View style={styles.heroPriceChip}>
                   <Text style={styles.heroPriceText}>
                     {(() => {
-                      const perMin = (trainer.ratePerMinuteCents || 0) / 100;
-                      const thirtyMin = perMin * 30;
-                      return thirtyMin > 0 ? `$${thirtyMin.toFixed(0)}` : '—';
+                      // iter102ah: badge must reflect the trainer's actual
+                      // 30-min rate (resolved via the single-source-of-truth
+                      // resolver), not the legacy `ratePerMinuteCents * 30`
+                      // formula that always produced "$30" because the default
+                      // per-minute rate is $1.
+                      const cents = resolveSessionPriceCents(trainer as any, 'outdoor', 30);
+                      return cents !== null && cents > 0
+                        ? `$${(cents / 100).toFixed(0)}`
+                        : '—';
                     })()}<Text style={styles.heroPriceUnit}>/30 min</Text>
                   </Text>
                 </View>
@@ -919,7 +911,9 @@ export default function TrainerDetailScreen() {
               <View style={styles.priceSummary}>
                 <View style={styles.priceRow}>
                   <Text style={styles.priceLabel}>{selectedDuration} min session</Text>
-                  <Text style={styles.priceValue}>${prices.sessionRate.toFixed(2)}</Text>
+                  <Text style={styles.priceValue}>
+                    {prices.ratesSet ? `$${prices.sessionRate.toFixed(2)}` : '—'}
+                  </Text>
                 </View>
                 {prices.travelFee > 0 && (
                   <View style={styles.priceRow}>
@@ -929,13 +923,20 @@ export default function TrainerDetailScreen() {
                 )}
                 <View style={styles.priceRow}>
                   <Text style={styles.priceLabel}>Service Fee</Text>
-                  <Text style={styles.priceValue}>$2.00</Text>
+                  <Text style={styles.priceValue}>${prices.serviceFee.toFixed(2)}</Text>
                 </View>
                 <View style={styles.priceDivider} />
                 <View style={styles.priceRow}>
                   <Text style={styles.priceTotalLabel}>Total</Text>
-                  <Text style={styles.priceTotalValue}>${prices.totalCharged.toFixed(2)}</Text>
+                  <Text style={styles.priceTotalValue}>
+                    {prices.ratesSet ? `$${prices.totalCharged.toFixed(2)}` : '—'}
+                  </Text>
                 </View>
+                {!prices.ratesSet && (
+                  <Text style={styles.ratesNotSetNote}>
+                    This trainer hasn&apos;t set their rates yet.
+                  </Text>
+                )}
               </View>
 
               {/* Cancellation Policy */}
@@ -1028,7 +1029,10 @@ export default function TrainerDetailScreen() {
                   trainerId: trainerId,
                   // iter98b (#25): pass full tierRates so recurring-sessions can pick per-duration price
                   tierRates: JSON.stringify(trainer?.tierRates || {}),
-                  rateCents: String(trainer?.tierRates?.inPerson60Cents || trainer?.outdoor60Cents || trainer?.outdoorRateCents || 4000),
+                  // iter102ah: only pass legacy rate if the trainer actually has one set.
+                  // Previously defaulted to 4000 ($40/hr), which silently filled the
+                  // recurring screen with a fake price when the trainer hadn't set rates.
+                  rateCents: String(trainer?.tierRates?.inPerson60Cents || trainer?.outdoorRateCents || 0),
                 }
               })}
               data-testid="recurring-sessions-btn"
@@ -1777,6 +1781,14 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.5)',
     textAlign: 'center',
     marginTop: 8,
+  },
+  ratesNotSetNote: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: 'rgba(255,179,0,0.85)',
+    textAlign: 'center',
+    marginTop: 10,
+    fontStyle: 'italic',
   },
   // Cancellation Policy
   cancellationPolicy: {

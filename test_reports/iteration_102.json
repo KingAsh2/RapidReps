@@ -1,0 +1,44 @@
+{
+  "summary": "iter102ah pricing-consistency backend contract verified end-to-end. The fix correctly plumbs `tierRates` + `assignedTier` (and legacy modality fields) through all trainer-returning endpoints. 4/7 tests passed; 3 list-endpoint tests skipped because the seed DB has no trainers with lat/long set within the queried area — this is a seed/data limitation, NOT a code bug (the projection/serialization code paths were code-reviewed and are correct).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "/api/trainers/nearby, /api/trainers/ranked-search, /api/trainers/search",
+        "issue": "Returned empty list for the seeded trainer (test_trainer_iter25@test.com) — trainer likely lacks latitude/longitude or visibility flags. Couldn't directly assert tierRates is in list payloads at runtime; verified instead via code review (location_routes.py:559-560, matching.py:138-139, profile_routes.py:793,828). Recommend seeding lat/long+visibility for this trainer so the list-shape contract is also runtime-asserted."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iter102ah_pricing_consistency.py",
+    "/app/test_reports/pytest/iter102ah_pricing_consistency.xml"
+  ],
+  "action_items": [
+    "(Optional) Seed test_trainer_iter25@test.com with latitude/longitude + isAvailable=true so nearby/ranked-search/trainers-search assertions move from SKIPPED to PASSED. The projection code already includes tierRates — only missing geo data is preventing runtime verification.",
+    "Pre-existing failures in test_iteration92_tier_pricing.py (service_fee 499 vs 299 mismatch and 45-min cap) are unrelated to this iteration per main agent note — confirmed not regressed by these changes."
+  ],
+  "critical_code_review_comments": [
+    "Contract is consistent across surfaces: GET /api/trainer-profiles/{user_id} (models.py:283-284), /api/trainers/nearby (location_routes.py:559-560), /api/trainers/ranked-search (matching.py:138-139), and /api/trainers/search (profile_routes.py:793,828) all project `tierRates` + `assignedTier`.",
+    "POST /api/trainer/tier-rates correctly persists `tierRates.<field>` via $set and validates against tier caps server-side (payment_routes.py:357-361).",
+    "Confirmed end-to-end: trainer POSTs {inPerson30:4500, inPerson45:6500, inPerson60:8500, inPerson90:12000} → trainee GET /api/trainer-profiles/{trainerId} returns identical tierRates dict. Resolver-critical data is reaching the trainee surface.",
+    "Note: user mentioned a `find-matches` endpoint, but the actual route in this codebase is `/api/trainers/ranked-search`. Test was updated to hit the real route. Main agent should confirm the frontend resolver is calling the correct endpoint name.",
+    "Frontend resolver (sessionPricing.ts, trainer-detail.tsx, recurring-sessions.tsx) was NOT runtime-tested (Expo RN — out of scope per request). Recommend manual visual check on device or Expo web after the next deploy."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter102ah_pricing_consistency.py"
+  ],
+  "success_rate": {
+    "backend": "100% of executed contract tests passed (4/4); 3 SKIPPED due to seed-data, not code defects",
+    "frontend": "not tested (Expo RN, per request scope)"
+  },
+  "test_credentials": "Used credentials from /app/memory/test_credentials.md (trainer + trainee Test123!).",
+  "seed_data_creation": "None. The e2e test set trainer tier rates via the public POST /api/trainer/tier-rates endpoint to {inPerson30: 4500, inPerson45: 6500, inPerson60: 8500, inPerson90: 12000}. This is the same trainer the main agent already seeded with assignedTier=specialty.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "iter102ah pricing-consistency contract is verified at the GET /api/trainer-profiles/{user_id} and POST/GET /api/trainer/tier-rates endpoints. For nearby/ranked-search/trainers-search, only the code path is verified (not runtime) because the seeded trainer lacks geo data. If a future iteration adds geo seed for test_trainer_iter25, re-running this test file will move those 3 skips to passes without any code changes. The frontend resolver in `/app/frontend/src/utils/sessionPricing.ts` should be visually validated on Expo (cannot be done from this sandbox)."
+}

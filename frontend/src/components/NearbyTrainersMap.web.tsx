@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'rea
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { resolveSessionPriceCents } from '../utils/sessionPricing';
 
 const COLORS = {
   orange: '#FF6A00',
@@ -19,6 +20,10 @@ interface Trainer {
   avatarUrl?: string;
   averageRating?: number;
   ratePerMinuteCents?: number;
+  tierRates?: Record<string, number | undefined>;
+  outdoorRateCents?: number;
+  virtualRateCents?: number;
+  inHomeRateCents?: number;
   distanceMiles?: number;
   etaMinutes?: number;
   sessionTypes?: string[];
@@ -84,9 +89,12 @@ export default function NearbyTrainersMap({ trainers = [] }: Props) {
               {(trainer.distanceMiles ?? 0) > 0 && (
                 <Text style={styles.distanceText}>{trainer.distanceMiles?.toFixed(1)} mi</Text>
               )}
-              {(trainer.ratePerMinuteCents ?? 0) > 0 && (
-                <Text style={styles.priceText}>${((trainer.ratePerMinuteCents! * 30) / 100).toFixed(0)}/30min</Text>
-              )}
+              {(() => {
+                // iter102ah: canonical 30-min outdoor rate via resolver.
+                const cents = resolveSessionPriceCents(trainer as any, 'outdoor', 30);
+                if (!cents || cents <= 0) return null;
+                return <Text style={styles.priceText}>${(cents / 100).toFixed(0)}/30min</Text>;
+              })()}
             </TouchableOpacity>
           ))}
         </ScrollView>
