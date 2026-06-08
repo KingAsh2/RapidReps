@@ -57,7 +57,13 @@ async def backfill_highlight_thumbnails(current_user: dict = Depends(get_current
     profiles_touched = 0
     for coll_name in ('trainer_profiles', 'trainee_profiles'):
         coll = db[coll_name]
-        async for doc in coll.find({'highlights.0': {'$exists': True}}):
+        # iter102aq (deployment health-check): cap the scan + project only the
+        # fields we mutate so production datasets don't time out the request.
+        cursor = coll.find(
+            {'highlights.0': {'$exists': True}},
+            {'userId': 1, 'highlights': 1},
+        ).limit(1000)
+        async for doc in cursor:
             highlights = doc.get('highlights') or []
             user_id = doc.get('userId')
             if not user_id:
