@@ -1,0 +1,56 @@
+{
+  "summary": "iter104 — P0 backend regression for the 'tap a trainer from Trainee Home does NOT open profile' bug. The frontend was passing trainer-profile doc `id` to `/api/trainer-profiles/{trainerId}` which resolves by USER ID (so it 404'd). The frontend now passes `trainer.userId || trainer.id`. Backend-side contract that the fix relies on is fully verified: 9/9 iter104 tests pass + 26/26 prior iter102* regression tests still pass (3 pre-existing skips, no new failures). No backend code changes needed.",
+  "tests_executed": [
+    "test_trainer_profile_by_user_id_returns_200_with_required_fields — GET /api/trainer-profiles/{userId} returns 200 with id != userId, tierRates dict, videoCallLink, accentColor, ratePerMinuteCents (PASS)",
+    "test_trainer_profile_by_profile_doc_id_returns_404 — GET /api/trainer-profiles/{profileDocId} returns 404 (proves the route requires userId — the exact failure the user reported) (PASS)",
+    "test_nearby_response_exposes_userid_distinct_from_id — /api/trainers/nearby returns BOTH `id` (doc) and `userId` as separate values; passing nearby.id → 404, passing nearby.userId → 200. This locks the contract the frontend fix depends on (PASS)",
+    "test_pricing_consistency_nearby_vs_profile — nearby[i].ratePerMinuteCents, outdoorRateCents, tierRates, assignedTier all match /api/trainer-profiles/{userId} exactly (PASS)",
+    "test_session_created_with_payment_ready_false — POST /api/sessions returns 200 with status='requested', paymentReady falsy (deferred-payment contract) (PASS)",
+    "test_payment_intent_blocked_before_acceptance — POST /api/payments/create-payment-intent returns 400 with 'negotiation/agreed' before accept (PASS)",
+    "test_accept_flips_payment_ready_true — PATCH /api/sessions/{id}/accept flips status=confirmed, paymentReady=true, negotiationStatus='agreed' (PASS, verified via GET-after)",
+    "test_payment_intent_succeeds_after_acceptance — Stripe intent path returns 200 with clientSecret post-accept (PASS)",
+    "test_zzz_cleanup_session — best-effort cancel of the test booking (PASS)",
+    "Re-ran prior regression suite: 26/26 passed across test_iter102ah_pricing_consistency, test_iter102aj_accent_intensity, test_iter102an_tier_pricing_chain, test_iter102ao_meeting_location_contract, test_iter102ap_video_call_link, test_iter102aq_accept_unlocks_payment (3 unrelated skips for /trainers/search,/nearby,/ranked in iter102ah — were already skipping before iter104, NOT a regression)"
+  ],
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/trainer-profiles/{userId}", "issue": "Response model `TrainerProfileResponse` (backend/models.py:268-332) does NOT expose `accentIntensity`, even though the underlying DB field exists (models.py:208) and PUT /accent-color writes it. The user request asked us to confirm `accentIntensity` ships on the response — it does not. Frontend currently only reads `accentColor`, so it's NOT blocking the regression, but the API surface is inconsistent. Recommend adding `accentIntensity: Optional[float] = None` to TrainerProfileResponse so the trainee-side detail screen can render accent strength."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iter104_trainer_routing_by_userid.py",
+    "/app/test_reports/pytest/iter104_results.xml",
+    "/app/test_reports/pytest/iter104_iter102_regression.xml"
+  ],
+  "action_items": [
+    "(Non-blocking, recommended) Add `accentIntensity: Optional[float] = None` to `TrainerProfileResponse` (backend/models.py:268-332). The DB field is already written by PUT /accent-color but never surfaced back to the client.",
+    "(Verified, no action) The frontend fix in /app/frontend/app/trainee/(tabs)/home.tsx (use `trainer.userId || trainer.id`) is the correct mitigation — backend contract confirms userId is the ONLY accepted route param.",
+    "(Optional, hardening) Consider also accepting profile-doc-id as a fallback in GET /api/trainer-profiles/{id} (try {'userId': id}; if None, try {'_id': ObjectId(id)}). This would make the route defensive against the exact frontend bug that just shipped."
+  ],
+  "critical_code_review_comments": [
+    "profile_routes.py:302-345 — GET /trainer-profiles/{user_id} resolves ONLY by `userId` (`db.trainer_profiles.find_one({'userId': user_id})`). There is no fallback to profile doc _id. This is correct *and* the root cause of the original P0: nearby returns BOTH `id` (doc) and `userId` and the frontend was reaching for the wrong one. Defence-in-depth fallback recommended (see action items).",
+    "location_routes.py:538-541 — /api/trainers/nearby returns `{'id': str(trainer['_id']), 'trainerId': trainer['userId'], 'userId': trainer['userId'], ...}`. Three near-synonyms in the same payload is asking for exactly this kind of bug. Recommend deprecating the bare `id` key from this response (or renaming it to `profileDocId`) so no future frontend can confuse it with the trainer's userId.",
+    "models.py:208 vs models.py:268-332 — accentIntensity is writable but not readable through the public profile response. Minor API surface gap.",
+    "session_routes.py + payment_routes.py:994-1035 — deferred-payment gate is solid: paymentReady starts falsy, accept flips it to true, payment-intent rejects 400 before agreed. iter102aq contract holds in iter104.",
+    "Pricing surfaces are consistent: tierRates, ratePerMinuteCents, outdoorRateCents all match byte-for-byte between /trainers/nearby and /trainer-profiles/{userId}. Frontend resolver has a single source of truth."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter104_trainer_routing_by_userid.py (new)"
+  ],
+  "success_rate": {
+    "backend": "100% (9/9 iter104 + 26/26 prior iter102 regression — 35/35 effective; 3 pre-existing unrelated skips)",
+    "frontend": "not tested — per request (Expo RN, native pickers, out of sandbox scope)"
+  },
+  "test_credentials": "Used /app/memory/test_credentials.md — trainer + trainee Test123!.",
+  "seed_data_creation": "Module-scope `db_seed` fixture writes latitude=40.7128/longitude=-74.0060 + isAvailable=true + verificationStatus=verified + travelRadiusMiles=None (unlimited) + tierRates {inPerson30/45/60/90Cents = 4500/6500/8500/12000} + assignedTier='specialty' + ratePerMinuteCents=150 + outdoorRateCents=8500 + offersOutdoor=true on test_trainer_iter25's profile. Teardown restores the trainer's original latitude/longitude/travelRadiusMiles. Other fields are left healthy (matches prior iter103 baseline).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Run `python -m pytest backend/tests/test_iter104_trainer_routing_by_userid.py -v` from /app. The fixture loads /app/backend/.env and self-heals the trainer's GPS + verification status before tests. The cleanup test cancels the booked session so no stuck 'confirmed' session is left behind. test_trainer_iter25's profile is left with the seeded NYC coords/tier rates restored to original lat/lng on teardown — re-running is idempotent. KEY INSIGHT for future testers: `/api/trainers/nearby` returns BOTH `id` (profile doc _id) and `userId` (user _id) — frontends MUST navigate to /trainer-profiles/{userId}. Passing `id` returns 404.",
+  "rca of the issue": "ROOT CAUSE: location_routes.py:538-541 sets `'id': str(trainer['_id'])` (the trainer_profiles doc _id) AND `'userId': trainer['userId']` on every /nearby record. The frontend trainee home was reading `.id` for the bottom-sheet tap handler and passing it to /trainee/trainer-detail?trainerId=..., which then hit GET /api/trainer-profiles/{that_id}. The route at profile_routes.py:305 queries `db.trainer_profiles.find_one({'userId': user_id})` — so a profile doc _id never matches and the screen 404'd silently. MITIGATION (applied by main agent in frontend): use `trainer.userId || trainer.id` everywhere a trainerId is passed downstream (home.tsx lines 439-465 bottomSheetTrainers, 700-702 search tap, 830-834 favorites strip, 911-915 onSelectTrainer, 1043-1049 preview card). REPRODUCTION (backend-side, locked in this iter): `curl /api/trainer-profiles/{profileDocId}` → 404, `curl /api/trainer-profiles/{userId}` → 200. HARDENING SUGGESTION: rename nearby's `id` to `profileDocId` (or drop it) so this confusion cannot recur."
+}

@@ -442,7 +442,11 @@ export default function TraineeHomeScreen() {
     // (the canonical "from" rate).
     const cents = resolveSessionPriceCents(t, 'outdoor', 30);
     return {
-      id: t.id,
+      // iter102au: pass the trainer's USER ID (not the profile doc id) so the
+      // detail screen's `/trainer-profiles/{userId}` lookup actually resolves.
+      // Was silently navigating with a doc id → trainer-detail showed an error
+      // / blank state and the user thought taps did nothing.
+      id: t.userId || t.id,
       name: t.fullName || t.name || 'Trainer',
       photo: t.avatarUrl || t.profilePhoto,
       rating: t.averageRating || 0,
@@ -456,7 +460,8 @@ export default function TraineeHomeScreen() {
   });
 
   const handleBottomSheetBook = (trainer: any) => {
-    router.push(`/trainee/trainer-detail?trainerId=${trainer.id}`);
+    // iter102au: same user-id fix as the card tap above.
+    router.push(`/trainee/trainer-detail?trainerId=${trainer.id || trainer.userId}`);
   };
 
   const initiateVideoCall = async (trainer: any) => {
@@ -625,7 +630,7 @@ export default function TraineeHomeScreen() {
               >
                 <View style={styles.heroGlow} />
                 <Text style={styles.heroTitle}>
-                  LET'S GET AFTER IT, {user?.fullName?.split(' ')[0]?.toUpperCase() || 'CHAMP'}! 💪🔥
+                  LET&apos;S GET AFTER IT, {user?.fullName?.split(' ')[0]?.toUpperCase() || 'CHAMP'}! 💪🔥
                 </Text>
                 <Text style={styles.heroSubtitle}>
                   Your next workout is just one tap away
@@ -939,7 +944,7 @@ export default function TraineeHomeScreen() {
                 <View style={styles.dialogIconContainer}>
                   <Ionicons name="videocam" size={64} color="#FFFFFF" />
                 </View>
-                <Text style={styles.dialogTitle}>Don't Sweat Just Yet! 💪</Text>
+                <Text style={styles.dialogTitle}>Don&apos;t Sweat Just Yet! 💪</Text>
                 <Text style={styles.dialogMessage}>Virtual Trainers available RAPIDLY! 🚀</Text>
                 <Text style={styles.dialogSubMessage}>Would you like Virtual Training?</Text>
                 <View style={styles.dialogButtons}>
@@ -953,7 +958,7 @@ export default function TraineeHomeScreen() {
                     style={styles.dialogButtonYes}
                     onPress={handleVirtualTrainingYes}
                   >
-                    <Text style={styles.dialogButtonTextYes}>Yes, Let's Go! 🔥</Text>
+                    <Text style={styles.dialogButtonTextYes}>Yes, Let&apos;s Go! 🔥</Text>
                   </TouchableOpacity>
                 </View>
                 <TouchableOpacity
@@ -1037,8 +1042,9 @@ export default function TraineeHomeScreen() {
           onClose={() => setShowPreview(false)}
           onViewProfile={() => {
             setShowPreview(false);
-            if (previewUser?.id) {
-              router.push(`/trainee/trainer-detail?trainerId=${previewUser.id}`);
+            const id = previewUser?.userId || previewUser?.id;
+            if (id) {
+              router.push(`/trainee/trainer-detail?trainerId=${id}`);
             }
           }}
         />
