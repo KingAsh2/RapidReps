@@ -1072,6 +1072,27 @@ async def get_session(session_id: str, current_user: dict = Depends(get_current_
         if trainer_doc and trainer_doc.get('videoCallLink'):
             session['videoCallLink'] = trainer_doc['videoCallLink']
 
+    # iter102aq: join trainee name + photo so the Session Details screen can
+    # render the real trainee avatar instead of a generic person icon. Falls
+    # back to trainee_profiles.avatarUrl if users.profilePhoto is empty.
+    if session.get('traineeId') and ObjectId.is_valid(session['traineeId']):
+        trainee_user = await db.users.find_one(
+            {'_id': ObjectId(session['traineeId'])},
+            {'fullName': 1, 'profilePhoto': 1, 'phone': 1},
+        )
+        if trainee_user:
+            session.setdefault('traineeName', trainee_user.get('fullName', 'Trainee'))
+            photo = trainee_user.get('profilePhoto')
+            if not photo:
+                t_prof = await db.trainee_profiles.find_one(
+                    {'userId': session['traineeId']},
+                    {'avatarUrl': 1, 'profilePhoto': 1},
+                )
+                if t_prof:
+                    photo = t_prof.get('avatarUrl') or t_prof.get('profilePhoto')
+            session['traineePhoto'] = photo
+            session.setdefault('traineePhone', trainee_user.get('phone'))
+
     return SessionResponse(**serialize_doc(session))
 
 @router.get("/trainer/sessions", response_model=List[SessionResponse])
@@ -1193,34 +1214,50 @@ async def get_trainee_sessions(
 
 @router.patch("/sessions/{session_id}/accept", response_model=SessionResponse)
 async def accept_session(session_id: str, current_user: dict = Depends(get_current_user)):
-    """Trainer accepts a session request"""
+    """Trainer accepts a session request.
+
+    iter102aq: accepting now ALSO unlocks payment. The trainer is implicitly
+    agreeing to the trainee's proposed time + location + duration, so we set
+    `negotiationStatus='agreed'`, `paymentReady=True`, and for outdoor sessions
+    also `outdoorLocationAgreed=True`. The trainee gets a push that deep-links
+    to the session-detail screen which now shows a "Confirm & Pay" CTA. No
+    payment is captured before this step — exactly the flow the user asked for.
+    """
     session = await db.sessions.find_one({'_id': ObjectId(session_id)})
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-    
+
     if session['trainerId'] != str(current_user['_id']):
         raise HTTPException(status_code=403, detail="Not authorized")
-    
+
     # Verification gate: trainer must be admin-verified
     trainer_profile = await db.trainer_profiles.find_one({'userId': str(current_user['_id'])})
     if not trainer_profile or trainer_profile.get('verificationStatus') != 'verified':
         raise HTTPException(status_code=403, detail="Your account must be verified by an admin before you can accept sessions. Please complete your verification process.")
-    
-    await db.sessions.update_one(
-        {'_id': ObjectId(session_id)},
-        {'$set': {'status': SessionStatus.CONFIRMED, 'updatedAt': datetime.utcnow()}}
-    )
-    
+
+    update: dict = {
+        'status': SessionStatus.CONFIRMED,
+        'updatedAt': datetime.utcnow(),
+        # iter102aq: unlock payment + lock the agreed terms.
+        'negotiationStatus': 'agreed',
+        'paymentReady': True,
+        'agreedAt': datetime.utcnow(),
+    }
+    if session.get('sessionType') == SessionType.OUTDOOR or session.get('locationType') == 'outdoor':
+        update['outdoorLocationAgreed'] = True
+
+    await db.sessions.update_one({'_id': ObjectId(session_id)}, {'$set': update})
+
     updated_session = await db.sessions.find_one({'_id': ObjectId(session_id)})
 
-    # Push: Notify trainee that session was accepted
+    # Push: Notify trainee that session was accepted — nudge to pay.
     trainer_name = current_user.get('fullName', 'Your trainer')
     asyncio.create_task(create_and_send_notification(
         session['traineeId'],
-        "Session Accepted!",
-        f"{trainer_name} accepted your session request. Get ready!",
-        "session_accepted",
-        {"sessionId": session_id, "screen": "trainee/sessions"}
+        "Session Accepted — confirm & pay",
+        f"{trainer_name} accepted your session. Tap to confirm and pay.",
+        "session_accepted_pay",
+        {"sessionId": session_id, "screen": "trainee/session-detail"}
     ))
 
     return SessionResponse(**serialize_doc(updated_session))

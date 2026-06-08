@@ -288,6 +288,48 @@ export default function SessionDetailScreen() {
             </View>
           </View>
 
+          {/* iter102aq: Payment CTA — only shown when the trainer has accepted
+              (paymentReady=true) AND payment hasn't been made yet. This is the
+              new flow: no charge happens until the trainer locks in time +
+              location, then the trainee taps to confirm and pay. */}
+          {session.paymentReady && session.paymentStatus !== 'succeeded' && session.paymentStatus !== 'paid' && (
+            <View style={[styles.card, { borderColor: COLORS.orange, borderWidth: 1.5, backgroundColor: 'rgba(255,106,0,0.08)' }]}>
+              <Text style={[styles.cardTitle, { color: COLORS.orange }]}>Trainer accepted — confirm to lock in</Text>
+              <Text style={[styles.infoTextSub, { marginBottom: 12 }]}>
+                Your trainer agreed on the time, date and location. Pay now to confirm the session.
+              </Text>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: COLORS.orange,
+                  borderRadius: 14,
+                  paddingVertical: 16,
+                  alignItems: 'center',
+                }}
+                onPress={() => router.push({
+                  pathname: '/trainee/confirm-booking',
+                  params: {
+                    sessionId: String(session.id),
+                    trainerName: session.trainerName || 'Trainer',
+                    trainerId: session.trainerId,
+                    date: sessionDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+                    time: sessionDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+                    duration: String(session.durationMinutes),
+                    sessionType: session.sessionType || session.locationType || 'outdoor',
+                    priceCents: String(session.baseSessionPriceCents || session.finalSessionPriceCents || 0),
+                    sessionDateTimeStartIso: session.sessionDateTimeStart,
+                    locationNameOrAddress: session.locationNameOrAddress || '',
+                    payNow: '1',
+                  },
+                })}
+                data-testid="confirm-and-pay-btn"
+              >
+                <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '800', letterSpacing: 0.5 }}>
+                  CONFIRM & PAY
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
           {/* iter102ap: Trainee-side Join Video Call card for virtual sessions. */}
           {(session.sessionType === 'virtual' || session.modality === 'virtual') && (
             <View style={styles.card}>

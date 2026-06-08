@@ -484,6 +484,12 @@ class SessionResponse(BaseModel):
     outdoorLocationTraineeProposal: Optional[str] = None
     # iter102ap: trainer's video-call link joined on read for virtual sessions.
     videoCallLink: Optional[str] = None
+    # iter102aq: payment-gate state — trainee uses these to decide whether to
+    # render the "Confirm & Pay" CTA after the trainer accepts.
+    paymentReady: Optional[bool] = None
+    negotiationStatus: Optional[str] = None
+    paymentStatus: Optional[str] = None
+    paymentIntentId: Optional[str] = None
 
 class RatingCreate(BaseModel):
     sessionId: str

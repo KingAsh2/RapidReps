@@ -87,7 +87,7 @@ export default function TrainerSessionDetailScreen() {
     <SafeAreaView style={s.container} edges={['top']}>
       <RapidBg variant="trainer-session-detail" style={StyleSheet.absoluteFillObject} />
       <ScreenHeader
-        title="Session"
+        title="Session Details"
         onBack={() => router.back()}
         testID="trainer-session-detail-header"
       />
@@ -103,7 +103,12 @@ export default function TrainerSessionDetailScreen() {
             <Text style={s.statusBadgeText}>{meta.label}</Text>
           </View>
           <Text style={s.cardTitle}>Trainee</Text>
-          <View style={s.row}>
+          <TouchableOpacity
+            style={s.row}
+            onPress={() => session.traineeId && router.push({ pathname: '/trainer/trainee-profile', params: { traineeId: session.traineeId, sessionId: String(session.id) } })}
+            data-testid="open-trainee-profile"
+            activeOpacity={0.85}
+          >
             {session.traineePhoto ? (
               <Image source={{ uri: session.traineePhoto }} style={s.avatar} />
             ) : (
@@ -113,9 +118,10 @@ export default function TrainerSessionDetailScreen() {
             )}
             <View style={{ flex: 1 }}>
               <Text style={s.h3}>{session.traineeName || 'Trainee'}</Text>
-              <Text style={s.caption}>{isVirtual ? 'Virtual Session' : (session.locationType || 'In-Person').replace('_', ' ')}</Text>
+              <Text style={s.caption}>Tap to view full profile</Text>
             </View>
-          </View>
+            <Ionicons name="chevron-forward" size={20} color={DS.colors.textMuted} />
+          </TouchableOpacity>
           <View style={s.actionsRow}>
             <TouchableOpacity
               style={s.actionBtn}

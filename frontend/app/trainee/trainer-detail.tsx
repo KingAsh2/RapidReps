@@ -27,6 +27,8 @@ import { haptic } from '../../src/utils/haptics';
 import { SocialLinksDisplay } from '../../src/components/ProfileSections';
 import { resolveSessionPriceCents } from '../../src/utils/sessionPricing';
 import InstagramSection from '../../src/components/InstagramSection';
+import PlacesAutocomplete from '../../src/components/PlacesAutocomplete';
+import { TrainerVibePlayer } from '../../src/components/TrainerVibePlayer';
 import { HighlightReel } from '../../src/components/HighlightReel';
 import { TrainerHeroVideoPreview } from '../../src/components/TrainerHeroVideoPreview';
 import { PersonalityTagBadge } from '../../src/components/PersonalityTagBadge';
@@ -598,11 +600,15 @@ export default function TrainerDetailScreen() {
                 </View>
               </Animated.View>
 
-              {/* iter102ak: removed the duplicate Trainer Vibe player from
-                  this screen. The home-card / swipe / bottom-sheet already
-                  carries the vibe audio; mounting a second instance here
-                  caused two tracks to play simultaneously when navigating in
-                  from the home tab. Single source of truth = no overlap. */}
+              {/* iter102aq: restored the Vibe player on the trainer-detail
+                  page. The previous removal in iter102ak silenced autoplay
+                  entirely when trainees visit a trainer's profile. The card
+                  player on the home tab now stops on blur (via the
+                  TrainerVibePlayer's useFocusEffect), so a single instance
+                  on this screen cannot double up with the card. */}
+              <Animated.View style={{ transform: [{ translateY: vibeSlideAnim }], opacity: headerAnim }}>
+                <TrainerVibePlayer vibe={trainer as any} autoPlay={true} />
+              </Animated.View>
 
               {/* CTA Row */}
               <Animated.View style={[styles.heroCTARow, { transform: [{ translateY: ctaSlideAnim }], opacity: headerAnim }]}>
@@ -866,27 +872,23 @@ export default function TrainerDetailScreen() {
                 </View>
               )}
 
-              {/* iter102ao: Outdoor meeting-location capture. Without this the
-                  trainer ends up with the literal string "Outdoor Location" and
-                  no idea where to meet — surfaced as a real product gap. */}
+              {/* iter102ao + iter102aq: Outdoor meeting-location capture with
+                  Google Places autocomplete. Trainee MUST pick/type ≥3 chars
+                  before booking is enabled. Replaces the plain TextInput so
+                  addresses are real lat/lng-resolvable strings. */}
               {selectedSessionType === 'outdoor' && (
                 <View style={styles.locationField}>
                   <Text style={styles.sectionLabel}>WHERE WILL YOU MEET?</Text>
-                  <View style={styles.locationInputWrap}>
-                    <Ionicons name="location" size={18} color={accent} />
-                    <TextInput
-                      value={outdoorLocation}
-                      onChangeText={setOutdoorLocation}
-                      placeholder="e.g. Central Park, 72nd St entrance"
-                      placeholderTextColor="rgba(255,255,255,0.4)"
-                      style={styles.locationInput}
-                      maxLength={140}
-                      returnKeyType="done"
-                      data-testid="outdoor-location-input"
-                    />
-                  </View>
+                  <PlacesAutocomplete
+                    value={outdoorLocation}
+                    onChangeText={setOutdoorLocation}
+                    onSelect={(address) => setOutdoorLocation(address)}
+                    placeholder="Park, gym, address…"
+                    accentColor={accent}
+                    testID="outdoor-location-input"
+                  />
                   <Text style={styles.locationHint}>
-                    Required so your trainer knows exactly where to find you.
+                    Required so your trainer knows exactly where to find you. The trainer reviews & confirms before payment is taken.
                   </Text>
                 </View>
               )}
