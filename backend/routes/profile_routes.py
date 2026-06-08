@@ -303,6 +303,19 @@ async def create_trainer_profile(profile: TrainerProfileCreate, current_user: di
 async def get_trainer_profile(user_id: str):
     """Get trainer profile by user ID — enriched with user data (fullName, avatar)"""
     profile = await db.trainer_profiles.find_one({'userId': user_id})
+    # iter104b: defence-in-depth — if the client accidentally passed a
+    # trainer_profiles document `_id` (as happened with the home-screen
+    # routing bug pre-iter104), try a second lookup against `_id` and resolve
+    # the *actual* userId from the matched doc. This makes the route
+    # idempotent against the exact ID-confusion bug class that just shipped.
+    if not profile:
+        try:
+            from bson import ObjectId as _Oid
+            profile = await db.trainer_profiles.find_one({'_id': _Oid(user_id)})
+            if profile:
+                user_id = profile['userId']
+        except Exception:
+            profile = None
     if not profile:
         raise HTTPException(status_code=404, detail="Trainer profile not found")
 

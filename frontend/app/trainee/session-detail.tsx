@@ -221,6 +221,36 @@ export default function SessionDetailScreen() {
             />
           )}
 
+          {/* iter104a: One-tap "Book Again" CTA for completed sessions.
+              Pre-fills the trainer-detail booking card with the same modality,
+              duration, and location the trainee already used — cutting repeat
+              bookings from 7 taps to 2 and lifting LTV on power users. */}
+          {session.status === 'completed' && (
+            <TouchableOpacity
+              style={styles.bookAgainCta}
+              onPress={() => {
+                haptic.medium();
+                const params: Record<string, string> = { trainerId: String(session.trainerId), repeat: '1' };
+                if (session.durationMinutes) params.dur = String(session.durationMinutes);
+                if (session.sessionType) params.type = String(session.sessionType);
+                if (session.locationNameOrAddress) params.loc = String(session.locationNameOrAddress);
+                router.push({ pathname: '/trainee/trainer-detail', params });
+              }}
+              data-testid="book-again-cta"
+            >
+              <LinearGradient
+                colors={['#FF6A00', '#F7931E']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.bookAgainGradient}
+              >
+                <Ionicons name="refresh" size={20} color={COLORS.white} />
+                <Text style={styles.bookAgainText}>BOOK AGAIN WITH {(session.trainerName || 'TRAINER').split(' ')[0].toUpperCase()}</Text>
+                <Ionicons name="arrow-forward" size={18} color={COLORS.white} />
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
+
           {/* Trainer Info */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Trainer</Text>
@@ -571,6 +601,33 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
+  },
+  // iter104a: BOOK AGAIN cta for completed sessions
+  bookAgainCta: {
+    marginBottom: 16,
+    borderRadius: 14,
+    overflow: 'hidden',
+    shadowColor: '#FF6A00',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 14,
+    elevation: 6,
+  },
+  bookAgainGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    gap: 10,
+  },
+  bookAgainText: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: 0.8,
   },
   cardTitle: {
     fontSize: 14,

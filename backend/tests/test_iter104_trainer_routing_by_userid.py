@@ -179,11 +179,15 @@ def test_trainer_profile_by_user_id_returns_200_with_required_fields(
 
 
 # ---------------------------------------------------------------------------
-# 2. GET /api/trainer-profiles/{profileDocId} → 404
-#    (proves the route resolves by USER ID, not profile doc id — this is
-#    the exact failure mode the user reported.)
+# 2. GET /api/trainer-profiles/{profileDocId} — iter104b hardening.
+#    Pre-iter104b this returned 404 (route resolved ONLY by userId, which is
+#    what caused the original P0 routing bug). iter104b added a defence-in-
+#    depth fallback: if the passed id isn't a userId, the route tries it as
+#    a profile doc _id and resolves the actual userId from the matched doc.
+#    Frontends should still pass `userId`, but if they slip up the API now
+#    self-heals instead of silently 404'ing.
 # ---------------------------------------------------------------------------
-def test_trainer_profile_by_profile_doc_id_returns_404(
+def test_trainer_profile_by_profile_doc_id_falls_back_to_200(
     trainer_auth, trainee_auth, db_seed
 ):
     # First grab the profile doc id from the (working) userId lookup
@@ -198,15 +202,31 @@ def test_trainer_profile_by_profile_doc_id_returns_404(
         "Setup precondition failed — profile doc id and userId are the same?"
     )
 
-    # Hitting the route with the doc id MUST 404
+    # iter104b: hitting the route with the doc id must now succeed (fallback)
     r2 = httpx.get(
         f"{BASE_URL}/api/trainer-profiles/{profile_doc_id}",
         headers=trainee_auth["headers"],
         timeout=15.0,
     )
-    assert r2.status_code == 404, (
-        f"Expected 404 when querying by profile doc id (route is by userId), "
+    assert r2.status_code == 200, (
+        f"iter104b hardening: passing doc id should now resolve via fallback, "
         f"got {r2.status_code}: {r2.text}"
+    )
+    body = r2.json()
+    # Verify it resolved to the SAME profile (same userId)
+    assert body["userId"] == trainer_auth["user_id"], (
+        f"Fallback resolved the wrong profile. Expected userId="
+        f"{trainer_auth['user_id']}, got {body['userId']}"
+    )
+
+    # And a truly random / malformed id must still 404
+    r404 = httpx.get(
+        f"{BASE_URL}/api/trainer-profiles/this-is-not-a-valid-id",
+        headers=trainee_auth["headers"],
+        timeout=15.0,
+    )
+    assert r404.status_code == 404, (
+        f"A garbage id must still 404 (got {r404.status_code})"
     )
 
 
@@ -233,26 +253,37 @@ def test_nearby_response_exposes_userid_distinct_from_id(
         f"response. count={payload.get('count')}, sample userIds="
         f"{[t.get('userId') for t in trainers[:5]]}"
     )
-    # The exact contract the frontend depends on: BOTH keys exist and differ
+    # The exact contract the frontend depends on: BOTH keys exist
+    # iter104b: also expose `profileDocId` as an explicit alias for the doc id
+    # so future frontends never confuse `id` with `userId`.
     assert "id" in me and "userId" in me
+    assert "profileDocId" in me, (
+        "iter104b: /nearby must expose `profileDocId` so consumers have an "
+        "unambiguous name for the trainer_profiles _id."
+    )
     assert me["id"] != me["userId"], (
         "Nearby must return doc `id` and `userId` as separate values so the "
         "frontend has a clear choice — frontend MUST use `userId` for the "
         "trainer-detail navigation."
     )
+    assert me["profileDocId"] == me["id"], "profileDocId must mirror legacy id"
 
-    # Confirm: if frontend (incorrectly) passes `id`, server returns 404
-    r404 = httpx.get(
+    # iter104b: passing nearby.id now resolves via the defence-in-depth
+    # fallback. Before iter104b this 404'd (which was the root cause of the
+    # P0 routing bug). The fallback hardens the route so a future frontend
+    # bug of this exact class can't ship again.
+    r_fb = httpx.get(
         f"{BASE_URL}/api/trainer-profiles/{me['id']}",
         headers=trainee_auth["headers"],
         timeout=15.0,
     )
-    assert r404.status_code == 404, (
-        "Defence-in-depth check: passing nearby.id to trainer-profiles "
-        f"must 404 (got {r404.status_code})."
+    assert r_fb.status_code == 200, (
+        "iter104b: passing nearby.id (profile doc id) should now resolve via "
+        f"the route's userId-or-doc-id fallback (got {r_fb.status_code})."
     )
+    assert r_fb.json()["userId"] == me["userId"]
 
-    # And passing `userId` works
+    # And passing `userId` still works (the canonical path)
     r200 = httpx.get(
         f"{BASE_URL}/api/trainer-profiles/{me['userId']}",
         headers=trainee_auth["headers"],

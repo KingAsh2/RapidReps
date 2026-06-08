@@ -5,15 +5,11 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
-  Pressable,
   Animated,
   Image,
   Dimensions,
   Modal,
-  TextInput,
-  Platform,
 } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
@@ -30,14 +26,13 @@ import { useAlert } from '../../src/contexts/AlertContext';
 import { Video, ResizeMode } from 'expo-av';
 import { toast } from '../../src/utils/toast';
 import { haptic } from '../../src/utils/haptics';
-import { SocialLinksDisplay } from '../../src/components/ProfileSections';
 import { resolveSessionPriceCents } from '../../src/utils/sessionPricing';
 import InstagramSection from '../../src/components/InstagramSection';
-import PlacesAutocomplete from '../../src/components/PlacesAutocomplete';
 import { TrainerVibePlayer } from '../../src/components/TrainerVibePlayer';
 import { HighlightReel } from '../../src/components/HighlightReel';
 import { TrainerHeroVideoPreview } from '../../src/components/TrainerHeroVideoPreview';
 import { PersonalityTagBadge } from '../../src/components/PersonalityTagBadge';
+import { BookingCard } from '../../src/components/trainee-detail/BookingCard';
 import FloatingOrangeBg from '../../src/components/FloatingOrangeBg';
 
 const { width, height: screenHeight } = Dimensions.get('window');
@@ -62,7 +57,11 @@ const COLORS = {
 
 export default function TrainerDetailScreen() {
   const router = useRouter();
-  const { trainerId } = useLocalSearchParams();
+  // iter104a: accept optional repeat-booking hints. When the trainee taps
+  // "Book Again" from a completed session, session-detail.tsx forwards the
+  // session's modality, duration, and meeting location as query params so the
+  // booking card opens with everything pre-filled (7 taps → 2 taps).
+  const { trainerId, repeat, dur, type, loc } = useLocalSearchParams();
   const { user } = useAuth();
   const { showAlert } = useAlert();
 
@@ -70,7 +69,19 @@ export default function TrainerDetailScreen() {
   const [trainer, setTrainer] = useState<TrainerProfile | null>(null);
   const [ratings, setRatings] = useState<any[]>([]);
   const [highlights, setHighlights] = useState<any[]>([]);
-  const [selectedDuration, setSelectedDuration] = useState<number>(60);
+  // iter104a: prefill from repeat-booking query params (no-op for the regular
+  // discover flow). `dur` may be "30" | "45" | "60" | "90"; `type` is the
+  // original sessionType; `loc` carries the previous meeting location.
+  const initialDuration = (() => {
+    const n = dur ? parseInt(String(dur), 10) : NaN;
+    return [30, 45, 60, 90].includes(n) ? n : 60;
+  })();
+  const initialSessionType: 'virtual' | 'outdoor' | 'in_home' =
+    type === 'virtual' || type === 'in_home' || type === 'outdoor'
+      ? (type as any)
+      : 'outdoor';
+  const initialOutdoorLocation = repeat === '1' && initialSessionType === 'outdoor' && loc ? String(loc) : '';
+  const [selectedDuration, setSelectedDuration] = useState<number>(initialDuration);
   const [booking, setBooking] = useState(false);
   const [showTraineeHomeConsent, setShowTraineeHomeConsent] = useState(false);
   const [traineeHomeConsented, setTraineeHomeConsented] = useState(false);
@@ -140,6 +151,14 @@ export default function TrainerDetailScreen() {
 
       // 5. Content body (below hero)
       Animated.spring(contentAnim, { toValue: 1, friction: 8, tension: 40, delay: 500, useNativeDriver: true }).start();
+
+      // iter104a: when arriving from a "Book Again" CTA, jump straight to the
+      // booking card after the entrance animations settle. The pre-filled
+      // duration/modality/location are already applied via state initializers,
+      // so the trainee just taps SEND REQUEST.
+      if (repeat === '1') {
+        setTimeout(() => { scrollToBookingCard(); }, 900);
+      }
     }
   }, [loading, trainer]);
 
@@ -183,11 +202,11 @@ export default function TrainerDetailScreen() {
     }
   };
 
-  // Session type state
-  const [selectedSessionType, setSelectedSessionType] = useState<'virtual' | 'outdoor' | 'in_home'>('outdoor');
+  // Session type state — iter104a: prefilled by repeat-booking flow (defaults to 'outdoor').
+  const [selectedSessionType, setSelectedSessionType] = useState<'virtual' | 'outdoor' | 'in_home'>(initialSessionType);
   // iter102ao: outdoor meeting-location input — required before BOOK SESSION
   // is enabled so the trainer doesn't get a useless "Outdoor Location" string.
-  const [outdoorLocation, setOutdoorLocation] = useState<string>('');
+  const [outdoorLocation, setOutdoorLocation] = useState<string>(initialOutdoorLocation);
   // iter102as: real date + time pickers. Default to tomorrow at 10am but the
   // trainee can move it freely instead of being forced into one preset.
   const [sessionDateTime, setSessionDateTime] = useState<Date>(() => {
@@ -407,6 +426,47 @@ export default function TrainerDetailScreen() {
         },
       ],
     });
+  };
+
+  const handleSendRequest = async () => {
+    if (!trainer || !user) return;
+    const outdoorMissing = selectedSessionType === 'outdoor' && outdoorLocation.trim().length < 3;
+    if (booking || !prices.ratesSet || outdoorMissing) return;
+    try {
+      setBooking(true);
+      haptic.medium();
+      const meetingLocation =
+        selectedSessionType === 'virtual'
+          ? 'Virtual'
+          : selectedSessionType === 'outdoor'
+          ? outdoorLocation.trim()
+          : 'In-Home (address shared after confirmation)';
+      const locationType =
+        selectedSessionType === 'virtual' ? 'virtual'
+        : selectedSessionType === 'in_home' ? 'home'
+        : 'outdoor';
+      const token = await AsyncStorage.getItem('auth_token');
+      await axios.post(
+        `${API_URL}/api/sessions`,
+        {
+          traineeId: user.id,
+          trainerId: trainer.userId,
+          sessionDateTimeStart: sessionDateTime.toISOString(),
+          durationMinutes: Number(selectedDuration) || 60,
+          sessionType: selectedSessionType,
+          locationType,
+          locationNameOrAddress: meetingLocation,
+        },
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+      );
+      toast.success('Request sent! Your trainer will review it.');
+      router.replace('/trainee/(tabs)/sessions');
+    } catch (e: any) {
+      const msg = e?.response?.data?.detail || 'Could not send your request. Try again.';
+      toast.error(msg);
+    } finally {
+      setBooking(false);
+    }
   };
 
   const prices = calculatePrice();
@@ -746,412 +806,34 @@ export default function TrainerDetailScreen() {
             </LinearGradient>
           </Animated.View>
 
-          {/* Booking Card */}
-          <Animated.View
+          {/* Booking Card — iter104c: extracted to BookingCard component to keep trainer-detail.tsx shippable. */}
+          <BookingCard
+            trainer={trainer}
+            accent={accent}
+            styles={styles}
+            contentAnim={contentAnim}
+            contentTranslateY={contentTranslateY}
             onLayout={(e) => { bookingCardY.current = e.nativeEvent.layout.y; }}
-            style={[
-              styles.bookingCard,
-              {
-                opacity: contentAnim,
-                transform: [{ translateY: contentTranslateY }],
-              },
-            ]}
-          >
-            <LinearGradient colors={['#141929', '#1A2035']} style={styles.bookingGradient}>
-              <Text style={styles.bookingTitle}>Book a Session</Text>
-
-              {/* Session Type Selection - NEW PRD */}
-              <Text style={styles.sectionLabel}>SESSION TYPE</Text>
-              {/* iter102d: "from $X" labels reflect ONLY what the trainer set in
-                  tierRates. If no rate exists for a modality we hide the label
-                  entirely (no hardcoded $38/$50/$75 fallbacks). */}
-              {(() => null)()}
-              {(() => {
-                const tr: any = (trainer as any).tierRates || {};
-                const durations = (trainer.sessionDurationsOffered || [30, 45, 60, 90]) as number[];
-                const minRate = (modality: 'inPerson' | 'virtual'): number | null => {
-                  const vals = durations
-                    .map((d) => tr[`${modality}${d}Cents`])
-                    .filter((v: any) => typeof v === 'number' && v > 0);
-                  return vals.length ? Math.min(...vals) : null;
-                };
-                const minVirtualCents = minRate('virtual');
-                const minInPersonCents = minRate('inPerson');
-                return (
-                  <View style={styles.sessionTypeRow}>
-                    {trainer.offersVirtual && (
-                      <TouchableOpacity
-                        onPress={() => setSelectedSessionType('virtual')}
-                        style={[
-                          styles.sessionTypeChip,
-                          selectedSessionType === 'virtual' && styles.sessionTypeChipSelected,
-                        ]}
-                        data-testid="session-type-virtual"
-                      >
-                        <Ionicons
-                          name="videocam"
-                          size={18}
-                          color={selectedSessionType === 'virtual' ? COLORS.white : COLORS.orange}
-                        />
-                        <Text style={[
-                          styles.sessionTypeText,
-                          selectedSessionType === 'virtual' && styles.sessionTypeTextSelected,
-                        ]}>
-                          Virtual
-                        </Text>
-                        {minVirtualCents != null && (
-                          <Text style={[
-                            styles.sessionTypePrice,
-                            selectedSessionType === 'virtual' && styles.sessionTypePriceSelected,
-                          ]}>
-                            from ${Math.round(minVirtualCents / 100)}
-                          </Text>
-                        )}
-                      </TouchableOpacity>
-                    )}
-                    {(trainer.offersInPerson || trainer.offersOutdoor) && (
-                      <TouchableOpacity
-                        onPress={() => setSelectedSessionType('outdoor')}
-                        style={[
-                          styles.sessionTypeChip,
-                          selectedSessionType === 'outdoor' && styles.sessionTypeChipSelected,
-                        ]}
-                        data-testid="session-type-outdoor"
-                      >
-                        <Ionicons
-                          name="sunny"
-                          size={18}
-                          color={selectedSessionType === 'outdoor' ? COLORS.white : COLORS.orange}
-                        />
-                        <Text style={[
-                          styles.sessionTypeText,
-                          selectedSessionType === 'outdoor' && styles.sessionTypeTextSelected,
-                        ]}>
-                          Outdoor
-                        </Text>
-                        {minInPersonCents != null && (
-                          <Text style={[
-                            styles.sessionTypePrice,
-                            selectedSessionType === 'outdoor' && styles.sessionTypePriceSelected,
-                          ]}>
-                            from ${Math.round(minInPersonCents / 100)}
-                          </Text>
-                        )}
-                      </TouchableOpacity>
-                    )}
-                    {trainer.offersInHome && (
-                      <TouchableOpacity
-                        onPress={() => {
-                          if (!traineeHomeConsented) {
-                            setShowTraineeHomeConsent(true);
-                          } else {
-                            setSelectedSessionType('in_home');
-                          }
-                        }}
-                        style={[
-                          styles.sessionTypeChip,
-                          selectedSessionType === 'in_home' && styles.sessionTypeChipSelected,
-                        ]}
-                        data-testid="session-type-at-home"
-                      >
-                        <Ionicons
-                          name="home"
-                          size={18}
-                          color={selectedSessionType === 'in_home' ? COLORS.white : COLORS.orange}
-                        />
-                        <Text style={[
-                          styles.sessionTypeText,
-                          selectedSessionType === 'in_home' && styles.sessionTypeTextSelected,
-                        ]}>
-                          At Home
-                        </Text>
-                        {minInPersonCents != null && (
-                          <Text style={[
-                            styles.sessionTypePrice,
-                            selectedSessionType === 'in_home' && styles.sessionTypePriceSelected,
-                          ]}>
-                            from ${Math.round(minInPersonCents / 100)}
-                          </Text>
-                        )}
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                );
-              })()}
-
-              {/* Safety PIN Notice for In-Home */}
-              {selectedSessionType === 'in_home' && (
-                <View style={styles.safetyNotice}>
-                  <Ionicons name="shield-checkmark" size={18} color={accent} />
-                  <Text style={styles.safetyNoticeText}>
-                    You&apos;ll receive a 4-digit safety PIN to verify your trainer
-                  </Text>
-                </View>
-              )}
-
-              {/* iter102ao + iter102aq: Outdoor meeting-location capture with
-                  Google Places autocomplete. Trainee MUST pick/type ≥3 chars
-                  before booking is enabled. Replaces the plain TextInput so
-                  addresses are real lat/lng-resolvable strings. */}
-              {selectedSessionType === 'outdoor' && (
-                <View style={styles.locationField}>
-                  <Text style={styles.sectionLabel}>WHERE WILL YOU MEET?</Text>
-                  <PlacesAutocomplete
-                    value={outdoorLocation}
-                    onChangeText={setOutdoorLocation}
-                    onSelect={(address) => setOutdoorLocation(address)}
-                    placeholder="Park, gym, address…"
-                    accentColor={accent}
-                    testID="outdoor-location-input"
-                  />
-                  <Text style={styles.locationHint}>
-                    Required so your trainer knows exactly where to find you. The trainer reviews & confirms before payment is taken.
-                  </Text>
-                </View>
-              )}
-
-              {/* Duration Selection — iter96b (#21, #25): 30/45/60/90, each price from trainer tierRates */}
-              <Text style={styles.sectionLabel}>SESSION DURATION</Text>
-              <View style={styles.durationRow}>
-                {(trainer.sessionDurationsOffered || [30, 45, 60, 90]).map((duration) => {
-                  // iter102ag: use the shared price resolver so the tiles
-                  // honor the same fallback chain as the rest of the screen
-                  // (tierRates → flat alias → hourly fields → per-minute).
-                  // Previously the tiles ONLY looked at tierRates and showed
-                  // `$—` for every other field type, even when the trainer
-                  // had set hourly rates that the booking summary would happily
-                  // display below.
-                  const modality: 'outdoor' | 'virtual' = selectedSessionType === 'virtual' ? 'virtual' : 'outdoor';
-                  const cents = resolveSessionPriceCents(trainer, modality, duration as 30 | 45 | 60 | 90);
-                  const labelPrice = cents !== null ? (cents / 100).toFixed(2) : '—';
-                  return (
-                    <TouchableOpacity
-                      key={duration}
-                      onPress={() => setSelectedDuration(duration)}
-                      style={[
-                        styles.durationChip,
-                        selectedDuration === duration && styles.durationChipSelected,
-                      ]}
-                      data-testid={`duration-${duration}`}
-                    >
-                      <Text
-                        style={[
-                          styles.durationText,
-                          selectedDuration === duration && styles.durationTextSelected,
-                        ]}
-                      >
-                        {duration} min
-                      </Text>
-                      <Text
-                        style={[
-                          styles.durationPrice,
-                          selectedDuration === duration && styles.durationPriceSelected,
-                        ]}
-                      >
-                        ${labelPrice}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-
-              {/* iter102as: Inline date + time pickers — replaces the
-                  hardcoded "tomorrow 10am" bug that forced every booking
-                  through a negotiation cycle. */}
-              <View style={styles.dateTimeRow}>
-                <TouchableOpacity
-                  style={styles.dateTimeChip}
-                  onPress={() => setShowDatePicker(true)}
-                  data-testid="pick-date-btn"
-                >
-                  <Ionicons name="calendar" size={18} color={accent} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.dateTimeLabel}>DATE</Text>
-                    <Text style={styles.dateTimeValue}>
-                      {sessionDateTime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-down" size={16} color="rgba(255,255,255,0.5)" />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.dateTimeChip}
-                  onPress={() => setShowTimePicker(true)}
-                  data-testid="pick-time-btn"
-                >
-                  <Ionicons name="time" size={18} color={accent} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.dateTimeLabel}>TIME</Text>
-                    <Text style={styles.dateTimeValue}>
-                      {sessionDateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-down" size={16} color="rgba(255,255,255,0.5)" />
-                </TouchableOpacity>
-              </View>
-
-              {showDatePicker && (
-                <DateTimePicker
-                  value={sessionDateTime}
-                  mode="date"
-                  display={Platform.OS === 'ios' ? 'inline' : 'default'}
-                  minimumDate={new Date()}
-                  themeVariant="dark"
-                  onChange={(_e, selected) => {
-                    setShowDatePicker(Platform.OS === 'ios');
-                    if (selected) {
-                      const next = new Date(sessionDateTime);
-                      next.setFullYear(selected.getFullYear(), selected.getMonth(), selected.getDate());
-                      setSessionDateTime(next);
-                    }
-                  }}
-                />
-              )}
-              {showTimePicker && (
-                <DateTimePicker
-                  value={sessionDateTime}
-                  mode="time"
-                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                  minuteInterval={15}
-                  themeVariant="dark"
-                  onChange={(_e, selected) => {
-                    setShowTimePicker(Platform.OS === 'ios');
-                    if (selected) {
-                      const next = new Date(sessionDateTime);
-                      next.setHours(selected.getHours(), selected.getMinutes(), 0, 0);
-                      setSessionDateTime(next);
-                    }
-                  }}
-                />
-              )}
-
-              {/* Price Summary — single pill, tap to expand. */}
-              <TouchableOpacity
-                style={styles.pricePill}
-                onPress={() => setPriceExpanded(v => !v)}
-                activeOpacity={0.8}
-                data-testid="price-pill"
-              >
-                <View>
-                  <Text style={styles.pricePillLabel}>TOTAL</Text>
-                  <Text style={styles.pricePillValue}>
-                    {prices.ratesSet ? `$${prices.totalCharged.toFixed(2)}` : '—'}
-                  </Text>
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Text style={styles.pricePillHint}>inc. fees</Text>
-                  <Ionicons name={priceExpanded ? 'chevron-up' : 'chevron-down'} size={16} color="rgba(255,255,255,0.5)" />
-                </View>
-              </TouchableOpacity>
-              {priceExpanded && (
-                <View style={styles.priceBreakdown}>
-                  <View style={styles.priceRow}>
-                    <Text style={styles.priceLabel}>{selectedDuration} min session</Text>
-                    <Text style={styles.priceValue}>{prices.ratesSet ? `$${prices.sessionRate.toFixed(2)}` : '—'}</Text>
-                  </View>
-                  {prices.travelFee > 0 && (
-                    <View style={styles.priceRow}>
-                      <Text style={styles.priceLabel}>Travel Fee</Text>
-                      <Text style={styles.priceValue}>${prices.travelFee.toFixed(2)}</Text>
-                    </View>
-                  )}
-                  <View style={styles.priceRow}>
-                    <Text style={styles.priceLabel}>Service Fee</Text>
-                    <Text style={styles.priceValue}>${prices.serviceFee.toFixed(2)}</Text>
-                  </View>
-                </View>
-              )}
-              {!prices.ratesSet && (
-                <Text style={styles.ratesNotSetNote}>
-                  This trainer hasn&apos;t set their rates yet.
-                </Text>
-              )}
-
-              {/* Cancellation Policy — copy now matches the iter102aq flow:
-                  no charge before trainer accepts. */}
-              <View style={styles.cancellationPolicy}>
-                <Ionicons name="information-circle" size={16} color={COLORS.gray} />
-                <Text style={styles.cancellationText}>
-                  Free cancellation before trainer accepts •
-                  {selectedSessionType === 'virtual' && ' $15 fee after confirmed & paid'}
-                  {selectedSessionType === 'outdoor' && ' $25 fee after confirmed & paid'}
-                  {selectedSessionType === 'in_home' && ' $35 fee after confirmed & paid'}
-                </Text>
-              </View>
-
-              {/* iter102as: SEND REQUEST — single-tap booking. Creates the
-                  session via direct API call (no second confirm screen). When
-                  the trainer accepts, the trainee sees the CONFIRM & PAY card
-                  on session-detail (iter102aq). */}
-              {(() => {
-                const outdoorMissing = selectedSessionType === 'outdoor' && outdoorLocation.trim().length < 3;
-                const disabled = booking || !trainer || !prices.ratesSet || outdoorMissing;
-                const handleSend = async () => {
-                  if (disabled || !trainer || !user) return;
-                  try {
-                    setBooking(true);
-                    haptic.medium();
-                    const meetingLocation =
-                      selectedSessionType === 'virtual'
-                        ? 'Virtual'
-                        : selectedSessionType === 'outdoor'
-                        ? outdoorLocation.trim()
-                        : 'In-Home (address shared after confirmation)';
-                    const locationType =
-                      selectedSessionType === 'virtual' ? 'virtual'
-                      : selectedSessionType === 'in_home' ? 'home'
-                      : 'outdoor';
-                    const token = await AsyncStorage.getItem('auth_token');
-                    await axios.post(
-                      `${API_URL}/api/sessions`,
-                      {
-                        traineeId: user.id,
-                        trainerId: trainer.userId,
-                        sessionDateTimeStart: sessionDateTime.toISOString(),
-                        durationMinutes: Number(selectedDuration) || 60,
-                        sessionType: selectedSessionType,
-                        locationType,
-                        locationNameOrAddress: meetingLocation,
-                      },
-                      { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
-                    );
-                    toast.success('Request sent! Your trainer will review it.');
-                    router.replace('/trainee/(tabs)/sessions');
-                  } catch (e: any) {
-                    const msg = e?.response?.data?.detail || 'Could not send your request. Try again.';
-                    toast.error(msg);
-                  } finally {
-                    setBooking(false);
-                  }
-                };
-                return (
-                  <TouchableOpacity
-                    onPress={handleSend}
-                    disabled={disabled}
-                    style={[styles.bookButtonWrapper, disabled && { opacity: 0.55 }]}
-                    data-testid="book-session-btn"
-                  >
-                    <LinearGradient
-                      colors={disabled ? [COLORS.gray, COLORS.grayLight] : [COLORS.orangeHot, COLORS.orange]}
-                      style={styles.bookButton}
-                    >
-                      <View style={styles.bookButtonContent}>
-                        {booking ? (
-                          <ActivityIndicator color="#FFFFFF" />
-                        ) : (
-                          <>
-                            <Ionicons name="paper-plane" size={20} color={COLORS.white} />
-                            <Text style={styles.bookButtonText}>
-                              {outdoorMissing ? 'ADD MEETING LOCATION' : 'SEND REQUEST'}
-                            </Text>
-                          </>
-                        )}
-                      </View>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                );
-              })()}
-            </LinearGradient>
-          </Animated.View>
+            selectedSessionType={selectedSessionType}
+            setSelectedSessionType={setSelectedSessionType}
+            selectedDuration={selectedDuration}
+            setSelectedDuration={setSelectedDuration}
+            outdoorLocation={outdoorLocation}
+            setOutdoorLocation={setOutdoorLocation}
+            sessionDateTime={sessionDateTime}
+            setSessionDateTime={setSessionDateTime}
+            showDatePicker={showDatePicker}
+            setShowDatePicker={setShowDatePicker}
+            showTimePicker={showTimePicker}
+            setShowTimePicker={setShowTimePicker}
+            priceExpanded={priceExpanded}
+            setPriceExpanded={setPriceExpanded}
+            booking={booking}
+            prices={prices}
+            traineeHomeConsented={traineeHomeConsented}
+            onRequestInHomeConsent={() => setShowTraineeHomeConsent(true)}
+            onSendRequest={handleSendRequest}
+          />
 
           {/* Quick Actions - Safety & Schedule */}
           <Animated.View

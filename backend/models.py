@@ -328,6 +328,11 @@ class TrainerProfileResponse(BaseModel):
     personalityTag: Optional[str] = None
     accentColor: Optional[str] = None
     accentColorAuto: Optional[str] = None  # Server-extracted from profile photo
+    # iter104b: brightness slider value (0.0=None … 1.0=Bright/Max). Mirror of
+    # users.accentIntensity for the trainer's own picker; written by PUT
+    # /trainer-profiles/{id}/accent-color but was missing from the read
+    # response, forcing the trainee-side detail screen to fall back to default.
+    accentIntensity: Optional[float] = None
     highlights: List[dict] = []
     createdAt: datetime
 

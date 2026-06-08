@@ -4,6 +4,40 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-02 — Iter104a / 104b / 104c: Repeat-Booking CTA, Routing Hardening, BookingCard Refactor ✅
+
+### a) "Book Again" one-tap CTA (NEW FEATURE)
+On the trainee's `session-detail` screen, completed sessions now show a "BOOK AGAIN WITH {trainerFirstName}" CTA. Tapping it deep-links to `/trainee/trainer-detail?trainerId=...&repeat=1&dur=...&type=...&loc=...` so the booking card opens with the prior session's modality, duration, and meeting location pre-filled, and the screen auto-scrolls to the booking card 900 ms after entrance animations settle. Repeat booking drops from 7 taps to 2.
+
+**Files**
+- `frontend/app/trainee/session-detail.tsx` — added BOOK AGAIN gradient CTA + styles (`bookAgainCta`, `bookAgainGradient`, `bookAgainText`); guard: `session.status === 'completed'`.
+- `frontend/app/trainee/trainer-detail.tsx` — accepts `repeat`, `dur`, `type`, `loc` query params; state initializers consume them; `useEffect` auto-scrolls when `repeat === '1'`.
+- `backend/tests/test_iter104a_book_again_contract.py` — locks in that the replayed-payload POST `/api/sessions` still returns `status='requested'` + `paymentReady` falsy (deferred-payment contract preserved).
+
+### b) Trainer-routing hardening (P2 → APPLIED)
+Defence-in-depth against the iter104 P0 bug class so a future frontend regression of "wrong id" can't ship.
+
+**Backend changes**
+- `models.py:268-332` — `TrainerProfileResponse` now exposes `accentIntensity: Optional[float]` (was writable via PUT but never readable).
+- `routes/profile_routes.py:302-345` — `GET /api/trainer-profiles/{user_id}` now tries `{userId: id}` first, and on miss falls back to `{_id: ObjectId(id)}` before 404-ing. The route self-heals against the exact mis-id bug class.
+- `routes/location_routes.py:538-541` — `/api/trainers/nearby` records now also include `profileDocId: str(_id)` as an explicit, unambiguous alias for the doc id. `id` retained for backward compatibility.
+- `backend/tests/test_iter104_trainer_routing_by_userid.py` — updated 2 tests: `test_trainer_profile_by_profile_doc_id_falls_back_to_200` (asserts the new fallback) + `test_nearby_response_exposes_userid_distinct_from_id` (asserts `profileDocId` present + fallback resolves correctly).
+
+### c) `trainer-detail.tsx` refactor
+Extracted the 405-line booking card UI into a dedicated component to keep the parent shippable.
+
+**Files**
+- `frontend/src/components/trainee-detail/BookingCard.tsx` — NEW. Owns session-type chips, outdoor location autocomplete, duration chips, inline Date/Time pickers, price pill + breakdown, cancellation policy, and SEND REQUEST CTA. Pure UI: all state stays in the parent, passed in via 22 typed props.
+- `frontend/app/trainee/trainer-detail.tsx` — 2,367 → 2,042 lines (-405 lines after extracting JSX, +60 lines for the lifted `handleSendRequest` and the `<BookingCard {...props} />` call). Removed now-unused imports: `Pressable`, `TextInput`, `Platform`, `DateTimePicker`, `PlacesAutocomplete`, `SocialLinksDisplay`.
+
+### Test results
+- 9/9 iter104 tests (rewritten to assert new fallback contract) — PASS
+- 1/1 iter104a Book-Again contract test — PASS
+- 26/26 prior iter102 regression tests — PASS
+- **Total: 36 passed, 3 pre-existing unrelated skips, 0 regressions.**
+
+
+
 ## 2026-02 — Iter104: Trainee Home → Trainer Profile Routing FIXED ✅
 
 ### User-reported P0 regression

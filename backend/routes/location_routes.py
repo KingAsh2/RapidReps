@@ -537,6 +537,12 @@ async def get_nearby_trainers(
 
         nearby_trainers.append({
             'id': str(trainer['_id']),
+            # iter104b: explicit alias so frontends never need to guess which
+            # identifier to pass downstream. `id` (legacy) is the
+            # trainer_profiles doc `_id`; `profileDocId` is the same value but
+            # named for clarity. Use `userId` for any route that fetches the
+            # trainer's profile (e.g. /api/trainer-profiles/{userId}).
+            'profileDocId': str(trainer['_id']),
             'trainerId': trainer['userId'],
             'userId': trainer['userId'],
             'fullName': full_name,
