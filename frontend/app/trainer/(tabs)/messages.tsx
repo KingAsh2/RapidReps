@@ -19,6 +19,7 @@ import { useAuth } from '../../../src/contexts/AuthContext';
 import { chatAPI } from '../../../src/services/api';
 import { DS } from '../../../src/theme/designSystem';
 import FloatingOrangeBg from '../../../src/components/FloatingOrangeBg';
+import { swrCache } from '../../../src/hooks/useStaleWhileRefresh';
 
 const COLORS = {
   orange: DS.colors.orange,
@@ -34,8 +35,11 @@ const backgroundImage = require('../../../assets/images/bg-gym-blue.png');
 export default function TrainerMessagesTab() {
   const router = useRouter();
   const { user } = useAuth();
-  const [conversations, setConversations] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  // iter106b: hydrate from cache for instant tab return; cold load still
+  // shows the spinner only when there's nothing to display.
+  const _cachedConv = swrCache.get<any[]>('trainer:conversations');
+  const [conversations, setConversations] = useState<any[]>(_cachedConv || []);
+  const [loading, setLoading] = useState(!_cachedConv);
   const [refreshing, setRefreshing] = useState(false);
   const headerAnim = useRef(new Animated.Value(0)).current;
   const listAnim = useRef(new Animated.Value(0)).current;
@@ -59,6 +63,7 @@ export default function TrainerMessagesTab() {
     try {
       const data = await chatAPI.getConversations();
       setConversations(data);
+      swrCache.set('trainer:conversations', data);
     } catch (error) {
       console.error('Error loading conversations:', error);
     } finally {

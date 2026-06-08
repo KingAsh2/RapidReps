@@ -19,6 +19,7 @@ import { useAuth } from '../../../src/contexts/AuthContext';
 import { chatAPI } from '../../../src/services/api';
 import { DS } from '../../../src/theme/designSystem';
 import FloatingOrangeBg from '../../../src/components/FloatingOrangeBg';
+import { swrCache } from '../../../src/hooks/useStaleWhileRefresh';
 
 // Brand colors — iter95d: sourced from unified DS tokens
 const COLORS = {
@@ -39,8 +40,10 @@ const backgroundImage = require('../../../assets/images/bg-gym-blue.png');
 export default function MessagesTab() {
   const router = useRouter();
   const { user } = useAuth();
-  const [conversations, setConversations] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  // iter106b: hydrate trainee conversations from cache for instant tab return.
+  const _cachedConv = swrCache.get<any[]>('trainee:conversations');
+  const [conversations, setConversations] = useState<any[]>(_cachedConv || []);
+  const [loading, setLoading] = useState(!_cachedConv);
   const [refreshing, setRefreshing] = useState(false);
 
   // Animations
@@ -76,6 +79,7 @@ export default function MessagesTab() {
     try {
       const data = await chatAPI.getConversations();
       setConversations(data);
+      swrCache.set('trainee:conversations', data);
     } catch (error) {
       console.error('Error loading conversations:', error);
     } finally {

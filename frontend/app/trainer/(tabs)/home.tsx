@@ -35,6 +35,7 @@ import { haptic } from '../../../src/utils/haptics';
 import PeopleSearchBar from '../../../src/components/PeopleSearchBar';
 import { DS } from '../../../src/theme/designSystem';
 import FloatingOrangeBg from '../../../src/components/FloatingOrangeBg';
+import { swrCache } from '../../../src/hooks/useStaleWhileRefresh';
 
 const { width } = Dimensions.get('window');
 
@@ -69,14 +70,21 @@ export default function TrainerHomeScreen() {
   const { user, logout } = useAuth();
   const { showAlert } = useAlert();
   const { unreadCount } = useNotifications();
-  const [loading, setLoading] = useState(true);
+  // iter106b: hydrate trainer dashboard from in-memory cache so re-entering
+  // the Home tab paints instantly instead of showing the "Loading your
+  // dashboard…" full-screen spinner on every navigation back.
+  const _cachedSessions = swrCache.get<Session[]>('trainer:dashboard:sessions');
+  const _cachedEarnings = swrCache.get<any>('trainer:dashboard:earnings');
+  const _cachedProfile = swrCache.get<any>('trainer:dashboard:profile');
+  const _hasCache = !!(_cachedSessions || _cachedEarnings || _cachedProfile);
+  const [loading, setLoading] = useState(!_hasCache);
   const [refreshing, setRefreshing] = useState(false);
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [earnings, setEarnings] = useState<any>(null);
-  const [isAvailable, setIsAvailable] = useState(false);
+  const [sessions, setSessions] = useState<Session[]>(_cachedSessions || []);
+  const [earnings, setEarnings] = useState<any>(_cachedEarnings || null);
+  const [isAvailable, setIsAvailable] = useState(_cachedProfile?.isAvailable ?? false);
   const [nearbyTrainees, setNearbyTrainees] = useState<any[]>([]);
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
-  const [trainerProfile, setTrainerProfile] = useState<any>(null);
+  const [trainerProfile, setTrainerProfile] = useState<any>(_cachedProfile || null);
   const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [locationPermission, setLocationPermission] = useState<boolean | null>(null);
   const [menuVisible, setMenuVisible] = useState(false);
@@ -305,9 +313,14 @@ export default function TrainerHomeScreen() {
       setSessions(sessionsData);
       setEarnings(earningsData);
       setNearbyTrainees(traineesData.trainees || []);
-      
+      // iter106b: persist to cache so next mount of this screen paints
+      // instantly. Reads pick up `_cachedSessions` / `_cachedEarnings` above.
+      swrCache.set('trainer:dashboard:sessions', sessionsData);
+      swrCache.set('trainer:dashboard:earnings', earningsData);
+
       if (profileData) {
         setTrainerProfile(profileData);
+        swrCache.set('trainer:dashboard:profile', profileData);
         const available = profileData.isAvailable ?? false;
         setIsAvailable(available);
         
@@ -614,7 +627,7 @@ export default function TrainerHomeScreen() {
                   </View>
                 )}
                 <Text style={styles.heroTitle}>
-                  LET'S TRAIN, {user?.fullName?.split(' ')[0]?.toUpperCase() || 'COACH'}!
+                  LET&apos;S TRAIN, {user?.fullName?.split(' ')[0]?.toUpperCase() || 'COACH'}!
                 </Text>
                 <Text style={styles.heroSubtitle}>
                   {pendingSessions.length > 0 
@@ -1122,7 +1135,7 @@ export default function TrainerHomeScreen() {
               data-testid="approval-modal-dismiss-btn"
             >
               <LinearGradient colors={['#FF6A00', '#FF9F1C']} style={approvalModalStyles.btnGradient}>
-                <Text style={approvalModalStyles.btnText}>Let's Get Started</Text>
+                <Text style={approvalModalStyles.btnText}>Let&apos;s Get Started</Text>
               </LinearGradient>
             </TouchableOpacity>
           </LinearGradient>

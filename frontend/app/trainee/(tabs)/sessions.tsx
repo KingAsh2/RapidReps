@@ -18,6 +18,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import FloatingOrangeBg from '../../../src/components/FloatingOrangeBg';
+import { swrCache } from '../../../src/hooks/useStaleWhileRefresh';
 import { useAlert } from '../../../src/contexts/AlertContext';
 import { useNotifications } from '../../../src/contexts/NotificationContext';
 import { traineeAPI } from '../../../src/services/api';
@@ -60,9 +61,12 @@ export default function SessionsScreen() {
   const { user } = useAuth();
   const { showAlert } = useAlert();
   const { markPendingSessionsSeen } = useNotifications();
-  const [loading, setLoading] = useState(true);
+  // iter106b: hydrate from cache so re-entering Sessions tab paints
+  // instantly. Loading spinner only shows on the very first cold load.
+  const _cachedTSessions = swrCache.get<any[]>('trainee:my-sessions');
+  const [loading, setLoading] = useState(!_cachedTSessions);
   const [refreshing, setRefreshing] = useState(false);
-  const [sessions, setSessions] = useState<any[]>([]);
+  const [sessions, setSessions] = useState<any[]>(_cachedTSessions || []);
   const initialTab = (params.tab === 'pending' || params.tab === 'past' || params.tab === 'upcoming')
     ? (params.tab as 'upcoming' | 'pending' | 'past')
     : 'upcoming';
@@ -120,9 +124,14 @@ export default function SessionsScreen() {
 
   const loadSessions = async () => {
     try {
-      setLoading(true);
+      // iter106b: only flip the spinner on FIRST cold load (no cached data).
+      // On every subsequent refresh we silently update the list in-place so
+      // users never see a "Loading your sessions…" full-screen takeover
+      // between tab switches.
+      if (sessions.length === 0) setLoading(true);
       const data = await traineeAPI.getSessions();
       setSessions(data);
+      swrCache.set('trainee:my-sessions', data);
     } catch (error) {
       console.error('Error loading sessions:', error);
     } finally {

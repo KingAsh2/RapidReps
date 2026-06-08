@@ -17,6 +17,7 @@ import axios from 'axios';
 import { useRouter } from 'expo-router';
 import { useNotifications } from '../../../src/contexts/NotificationContext';
 import { SessionCountdown } from '../../../src/components/SessionCountdown';
+import { swrCache } from '../../../src/hooks/useStaleWhileRefresh';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -38,8 +39,10 @@ type TabFilter = 'upcoming' | 'completed' | 'cancelled';
 
 export default function TrainerSessionsScreen() {
   const router = useRouter();
-  const [sessions, setSessions] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  // iter106b: hydrate from cache so re-entering tab paints instantly.
+  const _cached = swrCache.get<any[]>('trainer:sessions');
+  const [sessions, setSessions] = useState<any[]>(_cached || []);
+  const [loading, setLoading] = useState(!_cached);
   const [refreshing, setRefreshing] = useState(false);
   const [activeFilter, setActiveFilter] = useState<TabFilter>('upcoming');
   const { markPendingSessionsSeen } = useNotifications();
@@ -57,6 +60,7 @@ export default function TrainerSessionsScreen() {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSessions(res.data || []);
+      swrCache.set('trainer:sessions', res.data || []);
     } catch (err) {
       console.error('Load sessions error:', err);
     } finally {

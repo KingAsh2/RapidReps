@@ -21,6 +21,7 @@ import { useRouter } from 'expo-router';
 import { toast } from '../../../src/utils/toast';
 import { trainerAPI } from '../../../src/services/api';
 import FloatingOrangeBg from '../../../src/components/FloatingOrangeBg';
+import { swrCache } from '../../../src/hooks/useStaleWhileRefresh';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BAR_MAX_HEIGHT = 100;
@@ -48,9 +49,11 @@ type Period = 'week' | 'month';
 
 export default function TrainerEarningsScreen() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
+  // iter106b: hydrate earnings from cache so re-entering the tab paints instantly.
+  const _cachedEarn = swrCache.get<any>('trainer:earnings');
+  const [loading, setLoading] = useState(!_cachedEarn);
   const [refreshing, setRefreshing] = useState(false);
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<any>(_cachedEarn || null);
   const [period, setPeriod] = useState<Period>('week');
   const [connectStatus, setConnectStatus] = useState<{ connected: boolean; onboarded: boolean }>({ connected: false, onboarded: false });
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -91,6 +94,7 @@ export default function TrainerEarningsScreen() {
         headers: { Authorization: `Bearer ${token}` },
       });
       setData(res.data);
+      swrCache.set('trainer:earnings', res.data);
     } catch (err: any) {
       console.error('Earnings load error:', err?.response?.data || err.message);
     } finally {

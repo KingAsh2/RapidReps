@@ -4,6 +4,36 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-02 — Iter106b: Kill the "Loading…" full-screen takeover on back/tab nav ✅
+
+### User-reported regression
+"Anytime I hit a back button on a page I get this [Loading your dashboard…] loading screen. It slows things down. I don't like it."
+
+### Root cause
+iter106 wired `swrCache` into the trainee Home + my-sessions only. Every other tab (trainer dashboard, trainer/trainee sessions, trainer/trainee messages, trainer earnings, trainer receipts) still initialised `loading=true` on every mount and rendered a full-screen "Loading…" gradient spinner — even when the data was already cached in memory from 2 seconds prior.
+
+### Fix
+Applied the iter106 cache-hydration pattern (`useState(swrCache.get(...) || default)` + `swrCache.set(...)` after fetch) to **6 additional screens**:
+
+| Screen | Cache key |
+|---|---|
+| `app/trainer/(tabs)/home.tsx` | `trainer:dashboard:{sessions,earnings,profile}` |
+| `app/trainer/(tabs)/sessions.tsx` | `trainer:sessions` |
+| `app/trainer/(tabs)/earnings.tsx` | `trainer:earnings` |
+| `app/trainer/(tabs)/messages.tsx` | `trainer:conversations` |
+| `app/trainer/(tabs)/receipts.tsx` | `trainer:receipts` (compound: list + total + earnings) |
+| `app/trainee/(tabs)/sessions.tsx` | `trainee:my-sessions` (shared key with my-sessions screen) |
+| `app/trainee/(tabs)/messages.tsx` | `trainee:conversations` |
+
+Plus on `trainee/(tabs)/sessions.tsx` and `trainer/(tabs)/receipts.tsx`, guarded `setLoading(true)` so the spinner only flips on TRULY cold loads (when no cached data exists). Refreshes update silently in-place.
+
+### Verification
+- 25/25 critical backend regression tests PASS (routing, deferred payment, pricing, video link, book-again contract).
+- Lint clean — no blocking issues.
+- All booking, payment, matching, trainer-tier, admin code untouched.
+
+
+
 ## 2026-02 — Iter106: Perf Sweep Round 2 ✅ (closes the iter105 checklist gaps)
 
 ### What shipped

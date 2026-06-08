@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
+import { swrCache } from '../../../src/hooks/useStaleWhileRefresh';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 const backgroundImage = require('../../../assets/images/bg-battle-ropes.png');
@@ -38,14 +39,18 @@ const getSessionIcon = (type: string) => {
 
 export default function TrainerReceiptsTab() {
   const router = useRouter();
-  const [receipts, setReceipts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  // iter106b: hydrate receipts from cache for instant tab return.
+  const _cachedRcpt = swrCache.get<{ list: any[]; total: number; earnings: number }>('trainer:receipts');
+  const [receipts, setReceipts] = useState<any[]>(_cachedRcpt?.list || []);
+  const [loading, setLoading] = useState(!_cachedRcpt);
   const [refreshing, setRefreshing] = useState(false);
-  const [total, setTotal] = useState(0);
-  const [totalEarnings, setTotalEarnings] = useState(0);
+  const [total, setTotal] = useState(_cachedRcpt?.total || 0);
+  const [totalEarnings, setTotalEarnings] = useState(_cachedRcpt?.earnings || 0);
 
   const loadReceipts = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true); else setLoading(true);
+    // iter106b: only show the full-screen spinner on cold loads (when we
+    // have nothing to display). Refreshes update silently in-place.
+    if (isRefresh) setRefreshing(true); else if (receipts.length === 0) setLoading(true);
     try {
       const token = await AsyncStorage.getItem('auth_token');
       const res = await axios.get(`${API_URL}/api/trainer/receipts`, {
@@ -54,7 +59,9 @@ export default function TrainerReceiptsTab() {
       const data = res.data.receipts || [];
       setReceipts(data);
       setTotal(res.data.total || 0);
-      setTotalEarnings(data.reduce((sum: number, r: any) => sum + (r.trainerPayoutCents || 0), 0));
+      const earnings = data.reduce((sum: number, r: any) => sum + (r.trainerPayoutCents || 0), 0);
+      setTotalEarnings(earnings);
+      swrCache.set('trainer:receipts', { list: data, total: res.data.total || 0, earnings });
     } catch {}
     setLoading(false);
     setRefreshing(false);
