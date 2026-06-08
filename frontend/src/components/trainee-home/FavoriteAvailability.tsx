@@ -7,7 +7,7 @@ interface Props {
   onTrainerPress: (trainerId: string) => void;
 }
 
-export const FavoriteAvailability = ({ trainers, onTrainerPress }: Props) => (
+export const FavoriteAvailability = React.memo(({ trainers, onTrainerPress }: Props) => (
   <View style={styles.container} data-testid="fav-availability-section">
     <Text style={styles.label}>Your Trainers</Text>
     {trainers.slice(0, 3).map((t: any) => (
@@ -47,7 +47,7 @@ export const FavoriteAvailability = ({ trainers, onTrainerPress }: Props) => (
       </TouchableOpacity>
     ))}
   </View>
-);
+));
 
 const styles = StyleSheet.create({
   container: { marginBottom: 16 },

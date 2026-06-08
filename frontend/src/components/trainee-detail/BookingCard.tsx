@@ -12,7 +12,7 @@
  * report for the deferred-payment contract this enforces.
  */
 import React from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, Animated, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, Animated, Platform, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -64,6 +64,11 @@ type Props = {
   prices: Prices;
   traineeHomeConsented: boolean;
   onRequestInHomeConsent: () => void;
+  // iter105 polish: optional "Same as last time" chip — when the trainee has
+  // previously trained with this trainer, surfacing the last session lets
+  // returning clients rebook in 2 taps without touching the chips/pickers.
+  lastSessionWithTrainer?: any | null;
+  onApplyLastSession?: () => void;
   onSendRequest: () => Promise<void> | void;
 };
 
@@ -78,6 +83,7 @@ export const BookingCard: React.FC<Props> = ({
   priceExpanded, setPriceExpanded,
   booking, prices,
   traineeHomeConsented, onRequestInHomeConsent,
+  lastSessionWithTrainer, onApplyLastSession,
   onSendRequest,
 }) => {
   const outdoorMissing = selectedSessionType === 'outdoor' && outdoorLocation.trim().length < 3;
@@ -105,6 +111,28 @@ export const BookingCard: React.FC<Props> = ({
     >
       <LinearGradient colors={['#141929', '#1A2035']} style={styles.bookingGradient}>
         <Text style={styles.bookingTitle}>Book a Session</Text>
+
+        {/* iter105 polish: "Same as last time" one-tap rebook chip — only
+            renders when the trainee has a prior completed session with THIS
+            trainer. Tap = apply duration/modality/location in one go. */}
+        {lastSessionWithTrainer && onApplyLastSession && (
+          <TouchableOpacity
+            onPress={onApplyLastSession}
+            style={sameAsLastStyles.chip}
+            activeOpacity={0.85}
+            data-testid="same-as-last-time-chip"
+          >
+            <Ionicons name="time-outline" size={16} color={accent} />
+            <Text style={sameAsLastStyles.text} numberOfLines={1}>
+              Same as last time •{' '}
+              {lastSessionWithTrainer.durationMinutes || 60} min{' '}
+              {lastSessionWithTrainer.sessionType === 'virtual' ? 'virtual'
+                : lastSessionWithTrainer.sessionType === 'in_home' ? 'at home'
+                : 'outdoor'}
+            </Text>
+            <Ionicons name="arrow-forward" size={14} color={accent} />
+          </TouchableOpacity>
+        )}
 
         {/* Session Type */}
         <Text style={styles.sectionLabel}>SESSION TYPE</Text>
@@ -347,3 +375,27 @@ export const BookingCard: React.FC<Props> = ({
     </Animated.View>
   );
 };
+
+// iter105 polish: scoped styles for the "Same as last time" chip — kept
+// local so the parent stylesheet stays untouched.
+const sameAsLastStyles = StyleSheet.create({
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 16,
+    borderRadius: 12,
+    backgroundColor: 'rgba(247,147,30,0.10)',
+    borderWidth: 1,
+    borderColor: 'rgba(247,147,30,0.35)',
+  },
+  text: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.92)',
+    letterSpacing: 0.3,
+  },
+});

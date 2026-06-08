@@ -34,6 +34,7 @@ import { stopAllAudio } from '../../../src/utils/audioCoordinator';
 // iter98e: tap-to-edit display name component
 import EditableName from '../../../src/components/EditableName';
 import { UserAvatar } from '../../../src/components/UserAvatar';
+import { StreakRing } from '../../../src/components/StreakRing';
 import FloatingOrangeBg from '../../../src/components/FloatingOrangeBg';
 import { AccentColorPicker } from '../../../src/components/AccentColorPicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -225,15 +226,20 @@ export default function TraineeProfileScreen() {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.5,
-      base64: true,
+      quality: 0.9,
     });
 
-    if (!result.canceled && result.assets[0].base64) {
-      setFormData({ 
-        ...formData, 
-        profilePhoto: `data:image/jpeg;base64,${result.assets[0].base64}` 
-      });
+    if (!result.canceled && result.assets[0]?.uri) {
+      // iter105 perf: compress + resize before base64 upload.
+      try {
+        const { optimizeImage } = await import('../../../src/utils/imageOptimizer');
+        const FileSystem = await import('expo-file-system');
+        const optimizedUri = await optimizeImage(result.assets[0].uri, 'avatar');
+        const b64 = await FileSystem.readAsStringAsync(optimizedUri, { encoding: FileSystem.EncodingType.Base64 });
+        setFormData({ ...formData, profilePhoto: `data:image/jpeg;base64,${b64}` });
+      } catch {
+        setFormData({ ...formData, profilePhoto: result.assets[0].uri });
+      }
       setIsEditing(true);
     }
   };
@@ -424,14 +430,24 @@ export default function TraineeProfileScreen() {
                   borderWidth: 2,
                   borderColor: profile?.accentColor || '#FF6A00',
                 }}>
-                  <UserAvatar
-                    user={{
-                      avatarUrl: formData.profilePhoto,
-                      fullName: user?.fullName,
-                      email: user?.email,
-                    }}
-                    size={110}
-                  />
+                  {/* iter105 polish: streak ring around the avatar — invisible
+                      until earned. Pulls from /api/streaks/me already loaded
+                      into streakData below. */}
+                  <StreakRing
+                    size={116}
+                    strokeWidth={4}
+                    currentStreak={streakData?.currentStreak || 0}
+                    nextMilestone={streakData?.nextMilestone || 4}
+                  >
+                    <UserAvatar
+                      user={{
+                        avatarUrl: formData.profilePhoto,
+                        fullName: user?.fullName,
+                        email: user?.email,
+                      }}
+                      size={110}
+                    />
+                  </StreakRing>
                 </View>
                 {isEditing && (
                   <View style={styles.editBadge}>

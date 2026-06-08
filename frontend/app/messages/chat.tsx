@@ -50,9 +50,34 @@ export default function ChatScreen() {
 
   useEffect(() => {
     loadMessages();
-    const interval = setInterval(loadMessages, 3000);
+    // iter105 perf: was 3000ms — quadrupled chat traffic and forced re-render
+    // of the whole list every tick. 8s feels indistinguishable to users in
+    // practice (we still scroll-to-bottom on send via the optimistic update
+    // path below).
+    const interval = setInterval(loadMessages, 8000);
     return () => clearInterval(interval);
   }, [conversationId]);
+
+  // iter105 perf: render last-session memory line at the top of the chat
+  // (resolves trainer/trainee context instantly when re-engaging an old
+  // conversation).
+  const [lastSession, setLastSession] = useState<any>(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        if (!userId) return;
+        const sessionsApi = (await import('../../src/services/api')).traineeAPI;
+        const all = await sessionsApi.getSessions().catch(() => []);
+        const past = (all || []).filter((s: any) => (
+          (s.status === 'completed') && (s.trainerId === String(userId) || s.traineeId === String(userId))
+        ));
+        past.sort((a: any, b: any) => new Date(b.sessionDateTimeStart).getTime() - new Date(a.sessionDateTimeStart).getTime());
+        if (!cancelled && past.length > 0) setLastSession(past[0]);
+      } catch { /* ignore */ }
+    })();
+    return () => { cancelled = true; };
+  }, [userId]);
 
   useEffect(() => {
     if (!loading) {
@@ -275,6 +300,20 @@ export default function ChatScreen() {
               contentContainerStyle={styles.messagesList}
               onContentSizeChange={() => flatListRef.current?.scrollToEnd()}
               showsVerticalScrollIndicator={false}
+              initialNumToRender={20}
+              maxToRenderPerBatch={10}
+              windowSize={11}
+              removeClippedSubviews
+              ListHeaderComponent={lastSession ? (
+                <View style={styles.lastSessionStrip} data-testid="chat-last-session-strip">
+                  <Ionicons name="calendar-outline" size={14} color="rgba(255,255,255,0.55)" />
+                  <Text style={styles.lastSessionText} numberOfLines={1}>
+                    Last trained {new Date(lastSession.sessionDateTimeStart).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    {lastSession.locationNameOrAddress ? ` • ${lastSession.locationNameOrAddress}` : ''}
+                    {lastSession.durationMinutes ? ` • ${lastSession.durationMinutes} min` : ''}
+                  </Text>
+                </View>
+              ) : null}
               ListEmptyComponent={
                 <View style={styles.emptyContainer}>
                   <View style={styles.emptyIconBg}>
@@ -329,6 +368,27 @@ export default function ChatScreen() {
 }
 
 const styles = StyleSheet.create({
+  // iter105 perf/UX: last-session memory strip
+  lastSessionStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginHorizontal: 12,
+    marginBottom: 10,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  lastSessionText: {
+    flex: 1,
+    fontSize: 12,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.65)',
+    letterSpacing: 0.2,
+  },
   container: {
     flex: 1,
   },

@@ -15,7 +15,7 @@ interface Props {
   onAvatarLongPress?: (trainer: any) => void;
 }
 
-export const TrainerCard = ({ trainer, cardAnim, onViewProfile, onAvatarLongPress }: Props) => {
+const TrainerCardImpl = ({ trainer, cardAnim, onViewProfile, onAvatarLongPress }: Props) => {
   const shimmerAnim = useRef(new Animated.Value(0)).current;
   const pressScale = useRef(new Animated.Value(1)).current;
   const glowPulse = useRef(new Animated.Value(0)).current;
@@ -545,3 +545,15 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
   },
 });
+
+// iter105 perf: memoize so the trainer card only re-renders when its OWN
+// trainer/anim props change. Without this, scrolling the home feed re-rendered
+// every card on every state tick.
+export const TrainerCard = React.memo(TrainerCardImpl, (prev, next) => (
+  prev.trainer?.userId === next.trainer?.userId &&
+  prev.trainer?.isAvailable === next.trainer?.isAvailable &&
+  prev.trainer?.averageRating === next.trainer?.averageRating &&
+  prev.trainer?.distance === next.trainer?.distance &&
+  prev.cardAnim === next.cardAnim &&
+  prev.onViewProfile === next.onViewProfile
+));

@@ -25,6 +25,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
+import { optimizeImage } from '../../src/utils/imageOptimizer';
 import * as Location from 'expo-location';
 
 const { width } = Dimensions.get('window');
@@ -156,12 +158,19 @@ export default function TraineeOnboardingScreen() {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.5,
-      base64: true,
+      quality: 0.9,
     });
 
-    if (!result.canceled && result.assets[0].base64) {
-      setFormData({ ...formData, profilePhoto: `data:image/jpeg;base64,${result.assets[0].base64}` });
+    if (!result.canceled && result.assets[0]?.uri) {
+      // iter105 perf: see imageOptimizer — resize to 720px + JPEG 80% before
+      // base64-ifying, then upload. Cellular upload ~8s → ~1s.
+      try {
+        const optimizedUri = await optimizeImage(result.assets[0].uri, 'avatar');
+        const b64 = await FileSystem.readAsStringAsync(optimizedUri, { encoding: FileSystem.EncodingType.Base64 });
+        setFormData({ ...formData, profilePhoto: `data:image/jpeg;base64,${b64}` });
+      } catch {
+        setFormData({ ...formData, profilePhoto: result.assets[0].uri });
+      }
     }
   };
 

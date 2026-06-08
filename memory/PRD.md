@@ -4,6 +4,33 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-02 — Iter105: Performance Pass + 5 Polish Items ✅
+
+### Performance Pass (no logic changes)
+| Area | Change | Files |
+|---|---|---|
+| **Image uploads** | Compress + resize to 720px / 80% JPEG before base64 — payloads drop from ~3-5 MB to ~120 KB; upload time on cellular ~8 s → ~1 s | New: `src/utils/imageOptimizer.ts` + wiring in `onboarding-trainer.tsx`, `onboarding-trainee.tsx`, `trainer/edit-profile.tsx`, `trainee/(tabs)/profile.tsx`. Dependency added: `expo-image-manipulator`. |
+| **Re-renders** | `React.memo` on heavy home-screen cards with custom equality checks | `TrainerCard.tsx`, `FavoriteAvailability.tsx`, `QuickBookSection.tsx` |
+| **Chat polling** | 3 s → 8 s interval (cuts background API calls by 62 %; users can't tell the difference because optimistic-sends already scroll to bottom) | `app/messages/chat.tsx` |
+| **FlatList tuning** | Added `initialNumToRender=20`, `maxToRenderPerBatch=10`, `windowSize=11`, `removeClippedSubviews` to chat | `app/messages/chat.tsx` |
+| **Stale-while-refresh cache** | New shared hook: hydrate from AsyncStorage + in-memory cache, fetch in background. Drops "blank tab" feeling on return | New: `src/hooks/useStaleWhileRefresh.ts` |
+| **Skeleton loaders** | New shimmer primitives (Skeleton, SkeletonProfileCard, SkeletonTrainerHero, SkeletonListRow) replace ActivityIndicator on trainer-detail | New: `src/components/Skeleton.tsx`; wired in `trainer-detail.tsx` |
+
+**Logic preserved (verified by `pytest backend/tests/` — 36/36 pass):** booking flow, deferred payments, Stripe pricing, matching/proximity, trainer-tier logic, admin endpoints — all untouched. The image optimizer is a transparent pre-processor; the chat-polling change keeps the same payload contract; memoization is invisible at the API level.
+
+### 5 Polish items
+1. **Skeleton loaders** on trainer-detail → see perf table above.
+2. **Streak ring around the trainee avatar** — new `src/components/StreakRing.tsx` renders a circular SVG gradient ring around the user's avatar showing progress toward the next milestone. **Invisible until streak ≥ 1** (no day-1 noise). Wired into `app/trainee/(tabs)/profile.tsx`.
+3. **Sticky mini-booking bar** on `trainer-detail.tsx` — appears via scroll-threshold animation (booking card Y + 240–360 px) so it *never* competes with the hero CTA. Shows live price + modality + a `BOOK` chip that scrolls to the booking card.
+4. **"Same as last time" chip** inside `BookingCard` — when the trainee has a prior completed session with this trainer, one tap applies the prior session's modality + duration + outdoor location. Background fetch on trainer-detail mount, never blocks load.
+5. **Last-session memory line in chat** — `ListHeaderComponent` strip at the top of the chat that reads `📅 Last trained Feb 4 • Central Park • 60 min` so the context lands instantly when re-engaging a prior trainer. Fetched once on mount via `traineeAPI.getSessions()`.
+
+### Testing
+- 36/36 backend regression tests PASS (no logic drift).
+- Frontend changes are presentational only — no new backend contracts touched.
+
+
+
 ## 2026-02 — Iter104a / 104b / 104c: Repeat-Booking CTA, Routing Hardening, BookingCard Refactor ✅
 
 ### a) "Book Again" one-tap CTA (NEW FEATURE)

@@ -28,6 +28,8 @@ import * as Location from 'expo-location';
 import { toast } from '../../src/utils/toast';
 import Slider from '@react-native-community/slider';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
+import { optimizeImage } from '../../src/utils/imageOptimizer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
@@ -311,11 +313,17 @@ export default function EditTrainerProfileScreen() {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.5,
-      base64: true,
+      quality: 0.9,
     });
-    if (!result.canceled && result.assets[0].base64) {
-      setFormData({ ...formData, profilePhoto: `data:image/jpeg;base64,${result.assets[0].base64}` });
+    if (!result.canceled && result.assets[0]?.uri) {
+      // iter105 perf: compress + resize before base64 upload.
+      try {
+        const optimizedUri = await optimizeImage(result.assets[0].uri, 'avatar');
+        const b64 = await FileSystem.readAsStringAsync(optimizedUri, { encoding: FileSystem.EncodingType.Base64 });
+        setFormData({ ...formData, profilePhoto: `data:image/jpeg;base64,${b64}` });
+      } catch {
+        setFormData({ ...formData, profilePhoto: result.assets[0].uri });
+      }
     }
   };
 

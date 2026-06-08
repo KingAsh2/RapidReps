@@ -7,7 +7,7 @@ interface Props {
   onTrainerPress: (trainerId: string) => void;
 }
 
-export const QuickBookSection = ({ recentTrainers, onTrainerPress }: Props) => (
+export const QuickBookSection = React.memo(({ recentTrainers, onTrainerPress }: Props) => (
   <View style={styles.container} data-testid="quick-book-section">
     <Text style={styles.label}>Quick Book</Text>
     <Text style={styles.hint}>Tap a trainer to book again</Text>
@@ -35,7 +35,7 @@ export const QuickBookSection = ({ recentTrainers, onTrainerPress }: Props) => (
       ))}
     </ScrollView>
   </View>
-);
+));
 
 const styles = StyleSheet.create({
   container: { marginBottom: 16 },
