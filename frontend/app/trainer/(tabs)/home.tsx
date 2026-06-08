@@ -959,15 +959,25 @@ export default function TrainerHomeScreen() {
                           </View>
                           <View style={styles.sessionStat}>
                             <Ionicons name="location" size={16} color={COLORS.gray} />
-                            <Text style={styles.sessionStatText}>{session.locationType}</Text>
+                            {/* iter102an: outdoor + in-home both surface as "In-Person" — they're the
+                                same offer from the trainer's perspective. Virtual stays distinct. */}
+                            <Text style={styles.sessionStatText}>
+                              {session.locationType === 'virtual' ? 'Virtual' : 'In-Person'}
+                            </Text>
                           </View>
                           <View style={styles.sessionStat}>
                             <Ionicons name="cash" size={16} color={'#FF6A00'} />
+                            {/* iter102an: show the GROSS session price the trainee paid (not the
+                                80% take-home), so the trainer's card matches what the trainee saw
+                                at checkout and what admin sees. The earnings line below clarifies. */}
                             <Text style={[styles.sessionStatText, { color: '#FFFFFF', fontWeight: '700' }]}>
-                              ${(session.trainerEarningsCents / 100).toFixed(2)}
+                              ${(((session.baseSessionPriceCents ?? session.sessionGrossCents ?? (session.trainerEarningsCents / 0.80)) || 0) / 100).toFixed(2)}
                             </Text>
                           </View>
                         </View>
+                        <Text style={styles.earningsHint}>
+                          You earn ${(session.trainerEarningsCents / 100).toFixed(2)} after platform fees
+                        </Text>
 
                         <View style={styles.tapHint}>
                           <Ionicons name="eye-outline" size={14} color={COLORS.orange} />
@@ -1497,6 +1507,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: 'rgba(255,255,255,0.5)',
+  },
+  earningsHint: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.55)',
+    marginBottom: 10,
+    marginLeft: 2,
   },
   tapHint: {
     flexDirection: 'row',

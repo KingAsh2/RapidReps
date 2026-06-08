@@ -16,6 +16,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import RapidBg from '../../src/components/RapidBg';
+import { ScreenHeader } from '../../src/components/ScreenShell';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { sessionsAPI } from '../../src/services/api';
 import NegotiationPanel from '../../src/components/NegotiationPanel';
@@ -192,7 +193,7 @@ export default function TrainerSessionDetailScreen() {
               data-testid="open-en-route"
             >
               <Ionicons name="navigate" size={18} color={DS.colors.orangeGlow} />
-              <Text style={s.linkText}>I'm on my way</Text>
+              <Text style={s.linkText}>I&apos;m on my way</Text>
               <Ionicons name="chevron-forward" size={18} color={DS.colors.textMuted} />
             </TouchableOpacity>
             <TouchableOpacity

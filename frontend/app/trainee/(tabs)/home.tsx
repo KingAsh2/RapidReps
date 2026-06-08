@@ -720,29 +720,9 @@ export default function TraineeHomeScreen() {
               />
             )}
 
-            {/* iter98d (Task 6): Tinder-style swipe discovery CTA — full profile, accent colored */}
-            <TouchableOpacity
-              style={swipeCtaStyles.cta}
-              onPress={() => router.push('/trainee/swipe-trainers')}
-              data-testid="open-swipe-discover"
-              activeOpacity={0.85}
-            >
-              <LinearGradient
-                colors={['#FF6A00', '#FF3D00']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={swipeCtaStyles.gradient}
-              >
-                <View style={swipeCtaStyles.iconWrap}>
-                  <Ionicons name="flame" size={22} color="#FFF" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={swipeCtaStyles.title}>Swipe to Discover Trainers</Text>
-                  <Text style={swipeCtaStyles.sub}>Browse nearby pros card-by-card</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={22} color="#FFF" />
-              </LinearGradient>
-            </TouchableOpacity>
+            {/* iter102an: removed the orange "Swipe to Discover Trainers"
+                banner per user request — it duplicated the bottom-sheet
+                discovery flow and felt out of place. */}
 
             {/* MAP - Trainers Near You — strictly filtered by Trainer Proximity */}
             <NearbyTrainersMap

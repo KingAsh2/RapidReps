@@ -780,12 +780,16 @@ export default function TrainerHomeScreen() {
                           </View>
                           <View style={styles.sessionStat}>
                             <Ionicons name="location" size={16} color={COLORS.gray} />
-                            <Text style={styles.sessionStatText}>{session.locationType}</Text>
+                            {/* iter102an: outdoor + in-home both surface as "In-Person". */}
+                            <Text style={styles.sessionStatText}>
+                              {session.locationType === 'virtual' ? 'Virtual' : 'In-Person'}
+                            </Text>
                           </View>
                           <View style={styles.sessionStat}>
                             <Ionicons name="cash" size={16} color={'#FF6A00'} />
+                            {/* iter102an: show GROSS session price (matches trainee/admin views). */}
                             <Text style={[styles.sessionStatText, { color: '#FFFFFF', fontWeight: '700' }]}>
-                              ${(session.trainerEarningsCents / 100).toFixed(2)}
+                              ${(((session.baseSessionPriceCents ?? session.sessionGrossCents ?? (session.trainerEarningsCents / 0.80)) || 0) / 100).toFixed(2)}
                             </Text>
                           </View>
                         </View>

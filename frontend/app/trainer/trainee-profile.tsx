@@ -295,8 +295,10 @@ export default function TraineeProfileScreen() {
             ) : null}
           </View>
 
-          {/* Vibe music — auto-plays via TrainerVibePlayer */}
-          {traineeData?.profileMusicUrl || traineeData?.musicTrackUrl || traineeData?.vibeMusic ? (
+          {/* iter102an: Vibe music — check the ACTUAL fields the player reads
+              (vibeTrackTitle / vibePreviewUrl), not legacy `profileMusicUrl`
+              names that no longer exist on the trainee response. */}
+          {traineeData?.vibeTrackTitle || traineeData?.vibePreviewUrl ? (
             <View style={styles.sectionCard}>
               <TrainerVibePlayer vibe={traineeData as any} autoPlay={true} />
             </View>

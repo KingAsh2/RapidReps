@@ -277,18 +277,42 @@ def calculate_session_pricing(
     session_type: str, trainer_profile: dict, duration_minutes: int = 60,
     distance_miles: float = 0, trainee_session_count: int = 0, has_membership: bool = False,
 ) -> dict:
-    if session_type == SessionType.VIRTUAL:
-        hourly_rate = trainer_profile.get('virtualRateCents', PricingRules.VIRTUAL_MIN_CENTS)
-    elif session_type == SessionType.OUTDOOR:
-        hourly_rate = trainer_profile.get('outdoorRateCents', PricingRules.OUTDOOR_MIN_CENTS)
-    elif session_type == SessionType.IN_HOME:
-        hourly_rate = trainer_profile.get('inHomeRateCents', PricingRules.IN_HOME_MIN_CENTS)
+    # iter102an: TIER RATES ARE THE SINGLE SOURCE OF TRUTH FOR SESSION PRICE.
+    # Trainers set their per-duration prices in the Set Rates screen and those
+    # values write to `trainer_profiles.tierRates`. The legacy per-hour fields
+    # (`outdoorRateCents` etc.) are kept only as a last-resort fallback for
+    # accounts that never set tier rates. Previously this function read ONLY
+    # the legacy hourly field, so a trainer charging $90/60min was silently
+    # being billed as $40/60min (the seed default of $40/hr × 60min × 1).
+    tr = trainer_profile.get('tierRates') or {}
+    # Outdoor and In-Person are synonymous on the trainer side — both map to
+    # the `inPerson*` tier keys (which is what the trainer's Set Rates UI
+    # writes). Virtual stays separate.
+    modality_prefix = 'virtual' if session_type == SessionType.VIRTUAL else 'inPerson'
+    tier_key = f'{modality_prefix}{duration_minutes}Cents'
+    tier_price = tr.get(tier_key)
+
+    if isinstance(tier_price, int) and tier_price > 0:
+        # `tier_price` is the FULL session price the trainee pays (gross).
+        session_gross = tier_price
     else:
-        hourly_rate = PricingRules.OUTDOOR_MIN_CENTS
-    base_rate = int(hourly_rate * duration_minutes / 60)
+        # Legacy fallback (only when no tier rate exists for this duration).
+        if session_type == SessionType.VIRTUAL:
+            hourly_rate = trainer_profile.get('virtualRateCents', PricingRules.VIRTUAL_MIN_CENTS)
+        elif session_type == SessionType.OUTDOOR:
+            hourly_rate = trainer_profile.get('outdoorRateCents', PricingRules.OUTDOOR_MIN_CENTS)
+        elif session_type == SessionType.IN_HOME:
+            hourly_rate = trainer_profile.get('inHomeRateCents', PricingRules.IN_HOME_MIN_CENTS)
+        else:
+            hourly_rate = PricingRules.OUTDOOR_MIN_CENTS
+        trainer_take_home = int(hourly_rate * duration_minutes / 60)
+        # Legacy hourly is the trainer's 80% take-home → gross it up.
+        session_gross = int(round(trainer_take_home / 0.80))
+
     minimum = get_session_minimum_price(session_type)
-    if base_rate < minimum:
-        base_rate = minimum
+    if session_gross < minimum:
+        session_gross = minimum
+
     travel_fee = 0
     trainer_travel_earning = 0
     platform_travel_fee = 0
@@ -297,25 +321,34 @@ def calculate_session_pricing(
         if travel_fee > 0:
             trainer_travel_earning = int(travel_fee * PricingRules.TRAINER_TRAVEL_FEE_PERCENT / 100)
             platform_travel_fee = travel_fee - trainer_travel_earning
+
+    # Discounts apply to the gross session price.
     discount_type = None
     discount_amount = 0
     if trainee_session_count >= 2:
         discount_type = "multi_session_5pct"
-        discount_amount = int(base_rate * 0.05)
+        discount_amount = int(session_gross * 0.05)
     membership_discount = 0
     if has_membership:
-        membership_discount = int(base_rate * PricingRules.MEMBERSHIP_SESSION_DISCOUNT_PERCENT / 100)
+        membership_discount = int(session_gross * PricingRules.MEMBERSHIP_SESSION_DISCOUNT_PERCENT / 100)
         discount_type = "membership_10pct" if not discount_type else f"{discount_type}+membership_10pct"
         discount_amount += membership_discount
-    trainer_rate = base_rate - discount_amount
-    session_gross = int(round(trainer_rate / 0.80))
-    trainer_earnings = trainer_rate
-    platform_fee = session_gross - trainer_earnings
+
+    discounted_gross = session_gross - discount_amount
+    # Split 80/20 from the (post-discount) session price.
+    trainer_earnings = int(round(discounted_gross * PricingRules.TRAINER_REVENUE_PERCENT / 100))
+    platform_fee = discounted_gross - trainer_earnings
     service_fee = PricingRules.SERVICE_FEE_CENTS
-    subtotal = session_gross + travel_fee
+    subtotal = discounted_gross + travel_fee
     total_charged = subtotal + service_fee
     return {
-        'baseSessionPriceCents': base_rate, 'travelFeeCents': travel_fee,
+        # `baseSessionPriceCents` is the gross session price the trainee
+        # actually pays for the session itself (excluding service & travel
+        # fees). Admin + trainer surfaces should display THIS, not the
+        # trainer-take-home, when showing "session price".
+        'baseSessionPriceCents': discounted_gross,
+        'sessionGrossCents': session_gross,
+        'travelFeeCents': travel_fee,
         'travelDistanceMiles': distance_miles if travel_fee > 0 else None,
         'trainerTravelEarningsCents': trainer_travel_earning,
         'platformTravelFeeCents': platform_travel_fee,
