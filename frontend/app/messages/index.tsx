@@ -278,6 +278,10 @@ export default function MessagesScreen() {
               }
               contentContainerStyle={styles.listContent}
               showsVerticalScrollIndicator={false}
+              initialNumToRender={12}
+              maxToRenderPerBatch={8}
+              windowSize={9}
+              removeClippedSubviews
             />
           )}
         </Animated.View>

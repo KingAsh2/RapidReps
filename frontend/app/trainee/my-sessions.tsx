@@ -17,6 +17,7 @@ import { Session, SessionStatus } from '../../src/types';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { swrCache } from '../../src/hooks/useStaleWhileRefresh';
 
 const { width } = Dimensions.get('window');
 
@@ -37,9 +38,12 @@ const COLORS = {
 
 export default function MySessionsScreen() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
+  // iter106 perf: hydrate from cache so re-entering the screen renders instantly.
+  // Loading flag only fires on first-ever load when no cached value exists.
+  const cachedSessions = swrCache.get<Session[]>('trainee:my-sessions');
+  const [loading, setLoading] = useState(!cachedSessions);
   const [refreshing, setRefreshing] = useState(false);
-  const [sessions, setSessions] = useState<Session[]>([]);
+  const [sessions, setSessions] = useState<Session[]>(cachedSessions || []);
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
 
   // Animations
@@ -67,6 +71,9 @@ export default function MySessionsScreen() {
     try {
       const data = await traineeAPI.getSessions();
       setSessions(data);
+      // iter106 perf: persist to in-memory cache so re-entering this screen
+      // paints instantly. Background fetch still runs on every mount.
+      swrCache.set('trainee:my-sessions', data);
     } catch (error) {
       console.error('Error loading sessions:', error);
     } finally {

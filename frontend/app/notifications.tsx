@@ -191,6 +191,10 @@ export default function NotificationsScreen() {
           )}
           contentContainerStyle={notifications.length === 0 ? s.emptyContainer : s.listContent}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
+          initialNumToRender={12}
+          maxToRenderPerBatch={8}
+          windowSize={9}
+          removeClippedSubviews
           ListHeaderComponent={
             notifications.length > 0 ? (
               <Text style={s.swipeHint}>← Swipe left on a notification to delete</Text>

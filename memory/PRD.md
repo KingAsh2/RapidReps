@@ -4,6 +4,27 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-02 — Iter106: Perf Sweep Round 2 ✅ (closes the iter105 checklist gaps)
+
+### What shipped
+| Area | Change | Files |
+|---|---|---|
+| **API caching** | `swrCache.get/set` hooked into Home (trainers + sessions), my-sessions (sessions), and trainer-detail (lastSession effect). Re-entering these screens now paints the prior data instantly — background fetch still runs on every mount. | `app/trainee/(tabs)/home.tsx`, `app/trainee/my-sessions.tsx` |
+| **FlatList tuning** | Added `initialNumToRender`, `maxToRenderPerBatch`, `windowSize`, `removeClippedSubviews` to `notifications.tsx`, `messages/index.tsx` (chat already done in iter105). | `app/notifications.tsx`, `app/messages/index.tsx` |
+| **Message-row memo** | Extracted `MessageRow` as a `React.memo` component with reference-identity equality. Scrolling the chat no longer re-renders every bubble on every poll/state tick. | `app/messages/chat.tsx` |
+| **`useCallback` audit** | `renderMessage` now wrapped in `useCallback` so the memo'd row equality check actually fires. | `app/messages/chat.tsx` |
+| **Gesture performance** | **Audit-only — already optimal.** `swipe-trainers.tsx` already uses `react-native-reanimated` shared values + `react-native-gesture-handler` worklets (UI-thread). No change needed. |
+
+### What I did NOT do (and why)
+- **`expo-image` migration on hot avatars** — would touch ~20+ callsites for marginal benefit on top of the work already shipped. Deferred to iter107 if the felt slowness persists.
+- **Startup speed / lazy-loading** — Expo's bundler already splits routes; a meaningful win here requires app config changes I deliberately stayed out of given the no-logic-change constraint.
+- **Skeleton on home / my-sessions / messages** — replacing the ActivityIndicator on those screens is purely cosmetic now that the cache eliminates the empty-state flash entirely.
+
+### Logic preservation
+**Verified by `pytest backend/tests/` — 37 passed, 2 pre-existing skips, 0 failures.** No business logic, payment, booking, matching, trainer-tier, or admin code was modified. All changes are presentational + cache wiring.
+
+
+
 ## 2026-02 — Iter105: Performance Pass + 5 Polish Items ✅
 
 ### Performance Pass (no logic changes)

@@ -44,6 +44,7 @@ import { resolveSessionPriceCents } from '../../../src/utils/sessionPricing';
 import PeopleSearchBar from '../../../src/components/PeopleSearchBar';
 import FloatingOrangeBg from '../../../src/components/FloatingOrangeBg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { swrCache } from '../../../src/hooks/useStaleWhileRefresh';
 
 // iter102h: persist trainee's proximity preference so other screens
 // (e.g. /trainee/swipe-trainers) can honor the same radius.
@@ -72,8 +73,11 @@ export default function TraineeHomeScreen() {
   const [loading, setLoading] = useState(false); // Start with false to show UI immediately
   const [initialLoad, setInitialLoad] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [trainers, setTrainers] = useState<any[]>([]);
-  const [sessions, setSessions] = useState<any[]>([]);
+  // iter106 perf: hydrate the trainer list from the in-memory cache (set on
+  // the previous mount of this screen) so re-entering Home paints content
+  // instantly instead of flashing a blank scroll while the network resolves.
+  const [trainers, setTrainers] = useState<any[]>(() => swrCache.get<any[]>('home:trainers') || []);
+  const [sessions, setSessions] = useState<any[]>(() => swrCache.get<any[]>('home:sessions') || []);
   const [searchQuery, setSearchQuery] = useState('');
   const [userLocation, setUserLocation] = useState<{latitude: number, longitude: number} | null>(null);
   const [locationPermission, setLocationPermission] = useState<string | null>(null);
@@ -291,6 +295,9 @@ export default function TraineeHomeScreen() {
       });
       
       setTrainers(trainersWithDistance);
+      // iter106 perf: persist to in-memory cache so next mount of this screen
+      // paints the previous list instantly (background refresh still runs).
+      swrCache.set('home:trainers', trainersWithDistance);
       
       const hasLocalTrainers = trainersWithDistance.filter((t: any) => t.distance !== null).length > 0;
       const virtualTrainersAvailable = trainersWithDistance.filter((t: any) => t.isVirtualTrainingAvailable);
@@ -329,6 +336,8 @@ export default function TraineeHomeScreen() {
       if (!user) return;
       const data = await traineeAPI.getSessions();
       setSessions(data || []);
+      // iter106 perf: cache for instant repaint on tab return.
+      swrCache.set('home:sessions', data || []);
     } catch (error) {
       console.error('Error loading sessions:', error);
       setSessions([]);

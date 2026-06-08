@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -34,6 +34,41 @@ const COLORS = {
   gray: '#5a6785',
   grayLight: '#E8ECF0',
 };
+
+// iter106 perf: pure memoized message bubble. Equality is reference-only on
+// `item` — message documents are immutable after send, so this safely skips
+// the render whenever the list re-renders for a different message's update.
+const MessageRow = React.memo(
+  function MessageRow({ item, isMine, formatTime }: { item: any; isMine: boolean; formatTime: (s: string) => string }) {
+    return (
+    <View style={[
+      mrStyles.messageContainer,
+      isMine ? mrStyles.myMessageContainer : mrStyles.theirMessageContainer,
+    ]}>
+      <LinearGradient
+        colors={isMine ? ['#FF7F00', '#F7931E'] : ['#0A0E1A', '#141929']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[mrStyles.messageBubble, isMine ? mrStyles.myMessageBubble : mrStyles.theirMessageBubble]}
+      >
+        <Text style={mrStyles.myMessageText}>{item.content}</Text>
+        <Text style={mrStyles.myMessageTime}>{formatTime(item.createdAt)}</Text>
+      </LinearGradient>
+    </View>
+    );
+  },
+  (prev, next) => prev.item === next.item && prev.isMine === next.isMine,
+);
+const mrStyles = StyleSheet.create({
+  messageContainer: { marginVertical: 4, paddingHorizontal: 16 },
+  myMessageContainer: { alignItems: 'flex-end' },
+  theirMessageContainer: { alignItems: 'flex-start' },
+  messageBubble: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 18, maxWidth: '80%' },
+  myMessageBubble: { borderBottomRightRadius: 4 },
+  theirMessageBubble: { borderBottomLeftRadius: 4 },
+  myMessageText: { color: '#FFFFFF', fontSize: 15, lineHeight: 20 },
+  myMessageTime: { color: 'rgba(255,255,255,0.65)', fontSize: 10, marginTop: 4, alignSelf: 'flex-end' },
+});
 
 export default function ChatScreen() {
   const router = useRouter();
@@ -172,8 +207,11 @@ export default function ChatScreen() {
     outputRange: [-20, 0],
   });
 
-  const renderMessage = ({ item }: { item: any }) => {
-    // iter98b: day separator rows
+  // iter106 perf: extracted to a memoized child so scrolling the message list
+  // doesn't re-render every bubble on every state tick. Equality is purely
+  // identity-based on `item` + `isMine` — message contents are immutable once
+  // sent, so reference equality is correct here.
+  const renderMessage = useCallback(({ item }: { item: any }) => {
     if (item?.__sep) {
       return (
         <View style={styles.dayHeaderRow} data-testid="day-separator">
@@ -183,39 +221,8 @@ export default function ChatScreen() {
         </View>
       );
     }
-    const isMyMessage = item.senderId === user?.id;
-
-    return (
-      <View
-        style={[
-          styles.messageContainer,
-          isMyMessage ? styles.myMessageContainer : styles.theirMessageContainer,
-        ]}
-      >
-        {isMyMessage ? (
-          <LinearGradient
-            colors={['#FF7F00', '#F7931E']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={[styles.messageBubble, styles.myMessageBubble]}
-          >
-            <Text style={styles.myMessageText}>{item.content}</Text>
-            <Text style={styles.myMessageTime}>{formatTime(item.createdAt)}</Text>
-          </LinearGradient>
-        ) : (
-          <LinearGradient
-            colors={['#0A0E1A', '#141929']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={[styles.messageBubble, styles.theirMessageBubble]}
-          >
-            <Text style={styles.myMessageText}>{item.content}</Text>
-            <Text style={styles.myMessageTime}>{formatTime(item.createdAt)}</Text>
-          </LinearGradient>
-        )}
-      </View>
-    );
-  };
+    return <MessageRow item={item} isMine={item.senderId === user?.id} formatTime={formatTime} />;
+  }, [user?.id]);
 
   if (loading) {
     return (
