@@ -12,6 +12,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
 
 const GOOGLE_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
 
@@ -43,9 +44,43 @@ export const PlacesAutocomplete: React.FC<Props> = ({
 }) => {
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [loading, setLoading] = useState(false);
+  const [gpsLoading, setGpsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const justSelectedRef = useRef(false);
+
+  // iter102ar: "Use my current location" — reverse-geocode the device's GPS
+  // fix via Google's Geocoding API and lock the result into the input. One-tap
+  // outdoor location for trainees at a park; works just as well for trainers
+  // editing their primaryGym in the future.
+  const useCurrentLocation = async () => {
+    if (!GOOGLE_KEY) return;
+    try {
+      setGpsLoading(true);
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setGpsLoading(false);
+        return;
+      }
+      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+      const { latitude, longitude } = loc.coords;
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_KEY}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.status === 'OK' && data.results?.[0]) {
+        const address = data.results[0].formatted_address as string;
+        justSelectedRef.current = true;
+        onChangeText(address);
+        onSelect(address, data.results[0].place_id || '');
+        setShowResults(false);
+        setPredictions([]);
+      }
+    } catch {
+      // silent — user can fall back to typing
+    } finally {
+      setGpsLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -91,6 +126,7 @@ export const PlacesAutocomplete: React.FC<Props> = ({
         <TextInput
           value={value}
           onChangeText={onChangeText}
+          onFocus={() => setShowResults(true)}
           placeholder={placeholder}
           placeholderTextColor="rgba(255,255,255,0.4)"
           style={s.input}
@@ -102,8 +138,28 @@ export const PlacesAutocomplete: React.FC<Props> = ({
         {loading && <ActivityIndicator size="small" color={accentColor} />}
       </View>
 
-      {showResults && predictions.length > 0 && (
+      {showResults && (
         <View style={s.dropdown}>
+          {/* iter102ar: GPS quick-action — always first in the list. */}
+          <TouchableOpacity
+            style={[s.predictionRow, s.gpsRow]}
+            onPress={useCurrentLocation}
+            disabled={gpsLoading}
+            data-testid="use-current-location-btn"
+          >
+            {gpsLoading ? (
+              <ActivityIndicator size="small" color={accentColor} />
+            ) : (
+              <Ionicons name="navigate-circle" size={18} color={accentColor} />
+            )}
+            <View style={{ flex: 1 }}>
+              <Text style={[s.predictionMain, { color: accentColor }]}>
+                Use my current location
+              </Text>
+              <Text style={s.predictionSub}>Auto-fills from GPS</Text>
+            </View>
+          </TouchableOpacity>
+
           {predictions.map((p) => (
             <TouchableOpacity
               key={p.place_id}
@@ -169,6 +225,9 @@ const s = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: 'rgba(255,255,255,0.08)',
+  },
+  gpsRow: {
+    backgroundColor: 'rgba(255,106,0,0.06)',
   },
   predictionMain: {
     fontSize: 14,

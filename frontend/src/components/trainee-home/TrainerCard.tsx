@@ -160,7 +160,11 @@ export const TrainerCard = ({ trainer, cardAnim, onViewProfile, onAvatarLongPres
               <View style={styles.nameRow}>
                 <Text style={styles.name} numberOfLines={1}>{trainer.fullName || 'Trainer'}</Text>
                 {hasVibe && (
-                  <TrainerVibePlayer vibe={trainer} compact />
+                  // iter102ar: compact card vibe is silent (autoPlay=false).
+                  // Only the trainer-detail page auto-plays so a trainee never
+                  // hears two tracks competing — the user's "we only need one
+                  // for the music to auto play" rule.
+                  <TrainerVibePlayer vibe={trainer} compact autoPlay={false} />
                 )}
               </View>
 
