@@ -1,0 +1,55 @@
+{
+  "summary": "iter102aq backend contract for the shortened (1-screen) booking + deferred-payment flow verified end-to-end. All 10/10 tests passed against the public preview URL.",
+  "tests_executed": [
+    "test_post_sessions_creates_requested_with_supplied_terms — POST /api/sessions writes status=requested with trainee-supplied datetime/duration/sessionType/locationType/locationNameOrAddress (PASS)",
+    "test_payment_intent_blocked_before_acceptance — POST /api/payments/create-payment-intent returns 400 with 'negotiation/agreed' before trainer accepts (PASS)",
+    "test_accept_flips_flags_for_outdoor — PATCH /api/sessions/{id}/accept flips status=confirmed, paymentReady=true, negotiationStatus='agreed', outdoorLocationAgreed=true (PASS, verified via GET-after)",
+    "test_payment_intent_passes_gate_after_acceptance — post-accept the negotiation gate releases; Stripe path returns 200 (PASS)",
+    "test_get_session_surfaces_required_fields — SessionResponse includes paymentReady, negotiationStatus, paymentStatus, traineeName, traineePhoto, traineePhone (PASS; trainee join populates traineeName)",
+    "test_video_call_link_roundtrip_valid — PUT /api/trainer-profiles/{id}/video-call-link persists & returns valid https link (PASS)",
+    "test_video_call_link_rejects_invalid_scheme — ftp:// rejected with 400 (PASS)",
+    "test_video_call_link_rejects_cross_account — trainee writing trainer's link rejected with 403 (PASS)",
+    "test_unverified_trainer_cannot_accept — verificationStatus='pending' → PATCH /accept returns 403 with verification message (PASS)",
+    "test_pricing_chain_outdoor_60_with_tier_rate — tierRates.inPerson60Cents=9000 + 60-min outdoor → finalSessionPriceCents == 9299 (9000 + 299 service fee) (PASS)"
+  ],
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iter102aq_booking_shortener_contract.py",
+    "/app/test_reports/pytest/iter102aq_booking_shortener.xml"
+  ],
+  "action_items": [
+    "(Optional, not blocking) Seed/sanity-check note: the documented test_trainer_iter25@test.com was found with verificationStatus='rejected' and empty bio/styles/gates in MongoDB (likely flipped by an earlier negative test). The test fixture now self-heals this by writing verificationStatus=verified + all gates true + a 100+ char bio + trainingStyles=['strength','hiit','outdoor']. Future iterations should consider a deterministic seed reset script so /app/memory/test_credentials.md matches reality.",
+    "(Informational) The iter102aq contract is fully green; the user-visible flow (trainee picks date+time inline, hits SEND REQUEST, sees Confirm & Pay only after trainer accepts) is backed by the correct server contract."
+  ],
+  "critical_code_review_comments": [
+    "session_routes.py:1216-1263 (accept_session) correctly sets status='confirmed', paymentReady=True, negotiationStatus='agreed', agreedAt=utcnow(), and outdoorLocationAgreed=True (only for outdoor sessions). Verification gate at L1234-1236 properly 403s on non-verified trainers. No issues.",
+    "session_routes.py:36-220 (create_session) writes paymentReady absent (falsy) and outdoorLocationAgreed=False for outdoor sessions, which is exactly what the gate at payment_routes.py:1031 needs. ✓",
+    "payment_routes.py:1020-1035 enforces traineeId ownership AND (paymentReady && negotiationStatus=='agreed') before creating a Stripe intent. Error message contains both 'negotiation' and 'agreed' so the frontend can localize. ✓",
+    "profile_routes.py:993-1014 (video-call-link) — 403 cross-account, 400 invalid scheme (ftp://), 400 over-length (>500 chars), accepts http/https/zoommtg/facetime/facetime-audio. Tight and correct.",
+    "deps.py:276-364 (calculate_session_pricing) — tierRates is the source of truth (key= inPerson60Cents for outdoor+60min), service fee 299¢ added on top. Verified mathematically: 9000 + 299 = 9299. ✓",
+    "Models surface all required fields on SessionResponse (models.py:460-491): traineeName/Photo/Phone (trainer side), paymentReady, negotiationStatus, paymentStatus, videoCallLink. ✓",
+    "Minor observation (not a defect this iteration): test_trainer_iter25@test.com is missing latitude/longitude — fine for outdoor sessions but would break in-home distance/travel-fee testing in a future iteration.",
+    "Minor observation: the SessionType for the created session resolves to 'outdoor' (string) — matches what the frontend trainer-detail.tsx single-screen send-request flow posts."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter102aq_booking_shortener_contract.py (new)"
+  ],
+  "success_rate": {
+    "backend": "100% (10/10 passed)",
+    "frontend": "not tested per request (Expo RN — out of sandbox scope)"
+  },
+  "test_credentials": "Used /app/memory/test_credentials.md — trainer & trainee Test123!, admin admin123. Note: trainer verificationStatus had drifted to 'rejected'; the test fixture restores it to 'verified' at module setup.",
+  "seed_data_creation": "Module-scope fixture writes the trainer profile baseline (verificationStatus=verified, all five verification gates true, 144-char bio, trainingStyles=['strength','hiit','outdoor'], assignedTier=specialty, outdoorRateCents=8500, offersOutdoor=true). tierRates.inPerson60Cents is set to 9000 per-test via the public POST /api/trainer/tier-rates endpoint. State is left healthy for the next iteration.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Run `python -m pytest backend/tests/test_iter102aq_booking_shortener_contract.py -v` from /app to reproduce. The fixture imports pymongo + loads /app/backend/.env to self-heal the trainer's verificationStatus before tests run, so it's resilient against state drift between iterations. The video-call-link link is now persisted on the trainer profile (https://zoom.us/j/iter102aq-roundtrip-test) — clear it if you need a fresh-state run.",
+  "rca of the issue": "No bugs discovered this iteration. The initial 7/10 failure on the first run was an environmental state issue (test_trainer_iter25's verificationStatus was 'rejected' from prior tests). Adding a deterministic seed-restore fixture at module-scope made the suite 10/10. Recommend the main agent add a `/app/scripts/reset_test_users.py` that's invoked between iterations so testers don't have to re-discover this."
+}

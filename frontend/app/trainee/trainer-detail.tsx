@@ -11,7 +11,13 @@ import {
   Dimensions,
   Modal,
   TextInput,
+  Platform,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { trainerAPI, traineeAPI, chatAPI, safetyAPI } from '../../src/services/api';
 import { TrainerProfile } from '../../src/types';
@@ -182,6 +188,17 @@ export default function TrainerDetailScreen() {
   // iter102ao: outdoor meeting-location input — required before BOOK SESSION
   // is enabled so the trainer doesn't get a useless "Outdoor Location" string.
   const [outdoorLocation, setOutdoorLocation] = useState<string>('');
+  // iter102as: real date + time pickers. Default to tomorrow at 10am but the
+  // trainee can move it freely instead of being forced into one preset.
+  const [sessionDateTime, setSessionDateTime] = useState<Date>(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    d.setHours(10, 0, 0, 0);
+    return d;
+  });
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [priceExpanded, setPriceExpanded] = useState(false);
 
   const calculatePrice = () => {
     // iter102ah: SINGLE source of truth. resolveSessionPriceCents is the only
@@ -938,83 +955,177 @@ export default function TrainerDetailScreen() {
                 })}
               </View>
 
-              {/* Price Summary — Trainee View (clean, no fee breakdown) */}
-              <View style={styles.priceSummary}>
-                <View style={styles.priceRow}>
-                  <Text style={styles.priceLabel}>{selectedDuration} min session</Text>
-                  <Text style={styles.priceValue}>
-                    {prices.ratesSet ? `$${prices.sessionRate.toFixed(2)}` : '—'}
-                  </Text>
-                </View>
-                {prices.travelFee > 0 && (
-                  <View style={styles.priceRow}>
-                    <Text style={styles.priceLabel}>Travel Fee</Text>
-                    <Text style={styles.priceValue}>${prices.travelFee.toFixed(2)}</Text>
+              {/* iter102as: Inline date + time pickers — replaces the
+                  hardcoded "tomorrow 10am" bug that forced every booking
+                  through a negotiation cycle. */}
+              <View style={styles.dateTimeRow}>
+                <TouchableOpacity
+                  style={styles.dateTimeChip}
+                  onPress={() => setShowDatePicker(true)}
+                  data-testid="pick-date-btn"
+                >
+                  <Ionicons name="calendar" size={18} color={accent} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.dateTimeLabel}>DATE</Text>
+                    <Text style={styles.dateTimeValue}>
+                      {sessionDateTime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                    </Text>
                   </View>
-                )}
-                <View style={styles.priceRow}>
-                  <Text style={styles.priceLabel}>Service Fee</Text>
-                  <Text style={styles.priceValue}>${prices.serviceFee.toFixed(2)}</Text>
-                </View>
-                <View style={styles.priceDivider} />
-                <View style={styles.priceRow}>
-                  <Text style={styles.priceTotalLabel}>Total</Text>
-                  <Text style={styles.priceTotalValue}>
+                  <Ionicons name="chevron-down" size={16} color="rgba(255,255,255,0.5)" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.dateTimeChip}
+                  onPress={() => setShowTimePicker(true)}
+                  data-testid="pick-time-btn"
+                >
+                  <Ionicons name="time" size={18} color={accent} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.dateTimeLabel}>TIME</Text>
+                    <Text style={styles.dateTimeValue}>
+                      {sessionDateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-down" size={16} color="rgba(255,255,255,0.5)" />
+                </TouchableOpacity>
+              </View>
+
+              {showDatePicker && (
+                <DateTimePicker
+                  value={sessionDateTime}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                  minimumDate={new Date()}
+                  themeVariant="dark"
+                  onChange={(_e, selected) => {
+                    setShowDatePicker(Platform.OS === 'ios');
+                    if (selected) {
+                      const next = new Date(sessionDateTime);
+                      next.setFullYear(selected.getFullYear(), selected.getMonth(), selected.getDate());
+                      setSessionDateTime(next);
+                    }
+                  }}
+                />
+              )}
+              {showTimePicker && (
+                <DateTimePicker
+                  value={sessionDateTime}
+                  mode="time"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  minuteInterval={15}
+                  themeVariant="dark"
+                  onChange={(_e, selected) => {
+                    setShowTimePicker(Platform.OS === 'ios');
+                    if (selected) {
+                      const next = new Date(sessionDateTime);
+                      next.setHours(selected.getHours(), selected.getMinutes(), 0, 0);
+                      setSessionDateTime(next);
+                    }
+                  }}
+                />
+              )}
+
+              {/* Price Summary — single pill, tap to expand. */}
+              <TouchableOpacity
+                style={styles.pricePill}
+                onPress={() => setPriceExpanded(v => !v)}
+                activeOpacity={0.8}
+                data-testid="price-pill"
+              >
+                <View>
+                  <Text style={styles.pricePillLabel}>TOTAL</Text>
+                  <Text style={styles.pricePillValue}>
                     {prices.ratesSet ? `$${prices.totalCharged.toFixed(2)}` : '—'}
                   </Text>
                 </View>
-                {!prices.ratesSet && (
-                  <Text style={styles.ratesNotSetNote}>
-                    This trainer hasn&apos;t set their rates yet.
-                  </Text>
-                )}
-              </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Text style={styles.pricePillHint}>inc. fees</Text>
+                  <Ionicons name={priceExpanded ? 'chevron-up' : 'chevron-down'} size={16} color="rgba(255,255,255,0.5)" />
+                </View>
+              </TouchableOpacity>
+              {priceExpanded && (
+                <View style={styles.priceBreakdown}>
+                  <View style={styles.priceRow}>
+                    <Text style={styles.priceLabel}>{selectedDuration} min session</Text>
+                    <Text style={styles.priceValue}>{prices.ratesSet ? `$${prices.sessionRate.toFixed(2)}` : '—'}</Text>
+                  </View>
+                  {prices.travelFee > 0 && (
+                    <View style={styles.priceRow}>
+                      <Text style={styles.priceLabel}>Travel Fee</Text>
+                      <Text style={styles.priceValue}>${prices.travelFee.toFixed(2)}</Text>
+                    </View>
+                  )}
+                  <View style={styles.priceRow}>
+                    <Text style={styles.priceLabel}>Service Fee</Text>
+                    <Text style={styles.priceValue}>${prices.serviceFee.toFixed(2)}</Text>
+                  </View>
+                </View>
+              )}
+              {!prices.ratesSet && (
+                <Text style={styles.ratesNotSetNote}>
+                  This trainer hasn&apos;t set their rates yet.
+                </Text>
+              )}
 
-              {/* Cancellation Policy */}
+              {/* Cancellation Policy — copy now matches the iter102aq flow:
+                  no charge before trainer accepts. */}
               <View style={styles.cancellationPolicy}>
                 <Ionicons name="information-circle" size={16} color={COLORS.gray} />
                 <Text style={styles.cancellationText}>
-                  Free cancellation if pending • 
-                  {selectedSessionType === 'virtual' && ' $15 fee after confirmed'}
-                  {selectedSessionType === 'outdoor' && ' $25 fee after confirmed'}
-                  {selectedSessionType === 'in_home' && ' $35 fee after confirmed'}
+                  Free cancellation before trainer accepts •
+                  {selectedSessionType === 'virtual' && ' $15 fee after confirmed & paid'}
+                  {selectedSessionType === 'outdoor' && ' $25 fee after confirmed & paid'}
+                  {selectedSessionType === 'in_home' && ' $35 fee after confirmed & paid'}
                 </Text>
               </View>
 
-              {/* BOOK SESSION — single tap, navigates to Confirm Booking */}
+              {/* iter102as: SEND REQUEST — single-tap booking. Creates the
+                  session via direct API call (no second confirm screen). When
+                  the trainer accepts, the trainee sees the CONFIRM & PAY card
+                  on session-detail (iter102aq). */}
               {(() => {
-                // iter102ao: trainee MUST type where they'll meet for outdoor.
-                // Disable + warn until they do.
                 const outdoorMissing = selectedSessionType === 'outdoor' && outdoorLocation.trim().length < 3;
                 const disabled = booking || !trainer || !prices.ratesSet || outdoorMissing;
+                const handleSend = async () => {
+                  if (disabled || !trainer || !user) return;
+                  try {
+                    setBooking(true);
+                    haptic.medium();
+                    const meetingLocation =
+                      selectedSessionType === 'virtual'
+                        ? 'Virtual'
+                        : selectedSessionType === 'outdoor'
+                        ? outdoorLocation.trim()
+                        : 'In-Home (address shared after confirmation)';
+                    const locationType =
+                      selectedSessionType === 'virtual' ? 'virtual'
+                      : selectedSessionType === 'in_home' ? 'home'
+                      : 'outdoor';
+                    const token = await AsyncStorage.getItem('auth_token');
+                    await axios.post(
+                      `${API_URL}/api/sessions`,
+                      {
+                        traineeId: user.id,
+                        trainerId: trainer.userId,
+                        sessionDateTimeStart: sessionDateTime.toISOString(),
+                        durationMinutes: Number(selectedDuration) || 60,
+                        sessionType: selectedSessionType,
+                        locationType,
+                        locationNameOrAddress: meetingLocation,
+                      },
+                      { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+                    );
+                    toast.success('Request sent! Your trainer will review it.');
+                    router.replace('/trainee/(tabs)/sessions');
+                  } catch (e: any) {
+                    const msg = e?.response?.data?.detail || 'Could not send your request. Try again.';
+                    toast.error(msg);
+                  } finally {
+                    setBooking(false);
+                  }
+                };
                 return (
                   <TouchableOpacity
-                    onPress={() => {
-                      if (disabled || !trainer) return;
-                      const start = new Date();
-                      start.setDate(start.getDate() + 1);
-                      start.setHours(10, 0, 0, 0);
-                      const meetingLocation =
-                        selectedSessionType === 'virtual'
-                          ? 'Virtual'
-                          : selectedSessionType === 'outdoor'
-                          ? outdoorLocation.trim()
-                          : 'In-Home (address shared after confirmation)';
-                      router.push({
-                        pathname: '/trainee/confirm-booking',
-                        params: {
-                          trainerName: trainer.fullName || 'Trainer',
-                          trainerId: trainer.userId,
-                          date: start.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
-                          time: start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                          duration: String(selectedDuration),
-                          sessionType: selectedSessionType,
-                          priceCents: String(Math.round((prices.sessionRate || 0) * 100)),
-                          sessionDateTimeStartIso: start.toISOString(),
-                          locationNameOrAddress: meetingLocation,
-                        },
-                      });
-                    }}
+                    onPress={handleSend}
                     disabled={disabled}
                     style={[styles.bookButtonWrapper, disabled && { opacity: 0.55 }]}
                     data-testid="book-session-btn"
@@ -1024,10 +1135,16 @@ export default function TrainerDetailScreen() {
                       style={styles.bookButton}
                     >
                       <View style={styles.bookButtonContent}>
-                        <Ionicons name="flash" size={22} color={COLORS.white} />
-                        <Text style={styles.bookButtonText}>
-                          {outdoorMissing ? 'ADD MEETING LOCATION' : 'BOOK SESSION'}
-                        </Text>
+                        {booking ? (
+                          <ActivityIndicator color="#FFFFFF" />
+                        ) : (
+                          <>
+                            <Ionicons name="paper-plane" size={20} color={COLORS.white} />
+                            <Text style={styles.bookButtonText}>
+                              {outdoorMissing ? 'ADD MEETING LOCATION' : 'SEND REQUEST'}
+                            </Text>
+                          </>
+                        )}
                       </View>
                     </LinearGradient>
                   </TouchableOpacity>
@@ -1863,6 +1980,72 @@ const styles = StyleSheet.create({
     marginTop: 6,
     marginLeft: 4,
     fontStyle: 'italic',
+  },
+  dateTimeRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 14,
+    marginBottom: 10,
+  },
+  dateTimeChip: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  dateTimeLabel: {
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 1.2,
+    color: 'rgba(255,255,255,0.5)',
+    marginBottom: 1,
+  },
+  dateTimeValue: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  pricePill: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    marginTop: 14,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,106,0,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,106,0,0.25)',
+  },
+  pricePillLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1.4,
+    color: 'rgba(255,255,255,0.55)',
+  },
+  pricePillValue: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
+  },
+  pricePillHint: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.5)',
+  },
+  priceBreakdown: {
+    marginTop: 10,
+    padding: 14,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    gap: 6,
   },
   // Cancellation Policy
   cancellationPolicy: {
