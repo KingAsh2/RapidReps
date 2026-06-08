@@ -13,7 +13,7 @@ import io
 
 from deps import (
     db, get_current_user, require_admin, serialize_doc, sanitize_text,
-    send_push_notification, calculate_trainer_tier,
+    send_push_notification, calculate_trainer_tier, calculate_session_pricing,
 )
 from models import (
     AdminDashboardStats, SessionStatus, TransactionType, PaymentStatus,
@@ -112,6 +112,91 @@ async def backfill_trainer_visibility(
         "canGoLiveSetCount": live_result.modified_count,
         "currentlyVisibleToTrainees": visible_now,
         "defaultTier": default_tier,
+    }
+
+
+# ────────────────────────────────────────────────────────────────────
+# iter102an: Recompute pricing on legacy PENDING / CONFIRMED sessions
+# that were booked BEFORE the tier-rates-first pricing fix landed.
+#
+# Safe to run repeatedly. Only touches sessions where the stored
+# `finalSessionPriceCents` differs from what the current pricing
+# function computes given the trainer's CURRENT tierRates. Never
+# touches completed/cancelled/refunded sessions.
+# ────────────────────────────────────────────────────────────────────
+@router.post("/admin/recompute-pending-pricing")
+async def recompute_pending_pricing(
+    dry_run: bool = False,
+    admin_user: dict = Depends(require_admin),
+):
+    repriced = 0
+    inspected = 0
+    sample: list = []
+
+    cursor = db.sessions.find({
+        'status': {'$in': [SessionStatus.REQUESTED, SessionStatus.CONFIRMED]},
+    })
+
+    async for s in cursor:
+        inspected += 1
+        trainer_id = s.get('trainerId')
+        if not trainer_id:
+            continue
+        trainer = await db.trainer_profiles.find_one({'userId': trainer_id})
+        if not trainer:
+            continue
+        session_type = s.get('sessionType') or s.get('locationType') or 'outdoor'
+        duration = int(s.get('durationMinutes') or 60)
+        previous_completed = await db.sessions.count_documents({
+            'traineeId': s.get('traineeId'),
+            'trainerId': trainer_id,
+            'status': SessionStatus.COMPLETED,
+        })
+        pricing = calculate_session_pricing(
+            session_type=session_type,
+            trainer_profile=trainer,
+            duration_minutes=duration,
+            distance_miles=s.get('travelDistanceMiles') or 0,
+            trainee_session_count=previous_completed,
+            has_membership=False,
+        )
+        old_total = int(s.get('finalSessionPriceCents') or s.get('totalChargedCents') or 0)
+        new_total = int(pricing['totalChargedCents'])
+        if old_total == new_total:
+            continue
+        if len(sample) < 10:
+            sample.append({
+                'sessionId': str(s.get('_id')),
+                'oldTotalCents': old_total,
+                'newTotalCents': new_total,
+                'trainerId': trainer_id,
+                'duration': duration,
+                'sessionType': session_type,
+            })
+        repriced += 1
+        if dry_run:
+            continue
+        await db.sessions.update_one(
+            {'_id': s['_id']},
+            {'$set': {
+                'baseSessionPriceCents': pricing['baseSessionPriceCents'],
+                'sessionGrossCents': pricing.get('sessionGrossCents'),
+                'sessionSubtotalCents': pricing['sessionSubtotalCents'],
+                'serviceFeeCents': pricing['serviceFeeCents'],
+                'totalChargedCents': pricing['totalChargedCents'],
+                'finalSessionPriceCents': pricing['finalSessionPriceCents'],
+                'platformFeeCents': pricing['platformFeeCents'],
+                'trainerEarningsCents': pricing['trainerEarningsCents'],
+                'repricedAt': datetime.utcnow(),
+                'repricedBy': str(admin_user['_id']),
+            }}
+        )
+
+    return {
+        'inspected': inspected,
+        'repriced': repriced,
+        'dryRun': dry_run,
+        'sample': sample,
     }
 
 
