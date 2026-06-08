@@ -10,7 +10,7 @@
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Image, Linking, RefreshControl,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Image, Linking, RefreshControl, Platform,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -147,6 +147,48 @@ export default function TrainerSessionDetailScreen() {
             onAgreed={load}
           />
         )}
+
+        {/* iter102ao: Meeting Location — was completely missing, so trainers
+            had no idea where to go for outdoor bookings. Pulls the negotiated
+            location first, falls back to the trainee's original address. Tap
+            opens native Maps directions. */}
+        {!isVirtual && (() => {
+          const negotiated = session.outdoorLocationAgreed
+            ? (session.outdoorLocationTrainerProposal || session.outdoorLocationTraineeProposal)
+            : null;
+          const address = negotiated
+            || session.locationNameOrAddress
+            || session.outdoorLocationTrainerProposal
+            || session.outdoorLocationTraineeProposal
+            || '';
+          const hasAddress = address && address.trim() && address !== 'TBD' && address !== 'Outdoor Location';
+          return (
+            <View style={s.card}>
+              <Text style={s.cardTitle}>Meeting Location</Text>
+              {hasAddress ? (
+                <TouchableOpacity
+                  style={s.metaRow}
+                  onPress={() => {
+                    const q = encodeURIComponent(address);
+                    const url = Platform.OS === 'ios'
+                      ? `http://maps.apple.com/?q=${q}`
+                      : `geo:0,0?q=${q}`;
+                    Linking.openURL(url).catch(() => {});
+                  }}
+                  data-testid="open-maps-directions"
+                >
+                  <Ionicons name="location" size={18} color={DS.colors.orange} />
+                  <Text style={[s.metaText, { flex: 1 }]} numberOfLines={2}>{address}</Text>
+                  <Ionicons name="navigate-circle" size={22} color={DS.colors.orangeGlow} />
+                </TouchableOpacity>
+              ) : (
+                <Text style={[s.metaText, { color: '#FFB300', fontStyle: 'italic' }]}>
+                  No meeting location set yet. Use the negotiation panel above to propose one.
+                </Text>
+              )}
+            </View>
+          );
+        })()}
 
         {/* Date & Time */}
         {start && (

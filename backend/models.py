@@ -471,6 +471,11 @@ class SessionResponse(BaseModel):
     durationMin: Optional[int] = None
     baseCents: Optional[int] = None
     totalCents: Optional[int] = None
+    # iter102ao: outdoor location negotiation state — surface to client so the
+    # trainer's session-detail screen can show the agreed meeting address.
+    outdoorLocationAgreed: Optional[bool] = None
+    outdoorLocationTrainerProposal: Optional[str] = None
+    outdoorLocationTraineeProposal: Optional[str] = None
 
 class RatingCreate(BaseModel):
     sessionId: str

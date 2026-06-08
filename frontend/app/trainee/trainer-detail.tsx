@@ -10,6 +10,7 @@ import {
   Image,
   Dimensions,
   Modal,
+  TextInput,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { trainerAPI, traineeAPI, chatAPI, safetyAPI } from '../../src/services/api';
@@ -176,6 +177,9 @@ export default function TrainerDetailScreen() {
 
   // Session type state
   const [selectedSessionType, setSelectedSessionType] = useState<'virtual' | 'outdoor' | 'in_home'>('outdoor');
+  // iter102ao: outdoor meeting-location input — required before BOOK SESSION
+  // is enabled so the trainer doesn't get a useless "Outdoor Location" string.
+  const [outdoorLocation, setOutdoorLocation] = useState<string>('');
 
   const calculatePrice = () => {
     // iter102ah: SINGLE source of truth. resolveSessionPriceCents is the only
@@ -862,6 +866,31 @@ export default function TrainerDetailScreen() {
                 </View>
               )}
 
+              {/* iter102ao: Outdoor meeting-location capture. Without this the
+                  trainer ends up with the literal string "Outdoor Location" and
+                  no idea where to meet — surfaced as a real product gap. */}
+              {selectedSessionType === 'outdoor' && (
+                <View style={styles.locationField}>
+                  <Text style={styles.sectionLabel}>WHERE WILL YOU MEET?</Text>
+                  <View style={styles.locationInputWrap}>
+                    <Ionicons name="location" size={18} color={accent} />
+                    <TextInput
+                      value={outdoorLocation}
+                      onChangeText={setOutdoorLocation}
+                      placeholder="e.g. Central Park, 72nd St entrance"
+                      placeholderTextColor="rgba(255,255,255,0.4)"
+                      style={styles.locationInput}
+                      maxLength={140}
+                      returnKeyType="done"
+                      data-testid="outdoor-location-input"
+                    />
+                  </View>
+                  <Text style={styles.locationHint}>
+                    Required so your trainer knows exactly where to find you.
+                  </Text>
+                </View>
+              )}
+
               {/* Duration Selection — iter96b (#21, #25): 30/45/60/90, each price from trainer tierRates */}
               <Text style={styles.sectionLabel}>SESSION DURATION</Text>
               <View style={styles.durationRow}>
@@ -951,43 +980,57 @@ export default function TrainerDetailScreen() {
               </View>
 
               {/* BOOK SESSION — single tap, navigates to Confirm Booking */}
-              <TouchableOpacity
-                onPress={() => {
-                  if (booking || !trainer) return;
-                  const start = new Date();
-                  start.setDate(start.getDate() + 1);
-                  start.setHours(10, 0, 0, 0);
-                  router.push({
-                    pathname: '/trainee/confirm-booking',
-                    params: {
-                      trainerName: trainer.fullName || 'Trainer',
-                      trainerId: trainer.userId,
-                      date: start.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
-                      time: start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                      duration: String(selectedDuration),
-                      sessionType: selectedSessionType,
-                      priceCents: String(Math.round((prices.sessionRate || 0) * 100)),
-                      sessionDateTimeStartIso: start.toISOString(),
-                      locationNameOrAddress: selectedSessionType === 'virtual'
-                        ? 'Virtual'
-                        : (trainer.primaryGym || 'Outdoor Location'),
-                    },
-                  });
-                }}
-                disabled={booking || !trainer}
-                style={styles.bookButtonWrapper}
-                data-testid="book-session-btn"
-              >
-                <LinearGradient
-                  colors={booking ? [COLORS.gray, COLORS.grayLight] : [COLORS.orangeHot, COLORS.orange]}
-                  style={styles.bookButton}
-                >
-                  <View style={styles.bookButtonContent}>
-                    <Ionicons name="flash" size={22} color={COLORS.white} />
-                    <Text style={styles.bookButtonText}>BOOK SESSION</Text>
-                  </View>
-                </LinearGradient>
-              </TouchableOpacity>
+              {(() => {
+                // iter102ao: trainee MUST type where they'll meet for outdoor.
+                // Disable + warn until they do.
+                const outdoorMissing = selectedSessionType === 'outdoor' && outdoorLocation.trim().length < 3;
+                const disabled = booking || !trainer || !prices.ratesSet || outdoorMissing;
+                return (
+                  <TouchableOpacity
+                    onPress={() => {
+                      if (disabled || !trainer) return;
+                      const start = new Date();
+                      start.setDate(start.getDate() + 1);
+                      start.setHours(10, 0, 0, 0);
+                      const meetingLocation =
+                        selectedSessionType === 'virtual'
+                          ? 'Virtual'
+                          : selectedSessionType === 'outdoor'
+                          ? outdoorLocation.trim()
+                          : 'In-Home (address shared after confirmation)';
+                      router.push({
+                        pathname: '/trainee/confirm-booking',
+                        params: {
+                          trainerName: trainer.fullName || 'Trainer',
+                          trainerId: trainer.userId,
+                          date: start.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+                          time: start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                          duration: String(selectedDuration),
+                          sessionType: selectedSessionType,
+                          priceCents: String(Math.round((prices.sessionRate || 0) * 100)),
+                          sessionDateTimeStartIso: start.toISOString(),
+                          locationNameOrAddress: meetingLocation,
+                        },
+                      });
+                    }}
+                    disabled={disabled}
+                    style={[styles.bookButtonWrapper, disabled && { opacity: 0.55 }]}
+                    data-testid="book-session-btn"
+                  >
+                    <LinearGradient
+                      colors={disabled ? [COLORS.gray, COLORS.grayLight] : [COLORS.orangeHot, COLORS.orange]}
+                      style={styles.bookButton}
+                    >
+                      <View style={styles.bookButtonContent}>
+                        <Ionicons name="flash" size={22} color={COLORS.white} />
+                        <Text style={styles.bookButtonText}>
+                          {outdoorMissing ? 'ADD MEETING LOCATION' : 'BOOK SESSION'}
+                        </Text>
+                      </View>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                );
+              })()}
             </LinearGradient>
           </Animated.View>
 
@@ -1788,6 +1831,35 @@ const styles = StyleSheet.create({
     color: 'rgba(255,179,0,0.85)',
     textAlign: 'center',
     marginTop: 10,
+    fontStyle: 'italic',
+  },
+  locationField: {
+    marginTop: 14,
+    marginBottom: 6,
+  },
+  locationInputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,106,0,0.25)',
+  },
+  locationInput: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    paddingVertical: 0,
+  },
+  locationHint: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.55)',
+    marginTop: 6,
+    marginLeft: 4,
     fontStyle: 'italic',
   },
   // Cancellation Policy
