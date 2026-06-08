@@ -251,6 +251,10 @@ class TrainerProfileCreate(BaseModel):
     isAvailable: bool = True
     isVirtualTrainingAvailable: bool = False
     videoCallPreference: Optional[str] = "native"
+    # iter102ap: pasteable URL for the trainer's video call (Zoom / Meet /
+    # FaceTime / Whereby / Jitsi — any URL works). Surfaced to the trainee +
+    # trainer on virtual session-detail screens via a "Join Video Call" card.
+    videoCallLink: Optional[str] = None
     vibeTrackTitle: Optional[str] = None
     vibeArtistName: Optional[str] = None
     vibeArtworkUrl: Optional[str] = None
@@ -310,6 +314,8 @@ class TrainerProfileResponse(BaseModel):
     isAvailable: bool = True
     isVirtualTrainingAvailable: bool = False
     videoCallPreference: Optional[str] = None
+    # iter102ap: video call link surfaced to trainee on the trainer's profile.
+    videoCallLink: Optional[str] = None
     distance: Optional[float] = None
     matchType: Optional[str] = None
     fullName: Optional[str] = None
@@ -476,6 +482,8 @@ class SessionResponse(BaseModel):
     outdoorLocationAgreed: Optional[bool] = None
     outdoorLocationTrainerProposal: Optional[str] = None
     outdoorLocationTraineeProposal: Optional[str] = None
+    # iter102ap: trainer's video-call link joined on read for virtual sessions.
+    videoCallLink: Optional[str] = None
 
 class RatingCreate(BaseModel):
     sessionId: str

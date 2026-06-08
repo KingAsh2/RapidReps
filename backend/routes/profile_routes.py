@@ -979,6 +979,35 @@ async def update_trainer_accent_color(user_id: str, body: dict = Body(...), curr
     return {"success": True, "accentColor": color, "accentIntensity": update.get('accentIntensity')}
 
 
+# ─────────────────────────────────────────────────────────────────
+# iter102ap: Trainer video-call link for virtual sessions.
+# Generic — accept any URL (Zoom, Meet, FaceTime, Whereby, Jitsi, etc.).
+# Surfaced to both parties on the virtual session-detail screen.
+# ─────────────────────────────────────────────────────────────────
+@router.put("/trainer-profiles/{user_id}/video-call-link")
+async def update_trainer_video_call_link(
+    user_id: str,
+    body: dict = Body(...),
+    current_user: dict = Depends(get_current_user),
+):
+    if str(current_user['_id']) != user_id:
+        raise HTTPException(403, "Can only update your own video-call link")
+    raw = body.get("videoCallLink")
+    if raw is None or (isinstance(raw, str) and raw.strip() == ""):
+        link = None  # clear
+    else:
+        link = str(raw).strip()
+        if len(link) > 500:
+            raise HTTPException(400, "Video call link is too long (max 500 chars).")
+        if not (link.startswith("http://") or link.startswith("https://") or link.startswith("zoommtg://") or link.startswith("facetime://") or link.startswith("facetime-audio://")):
+            raise HTTPException(400, "Link must start with http://, https://, zoommtg://, or facetime://")
+    await db.trainer_profiles.update_one(
+        {'userId': user_id},
+        {'$set': {'videoCallLink': link, 'updatedAt': datetime.utcnow()}}
+    )
+    return {"success": True, "videoCallLink": link}
+
+
 @router.get("/music/search")
 async def search_music(q: str = Query(..., min_length=2), limit: int = Query(10, le=25)):
     """Proxy iTunes Search API for song lookup."""

@@ -148,6 +148,28 @@ export default function TrainerSessionDetailScreen() {
           />
         )}
 
+        {/* iter102ap: Virtual session — "Join Video Call" card. */}
+        {isVirtual && (
+          <View style={s.card}>
+            <Text style={s.cardTitle}>Join Video Call</Text>
+            {session.videoCallLink ? (
+              <TouchableOpacity
+                style={s.metaRow}
+                onPress={() => Linking.openURL(session.videoCallLink).catch(() => {})}
+                data-testid="join-video-call-btn"
+              >
+                <Ionicons name="videocam" size={18} color={DS.colors.orange} />
+                <Text style={[s.metaText, { flex: 1 }]} numberOfLines={2}>{session.videoCallLink}</Text>
+                <Ionicons name="open-outline" size={22} color={DS.colors.orangeGlow} />
+              </TouchableOpacity>
+            ) : (
+              <Text style={[s.metaText, { color: '#FFB300', fontStyle: 'italic' }]}>
+                You haven&apos;t added a video call link yet. Go to Edit Profile → Virtual Training to paste a Zoom / Meet / FaceTime link.
+              </Text>
+            )}
+          </View>
+        )}
+
         {/* iter102ao: Meeting Location — was completely missing, so trainers
             had no idea where to go for outdoor bookings. Pulls the negotiated
             location first, falls back to the trainee's original address. Tap

@@ -288,6 +288,28 @@ export default function SessionDetailScreen() {
             </View>
           </View>
 
+          {/* iter102ap: Trainee-side Join Video Call card for virtual sessions. */}
+          {(session.sessionType === 'virtual' || session.modality === 'virtual') && (
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Join Video Call</Text>
+              {session.videoCallLink ? (
+                <TouchableOpacity
+                  style={styles.infoRow}
+                  onPress={() => Linking.openURL(session.videoCallLink).catch(() => {})}
+                  data-testid="join-video-call-btn"
+                >
+                  <Ionicons name="videocam" size={20} color={COLORS.orange} />
+                  <Text style={[styles.infoText, { flex: 1 }]} numberOfLines={2}>{session.videoCallLink}</Text>
+                  <Ionicons name="open-outline" size={22} color={COLORS.orange} />
+                </TouchableOpacity>
+              ) : (
+                <Text style={[styles.infoTextSub, { color: '#FFB300', fontStyle: 'italic' }]}>
+                  Your trainer hasn&apos;t added a video call link yet. Message them to share it.
+                </Text>
+              )}
+            </View>
+          )}
+
           {/* Location */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Location</Text>

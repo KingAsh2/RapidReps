@@ -28,6 +28,10 @@ import * as Location from 'expo-location';
 import { toast } from '../../src/utils/toast';
 import Slider from '@react-native-community/slider';
 import * as ImagePicker from 'expo-image-picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 const backgroundImage = require('../../assets/images/bg-box-jumps-orange.jpg');
 
@@ -71,6 +75,8 @@ export default function EditTrainerProfileScreen() {
     primaryGym: '',
     offersInPerson: true,
     offersVirtual: false,
+    // iter102ap: pasteable link for virtual sessions (any URL).
+    videoCallLink: '',
     sessionDurations: [30, 45, 60],
     travelRadiusMiles: '',
     profilePhoto: '',
@@ -124,6 +130,7 @@ export default function EditTrainerProfileScreen() {
           primaryGym: data.primaryGym || '',
           offersInPerson: data.offersInPerson ?? true,
           offersVirtual: data.offersVirtual ?? false,
+          videoCallLink: data.videoCallLink || '',
           sessionDurations: data.sessionDurationsOffered || [30, 45, 60],
           travelRadiusMiles: typeof data.travelRadiusMiles === 'number' && data.travelRadiusMiles > 0 ? String(data.travelRadiusMiles) : '',
           profilePhoto: data.profilePhoto || data.avatarUrl || '',
@@ -256,6 +263,22 @@ export default function EditTrainerProfileScreen() {
         await trainerAPI.updateProfile(profileData);
       } else {
         await trainerAPI.createProfile(profileData);
+      }
+
+      // iter102ap: persist the video-call link via the dedicated endpoint
+      // (the main profile create/update payload doesn't carry it).
+      try {
+        const token = await AsyncStorage.getItem('auth_token');
+        await axios.put(
+          `${API_URL}/api/trainer-profiles/${user.id}/video-call-link`,
+          { videoCallLink: formData.videoCallLink.trim() || null },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      } catch (vErr: any) {
+        const msg = vErr?.response?.data?.detail || 'Could not save the video-call link';
+        toast.error(msg);
+        setSaving(false);
+        return;
       }
 
       // iter102: refresh auth user so bottom-tab avatar reflects new photo immediately
@@ -602,6 +625,29 @@ export default function EditTrainerProfileScreen() {
                       thumbColor={COLORS.white}
                     />
                   </View>
+                  {/* iter102ap: pasteable video call link — only shown when
+                      Virtual is on. Generic field; accepts Zoom, Meet, FaceTime,
+                      Whereby, Jitsi, etc. */}
+                  {formData.offersVirtual && (
+                    <View style={{ marginTop: 16 }}>
+                      <Text style={styles.subLabel}>Video call link</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={formData.videoCallLink}
+                        onChangeText={(text) => setFormData({ ...formData, videoCallLink: text })}
+                        placeholder="https://zoom.us/j/123… or https://meet.google.com/…"
+                        placeholderTextColor="rgba(255,255,255,0.35)"
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        keyboardType="url"
+                        maxLength={500}
+                        data-testid="video-call-link-input"
+                      />
+                      <Text style={styles.videoLinkHint}>
+                        Shared with trainees on the day of the session. Any video URL works.
+                      </Text>
+                    </View>
+                  )}
                 </LinearGradient>
               </Animated.View>
 
@@ -811,6 +857,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
     color: '#FFFFFF',
+  },
+  videoLinkHint: {
+    marginTop: 6,
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.55)',
+    fontStyle: 'italic',
   },
   radiusSelector: {
     backgroundColor: 'rgba(255,255,255,0.06)',

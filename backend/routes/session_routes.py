@@ -1060,7 +1060,18 @@ async def get_session(session_id: str, current_user: dict = Depends(get_current_
     is_admin = current_user.get('isAdmin', False)
     if user_id != session.get('trainerId') and user_id != session.get('traineeId') and not is_admin:
         raise HTTPException(status_code=403, detail="Not authorized to view this session")
-    
+
+    # iter102ap: for virtual sessions, join the trainer's videoCallLink so the
+    # session-detail screen can render the "Join Video Call" card without an
+    # extra round-trip to the trainer-profiles endpoint.
+    if session.get('sessionType') == SessionType.VIRTUAL or session.get('locationType') == 'virtual':
+        trainer_doc = await db.trainer_profiles.find_one(
+            {'userId': session.get('trainerId')},
+            {'videoCallLink': 1},
+        )
+        if trainer_doc and trainer_doc.get('videoCallLink'):
+            session['videoCallLink'] = trainer_doc['videoCallLink']
+
     return SessionResponse(**serialize_doc(session))
 
 @router.get("/trainer/sessions", response_model=List[SessionResponse])
