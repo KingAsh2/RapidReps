@@ -115,6 +115,8 @@ export const HighlightReel = ({ highlights, trainerName }: Props) => {
                       isMuted
                       posterSource={{ uri: resolveUrl(item.thumbnailUrl) }}
                       usePoster
+                      useNativeControls={false}
+                      progressUpdateIntervalMillis={1000}
                     />
                   ) : (
                     <Image source={{ uri: resolveUrl(item.thumbnailUrl) }} style={styles.reelMedia} />
@@ -127,6 +129,8 @@ export const HighlightReel = ({ highlights, trainerName }: Props) => {
                     shouldPlay={idx === activeIndex}
                     isLooping
                     isMuted
+                    useNativeControls={false}
+                    progressUpdateIntervalMillis={1000}
                   />
                 )
               ) : (
@@ -201,6 +205,11 @@ export const HighlightReel = ({ highlights, trainerName }: Props) => {
                 onLoad={() => setViewerLoading(false)}
                 onReadyForDisplay={() => setViewerLoading(false)}
                 onError={() => setViewerLoading(false)}
+                // iter106c: throttle JS-thread progress updates to once per
+                // second (default ~500ms) — smoother playback in the modal
+                // because the bridge isn't chattering twice a second for a
+                // 30-second clip the user is just watching, not scrubbing.
+                progressUpdateIntervalMillis={1000}
                 // iter102p: `usePoster` + `useNativeControls` causes the poster
                 // <Image> overlay to intercept taps on web/iOS Safari when
                 // autoplay is briefly blocked — the native play button visibly

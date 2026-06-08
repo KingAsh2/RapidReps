@@ -4,6 +4,28 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-02 — Iter106c: Highlight Reel — Upload & Playback Smoothing ✅
+
+### User feedback
+"Uploading to the highlight reel still takes too long and when the video uploads getting it to play feels clunky and not smooth."
+
+### Upload speed wins (HighlightUploadScreen)
+1. **iOS bitrate halved on capture** — added `videoQuality: ImagePicker.UIImagePickerControllerQualityType.Medium` + `videoExportPreset: ImagePicker.VideoExportPreset.MediumQuality` to the picker. For 30-second highlight clips the resulting file is roughly half the size with no perceptible quality loss (clips render at ~55% of screen width anyway).
+2. **Optimistic preview** — new dep `expo-video-thumbnails`. The picked clip's thumbnail is generated client-side and inserted into the highlight grid IMMEDIATELY (before upload starts). The user sees their pick instantly; upload runs in the background. Phantom tile is rolled back via `loadHighlights()` on any failure path.
+
+### Playback smoothness wins (HighlightReel)
+1. **`progressUpdateIntervalMillis={1000}`** on all 3 `<Video>` instances (active card with poster, active card without poster, full-screen modal viewer) — default was ~500 ms, which means the JS-RN bridge was chattering twice a second per video for status updates. Halving that smooths scroll + playback on lower-end devices.
+2. **`useNativeControls={false}`** explicit on inline grid videos — prevents the native AV control HUD from doing layout work in the background on Android.
+
+### What I deliberately did NOT do
+- **Adding `react-native-compressor`** for cross-platform video compression. It's the gold standard but pulls in heavy native modules — adds 8-10 MB to the app and requires a prebuild config change. Worth doing only if the iOS-only compression doesn't move the needle enough on Android. Deferred.
+- **Switching `expo-av Video` → `expo-video`**. The newer package has better preloading, but migrating ALL `<Video>` callsites (TrainerVibePlayer, TrainerHeroVideoPreview, HighlightReel, session-active, etc.) is a bigger surface than this iteration warrants. Deferred.
+
+### Logic preservation
+No backend, payment, booking, matching, or admin code touched. The chunked upload protocol, FFmpeg server-side thumbnail/transcode pipeline, and highlight storage paths are all unchanged.
+
+
+
 ## 2026-02 — Iter106b: Kill the "Loading…" full-screen takeover on back/tab nav ✅
 
 ### User-reported regression

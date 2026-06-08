@@ -108,14 +108,41 @@ export const HighlightUploadScreen: React.FC<Props> = ({ role }) => {
       allowsEditing: true,
       quality: 0.7,
       videoMaxDuration: 30,
+      // iter106c: cut iOS video bitrate in half on capture. Cellular upload
+      // time roughly halves with no perceptible quality loss for 30-sec
+      // highlight clips (which are scaled down to ~55% of screen width anyway).
+      videoQuality: ImagePicker.UIImagePickerControllerQualityType.Medium,
+      videoExportPreset: ImagePicker.VideoExportPreset.MediumQuality,
       base64: mediaType === 'photo',
     });
     if (result.canceled || !result.assets?.[0]) return;
 
     setUploading(true);
     setUploadProgress(0);
+    // iter106c: optimistic preview — drop the picked clip into the local
+    // highlight grid IMMEDIATELY so the user sees their selection while
+    // upload runs in the background. For videos we generate a quick
+    // thumbnail in-process so the tile isn't a black box.
     try {
       const asset = result.assets[0];
+      let optimisticThumb: string | undefined;
+      if (mediaType === 'video') {
+        try {
+          const VideoThumbnails = await import('expo-video-thumbnails');
+          const { uri: thumbUri } = await VideoThumbnails.getThumbnailAsync(asset.uri, { time: 500, quality: 0.6 });
+          optimisticThumb = thumbUri;
+        } catch { /* best-effort */ }
+      }
+      setHighlights((prev) => [
+        ...prev,
+        {
+          url: asset.uri,
+          type: mediaType,
+          caption: '',
+          thumbnailUrl: optimisticThumb || asset.uri,
+          createdAt: new Date().toISOString(),
+        },
+      ]);
 
       // Photos: base64 path first (more reliable on iOS).
       if (mediaType === 'photo' && asset.base64) {
@@ -163,9 +190,13 @@ export const HighlightUploadScreen: React.FC<Props> = ({ role }) => {
         loadHighlights();
       } else {
         toast.error(res.data?.detail || 'Upload failed. Try a smaller file.');
+        // iter106c: roll back the optimistic preview on failure so the user
+        // doesn't see a phantom tile that never made it to the server.
+        loadHighlights();
       }
     } catch {
       toast.error('Upload failed. Check your connection and try again.');
+      loadHighlights(); // iter106c: roll back optimistic entry on error
     } finally { setUploading(false); setUploadProgress(0); }
   };
 
