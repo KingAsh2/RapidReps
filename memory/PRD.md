@@ -4,6 +4,33 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-02 — Iter104: Trainee Home → Trainer Profile Routing FIXED ✅
+
+### User-reported P0 regression
+"Selecting the trainer from the Trainee Home page isn't opening their full profile" — taps on bottom-sheet cards, map markers, favorites strip, search results, and the profile preview card all silently 404'd.
+
+### Root cause
+`/api/trainers/nearby` ships BOTH `id` (trainer_profiles doc `_id`) AND `userId` (user doc `_id`) on every record. The frontend was passing the doc `id` to `/api/trainer-profiles/{trainerId}`, which resolves ONLY by userId (`profile_routes.py:305 → find_one({"userId": user_id})`). Result: silent 404 / blank detail screen.
+
+### Fix
+`/app/frontend/app/trainee/(tabs)/home.tsx` — every outbound `router.push('/trainee/trainer-detail?trainerId=...')` now sends `trainer.userId || trainer.id`:
+- Lines 439-465: `bottomSheetTrainers` maps `id: t.userId || t.id` (single source) + `handleBottomSheetBook` reuses.
+- Lines 700-702: search result tap uses `p.userId || p.id`.
+- Lines 830-834: favorites strip uses `trainer.userId || trainer.id`.
+- Lines 911-915: bottom-sheet `onSelectTrainer` uses the pre-mapped userId.
+- Lines 1043-1049: ProfilePreviewCard uses `previewUser.userId || previewUser.id`.
+
+### Verification
+- `backend/tests/test_iter104_trainer_routing_by_userid.py` — 9/9 PASS (userId → 200, profileDocId → 404, deferred payment flow intact, pricing consistency intact).
+- All 26 prior iter102 regression tests still PASS.
+
+### Hardening recommendations (NOT applied, P2 backlog)
+- `location_routes.py:538-541` — rename `/nearby`'s `id` to `profileDocId` (or drop it) so no future frontend can confuse it with the user id.
+- `profile_routes.py:302-345` — add ObjectId fallback to GET `/trainer-profiles/{id}` for defence-in-depth.
+- `models.py:268-332` — expose `accentIntensity` in `TrainerProfileResponse` (DB field is written but not read back).
+
+
+
 ## 2026-02-XX — Iter102ah: Rate/Pricing Discrepancies FIXED 💰
 
 ### User-reported bugs
