@@ -167,6 +167,11 @@ async def create_session(session: SessionCreate, current_user: dict = Depends(ge
         'sessionDateTimeEnd': session.sessionDateTimeStart + timedelta(minutes=session.durationMinutes),
         'durationMinutes': session.durationMinutes,
         'sessionType': session_type,
+        # iter106f: persist trainee-side display strings so trainer-side
+        # rendering uses the exact wall-clock time the trainee selected
+        # (timezone-drift safe).
+        'traineeLocalTime': session.traineeLocalTime,
+        'traineeLocalDate': session.traineeLocalDate,
         # Pricing breakdown
         'basePricePerMinuteCents': pricing['baseSessionPriceCents'] // session.durationMinutes if session.durationMinutes > 0 else 0,
         'baseSessionPriceCents': pricing['baseSessionPriceCents'],

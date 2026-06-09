@@ -423,6 +423,14 @@ class SessionCreate(BaseModel):
     traineeLatitude: Optional[float] = None
     traineeLongitude: Optional[float] = None
     notes: Optional[str] = None
+    # iter106f: trainee's literal wall-clock time + date at booking, formatted
+    # in their device locale (e.g. "8:45 PM" / "Tue, Jun 9, 2026"). Carried
+    # verbatim through to the trainer's pending card so the displayed time
+    # is exactly what the trainee selected — eliminates the timezone-drift
+    # bug where a trainer device in a different TZ would render the UTC
+    # timestamp as a different wall-clock time than the trainee intended.
+    traineeLocalTime: Optional[str] = None
+    traineeLocalDate: Optional[str] = None
 
 class SessionResponse(BaseModel):
     id: str
@@ -459,6 +467,9 @@ class SessionResponse(BaseModel):
     traineeLongitude: Optional[float] = None
     scheduledDate: Optional[str] = None
     scheduledTime: Optional[str] = None
+    # iter106f: trainee-side display strings — see SessionCreate notes.
+    traineeLocalTime: Optional[str] = None
+    traineeLocalDate: Optional[str] = None
     notes: Optional[str] = None
     createdAt: Optional[datetime] = None
     trainerName: Optional[str] = None

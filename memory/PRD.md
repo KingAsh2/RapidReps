@@ -4,6 +4,32 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-02 — Iter106f: Two bugs on the trainer pending card ✅
+
+### User-reported bugs
+1. **Time off by 4 hours** — trainee requested an 8:45 PM session, the trainer's pending card showed "12:45 AM" on the same date. Classic UTC ↔ local-TZ drift (the trainer's device interpreted the UTC ISO timestamp through a different timezone than the trainee's device used to compose it).
+2. **Address missing on the trainer pending card** — trainer could see modality + duration + price but not WHERE the trainee wanted to meet. Forced the trainer into the detail screen just to read a single line of text.
+
+### Fix
+**Bug 1 — timezone-drift safe display strings (cross-cutting):**
+- `models.py — SessionCreate + SessionResponse`: added `traineeLocalTime: Optional[str]` and `traineeLocalDate: Optional[str]` — the trainee's literal `toLocaleTimeString`/`toLocaleDateString` output from their device at booking.
+- `routes/session_routes.py`: persists both strings on session creation.
+- `app/trainee/trainer-detail.tsx — handleSendRequest`: computes and sends both strings alongside the UTC `sessionDateTimeStart`.
+- `app/trainer/(tabs)/home.tsx — pending + upcoming cards`: prefers `session.traineeLocalTime` / `traineeLocalDate` when present; falls back to the legacy UTC→local rendering for older sessions. The trainer now sees EXACTLY the wall-clock time the trainee selected, independent of any device-timezone interpretation.
+
+**Bug 2 — address on the pending card:**
+- `app/trainer/(tabs)/home.tsx`: new `locationLine` block rendered below the stats row when `session.locationType !== 'virtual'` and `session.locationNameOrAddress` is present. Pin icon + 2-line truncated address in an orange-tinted panel so the trainer can decide at a glance whether the location works for them BEFORE tapping into the detail screen.
+
+### Verification
+- Created a test session with `traineeLocalTime: "08:45 PM"` + `traineeLocalDate: "Tue, Jun 9, 2026"` + `locationNameOrAddress: "7631 W Test Address"` via the trainee API.
+- Hit `GET /api/trainer/sessions?session_status=requested` as the trainer — confirmed all 3 fields round-trip correctly.
+- 20/20 regression tests PASS (routing, pricing, deferred payment, meeting-location contract, book-again contract).
+
+### Logic preservation
+No payment, booking flow, matching, trainer-tier, or admin code changed. The `sessionDateTimeStart` UTC field is still the canonical sort/calendar key — only the DISPLAY layer was reinforced with verbatim strings.
+
+
+
 ## 2026-02 — Iter106c: Highlight Reel — Upload & Playback Smoothing ✅
 
 ### User feedback

@@ -956,7 +956,11 @@ export default function TrainerHomeScreen() {
                             <View style={styles.traineeInfo}>
                               <Text style={styles.traineeName}>{session.traineeName || 'New Client'}</Text>
                               <Text style={styles.sessionDateTime}>
-                                {new Date(session.sessionDateTimeStart).toLocaleDateString()} • {new Date(session.sessionDateTimeStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                {/* iter106f: prefer trainee's literal display strings — eliminates
+                                    the timezone-drift bug where a trainer device in a different TZ
+                                    rendered the UTC timestamp as a wrong wall-clock time. Falls
+                                    back to UTC→local rendering for legacy sessions without strings. */}
+                                {session.traineeLocalDate || new Date(session.sessionDateTimeStart).toLocaleDateString()} • {session.traineeLocalTime || new Date(session.sessionDateTimeStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                               </Text>
                             </View>
                           </View>
@@ -988,6 +992,20 @@ export default function TrainerHomeScreen() {
                             </Text>
                           </View>
                         </View>
+                        {/* iter106f: surface the meeting address so the trainer can decide
+                            whether the location works for them BEFORE accepting. Pre-iter106f
+                            the trainer card showed modality + duration + price but not WHERE,
+                            forcing them to tap into the detail screen just to see "Central Park"
+                            vs an unknown sketchy address. Hidden for virtual sessions where the
+                            address is "Virtual" by definition. */}
+                        {session.locationType !== 'virtual' && session.locationNameOrAddress ? (
+                          <View style={styles.locationLine} data-testid="pending-card-location">
+                            <Ionicons name="pin" size={14} color={'#FF6A00'} />
+                            <Text style={styles.locationLineText} numberOfLines={2}>
+                              {session.locationNameOrAddress}
+                            </Text>
+                          </View>
+                        ) : null}
                         <Text style={styles.earningsHint}>
                           You earn ${(session.trainerEarningsCents / 100).toFixed(2)} after platform fees
                         </Text>
@@ -1059,10 +1077,11 @@ export default function TrainerHomeScreen() {
                       <View style={styles.upcomingHeader}>
                         <View>
                           <Text style={styles.upcomingDate}>
-                            {new Date(session.sessionDateTimeStart).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                            {/* iter106f: use trainee's literal display string when present. */}
+                            {session.traineeLocalDate || new Date(session.sessionDateTimeStart).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                           </Text>
                           <Text style={styles.upcomingTime}>
-                            {new Date(session.sessionDateTimeStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            {session.traineeLocalTime || new Date(session.sessionDateTimeStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </Text>
                         </View>
                         <View style={styles.confirmedBadge}>
@@ -1527,6 +1546,27 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.55)',
     marginBottom: 10,
     marginLeft: 2,
+  },
+  // iter106f: meeting location row on pending request cards
+  locationLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    marginTop: 4,
+    marginBottom: 8,
+    backgroundColor: 'rgba(255,106,0,0.06)',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,106,0,0.18)',
+  },
+  locationLineText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.85)',
+    letterSpacing: 0.2,
   },
   tapHint: {
     flexDirection: 'row',

@@ -469,6 +469,11 @@ export default function TrainerDetailScreen() {
         : selectedSessionType === 'in_home' ? 'home'
         : 'outdoor';
       const token = await AsyncStorage.getItem('auth_token');
+      // iter106f: also send the trainee's literal wall-clock display strings
+      // so the trainer card renders the exact time the trainee picked,
+      // independent of any device timezone interpretation drift.
+      const traineeLocalTime = sessionDateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const traineeLocalDate = sessionDateTime.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
       await axios.post(
         `${API_URL}/api/sessions`,
         {
@@ -479,6 +484,8 @@ export default function TrainerDetailScreen() {
           sessionType: selectedSessionType,
           locationType,
           locationNameOrAddress: meetingLocation,
+          traineeLocalTime,
+          traineeLocalDate,
         },
         { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
       );
