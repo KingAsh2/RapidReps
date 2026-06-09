@@ -4,6 +4,16 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-02 — Iter106h Verification: WS handshake + broadcast confirmed ✅ (2026-02)
+
+End-to-end backend verification of the live tracking WebSocket completed.
+- **9/9 backend tests PASS** (`tests/test_iter106h_ws_tracking.py` + `test_iter106h_ws_edge_cases.py`)
+- Happy path: trainee opens WS → trainer POSTs `/api/sessions/{id}/gps-update` → trainee receives `{type:'position', role:'trainer', latitude, longitude, accuracy, timestamp}` in <1 s.
+- Auth: invalid token, missing token, valid-but-non-participant, and bogus session_id all rejected with HTTP 403 before `accept()`.
+- Bidirectional + two concurrent clients per session room verified.
+- Polling fallback `/api/sessions/{id}/gps-track` still returns latest position (unchanged).
+- Minor optional perf nits noted (skip echoing to originator, per-room socket cap). Not blockers.
+
 ## 2026-02 — Iter106h: Background location + WebSocket live position streaming ✅
 
 ### Iter106h #1 — Background location tracking
