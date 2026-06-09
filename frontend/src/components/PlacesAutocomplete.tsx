@@ -48,6 +48,12 @@ export const PlacesAutocomplete: React.FC<Props> = ({
   const [showResults, setShowResults] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const justSelectedRef = useRef(false);
+  // iter106i: cache the user's coarse GPS once on mount so we can bias
+  // autocomplete results to nearby streets/parks instead of returning
+  // international matches like "Starnberg, Germany" when they type "Star".
+  // Only reads location if permission has ALREADY been granted — we do not
+  // pop a prompt just to bias autocomplete.
+  const biasRef = useRef<{ latitude: number; longitude: number } | null>(null);
 
   // iter102ar: "Use my current location" — reverse-geocode the device's GPS
   // fix via Google's Geocoding API and lock the result into the input. One-tap
@@ -82,8 +88,25 @@ export const PlacesAutocomplete: React.FC<Props> = ({
     }
   };
 
+  // iter106i: best-effort prime of the locationBias on mount. We do NOT
+  // prompt — we only consume the cached fix if the user already granted
+  // foreground location to the app elsewhere (the trainee dashboard already
+  // requests it for the Nearby Trainers map).
   useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
+    let cancelled = false;
+    (async () => {
+      try {
+        const { status } = await Location.getForegroundPermissionsAsync();
+        if (status !== 'granted') return;
+        const loc = await Location.getLastKnownPositionAsync();
+        if (cancelled || !loc) return;
+        biasRef.current = { latitude: loc.coords.latitude, longitude: loc.coords.longitude };
+      } catch { /* ignore — autocomplete still works without bias */ }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
     // Skip a fetch right after a user tap (otherwise we'd re-query on
     // the newly-set full address).
     if (justSelectedRef.current) {
@@ -109,13 +132,32 @@ export const PlacesAutocomplete: React.FC<Props> = ({
         //   1. Enable "Places API (New)" in the API library.
         //   2. Make sure the key has no API restriction OR includes
         //      "Places API (New)" in its allow-list.
+        const body: any = {
+          input: q,
+          // iter106i: US-default + nearby-first results. Circle = 50km
+          // around the user's last-known GPS when available; falls back to
+          // pure regionCode bias otherwise.
+          regionCode: 'US',
+          languageCode: 'en',
+        };
+        if (biasRef.current) {
+          body.locationBias = {
+            circle: {
+              center: {
+                latitude: biasRef.current.latitude,
+                longitude: biasRef.current.longitude,
+              },
+              radius: 50000, // 50 km
+            },
+          };
+        }
         const res = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'X-Goog-Api-Key': GOOGLE_KEY,
           },
-          body: JSON.stringify({ input: q }),
+          body: JSON.stringify(body),
         });
         const data = await res.json();
         const suggestions = Array.isArray(data?.suggestions) ? data.suggestions : [];
