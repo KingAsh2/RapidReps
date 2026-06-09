@@ -183,7 +183,10 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
             </View>
           </Marker>
 
-          {/* Trainer markers — diamond geometry, not circles */}
+          {/* iter106l: trainer markers — circular profile-photo with the
+              tier-color ring (replaces the diamond shape). Photo when
+              available, falls back to a colored disc with the trainer's
+              initials. */}
           {trainers.map((t, i) => {
             const c = getColor(t.averageRating);
             const isSel = selected?.id === t.id;
@@ -191,11 +194,14 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
               <Marker key={t.id} coordinate={{ latitude: t.latitude, longitude: t.longitude }}
                 onPress={() => tap(t)} anchor={{ x: 0.5, y: 0.5 }}>
                 <View style={[s.markerWrap, isSel && { transform: [{ scale: 1.3 }] }]} data-testid="trainer-marker-node">
-                  {/* Outer diamond glow */}
-                  <View style={[s.markerGlow, { borderColor: c, shadowColor: c }]} />
-                  {/* Inner diamond with initials — slightly off-center */}
-                  <View style={[s.markerInner, { borderColor: c }]}>
-                    <Text style={[s.markerInit, { color: c, marginLeft: 1, marginTop: -1 }]}>{initials(t.fullName)}</Text>
+                  <View style={[s.markerPhotoRing, { borderColor: c, shadowColor: c }]}>
+                    {t.avatarUrl ? (
+                      <Image source={{ uri: t.avatarUrl }} style={s.markerPhotoImg} resizeMode="cover" />
+                    ) : (
+                      <View style={[s.markerPhotoFallback, { backgroundColor: c }]}>
+                        <Text style={s.markerPhotoInit}>{initials(t.fullName)}</Text>
+                      </View>
+                    )}
                   </View>
                 </View>
               </Marker>
@@ -218,7 +224,7 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
             <View style={[s.popupBar, { backgroundColor: getColor(selected.averageRating) }]} />
             <View style={s.popupBody}>
               <View style={s.popupLeft}>
-                {/* Diamond avatar — real profile photo when present */}
+                {/* iter106l: circular avatar (was diamond) */}
                 <View style={[s.popupAvatar, { borderColor: getColor(selected.averageRating) }]}>
                   {selected.avatarUrl ? (
                     <Image
@@ -286,7 +292,7 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
                   onPress={() => { tap(t); router.push(`/trainee/trainer-detail?trainerId=${t.trainerId}`); }}
                   data-testid={`avail-card-${i}`}
                 >
-                  {/* Diamond avatar — show real photo when available, fall back to initials */}
+                  {/* iter106l: circular avatar (was diamond) */}
                   <View style={[s.availDiamond, { borderColor: c, shadowColor: c }]}>
                     {t.avatarUrl ? (
                       <Image
@@ -295,7 +301,9 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
                         resizeMode="cover"
                       />
                     ) : (
-                      <Text style={[s.availInit, { color: c }]}>{initials(t.fullName)}</Text>
+                      <View style={[s.availDiamondFallback, { backgroundColor: c }]}>
+                        <Text style={s.availInit}>{initials(t.fullName)}</Text>
+                      </View>
                     )}
                   </View>
                   <Text style={s.availName} numberOfLines={1}>{t.fullName.split(' ')[0]}</Text>
@@ -350,11 +358,17 @@ const s = StyleSheet.create({
   userRadar: { position: 'absolute', width: 44, height: 44, borderWidth: 1.5, borderColor: N.white },
   userNode: { width: 8, height: 8, backgroundColor: N.white, transform: [{ rotate: '45deg' }] },
 
-  // Trainer markers — diamond geometry
+  // Trainer markers — iter106l: circular profile-photo (was diamond geometry)
   markerWrap: { width: 50, height: 50, justifyContent: 'center', alignItems: 'center' },
-  markerGlow: { position: 'absolute', width: 44, height: 44, borderWidth: 1, transform: [{ rotate: '45deg' }], shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.7, shadowRadius: 14, elevation: 8 },
-  markerInner: { width: 34, height: 34, borderWidth: 1.5, backgroundColor: N.bg, transform: [{ rotate: '45deg' }], justifyContent: 'center', alignItems: 'center' },
-  markerInit: { fontSize: 12, fontWeight: '900', letterSpacing: 1, transform: [{ rotate: '-45deg' }] },
+  markerPhotoRing: {
+    width: 44, height: 44, borderRadius: 22, borderWidth: 2,
+    backgroundColor: N.bg, alignItems: 'center', justifyContent: 'center',
+    overflow: 'hidden',
+    shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.7, shadowRadius: 14, elevation: 8,
+  },
+  markerPhotoImg: { width: '100%', height: '100%' },
+  markerPhotoFallback: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
+  markerPhotoInit: { color: '#FFFFFF', fontSize: 13, fontWeight: '900', letterSpacing: 0.8 },
 
   // Recenter — sharp tab from right edge
   recenter: { position: 'absolute', right: 0, top: '42%', width: 38, paddingVertical: 12, borderTopWidth: 1, borderBottomWidth: 1, borderLeftWidth: 1, borderColor: N.border, backgroundColor: N.glass, alignItems: 'center' },
@@ -364,9 +378,9 @@ const s = StyleSheet.create({
   popupBar: { height: 3, width: '100%' },
   popupBody: { flexDirection: 'row', alignItems: 'center', paddingTop: 14, paddingBottom: 10, paddingLeft: 16, paddingRight: 12 },
   popupLeft: { marginRight: 14 },
-  popupAvatar: { width: 42, height: 42, borderWidth: 1.5, backgroundColor: N.bg, transform: [{ rotate: '45deg' }], justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
-  popupAvatarInit: { fontSize: 16, fontWeight: '900', transform: [{ rotate: '-45deg' }] },
-  popupAvatarPhoto: { width: 60, height: 60, transform: [{ rotate: '-45deg' }] },
+  popupAvatar: { width: 48, height: 48, borderRadius: 24, borderWidth: 1.5, backgroundColor: N.bg, justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
+  popupAvatarInit: { fontSize: 16, fontWeight: '900' },
+  popupAvatarPhoto: { width: '100%', height: '100%' },
   popupInfo: { flex: 1 },
   popupName: { fontSize: 15, fontWeight: '800', color: N.white, letterSpacing: -0.3 },
   popupMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
@@ -393,9 +407,10 @@ const s = StyleSheet.create({
     borderLeftWidth: 2, borderTopWidth: 1, borderRightWidth: 0, borderBottomWidth: 0,
     borderColor: N.borderSubtle,
   },
-  availDiamond: { width: 40, height: 40, borderWidth: 1.5, backgroundColor: N.bg, transform: [{ rotate: '45deg' }], justifyContent: 'center', alignItems: 'center', marginBottom: 12, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.5, shadowRadius: 10, elevation: 6, overflow: 'hidden' },
-  availDiamondPhoto: { width: 56, height: 56, transform: [{ rotate: '-45deg' }] },
-  availInit: { fontSize: 14, fontWeight: '900', transform: [{ rotate: '-45deg' }], letterSpacing: 0.5 },
+  availDiamond: { width: 48, height: 48, borderRadius: 24, borderWidth: 1.5, backgroundColor: N.bg, justifyContent: 'center', alignItems: 'center', marginBottom: 12, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.5, shadowRadius: 10, elevation: 6, overflow: 'hidden' },
+  availDiamondPhoto: { width: '100%', height: '100%' },
+  availDiamondFallback: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
+  availInit: { fontSize: 14, fontWeight: '900', letterSpacing: 0.5, color: '#FFFFFF' },
   availName: { fontSize: 13, fontWeight: '700', color: N.white, marginBottom: 4, letterSpacing: 0.3 },
   availRatingRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginBottom: 3 },
   availRating: { fontSize: 11, fontWeight: '700', color: N.star },
