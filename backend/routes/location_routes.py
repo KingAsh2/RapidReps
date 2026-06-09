@@ -221,6 +221,24 @@ async def session_gps_update(session_id: str, latitude: float, longitude: float,
     }
     await db.session_gps_tracks.insert_one(gps_doc)
 
+    # iter106h: fan the new position out to any WebSocket clients connected
+    # to this session's tracking room. Sub-second delivery to the OTHER
+    # party so the en-route map updates feel instantaneous instead of waiting
+    # for the next 8-second polling cycle. Best-effort — failure is silent
+    # since the polling endpoint is still in place as fallback.
+    try:
+        from routes.session_tracking_ws import broadcast_position
+        await broadcast_position(session_id, {
+            "role": role,
+            "userId": user_id,
+            "latitude": latitude,
+            "longitude": longitude,
+            "accuracy": accuracy,
+            "timestamp": now.isoformat(),
+        })
+    except Exception:
+        pass
+
     # GPS SPOOF DETECTION: Check for impossible location jumps
     prev_gps = await db.session_gps_tracks.find_one(
         {"sessionId": session_id, "userId": user_id, "timestamp": {"$lt": now}},

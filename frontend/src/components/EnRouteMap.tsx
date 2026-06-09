@@ -20,7 +20,11 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, Linking, Act
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { sessionTrackingAPI } from '../services/api';
+import { startSessionBackgroundLocation, stopSessionBackgroundLocation } from '../utils/sessionBackgroundLocation';
+
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
 // Dark neon palette — mirrors NearbyTrainersMap so the two screens feel cohesive
 const MAP_STYLE = [
@@ -71,8 +75,10 @@ export const EnRouteMap: React.FC<Props> = ({ session, role, otherAvatarUrl, oth
   const [initializing, setInitializing] = useState<boolean>(true);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  // 1. Ask for foreground GPS perms + capture initial fix
+  // 1. Ask for foreground GPS perms + capture initial fix + START BACKGROUND
+  //    LOCATION updates (iter106h #1: keep tracking when app is backgrounded)
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
@@ -81,18 +87,68 @@ export const EnRouteMap: React.FC<Props> = ({ session, role, otherAvatarUrl, oth
           return;
         }
         const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+        if (cancelled) return;
         const here = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
         setMyLocation(here);
-        // Flip the session into en_route mode if it isn't already (idempotent
-        // on the backend so calling it twice is safe).
         try { await sessionTrackingAPI.startEnRoute(sessionId); } catch { /* already en-route */ }
-        // Push my opening position immediately.
         try { await sessionTrackingAPI.gpsUpdate(sessionId, here.latitude, here.longitude, pos.coords.accuracy || 0); } catch { /* ignore */ }
+
+        // iter106h #1: ask for ALWAYS-ON permission and start a background
+        // task. If denied, the foreground polling keeps working (graceful
+        // degradation — no error blocks the user).
+        try {
+          const token = await AsyncStorage.getItem('auth_token');
+          if (token && API_URL) {
+            await startSessionBackgroundLocation(sessionId, token, API_URL);
+          }
+        } catch { /* ignore */ }
       } catch { /* perms denied, etc. */ }
-      setInitializing(false);
-      Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }).start();
+      if (!cancelled) {
+        setInitializing(false);
+        Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }).start();
+      }
     })();
+    return () => {
+      cancelled = true;
+      // iter106h #1: stop background updates when the map unmounts so we
+      // don't keep draining battery after the session is over.
+      stopSessionBackgroundLocation().catch(() => {});
+    };
   }, [sessionId]);
+
+  // 1b. iter106h #2: WebSocket live position stream. Falls back to the
+  // polling effect below if the socket can't connect.
+  useEffect(() => {
+    let ws: WebSocket | null = null;
+    let cancelled = false;
+    (async () => {
+      try {
+        const token = await AsyncStorage.getItem('auth_token');
+        if (!token || !API_URL) return;
+        // Swap http(s) → ws(s) for the WebSocket scheme.
+        const wsBase = API_URL.replace(/^http/, 'ws');
+        ws = new WebSocket(`${wsBase}/api/ws/sessions/${sessionId}/track?token=${encodeURIComponent(token)}`);
+        ws.onmessage = (evt) => {
+          if (cancelled) return;
+          try {
+            const msg = JSON.parse(evt.data);
+            if (msg.type !== 'position') return;
+            const otherKey = role === 'trainer' ? 'trainee' : 'trainer';
+            if (msg.role === otherKey && typeof msg.latitude === 'number' && typeof msg.longitude === 'number') {
+              setOtherLocation({ latitude: msg.latitude, longitude: msg.longitude });
+              setTracking(true);
+            }
+          } catch { /* malformed frame — ignore */ }
+        };
+        // We don't need to do anything else — onclose/onerror let the
+        // polling effect take over naturally.
+      } catch { /* ignore */ }
+    })();
+    return () => {
+      cancelled = true;
+      try { ws?.close(); } catch { /* ignore */ }
+    };
+  }, [sessionId, role]);
 
   // 2. Continuous GPS push (10 s)
   useEffect(() => {

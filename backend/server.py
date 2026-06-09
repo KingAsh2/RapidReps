@@ -1013,6 +1013,12 @@ app.include_router(safety_check_router)
 from routes.subscription_routes import router as subscription_router
 app.include_router(subscription_router)
 
+# iter106h: live position WebSocket — mounted under /api with no /api prefix
+# on the route itself (the route file already declares /ws/...). Sub-second
+# push updates between trainee + trainer en route to a session.
+from routes.session_tracking_ws import router as session_tracking_ws_router
+app.include_router(session_tracking_ws_router, prefix='/api')
+
 from routes.gps_checkin_routes import router as gps_checkin_router
 app.include_router(gps_checkin_router)
 

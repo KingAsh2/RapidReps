@@ -22,6 +22,9 @@
       "buildNumber": "5",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "RapidReps uses your location to show nearby trainers and estimate their arrival time for your workouts.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "RapidReps keeps tracking your location while a session is en-route so your trainer (or trainee) can see your live arrival progress, even when the app is backgrounded.",
+        "NSLocationAlwaysUsageDescription": "RapidReps keeps tracking your location while a session is en-route so the other party can see your live arrival progress.",
+        "UIBackgroundModes": ["location", "fetch"],
         "NSCameraUsageDescription": "RapidReps uses the camera for profile photos, verification, and uploading session media.",
         "NSPhotoLibraryUsageDescription": "RapidReps lets you upload photos and videos for profiles and session content.",
         "NSContactsUsageDescription": "Share your training session status with emergency contacts for safety."
@@ -37,6 +40,9 @@
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION",
         "CAMERA",
         "READ_MEDIA_IMAGES",
         "READ_MEDIA_VIDEO",

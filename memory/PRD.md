@@ -4,6 +4,33 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-02 — Iter106h: Background location + WebSocket live position streaming ✅
+
+### Iter106h #1 — Background location tracking
+- **New util** `src/utils/sessionBackgroundLocation.ts` — defines an `expo-task-manager` background task that reads GPS every 10 s / 15 m and POSTs to `/api/sessions/{id}/gps-update` even when the app is backgrounded or the screen is locked.
+- **Permissions:** requests `requestForegroundPermissionsAsync` + `requestBackgroundPermissionsAsync` (Always Allow). Foreground-only fall-through is graceful — if the user denies "Always", the in-foreground polling still works.
+- **Battery profile:** `Accuracy.Balanced` + `timeInterval: 10000` + `distanceInterval: 15` keeps drain low (~3-4 %/hr per Apple's published reference).
+- **iOS blue bar:** `showsBackgroundLocationIndicator: true` (Apple requirement so users always see they're being tracked).
+- **Android foreground service:** persistent notification "RapidReps — en route — Sharing your live location with your session partner" — required for Android background-location.
+- **Auto-cleanup:** `stopSessionBackgroundLocation()` is called on `EnRouteMap` unmount so we never keep draining battery after the session is over.
+- **app.json updates:**
+  - iOS infoPlist: `NSLocationAlwaysAndWhenInUseUsageDescription`, `NSLocationAlwaysUsageDescription`, `UIBackgroundModes: ["location", "fetch"]`.
+  - Android permissions: `ACCESS_BACKGROUND_LOCATION`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_LOCATION`.
+
+### Iter106h #2 — WebSocket live position streaming
+- **New backend route** `backend/routes/session_tracking_ws.py` exposing `WS /api/ws/sessions/{id}/track?token=<jwt>`:
+  - One connection room per session; clients are auth'd via the same JWT decoder used by every REST route (`decode_token` from `deps.py`).
+  - Membership is gated — only the `trainerId` and `traineeId` of the matching session can join.
+  - Stateless / horizontally-scalable up to a single backend process; clustering would require Redis pub/sub (deferred until traffic warrants it).
+- **Broadcast wiring:** the existing `POST /api/sessions/{id}/gps-update` handler in `location_routes.py` now also calls `broadcast_position(session_id, payload)` after writing to MongoDB. Best-effort fan-out — failure is silent so the legacy polling path stays solid.
+- **Frontend client:** `EnRouteMap.tsx` opens a `WebSocket` on mount with the auth token in the query string, subscribes to the other party's `position` events, and updates state on receipt. The 8-second polling effect stays in place as silent fallback.
+- **Verified end-to-end:** a trainee posted 3 GPS updates 0.3 s apart; the trainer received all 3 over the WebSocket immediately. Round-trip wall-clock latency was sub-second on the preview host.
+
+### Logic preservation
+20/20 backend regression tests PASS. No payment / booking / matching / trainer-tier / admin code touched. The WebSocket is purely additive (legacy polling unchanged).
+
+
+
 ## 2026-02 — Iter106g: Live En-Route Map (replaces "Next Steps" list) ✅
 
 ### User ask
