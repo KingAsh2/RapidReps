@@ -259,8 +259,11 @@ export default function TrainerSessionDetailScreen() {
             single map en route to the meeting spot. The legacy /en-route,
             /gps-checkin, and /start-session screens are still reachable from
             inside the map (the "Open directions" button + Start Session in
-            the Quick Actions card below the map). */}
-        {session.status === 'confirmed' && (
+            the Quick Actions card below the map).
+            iter106j: also keep the map visible during en_route / in_progress
+            so the trainer doesn't lose live tracking once they tap "I'm on
+            my way" (matches the trainee side which already covered all 3). */}
+        {(session.status === 'confirmed' || session.status === 'en_route' || session.status === 'in_progress') && (
           <View style={s.card}>
             <Text style={s.cardTitle}>Live Tracking</Text>
             <EnRouteMap
