@@ -165,6 +165,23 @@ export const TrainerVibePlayer = ({ vibe, autoPlay = true, compact = false }: Pr
   };
 
   const togglePlayPause = async () => {
+    // iter106d: single-control vibe player. If the player is in the
+    // persisted-muted state, the user's tap means "I want to hear this" —
+    // flip the mute flag off, persist it, and start playback. This collapses
+    // the previous duplicate play/pause + speaker controls into ONE button
+    // tied to the auto-playing track.
+    if (isMuted) {
+      setIsMuted(false);
+      try { await AsyncStorage.setItem(MUTE_KEY, 'false'); } catch { /* ignore */ }
+      if (!sound) {
+        setHasPlayed(false);
+        setPreviewEnded(false);
+        await playPreview();
+      } else {
+        try { await sound.playAsync(); setIsPlaying(true); startPulse(); } catch { /* ignore */ }
+      }
+      return;
+    }
     if (!sound) {
       if (vibe.vibePreviewUrl) {
         setHasPlayed(false);
@@ -178,23 +195,17 @@ export const TrainerVibePlayer = ({ vibe, autoPlay = true, compact = false }: Pr
       if (status.isLoaded && status.isPlaying) {
         await sound.pauseAsync();
         setIsPlaying(false);
+        // iter106d: pausing the track also persists the "muted" preference
+        // so the song doesn't auto-play next mount — matches the user's
+        // mental model that the pause button is now their ON/OFF control.
+        setIsMuted(true);
+        try { await AsyncStorage.setItem(MUTE_KEY, 'true'); } catch { /* ignore */ }
       } else if (status.isLoaded) {
         await sound.playAsync();
         setIsPlaying(true);
         startPulse();
       }
     } catch { /* ignore */ }
-  };
-
-  const toggleMute = async () => {
-    const newMuted = !isMuted;
-    setIsMuted(newMuted);
-    await AsyncStorage.setItem(MUTE_KEY, String(newMuted));
-    if (newMuted && sound) {
-      try { await sound.stopAsync(); await sound.unloadAsync(); } catch { /* ignore */ }
-      setSound(null);
-      setIsPlaying(false);
-    }
   };
 
   const openAppleMusic = () => {
@@ -267,10 +278,10 @@ export const TrainerVibePlayer = ({ vibe, autoPlay = true, compact = false }: Pr
           )}
         </View>
 
-        {/* Mute control */}
-        <TouchableOpacity onPress={toggleMute} style={styles.muteBtn} data-testid="vibe-mute-btn" accessibilityLabel="Toggle audio preview" accessibilityRole="button">
-          <Ionicons name={isMuted ? 'volume-mute' : 'volume-high'} size={18} color="rgba(255,255,255,0.6)" />
-        </TouchableOpacity>
+        {/* iter106d: speaker/mute button removed — the play/pause overlay on
+            the artwork is now the single control. Pause = mute (next visit
+            won't auto-play); Play = unmute + start. Mental model collapses
+            from two conflicting toggles into one. */}
       </LinearGradient>
     </Animated.View>
   );
