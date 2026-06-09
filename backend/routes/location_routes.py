@@ -226,16 +226,44 @@ async def session_gps_update(session_id: str, latitude: float, longitude: float,
     # party so the en-route map updates feel instantaneous instead of waiting
     # for the next 8-second polling cycle. Best-effort — failure is silent
     # since the polling endpoint is still in place as fallback.
+    #
+    # iter106p: also enrich with a Google Directions polyline + ETA so the
+    # frontend can draw a route that follows actual roads (instead of an
+    # as-the-crow-flies dotted line) and show a live ETA countdown.
     try:
         from routes.session_tracking_ws import broadcast_position
-        await broadcast_position(session_id, {
+        from utils.directions import get_route
+
+        # Pick destination for THIS sender's route. Conventions match the
+        # frontend EnRouteMap props: trainer's destination is the trainee's
+        # location; trainee's destination is the trainer's location.
+        dest_lat = session.get('traineeLatitude') if is_trainer else session.get('trainerLatitude')
+        dest_lng = session.get('traineeLongitude') if is_trainer else session.get('trainerLongitude')
+        # Fall back to the session's negotiated meeting location if either
+        # party hasn't shared a personal lat/lng yet.
+        if dest_lat is None or dest_lng is None:
+            dest_lat = session.get('locationLatitude') or session.get('agreedLocationLatitude')
+            dest_lng = session.get('locationLongitude') or session.get('agreedLocationLongitude')
+
+        frame = {
             "role": role,
             "userId": user_id,
             "latitude": latitude,
             "longitude": longitude,
             "accuracy": accuracy,
             "timestamp": now.isoformat(),
-        })
+        }
+
+        if isinstance(dest_lat, (int, float)) and isinstance(dest_lng, (int, float)):
+            route = await get_route(latitude, longitude, float(dest_lat), float(dest_lng))
+            if route:
+                frame["routePolyline"] = route["polyline"]
+                frame["etaSeconds"] = route["etaSeconds"]
+                frame["distanceMeters"] = route["distanceMeters"]
+                if route.get("near"):
+                    frame["arriving"] = True
+
+        await broadcast_position(session_id, frame)
     except Exception:
         pass
 

@@ -45,6 +45,29 @@ const MAP_STYLE = [
 
 type LatLng = { latitude: number; longitude: number };
 
+/**
+ * iter106p: Decode a Google-encoded polyline string into a list of {lat, lng}
+ * points. Vendored algorithm (~25 lines) so we don't pull in another dep.
+ * Spec: https://developers.google.com/maps/documentation/utilities/polylinealgorithm
+ */
+const decodePolyline = (encoded: string): LatLng[] => {
+  if (!encoded) return [];
+  const points: LatLng[] = [];
+  let index = 0, lat = 0, lng = 0;
+  while (index < encoded.length) {
+    let b: number, shift = 0, result = 0;
+    do { b = encoded.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+    const dlat = (result & 1) ? ~(result >> 1) : (result >> 1);
+    lat += dlat;
+    shift = 0; result = 0;
+    do { b = encoded.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+    const dlng = (result & 1) ? ~(result >> 1) : (result >> 1);
+    lng += dlng;
+    points.push({ latitude: lat / 1e5, longitude: lng / 1e5 });
+  }
+  return points;
+};
+
 type Props = {
   session: any;
   role: 'trainer' | 'trainee';
@@ -68,6 +91,12 @@ const EnRouteMap: React.FC<Props> = ({ session, role, otherAvatarUrl, otherDispl
   const [distanceMiles, setDistanceMiles] = useState<number | null>(null);
   const [tracking, setTracking] = useState<boolean>(false);
   const [initializing, setInitializing] = useState<boolean>(true);
+  // iter106p: live ETA + road-following route polyline from Google Directions
+  // (sent down inside each gps-update broadcast frame). When absent we fall
+  // back to the straight-line polyline rendered below.
+  const [otherRoutePoints, setOtherRoutePoints] = useState<LatLng[] | null>(null);
+  const [etaSeconds, setEtaSeconds] = useState<number | null>(null);
+  const etaLastReceivedAt = useRef<number>(0);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   // 1. Ask for foreground GPS perms + capture initial fix + START BACKGROUND
@@ -132,6 +161,17 @@ const EnRouteMap: React.FC<Props> = ({ session, role, otherAvatarUrl, otherDispl
             if (msg.role === otherKey && typeof msg.latitude === 'number' && typeof msg.longitude === 'number') {
               setOtherLocation({ latitude: msg.latitude, longitude: msg.longitude });
               setTracking(true);
+              // iter106p: pick up the road-following polyline + live ETA
+              // that the backend now attaches to each broadcast. Falls
+              // through silently when the fields are missing (no Directions
+              // API key or destination not yet known).
+              if (typeof msg.routePolyline === 'string') {
+                setOtherRoutePoints(msg.routePolyline ? decodePolyline(msg.routePolyline) : null);
+              }
+              if (typeof msg.etaSeconds === 'number') {
+                setEtaSeconds(msg.etaSeconds);
+                etaLastReceivedAt.current = Date.now();
+              }
             }
           } catch { /* malformed frame — ignore */ }
         };
@@ -197,6 +237,25 @@ const EnRouteMap: React.FC<Props> = ({ session, role, otherAvatarUrl, otherDispl
     });
   }, [myLocation, otherLocation, destination]);
 
+  // iter106p: tick down the local etaSeconds counter every second so the
+  // header chip displays a live countdown between server updates.
+  const etaActive = etaSeconds !== null;
+  useEffect(() => {
+    if (!etaActive) return;
+    const id = setInterval(() => {
+      setEtaSeconds((prev) => (prev === null ? null : Math.max(0, prev - 1)));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [etaActive]);
+
+  const fmtEta = (secs: number | null) => {
+    if (secs === null) return null;
+    if (secs < 60) return `${secs}s`;
+    const m = Math.floor(secs / 60);
+    if (m < 60) return `${m} MIN`;
+    return `${Math.floor(m / 60)}h ${m % 60}m`;
+  };
+
   const openTurnByTurn = () => {
     const dst = destination || otherLocation;
     if (!dst) return;
@@ -236,7 +295,9 @@ const EnRouteMap: React.FC<Props> = ({ session, role, otherAvatarUrl, otherDispl
         ) : null}
       </View>
 
-      {/* Status chip — sharp diamond dot + caps label (matches "1 ACTIVE NEARBY") */}
+      {/* Status chip — sharp diamond dot + caps label. iter106p adds a
+          live ETA pill next to the distance when Google Directions gives
+          us a duration_in_traffic estimate. */}
       <View style={s.countRow}>
         <View style={s.countChip}>
           <View style={s.countDot} />
@@ -248,6 +309,14 @@ const EnRouteMap: React.FC<Props> = ({ session, role, otherAvatarUrl, otherDispl
               : 'WAITING FOR MOVEMENT'}
           </Text>
         </View>
+        {etaSeconds !== null && (
+          <View style={[s.countChip, { marginLeft: 12 }]} data-testid="en-route-eta">
+            <View style={[s.countDot, { backgroundColor: N.orange }]} />
+            <Text style={[s.countLabel, { color: N.orange }]}>
+              {`${fmtEta(etaSeconds)} ETA`}
+            </Text>
+          </View>
+        )}
       </View>
 
       <View style={s.mapShell}>
@@ -292,8 +361,15 @@ const EnRouteMap: React.FC<Props> = ({ session, role, otherAvatarUrl, otherDispl
           {myLocation && destination && (
             <Polyline coordinates={[myLocation, destination]} strokeColor="rgba(255,95,31,0.55)" strokeWidth={3} lineDashPattern={[6, 6]} />
           )}
-          {otherLocation && destination && (
-            <Polyline coordinates={[otherLocation, destination]} strokeColor="rgba(176,38,255,0.55)" strokeWidth={3} lineDashPattern={[6, 6]} />
+          {/* iter106p: prefer the road-following polyline from Google
+              Directions when present; fall back to the straight-line dotted
+              segment if the backend didn't include one. */}
+          {otherRoutePoints && otherRoutePoints.length > 1 ? (
+            <Polyline coordinates={otherRoutePoints} strokeColor="rgba(176,38,255,0.85)" strokeWidth={4} />
+          ) : (
+            otherLocation && destination && (
+              <Polyline coordinates={[otherLocation, destination]} strokeColor="rgba(176,38,255,0.55)" strokeWidth={3} lineDashPattern={[6, 6]} />
+            )
           )}
         </MapView>
       </View>
