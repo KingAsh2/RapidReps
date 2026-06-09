@@ -23,6 +23,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { sessionTrackingAPI } from '../services/api';
 import { startSessionBackgroundLocation, stopSessionBackgroundLocation } from '../utils/sessionBackgroundLocation';
+import { useAuth } from '../contexts/AuthContext';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
@@ -53,20 +54,25 @@ type Props = {
   destination?: LatLng | null;
 };
 
-const DiamondMarker: React.FC<{ uri?: string; label: string; color: string }> = ({ uri, label, color }) => (
-  <View style={[s.diamondOuter, { borderColor: color, shadowColor: color }] }>
-    <View style={[s.diamondInner, { backgroundColor: color }]}>
-      {uri ? (
-        <Image source={{ uri }} style={s.markerAvatar} />
-      ) : (
+const PhotoMarker: React.FC<{ uri?: string; label: string; color: string }> = ({ uri, label, color }) => (
+  <View style={[s.photoOuter, { borderColor: color, shadowColor: color }] }>
+    {uri ? (
+      <Image source={{ uri }} style={s.photoImage} />
+    ) : (
+      <View style={[s.photoFallback, { backgroundColor: color }]}>
         <Text style={s.markerLabel}>{label}</Text>
-      )}
-    </View>
+      </View>
+    )}
   </View>
 );
 
 export const EnRouteMap: React.FC<Props> = ({ session, role, otherAvatarUrl, otherDisplayName, destination }) => {
   const sessionId = session?.id;
+  const { user } = useAuth();
+  // iter106k: "ME" marker now shows the current user's profile photo
+  // pulled from auth context (with a graceful initial fallback).
+  const myAvatarUrl: string | undefined = user?.avatarUrl || user?.profilePhoto || undefined;
+  const myInitial = (user?.displayName || user?.fullName || (role === 'trainer' ? 'T' : 'C')).charAt(0).toUpperCase();
   const mapRef = useRef<MapView>(null);
   const [myLocation, setMyLocation] = useState<LatLng | null>(null);
   const [otherLocation, setOtherLocation] = useState<LatLng | null>(null);
@@ -259,12 +265,12 @@ export const EnRouteMap: React.FC<Props> = ({ session, role, otherAvatarUrl, oth
           )}
           {myLocation && (
             <Marker coordinate={myLocation} anchor={{ x: 0.5, y: 0.5 }}>
-              <DiamondMarker label="ME" color="#FF6A00" />
+              <PhotoMarker uri={myAvatarUrl} label={myInitial} color="#FF6A00" />
             </Marker>
           )}
           {otherLocation && (
             <Marker coordinate={otherLocation} anchor={{ x: 0.5, y: 0.5 }}>
-              <DiamondMarker
+              <PhotoMarker
                 uri={otherAvatarUrl}
                 label={(otherDisplayName?.charAt(0) || (role === 'trainer' ? 'C' : 'T')).toUpperCase()}
                 color="#B026FF"
@@ -328,22 +334,24 @@ const s = StyleSheet.create({
   headerEta: { flex: 1, color: 'rgba(255,255,255,0.78)', fontSize: 12, fontWeight: '600', textAlign: 'right', letterSpacing: 0.3 },
   mapShell: { height: 280, backgroundColor: '#080C12' },
   map: { ...StyleSheet.absoluteFillObject },
-  // diamond markers — match Nearby Trainers aesthetic
-  diamondOuter: {
-    width: 54, height: 54,
-    transform: [{ rotate: '45deg' }],
-    borderWidth: 2,
-    backgroundColor: 'rgba(10,14,20,0.6)',
+  // iter106k: circular profile-photo markers (was diamond). Two concentric
+  // shapes: a colored outer ring (orange for me, purple for the other
+  // party) and an inner clipped circle holding the avatar. Falls back to
+  // a colored disc with the user's initial when no photo is set.
+  photoOuter: {
+    width: 56, height: 56, borderRadius: 28,
+    borderWidth: 2.5,
+    backgroundColor: '#0A0E14',
     alignItems: 'center', justifyContent: 'center',
-    shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.6, shadowRadius: 8, elevation: 6,
-  },
-  diamondInner: {
-    width: 38, height: 38, alignItems: 'center', justifyContent: 'center',
-    transform: [{ rotate: '-45deg' }],
     overflow: 'hidden',
+    shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.65, shadowRadius: 10, elevation: 6,
   },
-  markerAvatar: { width: '100%', height: '100%' },
-  markerLabel: { color: '#FFFFFF', fontSize: 14, fontWeight: '900', letterSpacing: 0.5 },
+  photoImage: { width: '100%', height: '100%', borderRadius: 28 },
+  photoFallback: {
+    width: '100%', height: '100%', borderRadius: 28,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  markerLabel: { color: '#FFFFFF', fontSize: 18, fontWeight: '900', letterSpacing: 0.5 },
   destinationPin: {
     width: 32, height: 32, borderRadius: 16, backgroundColor: '#00D26A',
     alignItems: 'center', justifyContent: 'center',
