@@ -1,5 +1,5 @@
 """Payment routes: Ratings, earnings, payouts, tier pricing, Stripe, memberships, boosts, receipts."""
-from fastapi import APIRouter, HTTPException, Depends, Request, Query
+from fastapi import APIRouter, HTTPException, Depends, Request, Query, Body
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime, timedelta
@@ -1085,6 +1085,79 @@ async def create_payment_intent(
         }
     except stripe.error.StripeError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+@router.post("/payments/sessions/confirm")
+@limiter.limit("60/minute")
+async def confirm_session_payment(
+    request: Request,
+    payload: dict = Body(...),
+    current_user: dict = Depends(get_current_user),
+):
+    """iter106o: post-PaymentSheet hook called by the mobile client once the
+    native PaymentSheet returns success. We re-verify the PaymentIntent with
+    Stripe (don't trust the client) and then stamp the session as paid.
+
+    Body: { sessionId: str, paymentIntentId: str }
+    """
+    session_id = (payload or {}).get('sessionId')
+    payment_intent_id = (payload or {}).get('paymentIntentId')
+    if not session_id or not payment_intent_id:
+        raise HTTPException(status_code=400, detail="sessionId and paymentIntentId are required.")
+    try:
+        session_oid = ObjectId(session_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid session id.")
+
+    session_doc = await db.sessions.find_one({"_id": session_oid})
+    if not session_doc:
+        raise HTTPException(status_code=404, detail="Session not found.")
+    if str(current_user['_id']) != session_doc.get('traineeId'):
+        raise HTTPException(status_code=403, detail="Only the trainee on this session can confirm payment.")
+
+    # Corporate fully-subsidised shortcut — there is no real Stripe intent.
+    if payment_intent_id.startswith('corp_full_subsidy_'):
+        await db.sessions.update_one(
+            {"_id": session_oid},
+            {"$set": {
+                "paymentStatus": "paid",
+                "paymentIntentId": payment_intent_id,
+                "paidAt": datetime.utcnow(),
+                "paymentMethod": "corporate_subsidy",
+            }},
+        )
+        return {"ok": True, "status": "paid", "method": "corporate_subsidy"}
+
+    if not _stripe_key_ready():
+        raise HTTPException(status_code=503, detail="Payments are temporarily unavailable.")
+
+    try:
+        intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+    except stripe.error.StripeError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    # Sanity-check that this intent really belongs to this session.
+    md_session = (intent.get('metadata') or {}).get('session_id') or ''
+    if md_session and md_session != session_id:
+        raise HTTPException(status_code=400, detail="Payment intent does not belong to this session.")
+
+    if intent.status != 'succeeded':
+        raise HTTPException(
+            status_code=400,
+            detail=f"Payment not completed (status: {intent.status}). Please try again.",
+        )
+
+    await db.sessions.update_one(
+        {"_id": session_oid},
+        {"$set": {
+            "paymentStatus": "paid",
+            "paymentIntentId": payment_intent_id,
+            "paidAt": datetime.utcnow(),
+            "chargeId": intent.get('latest_charge'),
+            "paymentMethod": "stripe",
+        }},
+    )
+    return {"ok": True, "status": "paid", "chargeId": intent.get('latest_charge')}
+
 
 @router.get("/payments/pricing-rules")
 async def get_pricing_rules():

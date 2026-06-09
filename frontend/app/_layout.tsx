@@ -1,5 +1,5 @@
 import React from 'react';
-import { View } from 'react-native';
+import { View, Platform } from 'react-native';
 import { Slot } from 'expo-router';
 import { AuthProvider } from '../src/contexts/AuthContext';
 import { AlertProvider } from '../src/contexts/AlertContext';
@@ -81,8 +81,27 @@ const toastConfig = {
   ),
 };
 
-// Stripe native SDK removed - payments handled via web-based Stripe Checkout
-const StripeProviderComponent: React.FC<{ children: React.ReactNode }> = ({ children }) => <>{children}</>;
+// iter106o: real Stripe provider for native (was a no-op stub). On web we
+// keep the no-op since @stripe/stripe-react-native is native-only — the web
+// build would use Stripe.js / Checkout if we ever build a web payment path.
+const STRIPE_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+let StripeProviderComponent: React.FC<{ children: React.ReactNode }>;
+if (Platform.OS === 'web' || !STRIPE_PUBLISHABLE_KEY) {
+  StripeProviderComponent = ({ children }) => <>{children}</>;
+} else {
+  // Native import only — avoids pulling the native module into the web bundle.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { StripeProvider } = require('@stripe/stripe-react-native');
+  StripeProviderComponent = ({ children }) => (
+    <StripeProvider
+      publishableKey={STRIPE_PUBLISHABLE_KEY}
+      merchantIdentifier="merchant.com.kingash.rapidreps"
+      urlScheme="rapidreps"
+    >
+      {children}
+    </StripeProvider>
+  );
+}
 
 function RootLayout() {
   const [fontsLoaded] = useFonts({

@@ -11,7 +11,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Alert,
+  View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Alert, Platform,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -23,6 +23,21 @@ import { toast } from '../../src/utils/toast';
 import { haptic } from '../../src/utils/haptics';
 import { formatCents } from '../../src/utils/pricing';
 import { formatApiError } from '../../src/utils/formatApiError';
+
+// iter106o: real Stripe PaymentSheet (card + Apple Pay + Google Pay).
+// Native-only — on web the hook returns no-ops so we gracefully fall back
+// to the legacy intent-only flow. Resolved ONCE at module load so the
+// hook below is always called in the same order on every render.
+let _resolvedUseStripe: null | (() => { initPaymentSheet?: (opts: any) => Promise<{ error?: { message: string } }>; presentPaymentSheet?: () => Promise<{ error?: { message: string; code?: string } }>; }) = null;
+if (Platform.OS !== 'web') {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    _resolvedUseStripe = require('@stripe/stripe-react-native').useStripe;
+  } catch {
+    _resolvedUseStripe = null;
+  }
+}
+const useStripeSheet = () => (_resolvedUseStripe ? _resolvedUseStripe() : ({} as { initPaymentSheet?: any; presentPaymentSheet?: any }));
 
 const C = {
   bg: '#06080F',
@@ -39,6 +54,7 @@ const C = {
 export default function PaymentScreen() {
   const router = useRouter();
   const { sessionId } = useLocalSearchParams<{ sessionId: string }>();
+  const { initPaymentSheet, presentPaymentSheet } = useStripeSheet();
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [paymentReady, setPaymentReady] = useState(false);
@@ -97,17 +113,55 @@ export default function PaymentScreen() {
     haptic.medium();
     setProcessing(true);
     try {
+      // 1. Server creates a PaymentIntent.
       const { data } = await api.post(
         `/payments/create-payment-intent?amount_cents=${pricing.customer_total_cents}&session_id=${sessionId}&description=RapidReps Session`,
       );
-      // For now we just open a confirmation — in production, expo-stripe SDK would
-      // present the PaymentSheet using data.clientSecret here.
+
+      // Corporate full-subsidy shortcut: no Stripe gateway needed.
+      if (data.fullySubsidized || !data.clientSecret) {
+        haptic.success();
+        await api.post('/payments/sessions/confirm', { sessionId, paymentIntentId: data.paymentIntentId });
+        Alert.alert('Booked!', `Fully covered by ${data.companyName || 'your employer'}.`, [
+          { text: 'OK', onPress: () => router.replace(`/trainee/session-detail?sessionId=${sessionId}`) },
+        ]);
+        return;
+      }
+
+      // 2. Open native PaymentSheet (card + Apple Pay + Google Pay).
+      if (!initPaymentSheet || !presentPaymentSheet) {
+        // Web fallback — Stripe.js path not yet implemented.
+        toast.error('Card payments on web are coming soon — please use the mobile app.');
+        return;
+      }
+      const initRes = await initPaymentSheet({
+        paymentIntentClientSecret: data.clientSecret,
+        merchantDisplayName: 'RapidReps',
+        style: 'alwaysDark',
+        applePay: { merchantCountryCode: 'US' },
+        googlePay: { merchantCountryCode: 'US', testEnv: true, currencyCode: 'USD' },
+        returnURL: 'rapidreps://stripe-redirect',
+        allowsDelayedPaymentMethods: false,
+      });
+      if (initRes?.error) {
+        throw new Error(initRes.error.message || 'Could not initialize payment.');
+      }
+      const presentRes = await presentPaymentSheet();
+      if (presentRes?.error) {
+        // User cancelled = not an error worth shouting about
+        if (presentRes.error.code === 'Canceled') {
+          setProcessing(false);
+          return;
+        }
+        throw new Error(presentRes.error.message || 'Payment failed.');
+      }
+
+      // 3. Tell our backend to verify with Stripe and mark the session paid.
+      await api.post('/payments/sessions/confirm', { sessionId, paymentIntentId: data.paymentIntentId });
       haptic.success();
-      Alert.alert(
-        'Stripe checkout ready',
-        `Payment intent created (${data.paymentIntentId.slice(-8)}). In production this opens the Stripe PaymentSheet.`,
-        [{ text: 'OK', onPress: () => router.back() }],
-      );
+      Alert.alert('Payment confirmed', 'Your session is locked in. See you there!', [
+        { text: 'OK', onPress: () => router.replace(`/trainee/session-detail?sessionId=${sessionId}`) },
+      ]);
     } catch (e: any) {
       haptic.error();
       toast.error(formatApiError(e, 'Payment failed'));
@@ -189,7 +243,7 @@ export default function PaymentScreen() {
         </TouchableOpacity>
 
         <Text style={s.disclaimer}>
-          Secure payments by Stripe. You won't be charged until the trainer accepts the agreed session details.
+          Secure payments by Stripe. You won&apos;t be charged until the trainer accepts the agreed session details.
         </Text>
       </ScrollView>
     </SafeAreaView>
