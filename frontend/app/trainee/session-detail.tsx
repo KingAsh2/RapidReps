@@ -23,6 +23,7 @@ import { haptic } from '../../src/utils/haptics';
 import { SessionTimeline, SessionTimelineStatus } from '../../src/components/SessionTimeline';
 import NegotiationPanel from '../../src/components/NegotiationPanel';
 import { ScreenHeader } from '../../src/components/ScreenShell';
+import EnRouteMap from '../../src/components/EnRouteMap';
 
 const COLORS = {
   teal: '#1a2a5e',
@@ -441,6 +442,22 @@ export default function SessionDetailScreen() {
               </View>
             )}
           </View>
+
+          {/* iter106g: live en-route map — both parties tracked toward each
+              other. Shows once payment is confirmed and through the active
+              session. Mirrors the trainer-side experience for symmetry. */}
+          {(session.status === SessionStatus.CONFIRMED || session.status === 'en_route' || session.status === 'in_progress') && (
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Live Tracking</Text>
+              <EnRouteMap
+                session={session}
+                role="trainee"
+                otherAvatarUrl={session.trainerAvatarUrl || session.trainerProfilePhoto}
+                otherDisplayName={session.trainerName}
+                destination={null}
+              />
+            </View>
+          )}
 
           {/* Arrival Confirmation */}
           {(session.status === SessionStatus.CONFIRMED || session.status === 'en_route') && !session.traineeArrivedConfirmed && (

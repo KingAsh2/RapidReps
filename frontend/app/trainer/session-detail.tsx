@@ -24,6 +24,7 @@ import { DS } from '../../src/theme/designSystem';
 import { formatCents } from '../../src/utils/pricing';
 import { toast } from '../../src/utils/toast';
 import { formatApiError } from '../../src/utils/formatApiError';
+import EnRouteMap from '../../src/components/EnRouteMap';
 
 const STATUS_META: Record<string, { label: string; color: string; icon: any }> = {
   requested: { label: 'Requested', color: DS.colors.warning, icon: 'time' },
@@ -253,30 +254,28 @@ export default function TrainerSessionDetailScreen() {
           </View>
         )}
 
-        {/* Quick links once payment lands */}
+        {/* iter106g: live en-route map replaces the old "Next Steps" link
+            list. Once payment is confirmed, both parties see each other on a
+            single map en route to the meeting spot. The legacy /en-route,
+            /gps-checkin, and /start-session screens are still reachable from
+            inside the map (the "Open directions" button + Start Session in
+            the Quick Actions card below the map). */}
         {session.status === 'confirmed' && (
           <View style={s.card}>
-            <Text style={s.cardTitle}>Next Steps</Text>
+            <Text style={s.cardTitle}>Live Tracking</Text>
+            <EnRouteMap
+              session={session}
+              role="trainer"
+              otherAvatarUrl={session.traineeAvatarUrl || session.traineeProfilePhoto}
+              otherDisplayName={session.traineeName}
+              destination={
+                typeof session.traineeLatitude === 'number' && typeof session.traineeLongitude === 'number'
+                  ? { latitude: session.traineeLatitude, longitude: session.traineeLongitude }
+                  : null
+              }
+            />
             <TouchableOpacity
-              style={s.linkRow}
-              onPress={() => router.push(`/trainer/en-route?sessionId=${session.id}`)}
-              data-testid="open-en-route"
-            >
-              <Ionicons name="navigate" size={18} color={DS.colors.orangeGlow} />
-              <Text style={s.linkText}>I&apos;m on my way</Text>
-              <Ionicons name="chevron-forward" size={18} color={DS.colors.textMuted} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={s.linkRow}
-              onPress={() => router.push(`/trainer/gps-checkin?sessionId=${session.id}`)}
-              data-testid="open-gps-checkin"
-            >
-              <Ionicons name="location" size={18} color={DS.colors.orangeGlow} />
-              <Text style={s.linkText}>GPS Check-In</Text>
-              <Ionicons name="chevron-forward" size={18} color={DS.colors.textMuted} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={s.linkRow}
+              style={[s.linkRow, { marginTop: 4 }]}
               onPress={() => router.push(`/trainer/start-session?sessionId=${session.id}`)}
               data-testid="open-start-session"
             >

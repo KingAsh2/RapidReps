@@ -4,6 +4,42 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-02 — Iter106g: Live En-Route Map (replaces "Next Steps" list) ✅
+
+### User ask
+Replace the "Next Steps" link list on the trainer session-detail screen with a live Uber-style en-route map showing both the trainer and trainee tracking toward the meeting point. Use the existing NearbyTrainersMap aesthetic.
+
+### New component: `src/components/EnRouteMap.tsx`
+- React-native-maps `MapView` with the same dark-neon `customMapStyle` as `NearbyTrainersMap` (visual continuity).
+- **Diamond avatar markers** for both parties (orange = me, purple = the other party) — mirrors the Nearby Trainers map.
+- **Green flag pin** for the meeting destination (when coords known).
+- **Polylines** (dotted, color-matched to each diamond) from each party to the destination — quick visual cue of who's coming from where.
+- **Live polling:**
+  - Pushes my GPS every 10 s via the existing `POST /api/sessions/{id}/gps-update`.
+  - Fetches the other party's last position every 8 s via the existing `GET /api/sessions/{id}/gps-track`.
+- **LIVE pill** at the top with `${distance} mi apart` once both parties are reporting.
+- **"Open turn-by-turn directions"** button hands off to Apple Maps (iOS) / Google Navigation (Android) — no in-app routing needed.
+- Role-aware (`trainer | trainee`) so the same JSX drops onto either side.
+
+### Wiring
+- **`app/trainer/session-detail.tsx`**: replaced the 3-link "Next Steps" card (`I'm on my way` / `GPS Check-In` / `Start Session`) with a single `<EnRouteMap role="trainer" />` block + a "Start Session" CTA below it (still needed since starting the session requires explicit trainer action). The `/trainer/en-route` and `/trainer/gps-checkin` routes still exist for power users but are no longer surfaced on the detail screen.
+- **`app/trainee/session-detail.tsx`**: added the same `<EnRouteMap role="trainee" />` block right above the existing "Tap When You Arrive" card — gives the trainee the symmetric Uber-pickup experience.
+
+### Backend reuse
+No new endpoints. Everything builds on the existing `sessionTrackingAPI`:
+- `POST /sessions/{id}/start-en-route` — flips the session to en-route mode (idempotent).
+- `POST /sessions/{id}/gps-update` — pushes the current user's GPS.
+- `GET /sessions/{id}/gps-track` — returns `{trainer, trainee, distanceMiles, tracking}`.
+
+### Verification
+- 20/20 backend regression PASS. Component lint clean (no blocking).
+- All existing booking, payment, matching, GPS check-in, admin code unchanged.
+
+### Known limitation
+For outdoor sessions the meeting-spot **lat/lng isn't stored on the session yet** — only the address string. Until Places (New) is enabled (iter106e) + the autocomplete saves coords with the address pick, the map shows the two parties + dotted line between them and "Open directions" navigates to the OTHER party's current location (which is the practical desired behavior: meet up). Once Places API is live, the autocomplete `onSelect` can save `traineeLatitude/traineeLongitude` to the session at booking time and the green flag will appear automatically.
+
+
+
 ## 2026-02 — Iter106f: Two bugs on the trainer pending card ✅
 
 ### User-reported bugs
