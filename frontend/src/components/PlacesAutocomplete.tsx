@@ -99,16 +99,55 @@ export const PlacesAutocomplete: React.FC<Props> = ({
     debounceRef.current = setTimeout(async () => {
       try {
         setLoading(true);
-        const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(q)}&types=geocode|establishment&key=${GOOGLE_KEY}`;
-        const res = await fetch(url);
+        // iter106e: Places API (New) — Google has deprecated the legacy
+        // `maps/api/place/autocomplete/json` endpoint. The new endpoint is a
+        // POST to `places.googleapis.com/v1/places:autocomplete` with the
+        // key in the `X-Goog-Api-Key` header.
+        //
+        // Required Google Cloud setup (one-time, on the project that owns
+        // EXPO_PUBLIC_GOOGLE_MAPS_API_KEY):
+        //   1. Enable "Places API (New)" in the API library.
+        //   2. Make sure the key has no API restriction OR includes
+        //      "Places API (New)" in its allow-list.
+        const res = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': GOOGLE_KEY,
+          },
+          body: JSON.stringify({ input: q }),
+        });
         const data = await res.json();
-        if (data.status === 'OK' && Array.isArray(data.predictions)) {
-          setPredictions(data.predictions.slice(0, 5));
+        const suggestions = Array.isArray(data?.suggestions) ? data.suggestions : [];
+        if (suggestions.length > 0) {
+          // Map the new shape onto the existing UI props so we don't have to
+          // change the dropdown markup.
+          const next: Prediction[] = suggestions.slice(0, 5).map((sg: any) => {
+            const pp = sg.placePrediction || {};
+            const text = pp?.text?.text || '';
+            const mainText = pp?.structuredFormat?.mainText?.text || text;
+            const secondaryText = pp?.structuredFormat?.secondaryText?.text || '';
+            return {
+              place_id: pp?.placeId || pp?.place || text,
+              description: text,
+              structured_formatting: {
+                main_text: mainText,
+                secondary_text: secondaryText,
+              },
+            };
+          });
+          setPredictions(next);
           setShowResults(true);
         } else {
+          // Surface the Google error message in dev so misconfiguration
+          // (e.g. API not enabled) doesn't get silently swallowed.
+          if (data?.error?.message) {
+            console.warn('Places autocomplete:', data.error.message);
+          }
           setPredictions([]);
         }
-      } catch {
+      } catch (e) {
+        console.warn('Places autocomplete network error:', e);
         setPredictions([]);
       } finally {
         setLoading(false);
