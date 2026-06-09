@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ActivityIndicator,
-  Dimensions, Platform, Animated, ScrollView, Image,
+  Dimensions, Platform, Animated, ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import { TrainerAvatar } from './TrainerAvatar';
 import { resolveSessionPriceCents } from '../utils/sessionPricing';
 
 const { width: W, height: H } = Dimensions.get('window');
@@ -52,6 +53,8 @@ interface NearbyTrainer {
   id: string; trainerId: string; fullName: string; avatarUrl?: string;
   latitude: number; longitude: number; distanceMiles: number;
   etaMinutes: number; averageRating: number; ratePerMinuteCents: number;
+  /** Trainer's chosen brand color (hex) — used for the avatar ring. */
+  accentColor?: string;
 }
 
 interface Props {
@@ -183,26 +186,21 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
             </View>
           </Marker>
 
-          {/* iter106l: trainer markers — circular profile-photo with the
-              tier-color ring (replaces the diamond shape). Photo when
-              available, falls back to a colored disc with the trainer's
-              initials. */}
+          {/* iter106n: unified circular avatar with brand-color ring + subtle pulse */}
           {trainers.map((t, i) => {
-            const c = getColor(t.averageRating);
+            const ringColor = t.accentColor || N.orange;
             const isSel = selected?.id === t.id;
             return (
               <Marker key={t.id} coordinate={{ latitude: t.latitude, longitude: t.longitude }}
                 onPress={() => tap(t)} anchor={{ x: 0.5, y: 0.5 }}>
-                <View style={[s.markerWrap, isSel && { transform: [{ scale: 1.3 }] }]} data-testid="trainer-marker-node">
-                  <View style={[s.markerPhotoRing, { borderColor: c, shadowColor: c }]}>
-                    {t.avatarUrl ? (
-                      <Image source={{ uri: t.avatarUrl }} style={s.markerPhotoImg} resizeMode="cover" />
-                    ) : (
-                      <View style={[s.markerPhotoFallback, { backgroundColor: c }]}>
-                        <Text style={s.markerPhotoInit}>{initials(t.fullName)}</Text>
-                      </View>
-                    )}
-                  </View>
+                <View style={[s.markerWrap, isSel && { transform: [{ scale: 1.25 }] }]} data-testid="trainer-marker-node">
+                  <TrainerAvatar
+                    uri={t.avatarUrl}
+                    initials={initials(t.fullName)}
+                    ringColor={ringColor}
+                    size={44}
+                    pulse
+                  />
                 </View>
               </Marker>
             );
@@ -224,18 +222,13 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
             <View style={[s.popupBar, { backgroundColor: getColor(selected.averageRating) }]} />
             <View style={s.popupBody}>
               <View style={s.popupLeft}>
-                {/* iter106l: circular avatar (was diamond) */}
-                <View style={[s.popupAvatar, { borderColor: getColor(selected.averageRating) }]}>
-                  {selected.avatarUrl ? (
-                    <Image
-                      source={{ uri: selected.avatarUrl }}
-                      style={s.popupAvatarPhoto}
-                      resizeMode="cover"
-                    />
-                  ) : (
-                    <Text style={[s.popupAvatarInit, { color: getColor(selected.averageRating) }]}>{initials(selected.fullName)}</Text>
-                  )}
-                </View>
+                <TrainerAvatar
+                  uri={selected.avatarUrl}
+                  initials={initials(selected.fullName)}
+                  ringColor={selected.accentColor || getColor(selected.averageRating)}
+                  size={48}
+                  pulse={false}
+                />
               </View>
               <View style={s.popupInfo}>
                 <Text style={s.popupName} numberOfLines={1}>{selected.fullName}</Text>
@@ -292,20 +285,13 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
                   onPress={() => { tap(t); router.push(`/trainee/trainer-detail?trainerId=${t.trainerId}`); }}
                   data-testid={`avail-card-${i}`}
                 >
-                  {/* iter106l: circular avatar (was diamond) */}
-                  <View style={[s.availDiamond, { borderColor: c, shadowColor: c }]}>
-                    {t.avatarUrl ? (
-                      <Image
-                        source={{ uri: t.avatarUrl }}
-                        style={s.availDiamondPhoto}
-                        resizeMode="cover"
-                      />
-                    ) : (
-                      <View style={[s.availDiamondFallback, { backgroundColor: c }]}>
-                        <Text style={s.availInit}>{initials(t.fullName)}</Text>
-                      </View>
-                    )}
-                  </View>
+                  <TrainerAvatar
+                    uri={t.avatarUrl}
+                    initials={initials(t.fullName)}
+                    ringColor={t.accentColor || c}
+                    size={48}
+                    pulse={false}
+                  />
                   <Text style={s.availName} numberOfLines={1}>{t.fullName.split(' ')[0]}</Text>
                   <View style={s.availRatingRow}>
                     <Ionicons name="star" size={10} color={N.star} />

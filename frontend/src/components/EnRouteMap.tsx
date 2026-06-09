@@ -16,7 +16,7 @@
  * either party's session-detail screen with the same JSX.
  */
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, Linking, ActivityIndicator, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, Linking, ActivityIndicator, Animated } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,6 +24,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { sessionTrackingAPI } from '../services/api';
 import { startSessionBackgroundLocation, stopSessionBackgroundLocation } from '../utils/sessionBackgroundLocation';
 import { useAuth } from '../contexts/AuthContext';
+import { TrainerAvatar } from './TrainerAvatar';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
@@ -54,19 +55,7 @@ type Props = {
   destination?: LatLng | null;
 };
 
-const PhotoMarker: React.FC<{ uri?: string; label: string; color: string }> = ({ uri, label, color }) => (
-  <View style={[s.photoOuter, { borderColor: color, shadowColor: color }] }>
-    {uri ? (
-      <Image source={{ uri }} style={s.photoImage} />
-    ) : (
-      <View style={[s.photoFallback, { backgroundColor: color }]}>
-        <Text style={s.markerLabel}>{label}</Text>
-      </View>
-    )}
-  </View>
-);
-
-export const EnRouteMap: React.FC<Props> = ({ session, role, otherAvatarUrl, otherDisplayName, destination }) => {
+const EnRouteMap: React.FC<Props> = ({ session, role, otherAvatarUrl, otherDisplayName, destination }) => {
   const sessionId = session?.id;
   const { user } = useAuth();
   // iter106k: "ME" marker now shows the current user's profile photo
@@ -228,16 +217,37 @@ export const EnRouteMap: React.FC<Props> = ({ session, role, otherAvatarUrl, oth
 
   return (
     <Animated.View style={[s.wrap, { opacity: fadeAnim }]}>
-      <View style={s.headerRow}>
-        <View style={s.statusDot} />
-        <Text style={s.headerLabel}>LIVE</Text>
-        <Text style={s.headerEta}>
-          {tracking
-            ? (distanceMiles !== null
-                ? `${distanceMiles.toFixed(1)} mi apart`
-                : `Connecting to ${role === 'trainer' ? 'trainee' : 'trainer'}…`)
-            : 'Tracking will start when you head out'}
-        </Text>
+      {/* iter106m: brutalist header — mirrors NearbyTrainersMap's
+          "SCANNING AREA / Nearby Trainers" + radar icon + SCAN block. */}
+      <View style={s.head}>
+        <View style={s.headLeft}>
+          <View style={s.headIcon}>
+            <Ionicons name="navigate-outline" size={16} color={N.orange} />
+          </View>
+          <View>
+            <Text style={s.headLabel}>EN ROUTE</Text>
+            <Text style={s.headTitle}>Live Tracking</Text>
+          </View>
+        </View>
+        {destination ? (
+          <TouchableOpacity style={s.brutalBtn} onPress={openTurnByTurn} activeOpacity={0.7} data-testid="en-route-open-maps">
+            <Text style={s.brutalBtnText}>DIRECTIONS</Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
+
+      {/* Status chip — sharp diamond dot + caps label (matches "1 ACTIVE NEARBY") */}
+      <View style={s.countRow}>
+        <View style={s.countChip}>
+          <View style={s.countDot} />
+          <Text style={s.countLabel}>
+            {tracking
+              ? (distanceMiles !== null
+                  ? `${distanceMiles.toFixed(1)} MI APART`
+                  : `CONNECTING TO ${role === 'trainer' ? 'TRAINEE' : 'TRAINER'}`)
+              : 'WAITING FOR MOVEMENT'}
+          </Text>
+        </View>
       </View>
 
       <View style={s.mapShell}>
@@ -265,22 +275,22 @@ export const EnRouteMap: React.FC<Props> = ({ session, role, otherAvatarUrl, oth
           )}
           {myLocation && (
             <Marker coordinate={myLocation} anchor={{ x: 0.5, y: 0.5 }}>
-              <PhotoMarker uri={myAvatarUrl} label={myInitial} color="#FF6A00" />
+              <TrainerAvatar uri={myAvatarUrl} initials={myInitial} ringColor={N.orange} size={46} pulse />
             </Marker>
           )}
           {otherLocation && (
             <Marker coordinate={otherLocation} anchor={{ x: 0.5, y: 0.5 }}>
-              <PhotoMarker
+              <TrainerAvatar
                 uri={otherAvatarUrl}
-                label={(otherDisplayName?.charAt(0) || (role === 'trainer' ? 'C' : 'T')).toUpperCase()}
-                color="#B026FF"
+                initials={(otherDisplayName?.charAt(0) || (role === 'trainer' ? 'C' : 'T')).toUpperCase()}
+                ringColor={N.purple}
+                size={46}
+                pulse
               />
             </Marker>
           )}
-          {/* Dotted lines from each party to destination — subtle visual cue
-              of who's coming from where without implementing actual routing. */}
           {myLocation && destination && (
-            <Polyline coordinates={[myLocation, destination]} strokeColor="rgba(255,106,0,0.55)" strokeWidth={3} lineDashPattern={[6, 6]} />
+            <Polyline coordinates={[myLocation, destination]} strokeColor="rgba(255,95,31,0.55)" strokeWidth={3} lineDashPattern={[6, 6]} />
           )}
           {otherLocation && destination && (
             <Polyline coordinates={[otherLocation, destination]} strokeColor="rgba(176,38,255,0.55)" strokeWidth={3} lineDashPattern={[6, 6]} />
@@ -290,58 +300,70 @@ export const EnRouteMap: React.FC<Props> = ({ session, role, otherAvatarUrl, oth
 
       <View style={s.legendRow}>
         <View style={s.legendItem}>
-          <View style={[s.legendDot, { backgroundColor: '#FF6A00' }]} />
-          <Text style={s.legendText}>You</Text>
+          <View style={[s.legendDot, { backgroundColor: N.orange }]} />
+          <Text style={s.legendText}>YOU</Text>
         </View>
         <View style={s.legendItem}>
-          <View style={[s.legendDot, { backgroundColor: '#B026FF' }]} />
-          <Text style={s.legendText}>{role === 'trainer' ? 'Client' : 'Trainer'}</Text>
+          <View style={[s.legendDot, { backgroundColor: N.purple }]} />
+          <Text style={s.legendText}>{role === 'trainer' ? 'CLIENT' : 'TRAINER'}</Text>
         </View>
         {destination && (
           <View style={s.legendItem}>
-            <View style={[s.legendDot, { backgroundColor: '#00D26A' }]} />
-            <Text style={s.legendText}>Meeting spot</Text>
+            <View style={[s.legendDot, { backgroundColor: N.green }]} />
+            <Text style={s.legendText}>MEETING SPOT</Text>
           </View>
         )}
       </View>
-
-      {destination && (
-        <TouchableOpacity onPress={openTurnByTurn} style={s.openMapsBtn} data-testid="en-route-open-maps">
-          <Ionicons name="navigate" size={16} color="#FFFFFF" />
-          <Text style={s.openMapsText}>Open turn-by-turn directions</Text>
-          <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.7)" />
-        </TouchableOpacity>
-      )}
     </Animated.View>
   );
 };
 
+// iter106m: shared brutalist palette — mirrors NearbyTrainersMap.native so
+// the two maps feel like one cohesive design system.
+const N = {
+  green: '#39FF14',
+  orange: '#FF5F1F',
+  purple: '#B026FF',
+  bg: '#0A0E14',
+  white: '#FFFFFF',
+  border: 'rgba(255,255,255,0.15)',
+  textSec: 'rgba(255,255,255,0.5)',
+};
+
 const s = StyleSheet.create({
-  wrap: { marginBottom: 16, borderRadius: 18, overflow: 'hidden', backgroundColor: '#0A0E14' },
+  // Brutalist shell — full-bleed, sharp corners, matches NearbyTrainersMap
+  wrap: { marginHorizontal: -20, marginBottom: 16, backgroundColor: N.bg, overflow: 'hidden' },
   loading: {
-    height: 280, borderRadius: 18, marginBottom: 16, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: '#0A0E14', gap: 10,
+    marginHorizontal: -20, marginBottom: 16, height: 280,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: N.bg, gap: 10,
   },
-  loadingText: { color: 'rgba(255,255,255,0.55)', fontSize: 13, fontWeight: '600', letterSpacing: 0.5 },
-  headerRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    paddingHorizontal: 16, paddingVertical: 12,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)',
-  },
-  statusDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#00D26A' },
-  headerLabel: { color: '#00D26A', fontSize: 11, fontWeight: '800', letterSpacing: 1.5 },
-  headerEta: { flex: 1, color: 'rgba(255,255,255,0.78)', fontSize: 12, fontWeight: '600', textAlign: 'right', letterSpacing: 0.3 },
+  loadingText: { color: N.textSec, fontSize: 11, fontWeight: '700', letterSpacing: 4 },
+
+  // Head — asymmetric, left-heavy (same as NearbyTrainersMap.head)
+  head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingLeft: 22, paddingRight: 14, paddingTop: 16, paddingBottom: 2 },
+  headLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  headIcon: { width: 28, height: 28, borderWidth: 1.5, borderColor: N.orange, justifyContent: 'center', alignItems: 'center', transform: [{ rotate: '45deg' }] },
+  headLabel: { fontSize: 9, fontWeight: '700', color: N.orange, letterSpacing: 3, marginBottom: 1 },
+  headTitle: { fontSize: 19, fontWeight: '800', color: N.white, letterSpacing: -0.5 },
+  // Brutalist block button — border on bottom + right only
+  brutalBtn: { paddingHorizontal: 14, paddingVertical: 7, borderBottomWidth: 2, borderRightWidth: 2, borderColor: N.orange, backgroundColor: 'transparent' },
+  brutalBtnText: { fontSize: 11, fontWeight: '800', color: N.orange, letterSpacing: 3 },
+
+  // Live count row — sharp diamond dot + caps (mirrors "1 ACTIVE NEARBY")
+  countRow: { paddingLeft: 22, paddingRight: 14, paddingBottom: 10, paddingTop: 4 },
+  countChip: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start' },
+  countDot: { width: 6, height: 6, backgroundColor: N.green, transform: [{ rotate: '45deg' }] },
+  countLabel: { fontSize: 10, fontWeight: '700', color: N.textSec, letterSpacing: 2.5 },
+
   mapShell: { height: 280, backgroundColor: '#080C12' },
   map: { ...StyleSheet.absoluteFillObject },
-  // iter106k: circular profile-photo markers (was diamond). Two concentric
-  // shapes: a colored outer ring (orange for me, purple for the other
-  // party) and an inner clipped circle holding the avatar. Falls back to
-  // a colored disc with the user's initial when no photo is set.
+
+  // iter106k: circular profile-photo markers
   photoOuter: {
     width: 56, height: 56, borderRadius: 28,
     borderWidth: 2.5,
-    backgroundColor: '#0A0E14',
+    backgroundColor: N.bg,
     alignItems: 'center', justifyContent: 'center',
     overflow: 'hidden',
     shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.65, shadowRadius: 10, elevation: 6,
@@ -351,28 +373,24 @@ const s = StyleSheet.create({
     width: '100%', height: '100%', borderRadius: 28,
     alignItems: 'center', justifyContent: 'center',
   },
-  markerLabel: { color: '#FFFFFF', fontSize: 18, fontWeight: '900', letterSpacing: 0.5 },
+  markerLabel: { color: N.white, fontSize: 18, fontWeight: '900', letterSpacing: 0.5 },
+
   destinationPin: {
-    width: 32, height: 32, borderRadius: 16, backgroundColor: '#00D26A',
+    width: 32, height: 32, borderRadius: 16, backgroundColor: N.green,
     alignItems: 'center', justifyContent: 'center',
-    borderWidth: 2, borderColor: '#FFFFFF',
-    shadowColor: '#00D26A', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.6, shadowRadius: 8, elevation: 6,
+    borderWidth: 2, borderColor: N.white,
+    shadowColor: N.green, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.6, shadowRadius: 8, elevation: 6,
   },
+
+  // Legend — caps, sharp diamond dots
   legendRow: {
-    flexDirection: 'row', flexWrap: 'wrap', gap: 14,
-    paddingHorizontal: 16, paddingVertical: 10,
-    backgroundColor: 'rgba(0,0,0,0.35)',
+    flexDirection: 'row', flexWrap: 'wrap', gap: 18,
+    paddingHorizontal: 22, paddingVertical: 14,
+    backgroundColor: N.bg,
   },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  legendDot: { width: 10, height: 10, borderRadius: 5 },
-  legendText: { color: 'rgba(255,255,255,0.75)', fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
-  openMapsBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    paddingHorizontal: 16, paddingVertical: 14,
-    backgroundColor: 'rgba(255,106,0,0.12)',
-    borderTopWidth: 1, borderTopColor: 'rgba(255,106,0,0.25)',
-  },
-  openMapsText: { flex: 1, color: '#FFFFFF', fontSize: 13, fontWeight: '700', letterSpacing: 0.4 },
+  legendDot: { width: 6, height: 6, transform: [{ rotate: '45deg' }] },
+  legendText: { color: N.textSec, fontSize: 10, fontWeight: '700', letterSpacing: 2 },
 });
 
 export default EnRouteMap;

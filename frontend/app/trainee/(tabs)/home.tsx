@@ -726,13 +726,8 @@ export default function TraineeHomeScreen() {
               />
             )}
 
-            {/* Favorite Trainer Availability */}
-            {favoriteAvailability.length > 0 && (
-              <FavoriteAvailability
-                trainers={favoriteAvailability}
-                onTrainerPress={(id) => router.push({ pathname: '/trainee/trainer-detail', params: { trainerId: id } })}
-              />
-            )}
+            {/* iter106n: removed "Your Trainers" section — duplicated the
+                Favorites list and added unnecessary vertical space. */}
 
             {/* iter102an: removed the orange "Swipe to Discover Trainers"
                 banner per user request — it duplicated the bottom-sheet
