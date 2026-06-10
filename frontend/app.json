@@ -21,6 +21,7 @@
       "bundleIdentifier": "com.kingash.rapidreps",
       "buildNumber": "5",
       "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
         "NSLocationWhenInUseUsageDescription": "RapidReps uses your location to show nearby trainers and estimate their arrival time for your workouts.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "RapidReps keeps tracking your location while a session is en-route so your trainer (or trainee) can see your live arrival progress, even when the app is backgrounded.",
         "NSLocationAlwaysUsageDescription": "RapidReps keeps tracking your location while a session is en-route so the other party can see your live arrival progress.",
