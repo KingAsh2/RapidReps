@@ -46,8 +46,8 @@ export const TrainerAvatar: React.FC<Props> = ({
     if (!pulse) return;
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1, duration: 1200, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 0, duration: 1200, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 1100, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 0, duration: 1100, useNativeDriver: true }),
       ])
     );
     loop.start();
@@ -69,9 +69,9 @@ export const TrainerAvatar: React.FC<Props> = ({
               height: haloSize,
               borderRadius: haloSize / 2,
               borderColor: ringColor,
-              opacity: pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [0.0, 0.35] }),
+              opacity: pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [0.0, 0.55] }),
               transform: [{
-                scale: pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1.08] }),
+                scale: pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1.18] }),
               }],
             },
           ]}

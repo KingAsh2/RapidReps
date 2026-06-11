@@ -875,19 +875,22 @@ export default function TraineeHomeScreen() {
               onPress={() => router.push('/trainee/safety-center')}
               data-testid="safety-section-btn"
             >
-              <LinearGradient
-                colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.9)']}
-                style={styles.safetySectionGradient}
-              >
+              {/* iter106v: removed the white LinearGradient that was making
+                  the white title text invisible. The card now uses its
+                  defined dark #141929 background so the white "Safety
+                  Center" title + rgba(255,255,255,0.5) subtitle render
+                  with proper contrast — matching the rest of the dark
+                  brutalist theme. */}
+              <View style={styles.safetySectionGradient}>
                 <View style={styles.safetySectionIcon}>
-                  <Ionicons name="shield-checkmark" size={28} color="#1a2a5e" />
+                  <Ionicons name="shield-checkmark" size={28} color="#FF6A00" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.safetySectionTitle}>Safety Center</Text>
                   <Text style={styles.safetySectionSub}>Tips, emergency contacts & session safety</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color="#1a2a5e" />
-              </LinearGradient>
+                <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.6)" />
+              </View>
             </TouchableOpacity>
 
             <View style={{ height: 30 }} />

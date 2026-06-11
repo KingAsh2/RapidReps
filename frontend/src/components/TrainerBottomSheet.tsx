@@ -8,11 +8,11 @@ import {
   PanResponder,
   Dimensions,
   ScrollView,
-  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { haptic } from '../utils/haptics';
+import { TrainerAvatar } from './TrainerAvatar';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const COLLAPSED_HEIGHT = 200;
@@ -118,10 +118,17 @@ export const TrainerBottomSheet: React.FC<TrainerBottomSheetProps> = ({
       }}
       data-testid={`trainer-card-${trainer.id}`}
     >
-      <Image
-        source={{ uri: trainer.photo || 'https://via.placeholder.com/60' }}
-        style={styles.trainerPhoto}
-      />
+      {/* iter106v: unified TrainerAvatar — same orange/brand ring + subtle
+          pulse as the map pin and Available Now card. */}
+      <View style={styles.trainerPhoto}>
+        <TrainerAvatar
+          uri={trainer.photo}
+          initials={(trainer.name || '?').split(' ').map(p => p[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()}
+          ringColor={(trainer as any).accentColor || '#FF5F1F'}
+          size={60}
+          pulse
+        />
+      </View>
       <View style={styles.trainerInfo}>
         <Text style={styles.trainerName}>{trainer.name}</Text>
         <View style={styles.ratingRow}>

@@ -225,9 +225,9 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
                 <TrainerAvatar
                   uri={selected.avatarUrl}
                   initials={initials(selected.fullName)}
-                  ringColor={selected.accentColor || getColor(selected.averageRating)}
+                  ringColor={selected.accentColor || N.orange}
                   size={48}
-                  pulse={false}
+                  pulse
                 />
               </View>
               <View style={s.popupInfo}>
@@ -288,9 +288,9 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
                   <TrainerAvatar
                     uri={t.avatarUrl}
                     initials={initials(t.fullName)}
-                    ringColor={t.accentColor || c}
+                    ringColor={t.accentColor || N.orange}
                     size={48}
-                    pulse={false}
+                    pulse
                   />
                   <Text style={s.availName} numberOfLines={1}>{t.fullName.split(' ')[0]}</Text>
                   <View style={s.availRatingRow}>
