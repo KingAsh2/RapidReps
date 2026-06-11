@@ -560,7 +560,18 @@ export default function TrainerVerificationScreen() {
 
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton} data-testid="verification-back-btn">
+          <TouchableOpacity
+            onPress={() => {
+              // iter106r: same canGoBack guard as the submit modal — when a
+              // brand-new trainer reaches verification via `router.replace`
+              // the stack is empty, so a raw `back()` ejects them out of
+              // the trainer flow entirely (looks like a logout).
+              if (router.canGoBack()) router.back();
+              else router.replace('/trainer/(tabs)/home');
+            }}
+            style={styles.backButton}
+            data-testid="verification-back-btn"
+          >
             <Ionicons name="arrow-back" size={24} color={COLORS.white} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Trainer Verification</Text>
@@ -908,7 +919,14 @@ export default function TrainerVerificationScreen() {
             <TouchableOpacity
               onPress={() => {
                 setShowSuccessModal(false);
-                router.back();
+                // iter106r: previously `router.back()` blindly — but for a
+                // BRAND NEW trainer that comes from auth/onboarding-trainer
+                // (which uses `router.replace(...)` to enter this screen)
+                // the back stack is empty, so `back()` pops the user out
+                // of the trainer flow and looks like an instant sign-out.
+                // Fall back to the trainer home tab when we can't go back.
+                if (router.canGoBack()) router.back();
+                else router.replace('/trainer/(tabs)/home');
               }}
               style={modalStyles.btn}
               data-testid="verification-modal-ok-btn"
