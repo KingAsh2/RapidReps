@@ -18,6 +18,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { chatAPI } from '../../src/services/api';
+import { toast } from '../../src/utils/toast';
+import { formatApiError } from '../../src/utils/formatApiError';
 import { UserAvatar } from '../../src/components/UserAvatar';
 import FloatingOrangeBg from '../../src/components/FloatingOrangeBg';
 import { RapidBg } from '../../src/components/RapidBg';
@@ -72,7 +74,17 @@ const mrStyles = StyleSheet.create({
 
 export default function ChatScreen() {
   const router = useRouter();
-  const { conversationId, userId, userName, userPhoto } = useLocalSearchParams();
+  // iter106q: accept BOTH naming conventions for the receiver param.
+  // Earlier code paths passed `otherUserId`/`otherUserName` (e.g. "Message
+  // the Admin" CTA) while most call sites pass `userId`/`userName`. The
+  // chat screen used to read only the latter, which silently broke the
+  // admin-support flow (send button looked dead). Fall back to the alias
+  // form so both paths work.
+  const params = useLocalSearchParams();
+  const conversationId = params.conversationId;
+  const userId = (params.userId || params.otherUserId) as string | undefined;
+  const userName = (params.userName || params.otherUserName) as string | undefined;
+  const userPhoto = params.userPhoto as string | undefined;
   const { user } = useAuth();
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -143,7 +155,10 @@ export default function ChatScreen() {
 
   const handleSend = async () => {
     if (!newMessage.trim() || sending) return;
-    
+    if (!userId) {
+      toast.error("Couldn't open this conversation", 'Please go back and try again');
+      return;
+    }
     setSending(true);
     try {
       await chatAPI.sendMessage(
@@ -156,6 +171,7 @@ export default function ChatScreen() {
       flatListRef.current?.scrollToEnd({ animated: true });
     } catch (error) {
       console.error('Error sending message:', error);
+      toast.error(formatApiError(error, "Couldn't send message"));
     } finally {
       setSending(false);
     }

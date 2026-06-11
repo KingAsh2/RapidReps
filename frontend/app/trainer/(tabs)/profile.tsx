@@ -218,7 +218,7 @@ export default function TrainerProfileScreen() {
                   const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
                   if (!res.ok) throw new Error(`HTTP ${res.status}`);
                   const data = await res.json();
-                  router.push(`/messages/chat?conversationId=${data.conversationId}&otherUserId=${data.admin.id}&otherUserName=${encodeURIComponent(data.admin.fullName || 'RapidReps Admin')}` as any);
+                  router.push(`/messages/chat?conversationId=${data.conversationId}&userId=${data.admin.id}&userName=${encodeURIComponent(data.admin.fullName || 'RapidReps Admin')}` as any);
                 } catch (e: any) {
                   toast.error('Could not reach admin', 'Try again later');
                 }
