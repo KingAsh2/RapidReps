@@ -496,6 +496,22 @@ export default function TraineeProfileScreen() {
                 <Ionicons name="share-social" size={18} color={COLORS.white} />
                 <Text style={styles.shareProfileBtnText}>Share Profile</Text>
               </TouchableOpacity>
+
+              {/* iter106s: Edit Profile button — moved up here to match the
+                  trainer profile alignment (sits directly under Share Profile,
+                  same orange full-width pill). The bottom-of-screen "Edit
+                  Profile" button has been removed; "Save Changes" still
+                  appears at the bottom while the user is actively editing. */}
+              {!isEditing && (
+                <TouchableOpacity
+                  onPress={() => setIsEditing(true)}
+                  style={[styles.shareProfileBtn, { marginTop: 10 }]}
+                  data-testid="edit-profile-btn"
+                >
+                  <Ionicons name="pencil" size={18} color={COLORS.white} />
+                  <Text style={styles.shareProfileBtnText}>Edit Profile</Text>
+                </TouchableOpacity>
+              )}
             </Animated.View>
 
             {/* Stats Card */}
@@ -873,8 +889,11 @@ export default function TraineeProfileScreen() {
               </View>
             </Animated.View>
 
-            {/* Save / Edit Button */}
-            {isEditing ? (
+            {/* Save Changes Button — shown only while actively editing.
+                iter106s: the unstyled "Edit Profile" button that used to sit
+                here was a visual duplicate of the new orange one near the
+                avatar (matches the trainer profile alignment); removed. */}
+            {isEditing && (
               <TouchableOpacity 
                 style={styles.saveButton}
                 onPress={handleSave}
@@ -893,19 +912,6 @@ export default function TraineeProfileScreen() {
                       <Text style={styles.saveButtonText}>Save Changes</Text>
                     </>
                   )}
-                </LinearGradient>
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity 
-                style={styles.editButton}
-                onPress={() => setIsEditing(true)}
-              >
-                <LinearGradient
-                  colors={['#141929', '#1A2035']}
-                  style={styles.editButtonGradient}
-                >
-                  <Ionicons name="pencil" size={18} color={'#FFFFFF'} />
-                  <Text style={styles.editButtonText}>Edit Profile</Text>
                 </LinearGradient>
               </TouchableOpacity>
             )}
