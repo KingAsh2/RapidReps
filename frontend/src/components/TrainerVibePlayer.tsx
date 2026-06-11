@@ -26,6 +26,12 @@ const MUTE_KEY = '@rapidreps_vibe_muted';
 
 export const TrainerVibePlayer = ({ vibe, autoPlay = true, compact = false }: Props) => {
   const [sound, setSound] = useState<Audio.Sound | null>(null);
+  // iter106t: mirror `sound` into a ref so `useFocusEffect` can read the
+  // latest value without depending on it. The old `useFocusEffect([sound])`
+  // re-fired on every setSound() and reset `hasPlayed`, which let the
+  // duplicate autoplay-on-deps useEffect race the status callback — that's
+  // what caused the play/pause icon to bounce.
+  const soundRef = useRef<Audio.Sound | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [hasPlayed, setHasPlayed] = useState(false);
@@ -65,16 +71,20 @@ export const TrainerVibePlayer = ({ vibe, autoPlay = true, compact = false }: Pr
   // ────────────────────────────────────────────────────────────────────
   useFocusEffect(
     React.useCallback(() => {
-      // Returning to focus: clear the "already played this mount" guard so
-      // the autoplay effect below fires again on this fresh visit.
+      // iter106t: use the ref instead of `sound` so deps are stable. The
+      // previous `[sound]` dep caused the effect to re-fire on every
+      // setSound(newSound) → reset hasPlayed → re-trigger autoplay → race
+      // with the status callback → bouncing icon. With `[]` deps the effect
+      // only runs on real focus/blur transitions.
       setHasPlayed(false);
       setPreviewEnded(false);
       return () => {
-        // Losing focus: stop and unload the current preview.
-        if (sound) {
+        const cur = soundRef.current;
+        if (cur) {
           (async () => {
-            try { await releaseActiveAudio(sound); } catch { /* ignore */ }
+            try { await releaseActiveAudio(cur); } catch { /* ignore */ }
           })();
+          soundRef.current = null;
           if (mountedRef.current) {
             setSound(null);
             setIsPlaying(false);
@@ -82,7 +92,7 @@ export const TrainerVibePlayer = ({ vibe, autoPlay = true, compact = false }: Pr
         }
         playLockRef.current = false;
       };
-    }, [sound])
+    }, [])
   );
 
   const initAutoPlay = async () => {
@@ -114,11 +124,10 @@ export const TrainerVibePlayer = ({ vibe, autoPlay = true, compact = false }: Pr
     }
   };
 
-  useEffect(() => {
-    if (autoPlay && !hasPlayed && !isMuted && getPreviewUrl()) {
-      playPreview();
-    }
-  }, [isMuted, freshPreviewUrl, hasPlayed]);
+  // iter106t: removed the redundant `useEffect([isMuted, freshPreviewUrl, hasPlayed])`
+  // that called playPreview again — initAutoPlay() and useFocusEffect already
+  // own the autoplay trigger. Having three call-sites all racing each other
+  // was the second half of the bouncing-icon bug.
 
   const cleanupSound = async () => {
     if (sound) {
@@ -153,6 +162,7 @@ export const TrainerVibePlayer = ({ vibe, autoPlay = true, compact = false }: Pr
       // iter97 (#1): register globally so any prior playing audio stops first
       await registerActiveAudio(newSound);
       if (mountedRef.current) {
+        soundRef.current = newSound;
         setSound(newSound);
         setIsPlaying(true);
         setHasPlayed(true);

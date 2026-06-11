@@ -52,6 +52,11 @@ export const HighlightUploadScreen: React.FC<Props> = ({ role }) => {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  // iter106u: distinct "finalizing" state for the gap between "bytes done
+  // uploading" and "server has reassembled + persisted the file". The bar
+  // would otherwise sit at 100% with no feedback for several seconds —
+  // making users think the upload had failed (it hadn't).
+  const [finalizing, setFinalizing] = useState(false);
   const [successVisible, setSuccessVisible] = useState(false);
   const successScale = useRef(new Animated.Value(0)).current;
 
@@ -75,6 +80,10 @@ export const HighlightUploadScreen: React.FC<Props> = ({ role }) => {
         if (e.lengthComputable) {
           const pct = Math.round((e.loaded / e.total) * 100);
           setUploadProgress(pct);
+          // iter106u: once bytes are 100% uploaded, switch to a "Saving…"
+          // indicator so the user doesn't think the upload is stuck while
+          // the server reassembles/persists the file.
+          if (pct >= 100) setFinalizing(true);
         }
       };
       xhr.onload = () => {
@@ -164,7 +173,10 @@ export const HighlightUploadScreen: React.FC<Props> = ({ role }) => {
             filename: `highlight.${ext}`,
             contentType: 'video/mp4',
             caption: '',
-            onProgress: (pct) => setUploadProgress(pct),
+            onProgress: (pct) => {
+              setUploadProgress(pct);
+              if (pct >= 100) setFinalizing(true);
+            },
           });
           showSuccessModal();
           loadHighlights();
@@ -189,15 +201,46 @@ export const HighlightUploadScreen: React.FC<Props> = ({ role }) => {
         showSuccessModal();
         loadHighlights();
       } else {
-        toast.error(res.data?.detail || 'Upload failed. Try a smaller file.');
-        // iter106c: roll back the optimistic preview on failure so the user
-        // doesn't see a phantom tile that never made it to the server.
-        loadHighlights();
+        // iter106u: before declaring "failed", refetch the highlights list.
+        // Sometimes the server has already persisted the file but the
+        // response was cut by the proxy / ngrok / hot reload — the user
+        // shouldn't see a red error toast for an upload that worked.
+        const before = highlights.length;
+        await loadHighlights();
+        // Note: highlights state may not be updated synchronously, so
+        // check by fetching directly instead of relying on local state.
+        try {
+          const check = await fetch(`${API_URL}/api/${profilePath}/${user?.id}/highlights`);
+          const checkData = await check.json();
+          if ((checkData.highlights || []).length > before) {
+            showSuccessModal();
+          } else {
+            toast.error(res.data?.detail || 'Upload failed. Try a smaller file.');
+          }
+        } catch {
+          toast.error(res.data?.detail || 'Upload failed. Try a smaller file.');
+        }
       }
     } catch {
-      toast.error('Upload failed. Check your connection and try again.');
-      loadHighlights(); // iter106c: roll back optimistic entry on error
-    } finally { setUploading(false); setUploadProgress(0); }
+      // iter106u: same verify-before-yelling pattern for thrown errors —
+      // chunked uploads occasionally throw on the final commit response even
+      // though the file landed on disk.
+      try {
+        const check = await fetch(`${API_URL}/api/${profilePath}/${user?.id}/highlights`);
+        const checkData = await check.json();
+        const beforeLen = highlights.length;
+        if ((checkData.highlights || []).length > beforeLen) {
+          showSuccessModal();
+          await loadHighlights();
+        } else {
+          toast.error('Upload failed. Check your connection and try again.');
+          loadHighlights();
+        }
+      } catch {
+        toast.error('Upload failed. Check your connection and try again.');
+        loadHighlights();
+      }
+    } finally { setUploading(false); setUploadProgress(0); setFinalizing(false); }
   };
 
   const deleteHighlight = async (index: number) => {
@@ -269,7 +312,16 @@ export const HighlightUploadScreen: React.FC<Props> = ({ role }) => {
               {uploading ? (
                 <View style={{ alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}>
                   <ActivityIndicator size="small" color="#FFF" />
-                  <Text style={s.uploadBtnText}>{uploadProgress > 0 ? `${uploadProgress}%` : 'UPLOADING…'}</Text>
+                  {/* iter106u: distinguish "uploading bytes" from "server is
+                      saving" so 100% doesn't sit there making the user think
+                      the upload froze. */}
+                  <Text style={s.uploadBtnText}>
+                    {finalizing
+                      ? 'SAVING…'
+                      : uploadProgress > 0
+                      ? `${uploadProgress}%`
+                      : 'UPLOADING…'}
+                  </Text>
                 </View>
               ) : (
                 <>

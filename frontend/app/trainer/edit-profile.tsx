@@ -465,14 +465,20 @@ export default function EditTrainerProfileScreen() {
                       <View style={styles.sliderContainer}>
                         {/* iter102i: opt-in cap. Empty value = no limit (default).
                             Trainers can flip on a cap if they don't want to travel far. */}
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, gap: 12 }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1, flexShrink: 1 }}>
                             <Ionicons
                               name={formData.travelRadiusMiles ? 'location' : 'infinite'}
                               size={16}
                               color={COLORS.orange}
                             />
-                            <Text style={styles.sliderValueText}>
+                            <Text
+                              style={[styles.sliderValueText, { flexShrink: 1 }]}
+                              numberOfLines={1}
+                              ellipsizeMode="tail"
+                              adjustsFontSizeToFit
+                              minimumFontScale={0.7}
+                            >
                               {formData.travelRadiusMiles
                                 ? `${formData.travelRadiusMiles} ${parseInt(formData.travelRadiusMiles) === 1 ? 'mile' : 'miles'}`
                                 : 'No limit'}
@@ -484,11 +490,12 @@ export default function EditTrainerProfileScreen() {
                               travelRadiusMiles: formData.travelRadiusMiles ? '' : '10',
                             })}
                             style={{
-                              paddingHorizontal: 10,
-                              paddingVertical: 5,
+                              paddingHorizontal: 12,
+                              paddingVertical: 6,
                               borderRadius: 999,
                               borderWidth: 1,
                               borderColor: 'rgba(255,106,0,0.4)',
+                              flexShrink: 0,
                             }}
                             data-testid="travel-radius-toggle-cap"
                           >
