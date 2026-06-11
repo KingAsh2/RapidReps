@@ -978,10 +978,10 @@ export default function TraineeProfileScreen() {
                 </LinearGradient>
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontSize: 16, fontWeight: '800', color: '#FFF' }}>
-                    {profile?.vibeTrackTitle ? 'Your Vibe' : 'Set Your Vibe'}
+                    {profile?.vibeTrackTitle ? 'Your Anthem' : 'Set Your Anthem'}
                   </Text>
                   <Text style={{ fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.5)' }}>
-                    {profile?.vibeTrackTitle ? `${profile.vibeTrackTitle} - ${profile.vibeArtistName}` : 'Choose a profile anthem'}
+                    {profile?.vibeTrackTitle ? `${profile.vibeTrackTitle} - ${profile.vibeArtistName}` : 'Pick the song that hypes you up'}
                   </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.3)" />

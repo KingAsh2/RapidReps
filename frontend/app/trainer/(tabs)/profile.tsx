@@ -478,8 +478,8 @@ export default function TrainerProfileScreen() {
                   <Ionicons name="musical-notes" size={22} color="#FFF" />
                 </LinearGradient>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 16, fontWeight: '800', color: '#FFF' }}>Set Your Vibe Music</Text>
-                  <Text style={{ fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.5)' }}>Choose a profile anthem</Text>
+                  <Text style={{ fontSize: 16, fontWeight: '800', color: '#FFF' }}>Set Your Anthem</Text>
+                  <Text style={{ fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.5)' }}>Pick the song that hypes you up</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.3)" />
               </TouchableOpacity>

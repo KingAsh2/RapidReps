@@ -234,7 +234,7 @@ export const VibeSetupScreen: React.FC<Props> = ({ role }) => {
       <SafeAreaView style={{ flex: 1 }}>
         <ScreenHeader
           title={title}
-          subtitle="Choose your profile anthem"
+          subtitle="Pick the song that hypes you up"
           onBack={() => router.back()}
           testID={`${role}-vibe-header`}
         />
