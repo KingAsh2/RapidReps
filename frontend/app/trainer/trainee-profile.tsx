@@ -43,7 +43,12 @@ export default function TraineeProfileScreen() {
   const { showAlert } = useAlert();
 
   const sessionId = params.sessionId as string;
-  const traineeId = params.traineeId as string;
+  // iter106w: accept both `traineeId` and `userId` param names. Earlier code
+  // paths used `userId` (e.g. the "find a client" search) which silently
+  // skipped the profile fetch — that's why the trainer-side view looked
+  // stripped down ("just initials + session details"). Accepting both keeps
+  // every entry point loading the rich profile data.
+  const traineeId = (params.traineeId || params.userId) as string;
   const traineeName = params.traineeName as string;
   const traineePhoto = params.traineePhoto as string;
   const sessionDetails = params.sessionDetails as string;
@@ -271,6 +276,13 @@ export default function TraineeProfileScreen() {
                 <Text style={[styles.tagPillText, { color: accent }]}>{personalityTag}</Text>
               </View>
             ) : null}
+            {/* iter106w: bio sits in the hero — same placement as
+                trainee-side trainer-detail. Trainee writes this in their
+                profile setup; surfaced here so trainers can read their
+                client's intro at a glance before accepting a session. */}
+            {traineeData?.bio ? (
+              <Text style={styles.bioText} numberOfLines={6}>{traineeData.bio}</Text>
+            ) : null}
             {session?.traineeGoals ? (
               <View style={styles.goalsRow}>
                 <Ionicons name="flag" size={14} color={accent} />
@@ -391,11 +403,18 @@ export default function TraineeProfileScreen() {
             </View>
           ) : null}
 
-          {/* Social + Instagram (iter102ac: SocialLinksDisplay removed) */}
-          <View style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>Connect</Text>
-            <InstagramSection targetUserId={traineeId} />
-          </View>
+          {/* iter106w: Connect — restored SocialLinksDisplay so the trainer
+              sees Instagram/TikTok/Twitter links the trainee filled in,
+              same as the trainee sees on the trainer profile. */}
+          {(traineeData?.socialLinks || traineeData?.instagramHandle) ? (
+            <View style={styles.sectionCard}>
+              <Text style={styles.sectionTitle}>Connect</Text>
+              {traineeData?.socialLinks ? (
+                <SocialLinksDisplay socialLinks={traineeData.socialLinks} />
+              ) : null}
+              <InstagramSection targetUserId={traineeId} />
+            </View>
+          ) : null}
 
           {/* Safety footer */}
           <TouchableOpacity style={styles.dangerRow} onPress={handleBlockTrainee} data-testid="block-trainee-btn">
@@ -527,6 +546,16 @@ const styles = StyleSheet.create({
     borderWidth: 1, marginTop: 10,
   },
   tagPillText: { fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.8 },
+  // iter106w: bio in the hero card (parity with trainee-side trainer-detail).
+  bioText: {
+    marginTop: 14,
+    paddingHorizontal: 4,
+    fontSize: 14,
+    lineHeight: 20,
+    color: 'rgba(255,255,255,0.78)',
+    fontWeight: '500',
+    textAlign: 'center',
+  },
   goalsRow: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     marginTop: 14, paddingHorizontal: 14, paddingVertical: 10,

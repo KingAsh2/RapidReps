@@ -892,7 +892,7 @@ export default function TrainerHomeScreen() {
               }}
               onSelectResult={(p) => {
                 const id = p.userId || p.id;
-                if (id) router.push(`/trainer/trainee-profile?userId=${id}`);
+                if (id) router.push(`/trainer/trainee-profile?traineeId=${id}`);
               }}
             />
 
