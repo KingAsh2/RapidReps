@@ -82,7 +82,10 @@ export const VibeSetupScreen: React.FC<Props> = ({ role }) => {
   };
 
   const searchTracks = useCallback(async (q?: string) => {
-    const term = (q ?? query).trim();
+    // RN passes event objects to onSubmitEditing / onPress handlers, so coerce
+    // anything that isn't a literal string back to the live `query` state
+    // (Sentry: TypeError: (q ?? query).trim is not a function — iter106af).
+    const term = (typeof q === 'string' ? q : query).trim();
     if (term.length < 2) {
       setResults([]);
       return;
