@@ -266,8 +266,12 @@ export default function MySessionsScreen() {
                   onPress={() => router.push(`/trainee/session-detail?sessionId=${session.id}`)}
                   activeOpacity={0.85}
                 >
+                  {/* iter106ab: session card gradient was white-on-white
+                      (rgba(255,255,255,0.95)/.9) but every text style inside
+                      is white → invisible card. Switched to the dark brand
+                      gradient that matches the rest of the dark theme. */}
                   <LinearGradient
-                    colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.9)']}
+                    colors={['#141929', '#1A2035']}
                     style={styles.sessionCardGradient}
                   >
                     {/* Status Badge */}

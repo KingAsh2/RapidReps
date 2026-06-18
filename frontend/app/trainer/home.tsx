@@ -842,8 +842,11 @@ export default function TrainerHomeScreen() {
               </View>
               {upcomingSessions.length === 0 ? (
                 <View style={styles.emptyCard}>
+                  {/* iter106ab: was white-on-white gradient with white text
+                      → invisible empty state. Dark gradient matches the rest
+                      of the trainer home theme. */}
                   <LinearGradient
-                    colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.9)']}
+                    colors={['#141929', '#1A2035']}
                     style={styles.emptyGradient}
                   >
                     <Ionicons name="calendar-outline" size={48} color={COLORS.orange} />
