@@ -65,9 +65,17 @@ const mrStyles = StyleSheet.create({
   messageContainer: { marginVertical: 4, paddingHorizontal: 16 },
   myMessageContainer: { alignItems: 'flex-end' },
   theirMessageContainer: { alignItems: 'flex-start' },
+  // iter106aa: bubbles previously had no backgroundColor — text floated
+  // straight on the body and was invisible on the old white gradient.
+  // Now: my bubble = brand orange, their bubble = subtle white tint.
   messageBubble: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 18, maxWidth: '80%' },
-  myMessageBubble: { borderBottomRightRadius: 4 },
-  theirMessageBubble: { borderBottomLeftRadius: 4 },
+  myMessageBubble: { borderBottomRightRadius: 4, backgroundColor: '#FF6A00' },
+  theirMessageBubble: {
+    borderBottomLeftRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
   myMessageText: { color: '#FFFFFF', fontSize: 15, lineHeight: 20 },
   myMessageTime: { color: 'rgba(255,255,255,0.65)', fontSize: 10, marginTop: 4, alignSelf: 'flex-end' },
 });
@@ -310,9 +318,13 @@ export default function ChatScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
         >
-          {/* Chat background */}
+          {/* iter106aa: chat background was `[grayLight, offWhite, white]`
+              — near-white. All text inside (empty-state, message bubbles,
+              input field) is `#FFFFFF`, so it disappeared. Switched to a
+              dark gradient that matches the brutalist app theme + the
+              messages list page (where this chat is opened from). */}
           <LinearGradient
-            colors={[COLORS.grayLight, COLORS.offWhite, COLORS.white]}
+            colors={['#0A0E14', '#141929', '#1A2035']}
             style={styles.chatBackground}
           >
             <FlatList
