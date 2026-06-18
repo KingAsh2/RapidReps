@@ -323,6 +323,41 @@ export default function TraineeProfileScreen() {
             </View>
           ) : null}
 
+          {/* iter106y: Client Info card — always renders, even for trainees
+              with empty profiles. Surfaces useful at-a-glance context for
+              the trainer (member since, prior sessions with you, verified
+              email, etc.) so the screen never feels visually empty just
+              because the client hasn't filled in vibe/bio/anthem yet. */}
+          <View style={styles.sectionCard}>
+            <Text style={styles.sectionTitle}>Client Info</Text>
+            <Row
+              icon="person-circle-outline"
+              text={traineeData?.createdAt
+                ? `Member since ${new Date(traineeData.createdAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}`
+                : 'New to RapidReps'}
+            />
+            <Row
+              icon="fitness-outline"
+              text={typeof traineeData?.sessionsWithYou === 'number'
+                ? `${traineeData.sessionsWithYou} previous ${traineeData.sessionsWithYou === 1 ? 'session' : 'sessions'} with you`
+                : 'First session with you'}
+            />
+            {traineeData?.emailVerified ? (
+              <Row icon="shield-checkmark-outline" text="Verified account" />
+            ) : null}
+            {traineeData?.phoneVerified ? (
+              <Row icon="call-outline" text="Phone verified" />
+            ) : null}
+            {!traineeData?.bio && !personalityTag ? (
+              <View style={styles.emptyHint}>
+                <Ionicons name="information-circle-outline" size={14} color="rgba(255,255,255,0.5)" />
+                <Text style={styles.emptyHintText}>
+                  This client hasn&apos;t finished setting up their profile yet — chat with them to learn more about their goals.
+                </Text>
+              </View>
+            ) : null}
+          </View>
+
           {/* Session details */}
           {session ? (
             <View style={styles.sectionCard}>
@@ -555,6 +590,25 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.78)',
     fontWeight: '500',
     textAlign: 'center',
+  },
+  // iter106y: friendly hint when a client hasn't filled in their profile yet
+  emptyHint: {
+    marginTop: 10,
+    padding: 10,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  emptyHintText: {
+    flex: 1,
+    fontSize: 12,
+    lineHeight: 17,
+    color: 'rgba(255,255,255,0.55)',
+    fontWeight: '500',
   },
   goalsRow: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
