@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { resolveSessionPriceCents } from '../utils/sessionPricing';
+import { UserAvatar } from './UserAvatar';
 
 const COLORS = {
   orange: '#FF6A00',
@@ -70,13 +71,15 @@ export default function NearbyTrainersMap({ trainers = [] }: Props) {
               data-testid={`nearby-trainer-${trainer.trainerId}`}
             >
               <View style={styles.avatarWrap}>
-                {trainer.avatarUrl ? (
-                  <Image source={{ uri: trainer.avatarUrl }} style={styles.avatar} />
-                ) : (
-                  <LinearGradient colors={[COLORS.orange, COLORS.orangeHot]} style={styles.avatarPlaceholder}>
-                    <Text style={styles.avatarInitial}>{trainer.fullName?.charAt(0) || '?'}</Text>
-                  </LinearGradient>
-                )}
+                <UserAvatar
+                  user={{
+                    id: trainer.trainerId,
+                    fullName: trainer.fullName,
+                    avatarUrl: trainer.avatarUrl,
+                  }}
+                  size={56}
+                  ring
+                />
                 <View style={styles.onlineDot} />
               </View>
               <Text style={styles.trainerName} numberOfLines={1}>{trainer.fullName}</Text>

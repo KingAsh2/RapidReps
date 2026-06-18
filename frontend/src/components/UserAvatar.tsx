@@ -1,62 +1,56 @@
 /**
- * UserAvatar — iter97 (#7, #18, #19). One component for every user thumbnail.
+ * UserAvatar — iter106ac.
  *
- * Renders the user's real photo when available; falls back to colored initials.
- * Used in: nearby cards, profile tab icon, chat headers, admin lists, etc.
+ * Was a separate avatar implementation (plain circle, optional orange ring,
+ * no pulse). The user asked for a SINGLE unified look across the app, so
+ * this is now a thin wrapper around `TrainerAvatar` — same circular ring +
+ * subtle brand-color pulse that the discovery surfaces already use.
  *
- *   <UserAvatar user={trainer} size={48} />
- *   <UserAvatar user={user} size={28} ring />   // tab-bar style
+ * The legacy API (`user`, `size`, `ring`, `style`) is preserved so the
+ * 30+ existing call sites keep working without edits.
+ *
+ *   <UserAvatar user={trainer} size={48} />          // pulse off (default)
+ *   <UserAvatar user={user} size={28} ring />        // pulse on
+ *   <UserAvatar user={u} size={40} pulse={false} />  // explicit override
  */
 import React from 'react';
-import { Image, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { ViewStyle, View } from 'react-native';
 import { avatarAccentFor, initialsFor, resolveAvatarUrl } from '../utils/avatar';
+import { TrainerAvatar } from './TrainerAvatar';
 
 type Props = {
   user?: any;
   size?: number;
-  ring?: boolean;       // accent ring for active states (e.g. selected tab)
+  /** Show the active-state ring (was the trigger for the orange border).
+   *  When true we also turn the pulse halo on, since that's what visually
+   *  signals "live / active" to the user. */
+  ring?: boolean;
+  /** Explicit pulse control if the call site needs to override `ring`. */
+  pulse?: boolean;
   style?: ViewStyle;
 };
 
-export const UserAvatar: React.FC<Props> = ({ user, size = 40, ring = false, style }) => {
+export const UserAvatar: React.FC<Props> = ({
+  user,
+  size = 40,
+  ring = false,
+  pulse,
+  style,
+}) => {
   const url = resolveAvatarUrl(user);
-  const dim = { width: size, height: size, borderRadius: size / 2 };
-  const ringStyle: ViewStyle | undefined = ring
-    ? { borderWidth: 2, borderColor: '#FF7A00' }
-    : undefined;
-
-  if (url) {
-    return (
-      <Image
-        source={{ uri: url }}
-        style={[styles.img, dim, ringStyle, style]}
-        accessibilityLabel="User avatar"
-        data-testid="user-avatar-img"
-      />
-    );
-  }
+  const ringColor = user?.accentColor || avatarAccentFor(user) || '#FF5F1F';
+  const initials = initialsFor(user);
   return (
-    <View
-      style={[
-        styles.fallback,
-        dim,
-        { backgroundColor: avatarAccentFor(user) },
-        ringStyle,
-        style,
-      ]}
-      data-testid="user-avatar-initials"
-    >
-      <Text style={[styles.initials, { fontSize: Math.max(10, size * 0.4) }]}>
-        {initialsFor(user)}
-      </Text>
+    <View style={style}>
+      <TrainerAvatar
+        uri={url || undefined}
+        initials={initials}
+        ringColor={ringColor}
+        size={size}
+        pulse={pulse !== undefined ? pulse : ring}
+      />
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  img: { backgroundColor: '#1a2238' },
-  fallback: { alignItems: 'center', justifyContent: 'center' },
-  initials: { color: '#fff', fontWeight: '800', letterSpacing: 0.5 },
-});
 
 export default UserAvatar;

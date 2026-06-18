@@ -45,6 +45,7 @@ import PeopleSearchBar from '../../../src/components/PeopleSearchBar';
 import FloatingOrangeBg from '../../../src/components/FloatingOrangeBg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { swrCache } from '../../../src/hooks/useStaleWhileRefresh';
+import { UserAvatar } from '../../../src/components/UserAvatar';
 
 // iter102h: persist trainee's proximity preference so other screens
 // (e.g. /trainee/swipe-trainers) can honor the same radius.
@@ -837,13 +838,10 @@ export default function TraineeHomeScreen() {
                         onPress={() => router.push(`/trainee/trainer-detail?trainerId=${trainer.userId || trainer.id}`)}
                         data-testid={`top-trainer-${trainer.id}`}
                       >
-                        {trainer.avatarUrl ? (
-                          <Image source={{ uri: trainer.avatarUrl }} style={{ width: 64, height: 64, borderRadius: 32, marginBottom: 8, borderWidth: 2, borderColor: 'rgba(255,106,0,0.3)' }} />
-                        ) : (
-                          <View style={{ width: 64, height: 64, borderRadius: 32, marginBottom: 8, backgroundColor: 'rgba(255,106,0,0.12)', justifyContent: 'center', alignItems: 'center' }}>
-                            <Ionicons name="person" size={28} color="#FF6A00" />
-                          </View>
-                        )}
+                        {/* Unified pulsing brand-ring avatar */}
+                        <View style={{ marginBottom: 8 }}>
+                          <UserAvatar user={trainer} size={64} ring />
+                        </View>
                         <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff', textAlign: 'center' }} numberOfLines={1}>{trainer.fullName || 'Trainer'}</Text>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
                           <Ionicons name="star" size={14} color="#FFD700" />

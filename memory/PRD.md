@@ -4,6 +4,30 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-02 — Iter106ad: Avatar Consistency Sweep ✅
+
+User explicitly requested that ALL photo markers across the app share the unified pulsing-brand-ring design (`TrainerAvatar`), except large hero profile images. Performed a comprehensive sweep across list views, chat conversations, discovery thumbnails, and the profile preview modal.
+
+**Files updated:**
+- `app/trainee/(tabs)/saved.tsx` — 50px favorite-trainer thumbnails now use `UserAvatar` with pulsing accent ring.
+- `app/messages/index.tsx`, `app/trainee/(tabs)/messages.tsx`, `app/trainer/(tabs)/messages.tsx` — 56px chat-list avatars now use `UserAvatar`; preserved the green active-indicator dot overlay on `/messages/index.tsx`.
+- `app/trainee/(tabs)/home.tsx` — "Top Trainers Near You" 64px discovery thumbnails now use `UserAvatar`.
+- `app/trainer/home.tsx` — "Nearby Trainees" card list now uses `UserAvatar`.
+- `src/components/ProfilePreviewCard.tsx` — Long-press preview modal avatar now uses `UserAvatar` (88px ring) while preserving the green availability dot.
+- `src/components/NearbyTrainersMap.web.tsx` — Web fallback list avatars now use `UserAvatar`.
+
+**Intentionally untouched (Hero exemptions per user direction):**
+- Trainee/Trainer self-profile hero images on `/trainee/(tabs)/profile.tsx` and `/trainer/(tabs)/profile.tsx`.
+- Trainer profile-detail header in `/trainer/(tabs)/home.tsx` (`heroAvatar`).
+- Trainer `edit-profile.tsx` upload preview (96px).
+- `badge.tsx` certification badge photo.
+- Virtual-match "Trainer Found!" 110px hero photo on `virtual-confirm.tsx` (functions visually as a profile hero in a match-result modal).
+- `TrainerCard.tsx` already has its own ring + glow + verified/live-dot overlay system — left as-is to preserve those rich overlays.
+
+**Verification:** Expo Metro bundle compiles cleanly (697 modules), no new ESLint errors introduced beyond pre-existing warnings.
+
+
+
 ## 2026-02 — Iter106h Verification: WS handshake + broadcast confirmed ✅ (2026-02)
 
 End-to-end backend verification of the live tracking WebSocket completed.

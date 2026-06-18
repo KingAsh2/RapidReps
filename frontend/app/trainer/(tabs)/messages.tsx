@@ -20,6 +20,7 @@ import { chatAPI } from '../../../src/services/api';
 import { DS } from '../../../src/theme/designSystem';
 import FloatingOrangeBg from '../../../src/components/FloatingOrangeBg';
 import { swrCache } from '../../../src/hooks/useStaleWhileRefresh';
+import { UserAvatar } from '../../../src/components/UserAvatar';
 
 const COLORS = {
   orange: DS.colors.orange,
@@ -105,13 +106,10 @@ export default function TrainerMessagesTab() {
             onPress={() => router.push({ pathname: '/trainer/trainee-profile', params: { traineeId: otherUser.id } })}
             data-testid={`trainer-msg-avatar-${otherUser.id}`}
           >
-            {otherUser.avatarUrl ? (
-              <Image source={{ uri: otherUser.avatarUrl }} style={styles.avatar} />
-            ) : (
-              <LinearGradient colors={['#0A0E1A', '#141929']} style={styles.avatarPlaceholder}>
-                <Ionicons name="person" size={24} color={COLORS.white} />
-              </LinearGradient>
-            )}
+            {/* Unified pulsing brand-ring avatar */}
+            <View style={styles.avatarWrap}>
+              <UserAvatar user={otherUser} size={56} ring />
+            </View>
           </TouchableOpacity>
           <View style={styles.conversationContent}>
             <View style={styles.conversationHeader}>
@@ -194,6 +192,7 @@ const styles = StyleSheet.create({
   listContent: { paddingBottom: 100 },
   conversationItem: { marginBottom: 12 },
   conversationCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#141929', borderRadius: 16, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 3 },
+  avatarWrap: { marginRight: 14 },
   avatar: { width: 56, height: 56, borderRadius: 28, marginRight: 14 },
   avatarPlaceholder: { width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center', marginRight: 14 },
   conversationContent: { flex: 1 },

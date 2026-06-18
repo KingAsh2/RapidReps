@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { chatAPI } from '../../src/services/api';
 import FloatingOrangeBg from '../../src/components/FloatingOrangeBg';
+import { UserAvatar } from '../../src/components/UserAvatar';
 
 // Brand colors
 const COLORS = {
@@ -146,18 +147,12 @@ export default function MessagesScreen() {
             }}
             data-testid={`message-avatar-${otherUser.id}`}
           >
-            {otherUser.avatarUrl ? (
-              <Image source={{ uri: otherUser.avatarUrl }} style={styles.avatar} />
-            ) : (
-              <LinearGradient
-                colors={['#0A0E1A', '#141929']}
-                style={styles.avatarPlaceholder}
-              >
-                <Ionicons name="person" size={24} color={COLORS.white} />
-              </LinearGradient>
-            )}
+            {/* Unified pulsing brand-ring avatar */}
+            <View style={styles.avatarWrap}>
+              <UserAvatar user={otherUser} size={56} ring />
+            </View>
             {/* Active indicator */}
-            <View style={{ position: 'absolute', bottom: 1, right: 1, width: 12, height: 12, borderRadius: 6, backgroundColor: '#00D68F', borderWidth: 2, borderColor: '#141929' }} />
+            <View style={{ position: 'absolute', bottom: 1, right: 15, width: 12, height: 12, borderRadius: 6, backgroundColor: '#00D68F', borderWidth: 2, borderColor: '#141929' }} />
           </TouchableOpacity>
           
           <View style={styles.conversationContent}>
@@ -361,6 +356,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
+  },
+  avatarWrap: {
+    marginRight: 14,
   },
   avatar: {
     width: 56,

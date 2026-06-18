@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { UserAvatar } from './UserAvatar';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -85,15 +86,9 @@ export const ProfilePreviewCard: React.FC<ProfilePreviewProps> = ({
             {/* Accent glow */}
             <View style={styles.glowOrb} />
             
-            {/* Avatar */}
+            {/* Avatar — unified pulsing brand ring */}
             <View style={styles.avatarContainer}>
-              {user.avatarUrl ? (
-                <Image source={{ uri: user.avatarUrl }} style={styles.avatar} />
-              ) : (
-                <LinearGradient colors={['#FF6A00', '#FF9F1C']} style={styles.avatarPlaceholder}>
-                  <Ionicons name="person" size={32} color="#fff" />
-                </LinearGradient>
-              )}
+              <UserAvatar user={user} size={88} ring />
               {user.isAvailable && (
                 <View style={styles.activeDot} />
               )}

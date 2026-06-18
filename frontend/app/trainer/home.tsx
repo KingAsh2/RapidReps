@@ -23,6 +23,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, Stack } from 'expo-router';
 import * as Location from 'expo-location';
 import { useAlert } from '../../src/contexts/AlertContext';
+import { UserAvatar } from '../../src/components/UserAvatar';
 
 const { width } = Dimensions.get('window');
 
@@ -912,16 +913,19 @@ export default function TrainerHomeScreen() {
                       style={styles.traineeCardGradient}
                     >
                       <View style={styles.traineeCardRow}>
-                        {trainee.profilePhoto ? (
-                          <Image source={{ uri: trainee.profilePhoto }} style={styles.traineeCardAvatar} />
-                        ) : (
-                          <LinearGradient
-                            colors={['#0A0E1A', '#141929']}
-                            style={styles.traineeCardAvatarPlaceholder}
-                          >
-                            <Ionicons name="person" size={24} color={COLORS.white} />
-                          </LinearGradient>
-                        )}
+                        {/* Unified pulsing brand-ring avatar */}
+                        <View style={styles.traineeCardAvatarWrap}>
+                          <UserAvatar
+                            user={{
+                              id: trainee.id || trainee.userId,
+                              fullName: trainee.fullName,
+                              avatarUrl: trainee.profilePhoto || trainee.avatarUrl,
+                              accentColor: trainee.accentColor,
+                            }}
+                            size={50}
+                            ring
+                          />
+                        </View>
                         <View style={styles.traineeCardInfo}>
                           <Text style={styles.traineeCardName}>{trainee.fullName}</Text>
                           {trainee.fitnessGoals && (
@@ -1440,6 +1444,9 @@ const styles = StyleSheet.create({
   traineeCardRow: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  traineeCardAvatarWrap: {
+    marginRight: 12,
   },
   traineeCardAvatar: {
     width: 44,

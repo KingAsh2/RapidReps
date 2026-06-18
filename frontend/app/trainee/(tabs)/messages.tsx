@@ -20,6 +20,7 @@ import { chatAPI } from '../../../src/services/api';
 import { DS } from '../../../src/theme/designSystem';
 import FloatingOrangeBg from '../../../src/components/FloatingOrangeBg';
 import { swrCache } from '../../../src/hooks/useStaleWhileRefresh';
+import { UserAvatar } from '../../../src/components/UserAvatar';
 
 // Brand colors — iter95d: sourced from unified DS tokens
 const COLORS = {
@@ -145,16 +146,10 @@ export default function MessagesTab() {
             onPress={() => router.push(`/trainee/trainer-detail?trainerId=${otherUser.id}`)}
             data-testid={`msg-avatar-${otherUser.id}`}
           >
-            {otherUser.avatarUrl ? (
-              <Image source={{ uri: otherUser.avatarUrl }} style={styles.avatar} />
-            ) : (
-              <LinearGradient
-                colors={['#0A0E1A', '#141929']}
-                style={styles.avatarPlaceholder}
-              >
-                <Ionicons name="person" size={24} color={COLORS.white} />
-              </LinearGradient>
-            )}
+            {/* Unified pulsing brand-ring avatar */}
+            <View style={styles.avatarWrap}>
+              <UserAvatar user={otherUser} size={56} ring />
+            </View>
           </TouchableOpacity>
           
           <View style={styles.conversationContent}>
@@ -328,6 +323,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
+  },
+  avatarWrap: {
+    marginRight: 14,
   },
   avatar: {
     width: 56,

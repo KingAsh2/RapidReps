@@ -19,6 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { traineeAPI } from '../../../src/services/api';
 import { toast } from '../../../src/utils/toast';
+import { UserAvatar } from '../../../src/components/UserAvatar';
 
 const { width } = Dimensions.get('window');
 
@@ -157,19 +158,19 @@ export default function SavedTrainersScreen() {
           onPress={() => router.push(`/trainee/trainer-detail?trainerId=${trainer.id}`)}
           activeOpacity={0.85}
         >
-          {/* Trainer Avatar */}
-          {trainer.profilePhoto ? (
-            <Image source={{ uri: trainer.profilePhoto }} style={styles.thumbnailAvatar} />
-          ) : (
-            <LinearGradient
-              colors={['#0A0E1A', '#141929']}
-              style={styles.thumbnailAvatarPlaceholder}
-            >
-              <Text style={styles.thumbnailInitials}>
-                {trainer.name.split(' ').map((n: string) => n[0]).join('')}
-              </Text>
-            </LinearGradient>
-          )}
+          {/* Trainer Avatar — unified pulsing brand ring */}
+          <View style={styles.thumbAvatarWrap}>
+            <UserAvatar
+              user={{
+                id: trainer.id,
+                fullName: trainer.name,
+                avatarUrl: trainer.profilePhoto,
+                accentColor: trainer.accentColor,
+              }}
+              size={50}
+              ring
+            />
+          </View>
           
           {/* Verified Badge */}
           {trainer.isVerified && (
@@ -374,6 +375,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 8,
     elevation: 4,
+  },
+  thumbAvatarWrap: {
+    marginBottom: 6,
   },
   thumbnailAvatar: {
     width: 50,
