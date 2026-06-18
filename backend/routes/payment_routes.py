@@ -790,6 +790,81 @@ async def trainer_connect_status(current_user: dict = Depends(get_current_user))
 
 
 # ============================================================================
+# TRAINER PAYOUT INFO (iter106ae)
+# Admin sends funds to trainer manually via Zelle / PayPal / Venmo / CashApp.
+# Trainer self-registers their preferred handle here.
+# ============================================================================
+
+SUPPORTED_PAYOUT_METHODS = {"zelle", "paypal", "venmo", "cashapp"}
+
+
+class TrainerPayoutInfoUpdate(BaseModel):
+    payoutMethod: str  # zelle | paypal | venmo | cashapp
+    payoutHandle: str  # email / phone / @handle / $cashtag depending on method
+
+
+@router.get("/trainer/payout-info")
+async def get_trainer_payout_info(current_user: dict = Depends(get_current_user)):
+    """Trainer fetches their saved payout method + handle."""
+    return {
+        "payoutMethod": current_user.get("payoutMethod") or (
+            "zelle" if (current_user.get("zelleEmail") or current_user.get("zellePhone")) else None
+        ),
+        "payoutHandle": current_user.get("payoutHandle") or current_user.get("zelleEmail") or current_user.get("zellePhone") or "",
+        # Legacy fields kept for downstream code that still reads them:
+        "zelleEmail": current_user.get("zelleEmail", ""),
+        "zellePhone": current_user.get("zellePhone", ""),
+        "isSetup": bool(
+            current_user.get("payoutHandle")
+            or current_user.get("zelleEmail")
+            or current_user.get("zellePhone")
+        ),
+    }
+
+
+@router.post("/trainer/payout-info")
+async def update_trainer_payout_info(
+    payload: TrainerPayoutInfoUpdate,
+    current_user: dict = Depends(get_current_user),
+):
+    """Trainer saves their preferred payout destination (Zelle/PayPal/Venmo/CashApp)."""
+    method = (payload.payoutMethod or "").strip().lower()
+    handle = (payload.payoutHandle or "").strip()
+    if method not in SUPPORTED_PAYOUT_METHODS:
+        raise HTTPException(status_code=400, detail=f"Unsupported payout method. Choose one of: {', '.join(sorted(SUPPORTED_PAYOUT_METHODS))}")
+    if not handle:
+        raise HTTPException(status_code=400, detail="Please enter your payout handle (email / phone / @username).")
+    if len(handle) > 120:
+        raise HTTPException(status_code=400, detail="Handle is too long.")
+
+    update_doc = {
+        "payoutMethod": method,
+        "payoutHandle": handle,
+        "payoutInfoUpdatedAt": datetime.utcnow(),
+    }
+    # Mirror Zelle email/phone for legacy admin queries (payouts/pending),
+    # so trainers immediately show up after saving.
+    if method == "zelle":
+        if "@" in handle:
+            update_doc["zelleEmail"] = handle
+            update_doc["zellePhone"] = ""
+        else:
+            update_doc["zellePhone"] = handle
+            update_doc["zelleEmail"] = ""
+
+    await db.users.update_one(
+        {"_id": ObjectId(str(current_user["_id"]))},
+        {"$set": update_doc},
+    )
+    return {
+        "success": True,
+        "payoutMethod": method,
+        "payoutHandle": handle,
+        "message": f"Payout method saved. Admin will send funds via {method.capitalize()}.",
+    }
+
+
+# ============================================================================
 # ADMIN PAYOUTS
 # ============================================================================
 
@@ -801,10 +876,21 @@ class AdminPayoutRequest(BaseModel):
 
 @router.get("/admin/payouts/pending")
 async def admin_get_pending_payouts(admin_user: dict = Depends(require_admin)):
-    """Get list of trainers eligible for payout ($35+ pending balance with Zelle info)."""
+    """Get list of trainers eligible for payout ($35+ pending balance with payout info set up)."""
     trainers = await db.users.find(
-        {'roles': 'trainer', '$or': [{'zelleEmail': {'$exists': True, '$ne': ''}}, {'zellePhone': {'$exists': True, '$ne': ''}}]},
-        {'fullName': 1, 'email': 1, 'profilePhoto': 1, 'zelleEmail': 1, 'zellePhone': 1}
+        {
+            'roles': 'trainer',
+            '$or': [
+                {'zelleEmail': {'$exists': True, '$ne': ''}},
+                {'zellePhone': {'$exists': True, '$ne': ''}},
+                {'payoutHandle': {'$exists': True, '$ne': ''}},
+            ],
+        },
+        {
+            'fullName': 1, 'email': 1, 'profilePhoto': 1,
+            'zelleEmail': 1, 'zellePhone': 1,
+            'payoutMethod': 1, 'payoutHandle': 1,
+        },
     ).to_list(500)
 
     results = []
@@ -818,10 +904,22 @@ async def admin_get_pending_payouts(admin_user: dict = Depends(require_admin)):
         total_paid = sum(p.get('amountCents', 0) for p in payouts)
         pending = total_earnings - total_paid
 
+        payout_method = trainer.get('payoutMethod') or (
+            'zelle' if (trainer.get('zelleEmail') or trainer.get('zellePhone')) else None
+        )
+        payout_handle = (
+            trainer.get('payoutHandle')
+            or trainer.get('zelleEmail')
+            or trainer.get('zellePhone')
+            or ''
+        )
+
         results.append({
             'trainerId': trainer_id, 'trainerName': trainer.get('fullName', 'Unknown'),
             'trainerEmail': trainer.get('email', ''), 'profilePhoto': trainer.get('profilePhoto'),
             'zelleEmail': trainer.get('zelleEmail', ''), 'zellePhone': trainer.get('zellePhone', ''),
+            'payoutMethod': payout_method,
+            'payoutHandle': payout_handle,
             'pendingBalanceCents': pending, 'totalEarningsCents': total_earnings,
             'totalPaidOutCents': total_paid, 'eligible': pending >= PAYOUT_MINIMUM_CENTS,
         })
@@ -836,12 +934,22 @@ async def admin_get_pending_payouts(admin_user: dict = Depends(require_admin)):
 
 @router.post("/admin/payouts/pay-trainer")
 async def admin_pay_trainer(req: AdminPayoutRequest, admin_user: dict = Depends(require_admin)):
-    """Admin marks a trainer as paid via Zelle (manual payment tracking)."""
+    """Admin marks a trainer as paid (via their chosen method — Zelle/PayPal/Venmo/CashApp)."""
     trainer = await db.users.find_one({'_id': ObjectId(req.trainerId)})
     if not trainer:
         raise HTTPException(status_code=404, detail="Trainer not found")
-    if not trainer.get('zelleEmail') and not trainer.get('zellePhone'):
-        raise HTTPException(status_code=400, detail="Trainer has not set up Zelle info")
+
+    method = trainer.get('payoutMethod') or (
+        'zelle' if (trainer.get('zelleEmail') or trainer.get('zellePhone')) else None
+    )
+    handle = (
+        trainer.get('payoutHandle')
+        or trainer.get('zelleEmail')
+        or trainer.get('zellePhone')
+        or ''
+    )
+    if not method or not handle:
+        raise HTTPException(status_code=400, detail="Trainer has not set up payout info")
 
     completed = await db.sessions.find(
         {'trainerId': req.trainerId, 'status': SessionStatus.COMPLETED}, {'trainerEarningsCents': 1}
@@ -861,7 +969,8 @@ async def admin_pay_trainer(req: AdminPayoutRequest, admin_user: dict = Depends(
 
     payout_doc = {
         'trainerId': req.trainerId, 'trainerName': trainer.get('fullName', ''),
-        'amountCents': payout_amount, 'paymentMethod': 'zelle',
+        'amountCents': payout_amount, 'paymentMethod': method,
+        'payoutHandle': handle,
         'zelleEmail': trainer.get('zelleEmail', ''), 'zellePhone': trainer.get('zellePhone', ''),
         'status': 'completed', 'notes': req.notes,
         'processedBy': str(admin_user['_id']), 'createdAt': datetime.utcnow(),
@@ -875,22 +984,33 @@ async def admin_pay_trainer(req: AdminPayoutRequest, admin_user: dict = Depends(
 
     asyncio.create_task(create_and_send_notification(
         req.trainerId, "Payout Sent!",
-        f"${payout_amount/100:.2f} has been sent to your Zelle account.",
+        f"${payout_amount/100:.2f} has been sent to your {method.capitalize()} account.",
         "payout", {"amount": str(payout_amount)}
     ))
 
     return {
         'success': True, 'amountCents': payout_amount, 'trainerName': trainer.get('fullName', ''),
-        'message': f"${payout_amount/100:.2f} marked as paid to {trainer.get('fullName', 'Trainer')} via Zelle",
+        'paymentMethod': method,
+        'message': f"${payout_amount/100:.2f} marked as paid to {trainer.get('fullName', 'Trainer')} via {method.capitalize()}",
     }
 
 
 @router.post("/admin/payouts/pay-all")
 async def admin_pay_all_trainers(admin_user: dict = Depends(require_admin)):
-    """Batch mark all eligible trainers as paid via Zelle."""
+    """Batch mark all eligible trainers as paid (using each trainer's chosen method)."""
     trainers = await db.users.find(
-        {'roles': 'trainer', '$or': [{'zelleEmail': {'$exists': True, '$ne': ''}}, {'zellePhone': {'$exists': True, '$ne': ''}}]},
-        {'fullName': 1, 'zelleEmail': 1, 'zellePhone': 1}
+        {
+            'roles': 'trainer',
+            '$or': [
+                {'zelleEmail': {'$exists': True, '$ne': ''}},
+                {'zellePhone': {'$exists': True, '$ne': ''}},
+                {'payoutHandle': {'$exists': True, '$ne': ''}},
+            ],
+        },
+        {
+            'fullName': 1, 'zelleEmail': 1, 'zellePhone': 1,
+            'payoutMethod': 1, 'payoutHandle': 1,
+        },
     ).to_list(500)
 
     results = []
@@ -909,28 +1029,41 @@ async def admin_pay_all_trainers(admin_user: dict = Depends(require_admin)):
         if pending < PAYOUT_MINIMUM_CENTS:
             continue
 
+        method = trainer.get('payoutMethod') or (
+            'zelle' if (trainer.get('zelleEmail') or trainer.get('zellePhone')) else None
+        )
+        handle = (
+            trainer.get('payoutHandle')
+            or trainer.get('zelleEmail')
+            or trainer.get('zellePhone')
+            or ''
+        )
+        if not method or not handle:
+            continue
+
         payout_doc = {
             'trainerId': trainer_id, 'trainerName': trainer.get('fullName', ''),
-            'amountCents': pending, 'paymentMethod': 'zelle',
+            'amountCents': pending, 'paymentMethod': method,
+            'payoutHandle': handle,
             'zelleEmail': trainer.get('zelleEmail', ''), 'zellePhone': trainer.get('zellePhone', ''),
-            'status': 'completed', 'notes': 'Batch Zelle payout',
+            'status': 'completed', 'notes': f'Batch {method.capitalize()} payout',
             'processedBy': str(admin_user['_id']), 'createdAt': datetime.utcnow(),
         }
         await db.trainer_payouts.insert_one(payout_doc)
 
         asyncio.create_task(create_and_send_notification(
             trainer_id, "Payout Sent!",
-            f"${pending/100:.2f} has been sent to your Zelle account.",
+            f"${pending/100:.2f} has been sent to your {method.capitalize()} account.",
             "payout", {"amount": str(pending)}
         ))
 
-        results.append({'trainerId': trainer_id, 'trainerName': trainer.get('fullName', ''), 'amountCents': pending})
+        results.append({'trainerId': trainer_id, 'trainerName': trainer.get('fullName', ''), 'amountCents': pending, 'paymentMethod': method})
         total_paid += pending
 
     return {
         'success': True, 'paidCount': len(results), 'totalPaidCents': total_paid,
         'payouts': results,
-        'message': f"Marked {len(results)} trainer(s) as paid - total ${total_paid/100:.2f} via Zelle",
+        'message': f"Marked {len(results)} trainer(s) as paid - total ${total_paid/100:.2f}",
     }
 
 

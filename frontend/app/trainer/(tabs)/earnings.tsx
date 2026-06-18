@@ -186,13 +186,25 @@ export default function TrainerEarningsScreen() {
               </View>
             </LinearGradient>
 
-            {/* iter98b: "Set Up Stripe Payouts" banner removed per user request.
-                The Stripe Connect onboarding remains accessible from the Profile / Settings tab —
-                here we only confirm payouts are enabled (no upsell prompt). */}
-            {connectStatus.onboarded && (
+            {/* iter106ae: Show "Set up payout method" banner if not configured.
+                Otherwise show "Payouts enabled" with link to manage. */}
+            {!connectStatus.onboarded ? (
+              <TouchableOpacity
+                style={styles.setupBanner}
+                onPress={() => router.push('/trainer/connect-bank')}
+                data-testid="setup-payout-banner"
+              >
+                <Ionicons name="warning" size={20} color={'#FFB300'} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.setupBannerTitle}>Set up your payout method</Text>
+                  <Text style={styles.setupBannerText}>Add Zelle, PayPal, Venmo, or Cash App so admin can send you funds.</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color={'#FFFFFF'} />
+              </TouchableOpacity>
+            ) : (
               <View style={styles.connectedBanner}>
                 <Ionicons name="checkmark-circle" size={18} color={COLORS.success} />
-                <Text style={styles.connectedText}>Stripe payouts enabled</Text>
+                <Text style={styles.connectedText}>Payouts enabled</Text>
                 <TouchableOpacity onPress={() => router.push('/trainer/connect-bank')} data-testid="manage-bank-btn">
                   <Text style={[styles.connectedText, { color: '#FFFFFF', fontWeight: '700' }]}>Manage</Text>
                 </TouchableOpacity>
@@ -329,7 +341,7 @@ export default function TrainerEarningsScreen() {
               <View style={styles.infoContent}>
                 <Text style={styles.infoTitle}>How Earnings Work</Text>
                 <Text style={styles.infoText}>
-                  You keep 80% of every session. RapidReps takes 20% as a platform fee. Payouts are processed by admin and transferred to your connected bank account. Minimum payout: $35.
+                  Clients pay via Stripe. Funds land with RapidReps, and admin sends your tier-share (75–85%) directly to your Zelle / PayPal / Venmo / Cash App. Minimum payout: $35.
                 </Text>
               </View>
             </View>
@@ -373,6 +385,13 @@ const styles = StyleSheet.create({
   payoutButtonText: { fontSize: 16, fontWeight: '800', color: COLORS.white },
   connectedBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(0,200,83,0.1)', borderRadius: 12, padding: 14, marginBottom: 20 },
   connectedText: { fontSize: 14, fontWeight: '600', color: 'rgba(255,255,255,0.8)', flex: 1 },
+  setupBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: 'rgba(255,179,0,0.12)', borderRadius: 14, padding: 14, marginBottom: 20,
+    borderWidth: 1, borderColor: 'rgba(255,179,0,0.35)',
+  },
+  setupBannerTitle: { fontSize: 14, fontWeight: '800', color: '#FFFFFF' },
+  setupBannerText: { fontSize: 12, fontWeight: '500', color: 'rgba(255,255,255,0.75)', marginTop: 2 },
 
   // Period Toggle
   periodToggle: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 14, padding: 4, marginBottom: 16 },

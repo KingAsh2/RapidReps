@@ -30,7 +30,7 @@ export const PayoutsTab = ({
     </View>
 
     <Text style={[s.sectionTitle, { fontSize: 13, marginBottom: 6, color: C.gray }]}>
-      Minimum payout: {formatCents(payoutsData?.payoutMinimumCents || 3500)} | Routed via Stripe
+      Minimum payout: {formatCents(payoutsData?.payoutMinimumCents || 3500)} | Stripe → admin → trainer&apos;s chosen handle
     </Text>
 
     {(payoutsData?.eligibleCount || 0) > 0 && (
@@ -44,7 +44,7 @@ export const PayoutsTab = ({
           <ActivityIndicator size="small" color={C.white} />
         ) : (
           <Text style={{ color: C.white, fontWeight: '800', fontSize: 15 }}>
-            Mark All Paid via Stripe ({payoutsData?.eligibleCount}) — {formatCents(payoutsData?.totalPendingCents || 0)}
+            Mark All Paid ({payoutsData?.eligibleCount}) — {formatCents(payoutsData?.totalPendingCents || 0)}
           </Text>
         )}
       </TouchableOpacity>
@@ -56,13 +56,18 @@ export const PayoutsTab = ({
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: 15, fontWeight: '700', color: '#FFFFFF' }}>{t.trainerName}</Text>
           <Text style={{ fontSize: 13, color: C.gray }}>{t.trainerEmail}</Text>
+          {t.payoutMethod ? (
+            <Text style={{ fontSize: 12, color: '#FFB300', fontWeight: '700', marginTop: 4 }}>
+              {String(t.payoutMethod).toUpperCase()}: <Text style={{ color: '#FFFFFF' }}>{t.payoutHandle || '—'}</Text>
+            </Text>
+          ) : (
+            <Text style={{ fontSize: 12, color: C.error, marginTop: 4 }}>No payout method set</Text>
+          )}
           {t.tier ? (
             <Text style={{ fontSize: 12, color: STRIPE, fontWeight: '700', marginTop: 4 }}>
               TIER: {String(t.tier).toUpperCase()}
             </Text>
-          ) : (
-            <Text style={{ fontSize: 12, color: C.error, marginTop: 4 }}>No tier assigned</Text>
-          )}
+          ) : null}
           <View style={{ flexDirection: 'row', gap: 14, marginTop: 6 }}>
             <Text style={{ fontSize: 13, color: C.gray }}>Earned: <Text style={{ fontWeight: '700', color: '#FFFFFF' }}>{formatCents(t.totalEarningsCents)}</Text></Text>
             <Text style={{ fontSize: 13, color: C.gray }}>Paid: <Text style={{ fontWeight: '700', color: C.success }}>{formatCents(t.totalPaidOutCents)}</Text></Text>
@@ -102,7 +107,7 @@ export const PayoutsTab = ({
           <View style={{ flex: 1 }}>
             <Text style={{ fontSize: 14, fontWeight: '700', color: '#FFFFFF' }}>{p.trainerName}</Text>
             <Text style={{ fontSize: 13, color: C.gray }}>
-              {new Date(p.createdAt).toLocaleDateString()} — {formatCents(p.amountCents)} via Stripe
+              {new Date(p.createdAt).toLocaleDateString()} — {formatCents(p.amountCents)} via {p.paymentMethod ? String(p.paymentMethod).charAt(0).toUpperCase() + String(p.paymentMethod).slice(1) : 'Manual'}
             </Text>
           </View>
           <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: p.status === 'completed' ? `${C.success}20` : `${C.orange}20` }}>

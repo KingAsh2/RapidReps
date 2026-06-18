@@ -4,6 +4,25 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-02 — Iter106ae: Admin-Managed Payouts (Stripe → Admin → Trainer) ✅
+
+User decision: Skip Stripe Connect entirely. Trainees pay via Stripe → funds land in the platform/admin Stripe balance → admin sends each trainer their tier-share **off-platform** via the trainer's preferred method (Zelle / PayPal / Venmo / Cash App).
+
+**Backend (`/app/backend/routes/payment_routes.py`):**
+- New `GET /api/trainer/payout-info` — returns trainer's saved method + handle, plus a fallback derived from legacy `zelleEmail` / `zellePhone`.
+- New `POST /api/trainer/payout-info` — validates and saves `{ payoutMethod: zelle|paypal|venmo|cashapp, payoutHandle: string }`. Mirrors Zelle entries to legacy `zelleEmail`/`zellePhone` so older admin queries still work.
+- Updated `GET /admin/payouts/pending` to include trainers with any payout method set (not just Zelle), and surfaces `payoutMethod` + `payoutHandle` per trainer.
+- Updated `POST /admin/payouts/pay-trainer` and `POST /admin/payouts/pay-all` to use the trainer's chosen method (not hardcoded Zelle) in the payout record + notification copy.
+
+**Frontend:**
+- Rewrote `/app/frontend/app/trainer/connect-bank.tsx` as a full **Payout Setup** screen — 2×2 method grid (Zelle / PayPal / Venmo / Cash App), handle input with per-method placeholder/hint, save button, success banner, and a "How it works" Stripe→admin→trainer explainer.
+- Updated `/app/frontend/app/trainer/(tabs)/earnings.tsx` info card text to accurately describe the new flow and added a "Set up your payout method" CTA banner that links to `connect-bank` when the trainer hasn't configured a method yet.
+- Updated `/app/frontend/src/components/admin/PayoutsTab.tsx`: removed misleading "via Stripe" copy, now shows each trainer's method (e.g. "PAYPAL: trainer25@paypal.me") and uses the actual payment method in history rows.
+
+**Tests:** `/app/backend/tests/test_iter106ae_payout_info.py` — 5 tests covering Zelle save+mirror, PayPal save, empty-handle validation, bad-method validation, and admin pending-list visibility. All passing.
+
+
+
 ## 2026-02 — Iter106ad: Avatar Consistency Sweep ✅
 
 User explicitly requested that ALL photo markers across the app share the unified pulsing-brand-ring design (`TrainerAvatar`), except large hero profile images. Performed a comprehensive sweep across list views, chat conversations, discovery thumbnails, and the profile preview modal.
