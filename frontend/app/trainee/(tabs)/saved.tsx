@@ -360,12 +360,18 @@ const styles = StyleSheet.create({
   trainerThumbnail: {
     width: (width - 32 - 36) / 4,
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.95)',
+    // iter106x: was rgba(255,255,255,0.95) (near-white) but the text inside
+    // is color:'#FFFFFF' → invisible name/rating on a white card. Switched
+    // to the dark brand surface so the white text reads cleanly, matching
+    // the rest of the app's dark theme.
+    backgroundColor: 'rgba(20,25,41,0.85)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
     borderRadius: 16,
     padding: 10,
-    shadowColor: '#1a2a5e',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.4,
     shadowRadius: 8,
     elevation: 4,
   },
