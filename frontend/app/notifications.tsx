@@ -12,7 +12,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useNotifications } from '../src/contexts/NotificationContext';
 import { Colors } from '../src/utils/colors';
@@ -127,7 +127,18 @@ export default function NotificationsScreen() {
     setRefreshing(true);
     await refreshNotifications();
     setRefreshing(false);
-  }, []);
+  }, [refreshNotifications]);
+
+  // iter106z: refetch on every focus + lightweight 30 s poll so the list
+  // feels "live". Previously it only loaded once at mount, so newly-arrived
+  // notifications wouldn't appear until the user manually pull-to-refreshed.
+  useFocusEffect(
+    useCallback(() => {
+      refreshNotifications();
+      const id = setInterval(() => { refreshNotifications(); }, 30_000);
+      return () => clearInterval(id);
+    }, [refreshNotifications])
+  );
 
   const handleDelete = async (notif: any) => {
     if (!notif.id) {
@@ -145,16 +156,119 @@ export default function NotificationsScreen() {
     }
   };
 
-  const handleTap = (notif: any) => {
-    if (notif.deepLink) {
-      router.push(notif.deepLink);
-      return;
+  const handleTap = async (notif: any) => {
+    // iter106z: notifications tap routing — was firing the "Unmatched Route"
+    // screen because:
+    //  (1) Some deepLinks are stored as fully-qualified `rapidreps://…` URLs
+    //      which expo-router's router.push() can't navigate to.
+    //  (2) Many notification types had no route mapping at all and silently
+    //      did nothing on tap.
+    //  (3) Read-state wasn't updated on tap, so the unread dot stuck around.
+    // Fix: strip the scheme, build a comprehensive type→route map using the
+    // notification's `data` field (sessionId, userId, screen), and mark as
+    // read in the same flow.
+
+    // Mark read (best-effort — UI shouldn't block on it)
+    if (!notif.read && notif.id) {
+      try {
+        const token = await AsyncStorage.getItem('auth_token');
+        await axios.post(
+          `${API_URL}/api/notifications/${notif.id}/read`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        refreshNotifications();
+      } catch { /* non-blocking */ }
     }
-    // Default routes by type
-    if (notif.type === 'new_message') {
-      router.push('/messages');
-    } else if (notif.type?.startsWith('session_')) {
-      router.push('/sessions');
+
+    const data = notif.data || {};
+    const sessionId: string | undefined = data.sessionId;
+    const otherUserId: string | undefined = data.userId || data.traineeId || data.trainerId;
+    const role: 'trainer' | 'trainee' = data.screen?.startsWith('trainer') ? 'trainer' : 'trainee';
+
+    // 1️⃣ Honor an explicit deepLink IF it looks like an in-app path
+    //    (starts with '/'). Strip the rapidreps:// scheme if present.
+    if (notif.deepLink) {
+      let dl: string = String(notif.deepLink).trim();
+      if (dl.startsWith('rapidreps://')) {
+        dl = dl.replace(/^rapidreps:\/\//, '/');
+        // Special-case the legacy session-summary route used by post-session DMs
+        if (dl.startsWith('/session-summary/')) {
+          const sid = dl.split('/session-summary/')[1];
+          dl = `/trainee/session-summary?sessionId=${sid}`;
+        }
+      }
+      // Rewrite the stale /trainer/trainee-detail path (it doesn't exist —
+      // the actual screen is /trainer/trainee-profile).
+      dl = dl.replace('/trainer/trainee-detail?', '/trainer/trainee-profile?');
+      if (dl.startsWith('/')) {
+        router.push(dl as any);
+        return;
+      }
+    }
+
+    // 2️⃣ Build a route by notification type + payload
+    switch (notif.type) {
+      case 'new_message':
+        if (otherUserId) router.push(`/messages/chat?userId=${otherUserId}` as any);
+        else router.push('/messages' as any);
+        return;
+
+      case 'session_requested':
+        // Trainer side: opens the pending request → trainee profile w/ accept CTA
+        if (sessionId) router.push(`/trainer/session-detail?sessionId=${sessionId}` as any);
+        else router.push('/trainer/(tabs)/home' as any);
+        return;
+
+      case 'session_accepted':
+      case 'session_confirmed':
+      case 'session_declined':
+      case 'session_cancelled':
+        if (sessionId) {
+          router.push(`/${role}/session-detail?sessionId=${sessionId}` as any);
+        } else {
+          router.push(`/${role}/(tabs)/sessions` as any);
+        }
+        return;
+
+      case 'session_reminder':
+      case 'session_starting':
+      case 'late_warning':
+      case 'trainer_en_route':
+        if (sessionId) router.push(`/${role}/session-detail?sessionId=${sessionId}` as any);
+        else router.push(`/${role}/(tabs)/sessions` as any);
+        return;
+
+      case 'session_ended':
+      case 'rate_reminder':
+        if (sessionId) router.push(`/${role}/session-summary?sessionId=${sessionId}` as any);
+        else router.push(`/${role}/(tabs)/sessions` as any);
+        return;
+
+      case 'payment_released':
+      case 'payout_completed':
+        router.push('/trainer/payouts' as any);
+        return;
+
+      case 'virtual_session_request':
+        if (otherUserId) router.push(`/trainer/trainee-profile?traineeId=${otherUserId}` as any);
+        else router.push('/trainer/(tabs)/home' as any);
+        return;
+
+      case 'streak_warning':
+      case 'achievement_unlocked':
+        router.push(`/${role}/(tabs)/profile` as any);
+        return;
+
+      case 'boost_expiring':
+        router.push('/trainer/boosts' as any);
+        return;
+
+      default:
+        // Final fallback: use data.screen if present, else the sessions tab.
+        if (data.screen) router.push(`/${data.screen}` as any);
+        else if (sessionId) router.push(`/${role}/session-detail?sessionId=${sessionId}` as any);
+        else router.push(`/${role}/(tabs)/sessions` as any);
     }
   };
 
@@ -205,7 +319,7 @@ export default function NotificationsScreen() {
               <Ionicons name="notifications-off-outline" size={56} color={Colors.grayLight} />
               <Text style={s.emptyTitle}>No Notifications</Text>
               <Text style={s.emptySubtext}>
-                You'll see session updates, messages, and reminders here.
+                You&apos;ll see session updates, messages, and reminders here.
               </Text>
             </View>
           }
