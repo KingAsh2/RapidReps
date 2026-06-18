@@ -524,7 +524,7 @@ export default function EditTrainerProfileScreen() {
                             </View>
                           </>
                         ) : (
-                          <Text style={{ fontSize: 11, color: 'rgba(26,42,94,0.55)', marginTop: 4 }}>
+                          <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 4, lineHeight: 16 }}>
                             You&apos;ll appear for any trainee inside their own search radius.
                           </Text>
                         )}
