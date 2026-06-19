@@ -325,7 +325,17 @@ export default function TrainerProfileScreen() {
                 )}
 
                 {/* Share Profile Button */}
-                <TouchableOpacity onPress={handleShareProfile} style={styles.shareProfileBtn} data-testid="share-profile-btn">
+                <TouchableOpacity
+                  onPress={handleShareProfile}
+                  style={[
+                    styles.shareProfileBtn,
+                    {
+                      backgroundColor: profile?.accentColor || '#FF6A00',
+                      shadowColor: profile?.accentColor || '#FF6A00',
+                    },
+                  ]}
+                  data-testid="share-profile-btn"
+                >
                   <Ionicons name="share-social" size={18} color={COLORS.white} />
                   <Text style={styles.shareProfileBtnText}>Share Profile</Text>
                 </TouchableOpacity>
@@ -333,7 +343,13 @@ export default function TrainerProfileScreen() {
                 {/* Edit Profile Button — single source-of-truth route for trainer edits */}
                 <TouchableOpacity
                   onPress={() => router.push('/trainer/edit-profile')}
-                  style={styles.shareProfileBtn}
+                  style={[
+                    styles.shareProfileBtn,
+                    {
+                      backgroundColor: profile?.accentColor || '#FF6A00',
+                      shadowColor: profile?.accentColor || '#FF6A00',
+                    },
+                  ]}
                   data-testid="edit-profile-btn"
                 >
                   <Ionicons name="pencil" size={18} color={COLORS.white} />
@@ -348,7 +364,15 @@ export default function TrainerProfileScreen() {
                 {user?.id && (
                   <TouchableOpacity
                     onPress={() => router.push(`/trainee/trainer-detail?trainerId=${user.id}` as any)}
-                    style={[styles.shareProfileBtn, { backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)' }]}
+                    style={[
+                      styles.shareProfileBtn,
+                      {
+                        backgroundColor: 'rgba(255,255,255,0.08)',
+                        borderWidth: 1,
+                        borderColor: `${profile?.accentColor || '#FF6A00'}66`,
+                        shadowColor: profile?.accentColor || '#FF6A00',
+                      },
+                    ]}
                     data-testid="preview-profile-btn"
                   >
                     <Ionicons name="eye" size={18} color={COLORS.white} />

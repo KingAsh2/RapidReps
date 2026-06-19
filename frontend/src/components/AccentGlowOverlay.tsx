@@ -44,9 +44,10 @@ export const AccentGlowOverlay: React.FC = () => {
   if (!user) return null;
 
   // iter102aj: brightness slider — user can dim the glow from None (0) to
-  // Max (1, default). Null/undefined = legacy users default to Max.
+  // Max (1). iter106al: default is now Dim (~0.35) instead of Max so legacy
+  // users / new accounts get a subtle accent halo rather than a heavy one.
   const rawIntensity = (user as any)?.accentIntensity;
-  const intensity = typeof rawIntensity === 'number' ? Math.max(0, Math.min(1, rawIntensity)) : 1;
+  const intensity = typeof rawIntensity === 'number' ? Math.max(0, Math.min(1, rawIntensity)) : 0.35;
   // When the user picks None, hide the overlay entirely (no faint ghost).
   if (intensity <= 0.001) return null;
 

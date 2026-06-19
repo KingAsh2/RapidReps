@@ -44,11 +44,11 @@ export const AccentColorPicker = ({
   // value (onSlidingComplete) hits the network. Default to Max (1.0) when no
   // intensity has been persisted yet.
   const [intensity, setIntensity] = useState<number>(
-    typeof currentIntensity === 'number' ? currentIntensity : 1,
+    typeof currentIntensity === 'number' ? currentIntensity : DEFAULT_INTENSITY,
   );
   useEffect(() => {
     if (visible) {
-      setIntensity(typeof currentIntensity === 'number' ? currentIntensity : 1);
+      setIntensity(typeof currentIntensity === 'number' ? currentIntensity : DEFAULT_INTENSITY);
     }
   }, [visible, currentIntensity]);
 
@@ -92,7 +92,13 @@ export const AccentColorPicker = ({
               <View style={styles.sliderHeaderRow}>
                 <Text style={styles.sliderLabel}>BRIGHTNESS</Text>
                 <Text style={[styles.sliderValue, { color: selected }]}>
-                  {intensity <= 0.001 ? 'None' : intensity >= 0.999 ? 'Max' : `${Math.round(intensity * 100)}%`}
+                  {intensity <= 0.001
+                    ? 'None'
+                    : intensity >= 0.999
+                    ? 'Max'
+                    : intensity <= 0.4
+                    ? 'Dim'
+                    : `${Math.round(intensity * 100)}%`}
                 </Text>
               </View>
               <Slider
@@ -264,6 +270,11 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: 'rgba(255,255,255,0.4)',
     letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    fontWeight: '700',
+  },
+});
+ng: 0.8,
     textTransform: 'uppercase',
     fontWeight: '700',
   },
