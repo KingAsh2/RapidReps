@@ -18,7 +18,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import RapidBg from '../../src/components/RapidBg';
 import { ScreenHeader } from '../../src/components/ScreenShell';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { sessionsAPI, chatAPI } from '../../src/services/api';
+import { sessionsAPI, chatAPI, negotiationAPI } from '../../src/services/api';
 import NegotiationPanel from '../../src/components/NegotiationPanel';
 import { DS } from '../../src/theme/designSystem';
 import { formatCents } from '../../src/utils/pricing';
@@ -42,6 +42,35 @@ export default function TrainerSessionDetailScreen() {
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  // iter106aj: countdown (seconds) for the Resend-Pay-Link cooldown.
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resending, setResending] = useState(false);
+
+  // Tick the cooldown timer down once a second.
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const t = setTimeout(() => setResendCooldown((s) => Math.max(0, s - 1)), 1000);
+    return () => clearTimeout(t);
+  }, [resendCooldown]);
+
+  const resendPayLink = async () => {
+    if (!sessionId || resendCooldown > 0 || resending) return;
+    setResending(true);
+    try {
+      const res = await negotiationAPI.resendPayLink(String(sessionId));
+      haptic.success();
+      toast.success('Reminder sent to trainee');
+      setResendCooldown(res?.nextAvailableInSeconds || 60);
+    } catch (e: any) {
+      // 429 → parse the "Please wait Xs" message for the timer.
+      const detail = e?.response?.data?.detail || '';
+      const m = detail.match(/wait (\d+)s/);
+      if (m) setResendCooldown(parseInt(m[1], 10));
+      toast.error(detail || 'Could not resend pay link');
+    } finally {
+      setResending(false);
+    }
+  };
 
   const load = useCallback(async () => {
     if (!sessionId) return;
@@ -185,6 +214,42 @@ export default function TrainerSessionDetailScreen() {
             onAgreed={load}
           />
         )}
+
+        {/* iter106aj: Resend Pay Link — shows after acceptance until the trainee
+            actually pays. One-tap nudge that re-fires the "Locked in! Tap to
+            pay" push notification (backend enforces a 60s cooldown). */}
+        {session.paymentReady &&
+          session.paymentStatus !== 'paid' &&
+          session.paymentStatus !== 'succeeded' &&
+          session.status !== 'completed' && (
+            <View style={[s.card, { borderColor: DS.colors.orange, borderWidth: 1, backgroundColor: 'rgba(255,122,0,0.06)' }]}>
+              <View style={s.metaRow}>
+                <Ionicons name="hourglass" size={18} color={DS.colors.orange} />
+                <Text style={[s.metaText, { flex: 1 }]}>Waiting on trainee to pay</Text>
+              </View>
+              <TouchableOpacity
+                style={[
+                  s.resendBtn,
+                  (resendCooldown > 0 || resending) && { opacity: 0.55 },
+                ]}
+                onPress={resendPayLink}
+                disabled={resendCooldown > 0 || resending}
+                data-testid="resend-pay-link-btn"
+              >
+                <Ionicons name="notifications" size={16} color="#FFFFFF" />
+                <Text style={s.resendBtnText}>
+                  {resending
+                    ? 'Sending...'
+                    : resendCooldown > 0
+                    ? `Resend Pay Link · ${resendCooldown}s`
+                    : 'Resend Pay Link'}
+                </Text>
+              </TouchableOpacity>
+              <Text style={[s.caption, { marginTop: 8 }]}>
+                Re-fires the &quot;Tap to pay&quot; notification on the trainee&apos;s device.
+              </Text>
+            </View>
+          )}
 
         {/* iter102ap: Virtual session — "Join Video Call" card. */}
         {isVirtual && (
@@ -357,6 +422,13 @@ const s = StyleSheet.create({
   actionsRow: { flexDirection: 'row', gap: DS.spacing.sm, marginTop: DS.spacing.md },
   actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 999, backgroundColor: DS.colors.orangeSoft, borderWidth: 1, borderColor: DS.colors.orangeRing },
   actionBtnText: { color: DS.colors.textPrimary, fontWeight: '800', fontSize: 13 },
+  // iter106aj: resend pay link CTA
+  resendBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: DS.colors.orange, borderRadius: 12,
+    paddingVertical: 12, paddingHorizontal: 16, marginTop: 10,
+  },
+  resendBtnText: { color: '#FFFFFF', fontWeight: '800', fontSize: 14, letterSpacing: 0.3 },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 4 },
   metaText: { ...DS.text.bodyStrong, flex: 1 },
   priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },

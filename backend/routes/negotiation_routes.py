@@ -370,3 +370,66 @@ async def timeline(session_id: str, current_user: dict = Depends(get_current_use
         "timeline": session.get("negotiationTimeline", []),
         "expiresInMinutes": expires_in,
     }
+
+
+# ── POST /sessions/{id}/resend-pay-link ───────────────────────────────────
+# iter106aj: re-fires the "Locked in! Tap to pay" notification to the trainee
+# if they swiped the original notification away. Trainer-only, 60s cooldown
+# so it can't be used to spam-notify a trainee.
+RESEND_COOLDOWN_SECONDS = 60
+
+
+@router.post("/{session_id}/resend-pay-link")
+async def resend_pay_link(session_id: str, current_user: dict = Depends(get_current_user)):
+    oid = _ensure_oid(session_id)
+    user_id = str(current_user["_id"])
+    session = await _load_session(oid, user_id)
+
+    # Only the trainer on the session can resend.
+    if str(session.get("trainerId")) != user_id:
+        raise HTTPException(status_code=403, detail="Only the trainer can resend the pay link.")
+
+    # Only valid once payment is unlocked and not yet paid.
+    if not session.get("paymentReady"):
+        raise HTTPException(status_code=400, detail="Accept the proposal first — payment isn't unlocked.")
+    if session.get("paymentStatus") in ("paid", "succeeded"):
+        raise HTTPException(status_code=400, detail="Trainee already paid for this session.")
+
+    # 60-second rate limit.
+    last = session.get("lastPayLinkResentAt")
+    now = _utcnow()
+    if last:
+        if last.tzinfo is None:
+            last = last.replace(tzinfo=timezone.utc)
+        elapsed = (now - last).total_seconds()
+        if elapsed < RESEND_COOLDOWN_SECONDS:
+            wait = int(RESEND_COOLDOWN_SECONDS - elapsed)
+            raise HTTPException(
+                status_code=429,
+                detail=f"Please wait {wait}s before sending another reminder.",
+            )
+
+    await db.sessions.update_one({"_id": oid}, {"$set": {"lastPayLinkResentAt": now}})
+
+    trainee_id = session.get("traineeId")
+    if trainee_id:
+        asyncio.create_task(
+            create_and_send_notification(
+                str(trainee_id),
+                "Reminder: tap to pay",
+                "Your session is locked in. Tap to complete payment.",
+                "session_accepted",
+                {
+                    "sessionId": str(session["_id"]),
+                    "action": "pay",
+                    "screen": f"trainee/payment?sessionId={session['_id']}&autoPay=1",
+                    "resent": True,
+                },
+            )
+        )
+
+    return {
+        "success": True,
+        "message": "Pay link resent to the trainee.",
+        "nextAvailableInSeconds": RESEND_COOLDOWN_SECONDS,
+    }

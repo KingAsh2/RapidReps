@@ -594,6 +594,13 @@ export const negotiationAPI = {
     const { data } = await api.post(`/sessions/${sessionId}/negotiation/reject`, { reason });
     return data;
   },
+  // iter106aj: trainer-side "Resend Pay Link" — re-fires the
+  // "Locked in! Tap to pay" notification to the trainee. 60s server-side
+  // cooldown returns HTTP 429.
+  resendPayLink: async (sessionId: string) => {
+    const { data } = await api.post(`/sessions/${sessionId}/resend-pay-link`);
+    return data;
+  },
 };
 
 export const sessionsAPI = {
