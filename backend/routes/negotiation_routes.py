@@ -31,13 +31,14 @@ Endpoints (all under /api/sessions/{id}/negotiation):
 
 Permissions: only trainee + trainer assigned to the session may negotiate.
 """
+import asyncio
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
 from bson import ObjectId
 
-from deps import db, get_current_user
+from deps import db, get_current_user, create_and_send_notification
 
 
 router = APIRouter(prefix="/sessions", tags=["negotiation"])
@@ -255,6 +256,43 @@ async def accept(session_id: str, current_user: dict = Depends(get_current_user)
             "$push": {"negotiationTimeline": entry},
         },
     )
+
+    # iter106ai: notify the OTHER party that the proposal was accepted so they
+    # can be deep-linked straight to the payment sheet (no extra clicks).
+    # Trainer-accepts-trainee-proposal → trainee gets "Locked in! Tap to pay".
+    # Trainee-accepts-trainer-proposal → trainer gets a polite confirmation.
+    other_party_id = (
+        session.get("traineeId") if role == "trainer" else session.get("trainerId")
+    )
+    if other_party_id:
+        if role == "trainer":
+            asyncio.create_task(
+                create_and_send_notification(
+                    str(other_party_id),
+                    "Locked in! Tap to pay",
+                    "Your trainer accepted. Confirm payment to lock in the session.",
+                    "session_accepted",
+                    {
+                        "sessionId": str(session["_id"]),
+                        "action": "pay",
+                        # iter106ai: deep-link straight to the payment screen
+                        # with autoPay=1 so the Stripe sheet opens immediately
+                        # on land — one tap from notification to pay sheet.
+                        "screen": f"trainee/payment?sessionId={session['_id']}&autoPay=1",
+                    },
+                )
+            )
+        else:
+            asyncio.create_task(
+                create_and_send_notification(
+                    str(other_party_id),
+                    "Session confirmed",
+                    "The trainee accepted your proposal — they'll be prompted to pay.",
+                    "session_accepted",
+                    {"sessionId": str(session["_id"])},
+                )
+            )
+
     return {
         "success": True,
         "status": NEG_STATUS_AGREED,

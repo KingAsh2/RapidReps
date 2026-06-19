@@ -222,6 +222,21 @@ export default function NotificationsScreen() {
 
       case 'session_accepted':
       case 'session_confirmed':
+        // iter106ai: minimise clicks — if the notification carries
+        // `action=pay` (set on trainer-accept), deep-link the trainee straight
+        // to the dedicated payment screen with `autoPay=1`, which auto-opens
+        // the Stripe payment sheet on land. One tap from notification → Pay sheet.
+        if (data?.action === 'pay' && sessionId && role === 'trainee') {
+          router.push(`/trainee/payment?sessionId=${sessionId}&autoPay=1` as any);
+          return;
+        }
+        if (sessionId) {
+          router.push(`/${role}/session-detail?sessionId=${sessionId}` as any);
+        } else {
+          router.push(`/${role}/(tabs)/sessions` as any);
+        }
+        return;
+
       case 'session_declined':
       case 'session_cancelled':
         if (sessionId) {

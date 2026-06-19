@@ -9,7 +9,7 @@
  *
  * Zelle has been fully removed. Trainees can only pay via Stripe.
  */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Alert, Platform,
 } from 'react-native';
@@ -53,7 +53,7 @@ const C = {
 
 export default function PaymentScreen() {
   const router = useRouter();
-  const { sessionId } = useLocalSearchParams<{ sessionId: string }>();
+  const { sessionId, autoPay } = useLocalSearchParams<{ sessionId: string; autoPay?: string }>();
   const { initPaymentSheet, presentPaymentSheet } = useStripeSheet();
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
@@ -61,6 +61,9 @@ export default function PaymentScreen() {
   const [agreedTime, setAgreedTime] = useState<string | null>(null);
   const [agreedLocation, setAgreedLocation] = useState<any>(null);
   const [pricing, setPricing] = useState<any>(null);
+  // iter106ai: track whether we've already auto-triggered to avoid loops
+  // when load() re-runs.
+  const autoPayFired = useRef(false);
 
   useEffect(() => {
     if (!sessionId) {
@@ -104,6 +107,26 @@ export default function PaymentScreen() {
       setLoading(false);
     }
   };
+
+  // iter106ai: auto-open the Stripe sheet when we got here via the
+  // "Locked in! Tap to pay" notification (autoPay=1). One tap from
+  // notification → native pay sheet. We only fire once, and only when
+  // every precondition is satisfied (payment unlocked + pricing loaded +
+  // not already processing).
+  useEffect(() => {
+    if (
+      autoPay === '1' &&
+      !autoPayFired.current &&
+      !loading &&
+      paymentReady &&
+      pricing &&
+      !processing
+    ) {
+      autoPayFired.current = true;
+      handlePay();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoPay, loading, paymentReady, pricing]);
 
   const handlePay = async () => {
     if (!paymentReady || !pricing) {
