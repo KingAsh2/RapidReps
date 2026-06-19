@@ -309,6 +309,18 @@ async def timeline(session_id: str, current_user: dict = Depends(get_current_use
         await db.sessions.update_one({"_id": oid}, {"$set": expired})
         session.update(expired)
 
+    # iter106ah: compute expiresInMinutes cleanly. The previous one-liner
+    # mis-grouped parentheses so `.total_seconds()` was called on a datetime
+    # instead of a timedelta, throwing 500s as soon as a session was seeded
+    # with `negotiationStatus=proposed_by_trainee`.
+    expires_in = None
+    if session.get("negotiationStatus") in PENDING_STATUSES:
+        last = session.get("negotiationLastUpdatedAt") or _utcnow()
+        if last.tzinfo is None:
+            last = last.replace(tzinfo=timezone.utc)
+        elapsed_min = (_utcnow() - last).total_seconds() // 60
+        expires_in = max(0, NEGOTIATION_TIMEOUT_MINUTES - int(elapsed_min))
+
     return {
         "sessionId": str(session["_id"]),
         "negotiationStatus": session.get("negotiationStatus"),
@@ -318,12 +330,5 @@ async def timeline(session_id: str, current_user: dict = Depends(get_current_use
         "proposedLocation": session.get("proposedLocation"),
         "paymentReady": bool(session.get("paymentReady")),
         "timeline": session.get("negotiationTimeline", []),
-        "expiresInMinutes": (
-            NEGOTIATION_TIMEOUT_MINUTES
-            - int((_utcnow() - (session.get("negotiationLastUpdatedAt") or _utcnow())
-                   .replace(tzinfo=timezone.utc) if session.get("negotiationLastUpdatedAt")
-                   and session["negotiationLastUpdatedAt"].tzinfo is None
-                   else session.get("negotiationLastUpdatedAt") or _utcnow()).total_seconds() // 60)
-            if session.get("negotiationStatus") in PENDING_STATUSES else None
-        ),
+        "expiresInMinutes": expires_in,
     }

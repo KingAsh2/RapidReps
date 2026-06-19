@@ -18,7 +18,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import RapidBg from '../../src/components/RapidBg';
 import { ScreenHeader } from '../../src/components/ScreenShell';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { sessionsAPI } from '../../src/services/api';
+import { sessionsAPI, chatAPI } from '../../src/services/api';
 import NegotiationPanel from '../../src/components/NegotiationPanel';
 import { DS } from '../../src/theme/designSystem';
 import { formatCents } from '../../src/utils/pricing';
@@ -126,22 +126,53 @@ export default function TrainerSessionDetailScreen() {
           <View style={s.actionsRow}>
             <TouchableOpacity
               style={s.actionBtn}
-              onPress={() => session.traineeId && router.push(`/messages/chat?userId=${session.traineeId}&userName=${session.traineeName || 'Trainee'}`)}
+              onPress={async () => {
+                if (!session.traineeId) {
+                  toast.error("Couldn't open chat", 'No trainee on this session');
+                  return;
+                }
+                try {
+                  // iter106ah: use getOrCreateConversation so the chat screen
+                  // receives the conversationId it needs to load message
+                  // history. Before this the URL only passed `userId=` and
+                  // chat.tsx silently skipped `loadMessages` (no history,
+                  // empty bubble area) since `conversationId` was missing.
+                  const res = await chatAPI.getOrCreateConversation(String(session.traineeId));
+                  router.push(
+                    `/messages/chat?conversationId=${res.conversationId}&userId=${session.traineeId}&userName=${encodeURIComponent(session.traineeName || 'Trainee')}`,
+                  );
+                } catch (e: any) {
+                  toast.error(formatApiError(e, "Couldn't open chat"));
+                }
+              }}
               data-testid="message-trainee"
             >
               <Ionicons name="chatbubble" size={18} color={DS.colors.orange} />
               <Text style={s.actionBtnText}>Message</Text>
             </TouchableOpacity>
-            {session.traineePhone && (
-              <TouchableOpacity
-                style={s.actionBtn}
-                onPress={() => Linking.openURL(`tel:${session.traineePhone}`)}
-                data-testid="call-trainee"
-              >
-                <Ionicons name="call" size={18} color={DS.colors.orange} />
-                <Text style={s.actionBtnText}>Call</Text>
-              </TouchableOpacity>
-            )}
+            {/* iter106ah: always show the Call button. If the trainee never
+                saved a phone number we toast a clear reason instead of just
+                hiding the action (which looked like a UI bug). */}
+            <TouchableOpacity
+              style={s.actionBtn}
+              onPress={() => {
+                if (session.traineePhone) {
+                  const tel = String(session.traineePhone).replace(/[^0-9+]/g, '');
+                  Linking.openURL(`tel:${tel}`).catch(() =>
+                    toast.error('Could not start call', 'Your device blocked the dial intent.'),
+                  );
+                } else {
+                  toast.error(
+                    'No phone number on file',
+                    'The trainee has not added a phone number to their profile yet.',
+                  );
+                }
+              }}
+              data-testid="call-trainee"
+            >
+              <Ionicons name="call" size={18} color={DS.colors.orange} />
+              <Text style={s.actionBtnText}>Call</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -219,23 +250,37 @@ export default function TrainerSessionDetailScreen() {
           );
         })()}
 
-        {/* Date & Time */}
-        {start && (
+        {/* Date & Time — iter106ah: render the trainee's exact wall-clock
+            choice when available (`traineeLocalDate` + `traineeLocalTime`,
+            persisted on the session doc). The trainer's device may live in a
+            different timezone than the trainee, and re-parsing the UTC ISO
+            via `.toLocaleString()` would shift the displayed hour. Falling
+            back to the device-local render only when those fields are
+            missing on an older session. */}
+        {(session.traineeLocalDate || session.traineeLocalTime || start) && (
           <View style={s.card}>
             <Text style={s.cardTitle}>Scheduled</Text>
             <View style={s.metaRow}>
               <Ionicons name="calendar" size={18} color={DS.colors.orange} />
               <Text style={s.metaText}>
-                {start.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                {session.traineeLocalDate ||
+                  (start ? start.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) : '')}
               </Text>
             </View>
             <View style={s.metaRow}>
               <Ionicons name="time" size={18} color={DS.colors.orange} />
               <Text style={s.metaText}>
-                {start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {session.traineeLocalTime ||
+                  (start ? start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '')}
                 {session.durationMinutes ? ` · ${session.durationMinutes} min` : ''}
               </Text>
             </View>
+            {/* If we rendered the trainee's wall-clock, leave a tiny note so
+                the trainer knows this is the trainee's local time, not their
+                own device's. */}
+            {(session.traineeLocalDate || session.traineeLocalTime) && (
+              <Text style={[s.caption, { marginTop: 6 }]}>Trainee&apos;s local time</Text>
+            )}
           </View>
         )}
 

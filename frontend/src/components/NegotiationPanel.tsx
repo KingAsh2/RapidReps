@@ -168,12 +168,18 @@ export const NegotiationPanel: React.FC<Props> = ({
     }
   };
 
+  // iter106ah: trainer wants a "one last confirm" modal before locking in the
+  // session (since acceptance flips paymentReady=true and the trainee gets
+  // charged the next moment). We gate the accept button behind a small modal.
+  const [showAcceptConfirm, setShowAcceptConfirm] = useState(false);
+
   const accept = async () => {
     setBusy(true);
     try {
       await negotiationAPI.accept(sessionId);
       haptic.success();
-      toast.success('Agreed! Payment is now unlocked.');
+      toast.success('Agreed! The trainee can now pay.');
+      setShowAcceptConfirm(false);
       await load();
     } catch (e: any) {
       haptic.error();
@@ -288,7 +294,7 @@ export const NegotiationPanel: React.FC<Props> = ({
           <>
             <TouchableOpacity
               style={[s.btn, s.btnSuccess]}
-              onPress={accept}
+              onPress={() => (currentUserRole === 'trainer' ? setShowAcceptConfirm(true) : accept())}
               disabled={busy}
               testID="negotiation-accept-btn"
             >
@@ -414,6 +420,67 @@ export const NegotiationPanel: React.FC<Props> = ({
                 )}
               </TouchableOpacity>
             </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* iter106ah: Trainer one-last-confirm modal before accepting.
+          Shows the proposed time/location so the trainer can sanity-check
+          before flipping paymentReady=true (which auto-charges the trainee). */}
+      <Modal visible={showAcceptConfirm} animationType="fade" transparent onRequestClose={() => setShowAcceptConfirm(false)}>
+        <View style={s.modalBg}>
+          <View style={[s.modalCard, { maxHeight: undefined }]}>
+            <View style={s.modalHeader}>
+              <Text style={s.modalTitle}>Accept this session?</Text>
+              <TouchableOpacity onPress={() => setShowAcceptConfirm(false)} testID="accept-confirm-close">
+                <Ionicons name="close" size={24} color={C.text} />
+              </TouchableOpacity>
+            </View>
+            <View style={{ padding: 18, gap: 12 }}>
+              <Text style={{ color: C.textSec, fontSize: 14, lineHeight: 20 }}>
+                Confirming will lock in this time &amp; location and notify the trainee to pay. You can&apos;t un-accept after this — they&apos;ll be charged on confirm.
+              </Text>
+              {data?.proposedTime ? (
+                <View style={s.proposalBox}>
+                  <Text style={s.label}>PROPOSED</Text>
+                  <View style={s.detailRow}>
+                    <Ionicons name="calendar" size={16} color={C.orangeGlow} />
+                    <Text style={s.detailText}>{new Date(data.proposedTime).toLocaleString()}</Text>
+                  </View>
+                  {!isVirtual && data.proposedLocation?.address ? (
+                    <View style={s.detailRow}>
+                      <Ionicons name="location" size={16} color={C.orangeGlow} />
+                      <Text style={s.detailText}>{data.proposedLocation.address}</Text>
+                    </View>
+                  ) : null}
+                </View>
+              ) : null}
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 6 }}>
+                <TouchableOpacity
+                  style={[s.btn, s.btnOutline, { flex: 1, justifyContent: 'center' }]}
+                  onPress={() => setShowAcceptConfirm(false)}
+                  disabled={busy}
+                  testID="accept-confirm-cancel"
+                >
+                  <Text style={s.btnOutlineText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[s.btn, s.btnSuccess, { flex: 1, justifyContent: 'center' }]}
+                  onPress={accept}
+                  disabled={busy}
+                  testID="accept-confirm-yes"
+                >
+                  {busy ? (
+                    <ActivityIndicator size="small" color="#FFF" />
+                  ) : (
+                    <>
+                      <Ionicons name="checkmark" size={16} color="#FFF" />
+                      <Text style={s.btnPrimaryText}>Yes, accept</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
         </View>
       </Modal>

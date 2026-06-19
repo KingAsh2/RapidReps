@@ -203,6 +203,34 @@ async def create_session(session: SessionCreate, current_user: dict = Depends(ge
         'outdoorLocationProposed': session.locationNameOrAddress if session_type == SessionType.OUTDOOR else None,
         'outdoorLocationAgreed': False if session_type == SessionType.OUTDOOR else None,
         'outdoorLocationTrainerProposal': None,
+        # iter106ah: seed the negotiation panel as proposed_by_trainee on creation
+        # so the trainer's session-detail screen shows ACCEPT / COUNTER / REJECT
+        # immediately on first load (instead of just "Propose"). Without this
+        # seed the negotiation_routes timeline endpoint returns nothing and
+        # NegotiationPanel only renders the Propose button — meaning a trainer
+        # had no way to accept a request right then and there.
+        # NOTE: field names match what negotiation_routes.py reads/writes
+        # (`proposedTime` / `proposedLocation` / `negotiationLastUpdatedAt`).
+        'negotiationStatus': 'proposed_by_trainee',
+        'negotiationLastUpdatedAt': datetime.utcnow(),
+        'proposedTime': session.sessionDateTimeStart,
+        'proposedLocation': (
+            {'address': session.locationNameOrAddress}
+            if session.locationNameOrAddress and session_type != SessionType.VIRTUAL
+            else None
+        ),
+        'negotiationTimeline': [{
+            'type': 'proposal',
+            'by': 'trainee',
+            'byUserId': trainee_id,
+            'proposedTime': session.sessionDateTimeStart,
+            'proposedLocation': (
+                {'address': session.locationNameOrAddress}
+                if session.locationNameOrAddress and session_type != SessionType.VIRTUAL
+                else None
+            ),
+            'at': datetime.utcnow(),
+        }],
         'notes': sanitize_text(session.notes),
         'paymentIntentId': None,
         'createdAt': datetime.utcnow(),
