@@ -66,6 +66,19 @@ export default function TrainerDetailScreen() {
   const { user } = useAuth();
   const { showAlert } = useAlert();
 
+  // iter106an: preview-mode guard. When `?preview=1` we neuter every CTA
+  // that would otherwise create a side effect (favoriting, messaging,
+  // booking, reporting, blocking) so users can't accidentally interact with
+  // their own profile while sanity-checking how it reads.
+  const inPreview = preview === '1' || preview === 'true';
+  const previewBlock = (): boolean => {
+    if (inPreview) {
+      toast.info('Disabled in preview · tap the banner to exit');
+      return true;
+    }
+    return false;
+  };
+
   const [loading, setLoading] = useState(true);
   const [trainer, setTrainer] = useState<TrainerProfile | null>(null);
   const [ratings, setRatings] = useState<any[]>([]);
@@ -217,6 +230,7 @@ export default function TrainerDetailScreen() {
   }, [trainerId]);
 
   const handleToggleFavorite = async () => {
+    if (previewBlock()) return;
     try {
       const res = await traineeAPI.toggleFavorite(trainerId as string);
       setIsFavorite(res.isFavorite);
@@ -317,6 +331,7 @@ export default function TrainerDetailScreen() {
   };
 
   const handleBookSession = async () => {
+    if (previewBlock()) return;
     if (!trainer || !user) return;
     setBooking(true);
     setIsHolding(false);
@@ -394,6 +409,7 @@ export default function TrainerDetailScreen() {
   };
 
   const handleMessage = async () => {
+    if (previewBlock()) return;
     if (!trainer) return;
     try {
       const conv = await chatAPI.getOrCreateConversation(trainer.userId);
@@ -404,6 +420,7 @@ export default function TrainerDetailScreen() {
   };
 
   const handleReportTrainer = () => {
+    if (previewBlock()) return;
     showAlert({
       title: 'Report',
       message: 'Report this trainer for spam, harassment, or inappropriate content?',
@@ -430,6 +447,7 @@ export default function TrainerDetailScreen() {
   };
 
   const handleBlockTrainer = () => {
+    if (previewBlock()) return;
     showAlert({
       title: 'Block Trainer',
       message: 'Blocking hides this trainer from your results.',
@@ -453,6 +471,7 @@ export default function TrainerDetailScreen() {
   };
 
   const handleSendRequest = async () => {
+    if (previewBlock()) return;
     if (!trainer || !user) return;
     const outdoorMissing = selectedSessionType === 'outdoor' && outdoorLocation.trim().length < 3;
     if (booking || !prices.ratesSet || outdoorMissing) return;

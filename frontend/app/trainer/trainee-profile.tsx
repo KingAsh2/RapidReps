@@ -55,6 +55,16 @@ export default function TraineeProfileScreen() {
   const traineePhoto = params.traineePhoto as string;
   const sessionDetails = params.sessionDetails as string;
 
+  // iter106an: preview-mode guard (see trainer-detail.tsx for rationale).
+  const inPreview = params.preview === '1' || params.preview === 'true';
+  const previewBlock = (): boolean => {
+    if (inPreview) {
+      toast.info('Disabled in preview · tap the banner to exit');
+      return true;
+    }
+    return false;
+  };
+
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
@@ -111,6 +121,7 @@ export default function TraineeProfileScreen() {
 
   // ---------------- Safety / actions ----------------
   const handleReportTrainee = () => {
+    if (previewBlock()) return;
     showAlert({
       title: 'Report',
       message: 'Report this trainee for spam, harassment, or inappropriate content?',
@@ -126,6 +137,7 @@ export default function TraineeProfileScreen() {
   };
 
   const handleBlockTrainee = () => {
+    if (previewBlock()) return;
     showAlert({
       title: 'Block Trainee',
       message: 'Blocking hides this trainee from your results and prevents future interactions.',
@@ -141,6 +153,7 @@ export default function TraineeProfileScreen() {
   };
 
   const handleProposeLocation = async () => {
+    if (previewBlock()) return;
     if (!proposedLocation.trim()) { toast.error('Please enter a location'); return; }
     setSubmitting(true);
     try {
@@ -155,6 +168,7 @@ export default function TraineeProfileScreen() {
   };
 
   const handleConfirmArrival = async () => {
+    if (previewBlock()) return;
     setSubmitting(true);
     try {
       const r = await trainerAPI.confirmArrival(session.id);
@@ -166,6 +180,7 @@ export default function TraineeProfileScreen() {
   };
 
   const handleAccept = () => {
+    if (previewBlock()) return;
     showAlert({
       title: 'Accept Session Request',
       message: 'Are you sure you want to accept this session?',
@@ -188,6 +203,7 @@ export default function TraineeProfileScreen() {
   };
 
   const handleDeny = () => {
+    if (previewBlock()) return;
     showAlert({
       title: 'Decline Session Request',
       message: 'Are you sure you want to decline this session?',
@@ -222,6 +238,7 @@ export default function TraineeProfileScreen() {
   };
 
   const handleMessage = async () => {
+    if (previewBlock()) return;
     try {
       const { chatAPI } = await import('../../src/services/api');
       const result = await chatAPI.getOrCreateConversation(traineeId || '');
@@ -230,6 +247,7 @@ export default function TraineeProfileScreen() {
   };
 
   const handleCall = () => {
+    if (previewBlock()) return;
     const phone = session?.traineePhone || params.traineePhone;
     if (phone) Linking.openURL(`tel:${phone}`);
     else showAlert({ title: 'Contact Unavailable', message: 'Contact info shared after session is confirmed.', type: 'info' });
