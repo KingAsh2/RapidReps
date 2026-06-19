@@ -22,6 +22,7 @@ import { toast } from '../../../src/utils/toast';
 import { trainerAPI } from '../../../src/services/api';
 import FloatingOrangeBg from '../../../src/components/FloatingOrangeBg';
 import { swrCache } from '../../../src/hooks/useStaleWhileRefresh';
+import { AnimatedNumber } from '../../../src/components/AnimatedNumber';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BAR_MAX_HEIGHT = 100;
@@ -171,17 +172,38 @@ export default function TrainerEarningsScreen() {
                   <Ionicons name="wallet" size={20} color={'#FF6A00'} />
                 </View>
               </View>
-              <Text style={styles.heroAmount}>{cents(data?.pendingBalanceCents || 0)}</Text>
+              {/* iter106ap: Animate the dollar count-up so the headline
+                  number feels alive when the trainer opens the tab. */}
+              <AnimatedNumber
+                value={(data?.pendingBalanceCents || 0) / 100}
+                prefix="$"
+                decimals={2}
+                duration={900}
+                style={styles.heroAmount}
+                testID="hero-pending-amount"
+              />
               <View style={styles.heroDivider} />
               <View style={styles.heroBottom}>
                 <View style={styles.heroStat}>
                   <Text style={styles.heroStatLabel}>Total Earned</Text>
-                  <Text style={styles.heroStatValue}>{cents(data?.totalEarningsCents || 0)}</Text>
+                  <AnimatedNumber
+                    value={(data?.totalEarningsCents || 0) / 100}
+                    prefix="$"
+                    decimals={2}
+                    duration={700}
+                    style={styles.heroStatValue}
+                  />
                 </View>
                 <View style={styles.heroStatDivider} />
                 <View style={styles.heroStat}>
                   <Text style={styles.heroStatLabel}>Paid Out</Text>
-                  <Text style={styles.heroStatValue}>{cents(data?.totalPaidOutCents || 0)}</Text>
+                  <AnimatedNumber
+                    value={(data?.totalPaidOutCents || 0) / 100}
+                    prefix="$"
+                    decimals={2}
+                    duration={700}
+                    style={styles.heroStatValue}
+                  />
                 </View>
               </View>
             </LinearGradient>

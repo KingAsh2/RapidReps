@@ -231,11 +231,19 @@ export default function TrainerDetailScreen() {
 
   const handleToggleFavorite = async () => {
     if (previewBlock()) return;
+    // iter106ap: optimistic toggle — flip the icon immediately so the tap
+    // feels instant, then reconcile with the server response. Rolls back on
+    // error. Light haptic on flip for the premium "click" feel.
+    const optimistic = !isFavorite;
+    setIsFavorite(optimistic);
+    haptic.selection?.();
     try {
       const res = await traineeAPI.toggleFavorite(trainerId as string);
       setIsFavorite(res.isFavorite);
       toast.success(res.isFavorite ? 'Added to favorites!' : 'Removed from favorites');
     } catch (err) {
+      // Rollback.
+      setIsFavorite(!optimistic);
       toast.error('Failed to update favorite');
     }
   };

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Dimensions
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Video, ResizeMode } from 'expo-av';
+import { haptic } from '../utils/haptics';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
@@ -35,6 +36,11 @@ interface Props {
 
 export const HighlightReel = ({ highlights, trainerName }: Props) => {
   const [activeIndex, setActiveIndex] = useState(0);
+  // iter106ap: long-press preview index. While the user is pressing-and-holding
+  // a tile, we treat that tile as the "active" one so its muted video plays
+  // inline. Release → fall back to scroll-driven activeIndex. Instagram-style
+  // sneak peek without opening the full viewer modal.
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
   const [viewerVisible, setViewerVisible] = useState(false);
   const [viewerIdx, setViewerIdx] = useState(0);
   const [viewerLoading, setViewerLoading] = useState(false);
@@ -117,6 +123,17 @@ export const HighlightReel = ({ highlights, trainerName }: Props) => {
             <TouchableOpacity
               activeOpacity={0.9}
               onPress={() => openViewer(idx)}
+              onLongPress={() => {
+                // iter106ap: long-press → sneak-peek (mutes other tiles,
+                // plays this one inline). Light haptic so the user feels
+                // the "lock" happen.
+                haptic.selection();
+                setPreviewIndex(idx);
+              }}
+              onPressOut={() => {
+                if (previewIndex !== null) setPreviewIndex(null);
+              }}
+              delayLongPress={250}
               style={styles.reelTouchable}
               data-testid={`highlight-${idx}`}
             >
@@ -125,7 +142,7 @@ export const HighlightReel = ({ highlights, trainerName }: Props) => {
                   // Use server-generated thumbnail as instant poster, only mount
                   // the <Video> component when this card is the active one.
                   // This is the fix for "thumbnails not visible" + "long load times".
-                  idx === activeIndex ? (
+                  (idx === activeIndex || idx === previewIndex) ? (
                     <Video
                       source={{ uri: resolveUrl(item.url) }}
                       style={styles.reelMedia}
@@ -146,7 +163,7 @@ export const HighlightReel = ({ highlights, trainerName }: Props) => {
                     source={{ uri: resolveUrl(item.url) }}
                     style={styles.reelMedia}
                     resizeMode={ResizeMode.COVER}
-                    shouldPlay={idx === activeIndex}
+                    shouldPlay={idx === activeIndex || idx === previewIndex}
                     isLooping
                     isMuted
                     useNativeControls={false}
