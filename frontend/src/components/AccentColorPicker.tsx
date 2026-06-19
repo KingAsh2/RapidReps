@@ -274,8 +274,3 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 });
-ng: 0.8,
-    textTransform: 'uppercase',
-    fontWeight: '700',
-  },
-});
