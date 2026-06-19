@@ -363,7 +363,7 @@ export default function TrainerProfileScreen() {
                     clients. */}
                 {user?.id && (
                   <TouchableOpacity
-                    onPress={() => router.push(`/trainee/trainer-detail?trainerId=${user.id}` as any)}
+                    onPress={() => router.push(`/trainee/trainer-detail?trainerId=${user.id}&preview=1` as any)}
                     style={[
                       styles.shareProfileBtn,
                       {

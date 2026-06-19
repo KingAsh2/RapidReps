@@ -519,7 +519,7 @@ export default function TraineeProfileScreen() {
                   thing to a "how do others see me?" sanity check. */}
               {!isEditing && user?.id && (
                 <TouchableOpacity
-                  onPress={() => router.push(`/trainer/trainee-profile?traineeId=${user.id}` as any)}
+                  onPress={() => router.push(`/trainer/trainee-profile?traineeId=${user.id}&preview=1` as any)}
                   style={[styles.shareProfileBtn, { marginTop: 10, backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)' }]}
                   data-testid="preview-profile-btn"
                 >
