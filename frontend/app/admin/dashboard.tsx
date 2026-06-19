@@ -34,6 +34,7 @@ import { PayoutsTab } from '../../src/components/admin/PayoutsTab';
 import { ProfileTab } from '../../src/components/admin/ProfileTab';
 import { SafetyTab } from '../../src/components/admin/SafetyTab';
 import { SubscriptionsTab } from '../../src/components/admin/SubscriptionsTab';
+import { UserAvatar } from '../../src/components/UserAvatar';
 
 type Tab = 'overview' | 'users' | 'verifications' | 'sessions' | 'subscriptions' | 'payments' | 'payouts' | 'safety' | 'profile';
 
@@ -403,12 +404,40 @@ export default function AdminDashboard() {
             </TouchableOpacity>
           </View>
           {selectedUser && (
+            <View style={{ alignItems: 'center', paddingTop: 18, paddingBottom: 8 }}>
+              {/* iter106ak: show the user's actual profile photo (or colored
+                  initials fallback) at the top of the admin detail modal.
+                  Was missing entirely — admin had to open the full profile
+                  just to confirm who they were looking at. */}
+              <UserAvatar
+                user={{
+                  id: selectedUser.user?.id,
+                  fullName: selectedUser.user?.fullName,
+                  avatarUrl: selectedUser.user?.avatarUrl
+                    || selectedUser.trainerProfile?.avatarUrl
+                    || selectedUser.traineeProfile?.profilePhoto
+                    || selectedUser.traineeProfile?.avatarUrl
+                    || selectedUser.user?.profilePhoto,
+                  accentColor: selectedUser.user?.accentColor,
+                }}
+                size={88}
+                ring
+              />
+              <Text style={{ fontSize: 18, fontWeight: '800', color: '#0A0E1A', marginTop: 10 }}>
+                {selectedUser.user?.fullName}
+              </Text>
+              <Text style={{ fontSize: 13, color: '#6B7280', marginTop: 2 }}>
+                {(selectedUser.user?.roles || []).join(', ')}
+              </Text>
+            </View>
+          )}
+          {selectedUser && (
             <TouchableOpacity
               onPress={() => {
                 setUserDetailVisible(false);
                 handleOpenUserProfile(selectedUser.user);
               }}
-              style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#FF7A00', padding: 12, marginHorizontal: 16, marginTop: 12, borderRadius: 10, gap: 8 }}
+              style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#FF7A00', padding: 12, marginHorizontal: 16, marginTop: 4, borderRadius: 10, gap: 8 }}
               data-testid="open-user-profile-btn"
             >
               <Ionicons name="person-circle" size={18} color="#fff" />

@@ -339,6 +339,22 @@ export default function TrainerProfileScreen() {
                   <Ionicons name="pencil" size={18} color={COLORS.white} />
                   <Text style={styles.shareProfileBtnText}>Edit Profile</Text>
                 </TouchableOpacity>
+
+                {/* iter106ak: "Preview as visitor" — opens the trainer-detail
+                    screen a trainee would see when browsing (same rich layout
+                    with vibe music + highlight reel + sections). Quick sanity
+                    check for trainers on how their profile reads to potential
+                    clients. */}
+                {user?.id && (
+                  <TouchableOpacity
+                    onPress={() => router.push(`/trainee/trainer-detail?trainerId=${user.id}` as any)}
+                    style={[styles.shareProfileBtn, { backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)' }]}
+                    data-testid="preview-profile-btn"
+                  >
+                    <Ionicons name="eye" size={18} color={COLORS.white} />
+                    <Text style={styles.shareProfileBtnText}>Preview as Visitor</Text>
+                  </TouchableOpacity>
+                )}
               </Animated.View>
 
               {/* Stats */}

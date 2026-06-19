@@ -512,6 +512,21 @@ export default function TraineeProfileScreen() {
                   <Text style={styles.shareProfileBtnText}>Edit Profile</Text>
                 </TouchableOpacity>
               )}
+
+              {/* iter106ak: "Preview as visitor" — lands the trainee on the
+                  exact public-facing screen a trainer would see (rich profile
+                  with vibe music, gallery, fitness goals, etc.). Closest
+                  thing to a "how do others see me?" sanity check. */}
+              {!isEditing && user?.id && (
+                <TouchableOpacity
+                  onPress={() => router.push(`/trainer/trainee-profile?traineeId=${user.id}` as any)}
+                  style={[styles.shareProfileBtn, { marginTop: 10, backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)' }]}
+                  data-testid="preview-profile-btn"
+                >
+                  <Ionicons name="eye" size={18} color={COLORS.white} />
+                  <Text style={styles.shareProfileBtnText}>Preview as Visitor</Text>
+                </TouchableOpacity>
+              )}
             </Animated.View>
 
             {/* Stats Card */}
