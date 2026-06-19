@@ -6,6 +6,7 @@
  * - Preserves all original session-request logic (accept/decline, propose
  *   location, confirm arrival) at the bottom.
  */
+import { Image } from 'expo-image';
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
@@ -249,7 +250,7 @@ export default function TraineeProfileScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.iconBtn} data-testid="back-btn">
             <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>{fullName.split(' ')[0]}'s Profile</Text>
+          <Text style={styles.headerTitle}>{fullName.split(' ')[0]}&apos;s Profile</Text>
           <TouchableOpacity onPress={handleReportTrainee} style={styles.iconBtn} data-testid="more-btn">
             <Ionicons name="flag-outline" size={20} color="#FFFFFF" />
           </TouchableOpacity>
@@ -309,17 +310,117 @@ export default function TraineeProfileScreen() {
 
           {/* iter102an: Vibe music — check the ACTUAL fields the player reads
               (vibeTrackTitle / vibePreviewUrl), not legacy `profileMusicUrl`
-              names that no longer exist on the trainee response. */}
+              names that no longer exist on the trainee response.
+              iter106ag: explicitly placed RIGHT below the hero so a trainer
+              opening a trainee's profile gets the exact same first-impression
+              experience as the trainee sees on their own profile — music
+              starts immediately on mount. */}
           {traineeData?.vibeTrackTitle || traineeData?.vibePreviewUrl ? (
             <View style={styles.sectionCard}>
               <TrainerVibePlayer vibe={traineeData as any} autoPlay={true} />
             </View>
           ) : null}
 
-          {/* Highlight reel */}
+          {/* Highlight reel — same component the trainee uses on their own
+              profile and the same one shown on trainer-detail (parity). */}
           {highlights && highlights.length > 0 ? (
             <View style={styles.sectionCard}>
               <HighlightReel highlights={highlights as any} trainerName={fullName} />
+            </View>
+          ) : null}
+
+          {/* iter106ag: Fitness Goals — surfaces the goals the trainee wrote
+              into their own profile so the trainer reads exactly what the
+              trainee wrote about themselves (not the per-session note). */}
+          {traineeData?.fitnessGoals ? (
+            <View style={styles.sectionCard}>
+              <View style={styles.sectionTitleRow}>
+                <Ionicons name="trophy" size={18} color={accent} />
+                <Text style={styles.sectionTitle}>Fitness Goals</Text>
+              </View>
+              <Text style={styles.bodyText}>{traineeData.fitnessGoals}</Text>
+            </View>
+          ) : null}
+
+          {/* iter106ag: Training Preferences — matches the trainee-side
+              "Training Preferences" card on their own profile. Read-only
+              chips so the trainer can quickly read style + availability. */}
+          {(traineeData?.prefersInPerson || traineeData?.prefersVirtual ||
+            traineeData?.isVirtualEnabled ||
+            (traineeData?.preferredTrainingStyles && traineeData.preferredTrainingStyles.length > 0) ||
+            traineeData?.currentFitnessLevel ||
+            traineeData?.experienceLevel) ? (
+            <View style={styles.sectionCard}>
+              <View style={styles.sectionTitleRow}>
+                <Ionicons name="options" size={18} color={accent} />
+                <Text style={styles.sectionTitle}>Training Preferences</Text>
+              </View>
+              <View style={styles.chipRow}>
+                {traineeData?.currentFitnessLevel ? (
+                  <View style={[styles.chip, { borderColor: `${accent}55`, backgroundColor: `${accent}18` }]}>
+                    <Text style={[styles.chipText, { color: accent }]}>
+                      {String(traineeData.currentFitnessLevel).toUpperCase()}
+                    </Text>
+                  </View>
+                ) : null}
+                {traineeData?.experienceLevel ? (
+                  <View style={[styles.chip, { borderColor: `${accent}55`, backgroundColor: `${accent}18` }]}>
+                    <Text style={[styles.chipText, { color: accent }]}>
+                      {String(traineeData.experienceLevel).toUpperCase()}
+                    </Text>
+                  </View>
+                ) : null}
+                {traineeData?.prefersInPerson ? (
+                  <View style={styles.chip}>
+                    <Ionicons name="walk" size={12} color="#5EC8FF" />
+                    <Text style={styles.chipText}>In-Person</Text>
+                  </View>
+                ) : null}
+                {(traineeData?.prefersVirtual || traineeData?.isVirtualEnabled) ? (
+                  <View style={styles.chip}>
+                    <Ionicons name="videocam" size={12} color="#00D68F" />
+                    <Text style={styles.chipText}>Virtual</Text>
+                  </View>
+                ) : null}
+                {(traineeData?.preferredTrainingStyles || []).slice(0, 6).map((style: string, i: number) => (
+                  <View key={`style-${i}`} style={styles.chip}>
+                    <Text style={styles.chipText}>{String(style)}</Text>
+                  </View>
+                ))}
+              </View>
+              {(traineeData?.budgetMinPerMinuteCents || traineeData?.budgetMaxPerMinuteCents) ? (
+                <Text style={styles.budgetText}>
+                  Budget: ${((traineeData?.budgetMinPerMinuteCents || 0) / 100).toFixed(2)}
+                  {' – '}
+                  ${((traineeData?.budgetMaxPerMinuteCents || 0) / 100).toFixed(2)} / min
+                </Text>
+              ) : null}
+            </View>
+          ) : null}
+
+          {/* iter106ag: Gallery (photos the trainee uploaded). Surfaced on
+              the trainee's own profile-setup flow but was missing here. */}
+          {(traineeData?.gallery && traineeData.gallery.length > 0) ? (
+            <View style={styles.sectionCard}>
+              <View style={styles.sectionTitleRow}>
+                <Ionicons name="images" size={18} color={accent} />
+                <Text style={styles.sectionTitle}>Gallery</Text>
+              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -4 }}>
+                {traineeData.gallery.map((item: any, i: number) => {
+                  const uri = typeof item === 'string' ? item : (item?.url || item?.uri);
+                  if (!uri) return null;
+                  return (
+                    <Image
+                      key={`g-${i}`}
+                      source={{ uri }}
+                      style={styles.galleryThumb}
+                      contentFit="cover"
+                      transition={120}
+                    />
+                  );
+                })}
+              </ScrollView>
             </View>
           ) : null}
 
@@ -630,6 +731,31 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
   },
   sectionTitle: { fontSize: 14, fontWeight: '800', color: '#FFFFFF', marginBottom: 12, letterSpacing: 0.3 },
+  // iter106ag: new section helpers (Fitness Goals, Training Preferences, Gallery).
+  sectionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  bodyText: {
+    fontSize: 14,
+    lineHeight: 21,
+    color: 'rgba(255,255,255,0.85)',
+    fontWeight: '500',
+  },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
+  },
+  chipText: { fontSize: 12, fontWeight: '700', color: '#FFFFFF', letterSpacing: 0.3 },
+  budgetText: {
+    fontSize: 12, color: 'rgba(255,255,255,0.65)', fontWeight: '600',
+    marginTop: 10,
+  },
+  galleryThumb: {
+    width: 110, height: 110, borderRadius: 12,
+    marginHorizontal: 4,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
 
   row: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6 },
   rowText: { fontSize: 14, color: 'rgba(255,255,255,0.85)', flex: 1 },
