@@ -38,6 +38,12 @@ export const HighlightReel = ({ highlights, trainerName }: Props) => {
   const [viewerVisible, setViewerVisible] = useState(false);
   const [viewerIdx, setViewerIdx] = useState(0);
   const [viewerLoading, setViewerLoading] = useState(false);
+  // iter106ao: start the modal video MUTED on open. Autoplay-with-sound is
+  // blocked on web/iOS Safari and silently fails the load — that was a major
+  // cause of "tap play, nothing happens". User can unmute via the corner btn.
+  const [viewerMuted, setViewerMuted] = useState(true);
+  const [viewerError, setViewerError] = useState<string | null>(null);
+  const viewerVideoRef = useRef<Video | null>(null);
   const fadeAnims = useRef(highlights.map(() => new Animated.Value(0))).current;
 
   useEffect(() => {
@@ -52,7 +58,21 @@ export const HighlightReel = ({ highlights, trainerName }: Props) => {
   const openViewer = (idx: number) => {
     setViewerIdx(idx);
     setViewerLoading(true);
+    setViewerError(null);
+    setViewerMuted(true);
     setViewerVisible(true);
+  };
+
+  // iter106ao: nuke + remount the video to retry a failed load.
+  const retryViewer = () => {
+    const idx = viewerIdx;
+    setViewerError(null);
+    setViewerLoading(true);
+    setViewerVisible(false);
+    setTimeout(() => {
+      setViewerIdx(idx);
+      setViewerVisible(true);
+    }, 60);
   };
 
   return (
@@ -142,15 +162,22 @@ export const HighlightReel = ({ highlights, trainerName }: Props) => {
                 colors={['transparent', 'rgba(0,0,0,0.7)']}
                 style={styles.reelOverlay}
               >
-                {item.type === 'video' && (
-                  <View style={styles.playBadge}>
-                    <Ionicons name="play" size={10} color="#FFF" />
-                  </View>
-                )}
                 {item.caption && (
                   <Text style={styles.reelCaption} numberOfLines={2}>{item.caption}</Text>
                 )}
               </LinearGradient>
+
+              {/* iter106ao: prominent CENTER play button for videos. Was a
+                  tiny corner badge before — users didn't realise the card
+                  was tappable. Frosted-glass disc with shadow reads as the
+                  primary "tap to watch" affordance. */}
+              {item.type === 'video' && (
+                <View style={styles.centerPlayBtnWrap} pointerEvents="none">
+                  <View style={styles.centerPlayBtn}>
+                    <Ionicons name="play" size={26} color="#FFFFFF" style={{ marginLeft: 3 }} />
+                  </View>
+                </View>
+              )}
 
               {/* Active indicator ring */}
               {idx === activeIndex && (
@@ -193,31 +220,51 @@ export const HighlightReel = ({ highlights, trainerName }: Props) => {
                 </View>
               )}
               <Video
-                key={`viewer-video-${viewerIdx}`}
+                ref={(r) => { viewerVideoRef.current = r; }}
+                key={`viewer-video-${viewerIdx}-${viewerError ? 'err' : 'ok'}`}
                 source={{ uri: resolveUrl(highlights[viewerIdx].url) }}
                 style={styles.viewerMedia}
                 resizeMode={ResizeMode.CONTAIN}
                 shouldPlay
                 isLooping
-                isMuted={false}
+                // iter106ao: ALWAYS open muted. Web/iOS Safari blocks
+                // autoplay-with-sound silently, leading to the "tap play,
+                // nothing happens" symptom. User unmutes via the corner btn.
+                isMuted={viewerMuted}
                 useNativeControls
-                onLoadStart={() => setViewerLoading(true)}
+                onLoadStart={() => { setViewerLoading(true); setViewerError(null); }}
                 onLoad={() => setViewerLoading(false)}
                 onReadyForDisplay={() => setViewerLoading(false)}
-                onError={() => setViewerLoading(false)}
-                // iter106c: throttle JS-thread progress updates to once per
-                // second (default ~500ms) — smoother playback in the modal
-                // because the bridge isn't chattering twice a second for a
-                // 30-second clip the user is just watching, not scrubbing.
+                onError={(err) => {
+                  setViewerLoading(false);
+                  // expo-av error shape varies; coerce to a friendly string.
+                  setViewerError(typeof err === 'string' ? err : 'Could not load this clip');
+                }}
                 progressUpdateIntervalMillis={1000}
-                // iter102p: `usePoster` + `useNativeControls` causes the poster
-                // <Image> overlay to intercept taps on web/iOS Safari when
-                // autoplay is briefly blocked — the native play button visibly
-                // does nothing. The modal backdrop is already fullscreen black
-                // and the user just saw the thumbnail on the tile, so the poster
-                // is redundant here. Remounting per `viewerIdx` (via `key`)
-                // ensures the source actually changes when navigating clips.
               />
+
+              {/* iter106ao: mute/unmute toggle. Sits top-left so it's reachable
+                  with the thumb without colliding with the close button. */}
+              <TouchableOpacity
+                style={styles.muteBtn}
+                onPress={() => setViewerMuted((m) => !m)}
+                data-testid="highlight-mute-toggle"
+              >
+                <Ionicons name={viewerMuted ? 'volume-mute' : 'volume-high'} size={20} color="#FFF" />
+              </TouchableOpacity>
+
+              {/* iter106ao: explicit error state with a Retry CTA — was an
+                  invisible failure before, looked like a black-screen freeze. */}
+              {viewerError && (
+                <View style={styles.viewerErrorWrap}>
+                  <Ionicons name="alert-circle" size={36} color="#FF6A00" />
+                  <Text style={styles.viewerErrorText}>This clip won&apos;t load right now.</Text>
+                  <TouchableOpacity style={styles.retryBtn} onPress={retryViewer} data-testid="highlight-retry">
+                    <Ionicons name="refresh" size={16} color="#FFFFFF" />
+                    <Text style={styles.retryBtnText}>Retry</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
           ) : (
             <Image
@@ -263,6 +310,39 @@ const styles = StyleSheet.create({
   reelMedia: { width: '100%', height: '100%' },
   reelOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 14, paddingBottom: 14, paddingTop: 40 },
   playBadge: { width: 22, height: 22, borderRadius: 11, backgroundColor: 'rgba(255,106,0,0.9)', justifyContent: 'center', alignItems: 'center', marginBottom: 6 },
+  // iter106ao: prominent centre play button + viewer mute/retry styles.
+  centerPlayBtnWrap: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  centerPlayBtn: {
+    width: 56, height: 56, borderRadius: 28,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.4)',
+    justifyContent: 'center', alignItems: 'center',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.5, shadowRadius: 12, elevation: 8,
+  },
+  muteBtn: {
+    position: 'absolute', top: 54, left: 20, zIndex: 8,
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)',
+    justifyContent: 'center', alignItems: 'center',
+  },
+  viewerErrorWrap: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    justifyContent: 'center', alignItems: 'center', gap: 12, zIndex: 6,
+    paddingHorizontal: 32,
+  },
+  viewerErrorText: { color: '#FFFFFF', fontSize: 14, fontWeight: '700', textAlign: 'center' },
+  retryBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: '#FF6A00', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 999, marginTop: 4,
+  },
+  retryBtnText: { color: '#FFFFFF', fontWeight: '800', fontSize: 13, letterSpacing: 0.3 },
   reelCaption: { fontSize: 12, fontWeight: '700', color: '#FFFFFF', lineHeight: 16 },
   activeRing: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 18, borderWidth: 2, borderColor: '#FF6A00' },
   dots: { flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: 10 },
