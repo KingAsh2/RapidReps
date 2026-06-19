@@ -1764,3 +1764,7 @@ Server logs showed repeated `LOGIN FAIL` for `admin@rapidreps.com` because the u
 | Admin | admin@rapidreps.com | admin123 |
 | Trainee | test_trainee_iter25@test.com | Test123! |
 | Trainer | test_trainer_iter25@test.com | Test123! |
+
+## Changelog — Feb 2026 (Deployment Hotfix)
+- **2026-02 P0 FIX**: Cleared deployment build failure in `/app/frontend/src/components/AccentColorPicker.tsx`. Removed corrupted trailing fragment (`ng: 0.8,` + duplicate `});`) that caused `SyntaxError: Missing semicolon. (278:17)`. Lint clean. `deployment_agent` re-scan returns ✅ PASS — app is deployment-ready.
+
