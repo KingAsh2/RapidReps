@@ -20,6 +20,9 @@ export const ACCENT_COLORS: { hex: string; name: string }[] = [
 ];
 
 const DEFAULT_ACCENT = '#FF6A00';
+// Matches AccentGlowOverlay fallback so the slider opens at the value the user
+// is actually seeing when no intensity has been persisted (Dim = 0.35).
+const DEFAULT_INTENSITY = 0.35;
 
 interface AccentColorPickerProps {
   visible: boolean;
