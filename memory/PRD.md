@@ -4,6 +4,24 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-02 — Iter106al: Android EAS Build Blocker Fix ✅
+
+EAS Android build was failing at `:app:mergeReleaseResources` with AAPT `file failed to compile` errors on three images. Root cause: the files had `.png` extensions but contained JPEG byte data (header `FF D8 FF E0` instead of `89 50 4E 47`). Newer AAPT/Android Gradle Plugin strictly validates that file headers match the extension and rejects mismatches.
+
+**Files repaired in place via Pillow re-encode (filenames preserved → no code changes needed):**
+- `/app/frontend/assets/images/bg-spin-class.png` (130 KB JPEG → 645 KB real PNG)
+- `/app/frontend/assets/images/bg-battle-ropes.png` (138 KB JPEG → 667 KB real PNG)
+- `/app/frontend/assets/images/bg-box-jumps.png` (120 KB JPEG → 613 KB real PNG)
+
+**Verification:**
+- All three now verify as valid PNG via `PIL.Image.verify()`.
+- Defensive sweep across `assets/images/`, `src/`, `app/`, `android/`, `components/` — every `.png` has a correct `89 50 4E 47 0D 0A 1A 0A` magic header. Stale mirrors in `dist/` are web-export artifacts not consumed by EAS Android.
+- All existing `require('.../bg-spin-class.png')` etc. resolve unchanged.
+
+**Next:** User to retrigger `eas build --platform android --profile production`.
+
+
+
 ## 2026-02 — Iter106ae: Admin-Managed Payouts (Stripe → Admin → Trainer) ✅
 
 User decision: Skip Stripe Connect entirely. Trainees pay via Stripe → funds land in the platform/admin Stripe balance → admin sends each trainer their tier-share **off-platform** via the trainer's preferred method (Zelle / PayPal / Venmo / Cash App).
