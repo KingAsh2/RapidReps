@@ -1022,6 +1022,9 @@ app.include_router(session_tracking_ws_router, prefix='/api')
 from routes.gps_checkin_routes import router as gps_checkin_router
 app.include_router(gps_checkin_router)
 
+from routes.legal_routes import router as legal_router
+app.include_router(legal_router)
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,

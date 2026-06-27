@@ -4,23 +4,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { TERMS_SECTIONS, LEGAL_EFFECTIVE_DATE, type LegalSection } from '../../src/legal/content';
 
 const backgroundImage = require('../../assets/images/bg-cardio-gym.png');
-
-// Brand colors
-const COLORS = {
-  teal: '#1a2a5e',
-  tealLight: '#2a3a6e',
-  orange: '#F7931E',
-  navy: '#1a2a5e',
-  white: '#FFFFFF',
-  offWhite: '#FAFBFC',
-  gray: '#5a6785',
-};
+const COLORS = { white: '#FFFFFF' };
 
 export default function TermsScreen() {
   const router = useRouter();
-  
+
   return (
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
       <LinearGradient
@@ -29,9 +20,7 @@ export default function TermsScreen() {
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
-      
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton} data-testid="terms-back-button">
             <Ionicons name="arrow-back" size={24} color={COLORS.white} />
@@ -39,52 +28,21 @@ export default function TermsScreen() {
           <Text style={styles.headerTitle}>TERMS OF SERVICE</Text>
           <View style={{ width: 44 }} />
         </View>
-        
-        <ScrollView 
+
+        <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          data-testid="terms-scroll"
         >
           <View style={styles.card}>
             <LinearGradient colors={['#141929', '#1A2035']} style={styles.cardGradient}>
-              <Text style={styles.updated}>Last updated: {new Date().toLocaleDateString()}</Text>
-
-              <Section title="1. What RapidReps is">
-                RapidReps is a marketplace that connects trainees with independent trainers for in‑person and virtual fitness services.
-                RapidReps is not a fitness provider and does not guarantee outcomes.
-              </Section>
-
-              <Section title="2. Accounts">
-                You must provide accurate information and keep your account secure.
-                We may suspend accounts that violate these terms or applicable laws.
-              </Section>
-
-              <Section title="3. Payments and fees">
-                Trainees pay for services through the app. Trainers receive payouts through our payment provider.
-                RapidReps may charge a platform/service fee and other disclosed fees (e.g., booking or convenience fees).
-                Fees are shown before you confirm payment.
-              </Section>
-
-              <Section title="4. Cancellations and refunds">
-                Cancellation rules are shown in the app and may vary by trainer and session type.
-                Refund eligibility depends on session status and payment provider policies.
-              </Section>
-
-              <Section title="5. User content and conduct">
-                Users may upload photos/videos and message other users. You are responsible for your content.
-                Prohibited content includes harassment, hate, sexual content involving minors, threats, and illegal activity.
-              </Section>
-
-              <Section title="6. Reporting and blocking">
-                RapidReps provides in‑app tools to report or block users. We may review reports and take action including removal.
-              </Section>
-
-              <Section title="7. Contact">
-                For support: support@rapidreps.app
-              </Section>
+              <Text style={styles.updated}>Last updated: {LEGAL_EFFECTIVE_DATE}</Text>
+              {TERMS_SECTIONS.map((s: LegalSection) => (
+                <Section key={s.title} title={s.title} body={s.body} />
+              ))}
             </LinearGradient>
           </View>
-          
           <View style={{ height: 40 }} />
         </ScrollView>
       </SafeAreaView>
@@ -92,22 +50,18 @@ export default function TermsScreen() {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, body }: { title: string; body: string }) {
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>{title}</Text>
-      <Text style={styles.body}>{children}</Text>
+      <Text style={styles.body}>{body}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  safeArea: {
-    flex: 1,
-  },
+  container: { flex: 1 },
+  safeArea: { flex: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -123,18 +77,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: COLORS.white,
-    letterSpacing: 0.5,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-  },
+  headerTitle: { fontSize: 18, fontWeight: '900', color: COLORS.white, letterSpacing: 0.5 },
+  scrollView: { flex: 1 },
+  scrollContent: { paddingHorizontal: 20 },
   card: {
     borderRadius: 20,
     overflow: 'hidden',
@@ -144,28 +89,9 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 6,
   },
-  cardGradient: {
-    padding: 24,
-  },
-  updated: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: 'rgba(255,255,255,0.5)',
-    marginBottom: 20,
-  },
-  section: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    marginBottom: 8,
-  },
-  body: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: 'rgba(255,255,255,0.5)',
-    lineHeight: 22,
-  },
+  cardGradient: { padding: 24 },
+  updated: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.5)', marginBottom: 20 },
+  section: { marginBottom: 22 },
+  sectionTitle: { fontSize: 16, fontWeight: '800', color: '#FFFFFF', marginBottom: 8 },
+  body: { fontSize: 14, fontWeight: '500', color: 'rgba(255,255,255,0.72)', lineHeight: 22 },
 });

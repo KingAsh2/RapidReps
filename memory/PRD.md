@@ -1767,4 +1767,16 @@ Server logs showed repeated `LOGIN FAIL` for `admin@rapidreps.com` because the u
 
 ## Changelog — Feb 2026 (Deployment Hotfix)
 - **2026-02 P0 FIX**: Cleared deployment build failure in `/app/frontend/src/components/AccentColorPicker.tsx`. Removed corrupted trailing fragment (`ng: 0.8,` + duplicate `});`) that caused `SyntaxError: Missing semicolon. (278:17)`. Lint clean. `deployment_agent` re-scan returns ✅ PASS — app is deployment-ready.
+- **2026-02 P0 FIX**: Fixed iOS Release crash `ReferenceError: Property 'DEFAULT_INTENSITY' doesn't exist` in `AccentColorPicker`. The earlier corruption-removal had also taken out the const declaration. Added `const DEFAULT_INTENSITY = 0.35` (matches `AccentGlowOverlay` fallback so the slider opens at the value the user is actually seeing).
+
+## Changelog — Feb 2026 (Production Readiness — Legal)
+- **Privacy Policy + Terms of Service**: Replaced thin placeholder content with App-Store-grade documents covering Stripe payments, GPS tracking (foreground + background), camera/photos, push notifications, off-platform admin payouts (Zelle/PayPal/Venmo/CashApp), CCPA rights, fitness disclaimer, arbitration + class-action waiver, Maryland governing law.
+- Owner: **BlkPixelTech**, 10219 Windsor Oaks Way, Lanham MD 20706. Contact: **admin@blkpixeltech.com**.
+- Single source of truth: `/app/frontend/src/legal/content.ts` consumed by in-app screens.
+- Backend mirrors at `/app/backend/routes/legal_routes.py` serving:
+  - `GET /api/legal/privacy.html` (mobile-friendly HTML for App Store/Play Store URL field)
+  - `GET /api/legal/terms.html` (same)
+  - `GET /api/legal/privacy` / `GET /api/legal/terms` (JSON)
+- Already-wired entry points: signup clickwrap, landing screens (classic/premium), trainee + trainer profile menus.
+
 
