@@ -43,9 +43,9 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "TODO_REPLACE_WITH_APPLE_ID@blkpixeltech.com",
-        "ascAppId": "TODO_APP_STORE_CONNECT_APP_ID",
-        "appleTeamId": "TODO_APPLE_TEAM_ID"
+        "appleId": "ashtonbundy1@gmail.com",
+        "ascAppId": "6758503993",
+        "appleTeamId": "38NPTUJ6P2"
       },
       "android": {
         "serviceAccountKeyPath": "./google-service-account.json",
