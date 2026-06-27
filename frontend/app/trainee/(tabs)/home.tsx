@@ -549,7 +549,7 @@ export default function TraineeHomeScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <ImageBackground
-        source={require('../../../assets/images/bg-battle-ropes.png')}
+        source={require('../../../assets/images/bg-battle-ropes.jpg')}
         style={styles.container}
         resizeMode="cover"
       >

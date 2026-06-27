@@ -30,7 +30,7 @@ const BRAND = {
   white: '#FFFFFF',
 };
 
-const welcomeBackground = require('../assets/images/bg-battle-ropes.png');
+const welcomeBackground = require('../assets/images/bg-battle-ropes.jpg');
 
 export default function WelcomeScreen() {
   const router = useRouter();

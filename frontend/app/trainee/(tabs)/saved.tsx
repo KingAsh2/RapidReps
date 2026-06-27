@@ -41,7 +41,7 @@ const COLORS = {
 
 // Background image
 import RapidBg from '../../../src/components/RapidBg';
-const backgroundImage = require('../../../assets/images/bg-battle-ropes.png');
+const backgroundImage = require('../../../assets/images/bg-battle-ropes.jpg');
 
 export default function SavedTrainersScreen() {
   const router = useRouter();

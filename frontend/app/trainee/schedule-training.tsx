@@ -31,7 +31,7 @@ const COLORS = {
 };
 
 // Background image
-const backgroundImage = require('../../assets/images/bg-spin-class.png');
+const backgroundImage = require('../../assets/images/bg-spin-class.jpg');
 
 // Quick schedule options
 const QUICK_OPTIONS = [

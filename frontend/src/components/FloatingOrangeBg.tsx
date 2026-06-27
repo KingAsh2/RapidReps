@@ -11,8 +11,8 @@
  *   <FloatingOrangeBg />
  *   <FloatingOrangeBg density={12} intensity={0.6} />
  */
-import React, { useEffect, useMemo, useRef } from 'react';
-import { Animated, Easing, StyleSheet, View, ViewStyle } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, Easing, StyleSheet, View, ViewStyle, AppState } from 'react-native';
 
 type Props = {
   density?: number;     // # of particles. Default 8.
@@ -26,11 +26,13 @@ const Ember: React.FC<{
   size: number;
   duration: number;
   intensity: number;
-}> = ({ delay, left, size, duration, intensity }) => {
+  paused: boolean;
+}> = ({ delay, left, size, duration, intensity, paused }) => {
   const y = useRef(new Animated.Value(0)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    if (paused) return;
     const loop = Animated.loop(
       Animated.sequence([
         Animated.delay(delay),
@@ -46,7 +48,8 @@ const Ember: React.FC<{
     );
     loop.start();
     return () => loop.stop();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paused]);
 
   const ty = y.interpolate({ inputRange: [0, 1], outputRange: [0, -180] });
 
@@ -73,6 +76,18 @@ const Ember: React.FC<{
 };
 
 export const FloatingOrangeBg: React.FC<Props> = ({ density = 8, intensity = 0.45, style }) => {
+  // iter106am: pause embers when the app is backgrounded. Each ember runs its
+  // own Animated.loop; leaving 8 of them spinning while the OS suspends the
+  // app can stall the run-loop on resume (a known contributor to iOS
+  // WatchdogTermination on long backgrounds).
+  const [paused, setPaused] = useState(AppState.currentState !== 'active');
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (next) => {
+      setPaused(next !== 'active');
+    });
+    return () => sub.remove();
+  }, []);
+
   const embers = useMemo(
     () =>
       Array.from({ length: density }).map((_, i) => ({
@@ -87,7 +102,7 @@ export const FloatingOrangeBg: React.FC<Props> = ({ density = 8, intensity = 0.4
   return (
     <View pointerEvents="none" style={[StyleSheet.absoluteFill, style]}>
       {embers.map((e, i) => (
-        <Ember key={i} {...e} intensity={intensity} />
+        <Ember key={i} {...e} intensity={intensity} paused={paused} />
       ))}
     </View>
   );

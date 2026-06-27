@@ -30,7 +30,7 @@ import { optimizeImage } from '../../src/utils/imageOptimizer';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Background image
-const backgroundImage = require('../../assets/images/bg-battle-ropes.png');
+const backgroundImage = require('../../assets/images/bg-battle-ropes.jpg');
 
 export default function TrainerOnboardingScreen() {
   const router = useRouter();

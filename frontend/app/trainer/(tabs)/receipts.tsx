@@ -18,7 +18,7 @@ import { useRouter } from 'expo-router';
 import { swrCache } from '../../../src/hooks/useStaleWhileRefresh';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
-const backgroundImage = require('../../../assets/images/bg-battle-ropes.png');
+const backgroundImage = require('../../../assets/images/bg-battle-ropes.jpg');
 
 const COLORS = {
   orange: '#FF6A00',

@@ -33,7 +33,7 @@ const { width } = Dimensions.get('window');
 
 // Background image
 import RapidBg from '../../src/components/RapidBg';
-const backgroundImage = require('../../assets/images/bg-box-jumps.png');
+const backgroundImage = require('../../assets/images/bg-box-jumps.jpg');
 
 // Brand colors
 const COLORS = {

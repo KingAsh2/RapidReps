@@ -30,7 +30,7 @@ const COLORS = {
   success: '#00C853',
 };
 
-const backgroundImage = require('../../assets/images/bg-box-jumps.png');
+const backgroundImage = require('../../assets/images/bg-box-jumps.jpg');
 
 type BoostType = 'daily' | 'weekly' | 'monthly';
 

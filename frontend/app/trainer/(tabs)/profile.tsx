@@ -48,7 +48,7 @@ const COLORS = {
   error: DS.colors.error,
 };
 
-const backgroundImage = require('../../../assets/images/bg-spin-class.png');
+const backgroundImage = require('../../../assets/images/bg-spin-class.jpg');
 
 export default function TrainerProfileScreen() {
   const router = useRouter();

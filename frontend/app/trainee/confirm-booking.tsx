@@ -38,7 +38,7 @@ const COLORS = {
   error: DS.colors.error,
 };
 
-const backgroundImage = require('../../assets/images/bg-battle-ropes.png');
+const backgroundImage = require('../../assets/images/bg-battle-ropes.jpg');
 
 export default function ConfirmBookingScreen() {
   const router = useRouter();

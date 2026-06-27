@@ -33,7 +33,7 @@ const COLORS = {
   error: '#FF4757',
 };
 
-const backgroundImage = require('../../../assets/images/bg-box-jumps.png');
+const backgroundImage = require('../../../assets/images/bg-box-jumps.jpg');
 
 type TabFilter = 'upcoming' | 'completed' | 'cancelled';
 

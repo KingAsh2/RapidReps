@@ -31,7 +31,7 @@ const COLORS = {
   gold: '#FFD700',
 };
 
-const backgroundImage = require('../../assets/images/bg-spin-class.png');
+const backgroundImage = require('../../assets/images/bg-spin-class.jpg');
 
 const BENEFITS = [
   { icon: 'pricetag', text: 'Discounted session rates', color: COLORS.success },

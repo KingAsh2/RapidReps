@@ -29,7 +29,7 @@ const { width, height: screenHeight } = Dimensions.get('window');
 
 // Background image - Box jumps (high energy, getting started)
 import RapidBg from '../../src/components/RapidBg';
-const backgroundImage = require('../../assets/images/bg-box-jumps.png');
+const backgroundImage = require('../../assets/images/bg-box-jumps.jpg');
 
 // Brand colors
 const COLORS = {

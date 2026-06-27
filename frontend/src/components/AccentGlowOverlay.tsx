@@ -14,8 +14,8 @@
  *  - Subtle breathing pulse via Animated to feel alive, not static.
  *  - Mounted once globally in app/_layout.tsx — every route inherits it.
  */
-import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Animated, Easing } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, StyleSheet, Animated, Easing, AppState } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../contexts/AuthContext';
 import { hexToRgba } from '../utils/accentColor';
@@ -29,7 +29,25 @@ export const AccentGlowOverlay: React.FC = () => {
 
   // Soft pulse — opacity oscillates between 0.55 and 1.0 every ~3.5s
   const pulse = useRef(new Animated.Value(0.7)).current;
+  // iter106am: track AppState so we can pause the breathing loop while the app
+  // is backgrounded. Long-suspended Animated.loops were a contributing factor
+  // in iOS WatchdogTermination reports — the runtime would resume mid-frame
+  // after long backgrounds, blocking the main thread during reconciliation.
+  const [appActive, setAppActive] = useState(AppState.currentState === 'active');
   useEffect(() => {
+    const sub = AppState.addEventListener('change', (next) => {
+      setAppActive(next === 'active');
+    });
+    return () => sub.remove();
+  }, []);
+
+  useEffect(() => {
+    if (!appActive) {
+      // Reset to a stable mid-value so we don't paint a half-finished animation
+      // when the app resumes; the loop below will start fresh.
+      pulse.stopAnimation();
+      return;
+    }
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(pulse, { toValue: 1.0, duration: 1800, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
@@ -38,7 +56,7 @@ export const AccentGlowOverlay: React.FC = () => {
     );
     loop.start();
     return () => loop.stop();
-  }, [pulse]);
+  }, [pulse, appActive]);
 
   // No user signed in? Don't draw the glow — keep auth/onboarding screens clean.
   if (!user) return null;

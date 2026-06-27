@@ -28,7 +28,7 @@ import { DS } from '../../../src/theme/designSystem';
 const { width } = Dimensions.get('window');
 
 // Background image
-const backgroundImage = require('../../../assets/images/bg-spin-class.png');
+const backgroundImage = require('../../../assets/images/bg-spin-class.jpg');
 
 // Brand colors — iter95c: derived from the unified DS tokens so any future
 // theme refresh propagates automatically across all sessions UI.

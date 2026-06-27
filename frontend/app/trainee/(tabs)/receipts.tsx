@@ -17,7 +17,7 @@ import axios from 'axios';
 import { useRouter } from 'expo-router';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
-const backgroundImage = require('../../../assets/images/bg-battle-ropes.png');
+const backgroundImage = require('../../../assets/images/bg-battle-ropes.jpg');
 
 const COLORS = {
   orange: '#FF6A00',

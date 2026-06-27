@@ -17,7 +17,14 @@
  * Pass `size` for non-default dimensions; the ring + halo scale together.
  */
 import React, { useEffect, useRef } from 'react';
-import { View, Text, Image, StyleSheet, Animated } from 'react-native';
+import { View, Text, StyleSheet, Animated } from 'react-native';
+// iter106am — migrate from legacy RN Image to expo-image. expo-image uses
+// SDWebImage on iOS and Coil on Android, both of which add disk + memory
+// caching, automatic downsampling, and proper memory release on screens with
+// many remote avatars (trainer list, saved list, chat list, map markers).
+// This is a primary fix for the iOS WatchdogTermination crash where many
+// avatars at once were exceeding the jetsam memory threshold.
+import { Image as ExpoImage } from 'expo-image';
 
 const DEFAULT_RING = '#FF5F1F'; // platform orange
 
@@ -90,7 +97,19 @@ export const TrainerAvatar: React.FC<Props> = ({
         ]}
       >
         {uri ? (
-          <Image source={{ uri }} style={[styles.photo, { borderRadius: (size - ringBorder * 2) / 2 }]} resizeMode="cover" />
+          <ExpoImage
+            source={uri}
+            style={[styles.photo, { borderRadius: (size - ringBorder * 2) / 2 }]}
+            contentFit="cover"
+            // iter106am: cache to disk so the same trainer photo isn't re-downloaded
+            // every time the list re-mounts; "memory-disk" gives us LRU eviction
+            // on iOS via SDWebImage so we don't pin every avatar in RAM.
+            cachePolicy="memory-disk"
+            // Cap concurrent decodes — keeps avatar mounts snappy and avoids
+            // a thundering-herd decode pass when a 20-item list first renders.
+            transition={120}
+            recyclingKey={typeof uri === 'string' ? uri : undefined}
+          />
         ) : (
           <View style={[styles.fallback, { backgroundColor: ringColor, borderRadius: (size - ringBorder * 2) / 2 }]}>
             <Text style={[styles.initials, { fontSize: Math.round(size * 0.34) }]}>{initials}</Text>
