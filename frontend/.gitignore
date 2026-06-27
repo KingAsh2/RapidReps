@@ -48,3 +48,4 @@ package-lock.json
 app-example
 google-services.json
 google-service-account.json
+credentials/
