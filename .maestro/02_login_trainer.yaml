@@ -1,0 +1,20 @@
+appId: com.kingash.rapidreps
+name: 02 — Trainer login
+tags:
+  - smoke
+  - auth
+---
+- launchApp:
+    clearState: true
+- tapOn: "Log In"
+- tapOn:
+    id: "login-email-input"
+- inputText: "test_trainer_iter25@test.com"
+- tapOn:
+    id: "login-password-input"
+- inputText: "Test123!"
+- tapOn:
+    id: "login-submit-btn"
+- assertVisible:
+    text: "Earnings|Schedule|Sessions"
+    timeout: 15000

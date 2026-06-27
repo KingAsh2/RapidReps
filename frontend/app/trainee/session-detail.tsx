@@ -290,6 +290,16 @@ export default function SessionDetailScreen() {
                 <Ionicons name="receipt" size={20} color="#6D1ED4" />
                 <Text style={[styles.actionButtonText, { color: '#6D1ED4' }]}>Receipt</Text>
               </TouchableOpacity>
+              {(session.paymentStatus === 'paid' || session.paymentStatus === 'succeeded') && (
+                <TouchableOpacity
+                  style={[styles.actionButton, { backgroundColor: '#FFF1F0' }]}
+                  onPress={() => router.push(`/dispute/open?sessionId=${sessionId}`)}
+                  data-testid="report-issue-btn"
+                >
+                  <Ionicons name="alert-circle" size={20} color={'#FF4757'} />
+                  <Text style={[styles.actionButtonText, { color: '#FF4757' }]}>Report issue</Text>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
 

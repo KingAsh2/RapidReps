@@ -1,0 +1,21 @@
+appId: com.kingash.rapidreps
+name: 06 — Trainer payout info (Zelle/Venmo)
+tags:
+  - smoke
+  - payouts
+---
+- runFlow: 02_login_trainer.yaml
+- tapOn:
+    text: "Profile|Account|Settings"
+- tapOn:
+    text: "Payout|Connect bank|Get paid"
+- tapOn:
+    text: "Zelle|Venmo|PayPal|CashApp"
+- tapOn:
+    id: "payout-handle-input"
+- inputText: "rapidreps-test@example.com"
+- tapOn:
+    id: "payout-save-btn"
+- assertVisible:
+    text: "Saved|Updated|Payout method"
+    timeout: 8000

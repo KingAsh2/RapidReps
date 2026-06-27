@@ -38,6 +38,8 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.kingash.rapidreps",
+      "googleServicesFile": "./google-services.json",
+      "useNextNotificationsApi": true,
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
@@ -47,7 +49,8 @@
         "CAMERA",
         "READ_MEDIA_IMAGES",
         "READ_MEDIA_VIDEO",
-        "READ_CONTACTS"
+        "READ_CONTACTS",
+        "POST_NOTIFICATIONS"
       ]
     },
     "web": {
@@ -100,6 +103,14 @@
         {
           "merchantIdentifier": "merchant.com.kingash.rapidreps",
           "enableGooglePay": true
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#FF6A00",
+          "defaultChannel": "default"
         }
       ]
     ],

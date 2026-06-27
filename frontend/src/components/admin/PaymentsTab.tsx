@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { C, s, formatCents, PAGE_SIZE, FilterPills, PaginationBar } from './AdminShared';
 
@@ -22,6 +23,7 @@ export const PaymentsTab = ({
   transTypeFilter, onTransTypeFilterChange,
   fetchTransactions, onRefund, onConfirmPayment,
 }: Props) => {
+  const router = useRouter();
   const statusOptions = [
     { key: '', label: 'All' },
     { key: 'pending', label: 'Pending' },
@@ -38,6 +40,21 @@ export const PaymentsTab = ({
 
   return (
     <View>
+      <TouchableOpacity
+        onPress={() => router.push('/admin/disputes')}
+        data-testid="admin-open-disputes-queue"
+        style={{
+          flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+          backgroundColor: 'rgba(255,71,87,0.08)', borderColor: '#FF4757', borderWidth: 1,
+          borderRadius: 12, padding: 14, marginBottom: 16,
+        }}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <Ionicons name="alert-circle" size={18} color="#FF4757" />
+          <Text style={{ color: '#FF4757', fontWeight: '900', letterSpacing: 0.5 }}>Dispute / refund queue</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color="#FF4757" />
+      </TouchableOpacity>
       <Text style={s.sectionTitle}>Transactions ({transTotal})</Text>
       
       {/* Cancellation Policy Card */}

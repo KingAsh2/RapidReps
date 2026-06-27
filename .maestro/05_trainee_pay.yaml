@@ -1,0 +1,22 @@
+appId: com.kingash.rapidreps
+name: 05 — Trainee pays via one-tap deep link
+tags:
+  - critical
+  - payments
+---
+- runFlow: 01_login_trainee.yaml
+- tapOn:
+    text: "Sessions|My Sessions"
+- assertVisible:
+    text: "Locked in|Tap to pay|Ready to pay"
+    timeout: 10000
+- tapOn:
+    text: "Tap to pay|Pay now"
+- assertVisible:
+    text: "Payment|Card details|Stripe"
+    timeout: 10000
+- assertVisible:
+    id: "payment-pay-btn"
+# NOTE: Stripe PaymentSheet uses a native iframe that Maestro cannot fully
+# script across iOS/Android. In CI we stop here and verify the sheet opens;
+# real card capture is exercised by Stripe's own test suite + manual QA.

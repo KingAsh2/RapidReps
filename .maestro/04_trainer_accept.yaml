@@ -1,0 +1,19 @@
+appId: com.kingash.rapidreps
+name: 04 — Trainer accepts & triggers pay push
+tags:
+  - critical
+  - booking
+---
+- runFlow: 02_login_trainer.yaml
+- tapOn:
+    text: "Sessions|Schedule"
+- assertVisible:
+    text: "pending|new request"
+    timeout: 10000
+- tapOn:
+    index: 0
+    id: "session-card-.*"
+- tapOn: "Accept"
+- assertVisible:
+    text: "Accepted|Waiting on trainee to pay|paymentReady"
+    timeout: 10000

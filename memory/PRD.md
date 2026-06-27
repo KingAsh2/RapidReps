@@ -1779,4 +1779,22 @@ Server logs showed repeated `LOGIN FAIL` for `admin@rapidreps.com` because the u
   - `GET /api/legal/privacy` / `GET /api/legal/terms` (JSON)
 - Already-wired entry points: signup clickwrap, landing screens (classic/premium), trainee + trainer profile menus.
 
+## Changelog — Feb 2026 (Production Readiness — Refund/Dispute + E2E + Push)
+- **Refund / Dispute admin flow** (`/app/backend/routes/dispute_routes.py`):
+  - Trainee or trainer can open a dispute on any paid session.
+  - Admin queue at `/app/frontend/app/admin/disputes.tsx` with 4 actions: full refund, **partial refund**, deny, **request more info**.
+  - Stripe `Refund.create()` integration; trainer earnings auto-marked `reversed` when refund issues.
+  - Push + in-app notifications to opener, counterparty, and admins on every state change.
+  - Opener can respond to admin info requests (`POST /api/disputes/{id}/respond`).
+  - "Report issue" entry points wired into both trainee and trainer session-detail screens.
+  - 6 pytest integration tests passing (`tests/test_iter106ak_dispute_flow.py`).
+- **Maestro E2E flows** (`.maestro/`): 6 YAML flows covering login (trainee + trainer) → book session → trainer accept → trainee pay → trainer payout-info. README + CI snippet included.
+- **EAS push notifications wired**:
+  - `expo-notifications` plugin registered in `app.json` with brand color + icon.
+  - Android: `POST_NOTIFICATIONS` permission added, `googleServicesFile` reference, `useNextNotificationsApi: true` for FCM v1.
+  - iOS: notification block ready; user uploads `.p8` APNs Auth Key via `eas credentials --platform ios`.
+  - `eas.json` extended with `submit.production` scaffolding for both platforms.
+  - Full step-by-step setup doc at `/app/EAS_PUSH_SETUP.md`.
+
+
 

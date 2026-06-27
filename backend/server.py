@@ -1025,6 +1025,9 @@ app.include_router(gps_checkin_router)
 from routes.legal_routes import router as legal_router
 app.include_router(legal_router)
 
+from routes.dispute_routes import router as dispute_router
+app.include_router(dispute_router)
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,

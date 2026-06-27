@@ -41,6 +41,16 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "appleId": "TODO_REPLACE_WITH_APPLE_ID@blkpixeltech.com",
+        "ascAppId": "TODO_APP_STORE_CONNECT_APP_ID",
+        "appleTeamId": "TODO_APPLE_TEAM_ID"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./google-service-account.json",
+        "track": "internal"
+      }
+    }
   }
 }

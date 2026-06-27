@@ -1,0 +1,22 @@
+appId: com.kingash.rapidreps
+name: 01 — Trainee login
+tags:
+  - smoke
+  - auth
+---
+- launchApp:
+    clearState: true
+- assertVisible:
+    text: "Log In|Sign In|Get Started"
+- tapOn: "Log In"
+- tapOn:
+    id: "login-email-input"
+- inputText: "test_trainee_iter25@test.com"
+- tapOn:
+    id: "login-password-input"
+- inputText: "Test123!"
+- tapOn:
+    id: "login-submit-btn"
+- assertVisible:
+    text: "Find a Trainer|Dashboard|Home"
+    timeout: 15000

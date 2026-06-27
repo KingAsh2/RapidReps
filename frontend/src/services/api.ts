@@ -1072,3 +1072,63 @@ export const corporateAPI = {
   },
 };
 
+
+
+// ── Disputes / Refunds (iter107) ───────────────────────────────────
+export interface DisputeDoc {
+  id: string;
+  sessionId: string;
+  openedBy: string;
+  openedByRole: 'trainee' | 'trainer';
+  reason: string;
+  description: string;
+  status: 'open' | 'info_requested' | 'approved_full' | 'approved_partial' | 'denied' | 'resolved';
+  refundAmountCents: number | null;
+  stripeRefundId: string | null;
+  adminNotes: string;
+  adminInfoRequest: string;
+  openerResponse: string;
+  createdAt: string;
+  updatedAt: string;
+  session?: any;
+}
+
+export const disputesAPI = {
+  open: async (sessionId: string, reason: string, description: string): Promise<{ disputeId: string; status: string }> => {
+    const r = await api.post(`/sessions/${sessionId}/disputes`, { reason, description });
+    return r.data;
+  },
+  get: async (id: string): Promise<DisputeDoc> => {
+    const r = await api.get(`/disputes/${id}`);
+    return r.data;
+  },
+  listMine: async (): Promise<DisputeDoc[]> => {
+    const r = await api.get('/disputes');
+    return r.data;
+  },
+  respond: async (id: string, response: string): Promise<{ status: string }> => {
+    const r = await api.post(`/disputes/${id}/respond`, { response });
+    return r.data;
+  },
+  // Admin
+  adminList: async (status?: string): Promise<DisputeDoc[]> => {
+    const r = await api.get('/admin/disputes', { params: status ? { status } : {} });
+    return r.data;
+  },
+  adminRefundFull: async (id: string, adminNotes?: string): Promise<any> => {
+    const r = await api.post(`/admin/disputes/${id}/refund-full`, { adminNotes });
+    return r.data;
+  },
+  adminRefundPartial: async (id: string, amountCents: number, adminNotes?: string): Promise<any> => {
+    const r = await api.post(`/admin/disputes/${id}/refund-partial`, { amountCents, adminNotes });
+    return r.data;
+  },
+  adminDeny: async (id: string, adminNotes?: string): Promise<any> => {
+    const r = await api.post(`/admin/disputes/${id}/deny`, { adminNotes });
+    return r.data;
+  },
+  adminRequestInfo: async (id: string, question: string): Promise<any> => {
+    const r = await api.post(`/admin/disputes/${id}/request-info`, { question });
+    return r.data;
+  },
+};

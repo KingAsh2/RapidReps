@@ -215,6 +215,22 @@ export default function TrainerSessionDetailScreen() {
           />
         )}
 
+        {/* Report-issue entry point — only after the session is paid so there is
+            something to dispute. Mirrors the trainee-side button. */}
+        {(session.paymentStatus === 'paid' || session.paymentStatus === 'succeeded') && (
+          <View style={[s.card, { borderColor: '#FF4757', borderWidth: 1, backgroundColor: 'rgba(255,71,87,0.06)' }]}>
+            <TouchableOpacity
+              style={s.metaRow}
+              onPress={() => router.push(`/dispute/open?sessionId=${session.id}`)}
+              data-testid="trainer-report-issue-btn"
+            >
+              <Ionicons name="alert-circle" size={18} color="#FF4757" />
+              <Text style={[s.metaText, { flex: 1, color: '#FF4757', fontWeight: '700' }]}>Report an issue with this session</Text>
+              <Ionicons name="chevron-forward" size={18} color="#FF4757" />
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* iter106aj: Resend Pay Link — shows after acceptance until the trainee
             actually pays. One-tap nudge that re-fires the "Locked in! Tap to
             pay" push notification (backend enforces a 60s cooldown). */}

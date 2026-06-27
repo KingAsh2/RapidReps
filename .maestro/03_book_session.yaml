@@ -1,0 +1,28 @@
+appId: com.kingash.rapidreps
+name: 03 — Trainee books a session
+tags:
+  - critical
+  - booking
+---
+- runFlow: 01_login_trainee.yaml
+- assertVisible: "Find a Trainer"
+  optional: true
+# Open the search / discovery tab
+- tapOn:
+    text: "Discover|Find|Search"
+    optional: true
+- assertVisible:
+    text: ".*Trainer.*|Featured"
+    timeout: 10000
+# Pick the first trainer card surfaced
+- tapOn:
+    index: 0
+    id: "trainer-card-.*"
+- assertVisible:
+    text: "Book|Request Session"
+- tapOn: "Book"
+- tapOn:
+    id: "book-confirm-btn"
+- assertVisible:
+    text: "Request sent|Waiting on trainer|Session requested"
+    timeout: 15000
