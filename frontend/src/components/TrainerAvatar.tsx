@@ -16,8 +16,8 @@
  *
  * Pass `size` for non-default dimensions; the ring + halo scale together.
  */
-import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, Animated, AppState } from 'react-native';
 // iter106am — migrate from legacy RN Image to expo-image. expo-image uses
 // SDWebImage on iOS and Coil on Android, both of which add disk + memory
 // caching, automatic downsampling, and proper memory release on screens with
@@ -48,9 +48,22 @@ export const TrainerAvatar: React.FC<Props> = ({
   pulse = true,
 }) => {
   const pulseAnim = useRef(new Animated.Value(0)).current;
+  // iter106am: pause the per-avatar pulse loop while the app is backgrounded.
+  // Dense list views (Discovery, Saved, NearbyTrainers, chat) mount 20+
+  // TrainerAvatars at once; each runs its own JS-driven Animated.loop.
+  // Stopping them on background eliminates run-loop reconciliation work
+  // when iOS resumes a long-suspended app — a known contributor to the
+  // WatchdogTermination crash.
+  const [paused, setPaused] = useState(AppState.currentState !== 'active');
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (next) => {
+      setPaused(next !== 'active');
+    });
+    return () => sub.remove();
+  }, []);
 
   useEffect(() => {
-    if (!pulse) return;
+    if (!pulse || paused) return;
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, { toValue: 1, duration: 1100, useNativeDriver: true }),
@@ -59,7 +72,7 @@ export const TrainerAvatar: React.FC<Props> = ({
     );
     loop.start();
     return () => loop.stop();
-  }, [pulse, pulseAnim]);
+  }, [pulse, paused, pulseAnim]);
 
   const ringBorder = Math.max(2, Math.round(size * 0.04));
   const haloSize = size + 12;
