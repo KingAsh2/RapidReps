@@ -4,6 +4,23 @@
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 
 
+## 2026-06 — Iter106am: iOS WatchdogTermination Memory Optimization ✅
+
+Sentry production fatal `WatchdogTermination` (issue cc184b370a274818b16a9810b7d3d0f5, 2026-06-27 08:02 AM EDT). Root cause: iOS jetsam memory pressure compounded by (a) the iter106al fix that re-encoded three JPEG-content `.png` files into true PNG at the same size — inflating disk and decoded-image RAM, and (b) legacy RN `<Image source={{uri}}>` in `TrainerAvatar` with no memory-aware caching across the many dense list/map views that mount 20+ avatars.
+
+**Fixes shipped:**
+- **Asset rollback**: `bg-spin-class.png/bg-battle-ropes.png/bg-box-jumps.png` converted to true JPEGs (`.jpg`, ~90 KB each, down from ~620 KB PNG). All 22 `require()` references across `app/` updated. Old PNG variants deleted.
+- **`TrainerAvatar` migrated to `expo-image`**: SDWebImage (iOS) / Coil (Android) backed cache, `cachePolicy="memory-disk"`, `recyclingKey={uri}`, 120 ms transition. Eliminates the primary RN `<Image>` memory pin during map/list scrolls.
+- **AppState pausing** on three ambient loops that were running unconditionally and reconciling on resume from long iOS suspends:
+  - `AccentGlowOverlay` (global breathing-pulse halo)
+  - `FloatingOrangeBg` (8 simultaneous ember loops on every screen)
+  - `TrainerAvatar` (per-avatar pulse halo — 20+ instances per dense list/map view)
+
+**Verified:** Testing agent iter 106 + iter 107 both clean. ESLint clean. Metro bundler clean (730 modules). Backend regression smoke `/api/` → 200.
+
+**Recurrence:** Isolated to the iter106al deployment window. Telemetry to watch: iOS-only Sentry `WatchdogTermination` count over the next 7 days post-release.
+
+
 ## 2026-02 — Iter106al: Android EAS Build Blocker Fix ✅
 
 EAS Android build was failing at `:app:mergeReleaseResources` with AAPT `file failed to compile` errors on three images. Root cause: the files had `.png` extensions but contained JPEG byte data (header `FF D8 FF E0` instead of `89 50 4E 47`). Newer AAPT/Android Gradle Plugin strictly validates that file headers match the extension and rejects mismatches.
