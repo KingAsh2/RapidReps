@@ -1,3 +1,21 @@
+/**
+ * ⚠️  DEAD CODE — DO NOT IMPORT.
+ *
+ * iter106ao (2026-07): Retained but no longer rendered anywhere in the app.
+ * Apple App Store Review Guideline 2.1(a) rejected the submission because
+ * Sign in with Apple errored on iPad Air (M3) / iPadOS 26.5. Per user
+ * directive, both Sign in with Apple AND Sign in with Google were removed
+ * from every auth screen. See:
+ *   - app/auth/login.classic.tsx
+ *   - app/auth/login.premium.tsx
+ *   - app/auth/signup.classic.tsx
+ *   - app/auth/signup.premium.tsx
+ *
+ * This file is preserved so social auth can be re-enabled after the native
+ * Apple provider bug is fixed. If you re-import it, coordinate with legal
+ * + a fresh App Store review — do not silently ship it back into any
+ * auth screen.
+ */
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Animated, Platform,
