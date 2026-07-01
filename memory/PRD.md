@@ -1,5 +1,25 @@
 # RapidReps PRD
 
+## 2026-06 — Iter106an: Critical Batch 1 (Edge-Case Scheduler + Stripe Webhook) ✅
+
+Closed the top-3 highest-risk gaps from EDGE_CASE_PLAYBOOK using a single shared async scheduler + Stripe webhook. All state transitions are atomic (Mongo compare-and-set) and idempotent (audit collection with unique-sparse index + `DuplicateKeyError` guard). All timeouts are env-configurable via `config/edge_cases.py` (14 knobs).
+
+**Scenarios shipped:**
+- **S1 — Trainer auto no-show** (G1): confirmed session → NO_SHOW at T+`NO_SHOW_GRACE_MIN` (default 10 min) with full refund, virtual credit, +1 strike.
+- **S5 — Auto-decline + responsiveness** (G11 + G12): stale `requested` session → DECLINED at T+`REQUEST_TIMEOUT_MIN` (default 60 min); trainer strike after `RESPONSIVENESS_STRIKE_IGNORES` ignores in `RESPONSIVENESS_WINDOW_DAYS`.
+- **S7 — Stripe webhook + orphan recovery** (G17 + G18 + G19): `POST /api/webhooks/stripe` (signature-verified, event-id dedup) + scheduler safety-net that reconciles PIs Stripe says succeeded but we didn't record; orphans auto-refund with Stripe idempotency keys.
+
+**New files:** `config/__init__.py`, `config/edge_cases.py`, `audit.py`, `edge_case_scheduler.py`, `routes/webhook_routes.py`, `tests/test_iter106an_critical_batch_1.py`, `memory/DEPLOYMENT_REPORT_iter106an.md`.
+
+**Tests:** 14/14 pytest cases passed (iteration_108.json). Independent testing-agent verification clean.
+
+**Admin surfaces:** `GET /api/admin/edge-case-audit` (filterable), `GET /api/admin/edge-case-config` (live snapshot).
+
+**Rollback:** three env kill-switches (`ENABLE_AUTO_NO_SHOW`, `ENABLE_AUTO_DECLINE`, `ENABLE_ORPHAN_RECONCILE`) + unset `STRIPE_WEBHOOK_SECRET`.
+
+**Remaining Critical/High from EDGE_CASE_PLAYBOOK:** G2/G3 (S1 secondary UX + admin alert), G5 (Stripe refund retry), G8/G9 (GPS accuracy), G14/G15 (S6 time gates), G20 (SMS/email fallback), G23–G25 (S9 offline tolerance).
+
+
 ## Original Problem Statement
 RapidReps is a full-stack fitness platform (React Native/Expo + FastAPI + MongoDB) connecting trainers with trainees. Features include session booking, **Stripe-only** payments (Zelle deprecated), trainer verification, personality tags, accent colors, cinematic UI transitions, streaks/achievements, and admin dashboards. Pricing uses tiered take-homes (New 75%, Certified 80%, Specialty 85%) and sessions MUST go through a Propose/Counter/Accept negotiation on time + location before payment is unlocked.
 

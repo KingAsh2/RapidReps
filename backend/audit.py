@@ -23,6 +23,8 @@ import logging
 from datetime import datetime
 from typing import Optional
 
+from pymongo.errors import DuplicateKeyError
+
 from deps import db
 
 logger = logging.getLogger(__name__)
@@ -42,6 +44,12 @@ async def log_edge_case_action(
     """
     Insert one audit row. Returns True if a new row was written, False if a
     duplicate (matched on `idempotency_key`) was skipped.
+
+    Concurrency safety: we rely on the unique-sparse index on `idempotencyKey`
+    created by ensure_audit_indexes(). The `find_one` check below is a fast
+    path to avoid the exception, but the unique index is the actual safety
+    net — a `DuplicateKeyError` from a racing writer is caught and treated as
+    a successful no-op.
     """
     doc = {
         "timestamp": datetime.utcnow(),
@@ -56,12 +64,17 @@ async def log_edge_case_action(
     }
 
     if idempotency_key:
-        # Upsert pattern — duplicates with same idempotency_key are no-ops.
+        # Fast path — most duplicates are caught here without an exception.
         existing = await db.edge_case_audit.find_one({"idempotencyKey": idempotency_key})
         if existing:
             return False
 
-    await db.edge_case_audit.insert_one(doc)
+    try:
+        await db.edge_case_audit.insert_one(doc)
+    except DuplicateKeyError:
+        # Rare race between the fast-path find_one and this insert — another
+        # writer got there first. The unique index enforces the invariant.
+        return False
     logger.info(
         "EDGE_CASE_ACTION action=%s session=%s trainer=%s trainee=%s reason=%s source=%s",
         action, session_id, trainer_id, trainee_id, reason, source,
