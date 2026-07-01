@@ -28,6 +28,11 @@ type AvatarBearer = {
 /**
  * Returns a usable URL or null. Promotes relative `/api/files/...` to absolute
  * via EXPO_PUBLIC_BACKEND_URL so Image components can render it on web/native.
+ *
+ * iter106ap: also filters out known-broken placeholder URLs that were seeded
+ * during earlier test iterations (example.com, some-photo.png). These leaked
+ * into production data and caused the admin portal + trainer cards to render
+ * blank circles instead of falling through to the colored-initials fallback.
  */
 export function resolveAvatarUrl(u?: AvatarBearer | null): string | null {
   if (!u) return null;
@@ -38,10 +43,22 @@ export function resolveAvatarUrl(u?: AvatarBearer | null): string | null {
     u.photoUrl ||
     u.profilePicture ||
     null;
-  if (!raw || typeof raw !== 'string' || raw.trim() === '') return null;
-  if (/^https?:\/\//i.test(raw)) return raw;
-  if (raw.startsWith('/')) return `${API_URL}${raw}`;
-  return raw;
+  if (!raw || typeof raw !== 'string') return null;
+  const trimmed = raw.trim();
+  if (trimmed === '') return null;
+
+  // iter106ap: hard-drop known-bad placeholders so we go straight to initials.
+  if (/(^|\.)example\.com\b/i.test(trimmed)) return null;
+  if (trimmed.endsWith('/some-photo.png')) return null;
+
+  // Absolute URLs (http/https/data/file/content) — return as-is.
+  if (/^(https?|data|file|content|blob):/i.test(trimmed)) return trimmed;
+
+  // Backend-relative path — promote to absolute.
+  if (trimmed.startsWith('/')) return `${API_URL}${trimmed}`;
+
+  // Unknown scheme — trust the caller as a last resort.
+  return trimmed;
 }
 
 /** Two-letter initials with sane fallbacks (e.g. "John Doe" → "JD", "alex" → "A", undefined → "?"). */

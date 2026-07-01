@@ -1,0 +1,86 @@
+{
+  "summary": "Frontend-only validation of iter106ap avatar placeholder-filter + expo-image object-form + onError-fallback fix. Verified via (a) 19-case Node unit test of resolveAvatarUrl inlined from src/utils/avatar.ts, (b) source-tree inspection of TrainerAvatar.tsx / UserAvatar.tsx / admin/UsersTab.tsx, (c) live backend curl (admin/users list, admin/users/{id}, trainer-profiles/{id}, auth/login) against the deployed ingress. Playwright UI validation skipped per explicit review-request instruction (deployed web preview serves stale /dist; iOS bundle out of scope). FOUND ONE CRITICAL BUG in the fix itself — the placeholder regex fails to match the primary case it claims to filter — plus one duplication concern and one edge case.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "src/utils/avatar.ts resolveAvatarUrl (line 51) + src/components/TrainerAvatar.tsx isPlaceholder check (line 92)",
+        "issue": "CRITICAL: placeholder regex `/(^|\\.)example\\.com\\b/i` FAILS to match `https://example.com/foo.jpg`. The character preceding `example.com` in a bare-domain URL is `/` (from the `://`), which is neither start-of-string nor `.`. Verified by 19-case unit test: `https://example.com/foo.png` returns the URL unchanged (should be null); only subdomain forms like `https://cdn.example.com/x.png` are filtered. Live data scan (curl /api/admin/users?limit=500 with admin creds) confirms 25 users in production carry `https://example.com/trainer-photo.jpg` or `https://example.com/trainee-photo.jpg` in avatarUrl / profilePhoto (all the TEST_ITER27_*_pop_trainer / pop_trainee accounts + the population-test trainee explicitly named in the review request). These will NOT be short-circuited to initials as the fix intends — the intended `example.com` hard-drop is a no-op for the primary URL form. At runtime the onError fallback should still eventually show initials because example.com returns 404 for these paths, but (a) that reintroduces the exact flash-of-blank-circle + wasted-network-round-trip UX the fix was written to eliminate, and (b) it relies on expo-image reliably firing onError on iOS which is the exact quirk cited as motivation for the fix. Fix: replace regex with `/(?:^|[./:])example\\.com\\b/i` (adds `/` and `:` to the pre-boundary class) OR — better — use `new URL(trimmed).hostname === 'example.com' || .endsWith('.example.com')` guarded by try/catch for non-URL inputs. Apply in BOTH avatar.ts AND TrainerAvatar.tsx (both have the same buggy check).",
+        "selector": "N/A (utility code)",
+        "priority": "CRITICAL"
+      },
+      {
+        "component": "src/components/TrainerAvatar.tsx line 92",
+        "issue": "DRY violation — the placeholder detection `/(^|\\.)example\\.com\\b/i.test(cleaned) || cleaned.endsWith('/some-photo.png')` is duplicated verbatim from src/utils/avatar.ts lines 51-52. Any fix to the regex has to land in two files or one will drift. Recommend exporting `isPlaceholderAvatarUrl(url: string): boolean` from utils/avatar.ts and calling it from both.",
+        "selector": "N/A",
+        "priority": "MEDIUM"
+      },
+      {
+        "component": "src/utils/avatar.ts line 52 and TrainerAvatar.tsx line 92",
+        "issue": "`trimmed.endsWith('/some-photo.png')` is fragile — a URL like `/api/files/some-photo.png?v=2` or `/api/files/some-photo.png#foo` would slip through. No live-data hits today (0/444 users have this URL currently — the test_trainer that historically carried it now has a real data-URI), so LOW priority, but recommend `/\\/some-photo\\.png(\\?|#|$)/i.test(trimmed)` for correctness.",
+        "selector": "N/A",
+        "priority": "LOW"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "Admin Users tab rendering for TEST_ITER27_*_pop_trainer / TEST_ITER27_*_pop_trainee accounts (25 seeded users total)",
+        "issue": "Because of the regex bug above, these rows will attempt to expo-image fetch `https://example.com/trainer-photo.jpg`, get a 404, and rely on onError → setImgFailed(true) to swap in initials. Best case: 200-500ms flash of blank circle then initials. Worst case (iOS expo-image silent no-render — the exact quirk called out in the review request): permanent blank circle. This is the App-Store-visible symptom the fix was meant to solve.",
+        "affected_selectors": ["UserAvatar/TrainerAvatar rendered inside admin/UsersTab and admin/dashboard user-detail modal"]
+      }
+    ],
+    "design_issues": []
+  },
+  "unit_test_evidence": {
+    "cases_run": 19,
+    "cases_passed": 16,
+    "failures": [
+      "example.com http placeholder — input=https://example.com/foo.png — expected=null got=https://example.com/foo.png",
+      "example.com bare — input=http://example.com/x.jpg — expected=null got=http://example.com/x.jpg",
+      "placeholder in avatarUrl DOES NOT fall through to profilePhoto — input={avatarUrl: https://example.com/x.png, profilePhoto: https://real.cdn/y.jpg} — expected=null got=https://example.com/x.png"
+    ],
+    "passing_cases_notable": [
+      "data:image/jpeg;base64,... passthrough (golden test_trainer case) — PASS",
+      "sub.example.com filtered — PASS (only subdomain form works)",
+      "/api/files/some-photo.png relative filtered — PASS",
+      "/api/files/real.jpg promoted to absolute via EXPO_PUBLIC_BACKEND_URL — PASS",
+      "file:// blob: schemes passthrough — PASS",
+      "whitespace-only rejected, whitespace trimmed around data URI — PASS",
+      "profilePhoto fallback (iter102l) still works — PASS"
+    ]
+  },
+  "backend_verification": {
+    "POST /api/auth/login admin@rapidreps.com": "200 OK, access_token 195 chars — non-regression PASS",
+    "GET /api/admin/users?limit=500": "200 OK, returned 444 users — non-regression PASS",
+    "GET /api/admin/users/69a859371897769df5a8314f (test_trainer)": "200 OK; user.profilePhoto begins with `data:image/jpeg;base64,/9j/4AAQSkZJRgAB...` (golden data-URI intact) — non-regression PASS",
+    "GET /api/trainer-profiles/69a859371897769df5a8314f": "200 OK; avatarUrl begins with `data:image/jpeg;base64,/9j/...` — non-regression PASS",
+    "avatar-scheme distribution across 444 users": "25x example.com, 2x data:, remainder null — confirms 25-user regression surface for the regex bug"
+  },
+  "playwright_ui_validation": "SKIPPED per explicit review-request instruction: 'Web preview at https://highlight-vibe-bugs.preview.emergentagent.com serves a stale /app/frontend/dist static export from before these changes' and 'Do NOT test on the deployed iOS bundle'. Metro dev bundle running on localhost:3000 was also unstable (ngrok tunnel errors + repeated `Bundled 1 module` in expo.err.log). Source-tree + unit-test + backend-curl was the agreed validation path.",
+  "test_report_links": [],
+  "action_items": [
+    "P0: Fix the placeholder regex in BOTH /app/frontend/src/utils/avatar.ts (line 51) AND /app/frontend/src/components/TrainerAvatar.tsx (line 92). Suggested: replace `/(^|\\.)example\\.com\\b/i` with `/(?:^|[./:])example\\.com\\b/i` so it also matches `https://example.com/...`. Re-run the 19-case matrix; the 3 failing cases above must go green.",
+    "P1: Extract `isPlaceholderAvatarUrl(url: string): boolean` into src/utils/avatar.ts and consume from TrainerAvatar to eliminate the duplicated regex (currently forced to fix in two places).",
+    "P2: Harden `/some-photo.png` check with `/\\/some-photo\\.png(\\?|#|$)/i` so it survives query-string/fragment appendage.",
+    "After fix, re-run against admin@rapidreps.com login → Users tab → confirm all 25 TEST_ITER27_*_pop_* rows render initials (never blank, never broken-image) and that test_trainer_iter25@test.com still renders the orange 128x128 JPEG data URI without falling back."
+  ],
+  "critical_code_review_comments": [
+    "TrainerAvatar.tsx duplicates the placeholder-detection regex from avatar.ts — this is a maintenance trap; both files must be edited in lockstep for any placeholder-list change. Extract into a shared helper.",
+    "resolveAvatarUrl currently short-circuits at the first non-null field; when that field is a placeholder it returns null and does NOT try the next field (profilePhoto/photoUrl/etc.). Live data confirms this is the correct behaviour for the 3 pop_trainee accounts that have example.com in BOTH profilePhoto AND avatarUrl, but a scenario where avatarUrl is example.com and profilePhoto is a valid data-URI would incorrectly go to initials. The unit-test matrix flags this — decide whether to keep the current behaviour or fall through to the next field after placeholder rejection.",
+    "TrainerAvatar re-runs the same placeholder check that resolveAvatarUrl already ran — belt-and-suspenders is fine, but only if the two implementations stay in sync (see DRY comment)."
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "100% (5/5 endpoints probed)",
+    "frontend_unit_contract": "84% (16/19 resolveAvatarUrl cases pass; the 3 failing are the primary target of the fix)"
+  },
+  "test_credentials": "Loaded from /app/memory/test_credentials.md — admin@rapidreps.com / admin123 (used), test_trainer_iter25@test.com / Test123! (data-URI golden case verified via admin curl)",
+  "seed_data_creation": "None — used existing seeded users (25x example.com placeholders + 1x test_trainer with real data-URI already present in DB from earlier iter106ap smoke test)",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "After main agent lands the P0 regex fix, run this 19-case matrix (inline `resolveAvatarUrl` into a small .mjs script in /tmp — do NOT commit) to confirm the 3 failing cases go green. Then re-curl `GET /api/admin/users?limit=500` with admin token and confirm the 25 example.com hits are still present in raw data (they should be — we do not scrub server-side, we filter client-side). Playwright UI check is unreliable per the pod stale-dist limitation; source-tree + curl is the source of truth for this iteration.",
+  "rca_of_the_issue": "The iter106ap fix intended to hard-drop example.com and /some-photo.png placeholder URLs so blank-circle avatars would fall through to the colored-initials block. The example.com regex `(^|\\.)example\\.com\\b` was written to match either bare 'example.com...' or 'sub.example.com...' — but URLs are almost always of the form `https://example.com/...` in which the character *immediately preceding* `example.com` is `/`, not `.` and not start-of-string. Hence the primary case is silently unmatched. Live-data scan proved 25 users out of 444 still have this exact pattern. Runtime effect is partly masked by TrainerAvatar's onError→setImgFailed fallback (introduced in the same fix), but only if expo-image reliably fires onError on iOS — the exact quirk the review request cites as motivation. Reproduction: `resolveAvatarUrl({avatarUrl:'https://example.com/trainer-photo.jpg'})` returns the URL unchanged; expected `null`. Mitigation: expand regex to `/(?:^|[./:])example\\.com\\b/i` (adds `/` and `:` to the char-class before the host) — or, more robust, `try { const h = new URL(trimmed).hostname; if (h === 'example.com' || h.endsWith('.example.com')) return null; } catch {}`. Apply the identical change in TrainerAvatar.tsx line 92."
+}

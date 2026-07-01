@@ -77,6 +77,21 @@ export const TrainerAvatar: React.FC<Props> = ({
   const ringBorder = Math.max(2, Math.round(size * 0.04));
   const haloSize = size + 12;
 
+  // iter106ap: track whether the network fetch actually produced a rendered
+  // image. Silent 404s (stale profile URLs, dead example.com placeholders,
+  // etc.) previously left a blank circle — now we fall back to initials so
+  // the admin portal + user profiles always show something recognizable.
+  const [imgFailed, setImgFailed] = useState(false);
+
+  // Normalize the source. expo-image accepts a plain string OR an object; the
+  // object form is more forgiving with data: URIs and file:// URIs, which is
+  // what the onboarding flow feeds us. Whitespace-only and obviously-broken
+  // placeholder URLs (example.com) are treated as "no photo" so we skip the
+  // network round-trip and go straight to initials.
+  const cleaned = typeof uri === 'string' ? uri.trim() : '';
+  const isPlaceholder = /(^|\.)example\.com\b/i.test(cleaned) || cleaned.endsWith('/some-photo.png');
+  const showPhoto = !!cleaned && !isPlaceholder && !imgFailed;
+
   return (
     <View style={[styles.wrap, { width: haloSize, height: haloSize }]}>
       {pulse && (
@@ -109,19 +124,22 @@ export const TrainerAvatar: React.FC<Props> = ({
           },
         ]}
       >
-        {uri ? (
+        {showPhoto ? (
           <ExpoImage
-            source={uri}
+            // iter106ap: object-form source. In expo-image v3 the string form
+            // has quirks with data: URIs on iOS (occasional silent no-render)
+            // and with file:// URIs picked from expo-image-picker. The object
+            // form is the canonical shape and works everywhere.
+            source={{ uri: cleaned }}
             style={[styles.photo, { borderRadius: (size - ringBorder * 2) / 2 }]}
             contentFit="cover"
-            // iter106am: cache to disk so the same trainer photo isn't re-downloaded
-            // every time the list re-mounts; "memory-disk" gives us LRU eviction
-            // on iOS via SDWebImage so we don't pin every avatar in RAM.
+            // iter106am: memory-disk cache = LRU eviction on iOS (SDWebImage),
+            // so we don't pin every avatar in RAM.
             cachePolicy="memory-disk"
-            // Cap concurrent decodes — keeps avatar mounts snappy and avoids
-            // a thundering-herd decode pass when a 20-item list first renders.
             transition={120}
-            recyclingKey={typeof uri === 'string' ? uri : undefined}
+            recyclingKey={cleaned}
+            // iter106ap: fall back to initials on 404 / bad payload / decode error.
+            onError={() => setImgFailed(true)}
           />
         ) : (
           <View style={[styles.fallback, { backgroundColor: ringColor, borderRadius: (size - ringBorder * 2) / 2 }]}>
