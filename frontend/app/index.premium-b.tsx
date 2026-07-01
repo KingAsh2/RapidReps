@@ -206,16 +206,7 @@ export default function PremiumWelcomeVariantB() {
                 Already have an account? <Text style={styles.loginLink}>Log In</Text>
               </Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => router.push('/corporate')}
-              testID="premium-corporate-link"
-              accessibilityRole="button"
-              style={styles.loginTap}
-            >
-              <Text style={styles.loginPrompt}>
-                <Text style={styles.loginLink}>For Teams →</Text> Corporate Wellness
-              </Text>
-            </TouchableOpacity>
+            {/* iter106ao: Corporate wellness link removed per App Store Guideline 3.1.1. */}
           </Animated.View>
         </SafeAreaView>
       </PremiumHeroBg>

@@ -23,7 +23,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useAlert } from '../../src/contexts/AlertContext';
 import { haptic } from '../../src/utils/haptics';
-import { SocialAuthButtons } from '../../src/components/SocialAuthButtons';
+// iter106ao: SocialAuthButtons import removed per App Store Guideline 2.1(a).
 import { PremiumColors } from '../../src/theme/premium';
 import { PremiumHeroBg } from '../../src/components/premium/PremiumHeroBg';
 import { PremiumGlassInput } from '../../src/components/premium/PremiumGlassInput';
@@ -127,17 +127,9 @@ export default function PremiumLoginScreen() {
                 <View style={styles.boltUnderline} />
               </Animated.View>
 
-              {/* ── Social ──────────────────────────────────── */}
-              <Animated.View style={[styles.socialWrap, { opacity: fade }]}>
-                <SocialAuthButtons mode="login" />
-              </Animated.View>
-
-              {/* ── OR divider ──────────────────────────────── */}
-              <View style={styles.orRow}>
-                <View style={styles.orLine} />
-                <Text style={styles.orText}>OR</Text>
-                <View style={styles.orLine} />
-              </View>
+              {/* ── Social auth removed per iter106ao (App Store Guideline 2.1a).
+                     Apple review reported Sign in with Apple failing on iPad Air M3;
+                     both providers pulled until re-verified.  ─────────── */}
 
               {/* ── Inputs ──────────────────────────────────── */}
               <Animated.View style={[styles.formWrap, { opacity: fade }]}>

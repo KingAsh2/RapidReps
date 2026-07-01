@@ -24,7 +24,7 @@ import { useAuth } from '../../src/contexts/AuthContext';
 import { useAlert } from '../../src/contexts/AlertContext';
 import { AnimatedPillButton } from '../../src/components/AnimatedPillButton';
 import { haptic } from '../../src/utils/haptics';
-import { SocialAuthButtons } from '../../src/components/SocialAuthButtons';
+// iter106ao: SocialAuthButtons import removed per App Store Guideline 2.1(a).
 
 const { width, height: screenHeight } = Dimensions.get('window');
 
@@ -279,20 +279,7 @@ export default function LoginScreen() {
               </View>
             </Animated.View>
 
-            {/* Social Login Buttons */}
-            <Animated.View
-              style={[styles.formSection, { opacity: formFade, transform: [{ translateY: formSlide }] }]}
-            >
-              <SocialAuthButtons
-                onError={(msg) => showAlert({ title: 'Sign In Failed', message: msg, type: 'error' })}
-              />
-
-              <View style={styles.dividerRow}>
-                <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>or sign in with email</Text>
-                <View style={styles.dividerLine} />
-              </View>
-            </Animated.View>
+            {/* Social auth removed per iter106ao (App Store Guideline 2.1a). */}
 
             {/* Login Form */}
             <Animated.View

@@ -1,5 +1,25 @@
 # RapidReps PRD
 
+## 2026-07 — Iter106ao: App Store Review Remediation ✅
+
+Apple returned the submission with two blocking issues. Both are now closed.
+
+**Guideline 2.1(a) — Sign in with Apple failed on iPad Air (M3) / iPadOS 26.5:**
+Per user directive, removed **Sign in with Apple** AND **Sign in with Google** buttons entirely from the app rather than debug the native Apple provider. `SocialAuthButtons` component is no longer rendered in any auth screen; imports removed from all four:
+- `app/auth/login.classic.tsx`
+- `app/auth/login.premium.tsx`
+- `app/auth/signup.classic.tsx`
+- `app/auth/signup.premium.tsx`
+Email + password remains as the sole auth path. The `SocialAuthButtons` component file itself is retained (not deleted) so we can re-enable later if the native provider bug is fixed.
+
+**Guideline 3.1.1 — In-app business/organization account registration:**
+Removed the corporate-signup entry points and turned the signup route into a **contact-sales redirect screen** (opens `https://rapidreps.com/for-teams` + `mailto:sales@rapidreps.com`). Route still exists so deep-links don't 404, but no in-app registration form.
+- Removed "For Teams → Corporate Wellness" link from both `app/index.premium.tsx` and `app/index.premium-b.tsx`
+- Removed "Sign up your company" card from `app/corporate/index.tsx` (Redeem invite code card retained — that's not registration)
+- Overwrote `app/corporate/signup.tsx` with the contact-sales screen
+- Backend corporate routes untouched (existing web-signed-up companies still work)
+
+
 ## 2026-06 — Iter106an: Critical Batch 1 (Edge-Case Scheduler + Stripe Webhook) ✅
 
 Closed the top-3 highest-risk gaps from EDGE_CASE_PLAYBOOK using a single shared async scheduler + Stripe webhook. All state transitions are atomic (Mongo compare-and-set) and idempotent (audit collection with unique-sparse index + `DuplicateKeyError` guard). All timeouts are env-configurable via `config/edge_cases.py` (14 knobs).

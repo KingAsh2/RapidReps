@@ -183,17 +183,9 @@ export default function PremiumWelcomeScreen() {
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={() => router.push('/corporate')}
-              testID="premium-corporate-link"
-              accessibilityRole="button"
-              accessibilityLabel="Open corporate wellness"
-              style={styles.loginTap}
-            >
-              <Text style={styles.loginPrompt}>
-                <Text style={styles.loginLink}>For Teams →</Text> Corporate Wellness
-              </Text>
-            </TouchableOpacity>
+            {/* iter106ao: Corporate wellness link removed per App Store Guideline 3.1.1
+                (no in-app business/organization account registration). Existing
+                corp members can still deep-link to /corporate/redeem for invite codes. */}
           </Animated.View>
         </SafeAreaView>
       </PremiumHeroBg>

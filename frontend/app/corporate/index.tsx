@@ -98,20 +98,10 @@ export default function CorporateIndexScreen() {
             </View>
             <Ionicons name="chevron-forward" size={20} color={DS.colors.textMuted} />
           </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            style={styles.optionCard}
-            onPress={() => router.push('/corporate/signup')}
-            data-testid="corp-idx-signup-btn"
-          >
-            <Ionicons name="add-circle" size={28} color={DS.colors.orange} />
-            <View style={{ flex: 1, marginLeft: 12 }}>
-              <Text style={DS.text.bodyStrong}>Sign up your company</Text>
-              <Text style={DS.text.caption}>Create a corporate account in 60 seconds</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={DS.colors.textMuted} />
-          </TouchableOpacity>
-        )}
+        ) : null}
+        {/* iter106ao: "Sign up your company" card removed per App Store Guideline 3.1.1.
+            Employers now sign up via https://rapidreps.com/for-teams (web) and their
+            employees continue to redeem invite codes here in the app. */}
 
         <TouchableOpacity
           style={styles.optionCard}

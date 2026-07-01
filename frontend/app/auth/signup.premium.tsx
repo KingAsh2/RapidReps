@@ -25,7 +25,7 @@ import { useAuth } from '../../src/contexts/AuthContext';
 import { useAlert } from '../../src/contexts/AlertContext';
 import { UserRole } from '../../src/types';
 import { haptic } from '../../src/utils/haptics';
-import { SocialAuthButtons } from '../../src/components/SocialAuthButtons';
+// iter106ao: SocialAuthButtons import removed per App Store Guideline 2.1(a).
 import { PremiumColors } from '../../src/theme/premium';
 import { PremiumHeroBg } from '../../src/components/premium/PremiumHeroBg';
 import { PremiumGlassInput } from '../../src/components/premium/PremiumGlassInput';
@@ -176,19 +176,7 @@ export default function PremiumSignupScreen() {
                 />
               </Animated.View>
 
-              {/* Social */}
-              {!isSocialAuth && (
-                <Animated.View style={[styles.socialWrap, { opacity: fade }]}>
-                  <SocialAuthButtons
-                    onError={(msg) => showAlert({ title: 'Sign Up Failed', message: msg, type: 'error' })}
-                  />
-                  <View style={styles.orRow}>
-                    <View style={styles.orLine} />
-                    <Text style={styles.orText}>OR EMAIL</Text>
-                    <View style={styles.orLine} />
-                  </View>
-                </Animated.View>
-              )}
+              {/* Social sign-up removed per iter106ao (App Store Guideline 2.1a). */}
 
               {/* Form */}
               <Animated.View style={[styles.formWrap, { opacity: fade }]}>

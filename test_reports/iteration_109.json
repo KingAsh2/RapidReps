@@ -1,0 +1,52 @@
+{
+  "summary": "iter106ao App Store remediation validated via source-tree inspection + backend smoke + Metro route probing. All Apple review blockers (Guideline 2.1a Sign in with Apple/Google + Guideline 3.1.1 in-app corporate registration) are fully removed. No regressions in auth flow or backend. Note: UI Playwright validation not performed because /dist static preview is stale (documented pod limitation in review request); Metro dev server is the source of truth and returns 200 on all probed routes.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "verifications_performed": {
+    "guideline_2_1a": {
+      "login.classic.tsx": "no SocialAuthButtons import, no render — only removal comment at line 27",
+      "login.premium.tsx": "no SocialAuthButtons import, no socialWrap block — only removal comment at line 26 + 130",
+      "signup.classic.tsx": "no SocialAuthButtons import, no !isSocialAuth card — only removal comment at line 26 + 365",
+      "signup.premium.tsx": "no SocialAuthButtons import, no socialWrap — only removal comment at line 28 + 179",
+      "grep_sweep": "grep -rn 'SocialAuthButtons' app/auth/ returns ONLY comment lines (0 render sites, 0 imports)",
+      "component_file_retained": "src/components/SocialAuthButtons.tsx still exists (intentional per review note)"
+    },
+    "guideline_3_1_1": {
+      "index.premium.tsx": "no 'For Teams' link, no premium-corporate-link testID — only comment reference to corporate/redeem deep-link at line 188",
+      "index.premium-b.tsx": "no 'For Teams' link, no premium-corporate-link testID",
+      "corporate/index.tsx": "'Sign up your company' card removed (only comment at line 102 explaining removal); dashboard card preserved behind myCompanyId conditional; redeem card intact",
+      "corporate/signup.tsx": "97-line contact-sales redirect screen; title 'Enroll your team'; testIDs corp-signup-back (line 37), corp-signup-web (line 52, opens https://rapidreps.com/for-teams via Linking.openURL), corp-signup-email (line 57, opens mailto:sales@rapidreps.com); no TextInput / no form submission",
+      "grep_sweep": "grep for 'For Teams|Corporate Wellness|premium-corporate-link|Sign up your company|corp-idx-signup-btn' across app/ + src/ returns 0 UI hits (only comments + api.ts section header)"
+    },
+    "auth_flow_smoke": {
+      "admin@rapidreps.com/admin123": "HTTP 200, token present",
+      "test_trainer_iter25@test.com/Test123!": "HTTP 200, token present",
+      "test_trainee_iter25@test.com/Test123!": "HTTP 200, token present"
+    },
+    "routing": {
+      "/ (Metro root)": "HTTP 200",
+      "/corporate/signup": "HTTP 200 (no 404, no white-screen)"
+    },
+    "backend_regression": {
+      "test_iter106an_critical_batch_1.py": "14 passed, 1 warning in 2.29s — no regressions",
+      "/api/": "HTTP 200"
+    }
+  },
+  "test_report_links": ["/app/backend/tests/test_iter106an_critical_batch_1.py"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "SocialAuthButtons.tsx retained as dead code (intentional per review note; will be re-enabled after native Apple provider fix). Recommend adding a TODO/lint-ignore comment in the component file to document its dead-code status so future contributors don't accidentally re-import it.",
+    "The removal comments (iter106ao) reference App Store guideline numbers directly — good audit trail for future App Store reviews."
+  ],
+  "updated_files": [],
+  "success_rate": { "backend": "100%", "frontend": "100% (source-tree verification)" },
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Web preview serves stale /app/frontend/dist per pod limitation — do NOT rely on Playwright against dist for this iteration. Use Metro dev server root (returns 200) and source-tree grep for verification. iter106ao is frontend-only; backend + pytest iter106an suite unaffected. SocialAuthButtons.tsx dead-code retention is deliberate.",
+  "rca_of_the_issue": "N/A — validation-only iteration, no bugs found."
+}

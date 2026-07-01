@@ -23,7 +23,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AnimatedPillButton } from '../../src/components/AnimatedPillButton';
 import { haptic } from '../../src/utils/haptics';
-import { SocialAuthButtons } from '../../src/components/SocialAuthButtons';
+// iter106ao: SocialAuthButtons import removed per App Store Guideline 2.1(a).
 
 const { width, height: screenHeight } = Dimensions.get('window');
 
@@ -362,26 +362,7 @@ export default function SignupScreen() {
               </Animated.View>
             </View>
 
-            {/* Social Sign-Up (only for non-social-redirected users) */}
-            {!isSocialAuth && (
-              <Animated.View
-                style={[
-                  styles.formCard,
-                  { opacity: formCardAnim, transform: [{ translateY: formTranslateY }], marginBottom: 0 },
-                ]}
-              >
-                <View style={{ paddingHorizontal: 20, paddingVertical: 20 }}>
-                  <SocialAuthButtons
-                    onError={(msg) => showAlert({ title: 'Sign Up Failed', message: msg, type: 'error' })}
-                  />
-                  <View style={styles.dividerRow}>
-                    <View style={styles.dividerLine} />
-                    <Text style={styles.dividerText}>or create account with email</Text>
-                    <View style={styles.dividerLine} />
-                  </View>
-                </View>
-              </Animated.View>
-            )}
+            {/* Social Sign-Up removed per iter106ao (App Store Guideline 2.1a). */}
 
             {/* Social user banner */}
             {isSocialAuth && (
