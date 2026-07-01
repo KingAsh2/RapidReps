@@ -1,8 +1,31 @@
 # RapidReps — Edge-Case Playbook
 
-**Owner:** Engineering · **Last reviewed:** 2026-06-27 · **Status:** Contract draft (no behavior changes shipped)
+**Owner:** Engineering · **Last reviewed:** 2026-06-30 · **Status:** Contract locked. Critical Batch 1 shipped (iter106an).
 
-Defines the expected outcome for the 9 failure modes that produce the most user pain or financial dispute. This is a contract — code is reviewed *against* it. Backend behavior is **not** changed here; gaps are surfaced for prioritization.
+---
+
+## Critical Batch 1 — Shipped 2026-06-30 (iter106an) ✅
+
+Three of the highest-risk gaps identified in this playbook are now closed. Shared infrastructure:
+
+- `/app/backend/config/edge_cases.py` — env-driven timeout config (14 knobs).
+- `/app/backend/audit.py` — `log_edge_case_action` writes to `db.edge_case_audit` (indexed, idempotent).
+- `/app/backend/edge_case_scheduler.py` — single async loop, 60 s cadence (configurable), 3 idempotent jobs.
+- `/app/backend/routes/webhook_routes.py` — Stripe webhook + admin debug endpoints.
+- All state transitions use atomic MongoDB compare-and-set (`update_one` with status filter).
+
+**Gaps now closed:** G1 (auto trainer no-show), G11 (auto-decline unresponsive request), G12 (responsiveness strike), G17 (Stripe webhook), G18 (orphan-payment auto-refund), G19 (Stripe idempotency keys).
+
+**Env vars (all optional; safe defaults shipped):**
+`EDGE_CASE_LOOP_INTERVAL_SEC`, `NO_SHOW_GRACE_MIN`, `NO_SHOW_BATCH_SIZE`, `REQUEST_TIMEOUT_MIN`, `REQUEST_NUDGE_MIN`, `RESPONSIVENESS_STRIKE_IGNORES`, `RESPONSIVENESS_WINDOW_DAYS`, `REQUEST_TIMEOUT_BATCH_SIZE`, `ORPHAN_RECONCILE_LOOKBACK_MIN`, `ORPHAN_RECONCILE_MIN_AGE_MIN`, `ORPHAN_BATCH_SIZE`, `STRIPE_WEBHOOK_SECRET`, `ENABLE_AUTO_NO_SHOW`, `ENABLE_AUTO_DECLINE`, `ENABLE_ORPHAN_RECONCILE`.
+
+**Admin endpoints:** `GET /api/admin/edge-case-audit` (filterable), `GET /api/admin/edge-case-config` (live snapshot).
+
+**Test coverage:** 14 pytest cases in `/app/backend/tests/test_iter106an_critical_batch_1.py` — all passing.
+
+---
+
+Defines the expected outcome for the 9 failure modes that produce the most user pain or financial dispute. This is a contract — code is reviewed *against* it.
 
 > **Status legend per scenario field:**
 > ✅ Wired & correct — 🟡 Partially wired (gap noted) — ❌ Not wired

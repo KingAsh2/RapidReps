@@ -1028,6 +1028,10 @@ app.include_router(legal_router)
 from routes.dispute_routes import router as dispute_router
 app.include_router(dispute_router)
 
+# iter106an — Critical Batch 1: Stripe webhook + edge-case audit endpoints
+from routes.webhook_routes import router as webhook_router
+app.include_router(webhook_router)
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
@@ -1039,6 +1043,12 @@ app.add_middleware(
 @app.on_event("startup")
 async def start_notification_scheduler():
     asyncio.create_task(notification_scheduler())
+    # iter106an — Critical Batch 1 edge-case scheduler (auto no-show,
+    # auto-decline, orphan-payment reconcile). Single shared loop; each job
+    # is idempotent and audit-logged. Loop interval is env-configurable
+    # (EDGE_CASE_LOOP_INTERVAL_SEC, default 60s).
+    from edge_case_scheduler import edge_case_scheduler_loop
+    asyncio.create_task(edge_case_scheduler_loop())
     # Initialize object storage
     try:
         init_storage()
