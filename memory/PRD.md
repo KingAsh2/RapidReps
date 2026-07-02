@@ -1,5 +1,16 @@
 # RapidReps PRD
 
+## 2026-07 — Iter106ap: Avatar Rendering Fix (Admin Portal + User Accounts) ✅
+
+User reported profile picture thumbnails/photo frames weren't showing up correctly in the admin portal or on user accounts. Root cause: (a) 25 seeded users carried placeholder URLs like `https://example.com/*` and `/api/files/some-photo.png` that 404 in production, causing blank circles instead of the intended initials fallback, and (b) the iter106am migration from RN `<Image>` to `expo-image` used the string-form `source={uri}` which has quirks with data: URIs on iOS.
+
+**Fixes (iter106ap v2):**
+- **`src/utils/avatar.ts`** — new exported `isPlaceholderAvatarUrl(url)` helper with fixed regex `/(?:^|[./:@])example\.com(?:[/:?#]|$)/i` (v1 used `(^|\.)example\.com\b` which missed the canonical `https://example.com/...` form because the char before is `/`, not `.` or SOS) + `/\/some-photo\.png(?:[?#]|$)/i` (query/fragment tolerant). `resolveAvatarUrl` calls the helper before promoting to absolute URL.
+- **`src/components/TrainerAvatar.tsx`** — swapped `source={uri}` → `source={{ uri: cleaned }}` (object form is safer for data:/file:/content: URIs on iOS in expo-image v3). Added `onError → setImgFailed(true)` fallback that shows initials if the network fetch fails. Reuses the shared `isPlaceholderAvatarUrl` helper (no duplicated regex).
+
+**Verified:** testing agent iteration_111.json — 27/27 unit-contract cases pass (all 3 previously-failing cases from iteration_110 now green). No circular import. Backend non-regression clean (/api/ 200, admin/users list 200, data URI intact on `test_trainer_iter25`'s profile).
+
+
 ## 2026-07 — Iter106ao: App Store Review Remediation ✅
 
 Apple returned the submission with two blocking issues. Both are now closed.
