@@ -388,6 +388,298 @@ async def _job_orphan_payment_reconcile() -> int:
 
 
 # ───────────────────────────────────────────────────────────────────────
+# Job D — G2/G3: Trainee no-show nudges + admin 3rd-strike alerts
+# ───────────────────────────────────────────────────────────────────────
+async def _job_trainee_nudges() -> int:
+    """
+    Two-phase trainee nudge for the "trainer accepted but never arrived"
+    scenario:
+      - Phase 1 (T+TRAINEE_NUDGE_T0_MIN): push "Where's your trainer?" when
+        the session clock hits start time and the trainer has neither gone
+        en_route nor GPS-confirmed.
+      - Phase 2 (T+TRAINEE_NUDGE_T5_MIN): in-app CTA to report no-show so
+        the trainee doesn't have to wait for the auto-no-show at T+10.
+
+    Also handles G3: whenever a trainer flips to `accountUnderReview=true`
+    from a 3rd strike (visible via `strikeHistory` growing past 3 without
+    an adminStrikeAlertSentAt marker), send an in-app admin notification.
+    """
+    if not cfg.ENABLE_TRAINEE_NUDGES:
+        return 0
+
+    now = datetime.utcnow()
+    fired = 0
+
+    # ── Phase 1: T+0 nudge ────────────────────────────────────────────────
+    t0_cutoff = now - timedelta(minutes=cfg.TRAINEE_NUDGE_T0_MIN)
+    t0_upper = now - timedelta(minutes=cfg.TRAINEE_NUDGE_T0_MIN + 4)  # send once within a 4-min window
+    p1 = await db.sessions.find({
+        'status': {'$in': [SessionStatus.CONFIRMED, SessionStatus.EN_ROUTE]},
+        'sessionType': {'$ne': 'virtual'},
+        'sessionDateTimeStart': {'$lte': t0_cutoff, '$gte': t0_upper},
+        'trainerGpsConfirmed': {'$ne': True},
+        '_traineeNudgeT0Sent': {'$ne': True},
+    }).limit(50).to_list(50)
+
+    for s in p1:
+        sid = str(s['_id'])
+        result = await db.sessions.update_one(
+            {'_id': s['_id'], '_traineeNudgeT0Sent': {'$ne': True}},
+            {'$set': {'_traineeNudgeT0Sent': True, 'updatedAt': now}},
+        )
+        if result.modified_count == 0:
+            continue
+        asyncio.create_task(create_and_send_notification(
+            s.get('traineeId'),
+            "Where's your trainer?",
+            "Session start time is here. If your trainer hasn't arrived, you can report a no-show.",
+            "session_reminder",
+            {"sessionId": sid, "screen": "trainee/session-detail", "phase": "t0"},
+        ))
+        await log_edge_case_action(
+            'trainee_nudge_t0',
+            session_id=sid,
+            trainee_id=s.get('traineeId'),
+            trainer_id=s.get('trainerId'),
+            reason=f'T+{cfg.TRAINEE_NUDGE_T0_MIN}min — no en-route/GPS confirm',
+            idempotency_key=f"trainee_nudge_t0:{sid}",
+        )
+        fired += 1
+
+    # ── Phase 2: T+5 in-app CTA ───────────────────────────────────────────
+    t5_cutoff = now - timedelta(minutes=cfg.TRAINEE_NUDGE_T5_MIN)
+    t5_upper = now - timedelta(minutes=cfg.TRAINEE_NUDGE_T5_MIN + 4)
+    p2 = await db.sessions.find({
+        'status': {'$in': [SessionStatus.CONFIRMED, SessionStatus.EN_ROUTE]},
+        'sessionType': {'$ne': 'virtual'},
+        'sessionDateTimeStart': {'$lte': t5_cutoff, '$gte': t5_upper},
+        'trainerGpsConfirmed': {'$ne': True},
+        '_traineeNudgeT5Sent': {'$ne': True},
+    }).limit(50).to_list(50)
+
+    for s in p2:
+        sid = str(s['_id'])
+        result = await db.sessions.update_one(
+            {'_id': s['_id'], '_traineeNudgeT5Sent': {'$ne': True}},
+            {'$set': {'_traineeNudgeT5Sent': True, 'updatedAt': now}},
+        )
+        if result.modified_count == 0:
+            continue
+        asyncio.create_task(create_and_send_notification(
+            s.get('traineeId'),
+            "Trainer is late",
+            "Your trainer still isn't here. Tap to report a no-show and get a full refund.",
+            "session_reminder",
+            {"sessionId": sid, "screen": "trainee/session-detail", "phase": "t5", "action": "report_no_show"},
+        ))
+        await log_edge_case_action(
+            'trainee_nudge_t5',
+            session_id=sid,
+            trainee_id=s.get('traineeId'),
+            trainer_id=s.get('trainerId'),
+            reason=f'T+{cfg.TRAINEE_NUDGE_T5_MIN}min — trainer still not here',
+            idempotency_key=f"trainee_nudge_t5:{sid}",
+        )
+        fired += 1
+
+    return fired
+
+
+async def _job_admin_strike_alerts() -> int:
+    """
+    G3: When a trainer's performanceStrikes crosses 3 (accountUnderReview=true),
+    push an in-app notification to every admin user. Idempotent via the
+    `adminStrikeAlertSentAt` marker on the trainer record.
+    """
+    if not cfg.ENABLE_ADMIN_STRIKE_ALERT:
+        return 0
+
+    now = datetime.utcnow()
+    trainers = await db.users.find({
+        'accountUnderReview': True,
+        'adminStrikeAlertSentAt': {'$exists': False},
+        'performanceStrikes': {'$gte': 3},
+    }).limit(20).to_list(20)
+
+    if not trainers:
+        return 0
+
+    admins = await db.users.find({'roles': 'admin'}).to_list(50)
+    admin_ids = [str(a['_id']) for a in admins]
+    fired = 0
+
+    for t in trainers:
+        tid = str(t['_id'])
+        # Compare-and-set the marker so we don't repeat.
+        result = await db.users.update_one(
+            {'_id': t['_id'], 'adminStrikeAlertSentAt': {'$exists': False}},
+            {'$set': {'adminStrikeAlertSentAt': now}},
+        )
+        if result.modified_count == 0:
+            continue
+        strikes = t.get('performanceStrikes', 0)
+        name = t.get('fullName') or t.get('email') or f"trainer {tid[:8]}"
+        for aid in admin_ids:
+            asyncio.create_task(create_and_send_notification(
+                aid,
+                "Trainer Under Review",
+                f"{name} has hit {strikes} performance strikes and is now under review.",
+                "admin_alert",
+                {"trainerId": tid, "screen": "admin/dashboard"},
+            ))
+        await log_edge_case_action(
+            'admin_strike_alert',
+            trainer_id=tid,
+            reason=f'{strikes} strikes → accountUnderReview=true',
+            details={'adminCount': len(admin_ids), 'strikes': strikes},
+            idempotency_key=f"admin_strike_alert:{tid}",
+        )
+        fired += 1
+
+    return fired
+
+
+# ───────────────────────────────────────────────────────────────────────
+# Job E — G5: Failed-refund retry queue
+# ───────────────────────────────────────────────────────────────────────
+async def _job_refund_retry() -> int:
+    """
+    Retries entries in db.failed_refunds with exponential backoff. Each row:
+      { paymentIntentId, sessionId, amountCents (optional), attempts,
+        nextRetryAt, lastError, createdAt, adminAlertedAt (optional) }
+    After REFUND_RETRY_MAX_ATTEMPTS, stops retrying and pings admins.
+    Producers: session_routes.cancel_session, edge_case_scheduler.auto_no_show.
+    """
+    if not cfg.ENABLE_REFUND_RETRY:
+        return 0
+
+    now = datetime.utcnow()
+    candidates = await db.failed_refunds.find({
+        'nextRetryAt': {'$lte': now},
+        'attempts': {'$lt': cfg.REFUND_RETRY_MAX_ATTEMPTS},
+        'succeededAt': {'$exists': False},
+    }).limit(cfg.REFUND_RETRY_BATCH_SIZE).to_list(cfg.REFUND_RETRY_BATCH_SIZE)
+
+    retried = 0
+    for r in candidates:
+        pi_id = r.get('paymentIntentId')
+        rid = r['_id']
+        attempts = r.get('attempts', 0) + 1
+        idempotency_key = f"refund_retry:{pi_id}:{attempts}"
+        if not pi_id or pi_id.startswith('mock_'):
+            # Nothing we can do with mocks; mark done.
+            await db.failed_refunds.update_one(
+                {'_id': rid},
+                {'$set': {'succeededAt': now, 'result': 'skipped_mock'}},
+            )
+            continue
+
+        try:
+            refund = stripe.Refund.create(
+                payment_intent=pi_id,
+                reason='requested_by_customer',
+                idempotency_key=f"refund:{idempotency_key}",
+            )
+            await db.failed_refunds.update_one(
+                {'_id': rid},
+                {'$set': {
+                    'succeededAt': now,
+                    'refundId': refund.id,
+                    'attempts': attempts,
+                }},
+            )
+            if r.get('sessionId'):
+                await db.sessions.update_one(
+                    {'_id': ObjectId(r['sessionId'])},
+                    {'$set': {'stripeRefundId': refund.id, 'refundRetriedAt': now}},
+                )
+            await log_edge_case_action(
+                'refund_retry_success',
+                session_id=r.get('sessionId'),
+                reason=f'Refund succeeded on attempt {attempts}',
+                details={'paymentIntentId': pi_id, 'refundId': refund.id, 'attempts': attempts},
+                idempotency_key=idempotency_key,
+            )
+            retried += 1
+        except stripe.error.StripeError as e:
+            # Schedule next retry with exponential backoff (capped at 24h).
+            delay_sec = min(
+                cfg.REFUND_RETRY_BASE_DELAY_SEC * (2 ** (attempts - 1)),
+                24 * 3600,
+            )
+            next_retry = now + timedelta(seconds=delay_sec)
+            reached_max = attempts >= cfg.REFUND_RETRY_MAX_ATTEMPTS
+            await db.failed_refunds.update_one(
+                {'_id': rid},
+                {'$set': {
+                    'attempts': attempts,
+                    'lastError': str(e)[:500],
+                    'lastAttemptAt': now,
+                    'nextRetryAt': next_retry,
+                }},
+            )
+            if reached_max and not r.get('adminAlertedAt'):
+                # Ping admins and stop retrying.
+                admins = await db.users.find({'roles': 'admin'}).to_list(20)
+                for a in admins:
+                    asyncio.create_task(create_and_send_notification(
+                        str(a['_id']),
+                        "Refund needs manual attention",
+                        f"Failed to auto-refund after {attempts} attempts. Check /admin/refunds.",
+                        "admin_alert",
+                        {"paymentIntentId": pi_id, "sessionId": r.get('sessionId')},
+                    ))
+                await db.failed_refunds.update_one(
+                    {'_id': rid},
+                    {'$set': {'adminAlertedAt': now}},
+                )
+                await log_edge_case_action(
+                    'refund_retry_exhausted',
+                    session_id=r.get('sessionId'),
+                    reason=f'Refund failed after {attempts} attempts — admin alerted',
+                    details={'paymentIntentId': pi_id, 'lastError': str(e)[:200]},
+                    idempotency_key=f"refund_exhausted:{pi_id}",
+                )
+    return retried
+
+
+# Public helper used by other backend code (cancel_session, auto_no_show)
+# to enqueue a failed refund for later retry. Keeps refund-retry logic
+# out of the caller.
+async def enqueue_failed_refund(
+    payment_intent_id: str,
+    session_id: Optional[str],
+    error: str,
+    amount_cents: Optional[int] = None,
+) -> None:
+    if not cfg.ENABLE_REFUND_RETRY or not payment_intent_id:
+        return
+    now = datetime.utcnow()
+    # Idempotent: one row per PI.
+    existing = await db.failed_refunds.find_one({'paymentIntentId': payment_intent_id})
+    if existing:
+        # Reset the retry cadence — a new failure means we want to try again soon.
+        await db.failed_refunds.update_one(
+            {'_id': existing['_id']},
+            {'$set': {
+                'nextRetryAt': now + timedelta(seconds=cfg.REFUND_RETRY_BASE_DELAY_SEC),
+                'lastError': error[:500],
+                'lastAttemptAt': now,
+            }},
+        )
+        return
+    await db.failed_refunds.insert_one({
+        'paymentIntentId': payment_intent_id,
+        'sessionId': session_id,
+        'amountCents': amount_cents,
+        'attempts': 0,
+        'nextRetryAt': now + timedelta(seconds=cfg.REFUND_RETRY_BASE_DELAY_SEC),
+        'lastError': error[:500],
+        'createdAt': now,
+    })
+
+
+# ───────────────────────────────────────────────────────────────────────
 # Loop
 # ───────────────────────────────────────────────────────────────────────
 async def edge_case_scheduler_loop() -> None:
@@ -397,6 +689,9 @@ async def edge_case_scheduler_loop() -> None:
     # Idempotent index creation (also creates the unique idempotencyKey index).
     try:
         await ensure_audit_indexes()
+        # iter106at: helpful indexes for the new failed_refunds retry queue.
+        await db.failed_refunds.create_index([('paymentIntentId', 1)], unique=True)
+        await db.failed_refunds.create_index([('nextRetryAt', 1), ('attempts', 1)])
     except Exception as e:
         logger.warning("ensure_audit_indexes failed (continuing): %s", e)
 
@@ -405,10 +700,14 @@ async def edge_case_scheduler_loop() -> None:
             no_show = await _job_auto_no_show_trainer()
             decline = await _job_auto_decline_request()
             orphans = await _job_orphan_payment_reconcile()
-            if no_show or decline or orphans:
+            # iter106at Batch 2 jobs
+            nudges = await _job_trainee_nudges()
+            alerts = await _job_admin_strike_alerts()
+            refunds = await _job_refund_retry()
+            if no_show or decline or orphans or nudges or alerts or refunds:
                 logger.info(
-                    "edge_case_scheduler tick: no_show=%d decline=%d orphan=%d",
-                    no_show, decline, orphans,
+                    "edge_case_scheduler tick: no_show=%d decline=%d orphan=%d nudge=%d alert=%d refund=%d",
+                    no_show, decline, orphans, nudges, alerts, refunds,
                 )
         except Exception as e:
             logger.exception("edge_case_scheduler tick failed: %s", e)

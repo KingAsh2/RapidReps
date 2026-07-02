@@ -434,7 +434,13 @@ async def start_en_route(session_id: str, current_user: dict = Depends(get_curre
 
 @router.post("/sessions/{session_id}/start-session")
 async def start_session_in_progress(session_id: str, current_user: dict = Depends(get_current_user)):
-    """Mark session as in_progress — switches GPS to 15s interval."""
+    """Mark session as in_progress — switches GPS to 15s interval.
+
+    iter106at G14: Rejects starts outside the [T-EARLY_WINDOW, T+LATE_WINDOW]
+    window relative to sessionDateTimeStart. Starts inside T+LATE_WINDOW but
+    later than LATE_START_CREDIT_THRESHOLD_MIN issue a 50% virtual-session
+    credit to the trainee (G16 late-start credit).
+    """
     try:
         oid = ObjectId(session_id)
     except Exception:
@@ -453,14 +459,59 @@ async def start_session_in_progress(session_id: str, current_user: dict = Depend
     if session.get('status') not in valid_statuses:
         raise HTTPException(400, f"Cannot start session with status: {session.get('status')}")
 
-    await db.sessions.update_one(
-        {'_id': oid},
-        {'$set': {
-            'status': SessionStatus.IN_PROGRESS,
-            'sessionActualStart': datetime.utcnow(),
-            'updatedAt': datetime.utcnow(),
-        }}
-    )
+    # ── iter106at G14: start-time gate ────────────────────────────────────
+    from config import edge_cases as cfg
+    now = datetime.utcnow()
+    scheduled = session.get('sessionDateTimeStart')
+    late_start_credit = False
+    delay_min = 0
+    if cfg.ENABLE_START_TIME_GATE and isinstance(scheduled, datetime):
+        # Normalize to naive UTC to avoid tz-aware/naive comparison errors.
+        sched_naive = scheduled.replace(tzinfo=None) if scheduled.tzinfo else scheduled
+        delta_min = (now - sched_naive).total_seconds() / 60.0
+        if delta_min < -cfg.START_EARLY_WINDOW_MIN:
+            mins_early = int(abs(delta_min))
+            raise HTTPException(
+                400,
+                f"Too early to start. You can begin {cfg.START_EARLY_WINDOW_MIN} min before scheduled time (in {mins_early - cfg.START_EARLY_WINDOW_MIN} min).",
+            )
+        if delta_min > cfg.START_LATE_WINDOW_MIN:
+            raise HTTPException(
+                400,
+                f"Too late to start. This session was scheduled {int(delta_min)} min ago; the {cfg.START_LATE_WINDOW_MIN} min grace window has passed.",
+            )
+        delay_min = int(max(0, delta_min))
+        late_start_credit = delta_min >= cfg.LATE_START_CREDIT_THRESHOLD_MIN
+
+    update_fields = {
+        'status': SessionStatus.IN_PROGRESS,
+        'sessionActualStart': now,
+        'actualStartDelayMinutes': delay_min,
+        'updatedAt': now,
+    }
+    if late_start_credit:
+        update_fields['lateStartCredit'] = True
+
+    await db.sessions.update_one({'_id': oid}, {'$set': update_fields})
+
+    # ── G16: issue late-start credit (50% of session price) ───────────────
+    if late_start_credit:
+        credit_cents = int((session.get('finalSessionPriceCents') or 0) * 0.5)
+        await db.session_credits.insert_one({
+            'userId': session.get('traineeId'),
+            'type': 'late_start_credit',
+            'amountCents': credit_cents,
+            'reason': f'Trainer late-started session {session_id} by {delay_min} min',
+            'isUsed': False,
+            'createdAt': now,
+        })
+        asyncio.create_task(create_and_send_notification(
+            session.get('traineeId'),
+            "Late-Start Credit",
+            f"Your trainer started {delay_min} min late — you've received a 50% credit toward your next session.",
+            "payment_received",
+            {"sessionId": session_id},
+        ))
 
     await create_and_send_notification(
         session['traineeId'],
@@ -470,7 +521,13 @@ async def start_session_in_progress(session_id: str, current_user: dict = Depend
         {"sessionId": session_id}
     )
 
-    return {"success": True, "status": SessionStatus.IN_PROGRESS, "message": "Session is now in progress."}
+    return {
+        "success": True,
+        "status": SessionStatus.IN_PROGRESS,
+        "actualStartDelayMinutes": delay_min,
+        "lateStartCredit": late_start_credit,
+        "message": "Session is now in progress.",
+    }
 
 
 
