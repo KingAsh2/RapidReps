@@ -756,19 +756,16 @@ export default function TrainerHomeScreen() {
                       >
                         <View style={styles.sessionHeader}>
                           <View style={styles.traineeRow}>
-                            {session.traineePhoto ? (
-                              <Image 
-                                source={{ uri: session.traineePhoto }} 
-                                style={styles.traineeAvatar}
-                              />
-                            ) : (
-                              <LinearGradient
-                                colors={[COLORS.orange, COLORS.orangeLight]}
-                                style={styles.traineeAvatarPlaceholder}
-                              >
-                                <Ionicons name="person" size={20} color={COLORS.white} />
-                              </LinearGradient>
-                            )}
+                            {/* iter106ar completion: unified avatar disc for
+                                the session-card trainee thumbnail. */}
+                            <UserAvatar
+                              size={40}
+                              style={styles.traineeAvatar as any}
+                              user={{
+                                avatarUrl: session.traineePhoto,
+                                fullName: session.traineeName,
+                              }}
+                            />
                             <View style={styles.traineeInfo}>
                               <Text style={styles.traineeName}>{session.traineeName || 'New Client'}</Text>
                               <Text style={styles.sessionDateTime}>
