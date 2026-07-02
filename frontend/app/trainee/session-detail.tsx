@@ -21,6 +21,8 @@ import { SessionStatus } from '../../src/types';
 import { toast } from '../../src/utils/toast';
 import { haptic } from '../../src/utils/haptics';
 import { SessionTimeline, SessionTimelineStatus } from '../../src/components/SessionTimeline';
+// iter106as fix: missing import that iteration_115 flagged as CRITICAL.
+import { UserAvatar } from '../../src/components/UserAvatar';
 import NegotiationPanel from '../../src/components/NegotiationPanel';
 import { ScreenHeader } from '../../src/components/ScreenShell';
 import EnRouteMap from '../../src/components/EnRouteMap';
