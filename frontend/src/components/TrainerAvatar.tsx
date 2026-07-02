@@ -25,7 +25,11 @@ import { View, Text, StyleSheet, Animated, AppState } from 'react-native';
 // This is a primary fix for the iOS WatchdogTermination crash where many
 // avatars at once were exceeding the jetsam memory threshold.
 import { Image as ExpoImage } from 'expo-image';
-import { isPlaceholderAvatarUrl } from '../utils/avatar';
+// iter106aq: premium generated-avatar fallback uses expo-linear-gradient
+// (already a dep) so users without a profile photo see a dimensional
+// on-brand disc instead of a flat pill of color.
+import { LinearGradient } from 'expo-linear-gradient';
+import { avatarGradientFor, isPlaceholderAvatarUrl } from '../utils/avatar';
 
 const DEFAULT_RING = '#FF5F1F'; // platform orange
 
@@ -146,8 +150,46 @@ export const TrainerAvatar: React.FC<Props> = ({
             onError={() => setImgFailed(true)}
           />
         ) : (
-          <View style={[styles.fallback, { backgroundColor: ringColor, borderRadius: (size - ringBorder * 2) / 2 }]}>
-            <Text style={[styles.initials, { fontSize: Math.round(size * 0.34) }]}>{initials}</Text>
+          // iter106aq: premium generated-avatar fallback. Gradient (light →
+          // dark of the ring color) + a soft top-left highlight for depth,
+          // plus tightened monogram typography. Zero new deps.
+          <View style={[styles.fallback, { borderRadius: (size - ringBorder * 2) / 2 }]}>
+            <LinearGradient
+              colors={avatarGradientFor(ringColor)}
+              start={{ x: 0.15, y: 0.1 }}
+              end={{ x: 0.9, y: 0.95 }}
+              style={StyleSheet.absoluteFill}
+            />
+            {/* Subtle glass highlight — quarter-circle at top-left, gives the
+                disc a lit / dimensional feel without a shadow tax. */}
+            <View
+              pointerEvents="none"
+              style={[
+                styles.highlight,
+                {
+                  width: size * 0.55,
+                  height: size * 0.55,
+                  borderRadius: size,
+                  top: -size * 0.15,
+                  left: -size * 0.1,
+                },
+              ]}
+            />
+            <Text
+              style={[
+                styles.initials,
+                {
+                  fontSize: Math.round(size * 0.38),
+                  // Give the letters a tiny extra weight on larger avatars
+                  // (admin detail modal at 88px is the largest place they
+                  // appear) so they read as "premium monogram" not "default
+                  // spinner".
+                  letterSpacing: size >= 72 ? 1.2 : 0.4,
+                },
+              ]}
+            >
+              {initials}
+            </Text>
           </View>
         )}
       </View>
@@ -165,8 +207,28 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   photo: { width: '100%', height: '100%' },
-  fallback: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
-  initials: { color: '#FFFFFF', fontWeight: '900', letterSpacing: 0.5 },
+  fallback: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  // iter106aq: soft top-left highlight for the generated-avatar disc.
+  // rgba white at ~18% is enough to feel "lit" without looking washed-out.
+  highlight: {
+    position: 'absolute',
+    backgroundColor: 'rgba(255,255,255,0.18)',
+  },
+  initials: {
+    color: '#FFFFFF',
+    fontWeight: '900',
+    letterSpacing: 0.5,
+    // Text shadow gives the monogram a tiny extra depth against the gradient.
+    textShadowColor: 'rgba(0,0,0,0.28)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
 });
 
 export default TrainerAvatar;

@@ -1,0 +1,94 @@
+{
+  "summary": "iter106aq avatarGradientFor + TrainerAvatar gradient/highlight/shadow polish VERIFIED. Unit contract 26/26 PASS (real hex, short-hex #F00 expansion, invalid fallbacks to platform-orange, black/white edge cases). Iteration_111 27-case avatar contract re-run: 27/27 PASS (isPlaceholderAvatarUrl + resolveAvatarUrl behavior unchanged). expo-linear-gradient present in package.json (~15.0.8) and node_modules. No circular deps. TrainerAvatar JSX source-tree matches spec: outer <View styles.fallback> + <LinearGradient> with start={0.15,0.1} end={0.9,0.95} absolute-fill + highlight overlay (rgba white 0.18, 55% diameter, top-left) + initials with letterSpacing (1.2 when size>=72, else 0.4) and textShadowColor rgba(0,0,0,0.28). Backend non-regression clean. GO verdict.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "unit_test_matrix_avatarGradientFor": {
+    "file": "/tmp/test_avatar_gradient.mjs",
+    "total": 26,
+    "passed": 26,
+    "failed": 0,
+    "coverage": {
+      "real_hex_cases (a)": "4 colors x 3 assertions each (12 tests): tuple shape + light>base + dark<base",
+      "short_hex (b)": "3 tests: #F00 tuple shape + light>base + dark<base",
+      "invalid_inputs (c)": "4 tests: 'bogus', '', null, undefined -> ['#FF7C47','#AD4115']",
+      "edge_cases (d)": "4 tests: pure black no-throw + dark stays dark; pure white no-throw + light stays light",
+      "exact_value_regression": "3 tests: platform orange -> ['#FF7C47','#AD4115']; cyan -> ['#2ECDFF','#0084AD']; #F00 -> ['#FF2E2E','#AD0000']"
+    },
+    "sample_outputs": {
+      "#FF5F1F": ["#FF7C47", "#AD4115"],
+      "#00C2FF": ["#2ECDFF", "#0084AD"],
+      "#7C4DFF": ["#946DFF", "#5434AD"],
+      "#26C281": ["#4DCD98", "#1A8458"],
+      "#F00":    ["#FF2E2E", "#AD0000"],
+      "#000000": ["#2E2E2E", "#000000"],
+      "#FFFFFF": ["#FFFFFF", "#ADADAD"],
+      "'bogus'/''/null/undefined": ["#FF7C47", "#AD4115"]
+    }
+  },
+  "non_regression_iteration_111_matrix": {
+    "file": "/tmp/test_avatar_helper.mjs",
+    "total": 27,
+    "passed": 27,
+    "failed": 0,
+    "verdict": "isPlaceholderAvatarUrl + resolveAvatarUrl behaviour unchanged"
+  },
+  "import_and_bundle_check": {
+    "expo_linear_gradient_in_package_json": "~15.0.8",
+    "expo_linear_gradient_installed": true,
+    "TrainerAvatar_imports": [
+      "line 31: import { LinearGradient } from 'expo-linear-gradient';",
+      "line 32: import { avatarGradientFor, isPlaceholderAvatarUrl } from '../utils/avatar';"
+    ],
+    "circular_dependency": false,
+    "utils_avatar_imports_from_components": false,
+    "metro_bundle_recent": "Web Bundled OK (see supervisor expo.out.log — Bundled 736 modules with no error)"
+  },
+  "source_tree_confirmation_TrainerAvatar_fallback": {
+    "outer_View_style_fallback": "line 156: <View style={[styles.fallback, { borderRadius: (size - ringBorder * 2) / 2 }]}>",
+    "LinearGradient_2color_from_avatarGradientFor": "line 157-162: colors={avatarGradientFor(ringColor)} start={{x:0.15,y:0.1}} end={{x:0.9,y:0.95}} style={StyleSheet.absoluteFill}",
+    "highlight_overlay_top_left": "line 165-177: <View styles.highlight> width=size*0.55, height=size*0.55, top=-size*0.15, left=-size*0.1 — rgba(255,255,255,0.18) in styles.highlight",
+    "initials_letterSpacing_rule": "line 187: letterSpacing: size >= 72 ? 1.2 : 0.4",
+    "initials_text_shadow": "styles.initials line 228-230: textShadowColor rgba(0,0,0,0.28), offset (0,1), radius 2",
+    "verdict": "MATCHES SPEC"
+  },
+  "backward_compat_check": {
+    "UserAvatar_wrapper": "src/components/UserAvatar.tsx line 41 uses `user?.accentColor || avatarAccentFor(user) || '#FF5F1F'` as ringColor — unchanged API",
+    "ringColor_prop_drives_gradient": "TrainerAvatar passes ringColor into avatarGradientFor(ringColor) -> gradient reflects user's accent when set, else deterministic seed",
+    "pulse_prop_still_works": true,
+    "size_prop_still_scales_everything": "yes: haloSize=size+12, ringBorder=size*0.04, fontSize=size*0.38, highlight=size*0.55, letterSpacing gated by size>=72"
+  },
+  "backend_non_regression": {
+    "GET /api/": {"status": 200},
+    "POST /api/auth/login (admin@rapidreps.com)": {"status": 200, "token_len": 195},
+    "GET /api/admin/users?limit=5": {"status": 200}
+  },
+  "test_report_links": [
+    "/tmp/test_avatar_gradient.mjs",
+    "/tmp/test_avatar_helper.mjs",
+    "/app/test_reports/iteration_112.json"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "avatarGradientFor is pure, deterministic, defensively handles invalid input via the hexToRgb #FF5F1F fallback — no NaN can enter LinearGradient colors prop.",
+    "expo-linear-gradient is declared in package.json (~15.0.8) and installed under node_modules — import will resolve at bundle time.",
+    "No circular import: utils/avatar.ts has zero imports from src/components/*; TrainerAvatar imports from utils only.",
+    "letterSpacing rule (1.2 when size>=72 else 0.4) is applied inline; the styles.initials static letterSpacing: 0.5 is correctly overridden by the inline value (last-write-wins in StyleSheet array).",
+    "Minor nit (not blocking): styles.highlight uses borderRadius: size (see inline override at line 172) which produces an oversized radius; effect is a rounded quarter-circle clipped by fallback overflow:'hidden' — visually correct, but a borderRadius equal to size*0.55/2 would be more idiomatic. Not a bug.",
+    "Backward compatibility with NearbyTrainersMap, TrainerCard, admin UsersTab, UserAvatar preserved — no prop-shape change."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100%", "frontend": "100% (unit contract + source-tree inspection)"},
+  "test_credentials": "admin@rapidreps.com / admin123 (verified 200 with 195-char JWT). test_trainer_iter25@test.com / Test123! (per iteration_111 — not re-hit here since backend admin/users regression already covers the data-URI path).",
+  "seed_data_creation": "none",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "iter106aq gradient/monogram avatar polish is GREEN. Unit tests: /tmp/test_avatar_gradient.mjs (26/26) + /tmp/test_avatar_helper.mjs (27/27). No runtime Playwright check required — the preview at highlight-vibe-bugs.preview.emergentagent.com serves a stale /dist per standing pod limitation, so source-tree + unit contract is the authoritative verification. No open action items.",
+  "verdict": "GO — iter106aq avatarGradientFor + TrainerAvatar gradient/highlight/shadow polish verified. Ship it."
+}

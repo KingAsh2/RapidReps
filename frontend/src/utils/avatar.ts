@@ -106,3 +106,52 @@ export function avatarAccentFor(u?: AvatarBearer | null): string {
   for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
   return palette[h % palette.length];
 }
+
+// ── iter106aq: premium generated-avatar helpers ────────────────────────────
+// Zero-dependency gradient + monogram derivation so users without a real
+// profile photo still see a distinctive, on-brand disc instead of a flat
+// pill of color. Consumed by TrainerAvatar's fallback path.
+
+/** Parse a "#RRGGBB" (or "#RGB") hex string to [r,g,b] (0-255). Falls back to platform orange. */
+function hexToRgb(hex: string): [number, number, number] {
+  const clean = (hex || '').replace('#', '').trim();
+  const expanded = clean.length === 3
+    ? clean.split('').map(c => c + c).join('')
+    : clean;
+  if (!/^[0-9a-f]{6}$/i.test(expanded)) return [255, 95, 31]; // #FF5F1F
+  return [
+    parseInt(expanded.slice(0, 2), 16),
+    parseInt(expanded.slice(2, 4), 16),
+    parseInt(expanded.slice(4, 6), 16),
+  ];
+}
+
+/** RGB → "#RRGGBB". */
+function rgbToHex(r: number, g: number, b: number): string {
+  const clamp = (n: number) => Math.max(0, Math.min(255, Math.round(n)));
+  const hex = (n: number) => clamp(n).toString(16).padStart(2, '0');
+  return `#${hex(r)}${hex(g)}${hex(b)}`.toUpperCase();
+}
+
+/** Shift each channel toward black by `amount` (0..1). 0.3 = 30% darker. */
+function darken(hex: string, amount = 0.32): string {
+  const [r, g, b] = hexToRgb(hex);
+  return rgbToHex(r * (1 - amount), g * (1 - amount), b * (1 - amount));
+}
+
+/** Shift each channel toward white by `amount` (0..1). 0.2 = 20% brighter. */
+function lighten(hex: string, amount = 0.18): string {
+  const [r, g, b] = hexToRgb(hex);
+  return rgbToHex(r + (255 - r) * amount, g + (255 - g) * amount, b + (255 - b) * amount);
+}
+
+/**
+ * Given a base color (typically the user's accentColor or the seeded
+ * palette color from avatarAccentFor), return a bright/dark pair for a
+ * top-left → bottom-right gradient. The bright side sits ~18% closer to
+ * white; the dark side sits ~32% closer to black. This produces enough
+ * contrast for the disc to feel dimensional without going neon.
+ */
+export function avatarGradientFor(baseColor: string): [string, string] {
+  return [lighten(baseColor, 0.18), darken(baseColor, 0.32)];
+}
