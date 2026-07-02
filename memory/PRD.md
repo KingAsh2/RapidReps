@@ -1,5 +1,40 @@
 # RapidReps PRD
 
+## 2026-07 — Iter106ar/as: Tap-to-Upload Avatars + App-Wide Consistency ✅
+
+Delivered the tap-to-upload disc enhancement AND unified 13 avatar rendering sites across the app so they all share the same disc, placeholder scrubbing (iter106ap), gradient-monogram fallback (iter106aq), and expo-image memory-disk cache (iter106am).
+
+**Added to `UserAvatar`:**
+- `editable` + `onEditPress` props — when editable=true, wraps the disc in a TouchableOpacity, overlays an accent-color `+` badge at the bottom-right (scales with disc: 28% of size, 18px floor), sets `accessibilityLabel="Change profile photo"`. Tapping invokes `onEditPress`.
+
+**Migrated to `<UserAvatar>` (was raw `<Image>` + ad-hoc placeholder):**
+- `app/trainer/(tabs)/profile.tsx` (130 px hero)
+- `app/trainer/edit-profile.tsx` (100 px, tap-to-upload)
+- `app/trainer/(tabs)/home.tsx` (90 px hero + 40 px session-card)
+- `app/trainer/home.tsx` (72 px + 40 px session-card)
+- `app/trainee/virtual-confirm.tsx` (110 px hero)
+- `app/trainee/session-detail.tsx` (64 px trainer thumb)
+- `app/trainee/verify-trainer.tsx` (64 px result card)
+- `app/trainee/(tabs)/sessions.tsx` (44 px list)
+- `app/trainee/leaderboard.tsx` (70 px podium)
+- `app/trainer/session-detail.tsx` (44 px trainee)
+- `app/trainer/badge.tsx` (100 px shareable badge)
+- `src/components/PeopleSearchBar.tsx` (40 px search result)
+- `src/components/trainee-home/FavoriteAvailability.tsx` (44 px favorites rail)
+
+**Intentionally NOT migrated** (documented in iter115 review):
+- `app/trainee/swipe-trainers.tsx` — full-bleed rectangular hero card, not a disc
+- `app/trainer/trainee-detail.tsx` — same, hero backdrop
+- `src/components/trainee-home/TrainerCard.tsx` — composited card with its own decorated glow + verified-badge visual identity, deferred to future visual-refresh
+
+**Verified (final test iteration_116):**
+- iter106ap 27/27 unit contract + iter106aq 26/26 gradient contract + iter106ar 50/50 UserAvatar editable/badge — all still GREEN.
+- All 13 migration sites render UserAvatar; imports resolved; no runtime ReferenceError.
+- Metro bundling clean, backend `/api/` 200.
+- iter115 flagged one CRITICAL miss (missing import in trainee/session-detail.tsx) — hot-fixed and re-verified in iter116.
+- Verdict: **GO — final delta of avatar-consistency batch complete.**
+
+
 ## 2026-07 — Iter106aq: Premium Generated-Avatar Fallback ✅
 
 Users without a profile photo now see a **gradient-monogram disc** tied to their `accentColor` (or a deterministic palette seed from name/email) instead of a flat colored pill. Zero new dependencies — uses `expo-linear-gradient` (already installed) plus pure-utility color derivation.
