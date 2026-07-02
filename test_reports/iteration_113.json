@@ -1,0 +1,107 @@
+{
+  "summary": "iter106ar UserAvatar `editable` + `onEditPress` prop pair and 6-file migration VERIFIED via unit contract + source-tree inspection. 48/50 iter106ar contract PASS. Prior contracts still GREEN: iter106ap (27/27), iter106aq (26/26). The 2 failures are OUT-OF-SCOPE avatar sites (session-card traineePhoto thumbnails at trainer/home.tsx:760 and trainer/(tabs)/home.tsx:948) not on the review's line-callout list; hero avatars called out in the spec (lines 264/385/622/518/405/299) all correctly migrated. Metro bundles clean, no circular imports, backend non-regression clean. GO.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "unit_test_matrix_iter106ar": {
+    "file": "/tmp/test_useravatar_iter106ar.mjs",
+    "total": 50,
+    "passed": 48,
+    "failed": 2,
+    "coverage": {
+      "badge_size_math (a)": "6 tests: badgeSize(100)=28, badgeSize(40)=18 min-floor, badgeSize(200)=56, badgeSize(28)=18 below-floor, badgeSize(72)=20, badgeSize(96)=27 — mirrors Math.max(18, Math.round(size*0.28))",
+      "UserAvatar_API_shape (b)": "18 tests: editable?/onEditPress?/testID? props declared; editable defaults to false; non-editable branch returns <View style={style}>{disc}</View> with NO TouchableOpacity and NO badge (backward compat); editable branch wraps disc in TouchableOpacity with onPress={onEditPress}, accessibilityLabel='Change profile photo', accessibilityRole='button', hitSlop, testID passthrough; badge uses ringColor bg, 2px border, shadow, pointerEvents='none' (tap falls through), position:absolute at bottom-right; style prop passed through as [styles.editWrap, style]; badge renders literal '+' glyph; onEditPress never invoked directly (safe when omitted)",
+      "migration_source_tree (c)": "12 tests: each of 6 files imports & uses <UserAvatar>; 4 files zero raw <Image source={{uri}}> (profile, edit-profile, virtual-confirm, PeopleSearchBar); 2 files still contain 1 raw Image each — but those are the session-card `session.traineePhoto` avatars at (tabs)/home.tsx:948 & trainer/home.tsx:760, NOT the hero avatars on lines 622/518 which ARE migrated — these are additional avatar sites outside iter106ar scope",
+      "edit_profile_wiring (d)": "4 tests: <UserAvatar editable onEditPress={pickImage} testID='edit-photo-btn'/> present; pickImage is defined; pickImage invokes ImagePicker.launchImageLibraryAsync; size=100",
+      "size_verification (e)": "6 tests: correct size at each migration site — (tabs)/profile=130, edit-profile=100, (tabs)/home=90, home=72, virtual-confirm=110, PeopleSearchBar=40"
+    }
+  },
+  "non_regression_prior_iterations": {
+    "iter106ap_avatar_helper": {"file": "/tmp/test_avatar_helper.mjs", "total": 27, "passed": 27, "failed": 0},
+    "iter106aq_avatar_gradient": {"file": "/tmp/test_avatar_gradient.mjs", "total": 26, "passed": 26, "failed": 0}
+  },
+  "out_of_scope_findings": [
+    {
+      "file": "app/trainer/(tabs)/home.tsx",
+      "line": 948,
+      "site": "<Image source={{ uri: session.traineePhoto }} style={styles.traineeAvatar} />",
+      "note": "Session-card trainee thumbnail avatar — NOT on iter106ar migration list (line ~622 hero avatar IS migrated). Future migration candidate for full consistency; not a regression from this iteration."
+    },
+    {
+      "file": "app/trainer/home.tsx",
+      "line": 760,
+      "site": "<Image source={{ uri: session.traineePhoto }} style={styles.traineeAvatar} />",
+      "note": "Same as above (session-card trainee thumbnail). Line ~518 hero IS migrated correctly. Not a regression."
+    }
+  ],
+  "userAvatar_api_contract_evidence": {
+    "editable_default_false": "src line 50: `editable = false,` — default preserves 30+ existing call sites",
+    "backward_compat_branch": "src lines 74-76: `if (!editable) { return <View style={style}>{disc}</View>; }` — plain View wrap, NO TouchableOpacity, NO badge",
+    "editable_branch_touchable": "src lines 79-88: <TouchableOpacity onPress={onEditPress} activeOpacity=0.85 testID={testID||'user-avatar-edit'} accessibilityRole='button' accessibilityLabel='Change profile photo' style={[styles.editWrap, style]} hitSlop=8/>",
+    "plus_badge_overlay": "src lines 92-107: <View pointerEvents='none' style=[styles.badge, {width/height/borderRadius = badgeSize, right/bottom = badgeOffset, backgroundColor: ringColor}]><Text>+</Text></View>",
+    "badge_size_formula": "src line 61: `Math.max(18, Math.round(size * 0.28))` — 18px floor, 28% of disc otherwise",
+    "no_crash_on_missing_onEditPress": "onPress={onEditPress} — RN accepts undefined onPress; tap becomes a no-op. No direct invocation of onEditPress() anywhere.",
+    "style_pass_through": "editable branch: style={[styles.editWrap, style]} — outer style merged with editWrap. Non-editable branch: <View style={style}> — style applied directly.",
+    "accent_color_used_for_badge": "src line 102: `backgroundColor: ringColor` where ringColor = user.accentColor || avatarAccentFor(user) || '#FF5F1F'"
+  },
+  "migration_source_tree_evidence": {
+    "app/trainer/(tabs)/profile.tsx": "L23 import UserAvatar; L271-281 <UserAvatar user={{avatarUrl, profilePhoto, fullName, email, accentColor}} size={130}/> — hero migrated",
+    "app/trainer/edit-profile.tsx": "L28 import UserAvatar; L389-399 <UserAvatar editable onEditPress={pickImage} testID='edit-photo-btn' size={100} user={{avatarUrl:formData.profilePhoto, fullName, email}}/> — editable hero migrated",
+    "app/trainer/(tabs)/home.tsx": "L24 import UserAvatar; L622 <UserAvatar size={90} .../> — hero migrated (session-card traineePhoto at L948 still raw — out-of-scope)",
+    "app/trainer/home.tsx": "L26 import UserAvatar; L521 & L925 UserAvatar refs (both branches unified to size={72} ring) — header migrated (session-card traineePhoto at L760 still raw — out-of-scope)",
+    "app/trainee/virtual-confirm.tsx": "L20 import UserAvatar; L409 <UserAvatar size={110} .../> — confirm hero migrated",
+    "src/components/PeopleSearchBar.tsx": "L26 import UserAvatar; L303 <UserAvatar size={40} user={p} style={styles.avatar}/> — search-result thumb migrated"
+  },
+  "bundle_and_import_check": {
+    "metro_recent_bundles": "Web Bundled 246ms, 182ms, 167ms — all successful, no error banners",
+    "circular_dep_check": "src/utils/avatar.ts imports zero from src/components/* — clean",
+    "UserAvatar_imports": [
+      "L18: import React from 'react'",
+      "L19: import { ViewStyle, View, TouchableOpacity, Text, StyleSheet } from 'react-native'",
+      "L20: import { avatarAccentFor, initialsFor, resolveAvatarUrl } from '../utils/avatar'",
+      "L21: import { TrainerAvatar } from './TrainerAvatar'"
+    ],
+    "no_new_dependencies": "iter106ar uses only stdlib RN components (TouchableOpacity, View, Text, StyleSheet) — no bundler risk"
+  },
+  "backend_non_regression": {
+    "note": "No backend changes in iter106ar. Backend logs show admin login 200, /api/ 200, /api/admin/users 200 — healthy. Pre-existing (unrelated) 500 on GET /api/admin/users/0 (invalid ObjectId '0') is a separate/pre-existing issue documented in prior iterations, not caused by iter106ar."
+  },
+  "test_report_links": [
+    "/tmp/test_useravatar_iter106ar.mjs",
+    "/tmp/test_avatar_gradient.mjs",
+    "/tmp/test_avatar_helper.mjs",
+    "/app/test_reports/iteration_113.json"
+  ],
+  "action_items": [
+    "OPTIONAL (post-iter106ar): migrate 2 additional session-card traineePhoto avatars at app/trainer/(tabs)/home.tsx:948 and app/trainer/home.tsx:760 to <UserAvatar size={?} user={{avatarUrl: session.traineePhoto, fullName: session.traineeName}}/> — would complete the 'consistent avatars everywhere' goal but was NOT in the review's line-callout list, so not a blocker for iter106ar.",
+    "Consider adding a small dashed accent ring around the disc when editable=true (mentioned in JSDoc line 32-33 as intent but implementation only adds the badge, not the dashed ring). Minor doc-vs-impl drift — either update the JSDoc or add the ring in a follow-up polish."
+  ],
+  "critical_code_review_comments": [
+    "UserAvatar backward compatibility is preserved cleanly: non-editable branch is an isolated early-return with a plain <View> wrap — 30+ existing call sites will not see a behavioral change.",
+    "Badge size math (Math.max(18, Math.round(size*0.28))) provides a sensible 18px minimum floor for tiny 40px avatars and scales up nicely for hero sizes; verified 40→18, 100→28, 200→56.",
+    "onEditPress is passed by reference (never called directly), so `editable={true}` without an onEditPress does not crash — RN's TouchableOpacity treats undefined onPress as a no-op.",
+    "accessibilityLabel='Change profile photo' + accessibilityRole='button' is correctly set only in the editable branch — a11y semantics are properly opt-in.",
+    "Badge overlay uses pointerEvents='none' so the tap correctly falls through to the outer TouchableOpacity — no dead-zone bug.",
+    "Style prop is correctly merged as [styles.editWrap, style] on the touchable and as {style} on the plain View — pass-through works in both branches.",
+    "JSDoc comment (lines 32-33) mentions 'dashed accent ring' as part of the editable affordance, but the implementation only adds the + badge, no dashed ring. Not a bug (badge alone is a valid affordance) but the JSDoc should be updated to match, or the ring added in a follow-up.",
+    "styles.badge borderColor is hardcoded '#0A0A0F' — this works on the current dark theme but would clash on a hypothetical light-mode surface. Not blocking today but worth parameterizing when/if a light theme lands.",
+    "The 2 remaining raw Image avatar sites (session-card traineePhoto at (tabs)/home.tsx:948 and home.tsx:760) fall outside the iter106ar migration list but ARE avatar renders — main agent may want to include them in the next migration pass for full 'consistent everywhere' coverage.",
+    "No new dependencies introduced; import graph is clean; no circular deps between src/utils/avatar.ts and src/components/*."
+  ],
+  "updated_files": [
+    "/tmp/test_useravatar_iter106ar.mjs (new — 50-case iter106ar contract)"
+  ],
+  "success_rate": {
+    "backend": "100% (non-regression only)",
+    "frontend": "96% (48/50 unit contract; 2 fails = out-of-scope additional avatar sites, NOT regressions of iter106ar scope)"
+  },
+  "test_credentials": "N/A for this iteration — pure UI polish, no auth flows exercised. Credentials on file: admin@rapidreps.com / admin123 (verified 200 in iter106aq); test_trainer_iter25@test.com / Test123! (data-URI photo path).",
+  "seed_data_creation": "none",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "iter106ar UserAvatar editable/onEditPress prop pair + 6-file avatar migration is GREEN via /tmp/test_useravatar_iter106ar.mjs (48/50, 2 out-of-scope fails documented). Non-regression contracts /tmp/test_avatar_helper.mjs (27/27) and /tmp/test_avatar_gradient.mjs (26/26) still pass. Web preview at highlight-vibe-bugs.preview.emergentagent.com serves stale /dist — source-tree + unit contract is the authoritative verification path per iteration_112 handoff. Two follow-up avatar migration candidates identified: (tabs)/home.tsx:948 and home.tsx:760 (session-card traineePhoto Image tags). No open blockers.",
+  "verdict": "GO — iter106ar UserAvatar editable affordance + 6-file migration verified. Backward-compat preserved. Metro clean. Ship it."
+}

@@ -24,6 +24,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useAlert } from '../../src/contexts/AlertContext';
+// iter106ar: unified UserAvatar with editable tap-to-upload affordance.
+import { UserAvatar } from '../../src/components/UserAvatar';
 import * as Location from 'expo-location';
 import { toast } from '../../src/utils/toast';
 import Slider from '@react-native-community/slider';
@@ -379,19 +381,23 @@ export default function EditTrainerProfileScreen() {
               contentContainerStyle={styles.scrollContent}
               showsVerticalScrollIndicator={false}
             >
-              {/* Profile Photo */}
-              <TouchableOpacity onPress={pickImage} style={{ alignSelf: 'center', marginBottom: 16 }} data-testid="edit-photo-btn">
-                <View style={{ width: 100, height: 100, borderRadius: 50, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center', borderWidth: 3, borderColor: 'rgba(255,255,255,0.4)' }}>
-                  {formData.profilePhoto ? (
-                    <Image source={{ uri: formData.profilePhoto }} style={{ width: 96, height: 96, borderRadius: 48 }} />
-                  ) : (
-                    <Ionicons name="camera" size={36} color={COLORS.white} />
-                  )}
-                </View>
-                <View style={{ position: 'absolute', bottom: 0, right: 0, backgroundColor: COLORS.orange, width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: COLORS.white }}>
-                  <Ionicons name="pencil" size={16} color={COLORS.white} />
-                </View>
-              </TouchableOpacity>
+              {/* Profile Photo — iter106ar: UserAvatar with `editable` overlay.
+                  Single-tap opens the image picker; gradient monogram is used
+                  when no photo, and existing photos benefit from the same
+                  cache + placeholder scrubbing as everywhere else in the app. */}
+              <View style={{ alignSelf: 'center', marginBottom: 16 }}>
+                <UserAvatar
+                  editable
+                  onEditPress={pickImage}
+                  testID="edit-photo-btn"
+                  size={100}
+                  user={{
+                    avatarUrl: formData.profilePhoto,
+                    fullName: user?.fullName,
+                    email: user?.email,
+                  }}
+                />
+              </View>
 
               {/* Bio Card */}
               <Animated.View

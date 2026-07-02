@@ -19,6 +19,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Alert } from 'react-native';
+// iter106ar: unify with the shared avatar disc used everywhere else.
+import { UserAvatar } from '../../../src/components/UserAvatar';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { streaksAPI } from '../../../src/services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -263,13 +265,19 @@ export default function TrainerProfileScreen() {
                   borderWidth: 2,
                   borderColor: profile?.accentColor || '#FF6A00',
                 }]}>
-                  {profile?.avatarUrl ? (
-                    <Image source={{ uri: profile.avatarUrl }} style={styles.avatar} />
-                  ) : (
-                    <View style={styles.avatarPlaceholder}>
-                      <Ionicons name="person" size={40} color={COLORS.gray} />
-                    </View>
-                  )}
+                  {/* iter106ar: unified UserAvatar disc — gradient monogram
+                      fallback when no photo, placeholder-URL scrubbing,
+                      consistent with every other screen in the app. */}
+                  <UserAvatar
+                    user={{
+                      avatarUrl: profile?.avatarUrl,
+                      profilePhoto: (profile as any)?.profilePhoto,
+                      fullName: user?.fullName,
+                      email: user?.email,
+                      accentColor: profile?.accentColor,
+                    }}
+                    size={130}
+                  />
                   {/* iter102j: any-of (isVerified OR verificationStatus==='verified')
                       matches what /api/trainer/visibility-status uses, so the
                       badge can't lag behind the rest of the app. */}

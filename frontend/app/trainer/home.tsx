@@ -515,13 +515,20 @@ export default function TrainerHomeScreen() {
                 <View style={styles.heroGlow} />
                 {/* Profile Photo */}
                 <View style={{ alignItems: 'center', marginBottom: 12 }}>
-                  {(user as any)?.profilePhoto ? (
-                    <Image source={{ uri: (user as any).profilePhoto }} style={{ width: 72, height: 72, borderRadius: 36, borderWidth: 3, borderColor: COLORS.orange }} />
-                  ) : (
-                    <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: COLORS.orange, justifyContent: 'center', alignItems: 'center', borderWidth: 3, borderColor: 'rgba(255,255,255,0.3)' }}>
-                      <Ionicons name="person" size={36} color={COLORS.white} />
-                    </View>
-                  )}
+                  {/* iter106ar: unified UserAvatar (was raw Image; no fallback,
+                      no placeholder scrubbing, inconsistent with the rest of
+                      the app). Ring color inherits from the user's accentColor. */}
+                  <UserAvatar
+                    size={72}
+                    ring
+                    user={{
+                      avatarUrl: (user as any)?.avatarUrl,
+                      profilePhoto: (user as any)?.profilePhoto,
+                      fullName: user?.fullName,
+                      email: user?.email,
+                      accentColor: (user as any)?.accentColor,
+                    }}
+                  />
                 </View>
                 <Text style={styles.heroTitle}>
                   LET'S TRAIN, {user?.fullName?.split(' ')[0]?.toUpperCase() || 'COACH'}!

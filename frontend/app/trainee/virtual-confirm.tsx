@@ -16,6 +16,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/contexts/AuthContext';
+// iter106ar: unified avatar disc for the confirmed-trainer hero photo.
+import { UserAvatar } from '../../src/components/UserAvatar';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Audio } from 'expo-av';
@@ -400,15 +402,20 @@ export default function VirtualConfirmScreen() {
       </View>
 
       <Animated.ScrollView style={{ flex: 1, opacity: fadeIn }} contentContainerStyle={st.matchContent} showsVerticalScrollIndicator={false}>
-        {/* Photo */}
+        {/* Photo — iter106ar: unified UserAvatar (was raw Image; blank on
+            data URIs & example.com placeholders). Size 110 preserves the
+            existing hero visual. */}
         <View style={st.trainerPhotoWrap}>
-          {trainerDetails?.profilePhoto ? (
-            <Image source={{ uri: trainerDetails.profilePhoto }} style={st.trainerPhoto} />
-          ) : (
-            <LinearGradient colors={[Colors.teal, Colors.orange]} style={st.trainerPhoto}>
-              <Ionicons name="person" size={50} color="#fff" />
-            </LinearGradient>
-          )}
+          <UserAvatar
+            size={110}
+            user={{
+              avatarUrl: trainerDetails?.avatarUrl,
+              profilePhoto: trainerDetails?.profilePhoto,
+              fullName: trainerDetails?.fullName,
+              email: trainerDetails?.email,
+              accentColor: trainerDetails?.accentColor,
+            }}
+          />
           <View style={st.matchBadge}>
             <Ionicons name="checkmark-circle" size={28} color={Colors.success} />
           </View>

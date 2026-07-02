@@ -22,6 +22,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { referralAPI } from '../services/api';
+// iter106ar: unified UserAvatar for search-result thumbnails.
+import { UserAvatar } from './UserAvatar';
 import { toast } from '../utils/toast';
 import { haptic } from '../utils/haptics';
 
@@ -285,7 +287,6 @@ export const PeopleSearchBar: React.FC<PeopleSearchBarProps> = ({
             >
               {results.map((p, idx) => {
                 const id = p.userId || p.id || `result-${idx}`;
-                const photo = p.profilePhoto || p.avatarUrl;
                 return (
                   <TouchableOpacity
                     key={id}
@@ -296,13 +297,10 @@ export const PeopleSearchBar: React.FC<PeopleSearchBarProps> = ({
                     }}
                     data-testid={`${testIDPrefix}-result-${idx}`}
                   >
-                    {photo ? (
-                      <Image source={{ uri: photo }} style={styles.avatar} />
-                    ) : (
-                      <View style={styles.avatarPlaceholder}>
-                        <Ionicons name="person" size={20} color="#FF7F00" />
-                      </View>
-                    )}
+                    {/* iter106ar: unified avatar disc with placeholder scrubbing
+                        + gradient-monogram fallback. Replaces raw <Image> +
+                        <Ionicons person /> pair. */}
+                    <UserAvatar size={40} user={p as any} style={styles.avatar as any} />
                     <View style={{ flex: 1 }}>
                       <Text style={styles.name} numberOfLines={1}>
                         {p.fullName || 'Unknown'}

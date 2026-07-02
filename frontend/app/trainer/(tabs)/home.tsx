@@ -618,14 +618,18 @@ export default function TrainerHomeScreen() {
                 style={styles.heroGradient}
               >
                 <View style={styles.heroGlow} />
-                {/* Profile Photo */}
-                {trainerProfile?.avatarUrl ? (
-                  <Image source={{ uri: trainerProfile.avatarUrl }} style={styles.heroAvatar} />
-                ) : (
-                  <View style={[styles.heroAvatar, styles.heroAvatarPlaceholder]}>
-                    <Ionicons name="person" size={36} color="rgba(255,255,255,0.5)" />
-                  </View>
-                )}
+                {/* Profile Photo — iter106ar: unified UserAvatar */}
+                <UserAvatar
+                  size={90}
+                  user={{
+                    avatarUrl: trainerProfile?.avatarUrl,
+                    profilePhoto: (trainerProfile as any)?.profilePhoto,
+                    fullName: user?.fullName,
+                    email: user?.email,
+                    accentColor: trainerProfile?.accentColor,
+                  }}
+                  style={styles.heroAvatar}
+                />
                 <Text style={styles.heroTitle}>
                   LET&apos;S TRAIN, {user?.fullName?.split(' ')[0]?.toUpperCase() || 'COACH'}!
                 </Text>
