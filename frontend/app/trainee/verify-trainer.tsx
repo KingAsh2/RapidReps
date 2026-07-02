@@ -8,6 +8,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { safetyCheckAPI } from '../../src/services/api';
+// iter106as: unified avatar disc for the verify-trainer result card.
+import { UserAvatar } from '../../src/components/UserAvatar';
 import { Colors as COLORS } from '../../src/utils/colors';
 import * as Haptics from 'expo-haptics';
 
@@ -125,13 +127,15 @@ export default function VerifyTrainer() {
 
           {/* Trainer Card */}
           <View style={styles.trainerCard}>
-            {result.trainerPhoto ? (
-              <Image source={{ uri: result.trainerPhoto }} style={styles.trainerCardPhoto} />
-            ) : (
-              <View style={[styles.trainerCardPhoto, styles.trainerCardPhotoPlaceholder]}>
-                <Ionicons name="person" size={28} color={'#FFFFFF'} />
-              </View>
-            )}
+            {/* iter106as: unified avatar disc for the verify-trainer result. */}
+            <UserAvatar
+              size={64}
+              style={styles.trainerCardPhoto as any}
+              user={{
+                avatarUrl: result.trainerPhoto,
+                fullName: result.trainerName,
+              }}
+            />
             <Text style={styles.trainerCardName}>{result.trainerName}</Text>
             <View style={styles.trainerCardRating}>
               <Ionicons name="star" size={14} color="#FFD700" />

@@ -1,0 +1,151 @@
+{
+  "summary": "iter106as (final avatar-consistency pass) verified. 6 of 7 migrated sites are CLEAN. Site (1) app/trainee/session-detail.tsx has a CRITICAL delta miss: <UserAvatar> is used at L265 but the import statement was NEVER added — will crash the trainee session-detail screen at runtime (TS2304: Cannot find name 'UserAvatar'). All 3 documented exceptions (swipe-trainers, trainer/trainee-detail, TrainerCard) still render raw <Image> as intended — no regression there. Non-regression contracts still all green: iter106ap 27/27, iter106aq 26/26, iter106ar 50/50. Backend /api/ + admin login + /api/admin/users all 200. Metro bundling clean overall, but the crashing screen won't hit Metro until a trainee navigates to it. NO-GO until the missing import is added.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "app/trainee/session-detail.tsx",
+        "issue": "CRITICAL: <UserAvatar> component used at L265 but the `import { UserAvatar } from '../../src/components/UserAvatar'` line was NEVER added to the file. TypeScript compile confirms: `app/trainee/session-detail.tsx(265,16): error TS2304: Cannot find name 'UserAvatar'.` This will throw ReferenceError at runtime when any trainee opens their session-detail screen. Delta claims 'UserAvatar import added' for this file — the claim is FALSE per source-tree and per git diff.",
+        "selector": "app/trainee/session-detail.tsx L265",
+        "priority": "CRITICAL"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "delta_verification": {
+    "migrated_sites_expected_7": {
+      "1_app/trainee/session-detail.tsx@L265": {
+        "userAvatar_import": "MISSING",
+        "userAvatar_usage_at_line": 265,
+        "size": 64,
+        "raw_image_avatar_removed": true,
+        "status": "FAIL — missing import breaks the screen. Component used without being imported."
+      },
+      "2_app/trainee/verify-trainer.tsx@L129": {
+        "userAvatar_import": "PRESENT",
+        "userAvatar_usage": true,
+        "raw_image_avatar_removed": true,
+        "status": "PASS"
+      },
+      "3_app/trainee/(tabs)/sessions.tsx@L448": {
+        "userAvatar_import": "PRESENT",
+        "userAvatar_usage": true,
+        "raw_image_avatar_removed": true,
+        "status": "PASS"
+      },
+      "4_app/trainer/session-detail.tsx@L145": {
+        "userAvatar_import": "PRESENT (L25)",
+        "userAvatar_usage": true,
+        "raw_image_avatar_removed": true,
+        "status": "PASS",
+        "note": "Pre-existing unrelated TS error: `haptic` used at L63 but not imported (TS2304 for `haptic`). NOT part of this delta — flag for separate cleanup. Also several `toast(msg, 'error')` calls pass 2 args to a 1-arg function (TS2554) — pre-existing."
+      },
+      "5_app/trainer/badge.tsx@L207": {
+        "userAvatar_import": "PRESENT",
+        "userAvatar_usage": true,
+        "raw_image_avatar_removed": true,
+        "status": "PASS"
+      },
+      "6_src/components/trainee-home/FavoriteAvailability.tsx@L23": {
+        "userAvatar_import": "PRESENT",
+        "userAvatar_usage": true,
+        "raw_image_avatar_removed": true,
+        "status": "PASS"
+      },
+      "7_app/trainee/leaderboard.tsx@L177": {
+        "userAvatar_import": "PRESENT (already imported for other uses)",
+        "userAvatar_usage_count": 2,
+        "podium_at_line": 178,
+        "raw_image_avatar_removed": true,
+        "status": "PASS"
+      }
+    },
+    "intentionally_skipped_sites_still_raw_Image_3": {
+      "a_app/trainee/swipe-trainers.tsx@L302": {
+        "still_raw_image": true,
+        "reason_documented": "Full-bleed hero card background, not avatar disc",
+        "status": "PASS (as intended)"
+      },
+      "b_app/trainer/trainee-detail.tsx@L227": {
+        "still_raw_image": true,
+        "reason_documented": "Full-bleed hero image, not avatar disc",
+        "status": "PASS (as intended)"
+      },
+      "c_src/components/trainee-home/TrainerCard.tsx@L137": {
+        "still_raw_image": true,
+        "reason_documented": "Composited discovery card with own glow ring + verified badge + LinearGradient",
+        "status": "PASS (as intended)"
+      }
+    }
+  },
+  "raw_image_avatar_sweep_after_delta": {
+    "command": "grep -rnE '<Image source=\\{\\{ *uri:.*(photo|Photo|avatar|Avatar|profile|Profile|trainer|Trainer|trainee|Trainee|user|User)' app/ src/components/",
+    "results_found_4": [
+      "app/trainee/swipe-trainers.tsx:302 (hero — documented exception)",
+      "app/trainer/trainee-detail.tsx:227 (hero — documented exception)",
+      "app/trainer/discover-trainees.tsx:209 (vibeArtworkUrl — legitimate non-avatar: trainee's vibe artwork)",
+      "src/components/trainee-home/TrainerCard.tsx:137 (composited card — documented exception)"
+    ],
+    "additional_hero_like_image_at": [
+      "app/trainee/trainer-detail.tsx:631 heroUri — trainer detail page hero image (same category as documented full-bleed hero exceptions; not flagged in original list but is semantically consistent with the 3 documented skips)",
+      "app/trainer/discover-trainees.tsx:165 heroUri — discovery card hero (also full-bleed hero, not avatar disc)"
+    ],
+    "verdict": "Only documented exceptions remain as user-photo avatar-disc renders. The 2 additional heroUri sites are also full-bleed hero cards (same rationale as the 3 documented) — flagging for awareness only, NOT a regression."
+  },
+  "unit_test_matrix_reruns": {
+    "iter106ap_avatar_helper": {"file": "/tmp/test_avatar_helper.mjs", "total": 27, "passed": 27, "failed": 0, "status": "GREEN"},
+    "iter106aq_avatar_gradient": {"file": "/tmp/test_avatar_gradient.mjs", "total": 26, "passed": 26, "failed": 0, "status": "GREEN"},
+    "iter106ar_useravatar_migration": {"file": "/tmp/test_useravatar_iter106ar.mjs", "total": 50, "passed": 50, "failed": 0, "status": "GREEN — note this contract only covers 6 files (profile/edit-profile/home tabs/virtual-confirm/PeopleSearchBar), NOT the 7 new sites from iter106as. So a green here does NOT verify the iter106as delta; it only confirms iter114 baseline non-regression."}
+  },
+  "backend_smoke": {
+    "GET_/api/": 200,
+    "POST_/api/auth/login (admin@rapidreps.com)": 200,
+    "GET_/api/admin/users (bearer token)": 200,
+    "note": "No new backend errors. Pre-existing InvalidId 500 on /api/admin/users/0 remains a known baseline issue per iter113."
+  },
+  "typescript_compile_findings": {
+    "critical_delta_error": "app/trainee/session-detail.tsx(265,16): error TS2304: Cannot find name 'UserAvatar'.",
+    "pre_existing_unrelated_errors_noted": [
+      "app/trainee/session-detail.tsx(118,120,124): SessionStatus.PENDING / IN_PROGRESS type errors (pre-existing)",
+      "app/trainer/session-detail.tsx(63,7): TS2304 `haptic` — used without import (pre-existing? verify)",
+      "app/trainer/session-detail.tsx(164,195,200): toast() called with 2 args but signature expects 1 (pre-existing)"
+    ]
+  },
+  "metro_bundle": "Web Bundled 246ms, 183ms, 174ms — all successful. Metro does NOT catch the trainee/session-detail.tsx issue because the file only crashes when it is actually rendered (dynamic route). Bundling passes, runtime will fail.",
+  "test_report_links": [
+    "/tmp/test_useravatar_iter106ar.mjs (50/50)",
+    "/tmp/test_avatar_helper.mjs (27/27)",
+    "/tmp/test_avatar_gradient.mjs (26/26)",
+    "/app/test_reports/iteration_115.json"
+  ],
+  "action_items": [
+    "CRITICAL (P0): Add `import { UserAvatar } from '../../src/components/UserAvatar';` to /app/frontend/app/trainee/session-detail.tsx (near the other component imports around L23-26). Without this, the trainee session-detail screen throws ReferenceError at render. This is a 1-line fix.",
+    "OPTIONAL (P2): Address the pre-existing `haptic` unused/missing import in /app/frontend/app/trainer/session-detail.tsx L63 — separate from this delta but surfaced during TS compile. Either add `import { haptic } from '../../src/utils/haptics'` or remove the call.",
+    "OPTIONAL (P3): Consider extending the iter106ar unit contract file to include the 7 new iter106as sites (session-detail x2, verify-trainer, (tabs)/sessions, badge, FavoriteAvailability, leaderboard). Currently the 50/50 does NOT cover them, so a delta regression here would not be caught by the existing test."
+  ],
+  "critical_code_review_comments": [
+    "The delta's files_of_reference list explicitly claims 'UserAvatar import added' for app/trainee/session-detail.tsx — verified via `git diff HEAD` that the diff for that file ONLY adds the <UserAvatar> JSX block; the import line is genuinely missing. Main agent's own claim contradicted by source tree.",
+    "6 of 7 sites: clean pass-through of styles.<name> as any + size + user prop; visually consistent with UserAvatar's public interface.",
+    "Leaderboard podium migration is well-done — user prop uses `entry.fullName` for monogram fallback and `entry.avatar` for the URL. Medal badge overlay preserved via the outer podiumAvatar view.",
+    "The scope-locked 'consistent avatars app-wide' directive is now MOSTLY complete: only the 3 documented exceptions (2 full-bleed hero cards + 1 composited discovery card) plus 2 additional heroUri sites (trainee/trainer-detail L631 and trainer/discover-trainees L165) remain as raw <Image>. All are legitimate non-avatar-disc contexts.",
+    "iter106ar unit contract does NOT cover the 7 new iter106as sites — a static test file update would harden this contract for future deltas. Optional but recommended."
+  ],
+  "updated_files": [
+    "None — testing agent made no code modifications. The missing-import bug is left as-is for main agent to fix per Fix Scope guidelines (business-logic / functional bug, not a test-selector issue)."
+  ],
+  "success_rate": {
+    "backend": "100% (smoke: /api/, login, /api/admin/users all 200)",
+    "frontend": "86% (6/7 migrated sites clean; 1/7 broken by missing import; 3/3 intentionally-skipped sites confirmed still raw <Image>; 27/27 + 26/26 + 50/50 non-regression contracts green)"
+  },
+  "test_credentials": "Used admin@rapidreps.com / admin123 for backend smoke — login 200. Trainer test_trainer_iter25@test.com / Test123! not exercised (no UI flow reached due to source-verified critical bug blocking review sign-off).",
+  "seed_data_creation": "none",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "iter106as delta: 7 planned migrations, 6 landed cleanly, 1 (app/trainee/session-detail.tsx) is missing the `import { UserAvatar } from '../../src/components/UserAvatar'` line even though <UserAvatar> is used at L265. Confirmed via `git diff HEAD frontend/app/trainee/session-detail.tsx` (only JSX block added, no import) and via `npx tsc --noEmit` (TS2304 error). Once main agent adds the 1-line import, re-run this same verification: (1) grep -c UserAvatar for the 7 files, (2) grep raw <Image> avatar patterns across app/ + src/components/ and confirm only the 3 documented exceptions (swipe-trainers, trainer/trainee-detail, TrainerCard) plus vibeArtworkUrl / hero variants remain, (3) re-run /tmp/test_useravatar_iter106ar.mjs (should stay 50/50), /tmp/test_avatar_helper.mjs (27/27), /tmp/test_avatar_gradient.mjs (26/26), (4) backend smoke /api/ + admin login. NO other issues found. All 3 intentionally-skipped hero/composited sites confirmed still raw <Image> — not regressions.",
+  "verdict": "NO-GO — 1 critical missing-import in app/trainee/session-detail.tsx breaks the trainee session-detail screen at runtime. Trivial 1-line main-agent fix needed. Once fixed, delta is complete and shippable. All other 6 migrated sites + 3 intentional-skips + non-regression contracts are clean.",
+  "rca of the issue": "During iter106as, the main agent replaced the raw <Image> avatar block in app/trainee/session-detail.tsx L262-267 with a new <UserAvatar ...> JSX block at L265-272 but omitted adding the corresponding `import { UserAvatar } from '../../src/components/UserAvatar'` line at the top of the file. All other 6 migrated files include the import (verified via `grep -c '^import.*UserAvatar' <file>` returning 1). The oversight is confined to this single file. Reproduction: (1) `cd /app && git diff frontend/app/trainee/session-detail.tsx` shows only JSX changes at L263-272, no import diff. (2) `cd /app/frontend && grep -n 'UserAvatar' app/trainee/session-detail.tsx` returns only the usage at L265, no import. (3) `cd /app/frontend && npx tsc --noEmit -p tsconfig.json 2>&1 | grep session-detail` returns `TS2304: Cannot find name 'UserAvatar'`. Mitigation: add `import { UserAvatar } from '../../src/components/UserAvatar';` between the existing L25 and L26 imports (or grouped with other component imports)."
+}

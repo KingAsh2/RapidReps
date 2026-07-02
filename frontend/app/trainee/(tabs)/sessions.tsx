@@ -21,6 +21,8 @@ import FloatingOrangeBg from '../../../src/components/FloatingOrangeBg';
 import { swrCache } from '../../../src/hooks/useStaleWhileRefresh';
 import { useAlert } from '../../../src/contexts/AlertContext';
 import { useNotifications } from '../../../src/contexts/NotificationContext';
+// iter106as: unified avatar disc for the sessions-list trainer thumbnail.
+import { UserAvatar } from '../../../src/components/UserAvatar';
 import { traineeAPI } from '../../../src/services/api';
 import { SessionCountdown } from '../../../src/components/SessionCountdown';
 import { DS } from '../../../src/theme/designSystem';
@@ -442,16 +444,15 @@ export default function SessionsScreen() {
                       activeOpacity={0.7}
                       data-testid={`session-trainer-${session.trainerId}`}
                     >
-                      {session.trainerPhoto ? (
-                        <Image source={{ uri: session.trainerPhoto }} style={styles.trainerAvatar} />
-                      ) : (
-                        <LinearGradient
-                          colors={['#0A0E1A', '#141929']}
-                          style={styles.trainerAvatarPlaceholder}
-                        >
-                          <Ionicons name="person" size={22} color={COLORS.white} />
-                        </LinearGradient>
-                      )}
+                      {/* iter106as: unified avatar disc */}
+                      <UserAvatar
+                        size={44}
+                        style={styles.trainerAvatar as any}
+                        user={{
+                          avatarUrl: session.trainerPhoto,
+                          fullName: session.trainerName,
+                        }}
+                      />
                       <View style={styles.trainerInfo}>
                         <Text style={styles.trainerName}>{session.trainerName || 'Trainer'}</Text>
                         <Text style={styles.sessionDate}>

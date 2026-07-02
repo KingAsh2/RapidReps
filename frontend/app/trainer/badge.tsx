@@ -8,6 +8,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import QRCode from 'react-native-qrcode-svg';
 import { safetyCheckAPI } from '../../src/services/api';
+// iter106as: unified avatar disc for the badge-share screen.
+import { UserAvatar } from '../../src/components/UserAvatar';
 import { Colors as COLORS } from '../../src/utils/colors';
 import * as Haptics from 'expo-haptics';
 
@@ -203,13 +205,15 @@ export default function TrainerBadge() {
           {/* Trainer Profile Section */}
           <View style={styles.profileSection}>
             <Animated.View style={[styles.profilePhotoWrapper, { transform: [{ scale: pulseAnim }] }]}>
-              {badgeData?.trainerPhoto ? (
-                <Image source={{ uri: badgeData.trainerPhoto }} style={styles.profilePhoto} />
-              ) : (
-                <View style={styles.profilePhotoPlaceholder}>
-                  <Ionicons name="person" size={40} color={'#FFFFFF'} />
-                </View>
-              )}
+              {/* iter106as: unified avatar disc for the shareable badge. */}
+              <UserAvatar
+                size={100}
+                style={styles.profilePhoto as any}
+                user={{
+                  avatarUrl: badgeData?.trainerPhoto,
+                  fullName: badgeData?.trainerName,
+                }}
+              />
               <View style={styles.verifiedDot}>
                 <Ionicons name="checkmark" size={12} color={COLORS.white} />
               </View>

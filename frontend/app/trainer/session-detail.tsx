@@ -21,6 +21,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { sessionsAPI, chatAPI, negotiationAPI } from '../../src/services/api';
 import NegotiationPanel from '../../src/components/NegotiationPanel';
 import { DS } from '../../src/theme/designSystem';
+// iter106as: unified avatar disc.
+import { UserAvatar } from '../../src/components/UserAvatar';
 import { formatCents } from '../../src/utils/pricing';
 import { toast } from '../../src/utils/toast';
 import { formatApiError } from '../../src/utils/formatApiError';
@@ -139,13 +141,15 @@ export default function TrainerSessionDetailScreen() {
             data-testid="open-trainee-profile"
             activeOpacity={0.85}
           >
-            {session.traineePhoto ? (
-              <Image source={{ uri: session.traineePhoto }} style={s.avatar} />
-            ) : (
-              <View style={[s.avatar, s.avatarPlaceholder]}>
-                <Ionicons name="person" size={22} color={DS.colors.textMuted} />
-              </View>
-            )}
+            {/* iter106as: unified avatar disc */}
+            <UserAvatar
+              size={44}
+              style={s.avatar as any}
+              user={{
+                avatarUrl: session.traineePhoto,
+                fullName: session.traineeName,
+              }}
+            />
             <View style={{ flex: 1 }}>
               <Text style={s.h3}>{session.traineeName || 'Trainee'}</Text>
               <Text style={s.caption}>Tap to view full profile</Text>

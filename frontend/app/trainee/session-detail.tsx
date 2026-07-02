@@ -260,13 +260,16 @@ export default function SessionDetailScreen() {
               onPress={() => session.trainerId && router.push(`/trainee/trainer-detail?trainerId=${session.trainerId}`)}
               data-testid="session-trainer-profile-link"
             >
-              {session.trainerPhoto ? (
-                <Image source={{ uri: session.trainerPhoto }} style={styles.trainerPhoto} />
-              ) : (
-                <View style={styles.trainerPhotoPlaceholder}>
-                  <Ionicons name="person" size={24} color={COLORS.gray} />
-                </View>
-              )}
+              {/* iter106as: unified avatar disc for the trainer thumbnail
+                  on the session-detail screen. */}
+              <UserAvatar
+                size={64}
+                style={styles.trainerPhoto as any}
+                user={{
+                  avatarUrl: session.trainerPhoto,
+                  fullName: session.trainerName,
+                }}
+              />
               <View style={styles.trainerInfo}>
                 <Text style={styles.trainerName}>{session.trainerName || 'Trainer'}</Text>
                 <Text style={styles.trainerSpecialty}>{session.trainerSpecialty || 'Personal Trainer'}</Text>

@@ -174,13 +174,15 @@ export default function LeaderboardScreen() {
                     >
                       <TouchableOpacity onPress={() => router.push(`/trainee/trainer-detail?trainerId=${entry.userId}`)} activeOpacity={0.7}>
                       <View style={[s.podiumAvatar, { borderColor: medalColor }]}>
-                        {entry.avatar ? (
-                          <Image source={{ uri: entry.avatar }} style={s.podiumAvatarImg} />
-                        ) : (
-                          <LinearGradient colors={[C.teal, C.navy]} style={s.podiumAvatarFallback}>
-                            <Text style={s.podiumInitial}>{entry.fullName?.charAt(0) || '?'}</Text>
-                          </LinearGradient>
-                        )}
+                        {/* iter106as: unified avatar disc for podium ranks. */}
+                        <UserAvatar
+                          size={70}
+                          style={s.podiumAvatarImg as any}
+                          user={{
+                            avatarUrl: entry.avatar,
+                            fullName: entry.fullName,
+                          }}
+                        />
                         <View style={[s.medalBadge, { backgroundColor: medalColor }]}>
                           <Text style={s.medalText}>{realRank}</Text>
                         </View>

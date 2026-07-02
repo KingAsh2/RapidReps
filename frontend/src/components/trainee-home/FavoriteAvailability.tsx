@@ -1,6 +1,8 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+// iter106as: unified avatar disc.
+import { UserAvatar } from '../UserAvatar';
 
 interface Props {
   trainers: any[];
@@ -18,13 +20,15 @@ export const FavoriteAvailability = React.memo(({ trainers, onTrainerPress }: Pr
         data-testid={`fav-trainer-${t.trainerId}`}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
-          {t.trainerPhoto ? (
-            <Image source={{ uri: t.trainerPhoto }} style={styles.photo} />
-          ) : (
-            <View style={[styles.photo, { backgroundColor: '#1a2a5e', justifyContent: 'center', alignItems: 'center' }]}>
-              <Ionicons name="person" size={18} color="#fff" />
-            </View>
-          )}
+          {/* iter106as: unified avatar disc */}
+          <UserAvatar
+            size={44}
+            style={styles.photo as any}
+            user={{
+              avatarUrl: t.trainerPhoto,
+              fullName: t.trainerName,
+            }}
+          />
           <View style={{ flex: 1 }}>
             <Text style={styles.name}>{t.trainerName}</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
