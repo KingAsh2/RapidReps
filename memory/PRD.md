@@ -1,5 +1,23 @@
 # RapidReps PRD
 
+## 2026-07 — Iter106aq: Premium Generated-Avatar Fallback ✅
+
+Users without a profile photo now see a **gradient-monogram disc** tied to their `accentColor` (or a deterministic palette seed from name/email) instead of a flat colored pill. Zero new dependencies — uses `expo-linear-gradient` (already installed) plus pure-utility color derivation.
+
+**Added:**
+- `src/utils/avatar.ts` — new exported helper `avatarGradientFor(baseHex): [lightHex, darkHex]`, plus private `hexToRgb`, `rgbToHex`, `darken`, `lighten` helpers. All defensive against invalid inputs (fall back to platform orange).
+
+**Enhanced:**
+- `src/components/TrainerAvatar.tsx` fallback JSX now layers: (a) a two-stop `LinearGradient` from top-left (bright) to bottom-right (deep), (b) a soft top-left highlight overlay (rgba white 0.18) for depth, (c) the initials monogram with adaptive `letterSpacing` (1.2 for large discs ≥ 72 px, 0.4 otherwise) and a subtle text-shadow.
+
+**Verified by testing agent (iteration_112.json):**
+- 26/26 unit-contract cases pass for `avatarGradientFor` (real hex, short-hex, invalid fallbacks, black/white edge cases).
+- 27/27 non-regression cases from iter106ap still pass.
+- Source-tree inspection matches spec. No circular imports. `expo-linear-gradient` present in `package.json` and `node_modules`.
+- Backend non-regression clean.
+- Verdict: **GO — ship it.**
+
+
 ## 2026-07 — Iter106ap: Avatar Rendering Fix (Admin Portal + User Accounts) ✅
 
 User reported profile picture thumbnails/photo frames weren't showing up correctly in the admin portal or on user accounts. Root cause: (a) 25 seeded users carried placeholder URLs like `https://example.com/*` and `/api/files/some-photo.png` that 404 in production, causing blank circles instead of the intended initials fallback, and (b) the iter106am migration from RN `<Image>` to `expo-image` used the string-form `source={uri}` which has quirks with data: URIs on iOS.
