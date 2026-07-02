@@ -728,7 +728,13 @@ async def admin_get_users(
 @router.get("/admin/users/{user_id}")
 async def admin_get_user_detail(user_id: str, admin_user: dict = Depends(require_admin)):
     """Get detailed user information for admin"""
-    user = await db.users.find_one({'_id': ObjectId(user_id)})
+    # iter106au P1: `/api/admin/users/0` and other malformed IDs used to 500
+    # via bson.errors.InvalidId. Return 400 with a clean message instead.
+    try:
+        oid = ObjectId(user_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid user ID format")
+    user = await db.users.find_one({'_id': oid})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     

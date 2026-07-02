@@ -1937,3 +1937,30 @@ Server logs showed repeated `LOGIN FAIL` for `admin@rapidreps.com` because the u
 
 
 
+
+---
+
+## iter106au — EDGE_CASE_PLAYBOOK Batch 2 + Admin/UI polish (2026-07-02)
+
+**Shipped:**
+- **G2 Trainee no-show nudges** — `_job_trainee_nudges` fires push at T+0 ("Where's your trainer?") and T+5 ("Trainer is late — report no-show"). Idempotent via `_traineeNudgeT0Sent` / `_traineeNudgeT5Sent` markers.
+- **G3 Admin strike alert** — `_job_admin_strike_alerts` sends admin push when a trainer's `accountUnderReview` flips true. One-shot via `adminStrikeAlertSentAt`.
+- **G5 Refund retry queue** — new `db.failed_refunds` collection with `_job_refund_retry` (exponential backoff, 5-attempt cap, admin alert on exhaustion). Public `enqueue_failed_refund()` helper for cancel/no-show paths.
+- **G14 Start-time gate** — `POST /api/sessions/{id}/start-session` now rejects starts outside `[T-15min, T+30min]` (configurable).
+- **G15 End-duration cap** — `POST /api/sessions/{id}/end` clamps `sessionEndedAt` to `actualStart + durationMinutes × 2` (protects analytics from stale open sessions). Also rejects instant-complete (<1 min elapsed).
+- **G16 Late-start credit** — auto-issues 50% virtual credit to trainee when trainer starts ≥30 min late.
+- **P1 admin `/users/{id}` 400 fix** — invalid ObjectId now returns `400 Invalid user ID format` instead of 500.
+- **P2 TrainerCard migration** — `frontend/src/components/trainee-home/TrainerCard.tsx` now renders `<UserAvatar>` (expo-image + placeholder scrub + gradient fallback). Removed dead `avatar`/`avatarPlaceholder`/`avatarRing` styles.
+- **P2 DB avatar scrub** — `scripts/scrub_legacy_avatars.py` nullifies `example.com`/placeholder URLs across `users`, `trainer_profiles`, `trainee_profiles`. First run cleaned 25 rows.
+
+**Tests:** `/app/backend/tests/test_iter106au_batch_2.py` — 12 new tests, all passing. Full suite (Batch 1 + Batch 2) = 26/26 green.
+
+**Env knobs added:** `ENABLE_TRAINEE_NUDGES`, `TRAINEE_NUDGE_T0_MIN`, `TRAINEE_NUDGE_T5_MIN`, `ENABLE_ADMIN_STRIKE_ALERT`, `ENABLE_START_TIME_GATE`, `START_EARLY_WINDOW_MIN`, `START_LATE_WINDOW_MIN`, `LATE_START_CREDIT_THRESHOLD_MIN`, `ENABLE_END_DURATION_CAP`, `END_DURATION_CAP_MULTIPLIER`, `ENABLE_REFUND_RETRY`, `REFUND_RETRY_MAX_ATTEMPTS`, `REFUND_RETRY_BATCH_SIZE`, `REFUND_RETRY_BASE_DELAY_SEC`.
+
+**Remaining backlog (unchanged):**
+- P1: Swap Stripe test → live keys
+- P1: Real SendGrid API key
+- P1: Trainer KYC before manual payouts
+- P2: Refactor `PreviewBanner` into global layout wrapper
+- P2: EDGE_CASE_PLAYBOOK Batch 3 (G8-G10 GPS accuracy, G20-G22 SMS fallback, G23-G27 offline handling)
+

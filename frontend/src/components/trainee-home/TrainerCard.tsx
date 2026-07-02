@@ -1,9 +1,10 @@
 import React, { useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Animated, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { TrainerVibePlayer } from '../TrainerVibePlayer';
 import { PersonalityTagBadge } from '../PersonalityTagBadge';
+import { UserAvatar } from '../UserAvatar';
 import { resolveSessionPriceCents } from '../../utils/sessionPricing';
 
 const { width } = Dimensions.get('window');
@@ -133,15 +134,8 @@ const TrainerCardImpl = ({ trainer, cardAnim, onViewProfile, onAvatarLongPress }
               activeOpacity={0.7}
               data-testid={`trainer-avatar-${trainer.userId}`}
             >
-              {trainer.avatarUrl ? (
-                <Image source={{ uri: trainer.avatarUrl }} style={styles.avatar} />
-              ) : (
-                <LinearGradient colors={['#FF6A00', '#FF3D00']} style={styles.avatarPlaceholder}>
-                  <Ionicons name="person" size={32} color="#FFFFFF" />
-                </LinearGradient>
-              )}
-              {/* Avatar glow ring */}
-              <View style={styles.avatarRing} />
+              {/* iter106au: use UserAvatar (expo-image + placeholder scrub + gradient fallback). */}
+              <UserAvatar user={trainer} size={68} ring={!!trainer.isAvailable} />
               {trainer.isVerified && (
                 <View style={styles.verifiedBadge}>
                   <LinearGradient colors={['#FF6A00', '#FF9F1C']} style={styles.verifiedGradient}>
@@ -324,30 +318,6 @@ const styles = StyleSheet.create({
   avatarContainer: {
     position: 'relative',
     marginRight: 14,
-  },
-  avatar: {
-    width: 68,
-    height: 68,
-    borderRadius: 22,
-    borderWidth: 2,
-    borderColor: 'rgba(255,106,0,0.25)',
-  },
-  avatarPlaceholder: {
-    width: 68,
-    height: 68,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarRing: {
-    position: 'absolute',
-    top: -3,
-    left: -3,
-    right: -3,
-    bottom: -3,
-    borderRadius: 25,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,106,0,0.12)',
   },
   verifiedBadge: {
     position: 'absolute',

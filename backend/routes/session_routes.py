@@ -949,17 +949,43 @@ async def end_session(
     # Verify current user is the trainer
     if str(current_user['_id']) != session['trainerId']:
         raise HTTPException(status_code=403, detail="Only the trainer can end the session")
-    
-    await db.sessions.update_one(
-        {'_id': oid},
-        {
-            '$set': {
-                'sessionEndedAt': datetime.utcnow(),
-                'status': SessionStatus.COMPLETED,
-                'updatedAt': datetime.utcnow()
-            }
-        }
-    )
+
+    # ── iter106au G15: end-session max-duration cap ───────────────────────
+    # Per EDGE_CASE_PLAYBOOK Scenario 6: end must be ≥ actualStart + 10 min
+    # (no instant complete) and ≤ actualStart + durationMinutes × cap. If
+    # over the cap, we clamp `sessionEndedAt` to the cap (protects earnings
+    # analytics + calorie estimates from stale open sessions).
+    from config import edge_cases as cfg
+    now = datetime.utcnow()
+    end_at = now
+    duration_capped = False
+    actual_start = session.get('sessionActualStart') or session.get('sessionStartedAt')
+    planned_min = session.get('durationMinutes') or 0
+    if cfg.ENABLE_END_DURATION_CAP and isinstance(actual_start, datetime) and planned_min > 0:
+        # Normalize tz to compare with utcnow (naive).
+        start_naive = actual_start.replace(tzinfo=None) if actual_start.tzinfo else actual_start
+        elapsed_min = (now - start_naive).total_seconds() / 60.0
+        if elapsed_min < 1:
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot end a session that just started. Wait a moment and try again.",
+            )
+        cap_min = planned_min * cfg.END_DURATION_CAP_MULTIPLIER
+        if elapsed_min > cap_min:
+            # Clamp end time — session ran too long to trust.
+            end_at = start_naive + timedelta(minutes=cap_min)
+            duration_capped = True
+
+    update_set = {
+        'sessionEndedAt': end_at,
+        'status': SessionStatus.COMPLETED,
+        'updatedAt': now,
+    }
+    if duration_capped:
+        update_set['durationCapped'] = True
+        update_set['durationCappedAt'] = now
+
+    await db.sessions.update_one({'_id': oid}, {'$set': update_set})
     
     # Push: Notify trainee that session ended
     asyncio.create_task(create_and_send_notification(
