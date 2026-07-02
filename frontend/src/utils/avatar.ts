@@ -26,6 +26,32 @@ type AvatarBearer = {
 };
 
 /**
+ * iter106ap (v2, fixed after testing-agent iteration_110 review): Known
+ * placeholder patterns that leaked into production data during earlier test
+ * iterations. Returns true when the URL should be treated as "no photo".
+ *
+ * Exported so TrainerAvatar can use the SAME check without duplicating the
+ * regex — a maintenance trap the previous version created.
+ *
+ * Bug fixed: the previous regex `(^|\.)example\.com\b` failed for the
+ * canonical `https://example.com/...` form because the char before
+ * `example.com` is `/`, not `.` or start-of-string. New pattern accepts
+ * `/`, `:`, `@`, `.`, or start-of-string as the pre-boundary character.
+ * Also hardens the some-photo.png check against `?`/`#` suffixes.
+ */
+export function isPlaceholderAvatarUrl(url: string | null | undefined): boolean {
+  if (!url) return false;
+  const trimmed = url.trim();
+  if (trimmed === '') return false;
+  // example.com in hostname position: covers https://example.com/x,
+  // http://example.com/x, sub.example.com/x, user@example.com/x.
+  if (/(?:^|[./:@])example\.com(?:[/:?#]|$)/i.test(trimmed)) return true;
+  // Legacy /some-photo.png stub, tolerant of query-string/fragment.
+  if (/\/some-photo\.png(?:[?#]|$)/i.test(trimmed)) return true;
+  return false;
+}
+
+/**
  * Returns a usable URL or null. Promotes relative `/api/files/...` to absolute
  * via EXPO_PUBLIC_BACKEND_URL so Image components can render it on web/native.
  *
@@ -47,11 +73,11 @@ export function resolveAvatarUrl(u?: AvatarBearer | null): string | null {
   const trimmed = raw.trim();
   if (trimmed === '') return null;
 
-  // iter106ap: hard-drop known-bad placeholders so we go straight to initials.
-  if (/(^|\.)example\.com\b/i.test(trimmed)) return null;
-  if (trimmed.endsWith('/some-photo.png')) return null;
+  // iter106ap: hard-drop known-bad placeholders so we go straight to initials
+  // and skip the wasted network round-trip + flash-of-blank-circle.
+  if (isPlaceholderAvatarUrl(trimmed)) return null;
 
-  // Absolute URLs (http/https/data/file/content) — return as-is.
+  // Absolute URLs (http/https/data/file/content/blob) — return as-is.
   if (/^(https?|data|file|content|blob):/i.test(trimmed)) return trimmed;
 
   // Backend-relative path — promote to absolute.

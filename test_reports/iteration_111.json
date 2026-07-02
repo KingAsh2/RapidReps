@@ -1,0 +1,98 @@
+{
+  "summary": "iter106ap v2 avatar-placeholder hotfix VERIFIED. Executed 27-case unit-test matrix at /tmp/test_avatar_helper.mjs — 27/27 PASS, 0 fail. All three previously-red iteration_110 cases now pass (https://example.com/foo.png → null, http://example.com/x.jpg → null, first-field-wins short-circuit → null). No circular import between utils/avatar.ts and components/TrainerAvatar.tsx. Backend non-regression clean: /api/ 200, admin login 200, admin/users/{test_trainer_id} 200 with 1203-char data:image/jpeg;base64 payload intact on user.profilePhoto and trainerProfile.avatarUrl/profilePhoto. GO verdict.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "unit_test_matrix": {
+    "file": "/tmp/test_avatar_helper.mjs",
+    "total": 27,
+    "passed": 27,
+    "failed": 0,
+    "red_cases": [],
+    "cases": [
+      {"id": "01", "name": "bare https://example.com", "expected": true, "actual": true, "result": "PASS"},
+      {"id": "02", "name": "https://example.com/foo.png", "expected": true, "actual": true, "result": "PASS", "note": "iteration_110 red case — now GREEN"},
+      {"id": "03", "name": "http://example.com/x.jpg", "expected": true, "actual": true, "result": "PASS", "note": "iteration_110 red case — now GREEN"},
+      {"id": "04", "name": "subdomain cdn.example.com/x.png", "expected": true, "actual": true, "result": "PASS"},
+      {"id": "05", "name": "https://example.com/x?y=z (with query)", "expected": true, "actual": true, "result": "PASS"},
+      {"id": "06", "name": "https://example.com/x#a (fragment)", "expected": true, "actual": true, "result": "PASS"},
+      {"id": "07", "name": "https://example.com:8080/x (port)", "expected": true, "actual": true, "result": "PASS"},
+      {"id": "08", "name": "user@example.com/x (userinfo)", "expected": true, "actual": true, "result": "PASS"},
+      {"id": "09", "name": "/api/files/some-photo.png", "expected": true, "actual": true, "result": "PASS"},
+      {"id": "10", "name": "/api/files/some-photo.png?v=2", "expected": true, "actual": true, "result": "PASS"},
+      {"id": "11", "name": "/api/files/some-photo.png#anchor", "expected": true, "actual": true, "result": "PASS"},
+      {"id": "12", "name": "adjacent hostname example.company.com/x.png", "expected": false, "actual": false, "result": "PASS", "note": "anti-regression negative"},
+      {"id": "13", "name": "real data:image/jpeg;base64 URI", "expected": false, "actual": false, "result": "PASS"},
+      {"id": "14", "name": "https://real.cdn.io/photo.jpg", "expected": false, "actual": false, "result": "PASS"},
+      {"id": "15", "name": "/api/files/real.jpg", "expected": false, "actual": false, "result": "PASS"},
+      {"id": "16", "name": "null", "expected": false, "actual": false, "result": "PASS"},
+      {"id": "17", "name": "empty string", "expected": false, "actual": false, "result": "PASS"},
+      {"id": "18", "name": "whitespace-only", "expected": false, "actual": false, "result": "PASS"},
+      {"id": "19", "name": "undefined", "expected": false, "actual": false, "result": "PASS"},
+      {"id": "20", "name": "https://cdn.io/example.com.jpg (name-in-path)", "expected": false, "actual": false, "result": "PASS", "note": "anti-regression negative — the trailing char after 'example.com' is '.' (not a boundary char), so it correctly does NOT match"},
+      {"id": "21", "name": "resolveAvatarUrl({avatarUrl:'https://example.com/foo.png'}) → null", "expected": null, "actual": null, "result": "PASS", "note": "iteration_110 red case — now GREEN"},
+      {"id": "22", "name": "resolveAvatarUrl({avatarUrl:'http://example.com/x.jpg'}) → null", "expected": null, "actual": null, "result": "PASS", "note": "iteration_110 red case — now GREEN"},
+      {"id": "23", "name": "first-field-wins: bad avatarUrl beats good profilePhoto → null", "expected": null, "actual": null, "result": "PASS", "note": "iteration_110 red case — intentional short-circuit"},
+      {"id": "24", "name": "real data URI passes through resolveAvatarUrl", "expected": "data:image/jpeg;base64,/9j/AAAA", "actual": "data:image/jpeg;base64,/9j/AAAA", "result": "PASS"},
+      {"id": "25", "name": "real https URL passes through", "expected": "https://real.cdn.io/photo.jpg", "actual": "https://real.cdn.io/photo.jpg", "result": "PASS"},
+      {"id": "26", "name": "relative /api/files/real.jpg promoted with API_URL prefix", "expected": "/api/files/real.jpg (with prefix)", "actual": "matched", "result": "PASS"},
+      {"id": "27", "name": "resolveAvatarUrl(null) → null", "expected": null, "actual": null, "result": "PASS"}
+    ]
+  },
+  "circular_import_check": {
+    "utils_avatar_imports_from_components": false,
+    "trainer_avatar_imports_from_utils": true,
+    "import_line": "import { isPlaceholderAvatarUrl } from '../utils/avatar';  // TrainerAvatar.tsx line 28",
+    "verdict": "CLEAN — no circular dependency"
+  },
+  "backend_non_regression": {
+    "GET /api/": {"status": 200},
+    "POST /api/auth/login (admin@rapidreps.com)": {"status": 200, "token_len": 195},
+    "GET /api/admin/users/{test_trainer_id}": {
+      "status": 200,
+      "bytes": 63141,
+      "data_uri_present": true,
+      "user.profilePhoto.len": 1203,
+      "trainerProfile.avatarUrl.len": 1203,
+      "trainerProfile.profilePhoto.len": 1203,
+      "trainerProfile.photoFileUri": "/api/files/some-photo.png (still present — will now be correctly scrubbed to null by the new helper)"
+    }
+  },
+  "source_review": {
+    "utils/avatar.ts": {
+      "isPlaceholderAvatarUrl_exported": true,
+      "regex": "/(?:^|[./:@])example\\.com(?:[/:?#]|$)/i",
+      "some_photo_regex": "/\\/some-photo\\.png(?:[?#]|$)/i",
+      "resolveAvatarUrl_uses_helper": true,
+      "line_count": 109
+    },
+    "components/TrainerAvatar.tsx": {
+      "imports_helper_from_utils": true,
+      "no_duplicated_regex": true,
+      "uses_isPlaceholderAvatarUrl_at_line": 96
+    }
+  },
+  "test_report_links": ["/tmp/test_avatar_helper.mjs", "/app/test_reports/iteration_111.json"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Fix confirmed source-correct: single-source-of-truth via exported isPlaceholderAvatarUrl in utils/avatar.ts.",
+    "DRY violation from iteration_110 is resolved — TrainerAvatar.tsx line 96 reuses the helper (no duplicated regex).",
+    "New regex `(?:^|[./:@])example\\.com(?:[/:?#]|$)/i` correctly handles the canonical `https://example.com/foo.png` form (previous `(^|\\.)example\\.com\\b` failed because `/` was neither `^` nor `.`).",
+    "some-photo.png stub is now query/fragment tolerant — matches the real seeded value trainerProfile.photoFileUri='/api/files/some-photo.png' observed in production.",
+    "No further action needed for this hotfix. Pod-stale-dist means the fix ships whenever Metro rebuilds; no runtime UI test is required per standing limitation."
+  ],
+  "updated_files": ["/tmp/test_avatar_helper.mjs (recreated — prior agent did not persist)"],
+  "success_rate": {"backend": "100%", "frontend": "100% (unit contract)"},
+  "test_credentials": "admin@rapidreps.com / admin123, test_trainer_iter25@test.com / Test123! (both verified working)",
+  "seed_data_creation": "none",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "iter106ap v2 avatar-placeholder hotfix is GREEN. 27/27 unit cases pass, backend non-regression clean. Playwright/Metro validation not required per standing pod stale-dist limitation. No open action items.",
+  "verdict": "GO — iter106ap v2 avatar-placeholder hotfix verified. Ship it."
+}

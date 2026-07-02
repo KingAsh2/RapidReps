@@ -25,6 +25,7 @@ import { View, Text, StyleSheet, Animated, AppState } from 'react-native';
 // This is a primary fix for the iOS WatchdogTermination crash where many
 // avatars at once were exceeding the jetsam memory threshold.
 import { Image as ExpoImage } from 'expo-image';
+import { isPlaceholderAvatarUrl } from '../utils/avatar';
 
 const DEFAULT_RING = '#FF5F1F'; // platform orange
 
@@ -89,7 +90,10 @@ export const TrainerAvatar: React.FC<Props> = ({
   // placeholder URLs (example.com) are treated as "no photo" so we skip the
   // network round-trip and go straight to initials.
   const cleaned = typeof uri === 'string' ? uri.trim() : '';
-  const isPlaceholder = /(^|\.)example\.com\b/i.test(cleaned) || cleaned.endsWith('/some-photo.png');
+  // iter106ap (v2, fixed after testing-agent iteration_110): use the shared
+  // helper so this file and resolveAvatarUrl stay in lockstep. Previously
+  // duplicated a fragile regex here that missed `https://example.com/...`.
+  const isPlaceholder = isPlaceholderAvatarUrl(cleaned);
   const showPhoto = !!cleaned && !isPlaceholder && !imgFailed;
 
   return (
