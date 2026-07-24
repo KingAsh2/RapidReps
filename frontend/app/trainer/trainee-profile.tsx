@@ -28,7 +28,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Video, ResizeMode } from 'expo-av';
 import { trainerAPI, safetyAPI } from '../../src/services/api';
 import { useAlert } from '../../src/contexts/AlertContext';
-import { PreviewBanner } from '../../src/components/PreviewBanner';
 import { toast } from '../../src/utils/toast';
 import { haptic } from '../../src/utils/haptics';
 import { SocialLinksDisplay } from '../../src/components/ProfileSections';
@@ -263,9 +262,7 @@ export default function TraineeProfileScreen() {
   return (
     <View style={styles.root}>
       <FloatingOrangeBg />
-      {/* iter106am: PREVIEW banner — visible when the trainee tapped
-          "Preview as Visitor" on their own profile (preview=1). */}
-      <PreviewBanner visible={params.preview === '1' || params.preview === 'true'} accent={accent} />
+      {/* iter106av: PreviewBanner now mounted globally in _layout.tsx. */}
       <SafeAreaView style={styles.safe} edges={['top']}>
         {/* Header */}
         <View style={styles.header}>

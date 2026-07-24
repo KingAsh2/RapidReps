@@ -519,7 +519,12 @@ export default function TraineeProfileScreen() {
                   thing to a "how do others see me?" sanity check. */}
               {!isEditing && user?.id && (
                 <TouchableOpacity
-                  onPress={() => router.push(`/trainer/trainee-profile?traineeId=${user.id}&preview=1` as any)}
+                  onPress={() => {
+                    // iter106av: forward user accent so the global preview
+                    // banner tints correctly (falls back to orange if absent).
+                    const acc = user?.accentColor ? `&previewAccent=${encodeURIComponent(user.accentColor)}` : '';
+                    router.push(`/trainer/trainee-profile?traineeId=${user.id}&preview=1${acc}` as any);
+                  }}
                   style={[styles.shareProfileBtn, { marginTop: 10, backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)' }]}
                   data-testid="preview-profile-btn"
                 >

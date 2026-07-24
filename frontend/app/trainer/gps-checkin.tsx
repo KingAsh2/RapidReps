@@ -55,10 +55,21 @@ export default function GpsCheckinCard({ sessionId, isTrainer, onCheckinComplete
       }
 
       const location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+
+      // iter106av G9: reject a check-in when device GPS is too noisy.
+      // A ±500m accuracy circle can false-positive an out-of-range check-in.
+      const acc = location.coords.accuracy ?? undefined;
+      if (typeof acc === 'number' && acc > 100) {
+        toast.error(`GPS signal too weak (±${Math.round(acc)}m). Move outside or near a window and retry.`);
+        setLoading(false);
+        return;
+      }
+
       const headers = await getHeaders();
       const res = await api.post(`/sessions/${sessionId}/gps-checkin`, {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
+        accuracy: acc,
       }, { headers });
 
       setCheckinResult(res.data);

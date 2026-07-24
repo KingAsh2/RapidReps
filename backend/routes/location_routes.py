@@ -176,11 +176,23 @@ class GPSUpdate(BaseModel):
     sessionId: str
 
 @router.post("/sessions/{session_id}/gps-update")
-async def session_gps_update(session_id: str, latitude: float, longitude: float, accuracy: float = 0, current_user: dict = Depends(get_current_user)):
+async def session_gps_update(
+    session_id: str,
+    latitude: float,
+    longitude: float,
+    accuracy: float = 0,
+    client_timestamp: Optional[str] = None,
+    current_user: dict = Depends(get_current_user),
+):
     """
     Real-time GPS update during a session.
     Called every 5s (en_route) or 15s (in_progress).
     Triggers alerts for distance violations and stale movement.
+
+    iter106av G27: When an offline client flushes a queued ping, it can pass
+    `client_timestamp` (ISO-8601). Server compares it against the last stored
+    clientTimestamp for this session+user and rejects strictly-older values
+    with 409 so a stale queued position can't overwrite a newer one.
     """
     try:
         oid = ObjectId(session_id)
@@ -201,6 +213,26 @@ async def session_gps_update(session_id: str, latitude: float, longitude: float,
     now = datetime.utcnow()
     alerts = []
 
+    # iter106av G27: parse + replay-protect the client timestamp.
+    client_ts_dt: Optional[datetime] = None
+    if client_timestamp:
+        try:
+            # Accept "2026-07-02T14:03:00Z" or "...+00:00"; strip Z for fromisoformat.
+            client_ts_dt = datetime.fromisoformat(client_timestamp.replace('Z', '+00:00'))
+            if client_ts_dt.tzinfo is not None:
+                client_ts_dt = client_ts_dt.astimezone(tz=None).replace(tzinfo=None)
+        except ValueError:
+            raise HTTPException(400, "Invalid client_timestamp — must be ISO-8601")
+        last = await db.session_gps_tracks.find_one(
+            {'sessionId': session_id, 'userId': user_id, 'clientTimestamp': {'$exists': True}},
+            sort=[('clientTimestamp', -1)],
+        )
+        if last and last.get('clientTimestamp') and client_ts_dt <= last['clientTimestamp']:
+            raise HTTPException(
+                409,
+                f"Stale GPS ping — a newer position has already been recorded ({last['clientTimestamp'].isoformat()})",
+            )
+
     # Low GPS accuracy warning
     if accuracy and accuracy > 50:
         alerts.append({
@@ -219,6 +251,8 @@ async def session_gps_update(session_id: str, latitude: float, longitude: float,
         "accuracy": accuracy,
         "timestamp": now,
     }
+    if client_ts_dt is not None:
+        gps_doc["clientTimestamp"] = client_ts_dt
     await db.session_gps_tracks.insert_one(gps_doc)
 
     # iter106h: fan the new position out to any WebSocket clients connected

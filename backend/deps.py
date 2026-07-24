@@ -374,6 +374,7 @@ async def send_push_notification(user_id: str, title: str, body: str, data: dict
             return
         unread_count = await db.notifications.count_documents({'userId': user_id, 'read': False})
         messages = []
+        token_by_str: dict = {}
         for t in tokens:
             msg = {
                 "to": t['token'], "sound": "default", "title": title, "body": body,
@@ -382,8 +383,35 @@ async def send_push_notification(user_id: str, title: str, body: str, data: dict
             if data:
                 msg["data"] = data
             messages.append(msg)
+            token_by_str[t['token']] = t
         async with aiohttp.ClientSession() as session:
-            await session.post(EXPO_PUSH_URL, json=messages, headers={"Content-Type": "application/json"})
+            async with session.post(
+                EXPO_PUSH_URL, json=messages,
+                headers={"Content-Type": "application/json"},
+            ) as resp:
+                # iter106av G21: parse Expo tickets — DeviceNotRegistered means
+                # the token is dead (app uninstalled or notifications revoked).
+                # Two strikes and we delete the token so we stop hammering.
+                try:
+                    body_json = await resp.json()
+                except Exception:
+                    body_json = None
+                if body_json and isinstance(body_json.get('data'), list):
+                    for msg, ticket in zip(messages, body_json['data']):
+                        if not isinstance(ticket, dict):
+                            continue
+                        if ticket.get('status') == 'error' and \
+                           ticket.get('details', {}).get('error') == 'DeviceNotRegistered':
+                            dead_token = msg['to']
+                            existing = token_by_str.get(dead_token) or {}
+                            strikes = existing.get('deadStrikes', 0) + 1
+                            if strikes >= 2:
+                                await db.push_tokens.delete_one({'token': dead_token})
+                            else:
+                                await db.push_tokens.update_one(
+                                    {'token': dead_token},
+                                    {'$set': {'deadStrikes': strikes, 'lastDeadAt': datetime.utcnow()}},
+                                )
     except Exception as e:
         logging.getLogger(__name__).warning(f"Push notification failed for user {user_id}: {e}")
 

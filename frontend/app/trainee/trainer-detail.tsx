@@ -28,7 +28,6 @@ import { haptic } from '../../src/utils/haptics';
 import { resolveSessionPriceCents } from '../../src/utils/sessionPricing';
 import InstagramSection from '../../src/components/InstagramSection';
 import { TrainerVibePlayer } from '../../src/components/TrainerVibePlayer';
-import { PreviewBanner } from '../../src/components/PreviewBanner';
 import { HighlightReel } from '../../src/components/HighlightReel';
 import { TrainerHeroVideoPreview } from '../../src/components/TrainerHeroVideoPreview';
 import { PersonalityTagBadge } from '../../src/components/PersonalityTagBadge';
@@ -576,9 +575,8 @@ export default function TrainerDetailScreen() {
   return (
     <View style={styles.container}>
       <RapidBg variant="trainee-trainer-detail" style={styles.headerGradient} />
-      {/* iter106am: PREVIEW banner — visible only when this screen was opened
-          from the trainer's own profile via "Preview as Visitor" (preview=1). */}
-      <PreviewBanner visible={preview === '1' || preview === 'true'} accent={accent} />
+      {/* iter106av: PreviewBanner now mounted globally in _layout.tsx via
+          GlobalPreviewBanner (reads ?preview=1 from URL). */}
 
       <SafeAreaView style={styles.safeArea} edges={['top']}>
       <FloatingOrangeBg />

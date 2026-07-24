@@ -13,6 +13,9 @@ import IntroVideoSplash from '../src/components/IntroVideoSplash';
 import FloatingOrangeBg from '../src/components/FloatingOrangeBg';
 // iter102k: user-chosen brand color glow around every screen + menu
 import AccentGlowOverlay from '../src/components/AccentGlowOverlay';
+// iter106av: single global mount for the "?preview=1" banner (replaces
+// per-screen <PreviewBanner /> copy-paste).
+import { GlobalPreviewBanner } from '../src/components/GlobalPreviewBanner';
 import Toast, { BaseToast } from 'react-native-toast-message';
 import * as Sentry from '@sentry/react-native';
 import { useFonts, Oswald_700Bold, Oswald_600SemiBold, Oswald_400Regular } from '@expo-google-fonts/oswald';
@@ -139,6 +142,8 @@ function RootLayout() {
                       around all four edges + the bottom menu. Reads
                       user.accentColor from AuthContext — defaults to orange. */}
                   {introDone && <AccentGlowOverlay />}
+                  {/* iter106av: global preview banner replaces per-screen mounts. */}
+                  {introDone && <GlobalPreviewBanner />}
                 </AlertProvider>
               </SoundProvider>
             </NotificationProvider>

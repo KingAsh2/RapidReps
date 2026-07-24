@@ -371,7 +371,11 @@ export default function TrainerProfileScreen() {
                     clients. */}
                 {user?.id && (
                   <TouchableOpacity
-                    onPress={() => router.push(`/trainee/trainer-detail?trainerId=${user.id}&preview=1` as any)}
+                    onPress={() => {
+                      // iter106av: forward user accent so the global preview banner tints correctly.
+                      const acc = user?.accentColor ? `&previewAccent=${encodeURIComponent(user.accentColor)}` : '';
+                      router.push(`/trainee/trainer-detail?trainerId=${user.id}&preview=1${acc}` as any);
+                    }}
                     style={[
                       styles.shareProfileBtn,
                       {

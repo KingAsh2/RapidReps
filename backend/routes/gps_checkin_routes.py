@@ -19,6 +19,10 @@ router = APIRouter(prefix="/api")
 class GpsCheckinRequest(BaseModel):
     latitude: float
     longitude: float
+    # iter106av G8: optional device GPS accuracy in meters. When present,
+    # backend uses (distance + accuracy) for the radius check and rejects
+    # readings above MAX_GPS_ACCURACY_METERS as too noisy to trust.
+    accuracy: Optional[float] = None
 
 
 class GpsRadiusUpdate(BaseModel):
@@ -70,6 +74,15 @@ async def gps_checkin(session_id: str, checkin: GpsCheckinRequest, current_user:
     if session['status'] not in [SessionStatus.CONFIRMED, SessionStatus.EN_ROUTE, SessionStatus.IN_PROGRESS]:
         raise HTTPException(400, f"Cannot check in to session with status '{session['status']}'")
 
+    # iter106av G8: reject noisy GPS. Devices in tunnels/underground gyms
+    # can report ±500m accuracy — trusting that would false-positive check-ins.
+    MAX_GPS_ACCURACY_METERS = 100
+    if checkin.accuracy is not None and checkin.accuracy > MAX_GPS_ACCURACY_METERS:
+        raise HTTPException(
+            400,
+            f"Your GPS signal is too weak (±{int(checkin.accuracy)}m). Move outside or near a window and try again.",
+        )
+
     # Get session location
     session_lat = session.get('locationLatitude') or session.get('traineeLatitude')
     session_lon = session.get('locationLongitude') or session.get('traineeLongitude')
@@ -81,7 +94,14 @@ async def gps_checkin(session_id: str, checkin: GpsCheckinRequest, current_user:
 
     if session_lat and session_lon:
         distance_miles = haversine_miles(checkin.latitude, checkin.longitude, session_lat, session_lon)
-        within_radius = distance_miles <= radius_miles
+        # iter106av G8: bake accuracy into the check. If the device is
+        # ±80m sure of its position and we're 79m from the pin, that's a
+        # possible miss — treat it as "within" only if (dist + accuracy) ≤ radius.
+        effective_distance = distance_miles
+        if checkin.accuracy is not None:
+            accuracy_miles = checkin.accuracy / 1609.34  # meters → miles
+            effective_distance = distance_miles + accuracy_miles
+        within_radius = effective_distance <= radius_miles
 
     # Store check-in
     role_prefix = 'trainer' if is_trainer else 'trainee'

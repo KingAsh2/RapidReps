@@ -1964,3 +1964,28 @@ Server logs showed repeated `LOGIN FAIL` for `admin@rapidreps.com` because the u
 - P2: Refactor `PreviewBanner` into global layout wrapper
 - P2: EDGE_CASE_PLAYBOOK Batch 3 (G8-G10 GPS accuracy, G20-G22 SMS fallback, G23-G27 offline handling)
 
+
+
+---
+
+## iter106av — Batch 3 Slice A + Bundle-ID fix (2026-07-02)
+
+**Bundle ID fix (unblocked build):**
+- `frontend/app.json` `ios.bundleIdentifier` + `android.package` changed from `com.kingash.rapidreps` → `app.emergent.trainer-finder-9f806c77e` to match the pre-existing App Store Connect record (Apple ID `6758503993`, name "RapidReps"). Resolves "Bundle ID and App Name already existing" error on Generate New Build. `.maestro/*.yaml` (6 files) updated to match.
+
+**Batch 3 Slice A shipped:**
+- **G8** — `GpsCheckinRequest` accepts optional `accuracy` (meters). Backend rejects when accuracy > 100m (weak GPS) and uses `(distance + accuracy)` for the radius check so ±80m readings don't false-positive.
+- **G9** — Frontend `trainer/gps-checkin.tsx` gates check-in submission when `location.coords.accuracy > 100`, shows a "Move outside or near a window" hint, and forwards accuracy to backend.
+- **G21** — `send_push_notification` parses Expo tickets; tokens returning `DeviceNotRegistered` twice are deleted from `db.push_tokens` (idempotent via `deadStrikes` counter).
+- **G27** — `POST /api/sessions/{id}/gps-update` accepts optional `client_timestamp` (ISO-8601). Rejects strictly-older values with `409 Conflict` so a stale queued ping (future Slice B offline queue) can't overwrite a newer position.
+- **PreviewBanner refactor** — new `<GlobalPreviewBanner />` mounted once in `app/_layout.tsx`; reads `?preview=1` from URL params. Removed per-screen mounts from `trainee/trainer-detail.tsx` and `trainer/trainee-profile.tsx`. Callers pass `&previewAccent=…` so tint is preserved.
+
+**Tests:** `/app/backend/tests/test_iter106av_batch_3_slice_a.py` — 6 new tests. Full edge-case suite (Batch 1 + Batch 2 + Batch 3 Slice A) = **32/32 passing**.
+
+**Remaining backlog:**
+- P1: Swap Stripe test → live keys
+- P1: Real SendGrid API key (currently mocked)
+- P1: Trainer KYC before manual payouts
+- P2: Batch 3 Slice B (G23-G26 offline handling — WS reconnect, NetInfo, AsyncStorage queue, offline banner)
+- P2: Batch 3 Slice C (G20 Twilio SMS + real SendGrid fallback, G22 test-push diagnostic — needs keys)
+- P2: G10 GPS spoofing detection (deferred per playbook)
