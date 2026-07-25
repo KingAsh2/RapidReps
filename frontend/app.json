@@ -37,7 +37,7 @@
         "backgroundColor": "#000000"
       },
       "edgeToEdgeEnabled": true,
-      "package": "app.emergent.trainer-finder-9f806c77e",
+      "package": "app.emergent.trainerfinder9f806c77e",
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
