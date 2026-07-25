@@ -102,7 +102,6 @@ if (Platform.OS === 'web' || !STRIPE_PUBLISHABLE_KEY) {
   StripeProviderComponent = ({ children }) => (
     <StripeProvider
       publishableKey={STRIPE_PUBLISHABLE_KEY}
-      merchantIdentifier="merchant.com.kingash.rapidreps"
       urlScheme="rapidreps"
     >
       {children}

@@ -99,7 +99,6 @@
       [
         "@stripe/stripe-react-native",
         {
-          "merchantIdentifier": "merchant.com.kingash.rapidreps",
           "enableGooglePay": true
         }
       ],
