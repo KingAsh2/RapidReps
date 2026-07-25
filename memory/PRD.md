@@ -2016,3 +2016,19 @@ Server logs showed repeated `LOGIN FAIL` for `admin@rapidreps.com` because the u
 - P2: Admin frontend for KYC queue (routes exist)
 - P2: G10 GPS spoofing (deferred per playbook)
 
+
+
+---
+
+## iter106ax — Ladder-inspired UI refresh: Phase 1 foundation (2026-07-02)
+
+**Shipped:**
+- Fonts installed + loaded (Instrument Serif + Inter Tight 400/500/600/700/900) in `app/_layout.tsx`.
+- Premium tokens: `src/theme/ladder.ts` (`LADDER`, `LADDER_FONTS`, `LADDER_TYPE`, `LADDER_MOTION`).
+- Button primitive: `src/components/ladder/LadderButton.tsx` (4 variants × 3 sizes, haptic on primary/destructive).
+- First redesigned screen: `app/trainer/kyc.tsx` with editorial serif hero.
+- Migration docs: `/app/design_guidelines.md` (checklist + rules).
+
+**Rules:** Never touch `src/theme.ts` / `src/theme/premium.ts` — legacy screens depend on them. Migrate one screen at a time using `LADDER`/`LADDER_TYPE`/`LadderButton`.
+
+**Refresh queue:** discovery → trainer detail → auth → booking → earnings → tracking → profile edit → admin dashboard.

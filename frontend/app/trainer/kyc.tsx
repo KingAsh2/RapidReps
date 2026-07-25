@@ -23,14 +23,12 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { useAlert } from '../../src/contexts/AlertContext';
+// iter106ax: Ladder-inspired premium tokens + button.
+import { LADDER, LADDER_TYPE } from '../../src/theme/ladder';
+import { LadderButton } from '../../src/components/ladder/LadderButton';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 const api = axios.create({ baseURL: `${API_URL}/api` });
-
-const COLORS = {
-  bg: '#0A0E1A', card: '#141929', ink: '#FFFFFF', mute: '#8790A6',
-  accent: '#FF6A00', good: '#00C853', bad: '#FF4757', warn: '#FFA502',
-};
 
 type KycStatus = 'not_submitted' | 'submitted' | 'approved' | 'rejected';
 
@@ -111,7 +109,7 @@ export default function TrainerKycScreen() {
   if (loading) {
     return (
       <SafeAreaView style={styles.root}>
-        <ActivityIndicator color={COLORS.accent} size="large" />
+        <ActivityIndicator color={LADDER.accent} size="large" />
       </SafeAreaView>
     );
   }
@@ -121,36 +119,52 @@ export default function TrainerKycScreen() {
   return (
     <SafeAreaView style={styles.root}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} data-testid="kyc-back-btn">
-          <Ionicons name="chevron-back" size={26} color={COLORS.ink} />
+        <TouchableOpacity onPress={() => router.back()} data-testid="kyc-back-btn" hitSlop={12}>
+          <Ionicons name="chevron-back" size={26} color={LADDER.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Identity Verification</Text>
         <View style={{ width: 26 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        {/* iter106ax: editorial serif hero — the design language's signature. */}
+        {showForm && (
+          <>
+            <Text style={styles.heroLabel}>Step 1 of 1</Text>
+            <Text style={styles.hero}>Verify your{"\n"}identity.</Text>
+            <Text style={styles.heroSub}>
+              We ID-check every trainer before payouts unlock. This usually clears in 24–48 hours.
+            </Text>
+          </>
+        )}
+
         {status === 'submitted' && (
-          <View style={[styles.card, { borderColor: COLORS.warn }]} testID="kyc-under-review">
-            <Ionicons name="hourglass-outline" size={28} color={COLORS.warn} />
+          <View style={[styles.card, { borderColor: LADDER.warning }]} testID="kyc-under-review">
+            <Ionicons name="hourglass-outline" size={28} color={LADDER.warning} />
             <Text style={styles.cardTitle}>Under Review</Text>
             <Text style={styles.cardBody}>We received your documents. This usually takes 24–48h. You'll get a push notification when approved.</Text>
           </View>
         )}
 
         {status === 'approved' && (
-          <View style={[styles.card, { borderColor: COLORS.good }]} testID="kyc-approved">
-            <Ionicons name="shield-checkmark" size={28} color={COLORS.good} />
+          <View style={[styles.card, { borderColor: LADDER.success }]} testID="kyc-approved">
+            <Ionicons name="shield-checkmark" size={28} color={LADDER.success} />
             <Text style={styles.cardTitle}>Verified</Text>
             <Text style={styles.cardBody}>You're all set. Payouts are now unlocked.</Text>
-            <TouchableOpacity style={[styles.primaryBtn, { marginTop: 14 }]} onPress={() => router.push('/trainer/earnings' as any)}>
-              <Text style={styles.primaryBtnText}>Go to Earnings</Text>
-            </TouchableOpacity>
+            <LadderButton
+              label="Go to Earnings"
+              onPress={() => router.push('/trainer/earnings' as any)}
+              variant="primary"
+              fullWidth
+              style={{ marginTop: 16 }}
+              testID="kyc-go-earnings"
+            />
           </View>
         )}
 
         {status === 'rejected' && (
-          <View style={[styles.card, { borderColor: COLORS.bad, marginBottom: 20 }]} testID="kyc-rejected">
-            <Ionicons name="alert-circle" size={28} color={COLORS.bad} />
+          <View style={[styles.card, { borderColor: LADDER.error, marginBottom: 20 }]} testID="kyc-rejected">
+            <Ionicons name="alert-circle" size={28} color={LADDER.error} />
             <Text style={styles.cardTitle}>Verification Failed</Text>
             {!!notes && <Text style={styles.cardBody}>Reason from admin: {notes}</Text>}
             <Text style={[styles.cardBody, { marginTop: 6 }]}>Upload new documents below and resubmit.</Text>
@@ -166,48 +180,49 @@ export default function TrainerKycScreen() {
                 <Image source={{ uri: documentUrl.startsWith('http') ? documentUrl : `${API_URL}${documentUrl}` }} style={styles.preview} />
               ) : (
                 <>
-                  <Ionicons name="card-outline" size={30} color={COLORS.mute} />
+                  <Ionicons name="card-outline" size={30} color={LADDER.textSecondary} />
                   <Text style={styles.uploadLabel}>Tap to upload ID</Text>
                 </>
               )}
-              {uploading === 'doc' && <ActivityIndicator color={COLORS.accent} style={styles.uploadOverlay} />}
+              {uploading === 'doc' && <ActivityIndicator color={LADDER.accent} style={styles.uploadOverlay} />}
             </TouchableOpacity>
 
-            <Text style={styles.sectionTitle}>Selfie holding your ID (optional but recommended)</Text>
+            <Text style={styles.sectionTitle}>Selfie holding your ID <Text style={styles.sectionTitleMuted}>· Optional</Text></Text>
             <Text style={styles.hint}>Speeds up manual review.</Text>
             <TouchableOpacity style={styles.uploadTile} onPress={() => pickAndUpload('selfie')} disabled={uploading !== null} data-testid="kyc-upload-selfie">
               {selfieUrl ? (
                 <Image source={{ uri: selfieUrl.startsWith('http') ? selfieUrl : `${API_URL}${selfieUrl}` }} style={styles.preview} />
               ) : (
                 <>
-                  <Ionicons name="happy-outline" size={30} color={COLORS.mute} />
+                  <Ionicons name="happy-outline" size={30} color={LADDER.textSecondary} />
                   <Text style={styles.uploadLabel}>Tap to upload selfie</Text>
                 </>
               )}
-              {uploading === 'selfie' && <ActivityIndicator color={COLORS.accent} style={styles.uploadOverlay} />}
+              {uploading === 'selfie' && <ActivityIndicator color={LADDER.accent} style={styles.uploadOverlay} />}
             </TouchableOpacity>
 
-            <Text style={styles.sectionTitle}>Full legal name (exact match on ID)</Text>
+            <Text style={styles.sectionTitle}>Full legal name <Text style={styles.sectionTitleMuted}>· Exact match on ID</Text></Text>
             <TextInput
               value={fullLegalName}
               onChangeText={setFullLegalName}
               placeholder="e.g. Ashton J Bundy"
-              placeholderTextColor={COLORS.mute}
+              placeholderTextColor={LADDER.textTertiary}
               style={styles.input}
               autoCapitalize="words"
               data-testid="kyc-legal-name"
             />
 
-            <TouchableOpacity
-              style={[styles.primaryBtn, { marginTop: 24, opacity: submitting || !documentUrl ? 0.6 : 1 }]}
+            <LadderButton
+              label={status === 'rejected' ? 'Resubmit for Review' : 'Submit for Review'}
               onPress={submit}
-              disabled={submitting || !documentUrl}
-              data-testid="kyc-submit-btn"
-            >
-              {submitting
-                ? <ActivityIndicator color="#FFFFFF" />
-                : <Text style={styles.primaryBtnText}>{status === 'rejected' ? 'Resubmit for Review' : 'Submit for Review'}</Text>}
-            </TouchableOpacity>
+              variant="primary"
+              size="lg"
+              fullWidth
+              loading={submitting}
+              disabled={!documentUrl}
+              style={{ marginTop: 28 }}
+              testID="kyc-submit-btn"
+            />
           </>
         )}
       </ScrollView>
@@ -216,29 +231,42 @@ export default function TrainerKycScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: COLORS.bg },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 },
-  headerTitle: { color: COLORS.ink, fontSize: 17, fontWeight: '700', letterSpacing: 0.2 },
-  content: { padding: 18, paddingBottom: 60 },
-  card: { backgroundColor: COLORS.card, borderRadius: 16, padding: 18, borderWidth: 1, alignItems: 'flex-start', gap: 6 },
-  cardTitle: { color: COLORS.ink, fontSize: 17, fontWeight: '700', marginTop: 6 },
-  cardBody: { color: COLORS.mute, fontSize: 13, lineHeight: 18 },
-  sectionTitle: { color: COLORS.ink, fontSize: 14, fontWeight: '700', marginTop: 20, marginBottom: 6, letterSpacing: 0.3, textTransform: 'uppercase' },
-  hint: { color: COLORS.mute, fontSize: 12, marginBottom: 10, lineHeight: 16 },
+  root: { flex: 1, backgroundColor: LADDER.bgBase },
+  header: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 20, paddingVertical: 14,
+    borderBottomWidth: 1, borderBottomColor: LADDER.borderSubtle,
+  },
+  headerTitle: { ...LADDER_TYPE.label, color: LADDER.textPrimary, letterSpacing: 1.2 },
+  content: { padding: 20, paddingBottom: 60 },
+
+  // iter106ax: editorial hero — massive serif on tap-and-go screens.
+  heroLabel: { ...LADDER_TYPE.label, marginBottom: 12 },
+  hero: { ...LADDER_TYPE.h1, marginBottom: 12 },
+  heroSub: { ...LADDER_TYPE.bodyMuted, marginBottom: 32 },
+
+  card: {
+    backgroundColor: LADDER.bgCard, borderRadius: 12, padding: 20,
+    borderWidth: 1, alignItems: 'flex-start', gap: 6,
+  },
+  cardTitle: { ...LADDER_TYPE.h3, fontSize: 18, marginTop: 8 },
+  cardBody: { ...LADDER_TYPE.bodyMuted, fontSize: 14, lineHeight: 20 },
+  sectionTitle: { ...LADDER_TYPE.label, color: LADDER.textPrimary, marginTop: 24, marginBottom: 8 },
+  sectionTitleMuted: { color: LADDER.textTertiary, letterSpacing: 1.2 },
+  hint: { ...LADDER_TYPE.bodySmall, marginBottom: 12 },
   uploadTile: {
-    height: 160, borderRadius: 14, backgroundColor: COLORS.card,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', borderStyle: 'dashed',
+    height: 168, borderRadius: 12, backgroundColor: LADDER.bgCard,
+    borderWidth: 1, borderColor: LADDER.borderSubtle, borderStyle: 'dashed',
     alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
     ...(Platform.OS === 'web' ? {} : {}),
   },
-  uploadLabel: { color: COLORS.mute, fontSize: 13, fontWeight: '600', marginTop: 8 },
+  uploadLabel: { ...LADDER_TYPE.bodySmall, color: LADDER.textSecondary, marginTop: 10 },
   uploadOverlay: { position: 'absolute' },
   preview: { width: '100%', height: '100%', resizeMode: 'cover' },
   input: {
-    color: COLORS.ink, fontSize: 15, backgroundColor: COLORS.card,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
-    borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12,
+    ...LADDER_TYPE.body,
+    backgroundColor: LADDER.bgCard,
+    borderWidth: 1, borderColor: LADDER.borderSubtle,
+    borderRadius: 10, paddingHorizontal: 16, paddingVertical: 14,
   },
-  primaryBtn: { backgroundColor: COLORS.accent, borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
-  primaryBtnText: { color: '#FFFFFF', fontWeight: '800', fontSize: 15, letterSpacing: 0.3 },
 });

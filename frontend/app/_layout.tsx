@@ -23,6 +23,12 @@ import { OfflineBanner } from '../src/components/OfflineBanner';
 import Toast, { BaseToast } from 'react-native-toast-message';
 import * as Sentry from '@sentry/react-native';
 import { useFonts, Oswald_700Bold, Oswald_600SemiBold, Oswald_400Regular } from '@expo-google-fonts/oswald';
+// iter106ax: Ladder-inspired premium typography (Instrument Serif + Inter Tight).
+import { InstrumentSerif_400Regular, InstrumentSerif_400Regular_Italic } from '@expo-google-fonts/instrument-serif';
+import {
+  InterTight_400Regular, InterTight_500Medium, InterTight_600SemiBold,
+  InterTight_700Bold, InterTight_900Black,
+} from '@expo-google-fonts/inter-tight';
 import * as SplashScreen from 'expo-splash-screen';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -114,6 +120,15 @@ function RootLayout() {
     Oswald_700Bold,
     Oswald_600SemiBold,
     Oswald_400Regular,
+    // iter106ax: Ladder-inspired premium fonts (loaded eagerly at splash so
+    // migrated screens don't flash system-font on first paint).
+    InstrumentSerif_400Regular,
+    InstrumentSerif_400Regular_Italic,
+    InterTight_400Regular,
+    InterTight_500Medium,
+    InterTight_600SemiBold,
+    InterTight_700Bold,
+    InterTight_900Black,
   });
 
   // iter98f: show intro video on every cold launch, then hand off to app
