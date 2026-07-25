@@ -24,6 +24,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { sessionTrackingAPI } from '../services/api';
 import { startSessionBackgroundLocation, stopSessionBackgroundLocation } from '../utils/sessionBackgroundLocation';
 import { useAuth } from '../contexts/AuthContext';
+import { useNetwork } from '../contexts/NetworkContext';
+import { enqueueOffline } from '../utils/offlineQueue';
 import { TrainerAvatar } from './TrainerAvatar';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
@@ -142,16 +144,22 @@ const EnRouteMap: React.FC<Props> = ({ session, role, otherAvatarUrl, otherDispl
 
   // 1b. iter106h #2: WebSocket live position stream. Falls back to the
   // polling effect below if the socket can't connect.
+  // iter106aw G23: exponential-backoff reconnect (1→2→4→8→16→30s cap) so
+  // transient drops don't leave the map stuck on the polling fallback.
   useEffect(() => {
     let ws: WebSocket | null = null;
     let cancelled = false;
-    (async () => {
+    let reconnectTimer: any = null;
+    let backoffMs = 1000; // starts at 1s, doubles on each failed connect, cap 30s
+
+    const connect = async () => {
+      if (cancelled) return;
       try {
         const token = await AsyncStorage.getItem('auth_token');
         if (!token || !API_URL) return;
-        // Swap http(s) → ws(s) for the WebSocket scheme.
         const wsBase = API_URL.replace(/^http/, 'ws');
         ws = new WebSocket(`${wsBase}/api/ws/sessions/${sessionId}/track?token=${encodeURIComponent(token)}`);
+        ws.onopen = () => { backoffMs = 1000; /* reset on successful open */ };
         ws.onmessage = (evt) => {
           if (cancelled) return;
           try {
@@ -161,10 +169,6 @@ const EnRouteMap: React.FC<Props> = ({ session, role, otherAvatarUrl, otherDispl
             if (msg.role === otherKey && typeof msg.latitude === 'number' && typeof msg.longitude === 'number') {
               setOtherLocation({ latitude: msg.latitude, longitude: msg.longitude });
               setTracking(true);
-              // iter106p: pick up the road-following polyline + live ETA
-              // that the backend now attaches to each broadcast. Falls
-              // through silently when the fields are missing (no Directions
-              // API key or destination not yet known).
               if (typeof msg.routePolyline === 'string') {
                 setOtherRoutePoints(msg.routePolyline ? decodePolyline(msg.routePolyline) : null);
               }
@@ -175,17 +179,33 @@ const EnRouteMap: React.FC<Props> = ({ session, role, otherAvatarUrl, otherDispl
             }
           } catch { /* malformed frame — ignore */ }
         };
-        // We don't need to do anything else — onclose/onerror let the
-        // polling effect take over naturally.
-      } catch { /* ignore */ }
-    })();
+        const scheduleReconnect = () => {
+          if (cancelled) return;
+          reconnectTimer = setTimeout(connect, backoffMs);
+          backoffMs = Math.min(backoffMs * 2, 30_000);
+        };
+        ws.onclose = scheduleReconnect;
+        ws.onerror = () => { try { ws?.close(); } catch { /* ignore */ } };
+      } catch {
+        if (!cancelled) {
+          reconnectTimer = setTimeout(connect, backoffMs);
+          backoffMs = Math.min(backoffMs * 2, 30_000);
+        }
+      }
+    };
+    connect();
     return () => {
       cancelled = true;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
       try { ws?.close(); } catch { /* ignore */ }
     };
   }, [sessionId, role]);
 
+  const { online } = useNetwork();
+
   // 2. Continuous GPS push (10 s)
+  //   iter106aw G25: when offline, enqueue the ping to AsyncStorage with a
+  //   client_timestamp so the server can replay-protect it on reconnect.
   useEffect(() => {
     if (!myLocation) return;
     const t = setInterval(async () => {
@@ -193,11 +213,27 @@ const EnRouteMap: React.FC<Props> = ({ session, role, otherAvatarUrl, otherDispl
         const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
         const here = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
         setMyLocation(here);
-        await sessionTrackingAPI.gpsUpdate(sessionId, here.latitude, here.longitude, pos.coords.accuracy || 0);
+        const acc = pos.coords.accuracy || 0;
+        const ts = new Date().toISOString();
+        if (online) {
+          await sessionTrackingAPI.gpsUpdate(sessionId, here.latitude, here.longitude, acc);
+        } else {
+          await enqueueOffline({
+            url: `/api/sessions/${sessionId}/gps-update`,
+            method: 'POST',
+            params: {
+              latitude: here.latitude,
+              longitude: here.longitude,
+              accuracy: acc,
+              client_timestamp: ts,
+            },
+            requiresAuth: true,
+          });
+        }
       } catch { /* ignore */ }
     }, 10_000);
     return () => clearInterval(t);
-  }, [myLocation, sessionId]);
+  }, [myLocation, sessionId, online]);
 
   // 3. Poll the other party's last known position (8 s)
   useEffect(() => {

@@ -123,6 +123,7 @@ from routes.social_auth_routes import router as social_auth_router
 from routes.messaging_routes import router as messaging_router
 from routes.notification_routes import router as notification_router
 from routes.location_routes import router as location_router
+from routes.kyc_routes import router as kyc_router
 from routes.matching_routes import router as engine_router
 from routes.convenience_routes import router as convenience_router
 from routes.negotiation_routes import router as negotiation_router
@@ -989,6 +990,7 @@ app.include_router(social_auth_router)
 app.include_router(messaging_router)
 app.include_router(notification_router)
 app.include_router(location_router)
+app.include_router(kyc_router)
 app.include_router(engine_router)
 app.include_router(convenience_router)
 

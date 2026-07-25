@@ -1,100 +1,197 @@
 {
-  "theme": "Dark",
-  "archetype": "Archetype 2 (Performance Pro) + Electric Neon Accents",
-  "global_rules": {
-    "anti_ai_principles": [
-      "No perfect symmetry. All elements must have intentional offset alignments (e.g., overlapping borders, mismatched left/right paddings).",
-      "Avoid standard pill badges or perfectly circular FABs. Use sharp geometric cuts, brutalist block shadows, or exposed grid lines.",
-      "Embrace negative space and typographic overlaps. Large numbers bleeding off the screen instead of small inline text.",
-      "Simulate designer tension: Use jagged, varying spacing. Do not use uniform gap-4 for everything. Mix gap-2 with gap-12 to create rhythm.",
-      "Containers must feel tactile, using heavy borders (border-b-4, border-r-4) instead of soft box-shadows."
-    ]
-  },
-  "colors": {
-    "background": "#0A0E14",
-    "surface": "rgba(255, 255, 255, 0.02)",
-    "surface_glass": "rgba(10, 14, 20, 0.75)",
-    "border": "rgba(255, 255, 255, 0.15)",
-    "border_subtle": "rgba(255, 255, 255, 0.05)",
-    "text_primary": "#FFFFFF",
-    "text_secondary": "rgba(255, 255, 255, 0.5)",
-    "neon": {
-      "green": "#39FF14",
-      "orange": "#FF5F1F",
-      "purple": "#B026FF"
+  "theme": "dark",
+  "aesthetic_direction": {
+    "mood": "Premium athletic, high-performance, tactical minimalism, editorial.",
+    "description": "Transitioning from brutalist orange/navy to a sleek 'Performance Pro' aesthetic inspired by Ladder. Embracing a near-black canvas, high-contrast crisp white typography, and deliberate editorial serif accents. The UI feels luxurious, focused, and heavy, relying on photography and typography rather than complex UI chrome.",
+    "color_system": {
+      "--bg-base": "#0A0A0A",
+      "--bg-surface": "#121212",
+      "--bg-card": "#1C1C1E",
+      "--bg-elevated": "#2C2C2E",
+      "--text-primary": "#FFFFFF",
+      "--text-secondary": "#8E8E93",
+      "--text-tertiary": "#636366",
+      "--accent-primary": "#FF3B30",
+      "--accent-secondary": "#FF6A00",
+      "--border-subtle": "rgba(255, 255, 255, 0.08)",
+      "--border-strong": "rgba(255, 255, 255, 0.15)",
+      "--overlay-dark": "rgba(0, 0, 0, 0.6)"
     },
-    "user_dot": "#FFFFFF"
-  },
-  "typography": {
-    "heading_font": "Anton",
-    "body_font": "Outfit",
-    "hierarchy": {
-      "background_count": "text-[140px] font-heading leading-none tracking-tighter opacity-10 text-white absolute -top-8 -left-4 pointer-events-none",
-      "h1": "text-4xl font-heading tracking-tight uppercase text-white",
-      "card_title": "text-xl font-heading tracking-wide uppercase text-white",
-      "body": "text-sm font-body tracking-wider text-text_secondary",
-      "label": "text-[10px] font-heading tracking-[0.2em] uppercase text-neon-green"
+    "typography": {
+      "strategy": "Editorial Serif + Athletic Sans. Using high contrast in font weights to establish hierarchy without needing color.",
+      "heading_font": "Instrument Serif (Editorial/Premium) or Bebas Neue (Athletic)",
+      "body_font": "Inter (Clean, highly legible for dense data)",
+      "scales": {
+        "h1": "font-size: 48px, line-height: 1.0, tracking: -1px, font-family: Instrument Serif",
+        "h2": "font-size: 32px, line-height: 1.1, tracking: -0.5px, font-family: Instrument Serif",
+        "h3": "font-size: 24px, line-height: 1.2, tracking: -0.2px, font-family: Inter, font-weight: 700",
+        "body": "font-size: 16px, line-height: 1.5, font-family: Inter, font-weight: 400",
+        "label": "font-size: 11px, line-height: 1.2, tracking: 1.5px, text-transform: uppercase, font-family: Inter, font-weight: 600",
+        "stats": "font-size: 64px, line-height: 1.0, tracking: -2px, font-family: Inter, font-weight: 900"
+      }
+    },
+    "visual_enhancers": {
+      "grain_noise": "Use a subtle noise image overlay with low opacity (0.02 - 0.04) across background views to remove digital flatness.",
+      "depth_shadows": "Zero drop shadows. Use 1px inner borders (--border-subtle) on cards to create surface separation.",
+      "glassmorphism": "Strictly for sticky headers, the bottom tab bar, and action sheets. Heavy blur (e.g., BlurView intensity 80-100) with a dark tint (rgba(10,10,10,0.7))."
     }
   },
-  "spacing_and_layout": {
-    "container_padding": "px-6 py-8",
-    "card_padding": "pt-6 pr-4 pb-4 pl-6",
-    "stagger_gap": "Every even card in a list should have a translate-y-4 offset."
-  },
+  "screen_redesign_specs": [
+    {
+      "name": "Trainee Home / Discovery Feed",
+      "priority": 1,
+      "layout_rules": "Vertical scrolling feed of massive trainer cards (80vh height). Think TikTok or Ladder discovery.",
+      "key_elements": [
+        "Header: Transparent with a blur-backed proximity/location selector pill.",
+        "Trainer Cards: Full-bleed imagery with a LinearGradient overlay (transparent at top, rgba(0,0,0,0.9) at bottom).",
+        "Typography on Card: Trainer name in H1 Instrument Serif at the bottom left. Price/Personality tags as ultra-minimal glass pills.",
+        "Interaction: Paging scroll enabled (snap to card)."
+      ]
+    },
+    {
+      "name": "Trainer Detail / Profile",
+      "priority": 2,
+      "layout_rules": "Editorial magazine layout. Sticky booking CTA at the bottom.",
+      "key_elements": [
+        "Hero: Immersive photo that scales up on over-scroll (parallax).",
+        "Vibe Player/Highlight Reel: Edge-to-edge horizontal scroll or auto-playing muted video loop.",
+        "Bio: Set in H3 Instrument Serif to feel like an editorial quote.",
+        "Sticky Action Bar: Glassmorphic footer containing the price and 'Book Session' primary button."
+      ]
+    },
+    {
+      "name": "Session Booking Flow",
+      "priority": 3,
+      "layout_rules": "Step-by-step modal sheet flow. Highly focused, one decision per screen.",
+      "key_elements": [
+        "Date/Time Picker: Large, custom horizontal scrolling date bubbles. No standard generic pickers.",
+        "Session Type: Two massive tactile cards for 'Outdoor' vs 'Gym' with high-contrast active states (1px Electric Blaze border + icon).",
+        "Price Breakdown: Minimalist receipt style, monospaced font for numbers."
+      ]
+    },
+    {
+      "name": "Live Session Tracking",
+      "priority": 4,
+      "layout_rules": "Tactical, dark-mode command center. Map-centric.",
+      "key_elements": [
+        "Map: Custom dark mode map styling (desaturated roads, vibrant Electric Blaze route line).",
+        "Metrics: Oversized, highly legible stats (ETA, Distance) floating in glass panels.",
+        "Offline Banner: Redesigned from a standard red block to a subtle striped dark-yellow tactical warning pill at the top."
+      ]
+    },
+    {
+      "name": "Trainer Earnings + KYC",
+      "priority": 5,
+      "layout_rules": "Data-heavy bento grid.",
+      "key_elements": [
+        "Earnings Stat: Massive numeric typography (64px).",
+        "KYC Status: Elegant status pills (e.g., 1px green border with green text for 'Verified').",
+        "Chart: Minimalist sparkline chart (React Native Skia/SVG) with a single vibrant accent line."
+      ]
+    },
+    {
+      "name": "Auth (Login/Register)",
+      "priority": 6,
+      "layout_rules": "Cinematic and minimal.",
+      "key_elements": [
+        "Background: Full-bleed moody gym photography (darkened significantly).",
+        "Form: Floating, borderless input fields with subtle bottom-borders that highlight on focus.",
+        "Typography: 'Welcome to the club' set in beautiful editorial Serif."
+      ]
+    },
+    {
+      "name": "Trainer's Own Profile Edit",
+      "priority": 7,
+      "layout_rules": "Form-centric, list view with drill-downs.",
+      "key_elements": [
+        "Avatar: Large circular `<UserAvatar>` component with a 2px offset border.",
+        "Inputs: Inline editing where possible. Labels are tiny, uppercase and tracked out.",
+        "Tags: Tap-to-add personality tags in a dense, wrapped flex row."
+      ]
+    },
+    {
+      "name": "Admin Panel (Web)",
+      "priority": 8,
+      "layout_rules": "Dense, analytical, edge-to-edge layout. High density grid (Mode B).",
+      "key_elements": [
+        "Sidebar: Dark navy/black monochrome.",
+        "Tables: Cardless. Data tables sit directly on the background with subtle 1px border bottoms for rows.",
+        "Typography: Strict adherence to Inter font. No serifs here."
+      ]
+    }
+  ],
   "components": {
-    "map_base": {
-      "style": "A dark #0A0E14 base with a subtle grid pattern or topographic SVG background. No bright or standard map tiles. Completely stealth.",
-      "data_testid": "nearby-trainers-map-container"
+    "buttons": {
+      "primary": "Pill-shaped (borderRadius: 999px). backgroundColor: var(--accent-primary), text-color: #FFF. Font: bold, 16px. No shadows.",
+      "secondary": "Pill-shaped. backgroundColor: transparent. borderWidth: 1px, borderColor: var(--border-strong). text-color: #FFF.",
+      "ghost": "No background, no border. text-color: var(--text-secondary). text-decoration: underline (optional).",
+      "destructive": "backgroundColor: #2A0808, borderWidth: 1px, borderColor: var(--error). text-color: var(--error).",
+      "motion": "On press, opacity drops to 0.7 or scale shrinks slightly (0.97) using React Native Reanimated."
     },
-    "trainer_markers": {
-      "style": "Not standard teardrop pins. Use harsh square or diamond geometric nodes with glowing borders.",
-      "glow_effect": "shadow-[0_0_15px_var(--neon-color)]",
-      "anti_ai_detail": "The inner initials should be slightly italicized and pushed off-center (e.g., translate-x-[1px] translate-y-[2px]) to feel raw.",
-      "data_testid": "trainer-marker-node"
+    "cards": {
+      "trainer_card": "Vertical rectangle. borderRadius: 16px. overflow: hidden. Background is entirely an <Image> with a LinearGradient overlay at the bottom 40%.",
+      "stat_card": "backgroundColor: var(--bg-card), borderRadius: 12px, borderWidth: 1px, borderColor: var(--border-subtle). padding: 24px."
     },
-    "available_now_row": {
-      "layout": "Horizontal scroll, floating 40px above the bottom edge. NOT flush. The first card has a heavy pl-8 margin.",
-      "card_style": "Sharp corners (rounded-none). Top and left borders only (border-t border-l border-white/20) for a brutalist 3D effect. backdrop-blur-xl.",
-      "stagger_effect": "Cards should not perfectly align. Odd cards are translateY(0), Even cards are translateY(-12px).",
-      "data_testid": "available-trainers-scroll-row"
+    "inputs": {
+      "default": "backgroundColor: var(--bg-surface), borderRadius: 8px, padding: 16px, color: #FFF. Placeholder color: var(--text-tertiary).",
+      "focus": "borderWidth: 1px, borderColor: var(--accent-primary)."
     },
-    "trainer_detail_popup": {
-      "style": "Occupies the top portion of the screen when a marker is tapped. Uses an asymmetrical layout with the trainer's image bleeding off the top edge.",
-      "border": "Heavy 2px border on the bottom edge matching the trainer's status neon color.",
-      "data_testid": "trainer-detail-popup-card"
+    "bottom_sheet": {
+      "surface": "backgroundColor: var(--bg-card), borderTopLeftRadius: 24px, borderTopRightRadius: 24px.",
+      "handle": "width: 40px, height: 4px, borderRadius: 2px, backgroundColor: var(--border-strong), alignSelf: center, marginTop: 12px."
     },
-    "recenter_button": {
-      "position": "absolute right-0 top-1/2 -translate-y-1/2",
-      "style": "A sharp rectangle sticking out from the right edge. border-y border-l border-white/20. No right border. The icon is a raw crosshair.",
-      "data_testid": "map-recenter-button"
-    },
-    "refresh_button": {
-      "position": "absolute top-8 right-6",
-      "style": "Brutalist block. border-b-2 border-r-2 border-neon-green bg-transparent hover:translate-x-[2px] hover:translate-y-[2px] hover:border-b-0 hover:border-r-0 transition-all px-4 py-2",
-      "text": "SCAN AREA",
-      "data_testid": "map-refresh-button"
-    },
-    "user_location_dot": {
-      "style": "A pure white 4px square. Instead of a smooth ripple, it has a glitching, harsh radar burst animation (opacity switching abruptly).",
-      "data_testid": "user-location-indicator"
+    "bottom_tab_bar": {
+      "style": "BlurView background. absolute positioning at bottom. borderTopWidth: 1px, borderTopColor: var(--border-subtle).",
+      "icons": "Lucide-react-native icons. Active: var(--text-primary). Inactive: var(--text-tertiary)."
     }
   },
-  "image_urls": {
-    "trainer_1": "https://images.pexels.com/photos/10960029/pexels-photo-10960029.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
-    "trainer_2": "https://images.unsplash.com/photo-1603503363848-6952525df449?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzR8MHwxfHNlYXJjaHwxfHxmaXRuZXNzJTIwdHJhaW5lciUyMHBvcnRyYWl0fGVufDB8fHx8MTc3NjY5Mjk3Mnww&ixlib=rb-4.1.0&q=85",
-    "trainer_3": "https://images.unsplash.com/photo-1646072507419-9f836f8d3f67?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzR8MHwxfHNlYXJjaHw0fHxmaXRuZXNzJTIwdHJhaW5lciUyMHBvcnRyYWl0fGVufDB8fHx8MTc3NjY5Mjk3Mnww&ixlib=rb-4.1.0&q=85",
-    "trainer_4": "https://images.pexels.com/photos/3912944/pexels-photo-3912944.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+  "motion_interaction": {
+    "page_transitions": "Native iOS standard push/pop (provided by Expo Router). Do not over-engineer.",
+    "hero_parallax": "On Trainer Detail scroll down, use Reanimated `interpolate` to scale the hero image up.",
+    "press_feedback": "Use native TouchableOpacity or Pressable with Reanimated scale spring (0.95 down, 1.0 up) on cards.",
+    "stagger_reveals": "For lists (e.g., Trainee Home feed), use a subtle fade-up stagger on mount (Y translation from 20px to 0, opacity 0 to 1)."
   },
-  "animations": {
-    "radar_burst": "keyframes: { 0%: { box-shadow: 0 0 0 0 rgba(255,255,255,0.8) }, 50%: { box-shadow: 0 0 0 20px rgba(255,255,255,0) }, 100%: { box-shadow: 0 0 0 0 rgba(255,255,255,0) } }",
-    "marker_glitch": "slight random X/Y translations on hover to feel unstable and high-energy."
+  "accessibility": {
+    "contrast": "Ensure primary text over images always has a gradient underlay meeting 4.5:1 ratio.",
+    "tap_targets": "Minimum 44x44 points for all interactive elements (buttons, toggles, tags).",
+    "voice_over": "Apply `accessibilityLabel` to all `<Image>` and icon buttons. Apply `accessibilityRole=\"button\"` explicitly.",
+    "testing": "All interactive elements MUST include a `testID` attribute (e.g., `testID=\"book-session-button\"`)."
   },
-  "instructions_to_main_agent": [
-    "Install Google Fonts: 'Anton' and 'Outfit' inside your global CSS.",
-    "Do NOT use standard rounded cards (rounded-xl, etc.). Implement sharp edges, asymmetrical borders (border-l, border-t), and raw brutalist geometry.",
-    "Implement the map as a relative mobile-sized container (e.g., max-w-md h-[850px] overflow-hidden). If map API isn't present, mock the map with a deep #0A0E14 background, a subtle CSS grid, and fixed marker nodes.",
-    "Trainer Count Badge must be implemented as a massive background typography element (h1) that bleeds off the screen with tracking-tighter and opacity-10.",
-    "Add 'data-testid' to every interactive or distinct visual component as specified.",
-    "Never center the layout perfectly. If a column of text is left aligned, add an arbitrary padding to its container (like pl-6) to push it off-balance."
+  "migration_plan": {
+    "step_1": "Typography Swap: Integrate `Instrument Serif` and `Inter` via `expo-font`. Replace all generic system fonts in headings globally. (Impact: Huge, Effort: Low)",
+    "step_2": "Color Overhaul: Update global context/theme file from Brutalist Orange/Navy to the Performance Pro Dark theme. Change app background to `#0A0A0A`.",
+    "step_3": "Component Restyle: Update the core Button and Card primitives to remove drop shadows and apply the new pill/border logic.",
+    "step_4": "Screen Specifics: Redesign the Trainee Home feed to use full-bleed vertical cards instead of standard lists."
+  },
+  "image_urls": [
+    {
+      "category": "Trainer Profile Photos",
+      "url": "https://images.pexels.com/photos/8874414/pexels-photo-8874414.jpeg",
+      "description": "Powerful, moody shot of a trainer in a dark studio. Perfect for the hero profile image."
+    },
+    {
+      "category": "Trainer Discovery Feed",
+      "url": "https://images.unsplash.com/photo-1549505415-e16dbd446231",
+      "description": "Desaturated, athletic lifestyle portrait. Excellent for feed cards."
+    },
+    {
+      "category": "Gym Location / Background",
+      "url": "https://images.pexels.com/photos/4753890/pexels-photo-4753890.jpeg",
+      "description": "Dark and atmospheric gym interior. Use for session booking location previews or auth backgrounds."
+    },
+    {
+      "category": "Session Highlight Reel",
+      "url": "https://images.unsplash.com/photo-1674834727206-4bc272bfd8da",
+      "description": "Premium dark gym interior weights."
+    }
+  ],
+  "universal_guidelines_for_main_agent": [
+    "NEVER use generic AI-slop patterns (e.g., purple gradients, centered arbitrary boxes).",
+    "Always rely on high-contrast, tactical minimalism (deep blacks, crisp whites).",
+    "Every button and pressable element must have a `testID` attribute in React Native for testing.",
+    "Do NOT use pure transparency (`rgba(0,0,0,0)`) on elements that sit above scrolling content; always use a BlurView or solid color.",
+    "Respect native platform paradigms while pushing the editorial visual style. The UX should feel instantly familiar to iOS/Android users.",
+    "DO NOT output HTML/divs in the React Native codebase. Use View, Text, Pressable, Image.",
+    "When modifying styling in React Native, use `StyleSheet.create` or inline styles consistently as per the existing codebase architecture."
   ]
 }

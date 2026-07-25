@@ -5,6 +5,8 @@ import { AuthProvider } from '../src/contexts/AuthContext';
 import { AlertProvider } from '../src/contexts/AlertContext';
 import { NotificationProvider } from '../src/contexts/NotificationContext';
 import { SoundProvider } from '../src/contexts/SoundContext';
+// iter106aw G24: global connectivity listener + offline-queue flush on reconnect.
+import { NetworkProvider } from '../src/contexts/NetworkContext';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ErrorBoundary } from '../src/components/ErrorBoundary';
 // iter98f: full-screen intro video on every cold launch
@@ -16,6 +18,8 @@ import AccentGlowOverlay from '../src/components/AccentGlowOverlay';
 // iter106av: single global mount for the "?preview=1" banner (replaces
 // per-screen <PreviewBanner /> copy-paste).
 import { GlobalPreviewBanner } from '../src/components/GlobalPreviewBanner';
+// iter106aw G26: global offline/synced banner — shows only when connectivity drops.
+import { OfflineBanner } from '../src/components/OfflineBanner';
 import Toast, { BaseToast } from 'react-native-toast-message';
 import * as Sentry from '@sentry/react-native';
 import { useFonts, Oswald_700Bold, Oswald_600SemiBold, Oswald_400Regular } from '@expo-google-fonts/oswald';
@@ -128,6 +132,7 @@ function RootLayout() {
             <NotificationProvider>
               <SoundProvider>
                 <AlertProvider>
+                  <NetworkProvider>
                   <Slot />
                   {/* iter102f: global firefly orange embers — visible on EVERY
                       screen. pointerEvents=none so touches pass through. Hidden
@@ -144,6 +149,9 @@ function RootLayout() {
                   {introDone && <AccentGlowOverlay />}
                   {/* iter106av: global preview banner replaces per-screen mounts. */}
                   {introDone && <GlobalPreviewBanner />}
+                  {/* iter106aw G26: connectivity banner (auto-hides when online). */}
+                  {introDone && <OfflineBanner />}
+                  </NetworkProvider>
                 </AlertProvider>
               </SoundProvider>
             </NotificationProvider>

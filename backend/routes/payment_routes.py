@@ -590,7 +590,12 @@ async def admin_mark_payouts_paid(
     req: AdminMarkPayoutPaidRequest,
     admin_user: dict = Depends(require_admin),
 ):
-    """Bulk-mark sessions as paid out (manual Stripe reconciliation)."""
+    """Bulk-mark sessions as paid out (manual Stripe reconciliation).
+
+    iter106aw KYC gate: refuse to mark any session paid whose trainer has
+    kycStatus != 'approved'. Prevents accidentally paying out to a trainer
+    who hasn't been ID-verified yet.
+    """
     if not req.sessionIds:
         raise HTTPException(status_code=400, detail="No sessions provided.")
     object_ids = []
@@ -599,6 +604,39 @@ async def admin_mark_payouts_paid(
             object_ids.append(ObjectId(sid))
         except Exception:
             raise HTTPException(status_code=400, detail=f"Invalid sessionId '{sid}'.")
+
+    # KYC gate — find every distinct trainer involved and block if any
+    # aren't approved. Fail closed so admins can't accidentally overlook it.
+    sessions = await db.sessions.find(
+        {"_id": {"$in": object_ids}},
+        {"trainerId": 1},
+    ).to_list(len(object_ids))
+    trainer_ids = list({s['trainerId'] for s in sessions if s.get('trainerId')})
+    if trainer_ids:
+        unapproved = await db.trainer_profiles.find(
+            {
+                'userId': {'$in': trainer_ids},
+                'kycStatus': {'$ne': 'approved'},
+            },
+            {'userId': 1, 'kycStatus': 1},
+        ).to_list(len(trainer_ids))
+        if unapproved:
+            names_map = {
+                str(u['_id']): u.get('fullName') or u.get('email') or str(u['_id'])
+                for u in await db.users.find(
+                    {'_id': {'$in': [ObjectId(x['userId']) for x in unapproved]}},
+                    {'fullName': 1, 'email': 1},
+                ).to_list(len(unapproved))
+            }
+            details = ", ".join(
+                f"{names_map.get(x['userId'], x['userId'])} ({x.get('kycStatus') or 'not_submitted'})"
+                for x in unapproved
+            )
+            raise HTTPException(
+                status_code=403,
+                detail=f"KYC not approved for: {details}. Review at /admin/kyc.",
+            )
+
     res = await db.sessions.update_many(
         {"_id": {"$in": object_ids}},
         {"$set": {
