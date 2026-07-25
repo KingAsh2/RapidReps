@@ -1989,3 +1989,30 @@ Server logs showed repeated `LOGIN FAIL` for `admin@rapidreps.com` because the u
 - P2: Batch 3 Slice B (G23-G26 offline handling — WS reconnect, NetInfo, AsyncStorage queue, offline banner)
 - P2: Batch 3 Slice C (G20 Twilio SMS + real SendGrid fallback, G22 test-push diagnostic — needs keys)
 - P2: G10 GPS spoofing detection (deferred per playbook)
+
+---
+
+## iter106aw — KYC + Slice B (Offline) + Ladder-inspired design brief (2026-07-02)
+
+**Shipped:**
+- **Trainer KYC (Option B — self-attestation + admin manual review)**
+  - Backend `routes/kyc_routes.py`: `POST /trainer/kyc/submit`, `GET /trainer/kyc/status`, `GET /admin/kyc/queue`, `POST /admin/kyc/{id}/approve|reject`. Admins get a push on new submission; trainer gets a push on approve/reject.
+  - **Payout gate**: `POST /api/admin/payouts/mark-paid` refuses (403) when ANY trainer in the batch has `kycStatus != 'approved'`.
+  - Frontend `app/trainer/kyc.tsx`: full upload/status screen (ID + selfie + legal name) that adapts to not_submitted / submitted / approved / rejected.
+- **Batch 3 Slice B (Offline handling)** — installed `@react-native-community/netinfo@11.4.1`.
+  - `src/contexts/NetworkContext.tsx` — global `useNetwork()` hook, auto-flushes queue on reconnect.
+  - `src/utils/offlineQueue.ts` — AsyncStorage-backed queue (`enqueueOffline` / `flushOfflineQueue`).
+  - `src/components/OfflineBanner.tsx` — mounted globally in `_layout.tsx`; auto-hides when online, flashes green "Synced" for 3s on reconnect.
+  - `src/components/EnRouteMap.tsx` — G23 WS reconnect with 1s→30s exponential backoff; G25 GPS pings enqueue when offline with `client_timestamp` for G27 replay-protection.
+- **Design brief for premium Ladder-inspired refresh** — `/app/design_guidelines.json` created. "Performance Pro" aesthetic: near-black canvas, Instrument Serif + Inter pairing, editorial trainer cards, glassmorphic tab bars, 8-screen redesign specs.
+
+**Tests:** 6 new tests in `test_iter106aw_kyc_and_payout_guard.py`. Full suite = **38/38 passing**.
+
+**Skipped this iter:** Real SendGrid key (no key), Twilio SMS (A2P pending), Stripe live-key swap (handled in deploy panel).
+
+**Remaining backlog:**
+- P1 Integrations: Stripe live keys · SendGrid · Twilio A2P (blocked on user)
+- P2 **Implement Ladder-inspired UI refresh** per `/app/design_guidelines.json` — phase order: (1) typography + button restyle, (2) trainee discovery card, (3) trainer detail editorial layout, (4) glassmorphic tab bar
+- P2: Admin frontend for KYC queue (routes exist)
+- P2: G10 GPS spoofing (deferred per playbook)
+
