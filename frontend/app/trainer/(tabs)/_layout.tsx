@@ -12,6 +12,7 @@ import {
   TAB_ICON_STYLE,
   TAB_BADGE_STYLE,
   tabSharedStyles,
+  TabBarGlassBackground,
 } from '../../../src/components/tabBarStyles';
 
 // iter102m: trainer tabs share the exact same visual tokens as the trainee
@@ -30,6 +31,8 @@ export default function TrainerTabsLayout() {
         tabBarStyle: TAB_BAR_STYLE,
         tabBarLabelStyle: TAB_LABEL_STYLE,
         tabBarIconStyle: TAB_ICON_STYLE,
+        // iter106ax: dark-blur glass background under all tabs.
+        tabBarBackground: () => <TabBarGlassBackground />,
       }}
     >
       <Tabs.Screen

@@ -2032,3 +2032,26 @@ Server logs showed repeated `LOGIN FAIL` for `admin@rapidreps.com` because the u
 **Rules:** Never touch `src/theme.ts` / `src/theme/premium.ts` — legacy screens depend on them. Migrate one screen at a time using `LADDER`/`LADDER_TYPE`/`LadderButton`.
 
 **Refresh queue:** discovery → trainer detail → auth → booking → earnings → tracking → profile edit → admin dashboard.
+
+---
+
+## iter106ax — Ladder Phase 2: Glass tab bar + editorial hero across 3 key screens (2026-07-02)
+
+**Shipped (visual essence over full rewrites):**
+- **Glass tab bar** — `src/components/tabBarStyles.tsx` (renamed from .ts, now JSX). New `<TabBarGlassBackground>` component uses `expo-blur` at intensity 60/90 + rgba(10,10,10,0.72) tint + 1px top hairline. Applied to both trainee and trainer `(tabs)/_layout.tsx`.
+- **Trainee discovery cards** (`TrainerBottomSheet.tsx`) — restyled to Ladder tokens: Instrument Serif trainer name (20pt, -0.3 tracking), uppercase micro-label specialty, InterTight Black price, 1px hairline borders replacing shadows, 12px corners.
+- **Trainer detail hero** (`trainee/trainer-detail.tsx`) — swapped brutalist skewed Oswald `heroName` for editorial Instrument Serif (44/46, -0.8 tracking). Sticky-book bar price + button restyled with InterTight Black + Bold, dropped drop-shadow.
+- **Login hero** (`auth/login.premium.tsx`) — replaced skewed Oswald "LET'S GET / TO WORK" with soft Instrument Serif "Let's get *to work.*" (regular + italic mix). Removed text-shadows, skew transforms, and the manual bolt-underline. Kept the wordmark + eyebrow labels for brand continuity.
+
+**Skipped by design** (avoids risky full rewrites, revisit next iter):
+- Full-bleed 80vh discovery cards → would require rewriting home.tsx (2k+ lines). Card visual language is now Ladder-consistent within the existing bottom sheet.
+- Adding a new sticky book bar JSX block → styles now exist (`stickyBookContainer` etc.) and are Ladder-tuned, but the current book action still lives inline in the hero. Wire the sticky bar as a small follow-up.
+
+**Lint:** clean across all touched files.
+
+**Next Action Items:**
+- Fully redesign `trainee/(tabs)/home.tsx` around the Ladder aesthetic (biggest-impact remaining screen)
+- Wire an actual sticky glass booking bar into `trainer-detail.tsx` (styles already Ladder-tuned)
+- Combined auth flow (single screen toggle between login/signup)
+- Trainer earnings + tracking screens
+

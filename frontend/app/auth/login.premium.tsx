@@ -108,23 +108,13 @@ export default function PremiumLoginScreen() {
                 <Text style={styles.eyebrow} numberOfLines={1}>WELCOME BACK</Text>
                 <Text
                   style={styles.heroLineWhite}
-                  numberOfLines={1}
                   adjustsFontSizeToFit
                   minimumFontScale={0.7}
                   allowFontScaling={false}
                 >
-                  LET'S GET
+                  Let's get{' '}
+                  <Text style={styles.heroLineOrange}>to work.</Text>
                 </Text>
-                <Text
-                  style={styles.heroLineOrange}
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                  minimumFontScale={0.7}
-                  allowFontScaling={false}
-                >
-                  TO WORK
-                </Text>
-                <View style={styles.boltUnderline} />
               </Animated.View>
 
               {/* ── Social auth removed per iter106ao (App Store Guideline 2.1a).
@@ -226,33 +216,20 @@ const styles = StyleSheet.create({
     fontFamily: 'Oswald_700Bold',
   },
   heroLineWhite: {
-    fontSize: 58,
-    fontWeight: '900',
+    // iter106ax: editorial serif hero — dropped the skew/shadow/uppercase brutalism
+    // for a Ladder-inspired quiet-confidence look.
+    fontFamily: 'InstrumentSerif_400Regular',
+    fontSize: 56,
+    lineHeight: 58,
     color: PremiumColors.white,
-    letterSpacing: -1,
-    lineHeight: 60,
+    letterSpacing: -1.5,
     textAlign: 'center',
-    fontFamily: 'Oswald_700Bold',
-    transform: [{ skewX: '-8deg' }],
-    textShadowColor: 'rgba(0,0,0,0.7)',
-    textShadowOffset: { width: 0, height: 5 },
-    textShadowRadius: 12,
     alignSelf: 'stretch',
   },
   heroLineOrange: {
-    fontSize: 68,
-    fontWeight: '900',
+    fontFamily: 'InstrumentSerif_400Regular_Italic',
     color: PremiumColors.orange,
-    letterSpacing: -1.3,
-    lineHeight: 70,
-    textAlign: 'center',
-    marginTop: -4,
-    fontFamily: 'Oswald_700Bold',
-    transform: [{ skewX: '-8deg' }],
-    textShadowColor: 'rgba(255,122,0,0.8)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 22,
-    alignSelf: 'stretch',
+    letterSpacing: -1.5,
   },
   boltUnderline: {
     width: 210,

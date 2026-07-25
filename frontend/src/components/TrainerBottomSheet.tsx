@@ -13,6 +13,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { haptic } from '../utils/haptics';
 import { TrainerAvatar } from './TrainerAvatar';
+// iter106ax: Ladder-inspired typography for card meta.
+import { LADDER, LADDER_FONTS } from '../theme/ladder';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const COLLAPSED_HEIGHT = 200;
@@ -294,16 +296,16 @@ const styles = StyleSheet.create({
   trainerCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1A2035',
-    borderRadius: 16,
-    padding: 12,
+    backgroundColor: LADDER.bgCard,
+    borderRadius: 12,
+    padding: 14,
     marginBottom: 12,
-    borderWidth: 2,
-    borderColor: 'transparent',
+    borderWidth: 1,
+    borderColor: LADDER.borderSubtle,
   },
   selectedCard: {
-    borderColor: COLORS.orange,
-    backgroundColor: 'rgba(255, 106, 0, 0.05)',
+    borderColor: LADDER.borderFocus,
+    backgroundColor: '#1F1A15',
   },
   trainerPhoto: {
     width: 56,
@@ -313,12 +315,14 @@ const styles = StyleSheet.create({
   },
   trainerInfo: {
     flex: 1,
-    marginLeft: 12,
+    marginLeft: 14,
   },
   trainerName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontFamily: LADDER_FONTS.serifDisplay,
+    fontSize: 20,
+    lineHeight: 22,
+    letterSpacing: -0.3,
+    color: LADDER.textPrimary,
   },
   ratingRow: {
     flexDirection: 'row',
@@ -326,20 +330,24 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   ratingText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#FFFFFF',
+    fontFamily: LADDER_FONTS.sansSemibold,
+    fontSize: 12,
+    color: LADDER.textPrimary,
     marginLeft: 4,
   },
   reviewCount: {
+    fontFamily: LADDER_FONTS.sans,
     fontSize: 12,
-    color: 'rgba(255,255,255,0.5)',
-    marginLeft: 2,
+    color: LADDER.textTertiary,
+    marginLeft: 3,
   },
   specialty: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.5)',
-    marginTop: 2,
+    fontFamily: LADDER_FONTS.sansSemibold,
+    fontSize: 10,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    color: LADDER.textSecondary,
+    marginTop: 4,
   },
   trainerMeta: {
     alignItems: 'flex-end',
@@ -347,26 +355,29 @@ const styles = StyleSheet.create({
   etaBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FF6A00',
+    backgroundColor: LADDER.accent,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: 6,
     gap: 4,
   },
   etaText: {
+    fontFamily: LADDER_FONTS.sansBold,
     fontSize: 11,
-    fontWeight: '700',
-    color: COLORS.white,
+    letterSpacing: 0.3,
+    color: '#FFFFFF',
   },
   distance: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.5)',
-    marginTop: 4,
+    fontFamily: LADDER_FONTS.sans,
+    fontSize: 11,
+    color: LADDER.textTertiary,
+    marginTop: 6,
   },
   price: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: COLORS.orange,
+    fontFamily: LADDER_FONTS.sansBlack,
+    fontSize: 16,
+    letterSpacing: -0.3,
+    color: LADDER.textPrimary,
     marginTop: 2,
   },
   selectedIndicator: {
