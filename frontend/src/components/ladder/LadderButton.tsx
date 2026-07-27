@@ -20,7 +20,7 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View, ActivityIndicator, ViewStyle, TextStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { LADDER, LADDER_TYPE } from '../theme/ladder';
+import { LADDER, LADDER_TYPE } from '../../theme/ladder';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'destructive';
 type Size = 'sm' | 'md' | 'lg';
