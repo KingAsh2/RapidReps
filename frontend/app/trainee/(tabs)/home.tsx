@@ -480,6 +480,9 @@ export default function TraineeHomeScreen() {
       price: cents !== null && cents > 0 ? Math.round(cents / 100) : undefined,
       specialty: (t.trainingStyles || [])[0],
       isAvailable: t.isAvailable,
+      // iter118p (spec #4): surface paid-placement flag from backend so the
+      // bottom sheet can render the neutral "Promoted" tag.
+      isBoosted: !!(t.isBoosted || t.boostActive),
     };
   });
 
@@ -637,7 +640,42 @@ export default function TraineeHomeScreen() {
                 Address is still editable from the Profile tab (Edit Profile flow). */}
 
             {/* iter117: Premium hero — muscular back photo anchored right, split-color
-                LET'S GET AFTER IT headline left, subtext + outlined location pill. */}
+                LET'S GET AFTER IT headline left, subtext + outlined location pill.
+                iter118p (spec #1): Hero is now tap-through. Destination is context-aware:
+                  - Upcoming session today  → /trainee/session-detail
+                  - Active streak (>0 days) → /trainee/user-progress
+                  - Neither                 → /trainee/feed
+                A subtle "Tap to see →" affordance signals interactivity. */}
+            {(() => {
+              const todayStr = new Date().toDateString();
+              const upcomingToday = (sessions || []).find((s: any) => {
+                const t = s.sessionDateTimeStart || s.startTime || s.date;
+                if (!t) return false;
+                const d = new Date(t);
+                if (isNaN(d.getTime())) return false;
+                if (d.toDateString() !== todayStr) return false;
+                return d.getTime() >= Date.now() - 15 * 60 * 1000; // include just-started
+              });
+              const hasStreak = !!(streak && streak.currentStreak > 0);
+              const heroCta = upcomingToday
+                ? "Today's session →"
+                : hasStreak
+                ? `${streak.currentStreak}-day streak →`
+                : 'See the feed →';
+              const onHeroPress = () => {
+                haptic.light();
+                if (upcomingToday) {
+                  router.push({
+                    pathname: '/trainee/session-detail',
+                    params: { sessionId: upcomingToday.id || upcomingToday._id },
+                  });
+                } else if (hasStreak) {
+                  router.push('/trainee/user-progress');
+                } else {
+                  router.push('/trainee/feed');
+                }
+              };
+              return (
             <Animated.View
               style={[
                 styles.heroBanner,
@@ -647,47 +685,65 @@ export default function TraineeHomeScreen() {
                 },
               ]}
             >
-              {/* Full-bleed hero image (muscular back, right-anchored). Uses expo-image cover. */}
-              <Image
-                source={require('../../../assets/images/hero-trainer-back.png')}
-                style={styles.heroBgImage}
-                resizeMode="cover"
-              />
-              {/* Left→right dark→transparent gradient so the headline stays legible
-                  while the photo remains clearly visible on the right */}
-              <LinearGradient
-                colors={['rgba(10,14,26,0.96)', 'rgba(10,14,26,0.70)', 'rgba(10,14,26,0.15)', 'rgba(10,14,26,0)']}
-                start={{ x: 0, y: 0.5 }}
-                end={{ x: 1, y: 0.5 }}
-                locations={[0, 0.35, 0.65, 1]}
-                style={StyleSheet.absoluteFillObject}
-              />
-              <View style={styles.heroContent}>
-                {/* iter118e PIXEL-LOCK: 3-line headline exactly per screenshot —
-                    LET'S GET (white) / AFTER IT, (orange) / NAME! + emojis (white) */}
-                <Text style={styles.heroTitleWhite}>LET&apos;S GET</Text>
-                <Text style={styles.heroTitleOrange}>AFTER IT,</Text>
-                <Text
-                  style={styles.heroTitleWhite}
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                  minimumFontScale={0.55}
-                >
-                  {(user?.fullName?.split(' ')[0] || 'CHAMP').toUpperCase()}! 💪🔥
-                </Text>
-                <Text style={styles.heroSubtitle}>
-                  Your next workout is{'\n'}just one tap away
-                </Text>
-                {locationAddress ? (
-                  <View style={styles.heroLocationPill}>
-                    <Ionicons name="location" size={14} color="#FF6A00" />
-                    <Text style={styles.heroLocationPillText} numberOfLines={1}>
-                      {locationAddress}
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={onHeroPress}
+                style={styles.heroTouchable}
+                data-testid="trainee-home-hero-btn"
+                accessibilityRole="button"
+                accessibilityLabel={heroCta}
+              >
+                {/* Full-bleed hero image (muscular back, right-anchored). Uses expo-image cover. */}
+                <Image
+                  source={require('../../../assets/images/hero-trainer-back.png')}
+                  style={styles.heroBgImage}
+                  resizeMode="cover"
+                />
+                {/* Left→right dark→transparent gradient so the headline stays legible
+                    while the photo remains clearly visible on the right */}
+                <LinearGradient
+                  colors={['rgba(10,14,26,0.96)', 'rgba(10,14,26,0.70)', 'rgba(10,14,26,0.15)', 'rgba(10,14,26,0)']}
+                  start={{ x: 0, y: 0.5 }}
+                  end={{ x: 1, y: 0.5 }}
+                  locations={[0, 0.35, 0.65, 1]}
+                  style={StyleSheet.absoluteFillObject}
+                />
+                <View style={styles.heroContent}>
+                  {/* iter118e PIXEL-LOCK: 3-line headline exactly per screenshot —
+                      LET'S GET (white) / AFTER IT, (orange) / NAME! + emojis (white) */}
+                  <Text style={styles.heroTitleWhite}>LET&apos;S GET</Text>
+                  <Text style={styles.heroTitleOrange}>AFTER IT,</Text>
+                  <Text
+                    style={styles.heroTitleWhite}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.55}
+                  >
+                    {(user?.fullName?.split(' ')[0] || 'CHAMP').toUpperCase()}! 💪🔥
+                  </Text>
+                  <Text style={styles.heroSubtitle}>
+                    Your next workout is{'\n'}just one tap away
+                  </Text>
+                  {locationAddress ? (
+                    <View style={styles.heroLocationPill}>
+                      <Ionicons name="location" size={14} color="#FF6A00" />
+                      <Text style={styles.heroLocationPillText} numberOfLines={1}>
+                        {locationAddress}
+                      </Text>
+                    </View>
+                  ) : null}
+                  {/* iter118p (spec #1): tap affordance so the hero doesn't
+                      look purely decorative. Copy adapts to trainee state. */}
+                  <View style={styles.heroTapAffordance}>
+                    <Text style={styles.heroTapAffordanceText} numberOfLines={1}>
+                      {heroCta}
                     </Text>
                   </View>
-                ) : null}
-              </View>
+                </View>
+              </TouchableOpacity>
             </Animated.View>
+              );
+            })()}
 
             {/* Urgent "Need a Trainer Now" banner removed — felt cluttered (user request) */}
 
@@ -792,7 +848,6 @@ export default function TraineeHomeScreen() {
               testIDPrefix="trainee-trainer-search"
               enableInvite
               inviteAudience="trainer"
-              onFilterPress={() => { haptic.light(); setShowProximityPicker(true); }}
               onSearch={async (q) => {
                 try {
                   const data = await trainerAPI.searchTrainers({ q });
@@ -1310,6 +1365,29 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
     letterSpacing: 0.2,
+  },
+  // iter118p (spec #1): full-hero touch target + tap affordance chip.
+  heroTouchable: {
+    flex: 1,
+    minHeight: 340,
+    borderRadius: 22,
+    overflow: 'hidden',
+  },
+  heroTapAffordance: {
+    marginTop: 14,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,106,0,0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,106,0,0.55)',
+  },
+  heroTapAffordanceText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#FFB673',
+    letterSpacing: 0.6,
   },
   // Legacy hero styles kept for any orphan references
   heroGradient: { paddingVertical: 22, paddingHorizontal: 20 },

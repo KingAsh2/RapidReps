@@ -334,6 +334,15 @@ class TrainerProfileResponse(BaseModel):
     # response, forcing the trainee-side detail screen to fall back to default.
     accentIntensity: Optional[float] = None
     highlights: List[dict] = []
+    # iter118p (spec #6): lightweight reliability signals derived from a
+    # trainer's completed-session history. Only surfaced to trainees once
+    # the trainer has ≥5 completed sessions to avoid punishing new trainers
+    # with small-sample noise. `onTimePercent` = 100 * completed / (completed
+    # + late + noShow). `completedSessionsForReliability` is that same
+    # denominator so the frontend can gate display.
+    onTimePercent: Optional[float] = None
+    completedSessionsForReliability: int = 0
+    avgResponseMinutes: Optional[float] = None
     createdAt: datetime
 
 class TraineeProfileCreate(BaseModel):
@@ -506,6 +515,13 @@ class SessionResponse(BaseModel):
     negotiationStatus: Optional[str] = None
     paymentStatus: Optional[str] = None
     paymentIntentId: Optional[str] = None
+    # iter118p (spec #3): lateness / no-show telemetry surfaced to clients.
+    # `trainerLateCheckIn` = trainer checked in 5-15 min after session start.
+    # `trainerNoShow` = trainer never checked in and trainee triggered
+    # cancel-and-refund at the 30-min mark.
+    trainerLateCheckIn: Optional[bool] = None
+    trainerNoShow: Optional[bool] = None
+    trainerCheckedInAt: Optional[datetime] = None
 
 class RatingCreate(BaseModel):
     sessionId: str

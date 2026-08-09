@@ -741,6 +741,28 @@ export default function TrainerDetailScreen() {
                 </View>
               </Animated.View>
 
+              {/* iter118p (spec #6): trainer reliability indicator. Only
+                  rendered once the trainer has ≥5 completed sessions so a
+                  single early bad-luck no-show doesn't publicly tank a new
+                  trainer. Value is computed server-side and comes back on
+                  the /api/trainer-profiles/{id} response. */}
+              {typeof (trainer as any).onTimePercent === 'number'
+                && ((trainer as any).completedSessionsForReliability || 0) >= 5 ? (
+                <Animated.View
+                  style={[styles.reliabilityBar, { transform: [{ translateY: statsSlideAnim }], opacity: headerAnim }]}
+                  data-testid="trainer-reliability-badge"
+                >
+                  <Ionicons name="shield-checkmark" size={16} color="#00D68F" />
+                  <Text style={styles.reliabilityText}>
+                    <Text style={styles.reliabilityPercent}>{(trainer as any).onTimePercent}%</Text>
+                    {' on-time'}
+                    <Text style={styles.reliabilitySubtle}>
+                      {'  ·  '}{(trainer as any).completedSessionsForReliability} completed
+                    </Text>
+                  </Text>
+                </Animated.View>
+              ) : null}
+
               {/* iter102aq: restored the Vibe player on the trainer-detail
                   page. The previous removal in iter102ak silenced autoplay
                   entirely when trainees visit a trainer's profile. The card
@@ -1465,6 +1487,37 @@ const styles = StyleSheet.create({
     height: 30,
     backgroundColor: 'rgba(255,255,255,0.08)',
     alignSelf: 'center',
+  },
+  // iter118p (spec #6): reliability chip — sits below the stats bar,
+  // deliberately calmer than the primary stats so it reads as a trust signal
+  // and not a metric competing for the trainee's attention.
+  reliabilityBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(0,214,143,0.10)',
+    borderColor: 'rgba(0,214,143,0.35)',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 14,
+  },
+  reliabilityText: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.85)',
+    fontWeight: '600',
+  },
+  reliabilityPercent: {
+    color: '#00D68F',
+    fontWeight: '900',
+    fontSize: 14,
+  },
+  reliabilitySubtle: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 12,
+    fontWeight: '600',
   },
   heroCTARow: {
     flexDirection: 'row',

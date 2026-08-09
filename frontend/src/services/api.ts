@@ -633,6 +633,21 @@ export const sessionsAPI = {
     const response = await api.post(`/sessions/${sessionId}/${endpoint}`);
     return response.data;
   },
+
+  // iter118p (spec #3): trainee-side lateness / no-show resolution.
+  // action = "wait"   → just note trainee is still waiting.
+  // action = "refund" → cancel + refund + record trainer strike.
+  traineeNoShowAction: async (
+    sessionId: string,
+    action: 'wait' | 'refund',
+    notes?: string,
+  ): Promise<any> => {
+    const response = await api.post(`/sessions/${sessionId}/trainee-no-show-action`, {
+      action,
+      notes,
+    });
+    return response.data;
+  },
 };
 
 export default api;

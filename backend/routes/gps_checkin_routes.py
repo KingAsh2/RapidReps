@@ -105,17 +105,42 @@ async def gps_checkin(session_id: str, checkin: GpsCheckinRequest, current_user:
 
     # Store check-in
     role_prefix = 'trainer' if is_trainer else 'trainee'
+    now_utc = datetime.utcnow()
     update_fields = {
         f'{role_prefix}GpsCheckin': {
             'latitude': checkin.latitude,
             'longitude': checkin.longitude,
-            'timestamp': datetime.utcnow(),
+            'timestamp': now_utc,
             'distanceMiles': round(distance_miles, 2) if distance_miles else None,
             'withinRadius': within_radius,
         },
         f'{role_prefix}GpsConfirmed': within_radius,
-        'updatedAt': datetime.utcnow(),
+        'updatedAt': now_utc,
     }
+
+    # iter118p (spec #3): trainer lateness telemetry. If the trainer's
+    # check-in is >5 min after the scheduled session start, tag the session
+    # for admin visibility + trainer scorecards. 15+ min without any check-in
+    # is handled by the trainee-side no-show action (see below).
+    if is_trainer and within_radius:
+        update_fields['trainerCheckedInAt'] = now_utc
+        try:
+            scheduled = session.get('sessionDateTimeStart')
+            if scheduled:
+                # Mongo stores datetime — handle both naive and iso-string
+                if isinstance(scheduled, str):
+                    scheduled_dt = datetime.fromisoformat(scheduled.replace('Z', '+00:00'))
+                    if scheduled_dt.tzinfo is not None:
+                        scheduled_dt = scheduled_dt.replace(tzinfo=None)
+                else:
+                    scheduled_dt = scheduled
+                minutes_late = (now_utc - scheduled_dt).total_seconds() / 60.0
+                if minutes_late > 5:
+                    update_fields['trainerLateCheckIn'] = True
+                    update_fields['trainerLateMinutes'] = round(minutes_late, 1)
+        except Exception:
+            # Never let a datetime edge-case break the check-in flow
+            pass
 
     await db.sessions.update_one({'_id': ObjectId(session_id)}, {'$set': update_fields})
 
@@ -245,6 +270,96 @@ async def trainer_no_show_action(session_id: str, body: NoShowActionRequest, cur
             "Your trainer has started the session.",
             {'type': 'session_started', 'sessionId': session_id}
         )
+
+    await db.sessions.update_one({'_id': ObjectId(session_id)}, {'$set': update})
+
+    return {"success": True, "action": body.action, "message": message}
+
+
+# ---------------------------------------------------------------------------
+# iter118p (spec #3): trainee-side lateness / no-show action.
+# ---------------------------------------------------------------------------
+# Symmetric to the trainer's no-show endpoint above, but for the trainee to
+# resolve a trainer who is either late (grace period at 15 min) or a no-show
+# (30 min without any check-in). Actions:
+#   • "wait"   → just note that trainee is still waiting.
+#   • "refund" → mark session as NO_SHOW, notes it was trainer-initiated,
+#                schedule refund via existing cancellation path, and record a
+#                trainer strike (same treatment as trainer-initiated cancel).
+
+@router.post("/sessions/{session_id}/trainee-no-show-action")
+async def trainee_no_show_action(session_id: str, body: NoShowActionRequest, current_user: dict = Depends(get_current_user)):
+    """Trainee decides what to do when the trainer hasn't checked in yet."""
+    user_id = str(current_user['_id'])
+
+    session = await db.sessions.find_one({'_id': ObjectId(session_id)})
+    if not session:
+        raise HTTPException(404, "Session not found")
+    if session['traineeId'] != user_id:
+        raise HTTPException(403, "Only the trainee can trigger this")
+
+    if body.action not in ('wait', 'refund'):
+        raise HTTPException(400, "Action must be 'wait' or 'refund'")
+
+    # Guard: only allow refund action once the session is genuinely overdue —
+    # this prevents impatient trainees pressing the button before the session
+    # has even started. 15 min past scheduled start is the earliest allowed.
+    if body.action == 'refund':
+        scheduled = session.get('sessionDateTimeStart')
+        if scheduled:
+            if isinstance(scheduled, str):
+                try:
+                    scheduled_dt = datetime.fromisoformat(scheduled.replace('Z', '+00:00'))
+                    if scheduled_dt.tzinfo is not None:
+                        scheduled_dt = scheduled_dt.replace(tzinfo=None)
+                except Exception:
+                    scheduled_dt = None
+            else:
+                scheduled_dt = scheduled
+            if scheduled_dt:
+                minutes_since_start = (datetime.utcnow() - scheduled_dt).total_seconds() / 60.0
+                if minutes_since_start < 15:
+                    raise HTTPException(400, "Please wait until 15 minutes past session start before requesting a no-show refund.")
+        # Only cancel if the trainer really hasn't checked in yet
+        if session.get('trainerGpsConfirmed'):
+            raise HTTPException(400, "Trainer has already checked in — this session is not a no-show.")
+
+    now_utc = datetime.utcnow()
+    update = {'updatedAt': now_utc, 'traineeNoShowAction': body.action}
+    message = ""
+
+    if body.action == 'wait':
+        update['traineeNoShowNotes'] = body.notes or "Trainee is still waiting for trainer"
+        message = "Marked as still waiting"
+    else:  # refund
+        update['status'] = SessionStatus.NO_SHOW
+        update['trainerNoShow'] = True
+        update['noShowInitiatedBy'] = 'trainee'
+        update['traineeNoShowNotes'] = body.notes or "Trainer never arrived; trainee requested cancel + refund"
+        update['cancelledAt'] = now_utc
+        update['refundPending'] = True
+        message = "Session cancelled — full refund pending"
+
+        # Best-effort trainer strike (existing 3-strikes system). Any failure
+        # is non-fatal to the refund flow.
+        try:
+            await db.trainer_profiles.update_one(
+                {'userId': session['trainerId']},
+                {'$inc': {'noShowStrikes': 1}, '$set': {'updatedAt': now_utc}},
+            )
+        except Exception:
+            pass
+
+        # Notify trainer their strike happened
+        try:
+            await send_push_notification(
+                session['trainerId'],
+                "Session Marked No-Show",
+                "Trainee cancelled the session because you didn't check in. This affects your reliability score.",
+                {'type': 'no_show_trainer_strike', 'sessionId': session_id},
+            )
+        except Exception:
+            pass
 
     await db.sessions.update_one({'_id': ObjectId(session_id)}, {'$set': update})
 

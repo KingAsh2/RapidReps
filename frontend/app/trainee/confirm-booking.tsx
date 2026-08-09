@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -21,6 +21,7 @@ import { toast } from '../../src/utils/toast';
 import { haptic } from '../../src/utils/haptics';
 import { useNotifications } from '../../src/contexts/NotificationContext';
 import { DS } from '../../src/theme/designSystem';
+import { UserAvatar } from '../../src/components/UserAvatar';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -53,6 +54,26 @@ export default function ConfirmBookingScreen() {
   const time = String(params.time || '10:00 AM');
   const duration = String(params.duration || '60');
   const sessionType = String(params.sessionType || 'outdoor');
+
+  // iter118p (spec #5): fetch trainer profile so the summary card can show
+  // photo + name + rating prominently at the top — leaves no ambiguity about
+  // WHO the trainee is about to pay before hitting confirm.
+  const [trainerProfile, setTrainerProfile] = useState<any>(null);
+  useEffect(() => {
+    if (!trainerId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const token = await AsyncStorage.getItem('auth_token');
+        const res = await axios.get(
+          `${API_URL}/api/trainer-profiles/${trainerId}`,
+          { headers: token ? { Authorization: `Bearer ${token}` } : {} },
+        );
+        if (!cancelled) setTrainerProfile(res.data);
+      } catch { /* silent — fall back to trainerName-only */ }
+    })();
+    return () => { cancelled = true; };
+  }, [trainerId]);
 
   const getMinPrice = (type: string): number => {
     switch (type) {
@@ -163,6 +184,37 @@ export default function ConfirmBookingScreen() {
         </View>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* iter118p (spec #5): Trainer identity ABOVE the price breakdown so
+              the last screen before payment makes WHO you're paying
+              unambiguous. Photo + name + optional rating render prominently. */}
+          <View style={[styles.card, styles.trainerHeaderCard]}>
+            <UserAvatar
+              size={64}
+              user={{
+                fullName: trainerProfile?.fullName || trainerName,
+                profilePhoto: trainerProfile?.profilePhoto,
+                profilePhotoUrl: trainerProfile?.profilePhotoUrl,
+                avatarUrl: trainerProfile?.avatarUrl,
+              }}
+              style={{ borderWidth: 2, borderColor: 'rgba(255,106,0,0.6)', borderRadius: 32 } as any}
+            />
+            <View style={styles.trainerHeaderMeta}>
+              <Text style={styles.trainerHeaderLabel}>YOU&apos;RE BOOKING</Text>
+              <Text style={styles.trainerHeaderName} numberOfLines={1}>
+                {trainerProfile?.fullName || trainerName}
+              </Text>
+              {trainerProfile?.averageRating != null && trainerProfile.averageRating > 0 ? (
+                <View style={styles.trainerHeaderRatingRow}>
+                  <Ionicons name="star" size={13} color="#FFD700" />
+                  <Text style={styles.trainerHeaderRatingText}>
+                    {Number(trainerProfile.averageRating).toFixed(1)}
+                    {trainerProfile?.totalSessions ? ` · ${trainerProfile.totalSessions} sessions` : ''}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+          </View>
+
           {/* Session Details Card */}
           <View style={styles.card}>
             <View style={styles.cardHeader}>
@@ -177,13 +229,6 @@ export default function ConfirmBookingScreen() {
             </View>
 
             <View style={styles.detailGrid}>
-              <View style={styles.detailItem}>
-                <Ionicons name="person" size={18} color={COLORS.orange} />
-                <View>
-                  <Text style={styles.detailLabel}>Trainer</Text>
-                  <Text style={styles.detailValue}>{trainerName}</Text>
-                </View>
-              </View>
               <View style={styles.detailItem}>
                 <Ionicons name="calendar" size={18} color={COLORS.orange} />
                 <View>
@@ -357,6 +402,13 @@ const styles = StyleSheet.create({
   content: { flex: 1, paddingHorizontal: 16 },
 
   card: { backgroundColor: '#141929', borderRadius: 18, padding: 20, marginBottom: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.08, shadowRadius: 10, elevation: 4 },
+  // iter118p (spec #5): prominent trainer identity header above price.
+  trainerHeaderCard: { flexDirection: 'row', alignItems: 'center', gap: 14, borderWidth: 1, borderColor: 'rgba(255,106,0,0.25)' },
+  trainerHeaderMeta: { flex: 1, minWidth: 0 },
+  trainerHeaderLabel: { fontSize: 11, fontWeight: '800', color: '#FF9F1C', letterSpacing: 1.2, marginBottom: 4 },
+  trainerHeaderName: { fontSize: 20, fontWeight: '800', color: '#FFFFFF' },
+  trainerHeaderRatingRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+  trainerHeaderRatingText: { fontSize: 13, fontWeight: '700', color: 'rgba(255,255,255,0.75)' },
   cardHeader: { marginBottom: 16 },
   sessionTypeBadge: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(255,106,0,0.07)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, alignSelf: 'flex-start' },
   sessionTypeText: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },

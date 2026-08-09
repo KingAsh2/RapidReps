@@ -356,6 +356,32 @@ async def get_trainer_profile(user_id: str):
             {'userId': user_id}, {'$set': {'verificationStatus': 'verified'}}
         )
 
+    # iter118p (spec #6): compute a lightweight reliability signal for the
+    # trainee to see BEFORE booking. onTimePercent counts a session as
+    # "on-time" when it completed without `trainerLateCheckIn` and without
+    # being flagged as a no-show. Only surfaced when the trainer has enough
+    # completed sessions (≥5) to avoid small-sample noise; the frontend
+    # gates rendering on `completedSessionsForReliability`.
+    try:
+        completed = await db.sessions.count_documents({
+            'trainerId': user_id,
+            'status': {'$in': ['completed', 'no_show']},
+        })
+        if completed > 0:
+            late_or_no_show = await db.sessions.count_documents({
+                'trainerId': user_id,
+                'status': {'$in': ['completed', 'no_show']},
+                '$or': [{'trainerLateCheckIn': True}, {'trainerNoShow': True}, {'status': 'no_show'}],
+            })
+            on_time = max(0, completed - late_or_no_show)
+            profile['onTimePercent'] = round(100.0 * on_time / completed, 1)
+            profile['completedSessionsForReliability'] = completed
+        else:
+            profile['completedSessionsForReliability'] = 0
+    except Exception:
+        # Never fail the endpoint over a stats computation
+        profile.setdefault('completedSessionsForReliability', 0)
+
     return TrainerProfileResponse(**serialize_doc(profile))
 
 

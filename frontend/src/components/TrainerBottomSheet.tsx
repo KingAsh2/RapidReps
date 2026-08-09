@@ -51,6 +51,10 @@ interface Trainer {
   price?: number;
   specialty?: string;
   isAvailable?: boolean;
+  /** iter118p (spec #4): trainer paid for higher visibility. Rendered as a
+   *  neutral "Promoted" tag (Instacart / Amazon style) so ranking is
+   *  transparent to trainees. */
+  isBoosted?: boolean;
 }
 
 interface TrainerBottomSheetProps {
@@ -219,6 +223,17 @@ export const TrainerBottomSheet: React.FC<TrainerBottomSheetProps> = ({
                 styles.badgePillText,
                 { color: badge === 'FASTEST' ? COLORS.fastest : COLORS.goodDeal },
               ]}>{badge === 'FASTEST' ? 'Fastest match' : 'Top rated'}</Text>
+            </View>
+          ) : null}
+          {/* iter118p (spec #4): neutral "Promoted" tag on boosted rows so
+              paid placement is disclosed to trainees. Grey — not alarming. */}
+          {t.isBoosted ? (
+            <View
+              style={styles.promotedPill}
+              data-testid={`trainer-row-${t.id}-promoted`}
+              accessibilityLabel="Promoted placement"
+            >
+              <Text style={styles.promotedPillText}>Promoted</Text>
             </View>
           ) : null}
         </View>
@@ -448,6 +463,24 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 0.3,
+  },
+  // iter118p (spec #4): neutral "Promoted" tag — deliberately grey, not
+  // alarming; mirrors Instacart / Amazon sponsored-placement disclosure.
+  promotedPill: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    marginTop: 6,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderColor: 'rgba(255,255,255,0.18)',
+  },
+  promotedPillText: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    color: 'rgba(255,255,255,0.62)',
   },
   rowPriceCol: {
     alignItems: 'flex-end',

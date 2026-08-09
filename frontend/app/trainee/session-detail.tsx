@@ -41,6 +41,116 @@ const COLORS = {
   grayLight: '#E8ECF0',
 };
 
+// iter118p (spec #3): trainer-lateness / no-show banner.
+// Conditions for render:
+//   • session status ∈ {confirmed, en_route, in_progress}
+//   • trainer has NOT checked in yet (trainerGpsConfirmed !== true)
+//   • sessionDateTimeStart is at least 15 min in the past
+// Copy shifts from "hasn't checked in" (15-30 min) to "hasn't arrived at all"
+// (30+ min) to match the escalation described in the product spec.
+function TraineeNoShowBanner({ session, onResolved }: { session: any; onResolved: () => void }) {
+  const [busy, setBusy] = useState(false);
+  if (!session || !session.id) return null;
+  const status = session.status;
+  const eligibleStatus =
+    status === SessionStatus.CONFIRMED || status === 'en_route' || status === 'in_progress';
+  if (!eligibleStatus) return null;
+  if (session.trainerGpsConfirmed) return null;
+  if (session.trainerCheckedInAt) return null;
+
+  const startIso = session.sessionDateTimeStart;
+  if (!startIso) return null;
+  const startMs = new Date(startIso).getTime();
+  if (isNaN(startMs)) return null;
+  const minutesLate = (Date.now() - startMs) / 60000;
+  if (minutesLate < 15) return null;
+
+  const escalated = minutesLate >= 30;
+
+  const handleAction = async (action: 'wait' | 'refund') => {
+    if (busy) return;
+    setBusy(true);
+    haptic.medium();
+    try {
+      await sessionsAPI.traineeNoShowAction(String(session.id), action);
+      toast.success(
+        action === 'wait'
+          ? "We'll keep checking — hang tight."
+          : 'Session cancelled — full refund is on the way.',
+      );
+      onResolved();
+    } catch (e: any) {
+      toast.error(e?.response?.data?.detail || 'Could not update — please try again.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <View style={noShowStyles.card} data-testid="trainee-no-show-banner">
+      <View style={noShowStyles.header}>
+        <Ionicons name="alert-circle" size={22} color="#FFAA00" />
+        <Text style={noShowStyles.title}>
+          {escalated ? "Your trainer hasn't arrived" : "Your trainer hasn't checked in"}
+        </Text>
+      </View>
+      <Text style={noShowStyles.body}>
+        {escalated
+          ? "It's been 30+ minutes past your session time. You're eligible for a full refund."
+          : "It's past your session start time. What would you like to do?"}
+      </Text>
+      <View style={noShowStyles.row}>
+        <TouchableOpacity
+          style={[noShowStyles.btn, noShowStyles.btnSecondary]}
+          disabled={busy}
+          onPress={() => handleAction('wait')}
+          data-testid="no-show-wait-btn"
+        >
+          <Text style={noShowStyles.btnSecondaryText}>Wait</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[noShowStyles.btn, noShowStyles.btnPrimary]}
+          disabled={busy}
+          onPress={() => handleAction('refund')}
+          data-testid="no-show-refund-btn"
+        >
+          {busy ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <Text style={noShowStyles.btnPrimaryText}>Cancel &amp; Refund</Text>
+          )}
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+const noShowStyles = StyleSheet.create({
+  card: {
+    backgroundColor: 'rgba(255,170,0,0.10)',
+    borderColor: 'rgba(255,170,0,0.55)',
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 14,
+  },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
+  title: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
+  body: { color: 'rgba(255,255,255,0.78)', fontSize: 13, marginBottom: 12, lineHeight: 18 },
+  row: { flexDirection: 'row', gap: 10 },
+  btn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  btnSecondary: { backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
+  btnSecondaryText: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
+  btnPrimary: { backgroundColor: '#FF4757' },
+  btnPrimaryText: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
+});
+
 export default function SessionDetailScreen() {
   const router = useRouter();
   const { sessionId } = useLocalSearchParams();
@@ -213,6 +323,13 @@ export default function SessionDetailScreen() {
               </View>
             )}
           </View>
+
+          {/* iter118p (spec #3): No-show banner. Rendered when the session
+              start time is ≥15 min in the past, the trainer hasn't checked
+              in via GPS, and the session isn't already completed / cancelled.
+              Offers the trainee two clear actions — Wait, or Cancel & Refund.
+              After 30 min a full-refund treatment is applied server-side. */}
+          <TraineeNoShowBanner session={session} onResolved={loadSession} />
 
           {/* Negotiation Panel — gate payment behind mutual agreement */}
           {session.id && session.status !== 'completed' && session.status !== 'cancelled' && session.status !== 'declined' && (
