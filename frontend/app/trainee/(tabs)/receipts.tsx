@@ -111,10 +111,6 @@ export default function TraineeReceiptsTab() {
             <Text style={styles.headerTitle}>Receipts</Text>
             <Text style={styles.headerSub}>{total} payment{total !== 1 ? 's' : ''} verified</Text>
           </View>
-          <View style={styles.zelleTag}>
-            <Ionicons name="card" size={14} color={COLORS.zellePurple} />
-            <Text style={styles.zelleTagText}>Stripe</Text>
-          </View>
         </View>
 
         {loading ? (

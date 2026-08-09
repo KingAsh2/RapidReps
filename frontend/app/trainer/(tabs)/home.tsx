@@ -1384,7 +1384,7 @@ const styles = StyleSheet.create({
   },
   heroPhotoWrap: {
     position: 'relative',
-    minHeight: 230,
+    minHeight: 310,
     overflow: 'hidden',
   },
   onlineNested: {

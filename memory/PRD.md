@@ -2243,3 +2243,30 @@ User provided approved screenshot as single source of truth. Two visual discrepa
    Both the `TrainerVibePlayer` and the "Your Anthem" CTA rendered when an anthem was set (two "Your Anthem" surfaces stacked). Guarded the CTA with `{!profile?.vibeTrackTitle && (…)}` so the CTA only appears when there is **no** anthem yet (mirrors the exact behavior already used in the trainer profile). When set, only the audio player is shown.
 
 **No backend changes.** Metro bundles cleanly; lint delta = 0 new warnings on both files.
+
+
+---
+
+## iter118f — Hero Photo Fix + Anthem Editable + Stripe/Safety Cleanup (2026-02-09)
+
+**Four targeted fixes:**
+
+1. **Hero photo — head no longer cut off** (both trainer + trainee homes)
+   - Trainee `heroBanner.minHeight`: 260 → **340** (`heroContent.minHeight` matched, `paddingVertical` 24→28)
+   - Trainer `heroPhotoWrap.minHeight`: 230 → **310**
+   - The portrait `hero-trainer-back.png` (aspect ~0.80) at ~78% screen width has natural render height ~376px; with taller containers, `resizeMode="cover"` no longer vertically crops the trainer's head.
+
+2. **"Your Anthem" now editable** (`/app/frontend/app/trainee/(tabs)/profile.tsx`)
+   - Re-enabled the CTA unconditionally so users can tap to change their song
+   - When anthem is set: label becomes **"Change Your Anthem"** with the current track/artist as subtext + swap-horizontal icon
+   - When not set: original "Set Your Anthem" + musical-notes icon
+   - The `TrainerVibePlayer` above still auto-plays on profile visit — CTA is a separate change-track affordance
+
+3. **Removed Stripe pill from Receipts header** (`/app/frontend/app/trainee/(tabs)/receipts.tsx`)
+   - Deleted the top-right `zelleTag` block. Header now shows only "Receipts" title + payment count.
+
+4. **Safety Center moved out of trainee home → hamburger menu** (`/app/frontend/app/trainee/(tabs)/home.tsx`)
+   - Removed the full-width Safety Center card from the bottom of home
+   - Added `Safety Center` entry to the dropdown menu (below "Verify Trainer", above the divider) → `/trainee/safety-center` with `shield-half` orange icon
+
+**No backend changes.** Metro bundles cleanly; 0 lint issues on all touched files.

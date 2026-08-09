@@ -608,6 +608,10 @@ export default function TraineeHomeScreen() {
                 <Ionicons name="shield-checkmark" size={22} color="#00D68F" />
                 <Text style={{ fontSize: 15, fontWeight: '700', color: '#FFFFFF' }}>Verify Trainer</Text>
               </TouchableOpacity>
+              <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 18, gap: 14 }} onPress={() => { setMenuVisible(false); router.push('/trainee/safety-center'); }} data-testid="trainee-menu-safety">
+                <Ionicons name="shield-half" size={22} color="#FF6A00" />
+                <Text style={{ fontSize: 15, fontWeight: '700', color: '#FFFFFF' }}>Safety Center</Text>
+              </TouchableOpacity>
               <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.08)', marginHorizontal: 18 }} />
               <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 18, gap: 14 }} onPress={() => { setMenuVisible(false); handleLogout(); }} data-testid="trainee-menu-logout">
                 <Ionicons name="log-out-outline" size={22} color="#FF4757" />
@@ -924,29 +928,8 @@ export default function TraineeHomeScreen() {
             {/* Bottom Spacer for FAB */}
             <View style={{ height: 100 }} />
 
-            {/* Safety Section */}
-            <TouchableOpacity
-              style={styles.safetySection}
-              onPress={() => router.push('/trainee/safety-center')}
-              data-testid="safety-section-btn"
-            >
-              {/* iter106v: removed the white LinearGradient that was making
-                  the white title text invisible. The card now uses its
-                  defined dark #141929 background so the white "Safety
-                  Center" title + rgba(255,255,255,0.5) subtitle render
-                  with proper contrast — matching the rest of the dark
-                  brutalist theme. */}
-              <View style={styles.safetySectionGradient}>
-                <View style={styles.safetySectionIcon}>
-                  <Ionicons name="shield-checkmark" size={28} color="#FF6A00" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.safetySectionTitle}>Safety Center</Text>
-                  <Text style={styles.safetySectionSub}>Tips, emergency contacts & session safety</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.6)" />
-              </View>
-            </TouchableOpacity>
+            {/* iter118f: Safety Section removed from home — moved into the
+                hamburger menu per user request for a cleaner home surface. */}
 
             <View style={{ height: 30 }} />
           </ScrollView>
@@ -1244,7 +1227,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderRadius: 22,
     overflow: 'hidden',
-    minHeight: 260,
+    minHeight: 340,
     backgroundColor: '#0A0E1A',
     shadowColor: '#FF6A00',
     shadowOffset: { width: 0, height: 10 },
@@ -1272,10 +1255,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,106,0,0.25)',
   },
   heroContent: {
-    paddingVertical: 24,
+    paddingVertical: 28,
     paddingHorizontal: 22,
     justifyContent: 'center',
-    minHeight: 260,
+    minHeight: 340,
     maxWidth: '62%',
   },
   heroTitleWrap: {
