@@ -1,5 +1,18 @@
 # RapidReps PRD
 
+## 2026-08 — Iter117 Batch 4: Dark Themed Map on iOS + Anthem/Available Now Cleanup ✅
+
+Follow-up to user's "the themed map?" and screenshot showing the "TRAINER VIBE" label still visible.
+
+**Root cause of "themed map doesn't show on iOS":**
+- `NearbyTrainersMap.native.tsx` line 165 and `EnRouteMap.tsx` line 350 both had `provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}` — that means on iOS, MapView fell back to Apple Maps, which **ignores `customMapStyle` entirely**. The dark theme JSON was being sent but Apple Maps threw it away.
+- Fix: both components now use `provider={PROVIDER_GOOGLE}` unconditionally. The iOS Google Maps SDK is already wired via `app.config.js` → `ios.config.googleMapsApiKey` (uses `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY`), so this just needed the flag.
+- Removed the unused `Platform` import from `NearbyTrainersMap.native.tsx`.
+
+**⚠️ Requires an EAS rebuild for iOS** — the Google Maps iOS SDK link happens at native build time, not JS hot-reload time. The user's screenshot showing "TRAINER VIBE" also confirms they're on a stale native bundle. Push a fresh EAS iOS build and both the dark map + all the "Your Anthem" label fixes will appear together.
+
+---
+
 ## 2026-08 — Iter117 Batch 3: Available Now Removal + Music Label + Navigate + En-Route Accuracy + Notifications ✅
 
 Follow-up to user frustration that Batch 2 didn't fully land the intent. Iter117 Batch 2 removed the wrong strip in home.tsx — the real "AVAILABLE NOW" horizontal card row lived inside `NearbyTrainersMap.native.tsx`. Also caught remaining "TRAINER VIBE" / "YOUR VIBE" labels rendered inside `TrainerVibePlayer` and `VibeSetupScreen` currentVibe row.

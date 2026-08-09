@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ActivityIndicator,
-  Dimensions, Platform, Animated, ScrollView,
+  Dimensions, Animated,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -162,7 +162,11 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
         <MapView
           ref={mapRef}
           style={s.map}
-          provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
+          // iter117: force Google Maps on BOTH platforms so the custom dark
+          // theme (`customMapStyle`) actually renders on iOS. Apple Maps
+          // ignores `customMapStyle`; the iOS Google Maps SDK is already
+          // wired via app.config.js -> ios.config.googleMapsApiKey.
+          provider={PROVIDER_GOOGLE}
           customMapStyle={mapStyle}
           initialRegion={{ ...userLocation, latitudeDelta: 0.02, longitudeDelta: 0.02 }}
           showsUserLocation={false} showsMyLocationButton={false}

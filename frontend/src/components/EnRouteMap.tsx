@@ -347,9 +347,12 @@ const EnRouteMap: React.FC<Props> = ({ session, role, otherAvatarUrl, otherDispl
       <View style={s.mapShell}>
         <MapView
           ref={mapRef}
-          provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
+          // iter117: force Google Maps + custom dark theme on BOTH platforms.
+          // Apple Maps ignores `customMapStyle`; the iOS Google Maps SDK is
+          // wired via app.config.js -> ios.config.googleMapsApiKey.
+          provider={PROVIDER_GOOGLE}
           style={s.map}
-          customMapStyle={Platform.OS === 'android' ? MAP_STYLE : undefined}
+          customMapStyle={MAP_STYLE}
           initialRegion={
             myLocation
               ? { ...myLocation, latitudeDelta: 0.04, longitudeDelta: 0.04 }
