@@ -2371,3 +2371,38 @@ Both `google-services.json` and `google-service-account.json` are already in `fr
 - `/app/memory/test_credentials.md`
 
 **Testing:** Verified `/api/trainers/nearby` returns 5 trainers from Elkridge center. Metro bundles cleanly.
+
+
+---
+
+## iter118j — Live Stripe Payments Activated (2026-02-09)
+
+**Live mode is ON.** Backend now charges real cards; frontend production build will publish live publishable key.
+
+**Changes:**
+- `/app/backend/.env`:
+  - `STRIPE_SECRET_KEY` → `sk_live_51T7L4j…`
+  - `STRIPE_PUBLISHABLE_KEY` → `pk_live_51T7L4j…`
+  - **added** `STRIPE_WEBHOOK_SECRET=whsec_bQvP6O…` (was missing — webhook signature verification now enforced)
+- `/app/frontend/.env`: `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY` → `pk_live_51T7L4j…`
+- `/app/frontend/eas.json` — **production profile only**:
+  - `EXPO_PUBLIC_BACKEND_URL` → `https://trainer-finder-9.emergent.host`
+  - `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY` → `pk_live_51T7L4j…`
+  - Dev + preview profiles intentionally left with preview URL and no Stripe key (fall through to `.env`) so local/preview builds don't accidentally charge real cards
+- Backend restarted; `/api/payments/config` returns `stripeMode: "live"`, `stripeKeyConfigured: true`
+- Stripe SDK verified: `Account.retrieve()` for "Rapid Reps App" — `charges_enabled: True`, `payouts_enabled: True`, `details_submitted: True`, US/USD, no outstanding requirements
+- Webhook signature verification confirmed: `POST /api/webhooks/stripe` with unsigned body returns `400 Bad signature`
+- Live webhook URL: `https://trainer-finder-9.emergent.host/api/webhooks/stripe` (user registered directly in Stripe live dashboard for events: `payment_intent.succeeded`, `payment_intent.payment_failed`, `charge.refunded`, `charge.dispute.created`, `charge.dispute.closed`)
+
+**⚠️ CRITICAL post-flip work still owed (user-side):**
+1. Once deployed on `trainer-finder-9.emergent.host`, do a real $0.50 – $1 test charge end-to-end (create a session → pay → refund) and verify:
+   - Stripe live dashboard shows the charge
+   - Webhook delivery attempt shows 200 in Stripe dashboard → Webhooks → this endpoint → Recent deliveries
+   - `payment_transactions` collection records the paid → refunded transitions
+2. Trigger `eas build --platform ios --profile production` + Android — the app bundle must include the new `pk_live_` for real card tokenization on device (bundled EAS builds ignore .env — the eas.json production env is what ships)
+3. Any staff who tests on the preview backend now hits **live Stripe** — deposit-side test cards no longer work. Prefer testing via a real small charge or via Stripe's Live-mode test clock
+
+**Files touched:**
+- `/app/backend/.env`
+- `/app/frontend/.env`
+- `/app/frontend/eas.json`

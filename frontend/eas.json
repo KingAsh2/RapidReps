@@ -32,8 +32,9 @@
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_BACKEND_URL": "https://highlight-vibe-bugs.preview.emergentagent.com",
+        "EXPO_PUBLIC_BACKEND_URL": "https://trainer-finder-9.emergent.host",
         "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyDPQjkEm9BIaB6t-v_IZ4AQXCcPssqEJQU",
+        "EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY": "pk_live_51T7L4jK4wxCoNrprGugNesABuRIYw6ya3i8szhftkuNEl0eep8lzfzzaQB1MAwafxKHYVHUtE9z8IPL5Bw9JVxNG00ZRsXIXnP",
         "SENTRY_AUTH_TOKEN": "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",
         "SENTRY_ALLOW_FAILURE": "true",
         "EAS_BUILD_NO_EXPO_GO_WARNING": "true"
