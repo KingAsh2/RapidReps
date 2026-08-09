@@ -29,6 +29,34 @@ router = APIRouter(prefix="/api")
 
 
 # ────────────────────────────────────────────────────────────────────
+# iter118l — Beta trainer auto-seed admin controls
+# ────────────────────────────────────────────────────────────────────
+@router.get("/admin/beta-seed/status")
+async def admin_beta_seed_status(admin_user: dict = Depends(require_admin)):
+    """Report how many beta-seeded trainers currently exist + feature-flag state."""
+    from beta_seed_service import is_beta_seeding_enabled
+    user_count = await db.users.count_documents({'isBetaSeed': True})
+    profile_count = await db.trainer_profiles.count_documents({'isBetaSeed': True})
+    seeded_trainees = await db.beta_seeded_trainees.count_documents({})
+    return {
+        'featureEnabled': is_beta_seeding_enabled(),
+        'envVar': 'BETA_AUTO_SEED_TRAINERS',
+        'seededUsers': user_count,
+        'seededTrainerProfiles': profile_count,
+        'traineesEverSeeded': seeded_trainees,
+    }
+
+
+@router.post("/admin/beta-seed/purge")
+async def admin_beta_seed_purge(admin_user: dict = Depends(require_admin)):
+    """Delete every beta-seeded trainer + their profile + reset seed markers.
+    Call this before switching to production so live trainees don't see sample rows."""
+    from beta_seed_service import purge_all_beta_seeds
+    result = await purge_all_beta_seeds(db)
+    return {'success': True, **result}
+
+
+# ────────────────────────────────────────────────────────────────────
 # iter102z: One-shot data migration for the trainer-visibility disconnect.
 # Safe to run repeatedly — only touches profiles that don't already have
 # the required fields. Intended to be hit once against production after

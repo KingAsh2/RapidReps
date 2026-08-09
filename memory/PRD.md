@@ -2467,3 +2467,36 @@ Both `google-services.json` and `google-service-account.json` are already in `fr
 - `/app/backend/.gitignore` (+`credentials/`)
 - `/app/frontend/src/contexts/NotificationContext.tsx`
 - `/app/frontend/src/services/api.ts`
+
+
+---
+
+## iter118l — Beta auto-seed nearby trainers on trainee's first request (2026-02-09)
+
+**Behavior:** During beta testing, whenever a trainee makes their first call to `GET /api/trainers/nearby`, we auto-spawn 3 admin-approved sample trainers within **3-15 miles** of their reported GPS. Each seeded trainer is flagged `isBetaSeed: true` on both `users` and `trainer_profiles` docs so all beta clutter can be purged with a single admin call before production.
+
+**Feature flag:** `BETA_AUTO_SEED_TRAINERS` env var (currently set to `true`). Set to `false` or unset to disable.
+
+**Files:**
+- `/app/backend/beta_seed_service.py` (new) — feature-flag check, `_random_offset_coords()` haversine-safe offset generator, `maybe_seed_trainers_for_trainee()` main entrypoint, `purge_all_beta_seeds()` admin cleanup
+- `/app/backend/routes/location_routes.py` — hook added at top of `GET /api/trainers/nearby` (non-fatal try/except so seeding failures never break the real endpoint)
+- `/app/backend/routes/admin_routes.py` — two new admin endpoints:
+  - `GET /api/admin/beta-seed/status` — returns `featureEnabled`, `seededUsers`, `seededTrainerProfiles`, `traineesEverSeeded`
+  - `POST /api/admin/beta-seed/purge` — deletes all `isBetaSeed=True` users + profiles and resets the `beta_seeded_trainees` marker collection
+- `/app/backend/.env` — added `BETA_AUTO_SEED_TRAINERS=true`
+
+**Diversity:** 24 first names × 14 last names × 10 training-style triples × 7 personality tags × 4 tier/rating tuples so every trainee sees a varied mix. Bios, certs, rates, gyms all randomized. All seeded trainers are `verificationStatus: "verified"`, `canGoLive: true`, `isAvailable: true` so they surface in the Available Now sheet immediately.
+
+**Idempotence:** `beta_seeded_trainees` collection records `{userId, seededAt, trainersCreated, traineeLat, traineeLng}`. Second call from the same trainee is a no-op.
+
+**Verified end-to-end:**
+1. Signup fresh trainee → login
+2. Call `GET /trainers/nearby?latitude=41.878&longitude=-87.629` (Chicago) → 3 trainers returned at distances 5.3 / 7.1 / 13.5 mi ✅
+3. Admin status shows `seededUsers: 3, seededTrainerProfiles: 3, traineesEverSeeded: 1` ✅
+4. Second call from same trainee → still 3 trainers, no duplicates ✅
+5. Admin `POST /admin/beta-seed/purge` → deletes all 3 users, 3 profiles, 1 marker, back to 0/0/0 ✅
+
+**To disable for production:**
+1. `POST /api/admin/beta-seed/purge` (wipes existing seeded trainers)
+2. Set `BETA_AUTO_SEED_TRAINERS=false` in `backend/.env`
+3. Restart backend

@@ -573,7 +573,26 @@ async def get_nearby_trainers(
     current_user: dict = Depends(get_current_user)
 ):
     """Get all available trainers near a location with distance and ETA"""
-    
+
+    # iter118l — Beta auto-seed: if the flag is on and this trainee has never had
+    # sample trainers spawned, generate 3 within 3-15 miles of their GPS position
+    # so the Available Now sheet is never empty during beta testing.
+    try:
+        from beta_seed_service import maybe_seed_trainers_for_trainee, is_beta_seeding_enabled
+        from deps import hash_password
+        if is_beta_seeding_enabled():
+            await maybe_seed_trainers_for_trainee(
+                db,
+                str(current_user['_id']),
+                latitude,
+                longitude,
+                hash_password,
+            )
+    except Exception as _seed_err:
+        # Never let seeding break the real endpoint
+        import logging
+        logging.getLogger(__name__).warning(f"beta-seed hook failed (non-fatal): {_seed_err}")
+
     # Get all available, ADMIN-APPROVED trainers with valid locations
     trainers = await db.trainer_profiles.find({
         'isAvailable': True,
