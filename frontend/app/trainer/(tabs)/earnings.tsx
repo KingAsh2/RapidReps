@@ -208,8 +208,10 @@ export default function TrainerEarningsScreen() {
               </View>
             </LinearGradient>
 
-            {/* iter106ae: Show "Set up payout method" banner if not configured.
-                Otherwise show "Payouts enabled" with link to manage. */}
+            {/* iter118q: Stripe Connect Express onboarding banner. Shown
+                until the trainer's `payoutsEnabled === true` on their
+                Connect account. Otherwise show the "Payouts enabled" pill
+                and a Manage link into the full Payouts screen. */}
             {!connectStatus.onboarded ? (
               <TouchableOpacity
                 style={styles.setupBanner}
@@ -218,15 +220,17 @@ export default function TrainerEarningsScreen() {
               >
                 <Ionicons name="warning" size={20} color={'#FFB300'} />
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.setupBannerTitle}>Set up your payout method</Text>
-                  <Text style={styles.setupBannerText}>Add Zelle, PayPal, Venmo, or Cash App so admin can send you funds.</Text>
+                  <Text style={styles.setupBannerTitle}>Set up payouts with Stripe</Text>
+                  <Text style={styles.setupBannerText}>
+                    Complete Stripe onboarding to receive automatic payouts 24 hours after each session.
+                  </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={20} color={'#FFFFFF'} />
               </TouchableOpacity>
             ) : (
               <View style={styles.connectedBanner}>
                 <Ionicons name="checkmark-circle" size={18} color={COLORS.success} />
-                <Text style={styles.connectedText}>Payouts enabled</Text>
+                <Text style={styles.connectedText}>Stripe payouts active</Text>
                 <TouchableOpacity onPress={() => router.push('/trainer/connect-bank')} data-testid="manage-bank-btn">
                   <Text style={[styles.connectedText, { color: '#FFFFFF', fontWeight: '700' }]}>Manage</Text>
                 </TouchableOpacity>

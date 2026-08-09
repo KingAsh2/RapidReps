@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 import { C, s, formatCents } from './AdminShared';
 
 interface Props {
@@ -13,14 +15,132 @@ interface Props {
 
 const STRIPE = '#635BFF';
 
+// iter118q — chrome for the Stripe Connect status pill next to each trainer.
+type ConnectRow = {
+  trainerId: string;
+  trainerName: string;
+  stripeConnectAccountId?: string | null;
+  connectStatus: 'not_connected' | 'onboarding' | 'requirements_due' | 'restricted' | 'connected';
+  payoutsEnabled: boolean;
+  requirementsDue: string[];
+  requirementsDisabledReason?: string | null;
+};
+
+function connectChrome(status: ConnectRow['connectStatus']) {
+  switch (status) {
+    case 'connected': return { label: 'Connected', color: '#00C853' };
+    case 'requirements_due': return { label: 'Requirements due', color: '#FFB300' };
+    case 'restricted': return { label: 'Restricted', color: '#FF4757' };
+    case 'onboarding': return { label: 'Onboarding', color: STRIPE };
+    default: return { label: 'Not connected', color: '#8892A6' };
+  }
+}
+
 export const PayoutsTab = ({
   payoutsData, payoutsHistory, payingTrainerId, payingAll,
   onPayTrainer, onPayAll,
-}: Props) => (
+}: Props) => {
+  // iter118q — Fetch the Connect status fleet view on mount so admins can spot
+  // trainers stuck in onboarding without leaving this tab.
+  const [connectRows, setConnectRows] = useState<ConnectRow[]>([]);
+  const [connectLoading, setConnectLoading] = useState(true);
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = await AsyncStorage.getItem('auth_token');
+        const res = await axios.get(
+          `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/admin/trainers/connect-status`,
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        setConnectRows(res.data?.trainers || []);
+      } catch {
+        setConnectRows([]);
+      } finally {
+        setConnectLoading(false);
+      }
+    })();
+  }, []);
+
+  const needsAttention = connectRows.filter(r =>
+    r.connectStatus === 'requirements_due'
+    || r.connectStatus === 'restricted'
+    || r.connectStatus === 'not_connected'
+    || r.connectStatus === 'onboarding'
+  );
+  const readyCount = connectRows.filter(r => r.connectStatus === 'connected').length;
+
+  return (
   <View>
+    {/* iter118q Stripe Connect health strip */}
     <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
+      <View style={[s.statCard, { flex: 1 }]} data-testid="connect-ready-count">
+        <Text style={s.statLabel}>Connect Ready</Text>
+        <Text style={[s.statValue, { color: '#00C853' }]}>{readyCount}</Text>
+      </View>
+      <View style={[s.statCard, { flex: 1 }]} data-testid="connect-attention-count">
+        <Text style={s.statLabel}>Needs Attention</Text>
+        <Text style={[s.statValue, { color: '#FFB300' }]}>{needsAttention.length}</Text>
+      </View>
+    </View>
+
+    <Text style={s.sectionTitle}>Stripe Connect Status</Text>
+    {connectLoading ? (
+      <ActivityIndicator color={STRIPE} style={{ marginVertical: 12 }} />
+    ) : connectRows.length === 0 ? (
+      <Text style={{ textAlign: 'center', color: C.gray, marginBottom: 20 }}>
+        No trainer profiles yet.
+      </Text>
+    ) : (
+      <>
+        {connectRows.slice(0, 25).map((r) => {
+          const chrome = connectChrome(r.connectStatus);
+          return (
+            <View
+              key={r.trainerId}
+              style={[s.userCard, { borderLeftWidth: 3, borderLeftColor: chrome.color }]}
+              data-testid={`connect-row-${r.trainerId}`}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: '#FFFFFF' }}>{r.trainerName || r.trainerId}</Text>
+                <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: 4 }}>
+                  <View style={{
+                    paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6,
+                    backgroundColor: `${chrome.color}22`, borderWidth: 1, borderColor: `${chrome.color}66`,
+                  }}>
+                    <Text style={{ color: chrome.color, fontSize: 10, fontWeight: '800', letterSpacing: 0.4 }}>
+                      {chrome.label.toUpperCase()}
+                    </Text>
+                  </View>
+                  {r.stripeConnectAccountId ? (
+                    <Text style={{ fontSize: 11, color: C.gray }}>{r.stripeConnectAccountId}</Text>
+                  ) : null}
+                </View>
+                {r.requirementsDue?.length > 0 ? (
+                  <Text style={{ fontSize: 11, color: '#FFB300', marginTop: 4 }} numberOfLines={2}>
+                    Due: {r.requirementsDue.slice(0, 3).join(', ')}
+                    {r.requirementsDue.length > 3 ? '…' : ''}
+                  </Text>
+                ) : null}
+                {r.requirementsDisabledReason ? (
+                  <Text style={{ fontSize: 11, color: '#FF4757', marginTop: 4 }} numberOfLines={2}>
+                    Restricted: {r.requirementsDisabledReason}
+                  </Text>
+                ) : null}
+              </View>
+            </View>
+          );
+        })}
+        {connectRows.length > 25 ? (
+          <Text style={{ textAlign: 'center', color: C.gray, marginBottom: 20 }}>
+            + {connectRows.length - 25} more…
+          </Text>
+        ) : null}
+      </>
+    )}
+
+    <View style={{ flexDirection: 'row', gap: 10, marginTop: 8, marginBottom: 16 }}>
       <View style={[s.statCard, { flex: 1 }]} data-testid="payouts-total-pending">
-        <Text style={s.statLabel}>Total Pending</Text>
+        <Text style={s.statLabel}>Total Pending (legacy)</Text>
         <Text style={[s.statValue, { color: C.orange }]}>{formatCents(payoutsData?.totalPendingCents || 0)}</Text>
       </View>
       <View style={[s.statCard, { flex: 1 }]} data-testid="payouts-eligible-count">
@@ -30,7 +150,7 @@ export const PayoutsTab = ({
     </View>
 
     <Text style={[s.sectionTitle, { fontSize: 13, marginBottom: 6, color: C.gray }]}>
-      Minimum payout: {formatCents(payoutsData?.payoutMinimumCents || 3500)} | Stripe → admin → trainer&apos;s chosen handle
+      Payouts now flow automatically via Stripe Connect 24 h after each session. Legacy manual queue below is view-only.
     </Text>
 
     {(payoutsData?.eligibleCount || 0) > 0 && (
@@ -117,4 +237,5 @@ export const PayoutsTab = ({
       ))
     )}
   </View>
-);
+  );
+};

@@ -704,10 +704,18 @@ async def edge_case_scheduler_loop() -> None:
             nudges = await _job_trainee_nudges()
             alerts = await _job_admin_strike_alerts()
             refunds = await _job_refund_retry()
-            if no_show or decline or orphans or nudges or alerts or refunds:
+            # iter118q: Stripe Connect payouts — release trainer transfers 24h
+            # after session completion (separate charges + transfers model).
+            try:
+                from services.stripe_connect_service import release_due_transfers
+                transfers = await release_due_transfers(db)
+            except Exception:  # pragma: no cover
+                logger.exception("connect release_due_transfers tick failed")
+                transfers = 0
+            if no_show or decline or orphans or nudges or alerts or refunds or transfers:
                 logger.info(
-                    "edge_case_scheduler tick: no_show=%d decline=%d orphan=%d nudge=%d alert=%d refund=%d",
-                    no_show, decline, orphans, nudges, alerts, refunds,
+                    "edge_case_scheduler tick: no_show=%d decline=%d orphan=%d nudge=%d alert=%d refund=%d transfer=%d",
+                    no_show, decline, orphans, nudges, alerts, refunds, transfers,
                 )
         except Exception as e:
             logger.exception("edge_case_scheduler tick failed: %s", e)

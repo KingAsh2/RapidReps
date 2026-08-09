@@ -1086,12 +1086,23 @@ async def client_confirm_session_end(
         {'$inc': {'totalSessionsCompleted': 1}}
     )
 
+    # iter118q: schedule the trainer's payout for T+24h post-completion via
+    # Stripe Connect (separate charges + transfers model). The transfer is
+    # created later by edge_case_scheduler's _job_connect_release_transfers.
+    try:
+        from services.stripe_connect_service import mark_session_eligible_for_release
+        updated = await db.sessions.find_one({'_id': oid})
+        await mark_session_eligible_for_release(db, session_id, updated)
+    except Exception:  # pragma: no cover — must never block session confirmation
+        import logging
+        logging.getLogger(__name__).exception("connect: mark-eligible failed for session=%s", session_id)
+
     # Push: Notify trainer of payment release
     earnings = session.get('trainerEarningsCents', 0)
     asyncio.create_task(create_and_send_notification(
         session['trainerId'],
-        "Payment Released!",
-        f"Your session payment of ${earnings/100:.2f} has been released.",
+        "Payment Scheduled",
+        f"Your ${earnings/100:.2f} for this session will be released to your Stripe payout balance in 24 hours.",
         "payment_released",
         {"sessionId": session_id, "screen": "trainer/earnings"}
     ))

@@ -235,38 +235,22 @@ class PayoutRequestCreate(BaseModel):
 
 @router.post("/trainer/request-payout")
 async def request_payout(request: PayoutRequestCreate, current_user: dict = Depends(get_current_user)):
-    """Trainer requests a payout of their pending balance."""
-    user_id = str(current_user['_id'])
+    """iter118q: Zelle-style manual payout requests are DEPRECATED.
 
-    completed_sessions = await db.sessions.find(
-        {'trainerId': user_id, 'status': SessionStatus.COMPLETED}
-    ).to_list(1000)
-    total_earnings = sum(s.get('trainerEarningsCents', 0) for s in completed_sessions)
-
-    payouts = await db.trainer_payouts.find({'trainerId': user_id}).to_list(1000)
-    total_paid = sum(p.get('amountCents', 0) for p in payouts)
-
-    pending = total_earnings - total_paid
-    if pending <= 0:
-        raise HTTPException(status_code=400, detail="No pending balance to pay out")
-
-    existing = await db.payout_requests.find_one({'trainerId': user_id, 'status': 'pending'})
-    if existing:
-        raise HTTPException(status_code=400, detail="You already have a pending payout request")
-
-    payout_request = {
-        'trainerId': user_id, 'trainerName': current_user.get('fullName', ''),
-        'trainerEmail': current_user.get('email', ''), 'amountCents': pending,
-        'paymentMethod': request.paymentMethod, 'paymentHandle': request.paymentHandle,
-        'notes': sanitize_text(request.notes), 'status': 'pending',
-        'createdAt': datetime.utcnow(), 'updatedAt': datetime.utcnow(),
-    }
-    result = await db.payout_requests.insert_one(payout_request)
-
-    return {
-        'success': True, 'requestId': str(result.inserted_id), 'amountCents': pending,
-        'message': f'Payout request for ${pending/100:.2f} submitted. You will be paid via {request.paymentMethod}.'
-    }
+    Trainers are now paid automatically by Stripe Connect (separate charges +
+    transfers) 24 h after each session's completion. This endpoint is kept
+    responsive for older app installs but always returns 410 Gone with a
+    prompt to complete Connect onboarding.
+    """
+    raise HTTPException(
+        status_code=410,
+        detail=(
+            "Manual payout requests have been retired. Payouts now happen "
+            "automatically via Stripe Connect 24 hours after each session. "
+            "If you haven't set up your Stripe payout account yet, open "
+            "'Set up payouts' on your Earnings tab."
+        ),
+    )
 
 
 @router.get("/trainer/payout-requests")
@@ -816,9 +800,12 @@ async def get_trainer_receipts(current_user: dict = Depends(get_current_user), l
     return {"receipts": receipts, "total": total_count}
 
 
-@router.get("/trainer/connect/status")
-async def trainer_connect_status(current_user: dict = Depends(get_current_user)):
-    """Check if trainer has Zelle info set up (replaces Stripe Connect status)."""
+@router.get("/trainer/connect/status/_legacy")
+async def trainer_connect_status_legacy(current_user: dict = Depends(get_current_user)):
+    """iter118q: DEPRECATED. This is the pre-Connect Zelle-based status
+    endpoint, kept at a namespaced legacy path so any old code that still
+    imports it doesn't 404. Live traffic hits the Stripe Connect version
+    defined in routes/connect_routes.py at /trainer/connect/status."""
     has_zelle = bool(current_user.get("zelleEmail") or current_user.get("zellePhone"))
     return {
         "connected": has_zelle, "onboarded": has_zelle, "paymentMethod": "zelle",

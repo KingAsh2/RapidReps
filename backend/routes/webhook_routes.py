@@ -92,10 +92,131 @@ async def stripe_webhook(request: Request):
         await _handle_payment_failed(event)
     elif event_type == "charge.refunded":
         await _handle_charge_refunded(event)
+    # iter118q — Stripe Connect payout / account lifecycle
+    elif event_type == "account.updated":
+        await _handle_account_updated(event)
+    elif event_type == "payout.paid":
+        await _handle_payout_paid(event)
+    elif event_type == "payout.failed":
+        await _handle_payout_failed(event)
     else:
         logger.info("Stripe webhook ignored event_type=%s", event_type)
 
     return {"received": True}
+
+
+# ---------------------------------------------------------------------------
+# iter118q Connect handlers
+# ---------------------------------------------------------------------------
+
+async def _handle_account_updated(event: dict) -> None:
+    """Mirror the connected account's payouts_enabled / requirements into
+    trainer_profiles so the frontend can gate the [Withdraw] CTA off the
+    latest state without polling Stripe."""
+    obj = event.get('data', {}).get('object') or {}
+    account_id = obj.get('id')
+    if not account_id:
+        return
+    reqs = obj.get('requirements') or {}
+    due = list(reqs.get('currently_due') or [])
+    past_due = list(reqs.get('past_due') or [])
+    disabled = reqs.get('disabled_reason')
+    payouts_enabled = bool(obj.get('payouts_enabled'))
+    details_submitted = bool(obj.get('details_submitted'))
+    charges_enabled = bool(obj.get('charges_enabled'))
+    if payouts_enabled and details_submitted:
+        status = 'connected'
+    elif due or past_due:
+        status = 'requirements_due'
+    elif disabled and details_submitted:
+        status = 'restricted'
+    else:
+        status = 'onboarding'
+    await db.trainer_profiles.update_one(
+        {'stripeConnectAccountId': account_id},
+        {'$set': {
+            'payoutsEnabled': payouts_enabled,
+            'detailsSubmitted': details_submitted,
+            'chargesEnabled': charges_enabled,
+            'requirementsDue': due,
+            'requirementsPastDue': past_due,
+            'requirementsPendingVerification': list(reqs.get('pending_verification') or []),
+            'requirementsDisabledReason': disabled,
+            'connectStatus': status,
+            'connectUpdatedAt': datetime.utcnow(),
+            'lastStripeAccountEventId': event.get('id'),
+        }},
+    )
+    logger.info("connect: account.updated %s → %s", account_id, status)
+
+
+async def _handle_payout_paid(event: dict) -> None:
+    obj = event.get('data', {}).get('object') or {}
+    payout_id = obj.get('id')
+    if not payout_id:
+        return
+    account_id = event.get('account')
+    await db.trainer_payouts.update_one(
+        {'stripePayoutId': payout_id},
+        {'$set': {
+            'stripePayoutId': payout_id,
+            'stripeConnectAccountId': account_id,
+            'amountCents': int(obj.get('amount') or 0),
+            'currency': obj.get('currency', 'usd'),
+            'status': 'paid',
+            'arrivalDate': obj.get('arrival_date'),
+            'paidAt': datetime.utcnow(),
+        }},
+        upsert=True,
+    )
+    # Best-effort trainer push
+    try:
+        profile = await db.trainer_profiles.find_one({'stripeConnectAccountId': account_id})
+        if profile:
+            amt = int(obj.get('amount') or 0) / 100.0
+            await create_and_send_notification(
+                profile['userId'],
+                "Payout Sent",
+                f"${amt:.2f} is on its way to your bank.",
+                "payout_paid",
+                {"payoutId": payout_id, "screen": "trainer/earnings"},
+            )
+    except Exception:
+        pass
+
+
+async def _handle_payout_failed(event: dict) -> None:
+    obj = event.get('data', {}).get('object') or {}
+    payout_id = obj.get('id')
+    if not payout_id:
+        return
+    account_id = event.get('account')
+    await db.trainer_payouts.update_one(
+        {'stripePayoutId': payout_id},
+        {'$set': {
+            'stripePayoutId': payout_id,
+            'stripeConnectAccountId': account_id,
+            'amountCents': int(obj.get('amount') or 0),
+            'currency': obj.get('currency', 'usd'),
+            'status': 'failed',
+            'failureCode': obj.get('failure_code'),
+            'failureMessage': obj.get('failure_message'),
+            'failedAt': datetime.utcnow(),
+        }},
+        upsert=True,
+    )
+    try:
+        profile = await db.trainer_profiles.find_one({'stripeConnectAccountId': account_id})
+        if profile:
+            await create_and_send_notification(
+                profile['userId'],
+                "Payout Failed",
+                f"Your payout couldn't be delivered: {obj.get('failure_message') or 'update your bank in Payouts.'}",
+                "payout_failed",
+                {"payoutId": payout_id, "screen": "trainer/connect-bank"},
+            )
+    except Exception:
+        pass
 
 
 async def _handle_payment_succeeded(event: dict) -> None:

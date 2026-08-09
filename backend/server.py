@@ -128,6 +128,8 @@ from routes.matching_routes import router as engine_router
 from routes.convenience_routes import router as convenience_router
 from routes.negotiation_routes import router as negotiation_router
 from routes.corporate_routes import router as corporate_router
+# iter118q — Stripe Connect Express payout routes
+from routes.connect_routes import router as connect_router
 
 
 # Auth routes extracted to routes/auth_routes.py
@@ -1006,6 +1008,8 @@ from routes.progress import router as progress_router
 app.include_router(matching_router)
 app.include_router(trainer_tools_router)
 app.include_router(feed_router)
+# iter118q Stripe Connect Express
+app.include_router(connect_router)
 app.include_router(group_sessions_router)
 app.include_router(progress_router)
 

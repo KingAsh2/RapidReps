@@ -1,0 +1,33 @@
+{
+  "summary": "iter118q — Zelle → Stripe Connect Express backend migration verified end-to-end. All 13 backend tests pass (fee split math, new /api/trainer/connect/status shape, /api/trainer/connect/account-link Stripe-restriction forwarding, /api/admin/trainers/connect-status listing + ordering, legacy /api/trainer/request-payout returning 410, mark_session_eligible_for_release T+24h scheduling, release_due_transfers awaiting-onboarding path, webhook _handle_account_updated + _handle_payout_paid, and migration script idempotency).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iter118q_stripe_connect_migration.py",
+    "/app/test_reports/pytest/iter118q_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "connect_routes.get_connect_status hits Stripe (Balance.retrieve + Payout.list) on every /status call — cache or debounce (e.g., 30s) to keep the trainer Earnings tab snappy and reduce Stripe API pressure.",
+    "release_due_transfers claims a row atomically with transferState IN ['pending','retry'], but rows the worker itself parked as 'awaiting-onboarding' will NEVER be re-picked (they don't match the claim filter on a later tick). Add 'awaiting-onboarding' to the claim IN-list so trainers who finish onboarding late get their held funds released automatically.",
+    "POST /api/trainer/connect/account-link — the current live Stripe account is rejecting new Express account creation ('temporarily restricted'). This is a Stripe-side dashboard config issue, not a code bug, and the endpoint correctly surfaces the Stripe error. Flag with the ops team to lift the Stripe restriction before public rollout.",
+    "compute_platform_and_trainer_split uses banker's rounding via round(); for odd cent prices the trainer could lose a cent to the platform. Consider math.floor for the platform share to keep the trainer's cut deterministic and slightly favorable."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter118q_stripe_connect_migration.py (new)"
+  ],
+  "success_rate": {"backend": "100% (13/13)", "frontend": "n/a — frontend is Expo React Native, out of scope"},
+  "test_credentials": "admin@rapidreps.com / admin123 ; test_trainer_iter25@test.com / Test123!",
+  "seed_data_creation": "No permanent seed data. Tests self-clean: TEST_*-prefixed trainer_profiles/sessions/trainer_payouts rows are deleted in finally blocks. The connect-status test temporarily unsets and restores the real trainer's stripeConnectAccountId inside a try/finally.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "test_iter118q_stripe_connect_migration.py uses a shared asyncio event loop (_shared_loop) and rebinds deps.db to it so webhook handlers (which import deps.db module-level) work across multiple asyncio.run boundaries. Reuse the _arun helper pattern for any future direct-service async tests. The migration script scripts/migrate_zelle_to_connect.py is proven idempotent (2nd run yields 0/0/0 modified counts).",
+  "rca of the issue": "n/a — no bugs found. Note: initial test failures were pytest-side (motor client stuck on a closed event loop across asyncio.run boundaries), fixed by binding one shared loop and rebinding deps.db to it. Not a product bug."
+}

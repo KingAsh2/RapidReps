@@ -399,9 +399,26 @@ export const trainerAPI = {
     return response.data;
   },
 
-  connectStatus: async (): Promise<{ connected: boolean; onboarded: boolean; accountId?: string }> => {
+  connectStatus: async (): Promise<{
+    connectStatus: 'not_connected' | 'onboarding' | 'requirements_due' | 'restricted' | 'connected';
+    payoutsEnabled: boolean;
+    detailsSubmitted: boolean;
+    chargesEnabled: boolean;
+    requirementsDue: string[];
+    availableCents: number;
+    pendingCents: number;
+    payouts: Array<{ id: string; amountCents: number; status: string; arrivalDate?: number | null }>;
+    // Legacy shape shims kept for older Earnings-tab callers
+    connected?: boolean;
+    onboarded?: boolean;
+  }> => {
     const response = await api.get('/trainer/connect/status');
-    return response.data;
+    // iter118q: compute legacy `onboarded` from `payoutsEnabled` so the
+    // Earnings tab's setup banner still gates correctly without a rewrite.
+    const data = response.data || {};
+    data.connected = !!data.payoutsEnabled;
+    data.onboarded = !!data.payoutsEnabled;
+    return data;
   },
 
   getZelleInfo: async (): Promise<{ zelleEmail: string; zellePhone: string; hasZelleInfo: boolean }> => {
