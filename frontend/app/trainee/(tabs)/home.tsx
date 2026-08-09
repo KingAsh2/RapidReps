@@ -644,22 +644,15 @@ export default function TraineeHomeScreen() {
                 style={styles.heroBgImage}
                 resizeMode="cover"
               />
-              {/* Left→right dark→transparent gradient so the headline stays legible */}
+              {/* Left→right dark→transparent gradient so the headline stays legible
+                  while the photo remains clearly visible on the right */}
               <LinearGradient
-                colors={['rgba(10,14,26,0.98)', 'rgba(10,14,26,0.92)', 'rgba(10,14,26,0.55)', 'rgba(10,14,26,0.15)']}
+                colors={['rgba(10,14,26,0.96)', 'rgba(10,14,26,0.70)', 'rgba(10,14,26,0.15)', 'rgba(10,14,26,0)']}
                 start={{ x: 0, y: 0.5 }}
                 end={{ x: 1, y: 0.5 }}
+                locations={[0, 0.35, 0.65, 1]}
                 style={StyleSheet.absoluteFillObject}
               />
-              {/* Secondary top→bottom subtle gradient for extra depth + text safety */}
-              <LinearGradient
-                colors={['rgba(10,14,26,0.35)', 'rgba(10,14,26,0)', 'rgba(10,14,26,0.45)']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 1 }}
-                style={StyleSheet.absoluteFillObject}
-              />
-              {/* Warm fire glow behind the copy */}
-              <View style={styles.heroFireGlow} />
               <View style={styles.heroContent}>
                 <View style={styles.heroTitleWrap}>
                   <Text style={styles.heroTitleWhite}>LET&apos;S GET </Text>
@@ -1261,7 +1254,7 @@ const styles = StyleSheet.create({
     right: 0,
     top: 0,
     bottom: 0,
-    width: '72%',
+    width: '78%',
     height: '100%',
   },
   heroFireGlow: {
