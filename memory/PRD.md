@@ -2270,3 +2270,29 @@ User provided approved screenshot as single source of truth. Two visual discrepa
    - Added `Safety Center` entry to the dropdown menu (below "Verify Trainer", above the divider) → `/trainee/safety-center` with `shield-half` orange icon
 
 **No backend changes.** Metro bundles cleanly; 0 lint issues on all touched files.
+
+
+---
+
+## iter118g — Production Push Notifications (Config + Handoff Doc) (2026-02-09)
+
+**Code side is 100% wired.** Existing setup verified:
+- `expo-notifications ~0.32.17` installed; plugin configured; Android `POST_NOTIFICATIONS` permission declared
+- `NotificationContext.tsx` — `setNotificationHandler`, `setNotificationChannelAsync('default', MAX)`, `addNotificationReceivedListener`, `addNotificationResponseReceivedListener` all present
+- Push token registration → `/api/push-tokens/register` (DB: `push_tokens` collection)
+- Backend `deps.py::send_push_notification()` — posts to `https://exp.host/--/api/v2/push/send` with `priority: "high"`, `channelId: "default"`, badge count. Dead-token 2-strike cleanup on `DeviceNotRegistered` tickets
+- `eas.json` — Apple ID/Team ID/ASC App ID already filled for iOS submit; Android submit expects `google-service-account.json`
+
+**Added in this iteration:**
+- `app.json`: `expo-notifications.enableBackgroundRemoteNotifications: true` (iOS headless background mode entitlement at build time)
+- `app.json`: `android.googleServicesFile: "./google-services.json"` (referenced but file not yet handed over)
+- `/app/memory/PUSH_NOTIFICATIONS_SETUP.md` — full 15-min copy-paste setup checklist covering EAS APNs key generation, Firebase project creation, `google-services.json` download, FCM V1 service-account key upload via `eas credentials`, and production rebuild
+
+**Blocked on user (credential handoff only — no code work remaining):**
+- User must run `eas credentials` locally (requires Apple 2FA on their trusted device + Firebase login in their browser — cannot be automated from this container)
+- User must download `google-services.json` from Firebase Console and drop it at `/app/frontend/google-services.json`
+- User must upload FCM V1 service-account JSON via `eas credentials` (never committed)
+- After credentials setup: `eas build --platform ios --profile production` + `eas build --platform android --profile production`
+- Verified fresh install must register a new `ExponentPushToken[...]` before background pushes will arrive
+
+Both `google-services.json` and `google-service-account.json` are already in `frontend/.gitignore`.
