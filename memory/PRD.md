@@ -2222,3 +2222,24 @@ User provided approved screenshot as single source of truth. Two visual discrepa
 
 **Files touched:**
 - `/app/frontend/app/trainer/(tabs)/home.tsx`
+
+
+---
+
+## iter118e — Trainee Home Pixel-Lock + Profile Anthem De-Dup (2026-02-09)
+
+**Two targeted fixes:**
+
+1. **Trainee home — hero headline color pattern** (`/app/frontend/app/trainee/(tabs)/home.tsx`):
+   Rebuilt the 3-line headline exactly per the approved screenshot:
+   - Line 1: `LET'S GET` — **white** italic 900
+   - Line 2: `AFTER IT,` — **orange** italic 900
+   - Line 3: `{NAME}! 💪🔥` — **white** italic 900 (was orange)
+   - Font bumped 26→30 with italic + tighter letter-spacing to match the reference wordmark styling
+   - Hero border alpha 0.18→0.35 so the orange outline reads on device
+   - `heroContent.maxWidth: '62%'` so text can't crash into the photo
+
+2. **Trainee profile — duplicate "Your Anthem"** (`/app/frontend/app/trainee/(tabs)/profile.tsx`):
+   Both the `TrainerVibePlayer` and the "Your Anthem" CTA rendered when an anthem was set (two "Your Anthem" surfaces stacked). Guarded the CTA with `{!profile?.vibeTrackTitle && (…)}` so the CTA only appears when there is **no** anthem yet (mirrors the exact behavior already used in the trainer profile). When set, only the audio player is shown.
+
+**No backend changes.** Metro bundles cleanly; lint delta = 0 new warnings on both files.

@@ -974,27 +974,27 @@ export default function TraineeProfileScreen() {
                 </View>
               ) : null}
 
-              {/* Trainee Vibe CTA */}
-              <TouchableOpacity
-                onPress={() => router.push('/trainee/vibe-setup')}
-                style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,106,0,0.08)', borderRadius: 16, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: 'rgba(255,106,0,0.15)' }}
-                data-testid="trainee-vibe-setup-btn"
-                accessibilityLabel="Set your profile anthem"
-                accessibilityRole="button"
-              >
-                <LinearGradient colors={['#FF6A00', '#FF3D00']} style={{ width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center' }}>
-                  <Ionicons name="musical-notes" size={22} color="#FFF" />
-                </LinearGradient>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 16, fontWeight: '800', color: '#FFF' }}>
-                    {profile?.vibeTrackTitle ? 'Your Anthem' : 'Set Your Anthem'}
-                  </Text>
-                  <Text style={{ fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.5)' }}>
-                    {profile?.vibeTrackTitle ? `${profile.vibeTrackTitle} - ${profile.vibeArtistName}` : 'Pick the song that hypes you up'}
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.3)" />
-              </TouchableOpacity>
+              {/* Trainee Vibe CTA — iter118e: only render when the user has NOT set an anthem.
+                  When set, the TrainerVibePlayer above already surfaces the track,
+                  so the CTA becomes a duplicate. */}
+              {!profile?.vibeTrackTitle && (
+                <TouchableOpacity
+                  onPress={() => router.push('/trainee/vibe-setup')}
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,106,0,0.08)', borderRadius: 16, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: 'rgba(255,106,0,0.15)' }}
+                  data-testid="trainee-vibe-setup-btn"
+                  accessibilityLabel="Set your profile anthem"
+                  accessibilityRole="button"
+                >
+                  <LinearGradient colors={['#FF6A00', '#FF3D00']} style={{ width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center' }}>
+                    <Ionicons name="musical-notes" size={22} color="#FFF" />
+                  </LinearGradient>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 16, fontWeight: '800', color: '#FFF' }}>Set Your Anthem</Text>
+                    <Text style={{ fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.5)' }}>Pick the song that hypes you up</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.3)" />
+                </TouchableOpacity>
+              )}
 
               {/* Highlight Reel Upload CTA */}
               <TouchableOpacity

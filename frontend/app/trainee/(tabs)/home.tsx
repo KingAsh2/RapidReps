@@ -654,13 +654,18 @@ export default function TraineeHomeScreen() {
                 style={StyleSheet.absoluteFillObject}
               />
               <View style={styles.heroContent}>
-                <View style={styles.heroTitleWrap}>
-                  <Text style={styles.heroTitleWhite}>LET&apos;S GET </Text>
-                  <Text style={styles.heroTitleOrange}>
-                    AFTER IT,{'\n'}{user?.fullName?.split(' ')[0]?.toUpperCase() || 'CHAMP'}!
-                  </Text>
-                  <Text style={styles.heroTitleWhite}> 💪🔥</Text>
-                </View>
+                {/* iter118e PIXEL-LOCK: 3-line headline exactly per screenshot —
+                    LET'S GET (white) / AFTER IT, (orange) / NAME! + emojis (white) */}
+                <Text style={styles.heroTitleWhite}>LET&apos;S GET</Text>
+                <Text style={styles.heroTitleOrange}>AFTER IT,</Text>
+                <Text
+                  style={styles.heroTitleWhite}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.55}
+                >
+                  {(user?.fullName?.split(' ')[0] || 'CHAMP').toUpperCase()}! 💪🔥
+                </Text>
                 <Text style={styles.heroSubtitle}>
                   Your next workout is{'\n'}just one tap away
                 </Text>
@@ -1239,7 +1244,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderRadius: 22,
     overflow: 'hidden',
-    minHeight: 240,
+    minHeight: 260,
     backgroundColor: '#0A0E1A',
     shadowColor: '#FF6A00',
     shadowOffset: { width: 0, height: 10 },
@@ -1247,7 +1252,7 @@ const styles = StyleSheet.create({
     shadowRadius: 22,
     elevation: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255,106,0,0.18)',
+    borderColor: 'rgba(255,106,0,0.35)',
   },
   heroBgImage: {
     position: 'absolute',
@@ -1270,7 +1275,8 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
     paddingHorizontal: 22,
     justifyContent: 'center',
-    minHeight: 240,
+    minHeight: 260,
+    maxWidth: '62%',
   },
   heroTitleWrap: {
     flexDirection: 'row',
@@ -1280,21 +1286,23 @@ const styles = StyleSheet.create({
     maxWidth: '85%',
   },
   heroTitleWhite: {
-    fontSize: 26,
+    fontSize: 30,
     fontWeight: '900',
     color: '#FFFFFF',
     letterSpacing: 0.3,
-    lineHeight: 30,
+    lineHeight: 34,
+    fontStyle: 'italic',
     textShadowColor: 'rgba(0,0,0,0.5)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 6,
   },
   heroTitleOrange: {
-    fontSize: 26,
+    fontSize: 30,
     fontWeight: '900',
     color: '#FF6A00',
     letterSpacing: 0.3,
-    lineHeight: 30,
+    lineHeight: 34,
+    fontStyle: 'italic',
     textShadowColor: 'rgba(255,106,0,0.35)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
@@ -1304,8 +1312,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: 'rgba(255,255,255,0.72)',
     lineHeight: 18,
+    marginTop: 12,
     marginBottom: 16,
-    maxWidth: '60%',
+    maxWidth: '100%',
   },
   heroLocationPill: {
     flexDirection: 'row',
