@@ -619,74 +619,69 @@ export default function TrainerHomeScreen() {
             {/* iter96b: Stripe Payouts Setup Banner removed per user request.
                 Onboarding to Stripe is now reachable via Earnings tab. */}
 
-            {/* iter118b: Trainer home redesign matching the user's mock.
-                Section 1 — HERO: right-anchored photo, orange "WELCOME BACK,",
-                huge "LET'S TRAIN, [NAME]!" split-color headline. */}
+            {/* iter118d PIXEL-LOCK: Hero + ONLINE toggle live inside ONE orange-outlined card
+                per the approved screenshot. Single rounded container, single border,
+                photo right-anchored across the top, ONLINE toggle pinned inside bottom. */}
             <Animated.View
               style={[
-                styles.heroBanner,
+                styles.heroCombined,
                 {
                   opacity: heroAnim,
                   transform: [{ translateY: heroTranslateY }],
                 },
               ]}
             >
-              <Image
-                source={require('../../../assets/images/hero-trainer-back.png')}
-                style={styles.heroBgImage}
-                resizeMode="cover"
-              />
-              <LinearGradient
-                colors={['rgba(10,14,26,0.96)', 'rgba(10,14,26,0.70)', 'rgba(10,14,26,0.15)', 'rgba(10,14,26,0)']}
-                start={{ x: 0, y: 0.5 }}
-                end={{ x: 1, y: 0.5 }}
-                locations={[0, 0.35, 0.65, 1]}
-                style={StyleSheet.absoluteFillObject}
-              />
-              <View style={styles.heroContent}>
-                <Text style={styles.heroEyebrow}>WELCOME BACK,</Text>
-                <Text style={styles.heroTitleWhite}>LET&apos;S TRAIN,</Text>
-                <Text
-                  style={styles.heroTitleOrange}
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                  minimumFontScale={0.6}
-                >{(user?.fullName?.split(' ')[0] || 'TRAINER').toUpperCase()}!</Text>
-                <Text style={styles.heroSubtitle}>Your training empire awaits 💪🔥</Text>
-              </View>
-            </Animated.View>
-
-            {/* Section 2 — ONLINE & AVAILABLE toggle card */}
-            <Animated.View
-              style={[
-                styles.onlineCard,
-                {
-                  opacity: statusCardAnim,
-                  transform: [{ translateY: statusTranslateY }],
-                },
-              ]}
-            >
-              <View style={[styles.onlineDot, { backgroundColor: isAvailable ? COLORS.success : '#8a95b0' }]} />
-              <View style={styles.onlineContent}>
-                <Text style={[styles.onlineTitle, { color: isAvailable ? COLORS.success : COLORS.white }]}>
-                  {isAvailable ? 'ONLINE & AVAILABLE' : 'OFFLINE'}
-                </Text>
-                <Text style={styles.onlineSubtitle}>
-                  {isAvailable ? 'Trainees can find and book you' : 'Toggle on to accept new clients'}
-                </Text>
-              </View>
-              {availabilityLoading ? (
-                <ActivityIndicator size="small" color={COLORS.white} />
-              ) : (
-                <Switch
-                  value={isAvailable}
-                  onValueChange={handleToggleAvailability}
-                  trackColor={{ false: 'rgba(255,255,255,0.18)', true: COLORS.success }}
-                  thumbColor={'#FFFFFF'}
-                  ios_backgroundColor="rgba(255,255,255,0.18)"
-                  data-testid="availability-toggle"
+              {/* Photo layer — top region of the combined card */}
+              <View style={styles.heroPhotoWrap}>
+                <Image
+                  source={require('../../../assets/images/hero-trainer-back.png')}
+                  style={styles.heroBgImage}
+                  resizeMode="cover"
                 />
-              )}
+                <LinearGradient
+                  colors={['rgba(10,14,26,0.96)', 'rgba(10,14,26,0.70)', 'rgba(10,14,26,0.15)', 'rgba(10,14,26,0)']}
+                  start={{ x: 0, y: 0.5 }}
+                  end={{ x: 1, y: 0.5 }}
+                  locations={[0, 0.35, 0.65, 1]}
+                  style={StyleSheet.absoluteFillObject}
+                />
+                <View style={styles.heroContent}>
+                  <Text style={styles.heroEyebrow}>WELCOME BACK,</Text>
+                  <Text style={styles.heroTitleWhite}>LET&apos;S TRAIN,</Text>
+                  <Text
+                    style={styles.heroTitleOrange}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.55}
+                  >{(user?.fullName?.split(' ')[0] || 'TRAINER').toUpperCase()}!</Text>
+                  <Text style={styles.heroSubtitle}>Your training empire awaits 💪🔥</Text>
+                </View>
+              </View>
+
+              {/* ONLINE & AVAILABLE — nested inside the same orange-outlined card */}
+              <View style={styles.onlineNested}>
+                <View style={[styles.onlineDot, { backgroundColor: isAvailable ? COLORS.success : '#8a95b0' }]} />
+                <View style={styles.onlineContent}>
+                  <Text style={[styles.onlineTitle, { color: isAvailable ? COLORS.success : COLORS.white }]}>
+                    {isAvailable ? 'ONLINE & AVAILABLE' : 'OFFLINE'}
+                  </Text>
+                  <Text style={styles.onlineSubtitle}>
+                    {isAvailable ? 'Trainees can find and book you' : 'Toggle on to accept new clients'}
+                  </Text>
+                </View>
+                {availabilityLoading ? (
+                  <ActivityIndicator size="small" color={COLORS.white} />
+                ) : (
+                  <Switch
+                    value={isAvailable}
+                    onValueChange={handleToggleAvailability}
+                    trackColor={{ false: 'rgba(255,255,255,0.18)', true: COLORS.success }}
+                    thumbColor={'#FFFFFF'}
+                    ios_backgroundColor="rgba(255,255,255,0.18)"
+                    data-testid="availability-toggle"
+                  />
+                )}
+              </View>
             </Animated.View>
 
             {/* Section 3 — 4 stat cards row */}
@@ -927,7 +922,7 @@ export default function TrainerHomeScreen() {
               </TouchableOpacity>
             )}
 
-            {/* Section 6 — 2x2 grid of primary actions */}
+            {/* iter118d PIXEL-LOCK: Section 6 — single row of 4 action tiles */}
             <View style={styles.actionGridRow}>
               <TouchableOpacity
                 style={styles.actionTile}
@@ -935,11 +930,11 @@ export default function TrainerHomeScreen() {
                 activeOpacity={0.85}
                 data-testid="action-edit-profile"
               >
-                <View style={[styles.actionTileIcon, { backgroundColor: 'rgba(255,106,0,0.15)' }]}>
-                  <Ionicons name="person" size={26} color={COLORS.orange} />
+                <View style={[styles.actionTileIcon, { backgroundColor: 'transparent' }]}>
+                  <Ionicons name="person" size={30} color={COLORS.orange} />
                 </View>
                 <Text style={styles.actionTileTitle}>Edit Profile</Text>
-                <Text style={styles.actionTileSub}>Update your info</Text>
+                <Text style={styles.actionTileSub} numberOfLines={1}>Update your info</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -948,8 +943,8 @@ export default function TrainerHomeScreen() {
                 activeOpacity={0.85}
                 data-testid="action-verification"
               >
-                <View style={[styles.actionTileIcon, { backgroundColor: 'rgba(108,92,231,0.18)' }]}>
-                  <Ionicons name="shield-checkmark" size={26} color={'#A29BFE'} />
+                <View style={[styles.actionTileIcon, { backgroundColor: 'transparent' }]}>
+                  <Ionicons name="shield" size={30} color={'#A29BFE'} />
                   {(trainerProfile?.isVerified === true || (trainerProfile as any)?.verificationStatus === 'verified') && (
                     <View style={styles.verifiedBadge}>
                       <Ionicons name="checkmark" size={11} color="#fff" />
@@ -957,13 +952,11 @@ export default function TrainerHomeScreen() {
                   )}
                 </View>
                 <Text style={styles.actionTileTitle}>Verification</Text>
-                <Text style={styles.actionTileSub}>
+                <Text style={styles.actionTileSub} numberOfLines={1}>
                   {(trainerProfile?.isVerified === true || (trainerProfile as any)?.verificationStatus === 'verified') ? 'Verified Trainer' : 'Get verified'}
                 </Text>
               </TouchableOpacity>
-            </View>
 
-            <View style={styles.actionGridRow}>
               {(trainerProfile?.isVerified === true || (trainerProfile as any)?.verificationStatus === 'verified') ? (
                 <TouchableOpacity
                   style={styles.actionTile}
@@ -971,11 +964,11 @@ export default function TrainerHomeScreen() {
                   activeOpacity={0.85}
                   data-testid="action-set-rates"
                 >
-                  <View style={[styles.actionTileIcon, { backgroundColor: 'rgba(59,130,246,0.18)' }]}>
-                    <Ionicons name="cash" size={26} color={'#3B82F6'} />
+                  <View style={styles.setRatesCircle}>
+                    <Text style={styles.setRatesGlyph}>$</Text>
                   </View>
                   <Text style={styles.actionTileTitle}>Set Rates</Text>
-                  <Text style={styles.actionTileSub}>Manage pricing</Text>
+                  <Text style={styles.actionTileSub} numberOfLines={1}>Manage pricing</Text>
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity
@@ -984,11 +977,11 @@ export default function TrainerHomeScreen() {
                   activeOpacity={0.85}
                   data-testid="action-set-rates-locked"
                 >
-                  <View style={[styles.actionTileIcon, { backgroundColor: 'rgba(255,255,255,0.06)' }]}>
-                    <Ionicons name="lock-closed" size={24} color={'rgba(255,255,255,0.5)'} />
+                  <View style={[styles.actionTileIcon, { backgroundColor: 'transparent' }]}>
+                    <Ionicons name="lock-closed" size={26} color={'rgba(255,255,255,0.5)'} />
                   </View>
                   <Text style={[styles.actionTileTitle, { color: 'rgba(255,255,255,0.6)' }]}>Set Rates</Text>
-                  <Text style={styles.actionTileSub}>Verify first</Text>
+                  <Text style={styles.actionTileSub} numberOfLines={1}>Verify first</Text>
                 </TouchableOpacity>
               )}
 
@@ -998,11 +991,11 @@ export default function TrainerHomeScreen() {
                 activeOpacity={0.85}
                 data-testid="action-settings"
               >
-                <View style={[styles.actionTileIcon, { backgroundColor: 'rgba(255,71,87,0.18)' }]}>
-                  <Ionicons name="settings" size={26} color={'#FF4757'} />
+                <View style={[styles.actionTileIcon, { backgroundColor: 'transparent' }]}>
+                  <Ionicons name="settings" size={30} color={'#FF4757'} />
                 </View>
                 <Text style={styles.actionTileTitle}>Settings</Text>
-                <Text style={styles.actionTileSub}>App preferences</Text>
+                <Text style={styles.actionTileSub} numberOfLines={1}>App preferences</Text>
               </TouchableOpacity>
             </View>
 
@@ -1374,6 +1367,35 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 8,
+  },
+  // iter118d PIXEL-LOCK — combined hero + online card (single orange-outlined container)
+  heroCombined: {
+    marginBottom: 16,
+    borderRadius: 22,
+    overflow: 'hidden',
+    backgroundColor: '#0A0E1A',
+    borderWidth: 1,
+    borderColor: 'rgba(255,106,0,0.35)',
+    shadowColor: '#FF6A00',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.18,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  heroPhotoWrap: {
+    position: 'relative',
+    minHeight: 230,
+    overflow: 'hidden',
+  },
+  onlineNested: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,106,0,0.18)',
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    gap: 12,
   },
   // Hero
   heroBanner: {
@@ -1762,31 +1784,47 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#00D68F',
   },
-  // 2x2 action grid tiles
+  // Single-row of 4 action tiles (pixel-lock — matches screenshot)
   actionGridRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
     marginBottom: 12,
   },
   actionTile: {
     flex: 1,
-    paddingVertical: 16,
-    paddingHorizontal: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 8,
     borderRadius: 14,
     backgroundColor: 'rgba(255,255,255,0.03)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
-    minHeight: 110,
-    justifyContent: 'space-between',
+    minHeight: 118,
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
   },
   actionTileIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 10,
     position: 'relative' as const,
+  },
+  setRatesCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#2E90FA',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  setRatesGlyph: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    lineHeight: 24,
   },
   verifiedBadge: {
     position: 'absolute',
@@ -1802,13 +1840,13 @@ const styles = StyleSheet.create({
     borderColor: '#0A0E1A',
   },
   actionTileTitle: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '800',
     color: '#FFFFFF',
     marginBottom: 2,
   },
   actionTileSub: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '500',
     color: 'rgba(255,255,255,0.5)',
   },

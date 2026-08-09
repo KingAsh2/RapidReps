@@ -2206,3 +2206,19 @@ Server logs showed repeated `LOGIN FAIL` for `admin@rapidreps.com` because the u
 - P2: Replace athlete silhouettes on auth screens with premium photography
 - P2: EDGE_CASE_PLAYBOOK Batch 3 (G20–G22 SMS fallback via Twilio/SendGrid)
 - Optional: apply the same visual language to the trainee (tabs)/home.tsx for cohesion
+
+
+---
+
+## iter118d — Trainer Home PIXEL-LOCK correction (2026-02-09)
+
+User provided approved screenshot as single source of truth. Two visual discrepancies from iter118c were corrected while preserving all backend wiring:
+
+1. **Hero + ONLINE & AVAILABLE = one card** — Combined into a single orange-outlined rounded container (`heroCombined`). Photo layer (`heroPhotoWrap`) sits on top with the right-anchored trainer photo + gradient + headline copy; ONLINE toggle (`onlineNested`) sits below inside the same border with a hairline separator (`borderTopColor: rgba(255,106,0,0.18)`). Availability toggle still calls `handleToggleAvailability` (location perms + server update).
+
+2. **Actions = single row of 4 tiles** — Was a 2×2 grid, now a `flex-direction: row` of 4 flex-1 tiles: Edit Profile (orange person → /trainer/edit-profile), Verification (purple shield + green ✓ badge when verified → /trainer/verification), Set Rates (solid blue `$` circle chip → /trainer/set-rates; locked padlock if unverified → /trainer/verification), Settings (red gear → /trainer/(tabs)/profile). Titles 12pt, subtitles 10pt to fit 4 tiles across.
+
+**No backend changes.** Metro bundles cleanly; lint delta = 0 new warnings.
+
+**Files touched:**
+- `/app/frontend/app/trainer/(tabs)/home.tsx`
