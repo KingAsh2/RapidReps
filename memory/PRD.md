@@ -1,5 +1,45 @@
 # RapidReps PRD
 
+## 2026-08 — iter118q: Stripe Connect Express Migration ✅
+
+**Payout flow overhauled: manual Zelle batches → Stripe Connect Express (separate charges + transfers)**
+
+Locked-in design (per user):
+- **Separate charges + transfers** — 100% of trainee payment lands on the platform Stripe account. Trainer's 80% is transferred later via `stripe.Transfer.create` at T+24h post session completion. Platform cut (20% + $2.99) never leaves the platform account.
+- **24-hour hold** enforced per-session by a release worker inside `edge_case_scheduler` (60s tick).
+- **Immediate cutover** — legacy Zelle rows voided by migration script; `POST /api/trainer/request-payout` now returns HTTP 410. Trainers must complete Stripe Connect onboarding before their next payout.
+- **US-only Express accounts** (1099-K/NEC auto-gen).
+
+**New backend files**
+- `services/stripe_connect_service.py` — `compute_platform_and_trainer_split`, `ensure_express_account`, `create_account_link`, `refresh_account_status`, `mark_session_eligible_for_release`, `release_due_transfers`
+- `routes/connect_routes.py` — 3 endpoints
+- `scripts/migrate_zelle_to_connect.py` — one-shot Zelle→Connect cutover (already run: 122 trainers flagged, 1 payout_request voided)
+
+**New endpoints**
+- `POST /api/trainer/connect/account-link` — lazy Express account create + hosted-onboarding URL
+- `GET  /api/trainer/connect/status` — connectStatus + balance + recent payouts
+- `GET  /api/admin/trainers/connect-status` — fleet-view for admin dashboard
+
+**Modified**
+- `routes/session_routes.py` client-confirm-end → schedules T+24h transfer via `mark_session_eligible_for_release`
+- `routes/webhook_routes.py` — added `account.updated`, `payout.paid`, `payout.failed` handlers
+- `routes/payment_routes.py` — `/trainer/request-payout` returns 410; old Zelle-flavored `/trainer/connect/status` moved to `/_legacy` path
+- `edge_case_scheduler.py` — new `release_due_transfers` job ticked every ~60s
+- `server.py` — registers connect_router
+
+**Frontend**
+- `app/trainer/connect-bank.tsx` — fully rewritten Payouts screen with Stripe hosted onboarding via `expo-web-browser`; shows connect status, available/pending balances, requirements-due warnings, recent payouts list
+- `app/trainer/(tabs)/earnings.tsx` — setup banner copy updated to reference Stripe
+- `src/services/api.ts` — `trainerAPI.connectStatus` returns new shape with `connected`/`onboarded` legacy shims
+- `src/components/admin/PayoutsTab.tsx` — new "Stripe Connect Status" section with per-trainer status pills
+
+**Fee split (single source of truth in `compute_platform_and_trainer_split`)** — for a $50 session: trainee pays $52.99, platform keeps $12.99 ($10 + $2.99 fee), trainer nets $40.00. Rounding uses `math.floor` on the platform share so odd cents go to the trainer.
+
+**Testing** — `iteration_120.json` — Backend 13/13 tests passed (100%). Applied 2 code-review fixes: (a) `math.floor` for cent-rounding, (b) release worker re-picks up `awaiting-onboarding` rows on later ticks so trainers who onboard late get held funds released.
+
+**Operational note** — Stripe live account currently returns "temporarily restricted from creating this type of connected account" when we call `Account.create`. This is a Stripe-dashboard-side confirmation gate on the owner's account, not a code bug. Owner must log into Stripe Dashboard once to confirm intent to enable Connect. After that, live onboarding works.
+
+
 ## 2026-08 — iter118p: Product Fix Spec Batch 1+2 ✅
 
 Applied `RapidReps_Product_Fixes_Spec.md` items #1, #2, #3, #4, #5, #6.

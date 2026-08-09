@@ -20,6 +20,7 @@ Guarantees:
 from __future__ import annotations
 
 import logging
+import math
 import os
 from datetime import datetime, timedelta
 from typing import Any, Optional
@@ -66,7 +67,10 @@ def compute_platform_and_trainer_split(session_price_cents: int, service_fee_cen
     """
     session_price_cents = int(session_price_cents or 0)
     service_fee_cents = int(service_fee_cents or 0)
-    platform_share = int(round(session_price_cents * PLATFORM_PERCENT / 100.0))
+    # math.floor (not round) — banker's rounding on odd cents would sometimes
+    # nick a cent off the trainer. floor on the platform share keeps every
+    # rounding cent with the trainer, deterministically.
+    platform_share = math.floor(session_price_cents * PLATFORM_PERCENT / 100.0)
     trainer_gross = session_price_cents - platform_share
     platform_cut_total = platform_share + service_fee_cents
     return {
@@ -260,8 +264,11 @@ async def release_due_transfers(db, batch_size: int = 25) -> int:
             )
             continue
         # Claim the row atomically so a second worker never races us.
+        # awaiting-onboarding rows are re-eligible on later ticks so a
+        # trainer who finishes Connect onboarding late still gets their
+        # held funds released automatically.
         claim = await db.sessions.update_one(
-            {'_id': session_id, 'transferState': {'$in': ['pending', 'retry']}},
+            {'_id': session_id, 'transferState': {'$in': ['pending', 'retry', 'awaiting-onboarding']}},
             {'$set': {'transferState': 'creating', 'transferAttemptAt': now}},
         )
         if claim.modified_count != 1:
