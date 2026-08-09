@@ -657,7 +657,7 @@ export default function EditTrainerProfileScreen() {
                         value={formData.videoCallLink}
                         onChangeText={(text) => setFormData({ ...formData, videoCallLink: text })}
                         placeholder="https://zoom.us/j/123… or https://meet.google.com/…"
-                        placeholderTextColor="rgba(255,255,255,0.35)"
+                        placeholderTextColor="rgba(255,255,255,0.55)"
                         autoCapitalize="none"
                         autoCorrect={false}
                         keyboardType="url"

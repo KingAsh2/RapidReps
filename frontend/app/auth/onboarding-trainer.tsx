@@ -659,13 +659,14 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   progressDot: {
+    // iter106ay: taller + higher-contrast progress dots for trainer onboarding.
     flex: 1,
-    height: 4,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    borderRadius: 2,
+    height: 6,
+    backgroundColor: 'rgba(255,255,255,0.14)',
+    borderRadius: 3,
   },
   progressDotActive: {
-    backgroundColor: '#141929',
+    backgroundColor: '#FF6A00',
   },
   scrollView: {
     flex: 1,

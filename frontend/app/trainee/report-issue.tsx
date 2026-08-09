@@ -119,7 +119,7 @@ export default function ReportIssueScreen() {
             value={description}
             onChangeText={setDescription}
             placeholder="Please provide as much detail as possible..."
-            placeholderTextColor="rgba(255,255,255,0.4)"
+            placeholderTextColor="rgba(255,255,255,0.6)"
             multiline
             numberOfLines={6}
             textAlignVertical="top"

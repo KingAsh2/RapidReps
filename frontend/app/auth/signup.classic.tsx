@@ -633,7 +633,7 @@ export default function SignupScreen() {
                 <TextInput
                   style={styles.referralInput}
                   placeholder="Have a referral code? (optional)"
-                  placeholderTextColor="rgba(255,255,255,0.4)"
+                  placeholderTextColor="rgba(255,255,255,0.6)"
                   value={formData.referralCode}
                   onChangeText={(text) => setFormData(prev => ({ ...prev, referralCode: text.toUpperCase() }))}
                   autoCapitalize="characters"

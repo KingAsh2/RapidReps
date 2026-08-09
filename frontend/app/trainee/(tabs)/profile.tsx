@@ -962,25 +962,8 @@ export default function TraineeProfileScreen() {
 
             {/* Gallery (editable) */}
             <View style={{ paddingHorizontal: 16 }}>
-              {/* Personality Tag CTA */}
-              <TouchableOpacity
-                onPress={() => setShowTagSelector(true)}
-                style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(108,92,231,0.08)', borderRadius: 16, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: 'rgba(108,92,231,0.15)' }}
-                data-testid="trainee-personality-tag-btn"
-              >
-                <LinearGradient colors={['#6C5CE7', '#A29BFE']} style={{ width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center' }}>
-                  <Ionicons name="sparkles" size={22} color="#FFF" />
-                </LinearGradient>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 16, fontFamily: 'Oswald_700Bold', color: '#FFF', letterSpacing: 0.5 }}>
-                    {profile?.personalityTag || 'SET YOUR VIBE'}
-                  </Text>
-                  <Text style={{ fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.5)' }}>
-                    {profile?.personalityTag ? 'Tap to change your personality tag' : 'Choose a tag that defines your energy'}
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.3)" />
-              </TouchableOpacity>
+              {/* iter106ay: "Set Your Vibe" personality-tag CTA removed per user
+                  feedback — replaced by the music anthem CTA below. */}
 
               {/* iter98d (Task 5): mount the vibe player so user hears
                   their own music when visiting their own profile.

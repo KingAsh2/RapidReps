@@ -106,7 +106,7 @@ export const EditableName: React.FC<Props> = ({
         autoFocus
         maxLength={80}
         placeholder="Your display name"
-        placeholderTextColor="rgba(255,255,255,0.35)"
+        placeholderTextColor="rgba(255,255,255,0.55)"
         style={[styles.input, { borderColor: accent }]}
         onSubmitEditing={save}
         editable={!saving}

@@ -209,7 +209,7 @@ export const PlacesAutocomplete: React.FC<Props> = ({
           onChangeText={onChangeText}
           onFocus={() => setShowResults(true)}
           placeholder={placeholder}
-          placeholderTextColor="rgba(255,255,255,0.4)"
+          placeholderTextColor="rgba(255,255,255,0.6)"
           style={s.input}
           maxLength={200}
           autoCorrect={false}

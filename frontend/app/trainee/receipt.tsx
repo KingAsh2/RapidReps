@@ -39,7 +39,7 @@ const formatCents = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 const getSessionLabel = (type: string) => {
   const labels: Record<string, string> = {
     virtual: 'Virtual Session',
-    outdoor: 'Outdoor Session',
+    outdoor: 'In-Person Session',
     in_home: 'In-Home Session',
     trainee_home: 'At Trainee Home',
   };

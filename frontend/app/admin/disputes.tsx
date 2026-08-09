@@ -179,7 +179,7 @@ export default function AdminDisputesScreen() {
               <TextInput
                 style={styles.input}
                 placeholder="Amount in USD (e.g. 12.50)"
-                placeholderTextColor="rgba(255,255,255,0.35)"
+                placeholderTextColor="rgba(255,255,255,0.55)"
                 keyboardType="decimal-pad"
                 value={amountStr}
                 onChangeText={setAmountStr}
@@ -189,7 +189,7 @@ export default function AdminDisputesScreen() {
             <TextInput
               style={[styles.input, { minHeight: 90, textAlignVertical: 'top' }]}
               placeholder={action === 'request_info' ? 'What do you need from the user?' : 'Notes (optional)'}
-              placeholderTextColor="rgba(255,255,255,0.35)"
+              placeholderTextColor="rgba(255,255,255,0.55)"
               multiline
               value={notes}
               onChangeText={setNotes}

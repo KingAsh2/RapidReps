@@ -36,7 +36,7 @@ export const PricingDisplay: React.FC<PricingDisplayProps> = ({
   const getSessionTypeLabel = () => {
     switch (sessionType) {
       case 'virtual': return '🎥 Virtual Session';
-      case 'outdoor': return '🌳 Outdoor Session';
+      case 'outdoor': return '👤 In-Person Session';
       case 'in_home': return '🏠 In-Home Session';
       default: return 'Session';
     }

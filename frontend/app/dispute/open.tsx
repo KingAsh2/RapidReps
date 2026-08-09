@@ -90,7 +90,7 @@ export default function OpenDisputeScreen() {
             <TextInput
               style={styles.textarea}
               placeholder="e.g. Trainer never arrived. I waited 25 min and messaged them; no reply."
-              placeholderTextColor="rgba(255,255,255,0.35)"
+              placeholderTextColor="rgba(255,255,255,0.55)"
               value={description}
               onChangeText={setDescription}
               multiline

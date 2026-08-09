@@ -17,6 +17,9 @@ import { useAlert } from '../../src/contexts/AlertContext';
 import { SessionTimeline, SessionTimelineStatus } from '../../src/components/SessionTimeline';
 import { QuickActions } from '../../src/components/QuickActions';
 import { LiveTrainerMap } from '../../src/components/LiveTrainerMap';
+// iter106ay Task 7: photo + rating + chat button in the Uber-style tracking header.
+import { UserAvatar } from '../../src/components/UserAvatar';
+import { trainerAPI } from '../../src/services/api';
 
 const { width } = Dimensions.get('window');
 
@@ -51,6 +54,18 @@ export default function TrainerEnRouteScreen() {
   const [trainerLat, setTrainerLat] = useState<number | null>(null);
   const [trainerLng, setTrainerLng] = useState<number | null>(null);
   const [sessionStatus, setSessionStatus] = useState<string>('');
+  // iter106ay: Uber-style avatar + rating + chat.
+  const [trainerData, setTrainerData] = useState<any>(null);
+
+  useEffect(() => {
+    if (!trainerId) return;
+    (async () => {
+      try {
+        const t = await trainerAPI.getTrainerDetails(trainerId);
+        setTrainerData(t);
+      } catch { /* non-fatal — falls back to name-only */ }
+    })();
+  }, [trainerId]);
 
   const pollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -175,15 +190,37 @@ export default function TrainerEnRouteScreen() {
 
         {/* Visual Tracker */}
         <View style={styles.trackerCard}>
-          {/* Trainer avatar */}
+          {/* iter106ay: Uber-style trainer header — photo, name, rating, chat CTA. */}
           <View style={styles.trackerRow}>
-            <View style={[styles.avatarCircle, { backgroundColor: '#0A0E1A' }]}>
-              <Ionicons name="fitness" size={28} color={COLORS.white} />
-            </View>
+            <UserAvatar
+              user={trainerData || { fullName: trainerName, id: trainerId }}
+              size={56}
+              ring={status === 'en_route' || status === 'nearby'}
+            />
             <View style={styles.trackerInfo}>
               <Text style={styles.trainerNameText}>{trainerName || 'Your Trainer'}</Text>
+              {trainerData?.averageRating ? (
+                <View style={styles.ratingRow}>
+                  <Ionicons name="star" size={12} color="#FFB800" />
+                  <Text style={styles.ratingText}>
+                    {Number(trainerData.averageRating).toFixed(1)}
+                    {trainerData.reviewCount ? ` · ${trainerData.reviewCount} reviews` : ''}
+                  </Text>
+                </View>
+              ) : null}
               <Text style={styles.etaText}>{eta}</Text>
             </View>
+            <TouchableOpacity
+              style={styles.chatBtn}
+              onPress={() => router.push({
+                pathname: '/chat/[peerId]' as any,
+                params: { peerId: trainerId, name: trainerName || 'Trainer' },
+              })}
+              data-testid="trainee-tracking-chat-btn"
+              hitSlop={12}
+            >
+              <Ionicons name="chatbubble-ellipses" size={22} color="#FFFFFF" />
+            </TouchableOpacity>
           </View>
 
           {/* Session Timeline */}

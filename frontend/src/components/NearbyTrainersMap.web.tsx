@@ -56,9 +56,19 @@ export default function NearbyTrainersMap({ trainers = [] }: Props) {
 
       {trainers.length === 0 ? (
         <View style={styles.emptyContent}>
-          <Ionicons name="map-outline" size={40} color={COLORS.gray} />
-          <Text style={styles.emptyTitle}>No trainers nearby</Text>
-          <Text style={styles.emptySubtitle}>Try virtual training or expand your search radius</Text>
+          <Ionicons name="compass-outline" size={40} color={COLORS.orange} />
+          <Text style={styles.emptyTitle}>You're early — no trainers here yet</Text>
+          <Text style={styles.emptySubtitle}>
+            Try a virtual session, widen your search radius, or invite a friend to become a RapidReps trainer. We'll ping you the moment someone joins nearby.
+          </Text>
+          <TouchableOpacity
+            style={styles.emptyCta}
+            onPress={() => router.push('/trainee/referrals' as any)}
+            data-testid="empty-invite-cta"
+          >
+            <Ionicons name="paper-plane" size={16} color="#FFF" />
+            <Text style={styles.emptyCtaText}>Invite a trainer</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.listContainer}>
@@ -142,22 +152,41 @@ const styles = StyleSheet.create({
     color: COLORS.orange,
   },
   emptyContent: {
-    height: 160,
+    minHeight: 200,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 24,
   },
   emptyTitle: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '700',
     color: COLORS.white,
-    marginTop: 10,
+    marginTop: 12,
+    textAlign: 'center',
   },
   emptySubtitle: {
     fontSize: 13,
-    color: 'rgba(255,255,255,0.5)',
-    marginTop: 4,
+    color: 'rgba(255,255,255,0.72)',
+    marginTop: 6,
     textAlign: 'center',
+    lineHeight: 19,
+    maxWidth: 320,
+  },
+  emptyCta: {
+    marginTop: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: COLORS.orange,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  emptyCtaText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 13,
+    letterSpacing: 0.3,
   },
   listContainer: {
     paddingHorizontal: 14,

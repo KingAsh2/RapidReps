@@ -67,7 +67,7 @@ export default function ConfirmBookingScreen() {
   const getSessionLabel = (type: string): string => {
     switch (type) {
       case 'virtual': return 'Virtual Session';
-      case 'outdoor': return 'Outdoor Session';
+      case 'outdoor': return 'In-Person Session';
       case 'in_home': return "Trainer's Gym";
       case 'trainee_home': return "Trainee's Home";
       default: return 'Training Session';

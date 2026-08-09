@@ -278,7 +278,7 @@ export const VibeSetupScreen: React.FC<Props> = ({ role }) => {
             <TextInput
               style={s.searchText}
               placeholder="Search songs..."
-              placeholderTextColor="rgba(255,255,255,0.3)"
+              placeholderTextColor="rgba(255,255,255,0.55)"
               value={query}
               onChangeText={setQuery}
               onSubmitEditing={searchTracks}

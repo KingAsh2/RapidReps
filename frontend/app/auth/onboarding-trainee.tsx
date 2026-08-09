@@ -578,15 +578,16 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   progressBg: {
-    height: 6,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    borderRadius: 3,
+    // iter106ay: taller + higher-contrast progress bar for onboarding steps.
+    height: 8,
+    backgroundColor: 'rgba(255,255,255,0.14)',
+    borderRadius: 4,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#141929',
-    borderRadius: 3,
+    backgroundColor: '#FF6A00',
+    borderRadius: 4,
   },
   keyboardView: {
     flex: 1,

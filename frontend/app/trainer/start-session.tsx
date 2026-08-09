@@ -208,7 +208,7 @@ export default function StartSessionScreen() {
                   color={COLORS.white} 
                 />
                 <Text style={styles.sessionTypeText}>
-                  {sessionType === 'in_home' ? 'In-Home Session' : 'Outdoor Session'}
+                  {sessionType === 'in_home' ? 'In-Home Session' : 'In-Person Session'}
                 </Text>
               </View>
             </View>

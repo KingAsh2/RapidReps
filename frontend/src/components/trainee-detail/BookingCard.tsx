@@ -158,8 +158,11 @@ export const BookingCard: React.FC<Props> = ({
               style={[styles.sessionTypeChip, selectedSessionType === 'outdoor' && styles.sessionTypeChipSelected]}
               data-testid="session-type-outdoor"
             >
-              <Ionicons name="sunny" size={18} color={selectedSessionType === 'outdoor' ? COLORS.white : COLORS.orange} />
-              <Text style={[styles.sessionTypeText, selectedSessionType === 'outdoor' && styles.sessionTypeTextSelected]}>Outdoor</Text>
+              {/* iter106ay: label now says "In-Person" to match what the trainer
+                  actually selected in Trainer Setup Step 2 ("In-Person Sessions").
+                  Internal chip value stays 'outdoor' to preserve the pricing modality. */}
+              <Ionicons name="person" size={18} color={selectedSessionType === 'outdoor' ? COLORS.white : COLORS.orange} />
+              <Text style={[styles.sessionTypeText, selectedSessionType === 'outdoor' && styles.sessionTypeTextSelected]}>In-Person</Text>
               {minInPersonCents != null && (
                 <Text style={[styles.sessionTypePrice, selectedSessionType === 'outdoor' && styles.sessionTypePriceSelected]}>
                   from ${Math.round(minInPersonCents / 100)}

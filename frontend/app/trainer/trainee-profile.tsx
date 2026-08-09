@@ -608,7 +608,7 @@ export default function TraineeProfileScreen() {
               <TextInput
                 style={styles.locationInput}
                 placeholder="e.g., Central Park near 72nd St entrance"
-                placeholderTextColor="rgba(255,255,255,0.4)"
+                placeholderTextColor="rgba(255,255,255,0.6)"
                 value={proposedLocation}
                 onChangeText={setProposedLocation}
                 multiline

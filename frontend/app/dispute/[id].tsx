@@ -128,7 +128,7 @@ export default function DisputeDetailScreen() {
                   <TextInput
                     style={styles.textarea}
                     placeholder="Type your response..."
-                    placeholderTextColor="rgba(255,255,255,0.35)"
+                    placeholderTextColor="rgba(255,255,255,0.55)"
                     value={responseDraft}
                     onChangeText={setResponseDraft}
                     multiline
