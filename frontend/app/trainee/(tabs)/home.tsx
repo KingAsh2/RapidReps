@@ -563,19 +563,22 @@ export default function TraineeHomeScreen() {
         
         <SafeAreaView style={styles.safeArea} edges={['top']}>
       <FloatingOrangeBg />
-          {/* Header with Logo and Actions */}
+          {/* Header with custom RAPIDREPS wordmark lockup */}
           <View style={styles.header}>
             <View style={styles.headerLogo}>
-              <Image source={require('../../../assets/images/rapidreps-logo.png')} style={{ width: 32, height: 32 }} resizeMode="contain" />
-              <Text style={styles.logoText}>RapidReps</Text>
+              <Image source={require('../../../assets/images/rapidreps-logo.png')} style={{ width: 40, height: 40 }} resizeMode="contain" />
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={styles.logoWordmarkWhite}>RAPID</Text>
+                <Text style={styles.logoWordmarkOrange}>REPS</Text>
+              </View>
             </View>
             <View style={styles.headerActions}>
               <TouchableOpacity
                 onPress={() => { haptic.light(); setMenuVisible(!menuVisible); }}
-                style={styles.headerButton}
+                style={styles.headerMenuBtn}
                 data-testid="trainee-hamburger-menu-btn"
               >
-                <Ionicons name="menu" size={26} color="#FFFFFF" />
+                <Ionicons name="menu" size={24} color="#FFFFFF" />
                 {unreadCount > 0 && (
                   <View style={styles.notifBadge}>
                     <Text style={styles.notifBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
@@ -624,7 +627,8 @@ export default function TraineeHomeScreen() {
             {/* iter98d (Task 11): "Add Your Address" banner removed per user request.
                 Address is still editable from the Profile tab (Edit Profile flow). */}
 
-            {/* Hero Banner - Motivational Greeting */}
+            {/* iter117: Premium hero — muscular back photo anchored right, split-color
+                LET'S GET AFTER IT headline left, subtext + outlined location pill. */}
             <Animated.View
               style={[
                 styles.heroBanner,
@@ -634,58 +638,116 @@ export default function TraineeHomeScreen() {
                 },
               ]}
             >
+              {/* Full-bleed hero image (right-anchored). Uses expo-image cover. */}
+              <Image
+                source={require('../../../assets/images/bg-gym-weights.png')}
+                style={styles.heroBgImage}
+                resizeMode="cover"
+              />
+              {/* Left→right dark→transparent gradient so the headline stays legible */}
               <LinearGradient
-                colors={['rgba(255, 106, 0, 0.15)', 'rgba(20, 25, 41, 0.95)']}
-                style={styles.heroGradient}
-              >
-                <View style={styles.heroGlow} />
-                <Text style={styles.heroTitle}>
-                  LET&apos;S GET AFTER IT, {user?.fullName?.split(' ')[0]?.toUpperCase() || 'CHAMP'}! 💪🔥
-                </Text>
+                colors={['rgba(10,14,26,0.95)', 'rgba(10,14,26,0.85)', 'rgba(10,14,26,0.25)', 'rgba(10,14,26,0)']}
+                start={{ x: 0, y: 0.5 }}
+                end={{ x: 1, y: 0.5 }}
+                style={StyleSheet.absoluteFillObject}
+              />
+              {/* Warm fire glow behind the copy */}
+              <View style={styles.heroFireGlow} />
+              <View style={styles.heroContent}>
+                <View style={styles.heroTitleWrap}>
+                  <Text style={styles.heroTitleWhite}>LET&apos;S GET </Text>
+                  <Text style={styles.heroTitleOrange}>
+                    AFTER IT,{'\n'}{user?.fullName?.split(' ')[0]?.toUpperCase() || 'CHAMP'}!
+                  </Text>
+                  <Text style={styles.heroTitleWhite}> 💪🔥</Text>
+                </View>
                 <Text style={styles.heroSubtitle}>
-                  Your next workout is just one tap away
+                  Your next workout is{'\n'}just one tap away
                 </Text>
-                {locationAddress && (
-                  <View style={styles.heroLocation}>
-                    <Ionicons name="location" size={16} color="#2a3a6e" />
-                    <Text style={styles.heroLocationText}>{locationAddress}</Text>
+                {locationAddress ? (
+                  <View style={styles.heroLocationPill}>
+                    <Ionicons name="location" size={14} color="#FF6A00" />
+                    <Text style={styles.heroLocationPillText} numberOfLines={1}>
+                      {locationAddress}
+                    </Text>
                   </View>
-                )}
-              </LinearGradient>
+                ) : null}
+              </View>
             </Animated.View>
 
             {/* Urgent "Need a Trainer Now" banner removed — felt cluttered (user request) */}
 
-            {/* === QUICK FEATURE ACTIONS === */}
-            <View style={styles.featureActionsGrid}>
+            {/* === 3 PREMIUM ACTION CARDS — icon-badge top-left, title, subtitle, arrow bottom-right === */}
+            <View style={styles.actionCardsRow}>
+              {/* Group Workouts — Orange */}
               <TouchableOpacity
-                style={styles.featureAction}
+                style={styles.actionCard}
                 onPress={() => { haptic.light(); router.push('/trainee/group-sessions'); }}
                 data-testid="group-workouts-btn"
+                activeOpacity={0.85}
               >
-                <LinearGradient colors={['#1a2a5e', '#2a3a6e']} style={styles.featureActionGrad}>
-                  <Ionicons name="people" size={22} color="#fff" />
-                  <Text style={styles.featureActionText}>Group{'\n'}Workouts</Text>
+                <LinearGradient
+                  colors={['rgba(255,106,0,0.28)', 'rgba(255,61,0,0.08)']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.actionCardGrad}
+                >
+                  <View style={[styles.actionCardBadge, { backgroundColor: 'rgba(255,106,0,0.9)' }]}>
+                    <Ionicons name="people" size={18} color="#fff" />
+                  </View>
+                  <Text style={styles.actionCardTitle}>GROUP{'\n'}WORKOUTS</Text>
+                  <Text style={styles.actionCardSubtitle}>Train together{'\n'}Get stronger</Text>
+                  <View style={styles.actionCardArrow}>
+                    <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
+                  </View>
                 </LinearGradient>
               </TouchableOpacity>
+
+              {/* Community Feed — Purple */}
               <TouchableOpacity
-                style={styles.featureAction}
+                style={styles.actionCard}
                 onPress={() => { haptic.light(); router.push('/trainee/feed'); }}
                 data-testid="community-feed-btn"
+                activeOpacity={0.85}
               >
-                <LinearGradient colors={['#6C5CE7', '#A29BFE']} style={styles.featureActionGrad}>
-                  <Ionicons name="newspaper" size={22} color="#fff" />
-                  <Text style={styles.featureActionText}>Community{'\n'}Feed</Text>
+                <LinearGradient
+                  colors={['rgba(108,92,231,0.35)', 'rgba(78,52,201,0.15)']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.actionCardGrad}
+                >
+                  <View style={[styles.actionCardBadge, { backgroundColor: 'rgba(108,92,231,0.9)' }]}>
+                    <Ionicons name="chatbubble" size={18} color="#fff" />
+                  </View>
+                  <Text style={styles.actionCardTitle}>COMMUNITY{'\n'}FEED</Text>
+                  <Text style={styles.actionCardSubtitle}>Posts, tips &{'\n'}inspiration</Text>
+                  <View style={styles.actionCardArrow}>
+                    <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
+                  </View>
                 </LinearGradient>
               </TouchableOpacity>
+
+              {/* My Progress — Pink/Magenta */}
               <TouchableOpacity
-                style={styles.featureAction}
+                style={styles.actionCard}
                 onPress={() => router.push('/trainee/user-progress')}
                 data-testid="my-progress-btn"
+                activeOpacity={0.85}
               >
-                <LinearGradient colors={['#E84393', '#FD79A8']} style={styles.featureActionGrad}>
-                  <Ionicons name="trending-up" size={22} color="#fff" />
-                  <Text style={styles.featureActionText}>My{'\n'}Progress</Text>
+                <LinearGradient
+                  colors={['rgba(232,67,147,0.35)', 'rgba(180,40,120,0.15)']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.actionCardGrad}
+                >
+                  <View style={[styles.actionCardBadge, { backgroundColor: 'rgba(232,67,147,0.9)' }]}>
+                    <Ionicons name="trending-up" size={18} color="#fff" />
+                  </View>
+                  <Text style={styles.actionCardTitle}>MY{'\n'}PROGRESS</Text>
+                  <Text style={styles.actionCardSubtitle}>Track. Improve.{'\n'}Level up.</Text>
+                  <View style={styles.actionCardArrow}>
+                    <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
+                  </View>
                 </LinearGradient>
               </TouchableOpacity>
             </View>
@@ -698,6 +760,7 @@ export default function TraineeHomeScreen() {
               testIDPrefix="trainee-trainer-search"
               enableInvite
               inviteAudience="trainer"
+              onFilterPress={() => { haptic.light(); setShowProximityPicker(true); }}
               onSearch={async (q) => {
                 try {
                   const data = await trainerAPI.searchTrainers({ q });
@@ -1101,12 +1164,49 @@ const styles = StyleSheet.create({
   },
   headerLogo: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
   logoText: {
     fontSize: 22,
     fontWeight: '900',
     color: '#FFFFFF',
     letterSpacing: 0.5,
+  },
+  // iter117: bold condensed RAPID/REPS wordmark lockup
+  logoWordmarkWhite: {
+    fontSize: 26,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: 1,
+    fontStyle: 'italic',
+  },
+  logoWordmarkOrange: {
+    fontSize: 26,
+    fontWeight: '900',
+    color: '#FF6A00',
+    letterSpacing: 1,
+    fontStyle: 'italic',
+    textShadowColor: 'rgba(255,106,0,0.4)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
+  },
+  headerMenuBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,106,0,0.5)',
+    backgroundColor: 'rgba(10,14,26,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative' as const,
+    shadowColor: '#FF6A00',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 4,
   },
   scrollView: {
     flex: 1,
@@ -1116,95 +1216,173 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 24,
   },
-  // Hero Banner - Polished
+  // Hero Banner - Premium photo-anchored redesign (iter117)
   heroBanner: {
     marginBottom: 20,
-    borderRadius: 20,
+    borderRadius: 22,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
+    minHeight: 240,
+    backgroundColor: '#0A0E1A',
+    shadowColor: '#FF6A00',
+    shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 10,
-  },
-  heroGradient: {
-    paddingVertical: 22,
-    paddingHorizontal: 20,
-    position: 'relative',
-    overflow: 'hidden',
-    justifyContent: 'center',
+    shadowRadius: 22,
+    elevation: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255,106,0,0.15)',
-    borderRadius: 20,
+    borderColor: 'rgba(255,106,0,0.18)',
   },
-  heroGlow: {
+  heroBgImage: {
     position: 'absolute',
-    top: -40,
-    right: -40,
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: 'rgba(255,106,0,0.12)',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: '65%',
+    height: '100%',
   },
-  heroTitle: {
+  heroFireGlow: {
+    position: 'absolute',
+    right: '38%',
+    top: '50%',
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: 'rgba(255,106,0,0.25)',
+  },
+  heroContent: {
+    paddingVertical: 24,
+    paddingHorizontal: 22,
+    justifyContent: 'center',
+    minHeight: 240,
+  },
+  heroTitleWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'flex-start',
+    marginBottom: 10,
+    maxWidth: '85%',
+  },
+  heroTitleWhite: {
     fontSize: 26,
     fontWeight: '900',
     color: '#FFFFFF',
-    textAlign: 'center',
-    marginBottom: 8,
-    letterSpacing: 0.5,
-    textShadowColor: 'rgba(0,0,0,0.3)',
+    letterSpacing: 0.3,
+    lineHeight: 30,
+    textShadowColor: 'rgba(0,0,0,0.5)',
     textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    textShadowRadius: 6,
+  },
+  heroTitleOrange: {
+    fontSize: 26,
+    fontWeight: '900',
+    color: '#FF6A00',
+    letterSpacing: 0.3,
+    lineHeight: 30,
+    textShadowColor: 'rgba(255,106,0,0.35)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
   },
   heroSubtitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: 'rgba(255,255,255,0.9)',
-    textAlign: 'center',
-  },
-  heroLocation: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 12,
-    gap: 6,
-  },
-  heroLocationText: {
     fontSize: 14,
     fontWeight: '600',
-    color: 'rgba(255,255,255,0.6)',
+    color: 'rgba(255,255,255,0.72)',
+    lineHeight: 18,
+    marginBottom: 16,
+    maxWidth: '60%',
   },
-  // Urgent Banner - Polished with more spacing
-  featureActionsGrid: {
+  heroLocationPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,106,0,0.4)',
+    backgroundColor: 'rgba(10,14,26,0.6)',
+    maxWidth: '75%',
+  },
+  heroLocationPillText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.2,
+  },
+  // Legacy hero styles kept for any orphan references
+  heroGradient: { paddingVertical: 22, paddingHorizontal: 20 },
+  heroGlow: { position: 'absolute', top: -40, right: -40, width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(255,106,0,0.12)' },
+  heroTitle: { fontSize: 26, fontWeight: '900', color: '#FFFFFF' },
+  heroLocation: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  heroLocationText: { fontSize: 14, fontWeight: '600', color: 'rgba(255,255,255,0.6)' },
+
+  // 3 Premium Action Cards (iter117)
+  actionCardsRow: {
     flexDirection: 'row',
     gap: 10,
-    marginBottom: 14,
+    marginBottom: 18,
   },
-  featureAction: {
+  actionCard: {
     flex: 1,
-    borderRadius: 14,
+    borderRadius: 18,
     overflow: 'hidden',
+    minHeight: 180,
+    shadowColor: '#FF6A00',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  actionCardGrad: {
+    flex: 1,
+    padding: 14,
+    justifyContent: 'space-between',
+    minHeight: 180,
+  },
+  actionCardBadge: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.35,
     shadowRadius: 6,
     elevation: 4,
   },
-  featureActionGrad: {
+  actionCardTitle: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+    lineHeight: 17,
+    marginBottom: 8,
+  },
+  actionCardSubtitle: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.65)',
+    lineHeight: 14,
+    flex: 1,
+  },
+  actionCardArrow: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 1.2,
+    borderColor: 'rgba(255,255,255,0.35)',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 4,
-    gap: 6,
+    alignSelf: 'flex-end',
   },
-  featureActionText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#fff',
-    textAlign: 'center',
-    lineHeight: 14,
-  },
+  // Legacy feature-action styles kept for any orphan references
+  featureActionsGrid: { flexDirection: 'row', gap: 10, marginBottom: 14 },
+  featureAction: { flex: 1, borderRadius: 14, overflow: 'hidden' },
+  featureActionGrad: { alignItems: 'center', justifyContent: 'center', paddingVertical: 14, paddingHorizontal: 4, gap: 6 },
+  featureActionText: { fontSize: 13, fontWeight: '700', color: '#fff', textAlign: 'center', lineHeight: 14 },
   urgentBannerContainer: {
     marginBottom: 14,
   },

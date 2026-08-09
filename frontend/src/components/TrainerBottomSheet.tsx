@@ -177,15 +177,48 @@ export const TrainerBottomSheet: React.FC<TrainerBottomSheetProps> = ({
         <View style={styles.handle} />
       </View>
 
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>
-          {trainers.length} Trainer{trainers.length !== 1 ? 's' : ''} Nearby
-        </Text>
-        <Text style={styles.headerSubtitle}>
-          {isExpanded ? 'Tap a trainer to select' : 'Swipe up to see all'}
-        </Text>
-      </View>
+      {/* Header — iter117: premium row with the first trainer's photo, a
+          status dot, count + subtext, and a circular arrow CTA. Tapping the
+          row expands the list. */}
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPress={() => {
+          haptic.light();
+          const nextExpanded = !isExpanded;
+          Animated.spring(translateY, {
+            toValue: nextExpanded ? SCREEN_HEIGHT - EXPANDED_HEIGHT : SCREEN_HEIGHT - COLLAPSED_HEIGHT,
+            useNativeDriver: true,
+            bounciness: 4,
+          }).start();
+          setIsExpanded(nextExpanded);
+        }}
+        style={styles.header}
+        data-testid="trainer-bottom-sheet-header"
+      >
+        {trainers.length > 0 ? (
+          <View style={styles.headerAvatarWrap}>
+            <TrainerAvatar
+              uri={trainers[0].photo}
+              initials={(trainers[0].name || '?').split(' ').map(p => p[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()}
+              ringColor={(trainers[0] as any).accentColor || COLORS.orange}
+              size={54}
+              pulse
+            />
+            <View style={styles.headerStatusDot} />
+          </View>
+        ) : null}
+        <View style={{ flex: 1 }}>
+          <Text style={styles.headerTitle}>
+            {trainers.length} Trainer{trainers.length !== 1 ? 's' : ''} Nearby
+          </Text>
+          <Text style={styles.headerSubtitle}>
+            {isExpanded ? 'Tap a trainer to select' : 'Swipe up to see all'}
+          </Text>
+        </View>
+        <View style={styles.headerArrow}>
+          <Ionicons name="arrow-forward" size={18} color={COLORS.white} />
+        </View>
+      </TouchableOpacity>
 
       {/* Selected Trainer Preview (collapsed state) */}
       {!isExpanded && selectedTrainer && (
@@ -275,20 +308,49 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
     paddingHorizontal: 20,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.grayLight,
+    paddingBottom: 14,
+    paddingTop: 4,
+  },
+  headerAvatarWrap: {
+    position: 'relative',
+  },
+  headerStatusDot: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: COLORS.success,
+    borderWidth: 2,
+    borderColor: '#0A0E1A',
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 17,
+    fontWeight: '900',
     color: '#FFFFFF',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
   },
   headerSubtitle: {
     fontSize: 13,
-    color: 'rgba(255,255,255,0.5)',
-    marginTop: 2,
+    color: 'rgba(255,255,255,0.55)',
+    marginTop: 3,
+    fontWeight: '600',
+  },
+  headerArrow: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    borderWidth: 1.2,
+    borderColor: 'rgba(255,255,255,0.25)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   selectedPreview: {
     padding: 16,

@@ -125,21 +125,27 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
   return (
     <View style={s.root} data-testid="nearby-trainers-map-container">
 
-      {/* === HEADER — asymmetric, left-heavy === */}
+      {/* === HEADER — hex-badge left, pill SCAN button right === */}
       <View style={s.head}>
         <View style={s.headLeft}>
-          <View style={s.headIcon}>
-            <Ionicons name="radio-outline" size={16} color={N.orange} />
+          {/* iter117: hexagonal orange-outlined badge to match the reference */}
+          <View style={s.hexBadge}>
+            <View style={s.hexBadgeInner}>
+              <Ionicons name="radio-outline" size={18} color={N.orange} />
+            </View>
           </View>
           <View>
             <Text style={s.headLabel}>SCANNING AREA</Text>
-            <Text style={s.headTitle}>Nearby Trainers</Text>
+            <Text style={s.headTitle}>NEARBY TRAINERS</Text>
           </View>
         </View>
-        {/* SCAN button — brutalist block */}
+        {/* SCAN pill — outlined orange with radar icon */}
         <TouchableOpacity style={s.scanBtn} onPress={onRefresh} activeOpacity={0.7} data-testid="map-refresh-button">
           {refreshing ? <ActivityIndicator size="small" color={N.orange} /> : (
-            <Text style={s.scanText}>SCAN</Text>
+            <>
+              <Text style={s.scanText}>SCAN</Text>
+              <Ionicons name="wifi-outline" size={14} color={N.orange} style={{ transform: [{ rotate: '45deg' }] }} />
+            </>
           )}
         </TouchableOpacity>
       </View>
@@ -276,14 +282,36 @@ const s = StyleSheet.create({
   loadLabel: { marginTop: 14, fontSize: 11, fontWeight: '700', color: N.green, letterSpacing: 4 },
 
   // Head — asymmetric: more left padding, less right
-  head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingLeft: 22, paddingRight: 14, paddingTop: 16, paddingBottom: 2 },
-  headLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingLeft: 20, paddingRight: 14, paddingTop: 16, paddingBottom: 2 },
+  headLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   headIcon: { width: 28, height: 28, borderWidth: 1.5, borderColor: N.orange, justifyContent: 'center', alignItems: 'center', transform: [{ rotate: '45deg' }] },
-  headLabel: { fontSize: 9, fontWeight: '700', color: N.orange, letterSpacing: 3, marginBottom: 1 },
-  headTitle: { fontSize: 19, fontWeight: '800', color: N.white, letterSpacing: -0.5 },
-  // Scan button — brutalist block, not a circle
-  scanBtn: { paddingHorizontal: 14, paddingVertical: 7, borderWidth: 0, borderBottomWidth: 2, borderRightWidth: 2, borderColor: N.orange, backgroundColor: 'transparent' },
-  scanText: { fontSize: 11, fontWeight: '800', color: N.orange, letterSpacing: 3 },
+  // iter117: hexagonal orange-outlined badge (approximated with a rotated
+  // square + rounded corners) — matches the reference screenshot.
+  hexBadge: {
+    width: 44, height: 44, borderWidth: 1.5, borderColor: N.orange,
+    borderRadius: 10, justifyContent: 'center', alignItems: 'center',
+    transform: [{ rotate: '30deg' }],
+    shadowColor: N.orange, shadowOpacity: 0.35, shadowRadius: 8,
+    shadowOffset: { width: 0, height: 0 }, elevation: 3,
+  },
+  hexBadgeInner: { transform: [{ rotate: '-30deg' }] },
+  headLabel: { fontSize: 10, fontWeight: '800', color: N.orange, letterSpacing: 2.5, marginBottom: 2 },
+  headTitle: { fontSize: 20, fontWeight: '900', color: N.white, letterSpacing: 0.2 },
+  // iter117: outlined pill SCAN button with radar icon
+  scanBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    borderWidth: 1.5,
+    borderColor: N.orange,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,106,0,0.08)',
+    shadowColor: N.orange, shadowOpacity: 0.4, shadowRadius: 8,
+    shadowOffset: { width: 0, height: 0 }, elevation: 3,
+  },
+  scanText: { fontSize: 12, fontWeight: '900', color: N.orange, letterSpacing: 1.5 },
 
   // Massive background count
   bgCountWrap: { position: 'absolute', top: -8, right: -12, zIndex: 0, overflow: 'hidden', width: 160, height: 120 },

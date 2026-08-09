@@ -54,6 +54,9 @@ interface PeopleSearchBarProps {
   enableInvite?: boolean;
   /** What kind of person the inviter is looking for — used in the share message. */
   inviteAudience?: 'trainer' | 'trainee';
+  /** iter117: tapping the sliders/filter icon on the right edge. When
+   *  provided, the icon renders; when omitted the icon is hidden. */
+  onFilterPress?: () => void;
 }
 
 // ── Helpers to detect input type ──
@@ -77,6 +80,7 @@ export const PeopleSearchBar: React.FC<PeopleSearchBarProps> = ({
   testIDPrefix = 'people-search',
   enableInvite = false,
   inviteAudience = 'trainer',
+  onFilterPress,
 }) => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<PersonResult[]>([]);
@@ -225,6 +229,19 @@ export const PeopleSearchBar: React.FC<PeopleSearchBarProps> = ({
               data-testid={`${testIDPrefix}-clear-btn`}
              accessibilityLabel="Close" accessibilityRole="button">
               <Ionicons name="close-circle" size={20} color="rgba(255,255,255,0.55)" />
+            </TouchableOpacity>
+          ) : onFilterPress ? (
+            // iter117: sliders / filter icon on the right edge — orange to
+            // match the search icon on the left. Currently opens a filter
+            // sheet the parent screen owns.
+            <TouchableOpacity
+              onPress={onFilterPress}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              data-testid={`${testIDPrefix}-filter-btn`}
+              accessibilityLabel="Open filters"
+              accessibilityRole="button"
+            >
+              <Ionicons name="options-outline" size={22} color="#FF7F00" />
             </TouchableOpacity>
           ) : null}
         </View>
