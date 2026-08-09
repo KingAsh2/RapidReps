@@ -638,17 +638,24 @@ export default function TraineeHomeScreen() {
                 },
               ]}
             >
-              {/* Full-bleed hero image (right-anchored). Uses expo-image cover. */}
+              {/* Full-bleed hero image (muscular back, right-anchored). Uses expo-image cover. */}
               <Image
-                source={require('../../../assets/images/bg-gym-weights.png')}
+                source={require('../../../assets/images/hero-trainer-back.png')}
                 style={styles.heroBgImage}
                 resizeMode="cover"
               />
               {/* Left→right dark→transparent gradient so the headline stays legible */}
               <LinearGradient
-                colors={['rgba(10,14,26,0.95)', 'rgba(10,14,26,0.85)', 'rgba(10,14,26,0.25)', 'rgba(10,14,26,0)']}
+                colors={['rgba(10,14,26,0.98)', 'rgba(10,14,26,0.92)', 'rgba(10,14,26,0.55)', 'rgba(10,14,26,0.15)']}
                 start={{ x: 0, y: 0.5 }}
                 end={{ x: 1, y: 0.5 }}
+                style={StyleSheet.absoluteFillObject}
+              />
+              {/* Secondary top→bottom subtle gradient for extra depth + text safety */}
+              <LinearGradient
+                colors={['rgba(10,14,26,0.35)', 'rgba(10,14,26,0)', 'rgba(10,14,26,0.45)']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 0, y: 1 }}
                 style={StyleSheet.absoluteFillObject}
               />
               {/* Warm fire glow behind the copy */}
@@ -695,8 +702,14 @@ export default function TraineeHomeScreen() {
                   <View style={[styles.actionCardBadge, { backgroundColor: 'rgba(255,106,0,0.9)' }]}>
                     <Ionicons name="people" size={18} color="#fff" />
                   </View>
-                  <Text style={styles.actionCardTitle}>GROUP{'\n'}WORKOUTS</Text>
-                  <Text style={styles.actionCardSubtitle}>Train together{'\n'}Get stronger</Text>
+                  <Text
+                    style={styles.actionCardTitle}
+                    numberOfLines={2}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.75}
+                    allowFontScaling={false}
+                  >GROUP{'\n'}WORKOUTS</Text>
+                  <Text style={styles.actionCardSubtitle} numberOfLines={2}>Train together{'\n'}Get stronger</Text>
                   <View style={styles.actionCardArrow}>
                     <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
                   </View>
@@ -719,8 +732,14 @@ export default function TraineeHomeScreen() {
                   <View style={[styles.actionCardBadge, { backgroundColor: 'rgba(108,92,231,0.9)' }]}>
                     <Ionicons name="chatbubble" size={18} color="#fff" />
                   </View>
-                  <Text style={styles.actionCardTitle}>COMMUNITY{'\n'}FEED</Text>
-                  <Text style={styles.actionCardSubtitle}>Posts, tips &{'\n'}inspiration</Text>
+                  <Text
+                    style={styles.actionCardTitle}
+                    numberOfLines={2}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.75}
+                    allowFontScaling={false}
+                  >COMMUNITY{'\n'}FEED</Text>
+                  <Text style={styles.actionCardSubtitle} numberOfLines={2}>Posts, tips &{'\n'}inspiration</Text>
                   <View style={styles.actionCardArrow}>
                     <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
                   </View>
@@ -743,8 +762,14 @@ export default function TraineeHomeScreen() {
                   <View style={[styles.actionCardBadge, { backgroundColor: 'rgba(232,67,147,0.9)' }]}>
                     <Ionicons name="trending-up" size={18} color="#fff" />
                   </View>
-                  <Text style={styles.actionCardTitle}>MY{'\n'}PROGRESS</Text>
-                  <Text style={styles.actionCardSubtitle}>Track. Improve.{'\n'}Level up.</Text>
+                  <Text
+                    style={styles.actionCardTitle}
+                    numberOfLines={2}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.75}
+                    allowFontScaling={false}
+                  >MY{'\n'}PROGRESS</Text>
+                  <Text style={styles.actionCardSubtitle} numberOfLines={2}>Track. Improve.{'\n'}Level up.</Text>
                   <View style={styles.actionCardArrow}>
                     <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
                   </View>
@@ -1236,7 +1261,7 @@ const styles = StyleSheet.create({
     right: 0,
     top: 0,
     bottom: 0,
-    width: '65%',
+    width: '72%',
     height: '100%',
   },
   heroFireGlow: {
@@ -1336,7 +1361,7 @@ const styles = StyleSheet.create({
   },
   actionCardGrad: {
     flex: 1,
-    padding: 14,
+    padding: 12,
     justifyContent: 'space-between',
     minHeight: 180,
   },
@@ -1354,19 +1379,21 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   actionCardTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '900',
     color: '#FFFFFF',
-    letterSpacing: 0.5,
-    lineHeight: 17,
-    marginBottom: 8,
+    letterSpacing: 0.2,
+    lineHeight: 16,
+    marginBottom: 6,
+    flexShrink: 1,
   },
   actionCardSubtitle: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontWeight: '600',
     color: 'rgba(255,255,255,0.65)',
-    lineHeight: 14,
+    lineHeight: 13,
     flex: 1,
+    flexShrink: 1,
   },
   actionCardArrow: {
     width: 28,

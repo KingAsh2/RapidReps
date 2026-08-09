@@ -2154,3 +2154,25 @@ Server logs showed repeated `LOGIN FAIL` for `admin@rapidreps.com` because the u
 - Combined auth flow (single screen toggle between login/signup)
 - Trainer earnings + tracking screens
 
+
+
+---
+
+## iter118a — Trainee Home hero + action card polish (2026-02-09)
+
+**Shipped:**
+- **Hero image swap** — `home.tsx` now uses `assets/images/hero-trainer-back.png` (user-supplied muscular back photo). Removes the previous watermarked `bg-gym-weights.png`. Hero image now occupies 72% width right-anchored.
+- **Legibility gradients** — Strengthened the left→right dark gradient (0.98 → 0.15 alpha stops) and added a secondary top↔bottom gradient (0.35 → 0 → 0.45) so headline copy stays crisp against any hero photo.
+- **Action card text wrap fix** — `GROUP WORKOUTS`, `COMMUNITY FEED`, `MY PROGRESS` titles now use `numberOfLines={2}` + `adjustsFontSizeToFit` + `minimumFontScale=0.75` + `allowFontScaling=false`. Title font: 14→13, letterSpacing 0.5→0.2, lineHeight 17→16. Subtitle font: 11→10.5, lineHeight 14→13. Card padding 14→12. `flexShrink: 1` added. Prevents mid-word breaks on narrow devices.
+
+**No backend changes.** Metro bundles cleanly. Lint delta: 0 new warnings.
+
+**Files touched:**
+- `/app/frontend/app/trainee/(tabs)/home.tsx`
+
+**Next Action Items:**
+- P1: Wire Stripe live keys (test keys still active)
+- P1: Real SendGrid API key (currently mocked)
+- P2: Replace athlete silhouette placeholders on auth screens with premium photography
+- P2: EDGE_CASE_PLAYBOOK Batch 3 (G20–G22 SMS fallback via Twilio/SendGrid)
+- Optional refactor: Extract `HeroBanner` + `ActionCard` from `home.tsx` (2300+ lines) → `src/components/trainee-home/`
