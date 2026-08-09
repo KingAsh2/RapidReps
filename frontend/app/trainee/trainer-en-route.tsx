@@ -16,7 +16,11 @@ import { sessionTrackingAPI } from '../../src/services/api';
 import { useAlert } from '../../src/contexts/AlertContext';
 import { SessionTimeline, SessionTimelineStatus } from '../../src/components/SessionTimeline';
 import { QuickActions } from '../../src/components/QuickActions';
-import { LiveTrainerMap } from '../../src/components/LiveTrainerMap';
+// iter117: swap the visual-only LiveTrainerMap for the real EnRouteMap so the
+// trainer's live route polyline (from Google Directions via the WS gps-update
+// stream) renders on the tracker — trainees can now watch the trainer close
+// in on the pin along real roads instead of a schematic distance bar.
+import EnRouteMap from '../../src/components/EnRouteMap';
 // iter106ay Task 7: photo + rating + chat button in the Uber-style tracking header.
 import { UserAvatar } from '../../src/components/UserAvatar';
 import { trainerAPI } from '../../src/services/api';
@@ -178,14 +182,13 @@ export default function TrainerEnRouteScreen() {
           <Text style={[styles.statusLabel, { color: statusConfig.color }]}>{statusConfig.label}</Text>
         </View>
 
-        {/* Live Trainer Map */}
-        <LiveTrainerMap
-          trainerLocation={trainerLat ? { latitude: trainerLat, longitude: trainerLng! } : null}
-          traineeLocation={null}
-          trainerName={trainerName || 'Trainer'}
-          eta={status === 'en_route' || status === 'nearby' ? eta : undefined}
-          distance={distanceMiles != null ? `${distanceMiles.toFixed(1)} mi` : undefined}
-          status={status}
+        {/* Live Trainer Map (with real route polyline via WS) */}
+        <EnRouteMap
+          session={{ id: sessionId }}
+          role="trainee"
+          otherAvatarUrl={trainerData?.profilePhoto || trainerData?.avatarUrl}
+          otherDisplayName={trainerName}
+          destination={null}
         />
 
         {/* Visual Tracker */}

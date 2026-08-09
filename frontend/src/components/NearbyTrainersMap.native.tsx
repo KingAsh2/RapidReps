@@ -11,7 +11,11 @@ import { TrainerAvatar } from './TrainerAvatar';
 import { resolveSessionPriceCents } from '../utils/sessionPricing';
 
 const { width: W, height: H } = Dimensions.get('window');
-const MAP_H = H * 0.54;
+// iter117: Home screen removed the "Top Trainers Near You" horizontal row
+// that lived below the map. That freed ~150px of vertical space we now
+// reinvest into a taller map (0.54 → 0.66) so more pins are visible above
+// the fold and the map dominates as the primary discovery surface.
+const MAP_H = H * 0.66;
 
 // === NEON PALETTE ===
 const N = {

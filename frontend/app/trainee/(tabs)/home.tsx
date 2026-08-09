@@ -820,41 +820,12 @@ export default function TraineeHomeScreen() {
                 </View>
               </TouchableOpacity>
 
-              {/* Top Trainers Near You */}
-              {displayedTrainers.filter((t: any) => (t.averageRating || 0) >= 4.5).length > 0 && (
-                <>
-                  <View style={styles.sectionHeader}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <Ionicons name="trophy" size={18} color="#FFD700" />
-                      <Text style={styles.sectionTitle}>TOP TRAINERS NEAR YOU</Text>
-                    </View>
-                    <Text style={styles.trainerCount}>{displayedTrainers.filter((t: any) => (t.averageRating || 0) >= 4.5).length}</Text>
-                  </View>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16, marginHorizontal: -20, paddingHorizontal: 20 }}>
-                    {displayedTrainers.filter((t: any) => (t.averageRating || 0) >= 4.5).slice(0, 5).map((trainer, index) => (
-                      <TouchableOpacity 
-                        key={trainer.id}
-                        style={{ width: 160, marginRight: 12, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 16, padding: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', alignItems: 'center' }}
-                        onPress={() => router.push(`/trainee/trainer-detail?trainerId=${trainer.userId || trainer.id}`)}
-                        data-testid={`top-trainer-${trainer.id}`}
-                      >
-                        {/* Unified pulsing brand-ring avatar */}
-                        <View style={{ marginBottom: 8 }}>
-                          <UserAvatar user={trainer} size={64} ring />
-                        </View>
-                        <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff', textAlign: 'center' }} numberOfLines={1}>{trainer.fullName || 'Trainer'}</Text>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
-                          <Ionicons name="star" size={14} color="#FFD700" />
-                          <Text style={{ fontSize: 13, fontWeight: '700', color: '#FFD700' }}>{(trainer.averageRating || 0).toFixed(1)}</Text>
-                        </View>
-                        {trainer.distance != null && (
-                          <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>{trainer.distance.toFixed(1)} mi away</Text>
-                        )}
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-                </>
-              )}
+              {/* iter117: "TOP TRAINERS NEAR YOU" horizontal ScrollView removed
+                  per user request — it duplicated the trainer entry-points
+                  already available via (1) the NearbyTrainersMap pins and
+                  (2) the swipe-up TrainerBottomSheet. Keeping a single
+                  discovery path reduces vertical noise and reclaims map
+                  real-estate above the fold. */}
 
               {/* iter96b: "NEW TRAINERS" banner removed per user request. */}
               {/* iter102g: "ALL AVAILABLE TRAINERS" list removed.

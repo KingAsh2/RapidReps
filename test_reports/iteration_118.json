@@ -1,0 +1,25 @@
+{
+  "summary": "iter117 batch 2 source-level verification for RapidReps native Expo app. Verified all 4 code changes: (1) TOP TRAINERS NEAR YOU row removed from trainee home.tsx (only comment stub remains at line 823); (2) MAP_H = H * 0.66 in NearbyTrainersMap.native.tsx line 18; (3) VibeSetupScreen title unified to 'Your Anthem' line 55; trainee profile.tsx line 990 shows 'Your Anthem'/'Set Your Anthem'; trainer profile.tsx line 533 shows 'Set Your Anthem'; (4) trainer-en-route.tsx imports EnRouteMap (line 23) and renders it (line 186), LiveTrainerMap import removed. TrainerBottomSheet + NearbyTrainersMap + ProximitySelector remain on home. Backend /api/ returns 200. tsc --noEmit shows only pre-existing TS errors (NotificationContext expo-notifications API drift + VibeSetupScreen TrainerProfile|TraineeProfile union field access + onSubmitEditing type mismatch) — none introduced by this batch.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Pre-existing (not this batch): fix TrainerProfile|TraineeProfile discriminated union access in VibeSetupScreen (vibeTrackTitle/vibeTrackId/etc) — narrow by role before access.",
+    "Pre-existing: NotificationContext setNotificationHandler is missing shouldShowBanner/shouldShowList (expo-notifications SDK 52+ API change); addNotificationReceivedListener / addNotificationResponseReceivedListener called with 0 args.",
+    "Pre-existing: VibeSetupScreen onSubmitEditing/onPress handlers receive (q?: string) but expect event — wrap in () => runSearch()."
+  ],
+  "critical_code_review_comments": [
+    "LiveTrainerMap.tsx is now unused after this batch — consider deleting to prevent dead-code drift.",
+    "home.tsx line 823+ retains a large explanatory comment block for the removed TOP TRAINERS row; fine for traceability but consider trimming after 1-2 iterations."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100%", "frontend": "100% (source-level, 4/4 changes verified)"},
+  "seed_data_creation": "",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Native-first Expo app; web preview shows Expo scaffold, not real screens. Use grep + tsc --noEmit + backend smoke as signal set. TS errors in NotificationContext & VibeSetupScreen are pre-existing per iter117 baseline."
+}

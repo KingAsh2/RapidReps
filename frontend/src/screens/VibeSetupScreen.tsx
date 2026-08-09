@@ -51,7 +51,8 @@ export const VibeSetupScreen: React.FC<Props> = ({ role }) => {
 
   const profilePath = role === 'trainee' ? 'trainee-profiles' : 'trainer-profiles';
   const profileAPI = role === 'trainee' ? traineeAPI : trainerAPI;
-  const title = role === 'trainee' ? 'Your Vibe' : 'Trainer Vibe';
+  // iter117: unified music surface — both trainer & trainee call it "Your Anthem".
+  const title = 'Your Anthem';
 
   useEffect(() => {
     loadCurrentVibe();
