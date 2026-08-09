@@ -1,5 +1,24 @@
 # RapidReps PRD
 
+## 2026-08 — iter118p: Product Fix Spec Batch 1+2 ✅
+
+Applied `RapidReps_Product_Fixes_Spec.md` items #1, #2, #3, #4, #5, #6.
+
+**Batch 1 (frontend-only)**
+- #1 Dead hero card — Trainee home hero (`app/trainee/(tabs)/home.tsx`) is now a TouchableOpacity (`data-testid="trainee-home-hero-btn"`). Destination is context-aware: upcoming session today → session-detail; else active streak → user-progress; else → feed. Adds a "Tap to see →" affordance chip.
+- #2 Non-functional filter icon — Removed the `onFilterPress` prop from `PeopleSearchBar` on trainee home. Sliders icon is now hidden until real filters ship. Proximity picker Modal state kept but unreachable from home (Profile still surfaces the setting).
+- #5 Confirm-booking trainer prominence — `app/trainee/confirm-booking.tsx` now fetches the trainer profile and renders a large avatar + name + rating card ("YOU'RE BOOKING") ABOVE the price breakdown. Trainer row removed from the Session Details grid so it doesn't render twice.
+
+**Batch 2**
+- #4 Boost disclosure — Added a neutral grey "Promoted" pill on boosted rows in `TrainerBottomSheet.tsx` (`data-testid="trainer-row-{id}-promoted"`). `isBoosted` is surfaced from the existing `/api/trainers/nearby` payload via home.tsx mapping.
+- #6 Trainer reliability stat — `GET /api/trainer-profiles/{user_id}` now computes `onTimePercent` + `completedSessionsForReliability` from the trainer's completed/no-show sessions. Trainer-detail hero renders a green reliability chip (`data-testid="trainer-reliability-badge"`) only when completed ≥ 5 to avoid small-sample noise.
+- #3 No-show / lateness policy — Backend: GPS check-in now records `trainerCheckedInAt`, `trainerLateCheckIn`, `trainerLateMinutes` when the trainer checks in >5 min after session start (regardless of radius outcome). New endpoint `POST /api/sessions/{id}/trainee-no-show-action` (actions: `wait`, `refund`) — `refund` is gated to ≥15 min past session start and only when the trainer hasn't checked in, flips session status → `no_show`, marks `refundPending`, and increments the trainer's `noShowStrikes`. Frontend: `TraineeNoShowBanner` component in `session-detail.tsx` (`data-testid="trainee-no-show-banner"`) renders Wait / Cancel & Refund buttons; copy escalates to full-refund messaging at ≥30 min.
+
+**Testing** — `iteration_119.json` — Backend 10/10 tests passed (100%). Frontend verified via source (Expo RN, not Playwright).
+
+**Remaining spec items:** #7 Stripe Connect migration (largest lift), #8 Content moderation (needed before feed/group scales).
+
+
 ## 2026-08 — Iter117 Batch 4: Dark Themed Map on iOS + Anthem/Available Now Cleanup ✅
 
 Follow-up to user's "the themed map?" and screenshot showing the "TRAINER VIBE" label still visible.

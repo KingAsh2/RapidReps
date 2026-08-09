@@ -121,13 +121,14 @@ async def gps_checkin(session_id: str, checkin: GpsCheckinRequest, current_user:
     # iter118p (spec #3): trainer lateness telemetry. If the trainer's
     # check-in is >5 min after the scheduled session start, tag the session
     # for admin visibility + trainer scorecards. 15+ min without any check-in
-    # is handled by the trainee-side no-show action (see below).
-    if is_trainer and within_radius:
+    # is handled by the trainee-side no-show action (see below). Tracked
+    # independent of `within_radius` — a late check-in that also lands
+    # outside the radius is still a "trainer was late" signal.
+    if is_trainer:
         update_fields['trainerCheckedInAt'] = now_utc
         try:
             scheduled = session.get('sessionDateTimeStart')
             if scheduled:
-                # Mongo stores datetime — handle both naive and iso-string
                 if isinstance(scheduled, str):
                     scheduled_dt = datetime.fromisoformat(scheduled.replace('Z', '+00:00'))
                     if scheduled_dt.tzinfo is not None:
