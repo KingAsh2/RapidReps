@@ -246,7 +246,7 @@ export const VibeSetupScreen: React.FC<Props> = ({ role }) => {
         {currentVibe && (
           <View style={s.currentVibe} data-testid={`${role}-current-vibe-card`}>
             <LinearGradient colors={['rgba(255,106,0,0.12)', 'rgba(20,25,41,0.95)']} style={s.currentVibeGradient}>
-              <Text style={s.currentVibeLabel}>YOUR VIBE</Text>
+              <Text style={s.currentVibeLabel}>YOUR ANTHEM</Text>
               <View style={s.currentVibeRow}>
                 {currentVibe.artworkUrl ? (
                   <Image source={{ uri: currentVibe.artworkUrl }} style={s.currentVibeArt} />

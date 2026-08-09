@@ -1,6 +1,39 @@
 # RapidReps PRD
 
-## 2026-08 — Iter117 Batch 2: Home Declutter + Anthem Unify + Route Polyline ✅
+## 2026-08 — Iter117 Batch 3: Available Now Removal + Music Label + Navigate + En-Route Accuracy + Notifications ✅
+
+Follow-up to user frustration that Batch 2 didn't fully land the intent. Iter117 Batch 2 removed the wrong strip in home.tsx — the real "AVAILABLE NOW" horizontal card row lived inside `NearbyTrainersMap.native.tsx`. Also caught remaining "TRAINER VIBE" / "YOUR VIBE" labels rendered inside `TrainerVibePlayer` and `VibeSetupScreen` currentVibe row.
+
+**1. "Available Now" strip — definitively removed:**
+- Deleted lines 259-299 of `/app/frontend/src/components/NearbyTrainersMap.native.tsx` — the horizontal `s.availWrap` ScrollView with staggered trainer cards (photo, name, rating, distance).
+- Discovery is now solely (a) map pins + (b) swipe-up TrainerBottomSheet.
+
+**2. Music labels — every remaining source unified as "Your Anthem":**
+- `TrainerVibePlayer.tsx` player card label: `TRAINER VIBE` → `YOUR ANTHEM`
+- `VibeSetupScreen.tsx` currentVibe row label: `YOUR VIBE` → `YOUR ANTHEM`
+- Combined with Batch 2 fixes, there is now **one** designated music surface per role, labeled "Your Anthem" everywhere.
+
+**3. "Navigate to Trainee" — actually works:**
+- `handleNavigate` in `/app/frontend/app/trainer/trainee-profile.tsx` now (a) starts in-app GPS sharing via `/trainer/en-route` (keeps trainee's tracker live) **and** (b) immediately deep-links to native Maps (Apple Maps on iOS, Google Maps elsewhere) for real turn-by-turn.
+- Fallbacks: coordinates → address → error alert.
+
+**4. Trainer En-Route screen — accurate:**
+- Replaced the haversine × 3 straight-line ETA with the real `EnRouteMap` component (Google Directions polyline + WS-broadcast `etaSeconds` from the backend).
+- Removed the now-redundant Distance/ETA stats card (the map surfaces these).
+- Renamed "Open Maps" button to "Reopen Turn-by-Turn" since Maps was already launched from the previous screen.
+
+**5. Push notifications force-enabled for everyone:**
+- New idempotent migration `/app/backend/scripts/reset_notification_prefs.py` sets every field of every `notification_preferences` row to `True` and seeds all-True rows for users with a registered push token but no prefs doc.
+- Ran once: 3 existing rows updated, 11 new rows seeded → **all 14 users with push tokens now receive every notification type**.
+- Default behavior of `/api/notification-preferences` GET already returns all-True for missing rows; new users get all-True out of the box.
+
+**Verification:**
+- Metro bundles clean, `/api/notification-preferences` for test trainer returns every category = true.
+- Lint clean of new errors (only pre-existing warnings remain).
+
+---
+
+
 
 Removed a duplicate discovery surface on the trainee home, unified the profile-music button label across roles, and swapped the visual-only tracker for the real map with route polyline.
 

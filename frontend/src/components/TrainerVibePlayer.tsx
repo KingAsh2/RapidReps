@@ -270,7 +270,7 @@ export const TrainerVibePlayer = ({ vibe, autoPlay = true, compact = false }: Pr
 
         {/* Info */}
         <View style={styles.info}>
-          <Text style={styles.label}>TRAINER VIBE</Text>
+          <Text style={styles.label}>YOUR ANTHEM</Text>
           <Text style={styles.title} numberOfLines={1}>{vibe.vibeTrackTitle}</Text>
           <Text style={styles.artist} numberOfLines={1}>{vibe.vibeArtistName}</Text>
           {/* Progress bar */}

@@ -223,16 +223,48 @@ export default function TraineeProfileScreen() {
   };
 
   const handleNavigate = () => {
+    // iter117: "Navigate to Trainee" now does two things at once so trainers
+    // don't get a broken second screen:
+    //   1) Push the in-app en-route screen (starts GPS sharing + WS updates so
+    //      the trainee's tracker map & polyline stay live).
+    //   2) Immediately deep-link to native Maps for turn-by-turn navigation.
+    const lat = session?.traineeLatitude?.toString() || '';
+    const lng = session?.traineeLongitude?.toString() || '';
     const address = session?.traineeHomeAddress || session?.locationNameOrAddress || '';
+
+    if (!lat && !lng && !address) {
+      showAlert({
+        title: 'No Address',
+        message: 'Trainee location is not available yet. Ask them to share their address.',
+        type: 'info',
+      });
+      return;
+    }
+
+    // 1) Start in-app tracking (fire-and-forget so we never block the Maps
+    //    launch if the router push is slow).
     router.push({
       pathname: '/trainer/en-route',
       params: {
         sessionId, traineeName, traineeId,
         traineeAddress: address,
-        traineeLat: session?.traineeLatitude?.toString() || '',
-        traineeLng: session?.traineeLongitude?.toString() || '',
+        traineeLat: lat,
+        traineeLng: lng,
         sessionType: session?.sessionType || 'outdoor',
       },
+    });
+
+    // 2) Immediately launch native Maps for real turn-by-turn.
+    const dest = (lat && lng) ? `${lat},${lng}` : encodeURIComponent(address);
+    const mapsUrl = Platform.OS === 'ios'
+      ? `http://maps.apple.com/?daddr=${dest}&dirflg=d`
+      : `https://www.google.com/maps/dir/?api=1&destination=${dest}&travelmode=driving`;
+    Linking.openURL(mapsUrl).catch(() => {
+      showAlert({
+        title: 'Maps Unavailable',
+        message: 'Could not open Maps. Check that Maps is installed.',
+        type: 'error',
+      });
     });
   };
 

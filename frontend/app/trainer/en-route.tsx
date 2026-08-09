@@ -18,6 +18,10 @@ import { sessionTrackingAPI } from '../../src/services/api';
 import { useAlert } from '../../src/contexts/AlertContext';
 import { SessionTimeline, SessionTimelineStatus } from '../../src/components/SessionTimeline';
 import { QuickActions } from '../../src/components/QuickActions';
+// iter117: mount the real EnRouteMap so the trainer sees a live road-following
+// route polyline + a Google-Directions-based ETA instead of the previous
+// haversine × 3 straight-line estimate that was wildly inaccurate in cities.
+import EnRouteMap from '../../src/components/EnRouteMap';
 
 const { width } = Dimensions.get('window');
 
@@ -236,6 +240,25 @@ export default function TrainerEnRouteScreen() {
           )}
         </View>
 
+        {/* Live map — real Google-Directions polyline from trainer to
+            trainee, WS-driven ETA. Replaces the previous haversine ×3
+            estimate with actual driving data. */}
+        <EnRouteMap
+          session={{
+            id: sessionId,
+            traineeLatitude: traineeLat ? parseFloat(traineeLat) : undefined,
+            traineeLongitude: traineeLng ? parseFloat(traineeLng) : undefined,
+            traineeName,
+          }}
+          role="trainer"
+          otherDisplayName={traineeName}
+          destination={
+            traineeLat && traineeLng
+              ? { latitude: parseFloat(traineeLat), longitude: parseFloat(traineeLng) }
+              : null
+          }
+        />
+
         {/* Session Timeline */}
         <View style={styles.infoCard}>
           <SessionTimeline
@@ -249,22 +272,6 @@ export default function TrainerEnRouteScreen() {
           <Text style={styles.cardLabel}>Heading to</Text>
           <Text style={styles.cardValue}>{traineeName || 'Trainee'}</Text>
           {traineeAddress && <Text style={styles.cardAddress}>{traineeAddress}</Text>}
-
-          <View style={styles.statsRow}>
-            <View style={styles.stat}>
-              <Ionicons name="speedometer" size={20} color={'#FF6A00'} />
-              <Text style={styles.statValue}>
-                {distanceMiles != null ? `${distanceMiles.toFixed(1)} mi` : '-- mi'}
-              </Text>
-              <Text style={styles.statLabel}>Distance</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.stat}>
-              <Ionicons name="time" size={20} color={COLORS.orange} />
-              <Text style={styles.statValue}>{eta}</Text>
-              <Text style={styles.statLabel}>ETA</Text>
-            </View>
-          </View>
         </View>
 
         {/* Alerts */}
@@ -283,7 +290,7 @@ export default function TrainerEnRouteScreen() {
         <TouchableOpacity onPress={openNavigation} style={styles.navButton} data-testid="open-navigation-btn">
           <LinearGradient colors={['#0A0E1A', '#141929']} style={styles.navButtonGradient}>
             <Ionicons name="navigate" size={24} color={COLORS.white} />
-            <Text style={styles.navButtonText}>Open Maps</Text>
+            <Text style={styles.navButtonText}>Reopen Turn-by-Turn</Text>
           </LinearGradient>
         </TouchableOpacity>
 

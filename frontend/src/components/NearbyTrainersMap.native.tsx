@@ -256,47 +256,10 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
         )}
       </View>
 
-      {/* === AVAILABLE NOW — staggered cards, sharp edges === */}
-      {sorted.length > 0 && (
-        <View style={s.availWrap} data-testid="available-trainers-scroll-row">
-          <View style={s.availHead}>
-            <View style={s.availDot} />
-            <Text style={s.availLabel}>AVAILABLE NOW</Text>
-          </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}
-            contentContainerStyle={s.availScroll}>
-            {sorted.map((t, i) => {
-              const c = getColor(t.averageRating);
-              const isOdd = i % 2 !== 0;
-              return (
-                <TouchableOpacity key={t.id}
-                  style={[s.availCard, {
-                    marginTop: isOdd ? 0 : 14, // stagger effect
-                    borderLeftColor: c,
-                    borderTopColor: N.border,
-                  }]}
-                  onPress={() => { tap(t); router.push(`/trainee/trainer-detail?trainerId=${t.trainerId}`); }}
-                  data-testid={`avail-card-${i}`}
-                >
-                  <TrainerAvatar
-                    uri={t.avatarUrl}
-                    initials={initials(t.fullName)}
-                    ringColor={t.accentColor || N.orange}
-                    size={48}
-                    pulse
-                  />
-                  <Text style={s.availName} numberOfLines={1}>{t.fullName.split(' ')[0]}</Text>
-                  <View style={s.availRatingRow}>
-                    <Ionicons name="star" size={10} color={N.star} />
-                    <Text style={s.availRating}>{t.averageRating?.toFixed(1)}</Text>
-                  </View>
-                  <Text style={s.availDist}>{t.distanceMiles?.toFixed(1)} MI</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
-      )}
+      {/* iter117: "AVAILABLE NOW" horizontal card strip removed per user
+          request. Trainer discovery on the home screen is now solely through
+          (1) map pins and (2) the swipe-up TrainerBottomSheet — the strip
+          duplicated those entry points. */}
     </View>
   );
 }
