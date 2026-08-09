@@ -1033,6 +1033,9 @@ app.include_router(dispute_router)
 # iter106an — Critical Batch 1: Stripe webhook + edge-case audit endpoints
 from routes.webhook_routes import router as webhook_router
 app.include_router(webhook_router)
+# iter118m — public manual/docs routes (no auth)
+from routes.docs_routes import router as docs_router
+app.include_router(docs_router)
 
 app.add_middleware(
     CORSMiddleware,
