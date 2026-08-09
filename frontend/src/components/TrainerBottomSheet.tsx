@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -13,23 +13,31 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { haptic } from '../utils/haptics';
 import { TrainerAvatar } from './TrainerAvatar';
-// iter106ax: Ladder-inspired typography for card meta.
-import { LADDER, LADDER_FONTS } from '../theme/ladder';
+
+// iter118h — Uber-style instant-booking sheet.
+// Principles:
+//   1. Sheet is ALWAYS visible with a decision + action surface.
+//   2. A trainer is auto-selected so "Book Now" is one tap from open.
+//   3. Distance filter lives INSIDE the sheet (no separate step).
+//   4. Map is context, not something you interact with to book.
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-const COLLAPSED_HEIGHT = 200;
-const EXPANDED_HEIGHT = SCREEN_HEIGHT * 0.7;
+const COLLAPSED_HEIGHT = 340;   // enough to show 1.5 trainers + Book Now
+const EXPANDED_HEIGHT = SCREEN_HEIGHT * 0.78;
 
 const COLORS = {
   orange: '#FF6A00',
   orangeLight: '#FF9F1C',
-  teal: '#00CED1',
-  navy: '#1a2a5e',
   white: '#FFFFFF',
-  offWhite: '#F8F9FA',
-  gray: '#5a6785',
-  grayLight: '#F0F2F5',
-  success: '#00D68F',
+  cardBg: '#141929',
+  cardBgSelected: '#1F1A15',
+  border: 'rgba(255,255,255,0.08)',
+  borderFocus: '#FF6A00',
+  textPrimary: '#FFFFFF',
+  textSecondary: 'rgba(255,255,255,0.65)',
+  textTertiary: 'rgba(255,255,255,0.45)',
+  goodDeal: '#00D68F',
+  fastest: '#3B82F6',
 };
 
 interface Trainer {
@@ -51,6 +59,10 @@ interface TrainerBottomSheetProps {
   onSelectTrainer: (trainer: Trainer) => void;
   onBookTrainer: (trainer: Trainer) => void;
   isVisible: boolean;
+  // iter118h: distance filter is now embedded in the sheet
+  proximityMiles?: number;
+  onProximityPress?: () => void;
+  onAutoSelect?: (trainer: Trainer) => void;
 }
 
 export const TrainerBottomSheet: React.FC<TrainerBottomSheetProps> = ({
@@ -59,34 +71,60 @@ export const TrainerBottomSheet: React.FC<TrainerBottomSheetProps> = ({
   onSelectTrainer,
   onBookTrainer,
   isVisible,
+  proximityMiles = 10,
+  onProximityPress,
+  onAutoSelect,
 }) => {
   const translateY = useRef(new Animated.Value(SCREEN_HEIGHT - COLLAPSED_HEIGHT)).current;
   const [isExpanded, setIsExpanded] = useState(false);
-  const lastGestureDy = useRef(0);
+
+  // Compute badges — Fastest match (shortest ETA) + Top rated (highest rating)
+  const badges = useMemo(() => {
+    const map: Record<string, string> = {};
+    if (trainers.length === 0) return map;
+    const withEta = trainers.filter((t) => t.distance !== undefined);
+    if (withEta.length > 0) {
+      const fastest = withEta.reduce((a, b) => ((a.distance ?? 9999) < (b.distance ?? 9999) ? a : b));
+      if (fastest.distance !== undefined) map[fastest.id] = 'FASTEST';
+    }
+    const topRated = trainers
+      .filter((t) => t.rating > 0)
+      .sort((a, b) => (b.rating - a.rating) || (b.reviewCount - a.reviewCount))[0];
+    if (topRated && map[topRated.id] !== 'FASTEST') {
+      map[topRated.id] = 'TOP RATED';
+    }
+    return map;
+  }, [trainers]);
+
+  // Auto-select the fastest-match trainer on mount so Book Now is one tap.
+  useEffect(() => {
+    if (trainers.length === 0) return;
+    if (selectedTrainerId && trainers.some((t) => t.id === selectedTrainerId)) return;
+    // Prefer fastest, else top rated, else first
+    const fastest = Object.keys(badges).find((id) => badges[id] === 'FASTEST');
+    const pick = trainers.find((t) => t.id === fastest) || trainers[0];
+    if (pick && onAutoSelect) onAutoSelect(pick);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trainers.length]);
 
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: (_, gestureState) => Math.abs(gestureState.dy) > 5,
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dy) > 8,
       onPanResponderGrant: () => {
         translateY.extractOffset();
       },
-      onPanResponderMove: (_, gestureState) => {
-        translateY.setValue(gestureState.dy);
-        lastGestureDy.current = gestureState.dy;
+      onPanResponderMove: (_, g) => {
+        translateY.setValue(g.dy);
       },
-      onPanResponderRelease: (_, gestureState) => {
+      onPanResponderRelease: (_, g) => {
         translateY.flattenOffset();
-        
-        // Determine whether to expand or collapse based on velocity and position
-        const shouldExpand = gestureState.dy < -50 || (gestureState.vy < -0.5);
-        
+        const shouldExpand = g.dy < -50 || g.vy < -0.5;
         Animated.spring(translateY, {
           toValue: shouldExpand ? SCREEN_HEIGHT - EXPANDED_HEIGHT : SCREEN_HEIGHT - COLLAPSED_HEIGHT,
           useNativeDriver: true,
           bounciness: 4,
         }).start();
-        
         setIsExpanded(shouldExpand);
         haptic.light();
       },
@@ -97,186 +135,185 @@ export const TrainerBottomSheet: React.FC<TrainerBottomSheetProps> = ({
     if (!isVisible) {
       Animated.timing(translateY, {
         toValue: SCREEN_HEIGHT,
-        duration: 300,
+        duration: 250,
         useNativeDriver: true,
       }).start();
     } else {
       Animated.spring(translateY, {
         toValue: SCREEN_HEIGHT - COLLAPSED_HEIGHT,
         useNativeDriver: true,
+        bounciness: 4,
       }).start();
     }
   }, [isVisible]);
 
-  const selectedTrainer = trainers.find(t => t.id === selectedTrainerId);
+  const selectedTrainer = trainers.find((t) => t.id === selectedTrainerId) || trainers[0];
 
-  const renderTrainerCard = (trainer: Trainer, isSelected: boolean) => (
-    <TouchableOpacity
-      key={trainer.id}
-      style={[styles.trainerCard, isSelected && styles.selectedCard]}
-      onPress={() => {
-        haptic.light();
-        onSelectTrainer(trainer);
-      }}
-      data-testid={`trainer-card-${trainer.id}`}
-    >
-      {/* iter106v: unified TrainerAvatar — same orange/brand ring + subtle
-          pulse as the map pin and Available Now card. */}
-      <View style={styles.trainerPhoto}>
-        <TrainerAvatar
-          uri={trainer.photo}
-          initials={(trainer.name || '?').split(' ').map(p => p[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()}
-          ringColor={(trainer as any).accentColor || '#FF5F1F'}
-          size={60}
-          pulse
-        />
-      </View>
-      <View style={styles.trainerInfo}>
-        <Text style={styles.trainerName}>{trainer.name}</Text>
-        <View style={styles.ratingRow}>
-          <Ionicons name="star" size={14} color={COLORS.orange} />
-          <Text style={styles.ratingText}>{trainer.rating.toFixed(1)}</Text>
-          <Text style={styles.reviewCount}>({trainer.reviewCount})</Text>
+  const toggleExpand = () => {
+    const next = !isExpanded;
+    Animated.spring(translateY, {
+      toValue: next ? SCREEN_HEIGHT - EXPANDED_HEIGHT : SCREEN_HEIGHT - COLLAPSED_HEIGHT,
+      useNativeDriver: true,
+      bounciness: 4,
+    }).start();
+    setIsExpanded(next);
+    haptic.light();
+  };
+
+  const renderTrainerRow = (t: Trainer) => {
+    const selected = t.id === (selectedTrainer?.id);
+    const badge = badges[t.id];
+    return (
+      <TouchableOpacity
+        key={t.id}
+        style={[styles.row, selected && styles.rowSelected]}
+        onPress={() => {
+          haptic.light();
+          onSelectTrainer(t);
+        }}
+        activeOpacity={0.85}
+        data-testid={`trainer-row-${t.id}`}
+      >
+        <View style={styles.rowAvatarWrap}>
+          <TrainerAvatar
+            uri={t.photo}
+            initials={(t.name || '?').split(' ').map((p) => p[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()}
+            ringColor={selected ? COLORS.orange : 'rgba(255,255,255,0.15)'}
+            size={54}
+            pulse={false}
+          />
         </View>
-        {trainer.specialty && (
-          <Text style={styles.specialty}>{trainer.specialty}</Text>
-        )}
-      </View>
-      <View style={styles.trainerMeta}>
-        {trainer.eta && (
-          <View style={styles.etaBadge}>
-            <Ionicons name="time" size={12} color={COLORS.white} />
-            <Text style={styles.etaText}>{trainer.eta}</Text>
+        <View style={styles.rowBody}>
+          <Text style={styles.rowName} numberOfLines={1}>{t.name}</Text>
+          <View style={styles.rowMetaLine}>
+            {t.eta ? (
+              <>
+                <Ionicons name="time-outline" size={13} color={COLORS.textSecondary} />
+                <Text style={styles.rowMetaText}>{t.eta}</Text>
+                <Text style={styles.rowMetaDot}>·</Text>
+              </>
+            ) : null}
+            {t.distance !== undefined ? (
+              <Text style={styles.rowMetaText}>{t.distance.toFixed(1)} mi</Text>
+            ) : null}
+            {t.rating > 0 ? (
+              <>
+                <Text style={styles.rowMetaDot}>·</Text>
+                <Ionicons name="star" size={12} color={COLORS.orange} />
+                <Text style={styles.rowMetaText}>{t.rating.toFixed(1)}</Text>
+              </>
+            ) : null}
           </View>
-        )}
-        {trainer.distance !== undefined && (
-          <Text style={styles.distance}>{trainer.distance.toFixed(1)} mi</Text>
-        )}
-        {trainer.price && (
-          <Text style={styles.price}>${trainer.price}/hr</Text>
-        )}
-      </View>
-      {isSelected && (
-        <View style={styles.selectedIndicator}>
-          <Ionicons name="checkmark-circle" size={24} color={COLORS.success} />
+          {badge ? (
+            <View style={[
+              styles.badgePill,
+              badge === 'FASTEST' && { backgroundColor: 'rgba(59,130,246,0.15)', borderColor: 'rgba(59,130,246,0.4)' },
+              badge === 'TOP RATED' && { backgroundColor: 'rgba(0,214,143,0.15)', borderColor: 'rgba(0,214,143,0.4)' },
+            ]}>
+              <Ionicons
+                name={badge === 'FASTEST' ? 'flash' : 'star'}
+                size={11}
+                color={badge === 'FASTEST' ? COLORS.fastest : COLORS.goodDeal}
+              />
+              <Text style={[
+                styles.badgePillText,
+                { color: badge === 'FASTEST' ? COLORS.fastest : COLORS.goodDeal },
+              ]}>{badge === 'FASTEST' ? 'Fastest match' : 'Top rated'}</Text>
+            </View>
+          ) : null}
         </View>
-      )}
-    </TouchableOpacity>
-  );
+        <View style={styles.rowPriceCol}>
+          {t.price ? <Text style={styles.rowPrice}>${t.price}</Text> : null}
+          <Text style={styles.rowPriceSub}>/ session</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <Animated.View
-      style={[
-        styles.container,
-        { transform: [{ translateY }] },
-      ]}
-      {...panResponder.panHandlers}
+      style={[styles.container, { transform: [{ translateY }] }]}
+      pointerEvents={isVisible ? 'auto' : 'none'}
     >
-      {/* Handle bar */}
-      <View style={styles.handleContainer}>
+      {/* Grab handle — pan gestures live only on the top strip so the trainer list scrolls freely */}
+      <View {...panResponder.panHandlers} style={styles.handleStrip}>
         <View style={styles.handle} />
       </View>
 
-      {/* Header — iter117: premium row with the first trainer's photo, a
-          status dot, count + subtext, and a circular arrow CTA. Tapping the
-          row expands the list. */}
+      {/* Top row — "Available Now" + trainer count + proximity chip */}
       <TouchableOpacity
-        activeOpacity={0.85}
-        onPress={() => {
-          haptic.light();
-          const nextExpanded = !isExpanded;
-          Animated.spring(translateY, {
-            toValue: nextExpanded ? SCREEN_HEIGHT - EXPANDED_HEIGHT : SCREEN_HEIGHT - COLLAPSED_HEIGHT,
-            useNativeDriver: true,
-            bounciness: 4,
-          }).start();
-          setIsExpanded(nextExpanded);
-        }}
-        style={styles.header}
+        activeOpacity={0.9}
+        onPress={toggleExpand}
+        style={styles.topRow}
         data-testid="trainer-bottom-sheet-header"
       >
-        {trainers.length > 0 ? (
-          <View style={styles.headerAvatarWrap}>
-            <TrainerAvatar
-              uri={trainers[0].photo}
-              initials={(trainers[0].name || '?').split(' ').map(p => p[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()}
-              ringColor={(trainers[0] as any).accentColor || COLORS.orange}
-              size={54}
-              pulse
-            />
-            <View style={styles.headerStatusDot} />
-          </View>
-        ) : null}
         <View style={{ flex: 1 }}>
-          <Text style={styles.headerTitle}>
+          <Text style={styles.eyebrow}>AVAILABLE NOW</Text>
+          <Text style={styles.headline}>
             {trainers.length} Trainer{trainers.length !== 1 ? 's' : ''} Nearby
           </Text>
-          <Text style={styles.headerSubtitle}>
-            {isExpanded ? 'Tap a trainer to select' : 'Swipe up to see all'}
-          </Text>
         </View>
-        <View style={styles.headerArrow}>
-          <Ionicons name="arrow-forward" size={18} color={COLORS.white} />
-        </View>
+        {onProximityPress ? (
+          <TouchableOpacity
+            style={styles.proximityChip}
+            onPress={() => {
+              haptic.light();
+              onProximityPress();
+            }}
+            data-testid="sheet-proximity-chip"
+          >
+            <Ionicons name="navigate" size={13} color={COLORS.orange} />
+            <Text style={styles.proximityChipText}>{proximityMiles} mi</Text>
+            <Ionicons name="chevron-down" size={13} color={COLORS.orange} />
+          </TouchableOpacity>
+        ) : null}
       </TouchableOpacity>
 
-      {/* Selected Trainer Preview (collapsed state) */}
-      {!isExpanded && selectedTrainer && (
-        <View style={styles.selectedPreview}>
-          {renderTrainerCard(selectedTrainer, true)}
+      {/* Trainer list — always visible (collapsed: shows first ~1.5 rows;
+          expanded: shows all with scrolling) */}
+      <ScrollView
+        style={styles.list}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+        contentContainerStyle={{ paddingBottom: isExpanded ? 120 : 24 }}
+      >
+        {trainers.map((t) => renderTrainerRow(t))}
+        {trainers.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Ionicons name="search" size={28} color={COLORS.textTertiary} />
+            <Text style={styles.emptyText}>No trainers within {proximityMiles} miles.</Text>
+            <TouchableOpacity onPress={onProximityPress} style={styles.emptyCta} data-testid="empty-widen-btn">
+              <Text style={styles.emptyCtaText}>Widen search</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+      </ScrollView>
+
+      {/* Fixed Book Now — always visible when a trainer is selected */}
+      {selectedTrainer ? (
+        <View style={styles.bookBar}>
           <TouchableOpacity
-            style={styles.bookButton}
             onPress={() => {
               haptic.success();
               onBookTrainer(selectedTrainer);
             }}
+            activeOpacity={0.9}
             data-testid="book-trainer-btn"
           >
             <LinearGradient
               colors={[COLORS.orange, COLORS.orangeLight]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
               style={styles.bookGradient}
             >
-              <Text style={styles.bookButtonText}>Book Now</Text>
-              <Ionicons name="arrow-forward" size={18} color={COLORS.white} />
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Trainer List (expanded state) */}
-      {isExpanded && (
-        <ScrollView
-          style={styles.trainerList}
-          showsVerticalScrollIndicator={false}
-          bounces={false}
-        >
-          {trainers.map(trainer => renderTrainerCard(trainer, trainer.id === selectedTrainerId))}
-          <View style={{ height: 100 }} />
-        </ScrollView>
-      )}
-
-      {/* Book Button (expanded state) */}
-      {isExpanded && selectedTrainer && (
-        <View style={styles.floatingBookButton}>
-          <TouchableOpacity
-            onPress={() => {
-              haptic.success();
-              onBookTrainer(selectedTrainer);
-            }}
-            data-testid="book-trainer-expanded-btn"
-          >
-            <LinearGradient
-              colors={[COLORS.orange, COLORS.orangeLight]}
-              style={styles.floatingBookGradient}
-            >
               <Text style={styles.bookButtonText}>
-                Book {selectedTrainer.name.split(' ')[0]}
+                Book {selectedTrainer.name.split(' ')[0]} Now
               </Text>
               <Ionicons name="arrow-forward" size={18} color={COLORS.white} />
             </LinearGradient>
           </TouchableOpacity>
         </View>
-      )}
+      ) : null}
     </Animated.View>
   );
 };
@@ -286,201 +323,197 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
+    top: 0,
     height: EXPANDED_HEIGHT,
-    backgroundColor: '#141929',
+    backgroundColor: '#0A0E1A',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
+    borderTopWidth: 1,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: 'rgba(255,106,0,0.15)',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 10,
+    shadowOffset: { width: 0, height: -8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    elevation: 20,
   },
-  handleContainer: {
+  handleStrip: {
     alignItems: 'center',
-    paddingTop: 12,
-    paddingBottom: 8,
+    paddingTop: 10,
+    paddingBottom: 6,
   },
   handle: {
-    width: 40,
+    width: 44,
     height: 4,
-    backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 2,
+    backgroundColor: 'rgba(255,255,255,0.18)',
   },
-  header: {
+  topRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
     paddingHorizontal: 20,
-    paddingBottom: 14,
+    paddingBottom: 12,
     paddingTop: 4,
   },
-  headerAvatarWrap: {
-    position: 'relative',
-  },
-  headerStatusDot: {
-    position: 'absolute',
-    bottom: 2,
-    right: 2,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: COLORS.success,
-    borderWidth: 2,
-    borderColor: '#0A0E1A',
-  },
-  headerTitle: {
-    fontSize: 17,
+  eyebrow: {
+    fontSize: 11,
     fontWeight: '900',
-    color: '#FFFFFF',
-    letterSpacing: 0.3,
-    textTransform: 'uppercase',
+    color: COLORS.orange,
+    letterSpacing: 1.6,
+    marginBottom: 4,
   },
-  headerSubtitle: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.55)',
-    marginTop: 3,
-    fontWeight: '600',
-  },
-  headerArrow: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    borderWidth: 1.2,
-    borderColor: 'rgba(255,255,255,0.25)',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  selectedPreview: {
-    padding: 16,
-  },
-  trainerCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: LADDER.bgCard,
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: LADDER.borderSubtle,
-  },
-  selectedCard: {
-    borderColor: LADDER.borderFocus,
-    backgroundColor: '#1F1A15',
-  },
-  trainerPhoto: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-  },
-  trainerInfo: {
-    flex: 1,
-    marginLeft: 14,
-  },
-  trainerName: {
-    fontFamily: LADDER_FONTS.serifDisplay,
-    fontSize: 20,
-    lineHeight: 22,
-    letterSpacing: -0.3,
-    color: LADDER.textPrimary,
-  },
-  ratingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  ratingText: {
-    fontFamily: LADDER_FONTS.sansSemibold,
-    fontSize: 12,
-    color: LADDER.textPrimary,
-    marginLeft: 4,
-  },
-  reviewCount: {
-    fontFamily: LADDER_FONTS.sans,
-    fontSize: 12,
-    color: LADDER.textTertiary,
-    marginLeft: 3,
-  },
-  specialty: {
-    fontFamily: LADDER_FONTS.sansSemibold,
-    fontSize: 10,
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-    color: LADDER.textSecondary,
-    marginTop: 4,
-  },
-  trainerMeta: {
-    alignItems: 'flex-end',
-  },
-  etaBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: LADDER.accent,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    gap: 4,
-  },
-  etaText: {
-    fontFamily: LADDER_FONTS.sansBold,
-    fontSize: 11,
-    letterSpacing: 0.3,
-    color: '#FFFFFF',
-  },
-  distance: {
-    fontFamily: LADDER_FONTS.sans,
-    fontSize: 11,
-    color: LADDER.textTertiary,
-    marginTop: 6,
-  },
-  price: {
-    fontFamily: LADDER_FONTS.sansBlack,
-    fontSize: 16,
-    letterSpacing: -0.3,
-    color: LADDER.textPrimary,
-    marginTop: 2,
-  },
-  selectedIndicator: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-  },
-  bookButton: {
-    marginTop: 8,
-  },
-  bookGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    borderRadius: 16,
-    gap: 8,
-  },
-  bookButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
+  headline: {
+    fontSize: 22,
+    fontWeight: '900',
     color: COLORS.white,
+    letterSpacing: -0.3,
   },
-  trainerList: {
+  proximityChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,106,0,0.5)',
+    backgroundColor: 'rgba(255,106,0,0.08)',
+  },
+  proximityChipText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: COLORS.orange,
+  },
+  list: {
     flex: 1,
     paddingHorizontal: 16,
-    paddingTop: 12,
   },
-  floatingBookButton: {
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    marginBottom: 10,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.cardBg,
+  },
+  rowSelected: {
+    borderColor: COLORS.borderFocus,
+    backgroundColor: COLORS.cardBgSelected,
+  },
+  rowAvatarWrap: {
+    marginRight: 12,
+  },
+  rowBody: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  rowName: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: COLORS.textPrimary,
+    letterSpacing: -0.2,
+  },
+  rowMetaLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 3,
+  },
+  rowMetaText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: COLORS.textSecondary,
+  },
+  rowMetaDot: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.textTertiary,
+    marginHorizontal: 2,
+  },
+  badgePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    marginTop: 6,
+  },
+  badgePillText: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+  rowPriceCol: {
+    alignItems: 'flex-end',
+    marginLeft: 8,
+  },
+  rowPrice: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: COLORS.white,
+    letterSpacing: -0.3,
+  },
+  rowPriceSub: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: COLORS.textTertiary,
+    marginTop: 1,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 32,
+    gap: 12,
+  },
+  emptyText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+  },
+  emptyCta: {
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: COLORS.orange,
+  },
+  emptyCtaText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: COLORS.orange,
+    letterSpacing: 0.3,
+  },
+  bookBar: {
     position: 'absolute',
-    bottom: 24,
     left: 16,
     right: 16,
+    bottom: 24,
   },
-  floatingBookGradient: {
+  bookGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 18,
     borderRadius: 16,
     gap: 8,
+    shadowColor: COLORS.orange,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  bookButtonText: {
+    fontSize: 17,
+    fontWeight: '900',
+    color: COLORS.white,
+    letterSpacing: 0.3,
   },
 });
 

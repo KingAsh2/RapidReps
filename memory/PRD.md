@@ -2296,3 +2296,34 @@ User provided approved screenshot as single source of truth. Two visual discrepa
 - Verified fresh install must register a new `ExponentPushToken[...]` before background pushes will arrive
 
 Both `google-services.json` and `google-service-account.json` are already in `frontend/.gitignore`.
+
+
+---
+
+## iter118h — Uber-Style Instant Booking Sheet (2026-02-09)
+
+**Three-part fix implementing user's "one screen, one tap" principle:**
+
+1. **Removed translucent RR watermark competing with the map** (`/app/frontend/app/trainee/(tabs)/home.tsx`)
+   - Replaced `<ImageBackground source={bg-battle-ropes.jpg}>` + gradient overlay with a plain `<View style={{ backgroundColor: '#0A0E1A' }}>` so the dark map is the only visual layer (no ghost logo behind it)
+   - Removed `<FloatingOrangeBg />` mount so the map is the hero surface, not decoration
+
+2. **Folded "30 miles" dropdown into the sheet** — deleted the standalone `styles.proximityContainer` chip from home body. Distance filter now lives as a compact orange chip inside the bottom sheet header. The picker Modal (`showProximityPicker`) is reused unchanged.
+
+3. **Redesigned `TrainerBottomSheet.tsx` to Uber-style instant booking:**
+   - **"AVAILABLE NOW" eyebrow + "N Trainers Nearby" title** (Uber's "Choose a ride")
+   - **Trainer rows** — 54px avatar with focus-ring, name, ETA + distance + rating on one line, price on the right (`$XX / session`) mirroring Uber's ride rows
+   - **Badges** — "Fastest match" (blue, shortest ETA) or "Top rated" (green, highest rating) auto-computed via `useMemo`
+   - **Auto-select on mount** — the fastest trainer is pre-selected via `onAutoSelect` so "Book [Name] Now" is one tap from open
+   - **Persistent fixed Book Now button** — orange gradient bottom bar always visible with `Book {firstName} Now` label + arrow; taps directly navigate to `/trainee/trainer-detail?trainerId=…` (existing booking entry)
+   - **Embedded proximity chip** — orange outline pill with `navigate` icon + `10 mi` + chevron opens the existing miles picker
+   - **Empty state** — "No trainers within X miles" + "Widen search" CTA
+   - **Interaction contract change**: tapping a trainer row now just SELECTS them (updates the Book Now button label); it no longer navigates away. Booking is a deliberate action via the persistent bottom bar.
+   - **Sheet dimensions**: collapsed = 340px (shows title + ~1.5 rows + Book Now bar), expanded = 78% of screen. Grab handle at top with pan responder; body list scrolls freely.
+   - **Border**: subtle orange-tinted top edge to signal the sheet is a decision surface (`borderColor: 'rgba(255,106,0,0.15)'`)
+
+**No backend changes.** Metro bundles cleanly; only pre-existing unused-import lint warnings.
+
+**Files touched:**
+- `/app/frontend/app/trainee/(tabs)/home.tsx` (ImageBackground swap, proximity chip removed, new sheet props wired)
+- `/app/frontend/src/components/TrainerBottomSheet.tsx` (full rewrite — Uber-style layout, badges, auto-select, embedded proximity, persistent Book Now bar)

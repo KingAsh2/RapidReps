@@ -548,21 +548,12 @@ export default function TraineeHomeScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <ImageBackground
-        source={require('../../../assets/images/bg-battle-ropes.jpg')}
-        style={styles.container}
-        resizeMode="cover"
-      >
-        {/* Premium dark overlay */}
-        <LinearGradient
-          colors={['rgba(10, 14, 26, 0.92)', 'rgba(17, 24, 39, 0.88)']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={styles.fullGradient}
-        />
-        
+      {/* iter118h: swapped translucent bg-battle-ropes ImageBackground for a
+          solid dark surface — the ghost RR logo watermark was competing with
+          the map. Removed FloatingOrangeBg mount too so the map stays the
+          hero surface (Uber principle: map is context, not decoration). */}
+      <View style={[styles.container, { backgroundColor: '#0A0E1A' }]}>
         <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <FloatingOrangeBg />
           {/* Header with custom RAPIDREPS wordmark lockup */}
           <View style={styles.header}>
             <View style={styles.headerLogo}>
@@ -892,23 +883,10 @@ export default function TraineeHomeScreen() {
               </Animated.View>
             )}
 
-            {/* Available Trainers Section */}
+            {/* Available Trainers Section — iter118h: standalone Trainer Proximity
+                dropdown removed. The distance filter now lives INSIDE the
+                Uber-style TrainerBottomSheet (one screen, one tap principle). */}
             <View style={styles.trainersSection}>
-              {/* Trainer Proximity Selector */}
-              <TouchableOpacity 
-                style={styles.proximityContainer} 
-                data-testid="proximity-container"
-                onPress={() => setShowProximityPicker(true)}
-              >
-                <View style={styles.proximityHeader}>
-                  <Ionicons name="navigate-outline" size={18} color="#FF6A00" />
-                  <Text style={styles.proximityLabel}>Trainer Proximity</Text>
-                </View>
-                <View style={styles.proximityDropdown}>
-                  <Text style={styles.proximityDropdownText}>{travelProximity} miles</Text>
-                  <Ionicons name="chevron-down" size={18} color="#FF6A00" />
-                </View>
-              </TouchableOpacity>
 
               {/* iter117: "TOP TRAINERS NEAR YOU" horizontal ScrollView removed
                   per user request — it duplicated the trainer entry-points
@@ -948,18 +926,20 @@ export default function TraineeHomeScreen() {
           />
         </SafeAreaView>
 
-        {/* Uber-like Trainer Bottom Sheet */}
+        {/* Uber-like Trainer Bottom Sheet — iter118h persistent instant-book surface */}
         {bottomSheetTrainers.length > 0 && (
           <TrainerBottomSheet
             trainers={bottomSheetTrainers}
             selectedTrainerId={selectedTrainerId}
             onSelectTrainer={(trainer) => {
+              // Single tap on a row = select as booking candidate (persistent Book Now button updates)
               setSelectedTrainerId(trainer.id);
-              // Navigate immediately to the trainer's profile so user can see full details.
-              router.push(`/trainee/trainer-detail?trainerId=${trainer.id}`);
             }}
             onBookTrainer={handleBottomSheetBook}
             isVisible={bottomSheetTrainers.length > 0}
+            proximityMiles={travelProximity}
+            onProximityPress={() => setShowProximityPicker(true)}
+            onAutoSelect={(trainer) => setSelectedTrainerId(trainer.id)}
           />
         )}
 
@@ -1093,7 +1073,7 @@ export default function TraineeHomeScreen() {
             }
           }}
         />
-      </ImageBackground>
+      </View>
     </>
   );
 }
