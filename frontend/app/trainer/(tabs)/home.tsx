@@ -20,7 +20,6 @@ import { useAuth } from '../../../src/contexts/AuthContext';
 import { trainerAPI } from '../../../src/services/api';
 import api from '../../../src/services/api';
 import TierCelebrationSheet from '../../../src/components/TierCelebrationSheet';
-import VisibilityStatusCard from '../../../src/components/VisibilityStatusCard';
 import { UserAvatar } from '../../../src/components/UserAvatar';
 import { Session, SessionStatus } from '../../../src/types';
 import { Ionicons } from '@expo/vector-icons';
@@ -36,6 +35,7 @@ import PeopleSearchBar from '../../../src/components/PeopleSearchBar';
 import { DS } from '../../../src/theme/designSystem';
 import FloatingOrangeBg from '../../../src/components/FloatingOrangeBg';
 import { swrCache } from '../../../src/hooks/useStaleWhileRefresh';
+import Svg, { Path, Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 
 const { width } = Dimensions.get('window');
 
@@ -95,6 +95,10 @@ export default function TrainerHomeScreen() {
   // One-time post-approval celebratory modal — fires when canGoLive becomes true and never been shown
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const APPROVAL_SEEN_KEY = '@rapidreps_trainer_approval_modal_seen';
+  // iter118b: Trainer home redesign — tier/reviews for stat cards + earnings period picker
+  const [onboardingStatus, setOnboardingStatus] = useState<any>(null);
+  const [earningsPeriod, setEarningsPeriod] = useState<'week' | 'month' | 'all'>('week');
+  const [periodMenuVisible, setPeriodMenuVisible] = useState(false);
 
   // Location tracking interval ref
   const locationIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -303,16 +307,18 @@ export default function TrainerHomeScreen() {
 
   const loadData = async () => {
     try {
-      const [sessionsData, earningsData, traineesData, profileData, locationStatus] = await Promise.all([
+      const [sessionsData, earningsData, traineesData, profileData, locationStatus, onboardData] = await Promise.all([
         trainerAPI.getSessions(),
         trainerAPI.getEarnings(),
         trainerAPI.getNearbyTrainees(),
         trainerAPI.getMyProfile().catch(() => null),
         trainerAPI.getLocationStatus().catch(() => null),
+        trainerAPI.getOnboardingStatus().catch(() => null),
       ]);
       setSessions(sessionsData);
       setEarnings(earningsData);
       setNearbyTrainees(traineesData.trainees || []);
+      setOnboardingStatus(onboardData);
       // iter106b: persist to cache so next mount of this screen paints
       // instantly. Reads pick up `_cachedSessions` / `_cachedEarnings` above.
       swrCache.set('trainer:dashboard:sessions', sessionsData);
@@ -542,25 +548,35 @@ export default function TrainerHomeScreen() {
 
         <SafeAreaView style={styles.safeArea} edges={['top']}>
       <FloatingOrangeBg />
-          {/* Header with Logo and Actions — matching trainee */}
+          {/* iter118b: Header — RAPIDREPS wordmark lockup (barbell logo + condensed text) with bell + hamburger on the right */}
           <View style={styles.header}>
             <View style={styles.headerLogo}>
-              <Image source={require('../../../assets/images/rapidreps-logo.png')} style={{ width: 32, height: 32 }} resizeMode="contain" />
-              <Text style={styles.logoText}>RapidReps</Text>
+              <Image source={require('../../../assets/images/rapidreps-logo.png')} style={{ width: 40, height: 40 }} resizeMode="contain" />
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={styles.logoWordmarkWhite}>RAPID</Text>
+                <Text style={styles.logoWordmarkOrange}>REPS</Text>
+              </View>
             </View>
             <View style={styles.headerActions}>
-            <TouchableOpacity 
-              onPress={() => { haptic.light(); setMenuVisible(!menuVisible); }} 
-              style={styles.headerButton}
-              data-testid="hamburger-menu-btn"
-            >
-              <Ionicons name="menu" size={26} color={COLORS.white} />
-              {unreadCount > 0 && (
-                <View style={styles.notifBadge}>
-                  <Text style={styles.notifBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
-                </View>
-              )}
-            </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => { haptic.light(); router.push('/notifications'); }}
+                style={styles.headerBellBtn}
+                data-testid="trainer-notifications-bell-btn"
+              >
+                <Ionicons name="notifications-outline" size={22} color={COLORS.white} />
+                {unreadCount > 0 && (
+                  <View style={styles.notifBadge}>
+                    <Text style={styles.notifBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity 
+                onPress={() => { haptic.light(); setMenuVisible(!menuVisible); }} 
+                style={styles.headerMenuBtn}
+                data-testid="hamburger-menu-btn"
+              >
+                <Ionicons name="menu" size={24} color={COLORS.white} />
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -603,7 +619,9 @@ export default function TrainerHomeScreen() {
             {/* iter96b: Stripe Payouts Setup Banner removed per user request.
                 Onboarding to Stripe is now reachable via Earnings tab. */}
 
-            {/* Hero Banner */}
+            {/* iter118b: Trainer home redesign matching the user's mock.
+                Section 1 — HERO: right-anchored photo, orange "WELCOME BACK,",
+                huge "LET'S TRAIN, [NAME]!" split-color headline. */}
             <Animated.View
               style={[
                 styles.heroBanner,
@@ -613,270 +631,380 @@ export default function TrainerHomeScreen() {
                 },
               ]}
             >
+              <Image
+                source={require('../../../assets/images/hero-trainer-back.png')}
+                style={styles.heroBgImage}
+                resizeMode="cover"
+              />
               <LinearGradient
-                colors={['rgba(20, 25, 41, 0.95)', 'rgba(20, 25, 41, 0.85)']}
-                style={styles.heroGradient}
-              >
-                <View style={styles.heroGlow} />
-                {/* Profile Photo — iter106ar: unified UserAvatar */}
-                <UserAvatar
-                  size={90}
-                  user={{
-                    avatarUrl: trainerProfile?.avatarUrl,
-                    profilePhoto: (trainerProfile as any)?.profilePhoto,
-                    fullName: user?.fullName,
-                    email: user?.email,
-                    accentColor: trainerProfile?.accentColor,
-                  }}
-                  style={styles.heroAvatar}
-                />
-                <Text style={styles.heroTitle}>
-                  LET&apos;S TRAIN, {user?.fullName?.split(' ')[0]?.toUpperCase() || 'COACH'}!
-                </Text>
-                <Text style={styles.heroSubtitle}>
-                  {pendingSessions.length > 0 
-                    ? `${pendingSessions.length} client${pendingSessions.length > 1 ? 's' : ''} waiting for you`
-                    : 'Your training empire awaits'}
-                </Text>
-              </LinearGradient>
+                colors={['rgba(10,14,26,0.96)', 'rgba(10,14,26,0.70)', 'rgba(10,14,26,0.15)', 'rgba(10,14,26,0)']}
+                start={{ x: 0, y: 0.5 }}
+                end={{ x: 1, y: 0.5 }}
+                locations={[0, 0.35, 0.65, 1]}
+                style={StyleSheet.absoluteFillObject}
+              />
+              <View style={styles.heroContent}>
+                <Text style={styles.heroEyebrow}>WELCOME BACK,</Text>
+                <Text style={styles.heroTitleWhite}>LET&apos;S TRAIN,</Text>
+                <Text
+                  style={styles.heroTitleOrange}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.6}
+                >{(user?.fullName?.split(' ')[0] || 'TRAINER').toUpperCase()}!</Text>
+                <Text style={styles.heroSubtitle}>Your training empire awaits 💪🔥</Text>
+              </View>
             </Animated.View>
 
-            {/* Availability Status Card */}
+            {/* Section 2 — ONLINE & AVAILABLE toggle card */}
             <Animated.View
               style={[
-                styles.statusCard,
+                styles.onlineCard,
                 {
                   opacity: statusCardAnim,
                   transform: [{ translateY: statusTranslateY }],
                 },
               ]}
             >
-              <LinearGradient
-                colors={isAvailable ? [COLORS.success, COLORS.successDark] : ['#2a2a3e', '#1a1a2e']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.statusGradient}
-              >
-                {/* Pulsing glow ring */}
-                {isAvailable && (
-                  <Animated.View style={{
-                    position: 'absolute',
-                    left: 12,
-                    width: 56,
-                    height: 56,
-                    borderRadius: 28,
-                    backgroundColor: 'rgba(0, 214, 143, 0.3)',
-                    transform: [{ scale: pulseAnim }],
-                    opacity: pulseAnim.interpolate({
-                      inputRange: [0.85, 1, 1.15],
-                      outputRange: [0.6, 0.3, 0],
-                    }),
-                  }} />
-                )}
-                <Animated.View style={[styles.statusIconContainer, { transform: [{ scale: isAvailable ? pulseAnim : 1 }] }]}>
-                  <Ionicons 
-                    name={isAvailable ? "radio-button-on" : "radio-button-off"} 
-                    size={32} 
-                    color={COLORS.white} 
-                  />
-                </Animated.View>
-                <View style={styles.statusContent}>
-                  <Text style={styles.statusTitle}>
-                    {isAvailable ? 'AVAILABLE NOW' : 'UNAVAILABLE'}
-                  </Text>
-                  <Text style={styles.statusSubtitle}>
-                    {isAvailable 
-                      ? 'Trainees can find and book you' 
-                      : 'Toggle on to accept new clients'}
-                  </Text>
-                </View>
-                {availabilityLoading ? (
-                  <ActivityIndicator size="small" color={COLORS.white} />
-                ) : (
-                  <Switch
-                    value={isAvailable}
-                    onValueChange={handleToggleAvailability}
-                    trackColor={{ false: 'rgba(255,255,255,0.2)', true: 'rgba(255,255,255,0.4)' }}
-                    thumbColor={COLORS.white}
-                    ios_backgroundColor="rgba(255,255,255,0.2)"
-                  />
-                )}
-              </LinearGradient>
+              <View style={[styles.onlineDot, { backgroundColor: isAvailable ? COLORS.success : '#8a95b0' }]} />
+              <View style={styles.onlineContent}>
+                <Text style={[styles.onlineTitle, { color: isAvailable ? COLORS.success : COLORS.white }]}>
+                  {isAvailable ? 'ONLINE & AVAILABLE' : 'OFFLINE'}
+                </Text>
+                <Text style={styles.onlineSubtitle}>
+                  {isAvailable ? 'Trainees can find and book you' : 'Toggle on to accept new clients'}
+                </Text>
+              </View>
+              {availabilityLoading ? (
+                <ActivityIndicator size="small" color={COLORS.white} />
+              ) : (
+                <Switch
+                  value={isAvailable}
+                  onValueChange={handleToggleAvailability}
+                  trackColor={{ false: 'rgba(255,255,255,0.18)', true: COLORS.success }}
+                  thumbColor={'#FFFFFF'}
+                  ios_backgroundColor="rgba(255,255,255,0.18)"
+                  data-testid="availability-toggle"
+                />
+              )}
             </Animated.View>
 
-            {/* Earnings Card */}
+            {/* Section 3 — 4 stat cards row */}
+            <View style={styles.statCardsRow}>
+              {(() => {
+                const today = new Date();
+                const isSameDay = (d: Date) => d.toDateString() === today.toDateString();
+                const todaysSessions = sessions.filter((s) => {
+                  try { return isSameDay(new Date(s.sessionDateTimeStart)); } catch { return false; }
+                });
+                const nextToday = todaysSessions
+                  .filter((s: any) => s.status === 'confirmed' || s.status === 'in_progress')
+                  .sort((a: any, b: any) => new Date(a.sessionDateTimeStart).getTime() - new Date(b.sessionDateTimeStart).getTime())[0];
+                const nextLabel = nextToday
+                  ? `Next: ${new Date((nextToday as any).sessionDateTimeStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                  : todaysSessions.length > 0 ? `${todaysSessions.length} today` : 'No sessions today';
+                const rating = onboardingStatus?.averageRating ?? trainerProfile?.averageRating ?? 0;
+                const reviews = onboardingStatus?.totalReviews ?? 0;
+                const tier = (onboardingStatus?.trainerTier || 'Rising').toString();
+                const tierLabel = tier.charAt(0).toUpperCase() + tier.slice(1).toLowerCase();
+                const tierPct: Record<string, string> = { Elite: 'Top 10%', Pro: 'Top 25%', Rising: 'Growing', Newbie: 'Just starting' };
+                return (
+                  <>
+                    <TouchableOpacity
+                      style={styles.statCard}
+                      onPress={() => router.push('/trainer/(tabs)/sessions')}
+                      activeOpacity={0.85}
+                      data-testid="stat-todays-sessions"
+                    >
+                      <View style={[styles.statBadge, { borderColor: 'rgba(255,106,0,0.5)' }]}>
+                        <Ionicons name="calendar" size={16} color={COLORS.orange} />
+                      </View>
+                      <Text style={styles.statLabel}>TODAY&apos;S SESSIONS</Text>
+                      <Text style={styles.statValue}>{todaysSessions.length}</Text>
+                      <Text style={styles.statSub} numberOfLines={1}>{nextLabel}</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.statCard}
+                      onPress={() => router.push('/trainer/discover-trainees')}
+                      activeOpacity={0.85}
+                      data-testid="stat-nearby-trainees"
+                    >
+                      <View style={[styles.statBadge, { borderColor: 'rgba(108,92,231,0.6)' }]}>
+                        <Ionicons name="location" size={16} color={'#6C5CE7'} />
+                      </View>
+                      <Text style={styles.statLabel}>NEARBY TRAINEES</Text>
+                      <Text style={styles.statValue}>{nearbyTrainees.length}</Text>
+                      <Text style={styles.statSub}>Within 5 miles</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.statCard}
+                      onPress={() => router.push('/trainer/(tabs)/profile')}
+                      activeOpacity={0.85}
+                      data-testid="stat-rating"
+                    >
+                      <View style={[styles.statBadge, { borderColor: 'rgba(59,130,246,0.6)' }]}>
+                        <Ionicons name="star" size={16} color={'#3B82F6'} />
+                      </View>
+                      <Text style={styles.statLabel}>RATING</Text>
+                      <View style={styles.ratingRow}>
+                        <Text style={styles.statValue}>{rating > 0 ? rating.toFixed(1) : '—'}</Text>
+                        {rating > 0 && <Ionicons name="star" size={16} color={COLORS.yellow} style={{ marginLeft: 4, marginBottom: 4 }} />}
+                      </View>
+                      <Text style={styles.statSub} numberOfLines={1}>({reviews} review{reviews === 1 ? '' : 's'})</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.statCard}
+                      onPress={() => router.push('/trainer/achievements')}
+                      activeOpacity={0.85}
+                      data-testid="stat-level"
+                    >
+                      <View style={[styles.statBadge, { borderColor: 'rgba(232,67,147,0.6)' }]}>
+                        <Ionicons name="trending-up" size={16} color={'#E84393'} />
+                      </View>
+                      <Text style={styles.statLabel}>LEVEL</Text>
+                      <Text style={[styles.statValue, { color: '#E84393', fontSize: 20 }]} numberOfLines={1}>{tierLabel}</Text>
+                      <Text style={styles.statSub} numberOfLines={1}>{tierPct[tierLabel] || 'Growing'}</Text>
+                    </TouchableOpacity>
+                  </>
+                );
+              })()}
+            </View>
+
+            {/* Section 4 — Total Earnings card with sparkline + period tabs */}
             {earnings && (
               <Animated.View
                 style={[
-                  styles.earningsCard,
+                  styles.earningsCardV2,
                   {
                     opacity: earningsAnim,
                     transform: [{ translateY: earningsTranslateY }],
                   },
                 ]}
               >
-                <LinearGradient
-                  colors={['#0A0E1A', '#141929']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.earningsGradient}
-                >
-                  <View style={styles.earningsHeader}>
-                    <View style={styles.earningsIconBg}>
-                      <Ionicons name="wallet" size={24} color={'#FF6A00'} />
+                <View style={styles.earningsHeaderV2}>
+                  <View style={styles.earningsHeaderLeft}>
+                    <View style={styles.earningsWalletBadge}>
+                      <Ionicons name="wallet" size={18} color={COLORS.orange} />
                     </View>
-                    <Text style={styles.earningsLabel}>TOTAL EARNINGS</Text>
+                    <Text style={styles.earningsLabelV2}>TOTAL EARNINGS</Text>
                   </View>
-                  <Text style={styles.earningsAmount}>
-                    ${(earnings.totalEarningsCents / 100).toFixed(2)}
-                  </Text>
-                  <View style={styles.earningsBreakdown}>
-                    <View style={styles.earningsStat}>
-                      <Text style={styles.earningsStatLabel}>This Week</Text>
-                      <Text style={styles.earningsStatValue}>
-                        ${(earnings.weekEarningsCents / 100).toFixed(2)}
-                      </Text>
-                    </View>
-                    <View style={styles.earningsDivider} />
-                    <View style={styles.earningsStat}>
-                      <Text style={styles.earningsStatLabel}>This Month</Text>
-                      <Text style={styles.earningsStatValue}>
-                        ${(earnings.monthEarningsCents / 100).toFixed(2)}
-                      </Text>
-                    </View>
+                  <TouchableOpacity
+                    style={styles.periodPill}
+                    onPress={() => setPeriodMenuVisible(!periodMenuVisible)}
+                    data-testid="earnings-period-btn"
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.periodPillText}>
+                      {earningsPeriod === 'week' ? 'This Week' : earningsPeriod === 'month' ? 'This Month' : 'All Time'}
+                    </Text>
+                    <Ionicons name="chevron-down" size={14} color={COLORS.white} />
+                  </TouchableOpacity>
+                </View>
+                {periodMenuVisible && (
+                  <View style={styles.periodMenu}>
+                    {(['week', 'month', 'all'] as const).map((p) => (
+                      <TouchableOpacity
+                        key={p}
+                        style={styles.periodMenuItem}
+                        onPress={() => { setEarningsPeriod(p); setPeriodMenuVisible(false); }}
+                        data-testid={`earnings-period-${p}`}
+                      >
+                        <Text style={styles.periodMenuText}>
+                          {p === 'week' ? 'This Week' : p === 'month' ? 'This Month' : 'All Time'}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
                   </View>
-                </LinearGradient>
+                )}
+                <Text style={styles.earningsAmountV2}>
+                  ${(((earningsPeriod === 'week' ? earnings.weekEarningsCents : earningsPeriod === 'month' ? earnings.monthEarningsCents : earnings.totalEarningsCents) || 0) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </Text>
+                {/* Sparkline trend chart */}
+                {(() => {
+                  const breakdown = (earnings.weeklyBreakdown || []) as any[];
+                  const series = breakdown.length > 0
+                    ? breakdown.slice(-12).map((w: any) => (w.earnings || 0) / 100)
+                    : [1, 1.4, 2.1, 1.8, 2.6, 3.2, 3.0, 3.9, 4.4, 5.1, 6.3, 7.2];
+                  const chartW = width - 40 - 32; // screen padding + card padding
+                  const chartH = 70;
+                  const maxV = Math.max(...series, 1);
+                  const minV = Math.min(...series);
+                  const range = Math.max(maxV - minV, 1);
+                  const pts = series.map((v, i) => {
+                    const x = (i / Math.max(series.length - 1, 1)) * chartW;
+                    const y = chartH - ((v - minV) / range) * (chartH - 8) - 4;
+                    return { x, y };
+                  });
+                  // Build smooth cubic path
+                  let d = `M ${pts[0].x} ${pts[0].y}`;
+                  for (let i = 1; i < pts.length; i++) {
+                    const prev = pts[i - 1];
+                    const cur = pts[i];
+                    const cx = (prev.x + cur.x) / 2;
+                    d += ` Q ${cx} ${prev.y} ${cx} ${(prev.y + cur.y) / 2} T ${cur.x} ${cur.y}`;
+                  }
+                  const last = pts[pts.length - 1];
+                  return (
+                    <Svg width={chartW} height={chartH} style={{ marginTop: 8, marginBottom: 4 }}>
+                      <Defs>
+                        <SvgLinearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
+                          <Stop offset="0" stopColor="#FF6A00" stopOpacity="0.35" />
+                          <Stop offset="1" stopColor="#FF6A00" stopOpacity="1" />
+                        </SvgLinearGradient>
+                      </Defs>
+                      <Path d={d} stroke="url(#lineGrad)" strokeWidth={2.5} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                      <Circle cx={last.x} cy={last.y} r={4.5} fill="#FF6A00" />
+                    </Svg>
+                  );
+                })()}
+                {/* Bottom 3-column breakdown */}
+                <View style={styles.earningsBreakdownV2}>
+                  {(() => {
+                    const wPct = earnings.lastWeekEarningsCents > 0
+                      ? Math.round(((earnings.weekEarningsCents - earnings.lastWeekEarningsCents) / earnings.lastWeekEarningsCents) * 100)
+                      : null;
+                    const mPct = earnings.lastMonthEarningsCents > 0
+                      ? Math.round(((earnings.monthEarningsCents - earnings.lastMonthEarningsCents) / earnings.lastMonthEarningsCents) * 100)
+                      : null;
+                    const pctText = (pct: number | null, label: string) => {
+                      if (pct === null) return <Text style={styles.earnPctNeutral}>{label}</Text>;
+                      const up = pct >= 0;
+                      return (
+                        <View style={styles.earnPctRow}>
+                          <Ionicons name={up ? 'arrow-up' : 'arrow-down'} size={12} color={up ? COLORS.success : COLORS.error} />
+                          <Text style={[styles.earnPctText, { color: up ? COLORS.success : COLORS.error }]}>{Math.abs(pct)}%</Text>
+                          <Text style={styles.earnPctSub}> {label}</Text>
+                        </View>
+                      );
+                    };
+                    return (
+                      <>
+                        <View style={styles.earnCol}>
+                          <Text style={styles.earnColLabel}>THIS WEEK</Text>
+                          <Text style={styles.earnColValue}>${(earnings.weekEarningsCents / 100).toFixed(2)}</Text>
+                          {pctText(wPct, 'vs last week')}
+                        </View>
+                        <View style={styles.earnCol}>
+                          <Text style={styles.earnColLabel}>THIS MONTH</Text>
+                          <Text style={styles.earnColValue}>${(earnings.monthEarningsCents / 100).toFixed(2)}</Text>
+                          {pctText(mPct, 'vs last month')}
+                        </View>
+                        <View style={styles.earnCol}>
+                          <Text style={styles.earnColLabel}>ALL TIME</Text>
+                          <Text style={styles.earnColValue}>${(earnings.totalEarningsCents / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Text>
+                          <Text style={styles.earnPctNeutral}>Total Earnings</Text>
+                        </View>
+                      </>
+                    );
+                  })()}
+                </View>
               </Animated.View>
             )}
 
-            {/* iter102i: visibility diagnostic — auto-expands when hidden */}
-            <VisibilityStatusCard
-              refreshKey={isAvailable ? 1 : 0}
-              onFixAvailability={() => {/* lives on this same screen */}}
-              onFixVerification={() => router.push('/trainer/verification')}
-              onOpenEditProfile={() => router.push('/trainer/edit-profile')}
-            />
-
-            {/* Quick Actions */}
-            <View style={styles.quickActionsRow}>
-              <TouchableOpacity 
-                style={styles.quickAction}
+            {/* Section 5 — Visible to nearby trainees banner (only when online with location) */}
+            {isAvailable && (
+              <TouchableOpacity
+                style={styles.visibleBanner}
+                activeOpacity={0.9}
                 onPress={() => router.push('/trainer/edit-profile')}
+                data-testid="visible-banner"
               >
-                <LinearGradient
-                  colors={['#141929', '#1A2035']}
-                  style={styles.quickActionGradient}
-                >
-                  <View style={styles.quickActionIcon}>
-                    <Ionicons name="person-circle" size={28} color={COLORS.orange} />
-                  </View>
-                  <Text style={styles.quickActionText}>Edit Profile</Text>
-                </LinearGradient>
+                <View style={styles.visibleIcon}>
+                  <Ionicons name="radio" size={18} color={COLORS.success} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.visibleTitle}>Visible to nearby trainees</Text>
+                  <Text style={styles.visibleSub} numberOfLines={2}>
+                    You are visible in {trainerProfile?.locationAddress || 'your area'} and surrounding areas
+                  </Text>
+                </View>
+                <View style={styles.manageBtn} data-testid="visible-banner-manage-btn">
+                  <Text style={styles.manageBtnText}>Manage</Text>
+                </View>
               </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.quickAction}
+            )}
+
+            {/* Section 6 — 2x2 grid of primary actions */}
+            <View style={styles.actionGridRow}>
+              <TouchableOpacity
+                style={styles.actionTile}
+                onPress={() => router.push('/trainer/edit-profile')}
+                activeOpacity={0.85}
+                data-testid="action-edit-profile"
+              >
+                <View style={[styles.actionTileIcon, { backgroundColor: 'rgba(255,106,0,0.15)' }]}>
+                  <Ionicons name="person" size={26} color={COLORS.orange} />
+                </View>
+                <Text style={styles.actionTileTitle}>Edit Profile</Text>
+                <Text style={styles.actionTileSub}>Update your info</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.actionTile}
                 onPress={() => router.push('/trainer/verification')}
+                activeOpacity={0.85}
+                data-testid="action-verification"
               >
-                <LinearGradient
-                  colors={['#141929', '#1A2035']}
-                  style={styles.quickActionGradient}
-                >
-                  <View style={styles.quickActionIcon}>
-                    <Ionicons name="shield-checkmark" size={28} color={'#FF6A00'} />
-                  </View>
-                  <Text style={styles.quickActionText}>Verification</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-              {/* iter102c (refined iter102j): Set Rates unlocked when EITHER
-                  isVerified is true OR verificationStatus is 'verified'.
-                  Some admin approval paths only flip one of the two fields,
-                  so checking only `isVerified` was leaving legitimately-
-                  approved trainers locked out of pricing (e.g. Sir Big Dawg). */}
-              {(trainerProfile?.isVerified === true ||
-                (trainerProfile as any)?.verificationStatus === 'verified') ? (
-                <TouchableOpacity
-                  style={styles.quickAction}
-                  onPress={() => router.push('/trainer/set-rates')}
-                  data-testid="set-rates-btn"
-                >
-                  <LinearGradient
-                    colors={['#141929', '#1A2035']}
-                    style={styles.quickActionGradient}
-                  >
-                    <View style={styles.quickActionIcon}>
-                      <Ionicons name="cash" size={28} color={COLORS.success} />
+                <View style={[styles.actionTileIcon, { backgroundColor: 'rgba(108,92,231,0.18)' }]}>
+                  <Ionicons name="shield-checkmark" size={26} color={'#A29BFE'} />
+                  {(trainerProfile?.isVerified === true || (trainerProfile as any)?.verificationStatus === 'verified') && (
+                    <View style={styles.verifiedBadge}>
+                      <Ionicons name="checkmark" size={11} color="#fff" />
                     </View>
-                    <Text style={styles.quickActionText}>Set Rates</Text>
-                  </LinearGradient>
+                  )}
+                </View>
+                <Text style={styles.actionTileTitle}>Verification</Text>
+                <Text style={styles.actionTileSub}>
+                  {(trainerProfile?.isVerified === true || (trainerProfile as any)?.verificationStatus === 'verified') ? 'Verified Trainer' : 'Get verified'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.actionGridRow}>
+              {(trainerProfile?.isVerified === true || (trainerProfile as any)?.verificationStatus === 'verified') ? (
+                <TouchableOpacity
+                  style={styles.actionTile}
+                  onPress={() => router.push('/trainer/set-rates')}
+                  activeOpacity={0.85}
+                  data-testid="action-set-rates"
+                >
+                  <View style={[styles.actionTileIcon, { backgroundColor: 'rgba(59,130,246,0.18)' }]}>
+                    <Ionicons name="cash" size={26} color={'#3B82F6'} />
+                  </View>
+                  <Text style={styles.actionTileTitle}>Set Rates</Text>
+                  <Text style={styles.actionTileSub}>Manage pricing</Text>
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity
-                  style={styles.quickAction}
+                  style={styles.actionTile}
                   onPress={() => router.push('/trainer/verification')}
-                  data-testid="set-rates-btn-locked"
+                  activeOpacity={0.85}
+                  data-testid="action-set-rates-locked"
                 >
-                  <LinearGradient
-                    colors={['#141929', '#1A2035']}
-                    style={styles.quickActionGradient}
-                  >
-                    <View style={[styles.quickActionIcon, { opacity: 0.45 }]}>
-                      <Ionicons name="lock-closed" size={26} color={'rgba(255,255,255,0.5)'} />
-                    </View>
-                    <Text style={[styles.quickActionText, { color: 'rgba(255,255,255,0.55)' }]}>Set Rates</Text>
-                  </LinearGradient>
+                  <View style={[styles.actionTileIcon, { backgroundColor: 'rgba(255,255,255,0.06)' }]}>
+                    <Ionicons name="lock-closed" size={24} color={'rgba(255,255,255,0.5)'} />
+                  </View>
+                  <Text style={[styles.actionTileTitle, { color: 'rgba(255,255,255,0.6)' }]}>Set Rates</Text>
+                  <Text style={styles.actionTileSub}>Verify first</Text>
                 </TouchableOpacity>
               )}
-            </View>
 
-            {/* Trainer Feature Actions */}
-            <View style={styles.quickActionsRow}>
-              <TouchableOpacity 
-                style={styles.quickAction}
-                onPress={() => router.push('/trainer/trainer-tools')}
-                data-testid="trainer-tools-btn"
+              <TouchableOpacity
+                style={styles.actionTile}
+                onPress={() => router.push('/trainer/(tabs)/profile')}
+                activeOpacity={0.85}
+                data-testid="action-settings"
               >
-                <LinearGradient
-                  colors={['#6C5CE7', '#A29BFE']}
-                  style={styles.quickActionGradient}
-                >
-                  <View style={styles.quickActionIcon}>
-                    <Ionicons name="construct" size={28} color={COLORS.white} />
-                  </View>
-                  <Text style={[styles.quickActionText, { color: COLORS.white }]} numberOfLines={1} adjustsFontSizeToFit>My Tools</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.quickAction}
-                onPress={() => router.push('/trainer/group-sessions')}
-                data-testid="trainer-group-sessions-btn"
-              >
-                <LinearGradient
-                  colors={['#0A0E1A', '#141929']}
-                  style={styles.quickActionGradient}
-                >
-                  <View style={styles.quickActionIcon}>
-                    <Ionicons name="people" size={28} color={COLORS.white} />
-                  </View>
-                  <Text style={[styles.quickActionText, { color: COLORS.white }]} numberOfLines={1} adjustsFontSizeToFit>Group Sessions</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.quickAction}
-                onPress={() => router.push('/trainer/achievements')}
-                data-testid="trainer-achievements-btn"
-              >
-                <LinearGradient
-                  colors={[COLORS.orange, COLORS.orangeLight]}
-                  style={styles.quickActionGradient}
-                >
-                  <View style={styles.quickActionIcon}>
-                    <Ionicons name="trophy" size={28} color={COLORS.white} />
-                  </View>
-                  <Text style={[styles.quickActionText, { color: COLORS.white }]} numberOfLines={1} adjustsFontSizeToFit>Achievements</Text>
-                </LinearGradient>
+                <View style={[styles.actionTileIcon, { backgroundColor: 'rgba(255,71,87,0.18)' }]}>
+                  <Ionicons name="settings" size={26} color={'#FF4757'} />
+                </View>
+                <Text style={styles.actionTileTitle}>Settings</Text>
+                <Text style={styles.actionTileSub}>App preferences</Text>
               </TouchableOpacity>
             </View>
-            {/* Second Quick Actions row removed — user requested Discover Trainees button/banner be hidden from trainer home (route still accessible via session-prep "View Full Profile" CTA) */}
 
             {/* === GLOBAL TRAINEE SEARCH (by name / email / phone) === */}
             <PeopleSearchBar
@@ -1249,15 +1377,69 @@ const styles = StyleSheet.create({
   },
   // Hero
   heroBanner: {
-    marginBottom: 16,
-    borderRadius: 24,
+    marginBottom: 14,
+    borderRadius: 22,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
+    minHeight: 220,
+    backgroundColor: '#0A0E1A',
+    shadowColor: '#FF6A00',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 22,
     elevation: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,106,0,0.18)',
   },
+  heroBgImage: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: '72%',
+    height: '100%',
+  },
+  heroContent: {
+    paddingVertical: 22,
+    paddingHorizontal: 20,
+    justifyContent: 'center',
+    minHeight: 220,
+    maxWidth: '68%',
+  },
+  heroEyebrow: {
+    fontSize: 13,
+    fontWeight: '900',
+    color: '#FF6A00',
+    letterSpacing: 1.5,
+    marginBottom: 6,
+  },
+  heroTitleWhite: {
+    fontSize: 28,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
+    lineHeight: 32,
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 6,
+  },
+  heroTitleOrange: {
+    fontSize: 28,
+    fontWeight: '900',
+    color: '#FF6A00',
+    letterSpacing: 0.3,
+    lineHeight: 32,
+    textShadowColor: 'rgba(255,106,0,0.35)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
+    marginBottom: 10,
+  },
+  heroSubtitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.75)',
+    lineHeight: 17,
+  },
+  // Legacy hero styles kept for orphan references
   heroGradient: {
     paddingVertical: 28,
     paddingHorizontal: 24,
@@ -1295,7 +1477,343 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     letterSpacing: 0.5,
   },
-  heroSubtitle: {
+  // iter118b — RAPIDREPS wordmark lockup
+  logoWordmarkWhite: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: 1,
+    fontStyle: 'italic',
+  },
+  logoWordmarkOrange: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#FF6A00',
+    letterSpacing: 1,
+    fontStyle: 'italic',
+  },
+  headerMenuBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1.2,
+    borderColor: 'rgba(255,255,255,0.28)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+  },
+  headerBellBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative' as const,
+  },
+  // ONLINE & AVAILABLE toggle card
+  onlineCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    borderRadius: 16,
+    backgroundColor: '#0A0E1A',
+    borderWidth: 1,
+    borderColor: 'rgba(255,106,0,0.35)',
+    marginBottom: 16,
+    gap: 12,
+  },
+  onlineDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  onlineContent: {
+    flex: 1,
+  },
+  onlineTitle: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: COLORS.white,
+    letterSpacing: 0.5,
+  },
+  onlineSubtitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: 2,
+  },
+  // 4 stat cards row
+  statCardsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 16,
+  },
+  statCard: {
+    flex: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center',
+    minHeight: 128,
+  },
+  statBadge: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+  },
+  statLabel: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: 'rgba(255,255,255,0.72)',
+    letterSpacing: 0.5,
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  statValue: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    lineHeight: 26,
+    marginBottom: 2,
+  },
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+  },
+  statSub: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.5)',
+    textAlign: 'center',
+  },
+  // Total Earnings V2
+  earningsCardV2: {
+    borderRadius: 20,
+    padding: 18,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    marginBottom: 16,
+  },
+  earningsHeaderV2: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  earningsHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  earningsWalletBadge: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,106,0,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  earningsLabelV2: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: 1,
+  },
+  periodPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  periodPillText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  periodMenu: {
+    position: 'absolute',
+    right: 18,
+    top: 46,
+    backgroundColor: '#141929',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    zIndex: 10,
+    paddingVertical: 4,
+    minWidth: 120,
+  },
+  periodMenuItem: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  periodMenuText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  earningsAmountV2: {
+    fontSize: 40,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: -0.5,
+    marginTop: 2,
+  },
+  earningsBreakdownV2: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 10,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.06)',
+  },
+  earnCol: {
+    flex: 1,
+  },
+  earnColLabel: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: 'rgba(255,255,255,0.6)',
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  earnColValue: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  earnPctRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  earnPctText: {
+    fontSize: 11,
+    fontWeight: '800',
+    marginLeft: 2,
+  },
+  earnPctSub: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.5)',
+  },
+  earnPctNeutral: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.5)',
+  },
+  // Visible banner
+  visibleBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(0,214,143,0.5)',
+    backgroundColor: 'rgba(0,214,143,0.06)',
+    marginBottom: 16,
+  },
+  visibleIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,214,143,0.15)',
+  },
+  visibleTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    marginBottom: 2,
+  },
+  visibleSub: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.6)',
+    lineHeight: 15,
+  },
+  manageBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(0,214,143,0.6)',
+    backgroundColor: 'transparent',
+  },
+  manageBtnText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#00D68F',
+  },
+  // 2x2 action grid tiles
+  actionGridRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 12,
+  },
+  actionTile: {
+    flex: 1,
+    paddingVertical: 16,
+    paddingHorizontal: 14,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    minHeight: 110,
+    justifyContent: 'space-between',
+  },
+  actionTileIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+    position: 'relative' as const,
+  },
+  verifiedBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#00D68F',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#0A0E1A',
+  },
+  actionTileTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    marginBottom: 2,
+  },
+  actionTileSub: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.5)',
+  },
+  // Legacy heroSubtitle
+  heroSubtitleLegacy: {
     fontSize: 16,
     fontWeight: '600',
     color: 'rgba(255,255,255,0.9)',

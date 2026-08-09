@@ -2176,3 +2176,33 @@ Server logs showed repeated `LOGIN FAIL` for `admin@rapidreps.com` because the u
 - P2: Replace athlete silhouette placeholders on auth screens with premium photography
 - P2: EDGE_CASE_PLAYBOOK Batch 3 (G20–G22 SMS fallback via Twilio/SendGrid)
 - Optional refactor: Extract `HeroBanner` + `ActionCard` from `home.tsx` (2300+ lines) → `src/components/trainee-home/`
+
+
+---
+
+## iter118c — Trainer Home Screen Redesign (2026-02-09)
+
+**Shipped:** Full trainer home redesign to match user's reference mock.
+- **Header**: RAPIDREPS wordmark lockup (barbell logo + condensed italic RAPID/REPS) with dedicated bell (routes to /notifications) + hamburger menu icons top-right
+- **Hero**: right-anchored `hero-trainer-back.png` photo + 4-stop gradient. Left: orange "WELCOME BACK,", large white "LET'S TRAIN,", orange first-name (adjustsFontSizeToFit for long names), "Your training empire awaits 💪🔥" subtitle
+- **ONLINE & AVAILABLE toggle card**: dark surface with green dot + iOS-style Switch (green track when on). Wired to existing `handleToggleAvailability` (location perms + server toggle)
+- **4 stat cards**: Today's Sessions (calendar, filtered by today's date + confirmed/in-progress, "Next: HH:MM" or count fallback), Nearby Trainees (pin, from `getNearbyTrainees`), Rating (star, from `getOnboardingStatus.averageRating` + reviewCount), Level (tier from `getOnboardingStatus.trainerTier` with Elite="Top 10%" / Pro="Top 25%" / Rising="Growing"). Each card is tappable → routes to sessions / discover-trainees / profile / achievements
+- **Total Earnings card**: wallet badge + "TOTAL EARNINGS" label + period pill dropdown (This Week / This Month / All Time) that swaps the big $ amount. Custom SVG smoothed sparkline (react-native-svg) using `weeklyBreakdown` data (fallback dummy trend). 3-col breakdown row with ↑/↓ % change vs previous period (computed from `lastWeekEarningsCents` / `lastMonthEarningsCents`)
+- **"Visible to nearby trainees" banner**: green outlined pill w/ radio icon + "Manage" green outlined button → routes to /trainer/edit-profile. Only renders when `isAvailable` is true
+- **2x2 action grid**: Edit Profile (orange person, /trainer/edit-profile), Verification (purple shield with green checkmark badge if verified, /trainer/verification), Set Rates (blue $, /trainer/set-rates — locked with padlock if unverified), Settings (red gear, /trainer/(tabs)/profile)
+- **Data plumbing**: added `getOnboardingStatus()` to `loadData` Promise.all fetch; new `onboardingStatus` state; `earningsPeriod` state for period picker; kept existing pending/upcoming sessions sections below the redesigned block so functionality is preserved
+- **Bottom nav**: unchanged (existing tab bar already matches: Home, Sessions, Receipts, Chat, Funds, Profile)
+
+**Removed:** old `VisibilityStatusCard` diagnostic component from home (still exists in codebase, just not rendered here — the new green banner replaces it). Old 3-button quick action rows.
+
+**Files touched:**
+- `/app/frontend/app/trainer/(tabs)/home.tsx`
+
+**Testing status:** Metro bundles cleanly; lint delta = 0 new warnings. Native-only visuals — verify in Expo Go / preview build on device.
+
+**Next Action Items:**
+- P1: Wire Stripe live keys (test keys still active)
+- P1: Real SendGrid API key (currently mocked)
+- P2: Replace athlete silhouettes on auth screens with premium photography
+- P2: EDGE_CASE_PLAYBOOK Batch 3 (G20–G22 SMS fallback via Twilio/SendGrid)
+- Optional: apply the same visual language to the trainee (tabs)/home.tsx for cohesion
