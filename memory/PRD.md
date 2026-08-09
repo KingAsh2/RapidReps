@@ -1,5 +1,30 @@
 # RapidReps PRD
 
+## 2026-08 — Iter117 Batch 2: Home Declutter + Anthem Unify + Route Polyline ✅
+
+Removed a duplicate discovery surface on the trainee home, unified the profile-music button label across roles, and swapped the visual-only tracker for the real map with route polyline.
+
+**1. Home screen declutter (trainee):**
+- Removed the "TOP TRAINERS NEAR YOU" horizontal card row (below the map) — it duplicated trainer entry-points already available via the map pins and the swipe-up `TrainerBottomSheet`.
+- `NearbyTrainersMap.native.tsx` map height bumped from `H * 0.54` → `H * 0.66` to reclaim the vertical space, making the map the dominant above-the-fold surface.
+- Proximity selector, map pins, and swipe-up bottom sheet all untouched.
+
+**2. Profile music unified as "Your Anthem":**
+- `VibeSetupScreen` title unified to `'Your Anthem'` for both trainer and trainee (was `'Your Vibe'` / `'Trainer Vibe'`).
+- Trainee & trainer profile screens already use "Your Anthem" / "Set Your Anthem" CTAs — verified.
+
+**3. Trainer live route polyline on tracker:**
+- `/app/frontend/app/trainee/trainer-en-route.tsx` now uses `EnRouteMap` instead of the visual-only `LiveTrainerMap`.
+- `EnRouteMap` consumes `routePolyline` from the `/api/ws/sessions/{id}/track` WebSocket frames (Google Directions encoded string, decoded to `LatLng[]`, rendered as a purple `Polyline`).
+- Trainees now watch the trainer close in on the pin along real roads (no more schematic distance bar).
+
+**Verification (iteration_118.json):**
+- All 4 source-level changes confirmed present.
+- Metro bundles clean, backend `/api/` 200, 3 test credentials still valid.
+- Verdict: **GO** for all three tasks.
+
+---
+
 ## 2026-08 — Iter117: PCI/PII SSN Encryption + Dark Map Theme + Live Tracker Finalize ✅
 
 Completed the P0/P1 tail of the Premium Design Pass and hardened SSN handling for PCI/PII compliance.
