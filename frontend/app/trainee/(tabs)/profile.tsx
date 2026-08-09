@@ -38,6 +38,11 @@ import { StreakRing } from '../../../src/components/StreakRing';
 import FloatingOrangeBg from '../../../src/components/FloatingOrangeBg';
 import { AccentColorPicker } from '../../../src/components/AccentColorPicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Slider from '@react-native-community/slider';
+
+// iter118i: shared key with trainee/(tabs)/home.tsx so the map + Available Now
+// sheet re-filter when this setting changes.
+const PROXIMITY_STORAGE_KEY = 'trainee_proximity_miles';
 import axios from 'axios';
 
 const { width } = Dimensions.get('window');
@@ -123,12 +128,22 @@ export default function TraineeProfileScreen() {
   const streakPulseAnim = useRef(new Animated.Value(1)).current;
   const [showTagSelector, setShowTagSelector] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
+  // iter118i — Trainer Proximity setting (live-persisted; home reloads on focus)
+  const [proximityMiles, setProximityMiles] = useState<number>(10);
 
   const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
   useEffect(() => {
     loadProfile();
     loadStreaks();
+    // iter118i — load persisted proximity miles setting
+    (async () => {
+      try {
+        const v = await AsyncStorage.getItem(PROXIMITY_STORAGE_KEY);
+        const n = v ? parseInt(v, 10) : NaN;
+        if (Number.isFinite(n) && n > 0) setProximityMiles(n);
+      } catch { /* ignore */ }
+    })();
   }, []);
 
   // iter98d (Task 5 hardening): tab screens don't unmount on tab-switch,
@@ -807,6 +822,61 @@ export default function TraineeProfileScreen() {
                     thumbColor={COLORS.white}
                   />
                 </View>
+
+                {/* iter118i — Trainer Proximity Scanner (moved off home).
+                    Live: writes AsyncStorage on release; home + swipe re-read on focus. */}
+                <View style={styles.proximitySettingBlock}>
+                  <View style={styles.proximitySettingHeader}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <Ionicons name="navigate" size={18} color="#FF6A00" />
+                      <Text style={styles.preferenceLabel}>Trainer Proximity</Text>
+                    </View>
+                    <View style={styles.proximityValuePill}>
+                      <Text style={styles.proximityValueText}>{proximityMiles} mi</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.proximityHint}>
+                    Only show trainers within this distance. Applies to the map, Available Now sheet, and swipe screen.
+                  </Text>
+                  <Slider
+                    style={{ width: '100%', height: 40, marginTop: 4 }}
+                    minimumValue={1}
+                    maximumValue={100}
+                    step={1}
+                    value={proximityMiles}
+                    minimumTrackTintColor="#FF6A00"
+                    maximumTrackTintColor="rgba(255,255,255,0.15)"
+                    thumbTintColor="#FF6A00"
+                    onValueChange={(v) => setProximityMiles(Math.round(v))}
+                    onSlidingComplete={(v) => {
+                      const n = Math.round(v);
+                      setProximityMiles(n);
+                      AsyncStorage.setItem(PROXIMITY_STORAGE_KEY, String(n)).catch(() => {});
+                    }}
+                    data-testid="trainer-proximity-slider"
+                  />
+                  <View style={styles.proximityQuickRow}>
+                    {[5, 10, 25, 50, 100].map((m) => (
+                      <TouchableOpacity
+                        key={m}
+                        style={[
+                          styles.proximityQuickChip,
+                          proximityMiles === m && styles.proximityQuickChipActive,
+                        ]}
+                        onPress={() => {
+                          setProximityMiles(m);
+                          AsyncStorage.setItem(PROXIMITY_STORAGE_KEY, String(m)).catch(() => {});
+                        }}
+                        data-testid={`proximity-quick-${m}`}
+                      >
+                        <Text style={[
+                          styles.proximityQuickText,
+                          proximityMiles === m && { color: '#FFFFFF' },
+                        ]}>{m}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
               </View>
             </Animated.View>
 
@@ -1293,6 +1363,63 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: COLORS.white,
+  },
+  // iter118i — Trainer Proximity setting styles
+  proximitySettingBlock: {
+    paddingVertical: 14,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.06)',
+    marginTop: 4,
+  },
+  proximitySettingHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  proximityValuePill: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,106,0,0.4)',
+    backgroundColor: 'rgba(255,106,0,0.1)',
+  },
+  proximityValueText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#FF6A00',
+  },
+  proximityHint: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.5)',
+    marginTop: 4,
+    marginBottom: 8,
+    lineHeight: 16,
+  },
+  proximityQuickRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 4,
+    flexWrap: 'wrap',
+  },
+  proximityQuickChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  proximityQuickChipActive: {
+    borderColor: '#FF6A00',
+    backgroundColor: '#FF6A00',
+  },
+  proximityQuickText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: 'rgba(255,255,255,0.7)',
   },
   // Actions Card - Glass Style
   actionsCard: {

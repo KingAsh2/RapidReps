@@ -18,7 +18,7 @@ import {
   FlatList,
 } from 'react-native';
 import Slider from '@react-native-community/slider';
-import { useRouter, Stack } from 'expo-router';
+import { useRouter, Stack, useFocusEffect } from 'expo-router';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { useAlert } from '../../../src/contexts/AlertContext';
 import { trainerAPI, traineeAPI } from '../../../src/services/api';
@@ -121,6 +121,20 @@ export default function TraineeHomeScreen() {
       } catch { /* ignore */ }
     })();
   }, []);
+  // iter118i: proximity now lives in Trainee Settings — re-read on tab focus
+  // so changes there immediately re-filter the map + Available Now sheet here.
+  useFocusEffect(
+    React.useCallback(() => {
+      (async () => {
+        try {
+          const v = await AsyncStorage.getItem(PROXIMITY_STORAGE_KEY);
+          const n = v ? parseInt(v, 10) : NaN;
+          if (Number.isFinite(n) && n > 0 && n !== travelProximity) setTravelProximity(n);
+        } catch { /* ignore */ }
+      })();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+  );
   useEffect(() => {
     AsyncStorage.setItem(PROXIMITY_STORAGE_KEY, String(travelProximity)).catch(() => {});
   }, [travelProximity]);
@@ -926,19 +940,18 @@ export default function TraineeHomeScreen() {
           />
         </SafeAreaView>
 
-        {/* Uber-like Trainer Bottom Sheet — iter118h persistent instant-book surface */}
+        {/* Uber-like Trainer Bottom Sheet — iter118h persistent instant-book surface.
+            iter118i: proximity chip moved OUT of the sheet into the trainee Profile tab
+            (Settings section) — home stays focused on decision + action only. */}
         {bottomSheetTrainers.length > 0 && (
           <TrainerBottomSheet
             trainers={bottomSheetTrainers}
             selectedTrainerId={selectedTrainerId}
             onSelectTrainer={(trainer) => {
-              // Single tap on a row = select as booking candidate (persistent Book Now button updates)
               setSelectedTrainerId(trainer.id);
             }}
             onBookTrainer={handleBottomSheetBook}
             isVisible={bottomSheetTrainers.length > 0}
-            proximityMiles={travelProximity}
-            onProximityPress={() => setShowProximityPicker(true)}
             onAutoSelect={(trainer) => setSelectedTrainerId(trainer.id)}
           />
         )}

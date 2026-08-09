@@ -240,7 +240,7 @@ export const TrainerBottomSheet: React.FC<TrainerBottomSheetProps> = ({
         <View style={styles.handle} />
       </View>
 
-      {/* Top row — "Available Now" + trainer count + proximity chip */}
+      {/* Top row — "Available Now" + trainer count (proximity moved to Settings — iter118i) */}
       <TouchableOpacity
         activeOpacity={0.9}
         onPress={toggleExpand}
@@ -253,20 +253,9 @@ export const TrainerBottomSheet: React.FC<TrainerBottomSheetProps> = ({
             {trainers.length} Trainer{trainers.length !== 1 ? 's' : ''} Nearby
           </Text>
         </View>
-        {onProximityPress ? (
-          <TouchableOpacity
-            style={styles.proximityChip}
-            onPress={() => {
-              haptic.light();
-              onProximityPress();
-            }}
-            data-testid="sheet-proximity-chip"
-          >
-            <Ionicons name="navigate" size={13} color={COLORS.orange} />
-            <Text style={styles.proximityChipText}>{proximityMiles} mi</Text>
-            <Ionicons name="chevron-down" size={13} color={COLORS.orange} />
-          </TouchableOpacity>
-        ) : null}
+        <View style={styles.headerArrow}>
+          <Ionicons name={isExpanded ? 'chevron-down' : 'chevron-up'} size={18} color={COLORS.white} />
+        </View>
       </TouchableOpacity>
 
       {/* Trainer list — always visible (collapsed: shows first ~1.5 rows;
@@ -384,6 +373,16 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
     color: COLORS.orange,
+  },
+  headerArrow: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.2,
+    borderColor: 'rgba(255,255,255,0.25)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
   },
   list: {
     flex: 1,

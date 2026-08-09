@@ -2327,3 +2327,47 @@ Both `google-services.json` and `google-service-account.json` are already in `fr
 **Files touched:**
 - `/app/frontend/app/trainee/(tabs)/home.tsx` (ImageBackground swap, proximity chip removed, new sheet props wired)
 - `/app/frontend/src/components/TrainerBottomSheet.tsx` (full rewrite — Uber-style layout, badges, auto-select, embedded proximity, persistent Book Now bar)
+
+
+---
+
+## iter118i — Seed Trainers + Trainer Anthem CTA + Proximity → Settings (2026-02-09)
+
+**Three deliverables:**
+
+1. **Seeded 5 verified sample trainers** across the MD corridor (`/app/backend/scripts/seed_sample_trainers.py`, idempotent upsert-by-email):
+   - Marcus Reyes (Elite) — Elkridge (39.2126, -76.7130)
+   - Devon Malik (Elite) — Elkridge (39.2148, -76.7069)
+   - Sara Nguyen (Pro) — Hanover (39.1920, -76.7237)
+   - Jasmine Carter (Pro) — Laurel (39.0993, -76.8483)
+   - Andre Thompson (Elite) — College Park (38.9807, -76.9369)
+   - All flagged `verificationStatus="verified"`, `assignedTier` set, `isAvailable=True`, `canGoLive=True`, `verified/backgroundCheckPassed/cprAedCertUploaded/etc = True`, non-empty bio, training styles, tier rates, unique personality tag + accent color
+   - Password for all sample accounts: `SamplePass!2025`
+   - Verified via `GET /api/trainers/nearby?latitude=39.212&longitude=-76.713&radius_miles=30` — returns all 5 with distances 0.0/0.4/1.5/10.6/20.0 mi
+   - Credentials logged in `/app/memory/test_credentials.md`
+
+2. **Trainer "Change Your Anthem" CTA** (`/app/frontend/app/trainer/(tabs)/profile.tsx`):
+   - Removed the `{!profile?.vibeTrackTitle && (…)}` gate — CTA now always renders (parity with trainee side)
+   - When anthem set: label becomes "Change Your Anthem" + `swap-horizontal` icon + track/artist subtext
+   - When not set: original "Set Your Anthem" + `musical-notes` icon
+   - Auto-play vibe player above still renders on profile visit
+
+3. **Trainer Proximity moved from home → Settings** (dynamic):
+   - Removed the orange proximity chip from `TrainerBottomSheet` header (replaced with a chevron toggle)
+   - Removed proximity prop threading in trainee `home.tsx`; kept the miles picker Modal still in the file so it can be triggered from anywhere via `setShowProximityPicker(true)` — currently unused since it's now driven from Settings
+   - Added a **live Trainer Proximity block** to trainee Profile → Training Preferences:
+     - Slider (1 → 100 mi, `@react-native-community/slider`)
+     - Quick-select chips: 5 / 10 / 25 / 50 / 100 mi (active chip filled orange)
+     - Persists to AsyncStorage key `trainee_proximity_miles` on `onSlidingComplete` + chip tap
+     - Explanation hint: "Applies to the map, Available Now sheet, and swipe screen"
+   - Made home.tsx **re-read** the value on every tab focus via `useFocusEffect`, so changing the setting instantly re-filters the map + Available Now sheet without a full app reload
+
+**Files touched:**
+- `/app/backend/scripts/seed_sample_trainers.py` (new)
+- `/app/frontend/app/trainer/(tabs)/profile.tsx`
+- `/app/frontend/app/trainee/(tabs)/profile.tsx`
+- `/app/frontend/app/trainee/(tabs)/home.tsx`
+- `/app/frontend/src/components/TrainerBottomSheet.tsx`
+- `/app/memory/test_credentials.md`
+
+**Testing:** Verified `/api/trainers/nearby` returns 5 trainers from Elkridge center. Metro bundles cleanly.
