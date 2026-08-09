@@ -61,7 +61,7 @@ export default function TrainerEnRouteScreen() {
     if (!trainerId) return;
     (async () => {
       try {
-        const t = await trainerAPI.getTrainerDetails(trainerId);
+        const t = await trainerAPI.getProfile(trainerId);
         setTrainerData(t);
       } catch { /* non-fatal — falls back to name-only */ }
     })();
@@ -302,4 +302,19 @@ const styles = StyleSheet.create({
   tipText: { fontSize: 14, color: 'rgba(255,255,255,0.5)', marginLeft: 12 },
   messageBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0A0E1A', borderRadius: 14, paddingVertical: 16 },
   messageBtnText: { fontSize: 16, fontWeight: '700', color: COLORS.white, marginLeft: 10 },
+  ratingRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4, gap: 4 },
+  ratingText: { fontSize: 13, color: 'rgba(255,255,255,0.75)', fontWeight: '600' },
+  chatBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: COLORS.orange,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: COLORS.orange,
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 4,
+  },
 });

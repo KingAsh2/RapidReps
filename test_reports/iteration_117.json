@@ -1,0 +1,86 @@
+{
+  "summary": "Premium Design Pass batch verified via static source-tree + TS-compile + Metro + backend-smoke signals. Full E2E UI testing via headless browser is NOT possible for this Expo React Native app — the web preview at https://highlight-vibe-bugs.preview.emergentagent.com serves the default 'Welcome to Expo' scaffold (documented in iter116 and prior iterations). This is a known constraint of the app being a native-first Expo project; Metro bundles cleanly but the DOM rendered on web is the Expo router placeholder, not the trainee/trainer/admin flows.  Given that constraint, verification was done at the source + compile + bundle level, which is the appropriate signal set for this delta.",
+  "delta_verification": {
+    "trainer_en_route_style_keys": {
+      "file": "/app/frontend/app/trainee/trainer-en-route.tsx",
+      "ratingRow_defined_at_line": 305,
+      "ratingText_defined_at_line": 306,
+      "chatBtn_defined_at_lines": "307-319",
+      "usage_in_jsx": "ratingRow L203, ratingText L205, chatBtn L214",
+      "status": "PASS"
+    },
+    "trainer_api_call_fix": {
+      "file": "/app/frontend/app/trainee/trainer-en-route.tsx",
+      "line": 64,
+      "before": "trainerAPI.getTrainerDetails (non-existent)",
+      "after": "trainerAPI.getProfile(trainerId)",
+      "api_source_line": "src/services/api.ts:110 (getProfile: async (userId) => api.get(`/trainer-profiles/${userId}`))",
+      "residual_getTrainerDetails_refs_anywhere": 0,
+      "status": "PASS"
+    },
+    "data_testids_present": {
+      "trainee-tracking-back-btn": "L167 — PASS",
+      "trainee-tracking-chat-btn": "L219 — PASS"
+    },
+    "set_your_vibe_removal": {
+      "trainee_home_index": "grep 'Set Your Vibe' in app/trainee/index.tsx and app/trainee/(tabs)/*.tsx -> only present as removal comments (profile.tsx:965 iter106ay comment, no live JSX). PASS",
+      "trainer_profile": "trainer/(tabs)/profile.tsx also removed (comment L556). PASS"
+    },
+    "session_type_label_in_person": {
+      "src/components/trainee-detail/BookingCard.tsx:165": "displays 'In-Person' (iter106ay comment L161-163). PASS",
+      "src/constants/design.ts:189": "label: 'In-Person'. PASS",
+      "app/trainee/confirm-booking.tsx:70 + receipt.tsx:42": "'outdoor' -> 'In-Person Session'. PASS",
+      "note": "Internal domain value 'outdoor' still used as enum key in payments/sessions admin filter tabs and pricing schema — that is data-model level and unrelated to the user-facing 'In-Person' label fix."
+    },
+    "typescript_compile_check": {
+      "command": "npx tsc --noEmit",
+      "trainer-en-route.tsx_errors": "NONE",
+      "(auth)/login.tsx_errors": "NONE (file does not exist under (auth); auth screens live at app/auth/login*.tsx — see note below)",
+      "(auth)/register.tsx_errors": "NONE (file does not exist under (auth); actual path is app/auth/signup*.tsx)",
+      "trainee/index.tsx_errors": "NONE"
+    },
+    "auth_directory_naming_discrepancy": {
+      "reviewer_referenced_paths": ["/app/frontend/app/(auth)/login.tsx", "/app/frontend/app/(auth)/register.tsx"],
+      "actual_paths": ["/app/frontend/app/auth/login.tsx (+ login.premium.tsx, login.classic.tsx)", "/app/frontend/app/auth/signup.tsx (+ signup.premium.tsx, signup.classic.tsx)"],
+      "impact": "Cosmetic — no '(auth)' route group exists; auth screens are under /auth/. All login/signup variants compile cleanly.",
+      "status": "INFO (not a bug — main agent's review request text used '(auth)' shorthand)"
+    },
+    "backend_smoke": {
+      "GET /api/": 200,
+      "POST /api/auth/login admin@rapidreps.com": 200,
+      "POST /api/auth/login test_trainee_iter25@test.com": 200,
+      "POST /api/auth/login test_trainer_iter25@test.com": 200,
+      "status": "ALL PASS — all 3 credentials from /app/memory/test_credentials.md are valid"
+    },
+    "metro_bundle": "Expo Metro bundles cleanly (Web Bundled ~150-1500ms across recent invocations). No 'ratingRow'/'ratingText'/'chatBtn' style-undefined errors. No 'getTrainerDetails is not a function' errors. Expo/expo-updates version-mismatch warnings are cosmetic (54.0.35 vs expected ~54.0.36) and do not block bundling."
+  },
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Web preview (all screens)", "issues": ["Web preview at https://highlight-vibe-bugs.preview.emergentagent.com renders the default 'Welcome to Expo' scaffold instead of the actual app. This is a long-standing constraint of this project (Expo native-first) and NOT a regression from the Premium Design Pass. All UI verification for iter117 was static/compile-time. Main agent should run visual verification on iOS/Android simulator or Expo Go, not on web preview."]}
+    ]
+  },
+  "test_report_links": ["/app/test_reports/iteration_117.json"],
+  "action_items": [
+    "OPTIONAL (P3): bump expo@54.0.35 -> 54.0.36 and expo-updates@29.0.18 -> 29.0.19 to silence compatibility warnings.",
+    "NONE for the Premium Design Pass delta — all 8 review targets verified at source/compile/metro level."
+  ],
+  "critical_code_review_comments": [
+    "trainer-en-route.tsx: file is only 320 lines and cleanly structured; the 3 patched style keys (ratingRow, ratingText, chatBtn) are correctly defined + wired. Non-fatal try/catch on getProfile (L66) is appropriate — falls back to name-only header. Good.",
+    "trainer-en-route.tsx L285: stale `avatarCircle` style key still defined in StyleSheet after migration to <UserAvatar>. Dead code, harmless. Consider removing for cleanliness.",
+    "trainer-en-route.tsx L289-295: stale `progressTrack`/`progressBg`/`progressFill`/`progressLabels`/`progressLabel`/`dotRow`/`trackDot` style keys likewise appear dead after migration to <SessionTimeline>. Dead code, harmless — recommend cleanup.",
+    "trainer-en-route.tsx L303-304: stale `messageBtn`/`messageBtnText` style keys after migration to inline chatBtn. Dead code, harmless.",
+    "Data-testids present as specified: trainee-tracking-back-btn (L167) and trainee-tracking-chat-btn (L219). Good.",
+    "Session-type label fix is applied at the correct source of truth (BookingCard L165 + design.ts L189 + confirm-booking L70 + receipt L42). Backend-level enum key 'outdoor' is intentionally retained for schema stability."
+  ],
+  "updated_files": ["None — testing agent made zero code modifications."],
+  "success_rate": {"backend": "100% (4/4 smoke checks)", "frontend": "N/A via web — static verification 100% (8/8 delta targets verified at source/compile level)"},
+  "test_credentials": "Read from /app/memory/test_credentials.md. All 3 login credentials (admin/trainer/trainee) return 200 against /api/auth/login.",
+  "seed_data_creation": "none",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "This is an Expo native-first project. The web preview always shows the 'Welcome to Expo' scaffold — do NOT waste cycles trying to drive the UI through Playwright/headless browser. Verification should be: (1) static source grep for the delta, (2) `npx tsc --noEmit` filtered to the changed files, (3) `tail /var/log/supervisor/expo.out.log` for Metro bundling health, (4) backend smoke via curl on the /api routes. All 3 credentials in /app/memory/test_credentials.md are valid as of iter117. If main agent moves to a genuine web-first build (expo export web + static hosting), then E2E Playwright becomes possible; until then, use the signal set above.",
+  "verdict": "GO — Premium Design Pass (iter106ay batch) verified at source/compile/bundle/backend level. The 3 patched styles (ratingRow, ratingText, chatBtn) are present and wired. trainerAPI.getProfile is the correct call. Set Your Vibe is removed from home. In-Person label replaces Outdoor at the user-facing label sites. Both required data-testids are present. No TS errors introduced. Metro bundles clean. Backend + all 3 test credentials healthy."
+}
