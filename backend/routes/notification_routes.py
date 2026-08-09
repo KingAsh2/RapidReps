@@ -13,23 +13,42 @@ router = APIRouter(prefix="/api")
 class PushTokenRegister(BaseModel):
     token: str
     deviceId: Optional[str] = None
+    # iter118k: token type so backend knows how to route:
+    #   'expo' → Expo Push Service (dev builds / Expo Go)
+    #   'fcm'  → Google FCM V1 direct (Android production build)
+    #   'apns' → Apple APNs direct (iOS production build)
+    tokenType: Optional[str] = None
+    # iter118k: bundle id for APNs targeting (iOS only)
+    bundleId: Optional[str] = None
 
 
 @router.post("/push-tokens/register")
 async def register_push_token(data: PushTokenRegister, current_user: dict = Depends(get_current_user)):
     """Register a push notification token for the current user (one row per token per user)."""
     user_id = str(current_user['_id'])
+    # Auto-detect token type when not provided (backwards compatible)
+    inferred_type = data.tokenType
+    if not inferred_type:
+        t = data.token or ''
+        if t.startswith('ExponentPushToken[') or t.startswith('ExpoPushToken['):
+            inferred_type = 'expo'
+        elif len(t) == 64 and all(c in '0123456789abcdefABCDEF' for c in t):
+            inferred_type = 'apns'
+        else:
+            inferred_type = 'fcm'
     await db.push_tokens.update_one(
         {'userId': user_id, 'token': data.token},
         {'$set': {
             'userId': user_id,
             'token': data.token,
             'deviceId': data.deviceId,
+            'tokenType': inferred_type,
+            'bundleId': data.bundleId,
             'updatedAt': datetime.utcnow(),
         }},
         upsert=True,
     )
-    return {"success": True, "message": "Push token registered"}
+    return {"success": True, "message": "Push token registered", "tokenType": inferred_type}
 
 
 @router.delete("/push-tokens/unregister")
@@ -143,3 +162,31 @@ async def update_notification_preferences(
         upsert=True,
     )
     return {"success": True, "message": "Notification preferences updated"}
+
+
+# iter118k — self-serve smoke test for push notifications.
+# Any logged-in user can call this to send a test push to their own registered
+# devices. Returns per-token routing result so you can verify FCM vs APNs vs Expo.
+@router.post("/push-tokens/test")
+async def send_test_push(current_user: dict = Depends(get_current_user)):
+    """Send a test push notification to the current user's registered devices."""
+    from deps import send_push_notification
+    user_id = str(current_user['_id'])
+    tokens = await db.push_tokens.find({'userId': user_id}).to_list(20)
+    if not tokens:
+        raise HTTPException(400, "No push tokens registered for this account. Open the app on a real device first.")
+    summary = [
+        {
+            'tokenType': t.get('tokenType', 'unknown'),
+            'tokenPreview': (t.get('token') or '')[:20] + '…',
+            'deviceId': t.get('deviceId'),
+        }
+        for t in tokens
+    ]
+    await send_push_notification(
+        user_id,
+        'RapidReps test push',
+        'If you see this, background notifications are working.',
+        {'action': 'test_push', 'ts': datetime.utcnow().isoformat()},
+    )
+    return {"success": True, "sentTo": summary, "count": len(tokens)}

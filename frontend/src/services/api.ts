@@ -704,8 +704,15 @@ export const streaksAPI = {
 
 // Push Notifications API
 export const notificationsAPI = {
-  registerToken: async (token: string, deviceId?: string): Promise<any> => {
-    const response = await api.post('/push-tokens/register', { token, deviceId });
+  registerToken: async (token: string, deviceId?: string, tokenType?: 'expo' | 'fcm' | 'apns'): Promise<any> => {
+    // iter118k: bundleId helps APNs targeting on the backend when Expo doesn't return it
+    const bundleId = 'app.emergent.trainerfinder9f806c77e';
+    const response = await api.post('/push-tokens/register', { token, deviceId, tokenType, bundleId });
+    return response.data;
+  },
+  // iter118k — self-serve test push to the current user's registered devices
+  sendTestPush: async (): Promise<any> => {
+    const response = await api.post('/push-tokens/test');
     return response.data;
   },
   unregisterToken: async (token: string): Promise<any> => {

@@ -2406,3 +2406,64 @@ Both `google-services.json` and `google-service-account.json` are already in `fr
 - `/app/backend/.env`
 - `/app/frontend/.env`
 - `/app/frontend/eas.json`
+
+
+---
+
+## iter118k — Direct FCM + APNs Push (Expo Push Service bypassed) (2026-02-09)
+
+**Problem:** User was frustrated with the `eas credentials` interactive setup and pasted their APNs `.p8` + Firebase service-account JSON directly to chat (public URL exposure). Rather than push back on process, we built around it — bypassed Expo Push Service entirely and now send to Google FCM V1 + Apple APNs directly from our backend using the raw credentials.
+
+**Backend architecture change:**
+- Downloaded credentials to gitignored `/app/backend/credentials/`:
+  - `firebase-service-account.json` (Firebase Admin SDK — project `rapidreps-e5077`, service account `firebase-adminsdk-fbsvc@…`)
+  - `apns-key.p8` (Apple APNs auth key — Key ID `AW9VZJC7TF`, Team ID `38NPTUJ6P2`, Bundle `app.emergent.trainerfinder9f806c77e`)
+  - `credentials/` added to `backend/.gitignore`
+- New `push_providers.py` with:
+  - `send_fcm_v1(token, title, body, data, badge)` — uses `firebase-admin` messaging.send() with high-priority AndroidConfig
+  - `send_apns(token, title, body, data, badge)` — uses `aioapns`, instantiated per-call to bind to the current event loop; loads .p8 PEM into string (PyJWT compat)
+  - Both return `(ok, error_code)` and flag `'UNREGISTERED'` for two-strike token eviction
+- `deps.send_push_notification` rewritten to route by `tokenType`:
+  - `'fcm'` → firebase-admin
+  - `'apns'` → aioapns
+  - `'expo'` (fallback / dev builds) → Expo Push Service
+  - Legacy tokens without `tokenType` are auto-inferred (Expo tokens start with `ExponentPushToken[`, 64-char hex = APNs, else FCM)
+- Dead-token cleanup unified into `_handle_dead_token()` shared by all 3 providers
+
+**Frontend:**
+- `NotificationContext.tsx` — tries `getDevicePushTokenAsync()` FIRST (returns native FCM/APNs token in production builds), falls back to `getExpoPushTokenAsync()` for Expo Go / dev clients. Sends `tokenType` to backend with each registration.
+- `api.notificationsAPI.registerToken(token, deviceId, tokenType)` — new param + also sends bundleId
+- New `api.notificationsAPI.sendTestPush()` for self-serve smoke test
+
+**New endpoint:**
+- `POST /api/push-tokens/test` — sends "RapidReps test push" to all of the caller's registered devices. Returns per-token routing summary.
+
+**New Python deps** (installed via pip):
+- `firebase-admin==7.5.0`
+- `aioapns==4.0`
+
+**Verified working:**
+- FCM: fake token → Google returns "invalid registration token" (auth pipe confirmed)
+- APNs: fake token → Apple returns 400 BadDeviceToken (auth pipe confirmed, TLS + JWT signing all working)
+- Backend restarts cleanly with all providers loaded lazily
+
+**⚠️ Security debt — user MUST rotate credentials:**
+- APNs Key `AW9VZJC7TF` and FCM service-account key `7b1f912684` are both at public HTTPS URLs from chat uploads. **Anyone who scrapes those URLs can send push notifications through your Apple + Firebase accounts.** User should:
+  1. Revoke at https://developer.apple.com/account/resources/authkeys/list and https://console.firebase.google.com Service accounts
+  2. Generate new keys locally
+  3. Replace `/app/backend/credentials/*` with fresh files
+- Code is written so credential rotation is a 30-second file swap — no code changes needed
+
+**User still owes** (unblocks background/killed push delivery on real devices):
+1. **Rotate the leaked credentials** (above) and hand me the new files (secure channel this time — Emergent chat is public)
+2. **`eas build --platform ios --profile production && eas build --platform android --profile production`** — production builds bundle `expo-notifications` with the entitlements needed for `getDevicePushTokenAsync()` to return native FCM/APNs tokens on real devices
+3. Install fresh TestFlight / Play internal-testing build → open once → verify a new native token registers → force-quit app → POST `/api/push-tokens/test` from any client → push appears
+
+**Files touched:**
+- `/app/backend/push_providers.py` (new)
+- `/app/backend/deps.py`
+- `/app/backend/routes/notification_routes.py`
+- `/app/backend/credentials/*` (new — gitignored)
+- `/app/backend/.gitignore` (+`credentials/`)
+- `/app/frontend/src/contexts/NotificationContext.tsx`
+- `/app/frontend/src/services/api.ts`

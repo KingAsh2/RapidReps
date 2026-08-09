@@ -366,52 +366,93 @@ def calculate_session_pricing(
 # Push notifications
 EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send"
 
+
+async def _handle_dead_token(token_str: str, token_meta: dict):
+    """Two-strike eviction for dead tokens (shared by all providers)."""
+    strikes = (token_meta or {}).get('deadStrikes', 0) + 1
+    if strikes >= 2:
+        await db.push_tokens.delete_one({'token': token_str})
+    else:
+        await db.push_tokens.update_one(
+            {'token': token_str},
+            {'$set': {'deadStrikes': strikes, 'lastDeadAt': datetime.utcnow()}},
+        )
+
+
 async def send_push_notification(user_id: str, title: str, body: str, data: dict = None):
+    """
+    iter118k — Route each push to the correct provider:
+      - tokenType == 'expo'  → Expo Push Service (dev builds, Expo Go)
+      - tokenType == 'fcm'   → firebase-admin direct (Android production)
+      - tokenType == 'apns'  → aioapns direct (iOS production)
+    Legacy tokens without tokenType are inferred (Expo tokens start with 'ExponentPushToken[').
+    """
     try:
         tokens_cursor = db.push_tokens.find({'userId': user_id})
         tokens = await tokens_cursor.to_list(10)
         if not tokens:
             return
         unread_count = await db.notifications.count_documents({'userId': user_id, 'read': False})
-        messages = []
-        token_by_str: dict = {}
+
+        expo_msgs, expo_meta = [], {}
+
+        # Lazy imports so this module still loads if push_providers ever errors out.
+        try:
+            from push_providers import send_fcm_v1, send_apns
+        except Exception as _pp_err:
+            logging.getLogger(__name__).warning(f"push_providers import failed: {_pp_err}")
+            send_fcm_v1 = None
+            send_apns = None
+
         for t in tokens:
+            tok = t['token']
+            ttype = t.get('tokenType')
+            if not ttype:
+                ttype = 'expo' if (tok.startswith('ExponentPushToken[') or tok.startswith('ExpoPushToken[')) else \
+                        'apns' if (len(tok) == 64 and all(c in '0123456789abcdefABCDEF' for c in tok)) else \
+                        'fcm'
+
+            if ttype == 'fcm' and send_fcm_v1:
+                ok, err = send_fcm_v1(tok, title, body, data, unread_count)
+                if not ok and err == 'UNREGISTERED':
+                    await _handle_dead_token(tok, t)
+                continue
+
+            if ttype == 'apns' and send_apns:
+                ok, err = await send_apns(tok, title, body, data, unread_count)
+                if not ok and err == 'UNREGISTERED':
+                    await _handle_dead_token(tok, t)
+                continue
+
+            # Fallback → Expo Push Service (works for ExponentPushToken)
             msg = {
-                "to": t['token'], "sound": "default", "title": title, "body": body,
+                "to": tok, "sound": "default", "title": title, "body": body,
                 "priority": "high", "badge": unread_count, "channelId": "default",
             }
             if data:
                 msg["data"] = data
-            messages.append(msg)
-            token_by_str[t['token']] = t
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                EXPO_PUSH_URL, json=messages,
-                headers={"Content-Type": "application/json"},
-            ) as resp:
-                # iter106av G21: parse Expo tickets — DeviceNotRegistered means
-                # the token is dead (app uninstalled or notifications revoked).
-                # Two strikes and we delete the token so we stop hammering.
-                try:
-                    body_json = await resp.json()
-                except Exception:
-                    body_json = None
-                if body_json and isinstance(body_json.get('data'), list):
-                    for msg, ticket in zip(messages, body_json['data']):
-                        if not isinstance(ticket, dict):
-                            continue
-                        if ticket.get('status') == 'error' and \
-                           ticket.get('details', {}).get('error') == 'DeviceNotRegistered':
-                            dead_token = msg['to']
-                            existing = token_by_str.get(dead_token) or {}
-                            strikes = existing.get('deadStrikes', 0) + 1
-                            if strikes >= 2:
-                                await db.push_tokens.delete_one({'token': dead_token})
-                            else:
-                                await db.push_tokens.update_one(
-                                    {'token': dead_token},
-                                    {'$set': {'deadStrikes': strikes, 'lastDeadAt': datetime.utcnow()}},
-                                )
+            expo_msgs.append(msg)
+            expo_meta[tok] = t
+
+        # Batch send everything routed to Expo
+        if expo_msgs:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    EXPO_PUSH_URL, json=expo_msgs,
+                    headers={"Content-Type": "application/json"},
+                ) as resp:
+                    try:
+                        body_json = await resp.json()
+                    except Exception:
+                        body_json = None
+                    if body_json and isinstance(body_json.get('data'), list):
+                        for msg, ticket in zip(expo_msgs, body_json['data']):
+                            if not isinstance(ticket, dict):
+                                continue
+                            if ticket.get('status') == 'error' and \
+                               ticket.get('details', {}).get('error') == 'DeviceNotRegistered':
+                                dead_token = msg['to']
+                                await _handle_dead_token(dead_token, expo_meta.get(dead_token) or {})
     except Exception as e:
         logging.getLogger(__name__).warning(f"Push notification failed for user {user_id}: {e}")
 

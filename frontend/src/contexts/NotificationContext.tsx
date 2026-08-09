@@ -177,18 +177,45 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           }
 
           if (finalStatus === 'granted') {
+            // iter118k: try to acquire a native device token (FCM on Android, APNs on iOS)
+            // first because our backend now sends directly to Google/Apple. Fall back to the
+            // Expo Push Service token if the native path fails (Expo Go, dev clients).
+            let pushToken: string | null = null;
+            let tokenType: 'fcm' | 'apns' | 'expo' | undefined;
             try {
-              const tokenData = await Notifications.getExpoPushTokenAsync({
-                projectId: 'e17065a3-949a-4a61-8a90-13473a6eafe5',
-              });
-              const pushToken = tokenData.data;
+              const nativeToken: any = await Notifications.getDevicePushTokenAsync();
+              if (nativeToken?.data) {
+                pushToken = String(nativeToken.data);
+                // Expo returns { type: 'ios' | 'android' | ... }; map to backend types
+                const nt = String(nativeToken.type || '').toLowerCase();
+                tokenType = nt === 'ios' || nt === 'apns' ? 'apns'
+                          : nt === 'android' || nt === 'fcm' ? 'fcm'
+                          : undefined;
+              }
+            } catch (nativeErr) {
+              if (__DEV__) console.log('Native device token unavailable, falling back to Expo:', nativeErr);
+            }
+
+            if (!pushToken) {
+              try {
+                const tokenData = await Notifications.getExpoPushTokenAsync({
+                  projectId: 'e17065a3-949a-4a61-8a90-13473a6eafe5',
+                });
+                pushToken = tokenData.data;
+                tokenType = 'expo';
+              } catch (expoErr) {
+                console.log('Expo push token registration skipped:', expoErr);
+              }
+            }
+
+            if (pushToken) {
               if (isMounted.current) {
                 setExpoPushToken(pushToken);
               }
               // Register token with backend (fire and forget)
-              notificationsAPI.registerToken(pushToken, Device.modelName || undefined).catch(() => {});
-            } catch (tokenError) {
-              console.log('Push token registration skipped:', tokenError);
+              notificationsAPI
+                .registerToken(pushToken, Device.modelName || undefined, tokenType)
+                .catch(() => {});
             }
           }
         }
