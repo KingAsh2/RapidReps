@@ -844,7 +844,7 @@ export default function TrainerVerificationScreen() {
               data-testid="pii-dob"
             />
             <TextInput
-              style={{ backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 12, padding: 14, fontSize: 15, marginBottom: 10, color: '#FFFFFF' }}
+              style={{ backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 12, padding: 14, fontSize: 15, marginBottom: 6, color: '#FFFFFF' }}
               placeholder="SSN (9 digits, optional)"
               placeholderTextColor="#5a6785"
               value={piiData.ssn}
@@ -854,9 +854,19 @@ export default function TrainerVerificationScreen() {
               }}
               keyboardType="number-pad"
               secureTextEntry
+              autoComplete="off"
+              autoCorrect={false}
+              textContentType="none"
               maxLength={9}
               data-testid="pii-ssn"
             />
+            {/* iter117 PCI/PII: reassure trainer that SSN is encrypted at-rest */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10, paddingHorizontal: 2 }}>
+              <Text style={{ color: '#8bd4a0', fontSize: 11, fontWeight: '600' }}>🔒 </Text>
+              <Text style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11, flex: 1 }}>
+                Your SSN is encrypted before it ever leaves this device&apos;s network request and stored encrypted at-rest. Only the last 4 digits are ever displayed.
+              </Text>
+            </View>
             <TextInput
               style={{ backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 12, padding: 14, fontSize: 15, marginBottom: 16, color: '#FFFFFF' }}
               placeholder="Current Address (alphanumeric) *"

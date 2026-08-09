@@ -6,6 +6,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import { MAP_DARK_STYLE } from '../theme/mapDark';
 import { TrainerAvatar } from './TrainerAvatar';
 import { resolveSessionPriceCents } from '../utils/sessionPricing';
 
@@ -33,21 +34,9 @@ const N = {
 const getColor = (r: number) => r >= 4.5 ? N.green : r >= 3.5 ? N.orange : N.purple;
 const getDim = (r: number) => r >= 4.5 ? N.greenDim : r >= 3.5 ? N.orangeDim : N.purpleDim;
 
-// Stealth dark map — nearly invisible roads
-const mapStyle = [
-  { elementType: 'geometry', stylers: [{ color: '#080C12' }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#080C12' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#2A3545' }] },
-  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#111822' }] },
-  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#0D1117' }] },
-  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#141E2B' }] },
-  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#060A10' }] },
-  { featureType: 'landscape', elementType: 'geometry', stylers: [{ color: '#0A0E14' }] },
-  { featureType: 'poi', stylers: [{ visibility: 'off' }] },
-  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
-  { featureType: 'administrative', elementType: 'geometry.stroke', stylers: [{ color: '#111822' }] },
-  { featureType: 'administrative.locality', elementType: 'labels.text.fill', stylers: [{ color: '#344155' }] },
-];
+// Dark map theme — shared across all RapidReps maps for a unified look.
+// See src/theme/mapDark.ts for the palette rationale.
+const mapStyle = MAP_DARK_STYLE;
 
 interface NearbyTrainer {
   id: string; trainerId: string; fullName: string; avatarUrl?: string;

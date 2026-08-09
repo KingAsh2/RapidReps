@@ -20,6 +20,7 @@ from models import (
     PricingRules, VerificationStatus, UserRole, MembershipStatus, BoostType,
 )
 from email_service import send_payout_notification_email
+from utils.pii_crypto import decrypt_ssn, mask_ssn
 
 stripe.api_key = os.environ.get('STRIPE_SECRET_KEY', '')
 
@@ -999,10 +1000,16 @@ async def admin_get_verification_detail(trainer_id: str, admin_user: dict = Depe
     background_request = await db.background_check_requests.find_one({'userId': trainer_id})
     background_info = None
     if background_request:
+        # iter117: never surface encrypted SSN blob or plaintext SSN in this list
+        # view. Only the last-4 identifier is included. Full SSN requires the
+        # explicit /reveal-ssn endpoint which is audit-logged.
+        ssn_last4 = background_request.get('ssnLast4') or ''
         background_info = {
             'fullName': background_request.get('fullName'),
             'dob': background_request.get('dob'),
             'address': background_request.get('address'),
+            'ssnMasked': f'***-**-{ssn_last4}' if ssn_last4 else '',
+            'hasSsn': bool(background_request.get('ssnEncrypted')),
             'status': background_request.get('status'),
             'submittedAt': background_request.get('createdAt'),
         }
@@ -1188,6 +1195,39 @@ async def admin_set_background_check_status(
     )
 
     return {"success": True, "status": status, "message": f"Background check marked as {status}"}
+
+
+@router.post("/admin/verifications/{trainer_id}/reveal-ssn")
+async def admin_reveal_ssn(
+    trainer_id: str,
+    admin_user: dict = Depends(require_admin)
+):
+    """Admin-only, audit-logged reveal of the encrypted SSN for a background
+    check request. Returns the decrypted 9-digit SSN. Access is logged to
+    `pii_access_audit` (admin id, target trainer, timestamp) so we always have
+    a forensic trail of who saw what and when.
+    """
+    bg = await db.background_check_requests.find_one({'userId': trainer_id})
+    if not bg:
+        raise HTTPException(404, "No background check request found for this trainer")
+    encrypted = bg.get('ssnEncrypted') or ''
+    if not encrypted:
+        raise HTTPException(404, "No SSN on file for this trainer")
+    ssn_plain = decrypt_ssn(encrypted)
+    if not ssn_plain:
+        raise HTTPException(500, "SSN could not be decrypted. Verify PII_ENCRYPTION_KEY.")
+
+    # Audit trail — never store the SSN itself in the audit record.
+    await db.pii_access_audit.insert_one({
+        'adminId': str(admin_user['_id']),
+        'adminEmail': admin_user.get('email'),
+        'targetUserId': trainer_id,
+        'field': 'ssn',
+        'action': 'reveal',
+        'ssnLast4': bg.get('ssnLast4') or '',
+        'at': datetime.utcnow(),
+    })
+    return {"ssn": ssn_plain, "masked": mask_ssn(ssn_plain)}
 
 
 @router.post("/admin/verifications/{trainer_id}/approve-step")

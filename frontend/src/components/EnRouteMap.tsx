@@ -27,23 +27,12 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNetwork } from '../contexts/NetworkContext';
 import { enqueueOffline } from '../utils/offlineQueue';
 import { TrainerAvatar } from './TrainerAvatar';
+import { MAP_DARK_STYLE } from '../theme/mapDark';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
-// Dark neon palette — mirrors NearbyTrainersMap so the two screens feel cohesive
-const MAP_STYLE = [
-  { elementType: 'geometry', stylers: [{ color: '#080C12' }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#080C12' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#2A3545' }] },
-  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#111822' }] },
-  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#0D1117' }] },
-  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#141E2B' }] },
-  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#060A10' }] },
-  { featureType: 'landscape', elementType: 'geometry', stylers: [{ color: '#0A0E14' }] },
-  { featureType: 'poi', stylers: [{ visibility: 'off' }] },
-  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
-  { featureType: 'administrative', elementType: 'geometry.stroke', stylers: [{ color: '#111822' }] },
-];
+// Shared dark map theme — see src/theme/mapDark.ts
+const MAP_STYLE = MAP_DARK_STYLE;
 
 type LatLng = { latitude: number; longitude: number };
 

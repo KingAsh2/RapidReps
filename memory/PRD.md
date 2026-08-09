@@ -1,5 +1,33 @@
 # RapidReps PRD
 
+## 2026-08 — Iter117: PCI/PII SSN Encryption + Dark Map Theme + Live Tracker Finalize ✅
+
+Completed the P0/P1 tail of the Premium Design Pass and hardened SSN handling for PCI/PII compliance.
+
+**P0 — Live Trainer Tracking finalized:**
+- Patched 3 missing style keys (`ratingRow`, `ratingText`, `chatBtn`) in `/app/frontend/app/trainee/trainer-en-route.tsx`.
+- Replaced non-existent `trainerAPI.getTrainerDetails` call with correct `trainerAPI.getProfile(trainerId)` from `src/services/api.ts:110`.
+- Uber-style tracker header now renders: `UserAvatar` (with ring pulse when en_route/nearby) + name + star-rating row + orange chat CTA + ETA.
+- Test IDs: `trainee-tracking-back-btn`, `trainee-tracking-chat-btn`.
+- Verified via testing_agent iteration_117.json — verdict **GO**.
+
+**P1 — SSN PCI/PII Compliance:**
+- New util `/app/backend/utils/pii_crypto.py` — Fernet AES-128-CBC + HMAC-SHA256 encryption using `PII_ENCRYPTION_KEY` from `.env` (added). Loud RuntimeError if key missing (fail fast, never silent plaintext).
+- `POST /api/trainer/submit-background-pii` now stores `ssnEncrypted` (Fernet token) + `ssnLast4` (safe-to-display identifier). Raw `ssn` is never persisted.
+- New endpoint `POST /api/admin/verifications/{trainer_id}/reveal-ssn` — admin-only, audit-logged. Inserts a row in `pii_access_audit` (adminId, targetUserId, ssnLast4, timestamp) but never the raw SSN itself.
+- Admin details view (`/api/admin/verifications/{trainer_id}/detail`) now exposes `ssnMasked` (***-**-1234) + `hasSsn` boolean only — encrypted blob is never returned in list responses.
+- Frontend SSN input: adds `autoComplete="off"`, `autoCorrect={false}`, `textContentType="none"` and a 🔒 privacy notice below the field.
+- Tests: `/app/backend/tests/test_iter117_pii_ssn_encryption.py` — 7/7 pass (encrypt round-trip, dashes stripped, last4, mask, bad-token, submit persists encrypted, admin reveal + audit, details returns masked only).
+
+**P1 — Dark Map Theme unified:**
+- New shared theme `/app/frontend/src/theme/mapDark.ts` — near-black surfaces + subtle brand-orange (#FF6A00) highway stroke accent (weight 0.35) so trainer routes read as RapidReps without shouting.
+- `NearbyTrainersMap.native.tsx` and `EnRouteMap.tsx` now both import `MAP_DARK_STYLE` — no more duplicated JSON in two files.
+- POIs & transit hidden; markers dominate the canvas.
+
+**Bundle status:** Metro bundles clean, backend healthy, all 13 tests (7 iter117 + 6 iter106aw KYC) pass.
+
+---
+
 ## 2026-07 — Iter106ar/as: Tap-to-Upload Avatars + App-Wide Consistency ✅
 
 Delivered the tap-to-upload disc enhancement AND unified 13 avatar rendering sites across the app so they all share the same disc, placeholder scrubbing (iter106ap), gradient-monogram fallback (iter106aq), and expo-image memory-disk cache (iter106am).

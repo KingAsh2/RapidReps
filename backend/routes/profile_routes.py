@@ -25,6 +25,7 @@ from models import (
 from storage import init_storage, put_object, get_object, generate_upload_path, MIME_TYPES
 from video_thumbnails import extract_video_thumbnail
 from video_transcode import transcode_to_web_mp4
+from utils.pii_crypto import encrypt_ssn, ssn_last4
 
 router = APIRouter(prefix="/api")
 
@@ -694,18 +695,41 @@ async def submit_all_verification(current_user: dict = Depends(get_current_user)
 
 @router.post("/trainer/submit-background-pii")
 async def submit_background_pii(request: Request, current_user: dict = Depends(get_current_user)):
-    """Submit PII for admin-run background check via TruthFinder."""
+    """Submit PII for admin-run background check via TruthFinder.
+
+    Security (iter117 PCI/PII hardening):
+      - Raw SSN is never persisted. It is Fernet-encrypted at-rest using
+        PII_ENCRYPTION_KEY. Only `ssnLast4` is stored in plaintext for
+        identification.
+      - Nothing sensitive is logged.
+      - Admin decryption happens explicitly at review time via
+        utils.pii_crypto.decrypt_ssn.
+    """
     user_id = str(current_user['_id'])
     body = await request.json()
     full_name = sanitize_text(body.get('fullName', ''))
     dob = sanitize_text(body.get('dob', ''))
-    ssn = body.get('ssn', '')
+    raw_ssn = (body.get('ssn') or '').strip()
     address = sanitize_text(body.get('address', ''))
     if not full_name or not dob or not address:
         raise HTTPException(status_code=400, detail="Full name, date of birth, and address are required.")
+
+    ssn_digits = ''.join(ch for ch in raw_ssn if ch.isdigit())
+    if ssn_digits and len(ssn_digits) != 9:
+        raise HTTPException(status_code=400, detail="SSN must be exactly 9 digits.")
+
+    ssn_encrypted = encrypt_ssn(ssn_digits) if ssn_digits else ''
+    ssn_l4 = ssn_last4(ssn_digits) if ssn_digits else ''
+
     await db.background_check_requests.insert_one({
-        'userId': user_id, 'fullName': full_name, 'dob': dob, 'ssn': ssn,
-        'address': address, 'status': 'pending_admin_review', 'createdAt': datetime.utcnow(),
+        'userId': user_id,
+        'fullName': full_name,
+        'dob': dob,
+        'ssnEncrypted': ssn_encrypted,  # Fernet ciphertext, reversible by admin
+        'ssnLast4': ssn_l4,             # safe-to-display identifier
+        'address': address,
+        'status': 'pending_admin_review',
+        'createdAt': datetime.utcnow(),
     })
     await db.trainer_profiles.update_one(
         {'userId': user_id},
