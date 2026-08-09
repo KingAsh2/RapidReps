@@ -38,6 +38,7 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "app.emergent.trainerfinder9f806c77e",
+      "googleServicesFile": "./google-services.json",
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
@@ -107,7 +108,8 @@
         {
           "icon": "./assets/images/notification-icon.png",
           "color": "#FF6A00",
-          "defaultChannel": "default"
+          "defaultChannel": "default",
+          "enableBackgroundRemoteNotifications": true
         }
       ]
     ],
