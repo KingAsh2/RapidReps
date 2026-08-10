@@ -21,6 +21,7 @@ import { trainerAPI } from '../../../src/services/api';
 import api from '../../../src/services/api';
 import TierCelebrationSheet from '../../../src/components/TierCelebrationSheet';
 import { UserAvatar } from '../../../src/components/UserAvatar';
+import { CoachMarkTour } from '../../../src/components/coachmarks/CoachMarkTour';
 import { Session, SessionStatus } from '../../../src/types';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -97,6 +98,12 @@ export default function TrainerHomeScreen() {
   const APPROVAL_SEEN_KEY = '@rapidreps_trainer_approval_modal_seen';
   // iter118b: Trainer home redesign — tier/reviews for stat cards + earnings period picker
   const [onboardingStatus, setOnboardingStatus] = useState<any>(null);
+
+  // iter118v — coach-mark tour refs. Attach to the elements the tour points
+  // at; the tour reads their on-screen rects via measureInWindow.
+  const availabilityTourRef = useRef<any>(null);
+  const earningsTourRef = useRef<any>(null);
+  const heroTourRef = useRef<any>(null);
   const [earningsPeriod, setEarningsPeriod] = useState<'week' | 'month' | 'all'>('week');
   const [periodMenuVisible, setPeriodMenuVisible] = useState(false);
 
@@ -623,6 +630,7 @@ export default function TrainerHomeScreen() {
                 per the approved screenshot. Single rounded container, single border,
                 photo right-anchored across the top, ONLINE toggle pinned inside bottom. */}
             <Animated.View
+              ref={heroTourRef}
               style={[
                 styles.heroCombined,
                 {
@@ -659,7 +667,7 @@ export default function TrainerHomeScreen() {
               </View>
 
               {/* ONLINE & AVAILABLE — nested inside the same orange-outlined card */}
-              <View style={styles.onlineNested}>
+              <View style={styles.onlineNested} ref={availabilityTourRef}>
                 <View style={[styles.onlineDot, { backgroundColor: isAvailable ? COLORS.success : '#8a95b0' }]} />
                 <View style={styles.onlineContent}>
                   <Text style={[styles.onlineTitle, { color: isAvailable ? COLORS.success : COLORS.white }]}>
@@ -771,6 +779,7 @@ export default function TrainerHomeScreen() {
             {/* Section 4 — Total Earnings card with sparkline + period tabs */}
             {earnings && (
               <Animated.View
+                ref={earningsTourRef}
                 style={[
                   styles.earningsCardV2,
                   {
@@ -1282,6 +1291,36 @@ export default function TrainerHomeScreen() {
           </LinearGradient>
         </View>
       </Modal>
+
+      {/* iter118v — First-run coach-mark tour. Fires once for the trainer
+          then remembers dismissal forever via AsyncStorage. Only shows if
+          the trainer is signed in and past onboarding — approval modal
+          shouldn't collide with the tour. */}
+      <CoachMarkTour
+        tourId="trainer-home-v1"
+        enabled={!showApprovalModal && !tierCelebration}
+        steps={[
+          {
+            targetRef: heroTourRef,
+            title: "Welcome to your empire",
+            body: "This is your home base — everything you need to run sessions, track earnings, and grow your book.",
+            icon: 'flame-outline',
+          },
+          {
+            targetRef: availabilityTourRef,
+            title: "Flip the switch to go live",
+            body: "Toggle this to Online and trainees nearby can find and book you instantly. Turn it off any time.",
+            icon: 'radio-outline',
+          },
+          {
+            targetRef: earningsTourRef,
+            title: "Watch your money grow",
+            body: "Your live earnings and payouts land here. Tap the period pill to switch between Today / Week / Month.",
+            icon: 'wallet-outline',
+            cta: "Let's crush it",
+          },
+        ]}
+      />
     </>
   );
 }

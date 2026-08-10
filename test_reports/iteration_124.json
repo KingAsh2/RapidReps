@@ -1,0 +1,68 @@
+{
+  "summary": "Source-level verification of the new CoachMarkTour feature + backend regression sanity check. All 6 source-level assertions from the review request verified. Backend /api/health returns 200 healthy; backend booted clean with no import errors (Application startup complete in supervisor logs). This is a pure frontend Expo/React Native feature so no Playwright UI testing performed (RN mobile UI, not web).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "source_verification": {
+    "CoachMarkTour.tsx": {
+      "exists": true,
+      "path": "/app/frontend/src/components/coachmarks/CoachMarkTour.tsx",
+      "named_export": true,
+      "default_export": true,
+      "storage_prefix": "coachmark_v1_ (line 68)",
+      "resetCoachMarkTour_helper": "line 88",
+      "measureInWindow_usage": "line 128",
+      "useSafeAreaInsets_usage": "line 93",
+      "BlurView_usage": "line 262 (intensity 24 iOS / 60 Android, tint dark)",
+      "LinearGradient_usage": "lines 263, 303 (backdrop + CTA)",
+      "skip_pill": "'Skip tour' text at line 257"
+    },
+    "trainer_home": {
+      "path": "/app/frontend/app/trainer/(tabs)/home.tsx",
+      "import": "line 24",
+      "refs": {"heroTourRef": 106, "availabilityTourRef": 104, "earningsTourRef": 105},
+      "ref_attachments": {"hero": 633, "onlineNested": 670, "earningsCardV2": 782},
+      "mount_line": 1299,
+      "tourId": "trainer-home-v1",
+      "enabled_gate": "!showApprovalModal && !tierCelebration (line 1301)",
+      "step_titles_present": ["Welcome to your empire", "Flip the switch to go live", "Watch your money grow"]
+    },
+    "trainee_home": {
+      "path": "/app/frontend/app/trainee/(tabs)/home.tsx",
+      "import": "line 49",
+      "refs": {"heroTourRef": 94, "searchTourRef": 95, "bottomSheetTourRef": 96},
+      "ref_attachments": {"hero": 685, "PeopleSearchBar_wrapper": 852, "TrainerBottomSheet_wrapper": "1012 (collapsable={false})"},
+      "mount_line": 1160,
+      "tourId": "trainee-home-v1",
+      "enabled_gate": "!showVirtualDialog && !showPreview && !showProximityPicker (line 1162)",
+      "startDelayMs": 1400,
+      "step_titles_present": ["Your daily launchpad", "Search any trainer, anywhere", "Book in two taps"]
+    }
+  },
+  "backend_regression": {
+    "/api/health": "200 healthy (timestamp returned)",
+    "supervisor_status": "backend RUNNING, expo RUNNING, mongodb RUNNING",
+    "startup_logs": "Application startup complete — no import errors",
+    "note": "/api/trainers returned 404 and /api/auth/me returned 403 — both expected (route path and auth-required respectively); unrelated to this frontend-only feature"
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "CoachMarkTour uses Platform-aware BlurView intensity (24 iOS / 60 Android) — good.",
+    "Persistence key namespaced (coachmark_v1_${tourId}) — safe for future re-runs by bumping prefix.",
+    "Both tours are properly modal-gated to avoid stacking; trainee tour uses 1400ms startDelayMs allowing the home screen animations to settle before firing — good UX choice.",
+    "collapsable={false} on the trainee bottom-sheet wrapper is correct — required on Android so measureInWindow returns a valid rect."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100%", "frontend": "N/A (source-only verification, mobile RN)"},
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Coach-mark tours dismiss forever after final step via AsyncStorage. To re-test on device, call resetCoachMarkTour('trainer-home-v1') / resetCoachMarkTour('trainee-home-v1'). Purely frontend RN feature — no backend surface changed."
+}

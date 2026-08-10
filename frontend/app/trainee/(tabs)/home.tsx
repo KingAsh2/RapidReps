@@ -46,6 +46,7 @@ import FloatingOrangeBg from '../../../src/components/FloatingOrangeBg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { swrCache } from '../../../src/hooks/useStaleWhileRefresh';
 import { UserAvatar } from '../../../src/components/UserAvatar';
+import { CoachMarkTour } from '../../../src/components/coachmarks/CoachMarkTour';
 
 // iter102h: persist trainee's proximity preference so other screens
 // (e.g. /trainee/swipe-trainers) can honor the same radius.
@@ -89,6 +90,10 @@ export default function TraineeHomeScreen() {
   const [nearbyTrainers, setNearbyTrainers] = useState<any[]>([]);
   const [mapRefreshing, setMapRefreshing] = useState(false);
   const dialogAnim = useRef(new Animated.Value(0)).current;
+  // iter118v — coach-mark refs for the first-run trainee tour.
+  const heroTourRef = useRef<any>(null);
+  const searchTourRef = useRef<any>(null);
+  const bottomSheetTourRef = useRef<any>(null);
   
   // Animation refs for high-energy entrance
   const heroAnim = useRef(new Animated.Value(0)).current;
@@ -677,6 +682,7 @@ export default function TraineeHomeScreen() {
               };
               return (
             <Animated.View
+              ref={heroTourRef}
               style={[
                 styles.heroBanner,
                 {
@@ -843,26 +849,28 @@ export default function TraineeHomeScreen() {
             </View>
 
             {/* === GLOBAL TRAINER SEARCH (by name / email / phone) === */}
-            <PeopleSearchBar
-              placeholder="Search trainers by name, email, or phone"
-              emptyHint="Find any trainer nationwide — not limited to your area"
-              resultBadgeLabel="TRAINER"
-              testIDPrefix="trainee-trainer-search"
-              enableInvite
-              inviteAudience="trainer"
-              onSearch={async (q) => {
-                try {
-                  const data = await trainerAPI.searchTrainers({ q });
-                  return (data || []) as any[];
-                } catch {
-                  return [];
-                }
-              }}
-              onSelectResult={(p) => {
-                const id = p.userId || p.id;
-                if (id) router.push(`/trainee/trainer-detail?trainerId=${id}`);
-              }}
-            />
+            <View ref={searchTourRef}>
+              <PeopleSearchBar
+                placeholder="Search trainers by name, email, or phone"
+                emptyHint="Find any trainer nationwide — not limited to your area"
+                resultBadgeLabel="TRAINER"
+                testIDPrefix="trainee-trainer-search"
+                enableInvite
+                inviteAudience="trainer"
+                onSearch={async (q) => {
+                  try {
+                    const data = await trainerAPI.searchTrainers({ q });
+                    return (data || []) as any[];
+                  } catch {
+                    return [];
+                  }
+                }}
+                onSelectResult={(p) => {
+                  const id = p.userId || p.id;
+                  if (id) router.push(`/trainee/trainer-detail?trainerId=${id}`);
+                }}
+              />
+            </View>
 
             {/* === CONVENIENCE FEATURES === */}
 
@@ -1001,16 +1009,18 @@ export default function TraineeHomeScreen() {
             iter118i: proximity chip moved OUT of the sheet into the trainee Profile tab
             (Settings section) — home stays focused on decision + action only. */}
         {bottomSheetTrainers.length > 0 && (
-          <TrainerBottomSheet
-            trainers={bottomSheetTrainers}
-            selectedTrainerId={selectedTrainerId}
-            onSelectTrainer={(trainer) => {
-              setSelectedTrainerId(trainer.id);
-            }}
-            onBookTrainer={handleBottomSheetBook}
-            isVisible={bottomSheetTrainers.length > 0}
-            onAutoSelect={(trainer) => setSelectedTrainerId(trainer.id)}
-          />
+          <View ref={bottomSheetTourRef} collapsable={false}>
+            <TrainerBottomSheet
+              trainers={bottomSheetTrainers}
+              selectedTrainerId={selectedTrainerId}
+              onSelectTrainer={(trainer) => {
+                setSelectedTrainerId(trainer.id);
+              }}
+              onBookTrainer={handleBottomSheetBook}
+              isVisible={bottomSheetTrainers.length > 0}
+              onAutoSelect={(trainer) => setSelectedTrainerId(trainer.id)}
+            />
+          </View>
         )}
 
         {/* Virtual Training Dialog */}
@@ -1142,6 +1152,36 @@ export default function TraineeHomeScreen() {
               router.push(`/trainee/trainer-detail?trainerId=${id}`);
             }
           }}
+        />
+
+        {/* iter118v — First-run coach-mark tour. Fires once per install.
+            Waits until nearby trainers have loaded so the bottom-sheet
+            target has a chance to lay out; skips gracefully if it hasn't. */}
+        <CoachMarkTour
+          tourId="trainee-home-v1"
+          enabled={!showVirtualDialog && !showPreview && !showProximityPicker}
+          startDelayMs={1400}
+          steps={[
+            {
+              targetRef: heroTourRef,
+              title: "Your daily launchpad",
+              body: "Tap here anytime to jump to what's next — today's session, your streak, or the feed.",
+              icon: 'rocket-outline',
+            },
+            {
+              targetRef: searchTourRef,
+              title: "Search any trainer, anywhere",
+              body: "Look up trainers nationwide by name, email, or phone. Perfect for finding your out-of-town coach.",
+              icon: 'search-outline',
+            },
+            {
+              targetRef: bottomSheetTourRef,
+              title: "Book in two taps",
+              body: "Live trainers near you appear here. Tap one, pick a time, and you're set. Uber-fast bookings.",
+              icon: 'flash-outline',
+              cta: "Let's train",
+            },
+          ]}
         />
       </View>
     </>
