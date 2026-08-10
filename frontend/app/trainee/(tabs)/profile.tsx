@@ -257,9 +257,12 @@ export default function TraineeProfileScreen() {
     }
   };
 
-  // iter118s — called by <PhotoCropper> once the athlete confirms the frame.
+  // iter118s — <PhotoCropper> confirm handler.
+  // iter118t: also auto-persist the photo so the athlete doesn't have to
+  // hunt for a "Save" button after picking. This mirrors Uber / IG behavior.
   const commitCroppedPhoto = async (croppedUri: string) => {
     setCropperUri(null);
+    let dataUrl: string = croppedUri;
     try {
       const { optimizeImage } = await import('../../../src/utils/imageOptimizer');
       const FileSystem = await import('expo-file-system/legacy');
@@ -267,12 +270,33 @@ export default function TraineeProfileScreen() {
       const b64 = await FileSystem.readAsStringAsync(optimizedUri, {
         encoding: FileSystem.EncodingType.Base64,
       });
-      setFormData((f) => ({ ...f, profilePhoto: `data:image/jpeg;base64,${b64}` }));
+      dataUrl = `data:image/jpeg;base64,${b64}`;
     } catch {
       // Best-effort — never dead-end the user on a manipulator/reader glitch.
-      setFormData((f) => ({ ...f, profilePhoto: croppedUri }));
+      // Falls through with `croppedUri` (a file:// URI) which the backend
+      // will reject with 400 — we surface a toast in that case.
     }
-    setIsEditing(true);
+    setFormData((f) => ({ ...f, profilePhoto: dataUrl }));
+
+    // Persist immediately if we successfully converted to a data URL. If we
+    // fell back to a file:// URI (rare — imageOptimizer glitch), stay in
+    // edit mode so the athlete can retry via Save without losing state.
+    if (dataUrl.startsWith('data:')) {
+      try {
+        await traineeAPI.updateProfile({
+          ...formData,
+          profilePhoto: dataUrl,
+          userId: user?.id || profile?.userId,
+        });
+        try { await refreshUser?.(); } catch {}
+        toast.success('Profile photo updated');
+      } catch (e: any) {
+        toast.error(e?.response?.data?.detail || 'Could not save your photo — try again.');
+        setIsEditing(true);
+      }
+    } else {
+      setIsEditing(true);
+    }
   };
 
   const handleSave = async () => {
@@ -447,7 +471,18 @@ export default function TraineeProfileScreen() {
                 },
               ]}
             >
-              <TouchableOpacity onPress={isEditing ? pickImage : undefined} disabled={!isEditing} activeOpacity={isEditing ? 0.7 : 1} style={styles.avatarContainer} data-testid="trainee-avatar-tap">
+              {/* iter118t: Avatar is DIRECTLY tappable to change the photo —
+                  the athlete no longer has to hit "Edit Profile" first. The
+                  little camera badge is permanently visible so the affordance
+                  is discoverable. */}
+              <TouchableOpacity
+                onPress={pickImage}
+                activeOpacity={0.75}
+                style={styles.avatarContainer}
+                data-testid="trainee-avatar-tap"
+                accessibilityRole="button"
+                accessibilityLabel="Change profile photo"
+              >
                 {/* iter98e: accent-color halo + ring on own avatar.
                     iter102aa: glow toned down (22→12, 0.55→0.32, border 2.5→2). */}
                 <View style={{
@@ -480,11 +515,11 @@ export default function TraineeProfileScreen() {
                     />
                   </StreakRing>
                 </View>
-                {isEditing && (
-                  <View style={styles.editBadge}>
-                    <Ionicons name="camera" size={16} color={COLORS.white} />
-                  </View>
-                )}
+                {/* Camera badge — always visible on own profile so users
+                    know they can tap without entering edit mode first. */}
+                <View style={styles.editBadge}>
+                  <Ionicons name="camera" size={16} color={COLORS.white} />
+                </View>
               </TouchableOpacity>
 
               {/* iter98e: tap-to-edit display name (free-form, audit-logged) */}

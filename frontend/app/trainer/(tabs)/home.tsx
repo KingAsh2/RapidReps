@@ -654,7 +654,7 @@ export default function TrainerHomeScreen() {
                     adjustsFontSizeToFit
                     minimumFontScale={0.55}
                   >{(user?.fullName?.split(' ')[0] || 'TRAINER').toUpperCase()}!</Text>
-                  <Text style={styles.heroSubtitle}>Your training empire awaits 💪🔥</Text>
+                  <Text style={styles.heroSubtitle}>Your training empire awaits</Text>
                 </View>
               </View>
 

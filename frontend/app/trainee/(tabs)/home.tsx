@@ -710,7 +710,9 @@ export default function TraineeHomeScreen() {
                 />
                 <View style={styles.heroContent}>
                   {/* iter118e PIXEL-LOCK: 3-line headline exactly per screenshot —
-                      LET'S GET (white) / AFTER IT, (orange) / NAME! + emojis (white) */}
+                      LET'S GET (white) / AFTER IT, (orange) / NAME! (white)
+                      iter118u: emojis removed per user feedback — reads more
+                      premium and matches the trainer-hero minimalism. */}
                   <Text style={styles.heroTitleWhite}>LET&apos;S GET</Text>
                   <Text style={styles.heroTitleOrange}>AFTER IT,</Text>
                   <Text
@@ -719,7 +721,7 @@ export default function TraineeHomeScreen() {
                     adjustsFontSizeToFit
                     minimumFontScale={0.55}
                   >
-                    {(user?.fullName?.split(' ')[0] || 'CHAMP').toUpperCase()}! 💪🔥
+                    {(user?.fullName?.split(' ')[0] || 'CHAMP').toUpperCase()}!
                   </Text>
                   <Text style={styles.heroSubtitle}>
                     Your next workout is{'\n'}just one tap away

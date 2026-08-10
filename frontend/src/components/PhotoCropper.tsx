@@ -35,8 +35,9 @@ import {
   ActivityIndicator,
   Dimensions,
   Platform,
+  StatusBar,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GestureDetector, Gesture, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
@@ -45,6 +46,8 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import * as ImageManipulator from 'expo-image-manipulator';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 
 const { width: SCREEN_W } = Dimensions.get('window');
@@ -240,45 +243,87 @@ export function PhotoCropper({ visible, uri, onCancel, onConfirm, testID }: Prop
 
   const startCrop = () => { runOnJS(doCrop)(); };
 
+  // iter118t — respect the device safe-area insets so header buttons never
+  // collide with the OS status bar / notch / Dynamic Island. Modal presents
+  // over the app, so we can't rely on the app-level SafeAreaProvider — we
+  // consult the insets directly here.
+  const insets = useSafeAreaInsets();
+
   if (!visible) return null;
 
   return (
-    <Modal visible={visible} animationType="fade" transparent onRequestClose={onCancel}>
+    <Modal
+      visible={visible}
+      animationType="fade"
+      transparent
+      onRequestClose={onCancel}
+      statusBarTranslucent
+    >
+      <StatusBar barStyle="light-content" />
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <SafeAreaView style={styles.root}>
-          <View style={styles.header}>
-            <TouchableOpacity
-              onPress={onCancel}
-              hitSlop={12}
-              testID={`${testID || 'photo-cropper'}-cancel`}
-              accessibilityRole="button"
-              accessibilityLabel="Cancel crop"
-              // Kept for Expo-web where testID doesn't emit a DOM attribute.
-              // React Native drops unknown DOM-style props silently.
-              // @ts-ignore
-              data-testid={`${testID || 'photo-cropper'}-cancel`}
-            >
-              <Text style={styles.headerBtn}>Cancel</Text>
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Frame your photo</Text>
-            <TouchableOpacity
-              onPress={startCrop}
-              disabled={!imgSize || processing}
-              hitSlop={12}
-              testID={`${testID || 'photo-cropper'}-confirm`}
-              accessibilityRole="button"
-              accessibilityLabel="Use photo"
-              // @ts-ignore
-              data-testid={`${testID || 'photo-cropper'}-confirm`}
-            >
-              {processing ? (
-                <ActivityIndicator color="#FF7A00" />
-              ) : (
-                <Text style={[styles.headerBtn, { color: '#FF7A00', fontWeight: '800' }]}>
-                  Use photo
-                </Text>
-              )}
-            </TouchableOpacity>
+        <View style={styles.root}>
+          {/* Multi-stop radial-ish gradient backdrop — brand orange bloom
+              behind the disc, deep navy at the corners. Matches the trainee
+              home hero + trainer earnings surfaces. */}
+          <LinearGradient
+            colors={['#0A0F1E', '#0A0A0F', '#12070A']}
+            start={{ x: 0.15, y: 0.05 }}
+            end={{ x: 0.9, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+          <LinearGradient
+            pointerEvents="none"
+            colors={['rgba(255,122,0,0.20)', 'rgba(255,122,0,0)']}
+            start={{ x: 0.5, y: 0.35 }}
+            end={{ x: 0.5, y: 0.8 }}
+            style={StyleSheet.absoluteFill}
+          />
+
+          {/* Premium glass header — sits ABOVE the safe area with proper top
+              padding so Cancel / Use photo never overlap the clock. */}
+          <View style={[styles.headerWrap, { paddingTop: insets.top + 8 }]}>
+            <BlurView intensity={Platform.OS === 'ios' ? 30 : 60} tint="dark" style={StyleSheet.absoluteFill} />
+            <View style={styles.header}>
+              <TouchableOpacity
+                onPress={onCancel}
+                hitSlop={{ top: 14, bottom: 14, left: 16, right: 16 }}
+                style={styles.headerCancel}
+                testID={`${testID || 'photo-cropper'}-cancel`}
+                accessibilityRole="button"
+                accessibilityLabel="Cancel crop"
+                // @ts-ignore
+                data-testid={`${testID || 'photo-cropper'}-cancel`}
+              >
+                <Text style={styles.headerCancelText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <Text style={styles.headerTitle}>Frame your photo</Text>
+
+              <TouchableOpacity
+                onPress={startCrop}
+                disabled={!imgSize || processing}
+                hitSlop={{ top: 14, bottom: 14, left: 12, right: 12 }}
+                style={[styles.headerConfirm, (!imgSize || processing) && { opacity: 0.55 }]}
+                testID={`${testID || 'photo-cropper'}-confirm`}
+                accessibilityRole="button"
+                accessibilityLabel="Use photo"
+                // @ts-ignore
+                data-testid={`${testID || 'photo-cropper'}-confirm`}
+              >
+                <LinearGradient
+                  colors={['#FF9B2F', '#FF6A00']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.headerConfirmGrad}
+                >
+                  {processing ? (
+                    <ActivityIndicator color="#FFFFFF" />
+                  ) : (
+                    <Text style={styles.headerConfirmText}>Use photo</Text>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
           </View>
 
           <View style={styles.body}>
@@ -299,39 +344,90 @@ export function PhotoCropper({ visible, uri, onCancel, onConfirm, testID }: Prop
                     />
                   </Animated.View>
 
-                  {/* Circular mask overlay — 4 corners painted dark to leave
-                      only the disc showing. Rendered as a single SVG-free hack
-                      using border-radius on 4 square corners. */}
+                  {/* Orange-glow circular outline. Sits above the disc so
+                      the athlete sees exactly what will render in the app. */}
                   <View pointerEvents="none" style={styles.discOutline} />
                 </View>
               </GestureDetector>
             ) : (
               <ActivityIndicator color="#FF7A00" size="large" />
             )}
-            <Text style={styles.hint}>
-              <Ionicons name="move-outline" size={14} color="rgba(255,255,255,0.65)" />
-              {'   '}Pinch to zoom, drag to reframe
-            </Text>
+            <View style={styles.hintPill}>
+              <Ionicons name="move-outline" size={14} color="rgba(255,255,255,0.85)" />
+              <Text style={styles.hintText}>Pinch to zoom · drag to reframe</Text>
+            </View>
           </View>
-        </SafeAreaView>
+
+          {/* Bottom safe-area filler to avoid gesture area collision. */}
+          <SafeAreaView edges={['bottom']} style={{ backgroundColor: 'transparent' }} />
+        </View>
       </GestureHandlerRootView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: 'rgba(6,8,15,0.985)' },
+  root: { flex: 1, backgroundColor: '#0A0A0F' },
+  headerWrap: {
+    overflow: 'hidden',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(255,255,255,0.08)',
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderBottomColor: 'rgba(255,255,255,0.06)',
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    minHeight: 56,
   },
-  headerBtn: { color: '#FFFFFF', fontSize: 15, fontWeight: '600' },
-  headerTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '800', letterSpacing: 0.4 },
+  headerCancel: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+  },
+  headerCancelText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+  },
+  headerTitle: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: 0.4,
+    flex: 1,
+    textAlign: 'center',
+    // Keep the title from crowding the pills on narrow devices.
+    marginHorizontal: 8,
+  },
+  headerConfirm: {
+    borderRadius: 14,
+    overflow: 'hidden',
+    // Warm outer glow so the primary action reads from a glance.
+    shadowColor: '#FF6A00',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.55,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  headerConfirmGrad: {
+    paddingVertical: 9,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 92,
+  },
+  headerConfirmText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '900',
+    letterSpacing: 0.4,
+  },
   body: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 16 },
   viewport: {
     overflow: 'hidden',
@@ -347,20 +443,29 @@ const styles = StyleSheet.create({
     borderRadius: CROP_SIZE / 2,
     borderWidth: 3,
     borderColor: 'rgba(255,122,0,0.85)',
-    // Subtle inner glow via boxShadow — iOS renders shadowColor around the
-    // border on a round element, Android relies on elevation.
     shadowColor: '#FF7A00',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.6,
     shadowRadius: 12,
     elevation: Platform.OS === 'android' ? 6 : 0,
   },
-  hint: {
-    color: 'rgba(255,255,255,0.65)',
-    fontSize: 13,
-    fontWeight: '600',
-    marginTop: 28,
-    textAlign: 'center',
+  hintPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 26,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+  },
+  hintText: {
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
 });
 

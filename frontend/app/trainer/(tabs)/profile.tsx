@@ -21,10 +21,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { Alert } from 'react-native';
 // iter106ar: unify with the shared avatar disc used everywhere else.
 import { UserAvatar } from '../../../src/components/UserAvatar';
+import { PhotoCropper } from '../../../src/components/PhotoCropper';
 import { useAuth } from '../../../src/contexts/AuthContext';
-import { streaksAPI } from '../../../src/services/api';
+import { streaksAPI, trainerAPI } from '../../../src/services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import * as ImagePicker from 'expo-image-picker';
 import { toast } from '../../../src/utils/toast';
 import { SocialLinksDisplay } from '../../../src/components/ProfileSections';
 import { PersonalityTagBadge, PersonalityTagSelector } from '../../../src/components/PersonalityTagBadge';
@@ -62,6 +64,8 @@ export default function TrainerProfileScreen() {
   const streakPulseAnim = useRef(new Animated.Value(1)).current;
   const [showTagSelector, setShowTagSelector] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
+  // iter118t: in-app photo cropper URI (null = closed)
+  const [cropperUri, setCropperUri] = useState<string | null>(null);
   const heroScaleAnim = useRef(new Animated.Value(0.95)).current;
   const heroOpacityAnim = useRef(new Animated.Value(0)).current;
 
@@ -69,6 +73,55 @@ export default function TrainerProfileScreen() {
     loadProfile();
     loadStreaks();
   }, []);
+
+  // iter118t: pick + crop + auto-save profile photo. Direct-tap on the
+  // avatar. Uses PhotoCropper for consistent framing across the app.
+  const pickImage = async () => {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      toast.error('Camera roll permission needed');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: false,
+      quality: 1,
+    });
+    if (!result.canceled && result.assets[0]?.uri) {
+      setCropperUri(result.assets[0].uri);
+    }
+  };
+
+  const commitCroppedPhoto = async (croppedUri: string) => {
+    setCropperUri(null);
+    let dataUrl: string = croppedUri;
+    try {
+      const { optimizeImage } = await import('../../../src/utils/imageOptimizer');
+      const FileSystem = await import('expo-file-system/legacy');
+      const optimizedUri = await optimizeImage(croppedUri, 'avatar');
+      const b64 = await FileSystem.readAsStringAsync(optimizedUri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      dataUrl = `data:image/jpeg;base64,${b64}`;
+    } catch { /* fall through with croppedUri; backend will 400 */ }
+
+    if (!dataUrl.startsWith('data:')) {
+      toast.error('Could not process that photo — please try another.');
+      return;
+    }
+    try {
+      await trainerAPI.updateProfile({
+        userId: user?.id || profile?.userId,
+        avatarUrl: dataUrl,
+        profilePhoto: dataUrl,
+      });
+      try { await refreshUser?.(); } catch { /* non-blocking */ }
+      await loadProfile();
+      toast.success('Profile photo updated');
+    } catch (e: any) {
+      toast.error(e?.response?.data?.detail || 'Could not save your photo — try again.');
+    }
+  };
 
   // iter98d (Task 5 hardening): tab screens don't unmount on tab-switch,
   // so use useFocusEffect to stop audio when the user blurs this tab.
@@ -250,21 +303,28 @@ export default function TrainerProfileScreen() {
             <>
               {/* Avatar + Name */}
               <Animated.View style={[styles.avatarSection, { opacity: heroOpacityAnim, transform: [{ scale: heroScaleAnim }] }]}>
-                {/* iter98e: accent-color halo + ring on own avatar.
-                    iter102aa: glow toned down (shadowRadius 22→12, opacity
-                    0.55→0.32, border 2.5→2) so it no longer competes with
-                    surrounding text legibility per user feedback. */}
-                <View style={[styles.avatarContainer, {
-                  shadowColor: profile?.accentColor || '#FF6A00',
-                  shadowOpacity: 0.32,
-                  shadowRadius: 12,
-                  shadowOffset: { width: 0, height: 0 },
-                  elevation: 6,
-                  borderRadius: 70,
-                  padding: 3,
-                  borderWidth: 2,
-                  borderColor: profile?.accentColor || '#FF6A00',
-                }]}>
+                {/* iter118t: tap avatar directly to change the photo — no
+                    "Edit Profile" trip required. Wired via `pickImage` +
+                    `commitCroppedPhoto` defined below; both go through the
+                    new PhotoCropper for consistent framing UX. */}
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={pickImage}
+                  data-testid="trainer-avatar-tap"
+                  accessibilityRole="button"
+                  accessibilityLabel="Change profile photo"
+                  style={[styles.avatarContainer, {
+                    shadowColor: profile?.accentColor || '#FF6A00',
+                    shadowOpacity: 0.32,
+                    shadowRadius: 12,
+                    shadowOffset: { width: 0, height: 0 },
+                    elevation: 6,
+                    borderRadius: 70,
+                    padding: 3,
+                    borderWidth: 2,
+                    borderColor: profile?.accentColor || '#FF6A00',
+                  }]}
+                >
                   {/* iter106ar: unified UserAvatar disc — gradient monogram
                       fallback when no photo, placeholder-URL scrubbing,
                       consistent with every other screen in the app. */}
@@ -289,7 +349,12 @@ export default function TrainerProfileScreen() {
                       </View>
                     );
                   })()}
-                </View>
+                  {/* Camera badge on own avatar so the tap affordance is
+                      always visible — mirrors trainee profile. */}
+                  <View style={styles.cameraBadge}>
+                    <Ionicons name="camera" size={14} color={COLORS.white} />
+                  </View>
+                </TouchableOpacity>
                 {/* iter98e: tap-to-edit display name */}
                 <View style={{ marginTop: 14, marginBottom: 4, alignItems: 'center' }}>
                   <EditableName
@@ -602,6 +667,15 @@ export default function TrainerProfileScreen() {
         currentIntensity={profile?.accentIntensity}
         onIntensityCommit={handleAccentIntensityCommit}
       />
+
+      {/* iter118t — In-app circular photo cropper (direct-tap on avatar) */}
+      <PhotoCropper
+        visible={!!cropperUri}
+        uri={cropperUri}
+        onCancel={() => setCropperUri(null)}
+        onConfirm={commitCroppedPhoto}
+        testID="trainer-profile-cropper"
+      />
     </ImageBackground>
   );
 }
@@ -620,6 +694,22 @@ const styles = StyleSheet.create({
   avatar: { width: 100, height: 100, borderRadius: 50, borderWidth: 4, borderColor: COLORS.white },
   avatarPlaceholder: { width: 100, height: 100, borderRadius: 50, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center', borderWidth: 4, borderColor: COLORS.white },
   verifiedBadge: { position: 'absolute', bottom: 2, right: 2, width: 26, height: 26, borderRadius: 13, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: COLORS.white },
+  // iter118t: camera badge on own trainer avatar so the tap affordance is
+  // permanently visible. Positions below-left of the verified badge so
+  // neither overlaps the disc's face-frame.
+  cameraBadge: {
+    position: 'absolute',
+    bottom: 2,
+    left: 2,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: COLORS.white,
+    backgroundColor: '#FF6A00',
+  },
   name: { fontSize: 24, fontFamily: 'Oswald_700Bold', color: COLORS.white, marginTop: 12, letterSpacing: 1 },
   email: { fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
