@@ -116,14 +116,17 @@ async def notify_users(
     db, user_ids: Iterable[str], **kwargs: Any,
 ) -> dict[str, Any]:
     """Fan-out notify_user across a list of user ids (admins, followers, etc.)."""
+    # Materialize the iterable up front so we can report an accurate `total`
+    # even if the caller handed us a generator.
+    id_list = [str(uid) for uid in user_ids]
     sent = 0
-    for uid in user_ids:
+    for uid in id_list:
         try:
-            await notify_user(db, str(uid), **kwargs)
+            await notify_user(db, uid, **kwargs)
             sent += 1
         except Exception:
             logger.exception("notify_users: single delivery failed user=%s", uid)
-    return {"sent": sent, "total": sum(1 for _ in user_ids) if not sent else sent}
+    return {"sent": sent, "total": len(id_list)}
 
 
 async def notify_admins(db, **kwargs: Any) -> dict[str, Any]:

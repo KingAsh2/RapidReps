@@ -92,7 +92,12 @@ async def send_push_to_tokens(
     ]
 
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
-    if key:
+    # Only send the Bearer header when the relay URL has been explicitly
+    # overridden away from Expo's public endpoint — Expo returns 400 if it
+    # sees an unexpected Authorization header. This lets a future
+    # Emergent-provisioned relay accept a token without breaking the
+    # default zero-config Expo flow.
+    if key and url != DEFAULT_RELAY_URL:
         headers["Authorization"] = f"Bearer {key}"
     # Expo accepts gzip and gives faster responses when we hint accept-encoding.
     headers.setdefault("Accept-Encoding", "gzip, deflate")

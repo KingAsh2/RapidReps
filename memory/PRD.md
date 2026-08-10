@@ -1,5 +1,35 @@
 # RapidReps PRD
 
+## 2026-08 — iter118w: Emergent-Managed Push Migration + Admin New-Signup Alerts ✅
+
+**User asked**: (1) push admins whenever a new user signs up so they can proactively verify trainers; (2) migrate off directly-held APNs/Firebase creds to the Emergent-managed push pattern (HonestPays style); (3) reuse the standard hooks; (4) tap handler in `_layout.tsx` at module scope; (5) backend just builds `{message, link}`; (6) fallback ladder: push denied → in-app notifications → email for booking-critical; SOS falls back to native `Share.share` / `Linking`, never to a custom SMS API.
+
+**Delivered**
+
+- **Backend orchestrator** (`utils/notifications.py`) — every route now calls one function: `notify_user(db, userId, category, title, body, link, data)`. Fallback ladder:
+  1. Try the managed push relay via `utils/emergent_push.send_push_to_user`
+  2. ALWAYS write a durable row into `db.notifications` (in-app tab is the durable inbox)
+  3. For `bookings` category with a failed push, enqueue a transactional email via existing `email_service` (silent no-op if unavailable)
+  Plus `notify_admins` + `notify_users` helpers.
+
+- **Managed push adapter** (`utils/emergent_push.py`) — POSTs to `EMERGENT_PUSH_URL` (defaults to Expo's public endpoint `https://exp.host/--/api/v2/push/send`, which is the "no-credentials-held" managed layer confirmed by the playbook). Never raises. Bearer header only sent when the URL is overridden to a non-default relay.
+
+- **Admin new-signup notification** — `routes/auth_routes.py::signup` now calls `notify_admins` with category `system`, title `New Trainer Signed Up` / `New User Signed Up`, body containing full name + email + guidance ("Verify their credentials..." for trainers), deep link `/admin/dashboard?tab=verifications&userId=<id>` (trainer) or `?tab=users&userId=<id>` (trainee). Wrapped in try/except so a notify glitch never blocks auth.
+
+- **Frontend hook** (`src/hooks/usePushNotifications.ts`) — HonestPays pattern verbatim: `Device.isDevice` guard, permission request, `getExpoPushTokenAsync` with `projectId` fallback, POST to `/api/push-tokens/register` with AsyncStorage idempotency cache, Android channels `default` + `safety` (with `bypassDnd: true`).
+
+- **Tap handler in `_layout.tsx`** — MODULE-SCOPE `Notifications.addNotificationResponseReceivedListener` stashes any tapped link into AsyncStorage (`push.pendingLink.v1`) so cold-start deep links survive. A `<PushBridge />` component inside `AuthProvider` mounts the hook AND drains the pending link on ready. Covers all 3 states (cold-start / background / foreground).
+
+- **Env** — `EMERGENT_PUSH_URL` (default `https://exp.host/--/api/v2/push/send`) and `EMERGENT_PUSH_KEY` (optional). No APNs / Firebase creds required.
+
+**Testing** — `iteration_125.json` — Backend 6/6 tests passed (100%). Verified end-to-end: signup → admin gets the notification row with correct title/body/link/category. Applied 2 code-review fixes: (a) `notify_users` now materializes generators for accurate `total`; (b) Bearer header only sent when relay URL is overridden.
+
+**Follow-up (deferred)**
+- Delete `backend/push_providers.py` + strip `aioapns` and `firebase-admin` from `requirements.txt` (safe to defer — module is loaded but unused).
+- Wire the SOS Safety Center screen to fall back to `Share.share` / `Linking.openURL('sms:...')` when push delivery fails.
+- Add `app.json` iOS `UIBackgroundModes` + Android permission plugin config for the next EAS build.
+
+
 ## 2026-08 — iter118v: First-Run Coach-Mark Tours ✅
 
 **Requested**: "Add coach-mark tooltips on trainer & trainee home that appear once — highlight tap-avatar-to-change-photo, the map filter, the earnings tab, and dismiss forever after 1 tap."
