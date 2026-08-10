@@ -101,17 +101,11 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
   }, [selected]);
 
   const tap = (t: NearbyTrainer) => {
-    setSelected(t);
-    if (mapRef.current && userLocation) {
-      mapRef.current.animateToRegion({
-        latitude: (userLocation.latitude + t.latitude) / 2,
-        longitude: (userLocation.longitude + t.longitude) / 2,
-        latitudeDelta: 0.035, longitudeDelta: 0.035,
-      }, 350);
-    }
-    // iter118q: notify parent so the bottom sheet snaps up with this
-    // trainer pre-selected. `trainerId` is the user id which matches the
-    // bottom sheet row ids.
+    // iter118u: SIMPLIFIED — tapping a trainer avatar goes STRAIGHT to that
+    // trainer's profile. No bottom-sheet expansion, no in-map popup, no
+    // camera animation. One tap, one destination.
+    router.push(`/trainee/trainer-detail?trainerId=${t.trainerId}`);
+    // Still notify parent (kept optional for backward-compat callers).
     onTrainerSelect?.(t.trainerId);
   };
 
@@ -296,8 +290,10 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
                     coordinate={{ latitude: t.latitude, longitude: t.longitude }}
                     anchor={{ x: 0.5, y: 0.5 }}
                     onPress={() => {
-                      onTrainerSelect?.(t.trainerId);
+                      // iter118u: fullscreen marker tap also goes STRAIGHT
+                      // to the trainer profile. One consistent path.
                       setFullscreen(false);
+                      router.push(`/trainee/trainer-detail?trainerId=${t.trainerId}`);
                     }}
                   >
                     <View style={s.markerWrap}>
@@ -355,7 +351,7 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
 }
 
 const s = StyleSheet.create({
-  root: { backgroundColor: N.bg, marginHorizontal: -20, marginBottom: 16 },
+  root: { backgroundColor: N.bg, marginBottom: 16 },
 
   // Loading
   loadWrap: { height: MAP_H, justifyContent: 'center', alignItems: 'center' },
@@ -404,7 +400,26 @@ const s = StyleSheet.create({
   countLabel: { fontSize: 10, fontWeight: '700', color: N.textSec, letterSpacing: 2.5 },
 
   // Map
-  mapWrap: { height: MAP_H, position: 'relative' },
+  // iter118u: framed map surface — rounded corners + border so it reads as
+  // a contained card, not an edge-to-edge bleed. `overflow: hidden` clips
+  // the MapView to the border-radius on both iOS and Android.
+  mapWrap: {
+    height: MAP_H, position: 'relative',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+    overflow: 'hidden',
+    marginHorizontal: 16,
+    marginTop: 4,
+    marginBottom: 4,
+    backgroundColor: N.bg,
+    // subtle depth so the frame reads as a lifted card
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 14,
+    elevation: 6,
+  },
   map: { ...StyleSheet.absoluteFillObject },
 
   // User marker — white square, not circle

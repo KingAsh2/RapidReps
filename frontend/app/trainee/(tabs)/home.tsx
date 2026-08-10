@@ -39,7 +39,7 @@ import { QuickBookSection } from '../../../src/components/trainee-home/QuickBook
 import { FavoriteAvailability } from '../../../src/components/trainee-home/FavoriteAvailability';
 import { TrainerCard } from '../../../src/components/trainee-home/TrainerCard';
 import { haptic } from '../../../src/utils/haptics';
-import TrainerBottomSheet, { type TrainerBottomSheetHandle } from '../../../src/components/TrainerBottomSheet';
+import TrainerBottomSheet from '../../../src/components/TrainerBottomSheet';
 import { resolveSessionPriceCents } from '../../../src/utils/sessionPricing';
 import PeopleSearchBar from '../../../src/components/PeopleSearchBar';
 import FloatingOrangeBg from '../../../src/components/FloatingOrangeBg';
@@ -144,10 +144,8 @@ export default function TraineeHomeScreen() {
     AsyncStorage.setItem(PROXIMITY_STORAGE_KEY, String(travelProximity)).catch(() => {});
   }, [travelProximity]);
   const [menuVisible, setMenuVisible] = useState(false);
-  const [selectedTrainerId, setSelectedTrainerId] = useState<string | undefined>(undefined);
-  // iter118q: imperative handle to snap the bottom sheet open the instant a
-  // map marker is tapped (Uber-style).
-  const trainerSheetRef = useRef<TrainerBottomSheetHandle>(null);
+  // iter118u: `selectedTrainerId` removed — tapping a trainer navigates
+  // straight to their profile, no intermediate selection state needed.
   const [previewUser, setPreviewUser] = useState<any>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [needsAddress, setNeedsAddress] = useState(false);
@@ -494,18 +492,11 @@ export default function TraineeHomeScreen() {
     };
   });
 
-  const handleBottomSheetBook = (trainer: any, opts?: { sessionType?: 'outdoor' | 'in_home' | 'virtual'; durationMin?: number }) => {
-    // iter102au: same user-id fix as the card tap above.
-    // iter118t: forward the pre-committed session type + duration from the
-    // sheet picker so the trainer-detail screen can pre-fill.
+  const handleBottomSheetBook = (trainer: any) => {
+    // iter118u: SIMPLIFIED — row tap in the bottom sheet goes straight to
+    // the trainer's profile, same as tapping their avatar on the map.
     const trainerId = trainer.id || trainer.userId;
-    const params = new URLSearchParams({ trainerId });
-    // iter118t: trainer-detail already reads `type` (modality) and `dur`
-    // (duration in minutes) as pre-fill params — use those exact keys so
-    // the picker's selections actually land on the destination screen.
-    if (opts?.sessionType) params.set('type', opts.sessionType);
-    if (opts?.durationMin) params.set('dur', String(opts.durationMin));
-    router.push(`/trainee/trainer-detail?${params.toString()}`);
+    router.push(`/trainee/trainer-detail?trainerId=${trainerId}`);
   };
 
   const initiateVideoCall = async (trainer: any) => {
@@ -916,15 +907,6 @@ export default function TraineeHomeScreen() {
               })}
               onRefresh={handleMapRefresh}
               refreshing={mapRefreshing}
-              onTrainerSelect={(userId) => {
-                // iter118q: Uber-style instant selection — tapping a pin
-                // pre-selects the trainer in the sheet AND snaps the sheet
-                // to expanded so the highlighted row + Book Now are
-                // visible in a single frame.
-                setSelectedTrainerId(userId);
-                // Defer expand one tick so the row highlight paints first.
-                requestAnimationFrame(() => trainerSheetRef.current?.expand());
-              }}
             />
 
             {/* Available Trainers Header */}
@@ -1032,15 +1014,9 @@ export default function TraineeHomeScreen() {
         {bottomSheetTrainers.length > 0 && (
           <View ref={bottomSheetTourRef} collapsable={false}>
             <TrainerBottomSheet
-              ref={trainerSheetRef}
               trainers={bottomSheetTrainers}
-              selectedTrainerId={selectedTrainerId}
-              onSelectTrainer={(trainer) => {
-                setSelectedTrainerId(trainer.id);
-              }}
-              onBookTrainer={handleBottomSheetBook}
+              onTrainerPress={handleBottomSheetBook}
               isVisible={bottomSheetTrainers.length > 0}
-              onAutoSelect={(trainer) => setSelectedTrainerId(trainer.id)}
             />
           </View>
         )}

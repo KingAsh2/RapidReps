@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useMemo, forwardRef, useImperativeHandle } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,35 +8,28 @@ import {
   PanResponder,
   Dimensions,
   ScrollView,
-  Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { haptic } from '../utils/haptics';
 import { TrainerAvatar } from './TrainerAvatar';
 
-// iter118h — Uber-style instant-booking sheet.
-// Principles:
-//   1. Sheet is ALWAYS visible with a decision + action surface.
-//   2. A trainer is auto-selected so "Book Now" is one tap from open.
-//   3. Distance filter lives INSIDE the sheet (no separate step).
-//   4. Map is context, not something you interact with to book.
+// iter118u — SIMPLIFIED sheet.
+// A passive, scrollable list of nearby trainers. Tap a row → parent
+// navigates straight to that trainer's profile (single-step booking flow).
+// Deliberately drops the earlier Uber-style two-step (select then Book Now),
+// the session-details picker, the pre-commit context row, and the imperative
+// expand handle. The map above is the primary discovery surface; this sheet
+// is just a secondary list for trainers who want to scan without zooming.
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-// iter118s (P0): first-mount sheet height ~58% of screen — matches Uber's
-// "Choose a ride" reveal so trainees see ~3 full trainer rows without
-// swiping. Was 340px which showed only 1.5 rows and felt hidden.
-const COLLAPSED_HEIGHT = Math.round(SCREEN_HEIGHT * 0.58);
+const COLLAPSED_HEIGHT = Math.round(SCREEN_HEIGHT * 0.42);
 const EXPANDED_HEIGHT = SCREEN_HEIGHT * 0.82;
 
 const COLORS = {
   orange: '#FF6A00',
-  orangeLight: '#FF9F1C',
   white: '#FFFFFF',
   cardBg: '#141929',
-  cardBgSelected: '#1F1A15',
-  border: 'rgba(255,255,255,0.08)',
-  borderFocus: '#FF6A00',
+  border: 'rgba(255,255,255,0.06)',
   textPrimary: '#FFFFFF',
   textSecondary: 'rgba(255,255,255,0.65)',
   textTertiary: 'rgba(255,255,255,0.45)',
@@ -55,63 +48,30 @@ interface Trainer {
   price?: number;
   specialty?: string;
   isAvailable?: boolean;
-  /** iter118p (spec #4): trainer paid for higher visibility. Rendered as a
-   *  neutral "Promoted" tag (Instacart / Amazon style) so ranking is
-   *  transparent to trainees. */
   isBoosted?: boolean;
 }
 
 interface TrainerBottomSheetProps {
   trainers: Trainer[];
-  selectedTrainerId?: string;
-  onSelectTrainer: (trainer: Trainer) => void;
-  onBookTrainer: (trainer: Trainer, opts?: { sessionType?: 'outdoor' | 'in_home' | 'virtual'; durationMin?: number }) => void;
+  /** iter118u: single, simple callback — tapping a row navigates to that
+   *  trainer's profile. Parent supplies the routing. */
+  onTrainerPress: (trainer: Trainer) => void;
   isVisible: boolean;
-  // iter118h: distance filter is now embedded in the sheet
   proximityMiles?: number;
   onProximityPress?: () => void;
-  onAutoSelect?: (trainer: Trainer) => void;
 }
 
-// iter118q: expose imperative handle so the trainee home screen can slide
-// the sheet into expanded state the instant a map marker is tapped
-// (Uber-style: one tap on the pin → sheet snaps up with that trainer
-// pre-selected and "Book Now" prominent).
-export interface TrainerBottomSheetHandle {
-  expand: () => void;
-  collapse: () => void;
-}
-
-export const TrainerBottomSheet = forwardRef<TrainerBottomSheetHandle, TrainerBottomSheetProps>(({
+export const TrainerBottomSheet: React.FC<TrainerBottomSheetProps> = ({
   trainers,
-  selectedTrainerId,
-  onSelectTrainer,
-  onBookTrainer,
+  onTrainerPress,
   isVisible,
   proximityMiles = 10,
   onProximityPress,
-  onAutoSelect,
-}, ref) => {
+}) => {
   const translateY = useRef(new Animated.Value(SCREEN_HEIGHT - COLLAPSED_HEIGHT)).current;
   const [isExpanded, setIsExpanded] = useState(false);
-  const scrollRef = useRef<ScrollView>(null);
-  const rowOffsets = useRef<Record<string, number>>({});
 
-  // iter118t (P1 follow-up): local state backing the pre-commit context row.
-  // Making the row genuinely refinable closes the "visual IOU" — the chevron
-  // now actually opens something. Choices flow through to the parent's
-  // onBookTrainer so the trainer-detail screen can pre-fill.
-  const [sessionType, setSessionType] = useState<'outdoor' | 'in_home' | 'virtual'>('outdoor');
-  const [durationMin, setDurationMin] = useState<number>(30);
-  const [pickerOpen, setPickerOpen] = useState(false);
-
-  const sessionTypeMeta: Record<typeof sessionType, { label: string; icon: any }> = {
-    outdoor: { label: 'Outdoor', icon: 'sunny' },
-    in_home: { label: 'In-home', icon: 'home' },
-    virtual: { label: 'Virtual', icon: 'videocam' },
-  } as const;
-
-  // Compute badges — Fastest match (shortest ETA) + Top rated (highest rating)
+  // Fastest match (shortest distance) + Top rated — pure display badges.
   const badges = useMemo(() => {
     const map: Record<string, string> = {};
     if (trainers.length === 0) return map;
@@ -129,27 +89,14 @@ export const TrainerBottomSheet = forwardRef<TrainerBottomSheetHandle, TrainerBo
     return map;
   }, [trainers]);
 
-  // Auto-select the fastest-match trainer on mount so Book Now is one tap.
-  useEffect(() => {
-    if (trainers.length === 0) return;
-    if (selectedTrainerId && trainers.some((t) => t.id === selectedTrainerId)) return;
-    // Prefer fastest, else top rated, else first
-    const fastest = Object.keys(badges).find((id) => badges[id] === 'FASTEST');
-    const pick = trainers.find((t) => t.id === fastest) || trainers[0];
-    if (pick && onAutoSelect) onAutoSelect(pick);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [trainers.length]);
-
+  // Drag-to-expand — only the grab strip is a drag target so the list
+  // scrolls freely.
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => false,
       onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dy) > 8,
-      onPanResponderGrant: () => {
-        translateY.extractOffset();
-      },
-      onPanResponderMove: (_, g) => {
-        translateY.setValue(g.dy);
-      },
+      onPanResponderGrant: () => translateY.extractOffset(),
+      onPanResponderMove: (_, g) => translateY.setValue(g.dy),
       onPanResponderRelease: (_, g) => {
         translateY.flattenOffset();
         const shouldExpand = g.dy < -50 || g.vy < -0.5;
@@ -165,22 +112,14 @@ export const TrainerBottomSheet = forwardRef<TrainerBottomSheetHandle, TrainerBo
   ).current;
 
   useEffect(() => {
-    if (!isVisible) {
-      Animated.timing(translateY, {
-        toValue: SCREEN_HEIGHT,
-        duration: 250,
-        useNativeDriver: true,
-      }).start();
-    } else {
-      Animated.spring(translateY, {
-        toValue: SCREEN_HEIGHT - COLLAPSED_HEIGHT,
-        useNativeDriver: true,
-        bounciness: 4,
-      }).start();
-    }
-  }, [isVisible]);
-
-  const selectedTrainer = trainers.find((t) => t.id === selectedTrainerId) || trainers[0];
+    Animated.spring(translateY, {
+      toValue: isVisible
+        ? SCREEN_HEIGHT - COLLAPSED_HEIGHT
+        : SCREEN_HEIGHT,
+      useNativeDriver: true,
+      bounciness: 4,
+    }).start();
+  }, [isVisible, translateY]);
 
   const toggleExpand = () => {
     const next = !isExpanded;
@@ -193,62 +132,26 @@ export const TrainerBottomSheet = forwardRef<TrainerBottomSheetHandle, TrainerBo
     haptic.light();
   };
 
-  // iter118q: imperative expand/collapse used by the trainee home screen when
-  // a map marker is tapped — snaps the sheet to full height so the selected
-  // trainer's row is instantly visible with "Book Now" ready.
-  useImperativeHandle(ref, () => ({
-    expand: () => {
-      Animated.spring(translateY, {
-        toValue: SCREEN_HEIGHT - EXPANDED_HEIGHT,
-        useNativeDriver: true,
-        bounciness: 6,
-        speed: 14,
-      }).start();
-      setIsExpanded(true);
-      haptic.success();
-    },
-    collapse: () => {
-      Animated.spring(translateY, {
-        toValue: SCREEN_HEIGHT - COLLAPSED_HEIGHT,
-        useNativeDriver: true,
-        bounciness: 4,
-      }).start();
-      setIsExpanded(false);
-    },
-  }), [translateY]);
-
-  // iter118q: when the selected trainer changes (e.g. via map marker tap),
-  // scroll that row into view inside the sheet so the highlight is obvious.
-  useEffect(() => {
-    if (!selectedTrainerId) return;
-    const y = rowOffsets.current[selectedTrainerId];
-    if (typeof y === 'number' && scrollRef.current) {
-      scrollRef.current.scrollTo({ y: Math.max(0, y - 8), animated: true });
-    }
-  }, [selectedTrainerId]);
-
   const renderTrainerRow = (t: Trainer) => {
-    const selected = t.id === (selectedTrainer?.id);
     const badge = badges[t.id];
     return (
       <TouchableOpacity
         key={t.id}
-        style={[styles.row, selected && styles.rowSelected]}
-        onLayout={(e) => {
-          rowOffsets.current[t.id] = e.nativeEvent.layout.y;
-        }}
+        style={styles.row}
         onPress={() => {
           haptic.light();
-          onSelectTrainer(t);
+          onTrainerPress(t);
         }}
         activeOpacity={0.85}
         data-testid={`trainer-row-${t.id}`}
+        accessibilityRole="button"
+        accessibilityLabel={`View ${t.name}'s profile`}
       >
         <View style={styles.rowAvatarWrap}>
           <TrainerAvatar
             uri={t.photo}
             initials={(t.name || '?').split(' ').map((p) => p[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()}
-            ringColor={selected ? COLORS.orange : 'rgba(255,255,255,0.15)'}
+            ringColor="rgba(255,255,255,0.18)"
             size={54}
             pulse={false}
           />
@@ -291,14 +194,8 @@ export const TrainerBottomSheet = forwardRef<TrainerBottomSheetHandle, TrainerBo
               ]}>{badge === 'FASTEST' ? 'Fastest match' : 'Top rated'}</Text>
             </View>
           ) : null}
-          {/* iter118p (spec #4): neutral "Promoted" tag on boosted rows so
-              paid placement is disclosed to trainees. Grey — not alarming. */}
           {t.isBoosted ? (
-            <View
-              style={styles.promotedPill}
-              data-testid={`trainer-row-${t.id}-promoted`}
-              accessibilityLabel="Promoted placement"
-            >
+            <View style={styles.promotedPill} data-testid={`trainer-row-${t.id}-promoted`}>
               <Text style={styles.promotedPillText}>Promoted</Text>
             </View>
           ) : null}
@@ -306,6 +203,7 @@ export const TrainerBottomSheet = forwardRef<TrainerBottomSheetHandle, TrainerBo
         <View style={styles.rowPriceCol}>
           {t.price ? <Text style={styles.rowPrice}>${t.price}</Text> : null}
           <Text style={styles.rowPriceSub}>/ session</Text>
+          <Ionicons name="chevron-forward" size={16} color={COLORS.textTertiary} style={{ marginTop: 4 }} />
         </View>
       </TouchableOpacity>
     );
@@ -316,12 +214,12 @@ export const TrainerBottomSheet = forwardRef<TrainerBottomSheetHandle, TrainerBo
       style={[styles.container, { transform: [{ translateY }] }]}
       pointerEvents={isVisible ? 'auto' : 'none'}
     >
-      {/* Grab handle — pan gestures live only on the top strip so the trainer list scrolls freely */}
+      {/* Grab handle */}
       <View {...panResponder.panHandlers} style={styles.handleStrip}>
         <View style={styles.handle} />
       </View>
 
-      {/* Top row — "Available Now" + trainer count (proximity moved to Settings — iter118i) */}
+      {/* Header */}
       <TouchableOpacity
         activeOpacity={0.9}
         onPress={toggleExpand}
@@ -329,9 +227,9 @@ export const TrainerBottomSheet = forwardRef<TrainerBottomSheetHandle, TrainerBo
         data-testid="trainer-bottom-sheet-header"
       >
         <View style={{ flex: 1 }}>
-          <Text style={styles.eyebrow}>AVAILABLE NOW</Text>
+          <Text style={styles.eyebrow}>NEARBY TRAINERS</Text>
           <Text style={styles.headline}>
-            {trainers.length} Trainer{trainers.length !== 1 ? 's' : ''} Nearby
+            {trainers.length} available · tap to view
           </Text>
         </View>
         <View style={styles.headerArrow}>
@@ -339,14 +237,12 @@ export const TrainerBottomSheet = forwardRef<TrainerBottomSheetHandle, TrainerBo
         </View>
       </TouchableOpacity>
 
-      {/* Trainer list — always visible (collapsed: shows first ~1.5 rows;
-          expanded: shows all with scrolling) */}
+      {/* List */}
       <ScrollView
-        ref={scrollRef}
         style={styles.list}
         showsVerticalScrollIndicator={false}
         bounces={false}
-        contentContainerStyle={{ paddingBottom: isExpanded ? 180 : 160 }}
+        contentContainerStyle={{ paddingBottom: 32 }}
       >
         {trainers.map((t) => renderTrainerRow(t))}
         {trainers.length === 0 ? (
@@ -359,143 +255,9 @@ export const TrainerBottomSheet = forwardRef<TrainerBottomSheetHandle, TrainerBo
           </View>
         ) : null}
       </ScrollView>
-
-      {/* Fixed Book Now — always visible when a trainer is selected */}
-      {selectedTrainer ? (
-        <View style={styles.bookBar}>
-          {/* iter118s (P1) + iter118t follow-up: pre-commit context row is
-              now genuinely refinable. Tapping it opens an in-sheet picker
-              for session type + duration. Values flow to the parent's
-              onBookTrainer so the trainer-detail screen can pre-fill. */}
-          <TouchableOpacity
-            style={styles.contextRow}
-            onPress={() => {
-              haptic.light();
-              setPickerOpen(true);
-            }}
-            activeOpacity={0.75}
-            data-testid="booking-context-row"
-            accessibilityRole="button"
-            accessibilityLabel={`Change session details. Currently ${sessionTypeMeta[sessionType].label}, ${durationMin} minutes.`}
-          >
-            <View style={styles.contextChip}>
-              <Ionicons name={sessionTypeMeta[sessionType].icon} size={13} color={COLORS.orange} />
-              <Text style={styles.contextChipText}>{sessionTypeMeta[sessionType].label}</Text>
-            </View>
-            <View style={styles.contextDot} />
-            <View style={styles.contextChip}>
-              <Ionicons name="time-outline" size={13} color={COLORS.textSecondary} />
-              <Text style={styles.contextChipText}>{durationMin} min</Text>
-            </View>
-            <View style={styles.contextDot} />
-            <View style={styles.contextChip}>
-              <Ionicons name="card-outline" size={13} color={COLORS.textSecondary} />
-              <Text style={styles.contextChipText}>Card</Text>
-            </View>
-            <View style={{ flex: 1 }} />
-            <Ionicons name="chevron-forward" size={16} color={COLORS.textTertiary} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => {
-              haptic.success();
-              onBookTrainer(selectedTrainer, { sessionType, durationMin });
-            }}
-            activeOpacity={0.92}
-            data-testid="book-trainer-btn"
-          >
-            <LinearGradient
-              colors={[COLORS.orange, COLORS.orangeLight]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.bookGradient}
-            >
-              <Text style={styles.bookButtonText}>
-                Book {selectedTrainer.name.split(' ')[0]} Now
-              </Text>
-              <Ionicons name="arrow-forward" size={20} color={COLORS.white} />
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-      ) : null}
-
-      {/* iter118t: session-details picker — small centered modal, tap outside
-          to dismiss. Closes the "visual IOU" on the context row chevron. */}
-      <Modal
-        visible={pickerOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setPickerOpen(false)}
-      >
-        <TouchableOpacity
-          style={styles.pickerBackdrop}
-          activeOpacity={1}
-          onPress={() => setPickerOpen(false)}
-          data-testid="session-picker-backdrop"
-        >
-          <TouchableOpacity activeOpacity={1} style={styles.pickerCard} onPress={() => {}}>
-            <Text style={styles.pickerTitle}>Session details</Text>
-
-            <Text style={styles.pickerSectionLabel}>SESSION TYPE</Text>
-            <View style={styles.pickerRow}>
-              {(['outdoor', 'in_home', 'virtual'] as const).map((k) => {
-                const active = sessionType === k;
-                return (
-                  <TouchableOpacity
-                    key={k}
-                    style={[styles.pickerPill, active && styles.pickerPillActive]}
-                    onPress={() => { haptic.light(); setSessionType(k); }}
-                    activeOpacity={0.85}
-                    data-testid={`session-type-${k}`}
-                  >
-                    <Ionicons
-                      name={sessionTypeMeta[k].icon}
-                      size={15}
-                      color={active ? COLORS.orange : COLORS.textSecondary}
-                    />
-                    <Text style={[styles.pickerPillText, active && styles.pickerPillTextActive]}>
-                      {sessionTypeMeta[k].label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            <Text style={styles.pickerSectionLabel}>DURATION</Text>
-            <View style={styles.pickerRow}>
-              {[30, 45, 60].map((m) => {
-                const active = durationMin === m;
-                return (
-                  <TouchableOpacity
-                    key={m}
-                    style={[styles.pickerPill, active && styles.pickerPillActive]}
-                    onPress={() => { haptic.light(); setDurationMin(m); }}
-                    activeOpacity={0.85}
-                    data-testid={`session-duration-${m}`}
-                  >
-                    <Text style={[styles.pickerPillText, active && styles.pickerPillTextActive]}>
-                      {m} min
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            <TouchableOpacity
-              style={styles.pickerDone}
-              onPress={() => { haptic.success(); setPickerOpen(false); }}
-              data-testid="session-picker-done"
-            >
-              <Text style={styles.pickerDoneText}>Done</Text>
-            </TouchableOpacity>
-          </TouchableOpacity>
-        </TouchableOpacity>
-      </Modal>
     </Animated.View>
   );
-});
-
-TrainerBottomSheet.displayName = 'TrainerBottomSheet';
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -543,26 +305,10 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   headline: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '900',
     color: COLORS.white,
     letterSpacing: -0.3,
-  },
-  proximityChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(255,106,0,0.5)',
-    backgroundColor: 'rgba(255,106,0,0.08)',
-  },
-  proximityChipText: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: COLORS.orange,
   },
   headerArrow: {
     width: 34,
@@ -585,32 +331,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 14,
     marginBottom: 10,
-    // iter118s (P0): unselected border weight bumped so rows read as distinct
-    // cards (mirrors Uber's option list). Selected state gets a heavier ring
-    // just below to make the pick unmistakable.
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: COLORS.border,
     backgroundColor: COLORS.cardBg,
   },
-  rowSelected: {
-    borderWidth: 2.5,
-    borderColor: COLORS.borderFocus,
-    backgroundColor: COLORS.cardBgSelected,
-    // iter118s (P0): soft orange glow lifts the selected row like Uber's
-    // black-on-white ring lifts the "Comfort" option.
-    shadowColor: COLORS.orange,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  rowAvatarWrap: {
-    marginRight: 12,
-  },
-  rowBody: {
-    flex: 1,
-    justifyContent: 'center',
-  },
+  rowAvatarWrap: { marginRight: 12 },
+  rowBody: { flex: 1, justifyContent: 'center' },
   rowName: {
     fontSize: 16,
     fontWeight: '800',
@@ -650,8 +376,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0.3,
   },
-  // iter118p (spec #4): neutral "Promoted" tag — deliberately grey, not
-  // alarming; mirrors Instacart / Amazon sponsored-placement disclosure.
   promotedPill: {
     alignSelf: 'flex-start',
     paddingHorizontal: 8,
@@ -706,142 +430,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
     color: COLORS.orange,
-    letterSpacing: 0.3,
-  },
-  bookBar: {
-    position: 'absolute',
-    left: 16,
-    right: 16,
-    bottom: 24,
-  },
-  // iter118s (P1): pre-commit context row above the CTA — Uber "Personal ·
-  // Apple Pay" analogue. Faint divider on top so it reads as a summary strip.
-  contextRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 6,
-    marginBottom: 10,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.06)',
-  },
-  contextChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  contextChipText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: COLORS.white,
-    letterSpacing: 0.1,
-  },
-  contextDot: {
-    width: 3,
-    height: 3,
-    borderRadius: 1.5,
-    backgroundColor: COLORS.textTertiary,
-  },
-  // iter118s (P1): CTA restyled — brand orange preserved, but Uber-weight
-  // geometry (rectangle > pill, tighter radius, heavier vertical padding,
-  // bigger type). Reads as decisive without borrowing Uber's black.
-  bookGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 22,
-    borderRadius: 14,
-    gap: 10,
-    shadowColor: COLORS.orange,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.55,
-    shadowRadius: 16,
-    elevation: 10,
-  },
-  bookButtonText: {
-    fontSize: 19,
-    fontWeight: '900',
-    color: COLORS.white,
-    letterSpacing: 0.2,
-  },
-  // iter118t: session-details picker modal
-  pickerBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.55)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-  },
-  pickerCard: {
-    width: '100%',
-    maxWidth: 440,
-    backgroundColor: '#141929',
-    borderRadius: 20,
-    padding: 22,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.5,
-    shadowRadius: 24,
-    elevation: 20,
-  },
-  pickerTitle: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: COLORS.white,
-    letterSpacing: -0.3,
-    marginBottom: 18,
-  },
-  pickerSectionLabel: {
-    fontSize: 10,
-    fontWeight: '900',
-    color: COLORS.orange,
-    letterSpacing: 1.6,
-    marginBottom: 10,
-    marginTop: 6,
-  },
-  pickerRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 6,
-    flexWrap: 'wrap',
-  },
-  pickerPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.08)',
-    backgroundColor: 'rgba(255,255,255,0.03)',
-  },
-  pickerPillActive: {
-    borderColor: COLORS.orange,
-    backgroundColor: 'rgba(255,106,0,0.12)',
-  },
-  pickerPillText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: COLORS.textSecondary,
-  },
-  pickerPillTextActive: {
-    color: COLORS.white,
-  },
-  pickerDone: {
-    marginTop: 18,
-    paddingVertical: 15,
-    borderRadius: 12,
-    alignItems: 'center',
-    backgroundColor: COLORS.orange,
-  },
-  pickerDoneText: {
-    fontSize: 15,
-    fontWeight: '900',
-    color: COLORS.white,
     letterSpacing: 0.3,
   },
 });

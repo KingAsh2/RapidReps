@@ -2746,3 +2746,40 @@ Both `google-services.json` and `google-service-account.json` are already in `fr
 1. Content moderation (P0 — highest-stakes independent of UI polish)
 2. Refinable Context Row — ✅ shipped as iter118t
 3. Map floating pill (P2, held; touches map layer iter118r stabilized)
+
+---
+
+## iter118u — SIMPLIFY: tap avatar → trainer profile, map gets a proper frame (2026-02-10)
+
+**User directive (verbatim):** *"The map should display trainers in the area along with their respective avatars, users should be able to simply click the avatar and be taken straight to their profile for booking. Currently clicking the avatar does nothing. The map also should have borders around the edges it looks messy taking up as much screen space with no boundaries or edges. This should be simple — I'm afraid what you've done complicates a process that should be simple."*
+
+**Fix — collapsed the flow to one step:**
+
+1. **`NearbyTrainersMap.native.tsx`** — marker `onPress` now calls `router.push('/trainee/trainer-detail?trainerId=…')` directly. Same behavior in the fullscreen modal. No more "select-then-book" two-step, no in-map popup, no bottom-sheet expansion side-effect. The internal `selected` state is dead code but kept to avoid touching the radar/pulse animations.
+
+2. **Map frame** — added a real container around the map:
+   - `borderRadius: 20`, `borderWidth: 1`, `borderColor: rgba(255,255,255,0.10)`
+   - `marginHorizontal: 16`, subtle drop shadow so it reads as a lifted card
+   - `overflow: hidden` clips the MapView to the rounded corners on both iOS and Android
+   - Removed the previous `marginHorizontal: -20` edge-to-edge bleed on `s.root`.
+
+3. **`TrainerBottomSheet.tsx`** — rewritten from scratch as a lean passive list:
+   - **Removed:** `forwardRef` + `useImperativeHandle`, `expand()`/`collapse()`, auto-select on mount, session-details picker `Modal`, pre-commit context row, `Book Now` gradient CTA, `LinearGradient` import, `useImperativeHandle` import.
+   - **Kept:** drag-to-expand handle, header, scrollable list, FASTEST / TOP RATED / Promoted badges, empty state with "Widen search" CTA.
+   - **New prop signature:** just `{ trainers, onTrainerPress, isVisible, proximityMiles?, onProximityPress? }`. Row tap → `onTrainerPress(trainer)`.
+   - **Collapsed height:** 42% of screen (was 58% → felt too tall now that the sheet is passive; 42% peeks 2–3 rows without covering the map).
+   - Each row shows a `chevron-forward` on the right → visual "tap to open" cue.
+
+4. **`app/trainee/(tabs)/home.tsx`** — dropped `TrainerBottomSheetHandle` import, `trainerSheetRef`, `selectedTrainerId` state, `onTrainerSelect` map callback, `handleBottomSheetBook` opts. `handleBottomSheetBook(trainer)` is now a two-line router push. Bottom sheet mounts with just `trainers`, `onTrainerPress`, `isVisible`.
+
+**Trainee selection flow now (verified):**
+- Tap avatar on map → **trainer profile screen** (single-step).
+- Tap row in bottom sheet → **trainer profile screen** (single-step, same destination).
+- Tap fullscreen icon (bottom-right of map) → interactive fullscreen map → tap any pin → **trainer profile screen** (modal closes, navigation happens in one gesture).
+
+**Lint:** `TrainerBottomSheet.tsx` is now 100% lint-clean. `NearbyTrainersMap.native.tsx` and `home.tsx` only carry pre-existing warnings (unused animations / anims dependency arrays / dead imports untouched to keep diff scope tight).
+
+**Files touched:**
+- `/app/frontend/src/components/NearbyTrainersMap.native.tsx`
+- `/app/frontend/src/components/TrainerBottomSheet.tsx` (full rewrite)
+- `/app/frontend/app/trainee/(tabs)/home.tsx`
