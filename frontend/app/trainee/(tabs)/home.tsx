@@ -40,6 +40,7 @@ import { FavoriteAvailability } from '../../../src/components/trainee-home/Favor
 import { TrainerCard } from '../../../src/components/trainee-home/TrainerCard';
 import { haptic } from '../../../src/utils/haptics';
 import TrainerBottomSheet from '../../../src/components/TrainerBottomSheet';
+import { InstantBookSheet, type InstantBookTrainer } from '../../../src/components/InstantBookSheet';
 import { resolveSessionPriceCents } from '../../../src/utils/sessionPricing';
 import PeopleSearchBar from '../../../src/components/PeopleSearchBar';
 import FloatingOrangeBg from '../../../src/components/FloatingOrangeBg';
@@ -146,6 +147,8 @@ export default function TraineeHomeScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
   // iter118u: `selectedTrainerId` removed — tapping a trainer navigates
   // straight to their profile, no intermediate selection state needed.
+  // iter118x: Instant Book sheet state for the Uber-style map-avatar tap.
+  const [instantBookTrainer, setInstantBookTrainer] = useState<InstantBookTrainer | null>(null);
   const [previewUser, setPreviewUser] = useState<any>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [needsAddress, setNeedsAddress] = useState(false);
@@ -912,6 +915,21 @@ export default function TraineeHomeScreen() {
               })}
               onRefresh={handleMapRefresh}
               refreshing={mapRefreshing}
+              onInstantBook={(t: any) => {
+                // iter118x: open the Uber-style instant book sheet with
+                // whatever data we already have on the marker.
+                setInstantBookTrainer({
+                  trainerId: t.trainerId || t.userId || t.id,
+                  fullName: t.fullName || t.name || 'Trainer',
+                  avatarUrl: t.avatarUrl || t.profilePhoto,
+                  averageRating: t.averageRating,
+                  distanceMiles: t.distanceMiles ?? t.distance,
+                  etaMinutes: t.etaMinutes,
+                  ratePerMinuteCents: t.ratePerMinuteCents,
+                  outdoorRatePerMinuteCents: t.outdoorRatePerMinuteCents,
+                  accentColor: t.accentColor,
+                });
+              }}
             />
 
             {/* Available Trainers Header */}
@@ -1025,6 +1043,17 @@ export default function TraineeHomeScreen() {
             />
           </View>
         )}
+
+        {/* iter118x — Uber-style Instant Book confirm sheet.
+            Opens when a trainer avatar is tapped on the map (inline OR
+            fullscreen). Auto-navigates to /trainee/trainer-en-route on
+            success so the trainee can watch the trainer close in. */}
+        <InstantBookSheet
+          visible={!!instantBookTrainer}
+          trainer={instantBookTrainer}
+          userLocation={userLocation}
+          onClose={() => setInstantBookTrainer(null)}
+        />
 
         {/* Virtual Training Dialog */}
         <Modal

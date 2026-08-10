@@ -59,9 +59,12 @@ interface Props {
    *  slide up the TrainerBottomSheet with this trainer pre-selected
    *  (Uber-style: one tap on the pin → instant book surface). */
   onTrainerSelect?: (trainerUserId: string) => void;
+  /** iter118x: when set, tapping an avatar opens the InstantBookSheet in
+   *  the parent instead of routing to the trainer's profile. */
+  onInstantBook?: (trainer: NearbyTrainer) => void;
 }
 
-export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, refreshing, onTrainerSelect }: Props) {
+export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, refreshing, onTrainerSelect, onInstantBook }: Props) {
   const router = useRouter();
   const mapRef = useRef<MapView>(null);
   const fullscreenMapRef = useRef<MapView>(null);
@@ -101,11 +104,15 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
   }, [selected]);
 
   const tap = (t: NearbyTrainer) => {
-    // iter118u: SIMPLIFIED — tapping a trainer avatar goes STRAIGHT to that
-    // trainer's profile. No bottom-sheet expansion, no in-map popup, no
-    // camera animation. One tap, one destination.
+    // iter118x: map-avatar tap now opens the Instant Book sheet
+    // (Uber-style tap-to-book). If the parent hasn't wired
+    // `onInstantBook`, fall back to profile navigation so the flow still
+    // works everywhere the map is embedded.
+    if (onInstantBook) {
+      onInstantBook(t);
+      return;
+    }
     router.push(`/trainee/trainer-detail?trainerId=${t.trainerId}`);
-    // Still notify parent (kept optional for backward-compat callers).
     onTrainerSelect?.(t.trainerId);
   };
 
@@ -205,7 +212,10 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
             </View>
           </Marker>
 
-          {/* iter106n: unified circular avatar with brand-color ring + subtle pulse */}
+          {/* iter106n: unified circular avatar with brand-color ring + subtle pulse.
+              iter118x: added a synchronized radar sonar ring behind each
+              marker so the map feels alive on first open — the same
+              radarAnim already used for the user-location burst. */}
           {trainers.map((t, i) => {
             const ringColor = t.accentColor || N.orange;
             const isSel = selected?.id === t.id;
@@ -213,6 +223,17 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
               <Marker key={t.id} coordinate={{ latitude: t.latitude, longitude: t.longitude }}
                 onPress={() => tap(t)} anchor={{ x: 0.5, y: 0.5 }}>
                 <View style={[s.markerWrap, isSel && { transform: [{ scale: 1.25 }] }]} data-testid="trainer-marker-node">
+                  {/* Sonar ring — expands + fades in sync with the user's
+                      radar burst. Bright brand color + generous alpha so
+                      it's obvious even on the dark map style. */}
+                  <Animated.View
+                    pointerEvents="none"
+                    style={[s.trainerSonar, {
+                      borderColor: ringColor,
+                      opacity: radarAnim.interpolate({ inputRange: [0, 0.6, 1], outputRange: [0, 0.5, 0] }),
+                      transform: [{ scale: radarAnim.interpolate({ inputRange: [0, 1], outputRange: [0.8, 2.4] }) }],
+                    }]}
+                  />
                   <TrainerAvatar
                     uri={t.avatarUrl}
                     initials={initials(t.fullName)}
@@ -290,9 +311,14 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
                     coordinate={{ latitude: t.latitude, longitude: t.longitude }}
                     anchor={{ x: 0.5, y: 0.5 }}
                     onPress={() => {
-                      // iter118u: fullscreen marker tap also goes STRAIGHT
-                      // to the trainer profile. One consistent path.
                       setFullscreen(false);
+                      // iter118x: same flow as the inline map — open the
+                      // Instant Book sheet if the parent wired it,
+                      // otherwise fall back to profile navigation.
+                      if (onInstantBook) {
+                        onInstantBook(t);
+                        return;
+                      }
                       router.push(`/trainee/trainer-detail?trainerId=${t.trainerId}`);
                     }}
                   >
@@ -429,6 +455,14 @@ const s = StyleSheet.create({
 
   // Trainer markers — iter106l: circular profile-photo (was diamond geometry)
   markerWrap: { width: 50, height: 50, justifyContent: 'center', alignItems: 'center' },
+  // iter118x: synchronized sonar ring per trainer marker — same rhythm as
+  // the user's radar burst so the whole map beats together.
+  trainerSonar: {
+    position: 'absolute',
+    width: 56, height: 56,
+    borderRadius: 28,
+    borderWidth: 2,
+  },
   markerPhotoRing: {
     width: 44, height: 44, borderRadius: 22, borderWidth: 2,
     backgroundColor: N.bg, alignItems: 'center', justifyContent: 'center',

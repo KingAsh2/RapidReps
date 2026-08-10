@@ -130,6 +130,8 @@ from routes.negotiation_routes import router as negotiation_router
 from routes.corporate_routes import router as corporate_router
 # iter118q — Stripe Connect Express payout routes
 from routes.connect_routes import router as connect_router
+# iter118x — Uber-style instant book from map avatar tap
+from routes.instant_book_routes import router as instant_book_router
 
 
 # Auth routes extracted to routes/auth_routes.py
@@ -1010,6 +1012,8 @@ app.include_router(trainer_tools_router)
 app.include_router(feed_router)
 # iter118q Stripe Connect Express
 app.include_router(connect_router)
+# iter118x
+app.include_router(instant_book_router)
 app.include_router(group_sessions_router)
 app.include_router(progress_router)
 

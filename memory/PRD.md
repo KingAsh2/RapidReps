@@ -2856,3 +2856,68 @@ Both `google-services.json` and `google-service-account.json` are already in `fr
 - `/app/frontend/app/trainee/group-sessions.tsx` — InfoTip on Group Workouts header
 
 **Testing note:** all changes native-only-visible (Modal, RN Image, Share, chunked upload). Web preview stack (which is the pre-existing "Welcome to Expo" fallback) can't validate them; needs Expo Go / EAS build on device.
+
+---
+
+## iter118x — Instant Book from map + Live Radar polish (2026-02-10)
+
+**Scope shipped:** Uber-style tap-to-book flow from the trainee home map + synchronized radar sonar rings on every trainer marker so the map feels alive on first open.
+
+### Backend
+
+**`/app/backend/routes/instant_book_routes.py` — NEW**
+- `POST /api/sessions/instant-book` — one-tap booking endpoint.
+- Validates trainer exists, has a profile, isn't paused.
+- Rejects if trainer already has an accepted/in-progress session in the last `durationMin + 15 min` window (409).
+- Creates an auto-confirmed session doc (`status: "accepted"`, `instantBook: true`, `paymentStatus: "authorized"`) with the trainee's live `traineeLat` / `traineeLng` stored so the trainer can route immediately.
+- Generates a safety PIN if `sessionType == "in_home"`.
+- Fires a push notification to the trainer via `create_and_send_notification` with `type: "instant_book"`, `sessionId`, and trainee coords in the payload so the trainer app can deep-link to en-route with directions.
+- Returns `{ sessionId, trainerId, trainerName, sessionType, durationMin, status, scheduledAt }` — enough for the client to navigate to `/trainee/trainer-en-route`.
+
+**Registered in `server.py`** — `instant_book_router` mounted after `connect_router`.
+
+**Stripe capture** — session is created in `paymentStatus: "authorized"`. The existing session lifecycle (start/end + `calculate_session_payout` in `session_routes.py`) captures the intent when the session completes. Same rails as the negotiated-booking path, no duplicate payment logic added.
+
+**Verified end-to-end via curl:**
+- Login `test_trainee_iter25@test.com` → get token
+- POST instant-book with Sara Nguyen's trainer id → **200** with session details.
+- POST instant-book again immediately → **409** "Trainer is busy" (overlap detection works).
+
+### Frontend
+
+**`src/services/instantBookAPI.ts` — NEW** — thin `book()` wrapper around the backend endpoint (kept out of the already-huge `services/api.ts`).
+
+**`src/components/InstantBookSheet.tsx` — NEW** — bottom-sheet confirm modal:
+- Trainer avatar + name + rating + distance/ETA meta line
+- Session summary card (Outdoor · 30 min · Your current location)
+- Big price row + "Authorized now, charged on completion" hint
+- Full-width orange gradient CTA: `⚡ Book instantly · $X`
+- Secondary link: `Or view full profile →`
+- CTA disables if `userLocation` is null (no GPS = can't route)
+- Error box surfaces the 409 busy message inline instead of a system alert
+- On success → `router.push('/trainee/trainer-en-route', { sessionId, trainerId, trainerName, sessionType })` — reuses the existing en-route screen that already handles live polling + `EnRouteMap` polyline drawing.
+
+**`src/components/NearbyTrainersMap.native.tsx`:**
+- New optional `onInstantBook(trainer)` prop.
+- Marker `onPress` (both inline + fullscreen modal) now calls `onInstantBook(t)` if wired; falls back to profile navigation if not.
+- **Live Radar polish**: added a synchronized `trainerSonar` ring behind every trainer marker — same `radarAnim` driver as the user-location burst so the whole map beats in rhythm. Border in the trainer's brand color, opacity fades 0→0.5→0 while the scale sweeps 0.8× → 2.4×. Map now visibly "alive" on first open.
+
+**`app/trainee/(tabs)/home.tsx`:**
+- Imported `InstantBookSheet` + `InstantBookTrainer` type.
+- Added `instantBookTrainer` state.
+- Wired `onInstantBook` to the map — maps nearby-trainer fields to the sheet's expected shape.
+- Mounted `<InstantBookSheet>` at the root of the trainee home screen (below the bottom sheet).
+
+### Deliberately scoped OUT of iter118x (next iterations)
+
+- **Live location streaming via WebSocket** — the initial coords are stored on session creation, and the existing sessionTracking GPS-update WebSocket already handles trainer→trainee live coords for the en-route polyline. A follow-up iteration can add a trainee→trainer channel for the trainer's map to see the trainee moving.
+- **Stripe PaymentIntent authorize+capture flow** — currently marks `paymentStatus: "authorized"` but relies on the existing lifecycle to actually charge. A dedicated payment-intent flow (with capture on session end + refund on cancel) is a separate iteration.
+- **Trainer-side Instant Book UI** — the notification lands with all needed data (`sessionId`, trainee coords). Trainer opens it and the existing session-detail / en-route infrastructure takes over. A dedicated "instant request incoming" prompt on the trainer home screen would be a follow-up polish.
+
+### Files touched
+- `backend/routes/instant_book_routes.py` — NEW
+- `backend/server.py` — registered router
+- `frontend/src/services/instantBookAPI.ts` — NEW
+- `frontend/src/components/InstantBookSheet.tsx` — NEW
+- `frontend/src/components/NearbyTrainersMap.native.tsx` — `onInstantBook` prop + sonar rings
+- `frontend/app/trainee/(tabs)/home.tsx` — wire the sheet to the map
