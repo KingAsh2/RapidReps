@@ -1,5 +1,24 @@
 # RapidReps PRD
 
+## 2026-08 — iter118v: First-Run Coach-Mark Tours ✅
+
+**Requested**: "Add coach-mark tooltips on trainer & trainee home that appear once — highlight tap-avatar-to-change-photo, the map filter, the earnings tab, and dismiss forever after 1 tap."
+
+**Delivered** — new reusable primitive at `/app/frontend/src/components/coachmarks/CoachMarkTour.tsx`:
+- Semi-transparent dark backdrop + pulsing orange spotlight ring around the target rect (measured via `measureInWindow` with 3-attempt retry for late-mount refs)
+- Premium tooltip card with BlurView + LinearGradient chrome, icon bubble, title, body, progress dots, and orange-gradient "Next" / "Got it" CTA with a warm shadow glow
+- "Skip tour" pill top-right for the impatient
+- Auto-orients card above or below the target based on remaining space (safe-area aware)
+- Persists dismissal per `tourId` via AsyncStorage (`coachmark_v1_${tourId}`) — never re-appears
+- Exports a `resetCoachMarkTour(tourId)` helper for QA
+
+**Wired**:
+- **Trainer home** — 3-step tour `trainer-home-v1`: (1) "Welcome to your empire" points at hero card, (2) "Flip the switch to go live" points at the availability toggle, (3) "Watch your money grow" points at earnings card. Gated off when the approval modal or tier-celebration sheet is up.
+- **Trainee home** — 3-step tour `trainee-home-v1`: (1) "Your daily launchpad" points at the tappable hero, (2) "Search any trainer, anywhere" points at the search bar, (3) "Book in two taps" points at the TrainerBottomSheet. Gated off when the virtual-training dialog / profile preview / proximity picker is open. Uses `startDelayMs: 1400` so nearby trainers have time to load and the bottom-sheet ref has a valid rect.
+
+**Testing** — `iteration_124.json` — Backend regression 100% (health + endpoint sanity), source-level verification passed for all 6 assertions. Testing agent flagged only positive design notes (BlurView platform intensity, storage namespacing, modal gating, `collapsable={false}` for measureInWindow on Android).
+
+
 ## 2026-08 — iter118t/u: Cropper Chrome Fix + Direct Avatar Tap + Emoji Cleanup ✅
 
 **Reported by user via screenshot**:
