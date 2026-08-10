@@ -22,8 +22,11 @@ import { TrainerAvatar } from './TrainerAvatar';
 //   4. Map is context, not something you interact with to book.
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-const COLLAPSED_HEIGHT = 340;   // enough to show 1.5 trainers + Book Now
-const EXPANDED_HEIGHT = SCREEN_HEIGHT * 0.78;
+// iter118s (P0): first-mount sheet height ~58% of screen — matches Uber's
+// "Choose a ride" reveal so trainees see ~3 full trainer rows without
+// swiping. Was 340px which showed only 1.5 rows and felt hidden.
+const COLLAPSED_HEIGHT = Math.round(SCREEN_HEIGHT * 0.58);
+const EXPANDED_HEIGHT = SCREEN_HEIGHT * 0.82;
 
 const COLORS = {
   orange: '#FF6A00',
@@ -328,7 +331,7 @@ export const TrainerBottomSheet = forwardRef<TrainerBottomSheetHandle, TrainerBo
         style={styles.list}
         showsVerticalScrollIndicator={false}
         bounces={false}
-        contentContainerStyle={{ paddingBottom: isExpanded ? 120 : 24 }}
+        contentContainerStyle={{ paddingBottom: isExpanded ? 180 : 160 }}
       >
         {trainers.map((t) => renderTrainerRow(t))}
         {trainers.length === 0 ? (
@@ -345,12 +348,35 @@ export const TrainerBottomSheet = forwardRef<TrainerBottomSheetHandle, TrainerBo
       {/* Fixed Book Now — always visible when a trainer is selected */}
       {selectedTrainer ? (
         <View style={styles.bookBar}>
+          {/* iter118s (P1): pre-commit context row — mirrors Uber's
+              "Personal · Apple Pay" strip. Answers "what am I actually
+              booking?" before the trainee taps Book Now. Session type +
+              duration are safe defaults; they can refine on the next screen. */}
+          <View style={styles.contextRow} data-testid="booking-context-row">
+            <View style={styles.contextChip}>
+              <Ionicons name="sunny" size={13} color={COLORS.orange} />
+              <Text style={styles.contextChipText}>Outdoor</Text>
+            </View>
+            <View style={styles.contextDot} />
+            <View style={styles.contextChip}>
+              <Ionicons name="time-outline" size={13} color={COLORS.textSecondary} />
+              <Text style={styles.contextChipText}>30 min</Text>
+            </View>
+            <View style={styles.contextDot} />
+            <View style={styles.contextChip}>
+              <Ionicons name="card-outline" size={13} color={COLORS.textSecondary} />
+              <Text style={styles.contextChipText}>Card</Text>
+            </View>
+            <View style={{ flex: 1 }} />
+            <Ionicons name="chevron-forward" size={16} color={COLORS.textTertiary} />
+          </View>
+
           <TouchableOpacity
             onPress={() => {
               haptic.success();
               onBookTrainer(selectedTrainer);
             }}
-            activeOpacity={0.9}
+            activeOpacity={0.92}
             data-testid="book-trainer-btn"
           >
             <LinearGradient
@@ -362,7 +388,7 @@ export const TrainerBottomSheet = forwardRef<TrainerBottomSheetHandle, TrainerBo
               <Text style={styles.bookButtonText}>
                 Book {selectedTrainer.name.split(' ')[0]} Now
               </Text>
-              <Ionicons name="arrow-forward" size={18} color={COLORS.white} />
+              <Ionicons name="arrow-forward" size={20} color={COLORS.white} />
             </LinearGradient>
           </TouchableOpacity>
         </View>
@@ -461,13 +487,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 14,
     marginBottom: 10,
-    borderWidth: 1.5,
-    borderColor: COLORS.border,
+    // iter118s (P0): unselected border weight bumped so rows read as distinct
+    // cards (mirrors Uber's option list). Selected state gets a heavier ring
+    // just below to make the pick unmistakable.
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.06)',
     backgroundColor: COLORS.cardBg,
   },
   rowSelected: {
+    borderWidth: 2.5,
     borderColor: COLORS.borderFocus,
     backgroundColor: COLORS.cardBgSelected,
+    // iter118s (P0): soft orange glow lifts the selected row like Uber's
+    // black-on-white ring lifts the "Comfort" option.
+    shadowColor: COLORS.orange,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 6,
   },
   rowAvatarWrap: {
     marginRight: 12,
@@ -579,24 +616,56 @@ const styles = StyleSheet.create({
     right: 16,
     bottom: 24,
   },
+  // iter118s (P1): pre-commit context row above the CTA — Uber "Personal ·
+  // Apple Pay" analogue. Faint divider on top so it reads as a summary strip.
+  contextRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 6,
+    marginBottom: 10,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.06)',
+  },
+  contextChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  contextChipText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: COLORS.white,
+    letterSpacing: 0.1,
+  },
+  contextDot: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: COLORS.textTertiary,
+  },
+  // iter118s (P1): CTA restyled — brand orange preserved, but Uber-weight
+  // geometry (rectangle > pill, tighter radius, heavier vertical padding,
+  // bigger type). Reads as decisive without borrowing Uber's black.
   bookGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 18,
-    borderRadius: 16,
-    gap: 8,
+    paddingVertical: 22,
+    borderRadius: 14,
+    gap: 10,
     shadowColor: COLORS.orange,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.55,
+    shadowRadius: 16,
+    elevation: 10,
   },
   bookButtonText: {
-    fontSize: 17,
+    fontSize: 19,
     fontWeight: '900',
     color: COLORS.white,
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
   },
 });
 

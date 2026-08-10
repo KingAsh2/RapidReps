@@ -2708,3 +2708,18 @@ Both `google-services.json` and `google-service-account.json` are already in `fr
 - Path 2 — **Tap a row in the bottom sheet**: row highlights, "Book <FirstName> Now" updates.
 - Path 3 — **Open fullscreen map** (right-edge expand button): pan / zoom / rotate freely; tapping any pin closes the modal and lands the trainee back on the home screen with that trainer pre-selected in the expanded bottom sheet.
 - **Book Now** → routes to `/trainee/trainer-detail?trainerId=…` for confirmation and payment.
+
+---
+
+## iter118s — Uber-parity polish on TrainerBottomSheet (2026-02-10)
+
+**Scope:** P0 (visual weight) + P1 (pre-commit context) from the "Choose a ride" alignment plan. P2 (map floating pill) held back deliberately — don't want two passes at the map layer back-to-back after iter118r stabilized it.
+
+**Changes (`src/components/TrainerBottomSheet.tsx` only):**
+- **Sheet reveal height** — `COLLAPSED_HEIGHT` changed from a fixed 340 px peek to `Math.round(SCREEN_HEIGHT * 0.58)`. Trainees now land on ~3 full rows the way Uber's "Choose a ride" lands on 3 vehicle options. `EXPANDED_HEIGHT` bumped 0.78 → 0.82 for the swipe-up state.
+- **Selected-row prominence** — `borderWidth` on unselected rows raised to 2 px with a softer border color; selected rows get 2.5 px orange border + a soft orange shadow (`shadowOpacity: 0.35, radius: 12`) so the pick reads unmistakably at a glance.
+- **Pre-commit context row** — new strip directly above the CTA showing `Outdoor · 30 min · Card >` (Ionicons for each). Mirrors Uber's "Personal · Apple Pay" summary — answers "what am I actually booking?" before commit. Tap-hint chevron implies these choices are refinable on the next screen. `data-testid="booking-context-row"`.
+- **CTA restyle** — kept the brand orange gradient (deliberate: black would feel like a different app bled in), adopted Uber's weight: `paddingVertical` 18 → 22, `borderRadius` 16 → 14 (rectangle over pill), `fontSize` 17 → 19, arrow icon 18 → 20 px, heavier shadow. Reads as decisive without abandoning brand.
+- **List padding** — `paddingBottom` raised (160 / 180 collapsed / expanded) so the last row no longer hides behind the taller context + CTA stack.
+
+**Not changed (per user directive):** brand colors, marker/scan behavior, map surface (iter118r work protected), pixel-lock reference designs. No new data flows.
