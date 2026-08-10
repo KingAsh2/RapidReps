@@ -55,9 +55,13 @@ interface Props {
   trainers: NearbyTrainer[];
   onRefresh: () => void;
   refreshing: boolean;
+  /** iter118q: fires when a marker is tapped so the trainee home screen can
+   *  slide up the TrainerBottomSheet with this trainer pre-selected
+   *  (Uber-style: one tap on the pin → instant book surface). */
+  onTrainerSelect?: (trainerUserId: string) => void;
 }
 
-export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, refreshing }: Props) {
+export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, refreshing, onTrainerSelect }: Props) {
   const router = useRouter();
   const mapRef = useRef<MapView>(null);
   const [selected, setSelected] = useState<NearbyTrainer | null>(null);
@@ -98,6 +102,10 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
         latitudeDelta: 0.035, longitudeDelta: 0.035,
       }, 350);
     }
+    // iter118q: notify parent so the bottom sheet snaps up with this
+    // trainer pre-selected. `trainerId` is the user id which matches the
+    // bottom sheet row ids.
+    onTrainerSelect?.(t.trainerId);
   };
 
   const recenter = () => {
@@ -215,55 +223,10 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
           <Ionicons name="scan-outline" size={18} color={N.white} />
         </TouchableOpacity>
 
-        {/* === SELECTED TRAINER POPUP — top-anchored, asymmetric === */}
-        {selected && (
-          <Animated.View style={[s.popup, {
-            opacity: cardAnim,
-            transform: [{ translateY: cardAnim.interpolate({ inputRange: [0, 1], outputRange: [-60, 0] }) }],
-          }]} data-testid="trainer-detail-popup-card">
-            {/* Heavy bottom border in trainer's neon color */}
-            <View style={[s.popupBar, { backgroundColor: getColor(selected.averageRating) }]} />
-            <View style={s.popupBody}>
-              <View style={s.popupLeft}>
-                <TrainerAvatar
-                  uri={selected.avatarUrl}
-                  initials={initials(selected.fullName)}
-                  ringColor={selected.accentColor || N.orange}
-                  size={48}
-                  pulse
-                />
-              </View>
-              <View style={s.popupInfo}>
-                <Text style={s.popupName} numberOfLines={1}>{selected.fullName}</Text>
-                <View style={s.popupMeta}>
-                  <Ionicons name="star" size={12} color={N.star} />
-                  <Text style={s.popupRating}>{selected.averageRating?.toFixed(1)}</Text>
-                  <View style={s.popupDivider} />
-                  <Text style={s.popupDist}>{selected.distanceMiles?.toFixed(1)} MI</Text>
-                  <View style={s.popupDivider} />
-                  <Text style={s.popupEta}>{selected.etaMinutes}M ETA</Text>
-                </View>
-              </View>
-              <View style={s.popupPrice}>
-                {(() => {
-                  // iter102ah: canonical 30-min outdoor rate via resolver.
-                  const cents = resolveSessionPriceCents(selected as any, 'outdoor', 30);
-                  if (!cents || cents <= 0) {
-                    return <Text style={s.popupPriceVal}>—</Text>;
-                  }
-                  return <Text style={s.popupPriceVal}>${(cents / 100).toFixed(0)}</Text>;
-                })()}
-                <Text style={s.popupPriceUnit}>/30m</Text>
-              </View>
-            </View>
-            <TouchableOpacity style={s.popupAction}
-              onPress={() => router.push(`/trainee/trainer-detail?trainerId=${selected.trainerId}`)}
-              data-testid="book-trainer-btn">
-              <Text style={s.popupActionText}>VIEW PROFILE</Text>
-              <Ionicons name="chevron-forward" size={14} color={N.bg} />
-            </TouchableOpacity>
-          </Animated.View>
-        )}
+        {/* iter118q: in-map "VIEW PROFILE" popup removed. The TrainerBottomSheet
+            now serves as the single action surface (Uber-style) — one tap on
+            a marker slides the sheet up with that trainer pre-selected and
+            "Book Now" ready, so a competing popup would be pure friction. */}
       </View>
 
       {/* iter117: "AVAILABLE NOW" horizontal card strip removed per user

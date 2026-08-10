@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useMemo } from 'react';
+import React, { useRef, useEffect, useState, useMemo, forwardRef, useImperativeHandle } from 'react';
 import {
   View,
   Text,
@@ -69,7 +69,16 @@ interface TrainerBottomSheetProps {
   onAutoSelect?: (trainer: Trainer) => void;
 }
 
-export const TrainerBottomSheet: React.FC<TrainerBottomSheetProps> = ({
+// iter118q: expose imperative handle so the trainee home screen can slide
+// the sheet into expanded state the instant a map marker is tapped
+// (Uber-style: one tap on the pin → sheet snaps up with that trainer
+// pre-selected and "Book Now" prominent).
+export interface TrainerBottomSheetHandle {
+  expand: () => void;
+  collapse: () => void;
+}
+
+export const TrainerBottomSheet = forwardRef<TrainerBottomSheetHandle, TrainerBottomSheetProps>(({
   trainers,
   selectedTrainerId,
   onSelectTrainer,
@@ -78,9 +87,11 @@ export const TrainerBottomSheet: React.FC<TrainerBottomSheetProps> = ({
   proximityMiles = 10,
   onProximityPress,
   onAutoSelect,
-}) => {
+}, ref) => {
   const translateY = useRef(new Animated.Value(SCREEN_HEIGHT - COLLAPSED_HEIGHT)).current;
   const [isExpanded, setIsExpanded] = useState(false);
+  const scrollRef = useRef<ScrollView>(null);
+  const rowOffsets = useRef<Record<string, number>>({});
 
   // Compute badges — Fastest match (shortest ETA) + Top rated (highest rating)
   const badges = useMemo(() => {
@@ -164,6 +175,40 @@ export const TrainerBottomSheet: React.FC<TrainerBottomSheetProps> = ({
     haptic.light();
   };
 
+  // iter118q: imperative expand/collapse used by the trainee home screen when
+  // a map marker is tapped — snaps the sheet to full height so the selected
+  // trainer's row is instantly visible with "Book Now" ready.
+  useImperativeHandle(ref, () => ({
+    expand: () => {
+      Animated.spring(translateY, {
+        toValue: SCREEN_HEIGHT - EXPANDED_HEIGHT,
+        useNativeDriver: true,
+        bounciness: 6,
+        speed: 14,
+      }).start();
+      setIsExpanded(true);
+      haptic.success();
+    },
+    collapse: () => {
+      Animated.spring(translateY, {
+        toValue: SCREEN_HEIGHT - COLLAPSED_HEIGHT,
+        useNativeDriver: true,
+        bounciness: 4,
+      }).start();
+      setIsExpanded(false);
+    },
+  }), [translateY]);
+
+  // iter118q: when the selected trainer changes (e.g. via map marker tap),
+  // scroll that row into view inside the sheet so the highlight is obvious.
+  useEffect(() => {
+    if (!selectedTrainerId) return;
+    const y = rowOffsets.current[selectedTrainerId];
+    if (typeof y === 'number' && scrollRef.current) {
+      scrollRef.current.scrollTo({ y: Math.max(0, y - 8), animated: true });
+    }
+  }, [selectedTrainerId]);
+
   const renderTrainerRow = (t: Trainer) => {
     const selected = t.id === (selectedTrainer?.id);
     const badge = badges[t.id];
@@ -171,6 +216,9 @@ export const TrainerBottomSheet: React.FC<TrainerBottomSheetProps> = ({
       <TouchableOpacity
         key={t.id}
         style={[styles.row, selected && styles.rowSelected]}
+        onLayout={(e) => {
+          rowOffsets.current[t.id] = e.nativeEvent.layout.y;
+        }}
         onPress={() => {
           haptic.light();
           onSelectTrainer(t);
@@ -276,6 +324,7 @@ export const TrainerBottomSheet: React.FC<TrainerBottomSheetProps> = ({
       {/* Trainer list — always visible (collapsed: shows first ~1.5 rows;
           expanded: shows all with scrolling) */}
       <ScrollView
+        ref={scrollRef}
         style={styles.list}
         showsVerticalScrollIndicator={false}
         bounces={false}
@@ -320,7 +369,9 @@ export const TrainerBottomSheet: React.FC<TrainerBottomSheetProps> = ({
       ) : null}
     </Animated.View>
   );
-};
+});
+
+TrainerBottomSheet.displayName = 'TrainerBottomSheet';
 
 const styles = StyleSheet.create({
   container: {

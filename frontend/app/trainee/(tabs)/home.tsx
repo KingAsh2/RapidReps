@@ -39,7 +39,7 @@ import { QuickBookSection } from '../../../src/components/trainee-home/QuickBook
 import { FavoriteAvailability } from '../../../src/components/trainee-home/FavoriteAvailability';
 import { TrainerCard } from '../../../src/components/trainee-home/TrainerCard';
 import { haptic } from '../../../src/utils/haptics';
-import TrainerBottomSheet from '../../../src/components/TrainerBottomSheet';
+import TrainerBottomSheet, { type TrainerBottomSheetHandle } from '../../../src/components/TrainerBottomSheet';
 import { resolveSessionPriceCents } from '../../../src/utils/sessionPricing';
 import PeopleSearchBar from '../../../src/components/PeopleSearchBar';
 import FloatingOrangeBg from '../../../src/components/FloatingOrangeBg';
@@ -145,6 +145,9 @@ export default function TraineeHomeScreen() {
   }, [travelProximity]);
   const [menuVisible, setMenuVisible] = useState(false);
   const [selectedTrainerId, setSelectedTrainerId] = useState<string | undefined>(undefined);
+  // iter118q: imperative handle to snap the bottom sheet open the instant a
+  // map marker is tapped (Uber-style).
+  const trainerSheetRef = useRef<TrainerBottomSheetHandle>(null);
   const [previewUser, setPreviewUser] = useState<any>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [needsAddress, setNeedsAddress] = useState(false);
@@ -904,6 +907,15 @@ export default function TraineeHomeScreen() {
               })}
               onRefresh={handleMapRefresh}
               refreshing={mapRefreshing}
+              onTrainerSelect={(userId) => {
+                // iter118q: Uber-style instant selection — tapping a pin
+                // pre-selects the trainer in the sheet AND snaps the sheet
+                // to expanded so the highlighted row + Book Now are
+                // visible in a single frame.
+                setSelectedTrainerId(userId);
+                // Defer expand one tick so the row highlight paints first.
+                requestAnimationFrame(() => trainerSheetRef.current?.expand());
+              }}
             />
 
             {/* Available Trainers Header */}
@@ -1011,6 +1023,7 @@ export default function TraineeHomeScreen() {
         {bottomSheetTrainers.length > 0 && (
           <View ref={bottomSheetTourRef} collapsable={false}>
             <TrainerBottomSheet
+              ref={trainerSheetRef}
               trainers={bottomSheetTrainers}
               selectedTrainerId={selectedTrainerId}
               onSelectTrainer={(trainer) => {

@@ -2661,3 +2661,27 @@ Both `google-services.json` and `google-service-account.json` are already in `fr
 1. `POST /api/admin/beta-seed/purge` (wipes existing seeded trainers)
 2. Set `BETA_AUTO_SEED_TRAINERS=false` in `backend/.env`
 3. Restart backend
+
+---
+
+## iter118q — Uber-style instant trainer selection from map pins (2026-02-10)
+
+**Problem:** User feedback — "I see trainers listed, but how do I select them? I thought we were going for an instant feel similar to the design of the Uber page." Tapping a map marker opened a competing in-map "VIEW PROFILE" popup that routed AWAY from the home screen, while the persistent bottom sheet held the actual "Book Now" affordance. This created two competing action surfaces and confused the discovery → book path.
+
+**Fix (frontend only):**
+- `src/components/TrainerBottomSheet.tsx` — converted to `forwardRef`, exposes an imperative `TrainerBottomSheetHandle` with `expand()` / `collapse()`. Also auto-scrolls the selected row into view when `selectedTrainerId` changes externally (row layout offsets tracked via `onLayout`).
+- `src/components/NearbyTrainersMap.native.tsx` — added optional `onTrainerSelect(trainerUserId: string)` prop, fired from marker `onPress`. Removed the in-map "VIEW PROFILE" popup card (it duplicated and undermined the bottom sheet's action surface).
+- `app/trainee/(tabs)/home.tsx` — created a `trainerSheetRef`, wired `NearbyTrainersMap.onTrainerSelect` to (a) `setSelectedTrainerId(userId)` and (b) `trainerSheetRef.current?.expand()` inside `requestAnimationFrame` so the row highlight paints first and the sheet snaps to expanded state in a single frame. Passes the user id (matches bottom-sheet row ids which are `t.userId || t.id`).
+
+**Result (Uber-style flow):**
+1. Trainee taps any pin on the map → marker highlight animates (scale 1.25).
+2. Bottom sheet snaps from collapsed (340px peek) to expanded (78% of screen).
+3. Tapped trainer's row is highlighted (orange border) and auto-scrolled to top.
+4. "Book <FirstName> Now" gradient CTA is prominent and one tap away.
+
+**Files touched:**
+- `/app/frontend/src/components/TrainerBottomSheet.tsx`
+- `/app/frontend/src/components/NearbyTrainersMap.native.tsx`
+- `/app/frontend/app/trainee/(tabs)/home.tsx`
+
+**Testing note:** Web preview cannot render react-native-maps markers (the `.web.tsx` fallback is a horizontal card list). Native flow validated by code review + lint pass; recommend Expo Go or simulator run before shipping.
