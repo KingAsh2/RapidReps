@@ -1,5 +1,16 @@
 # RapidReps PRD
 
+## 2026-08 — iter118bd: Notifications Fiery Battle-Rope Background ✅
+
+**User asked**: Swap the Notifications screen background to the fiery battle-rope hero image they uploaded.
+
+**Delivered**
+- Downloaded the asset, re-encoded to true JPEG at 1200 px width / q=82 (2.1 MB → 293 KB) as `assets/images/bg-notifications.jpg`.
+- `app/notifications.tsx`: swapped `bg-swimming.png` → `bg-notifications.jpg`.
+- Replaced the bright white overlay with a **4-stop cinematic dark vignette** (top+bottom darkest, middle at 55% opacity) so the fiery orange energy bleeds through the middle of the screen while the header, tabs and rows stay perfectly legible.
+- Header + tab-bar backgrounds switched from solid `#141929` to `rgba(10,13,20,0.55)` glass so the hero image reads through them; border color nudged to a subtle orange tint (`rgba(255,106,0,0.18)`) to tie the chrome into the brand.
+
+
 ## 2026-08 — iter118bc: Premium Modal Pixel-Lock (App-Wide) ✅
 
 **User asked**: Pixel-lock the Logout modal shown in the mockup and update ALL modals to match the same design/theme with their respective icons.

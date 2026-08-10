@@ -21,7 +21,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
-const backgroundImage = require('../assets/images/bg-swimming.png');
+// iter118bd: fiery battle-rope hero replaces the swim BG.
+// Dark cinematic vignette overlay so orange sparks bleed through while
+// keeping notification rows perfectly legible.
+const backgroundImage = require('../assets/images/bg-notifications.jpg');
 const SWIPE_THRESHOLD = -80;
 
 const ICON_MAP: Record<string, { name: string; color: string }> = {
@@ -328,7 +331,18 @@ export default function NotificationsScreen() {
 
   return (
     <ImageBackground source={backgroundImage} style={s.container} resizeMode="cover">
-      <LinearGradient colors={['rgba(255, 255, 255, 0.95)', 'rgba(245, 246, 248, 0.92)']} style={StyleSheet.absoluteFillObject} />
+      {/* iter118bd: cinematic dark vignette — top & bottom darkened so header
+          + list rows stay perfectly legible, middle stays warm & atmospheric */}
+      <LinearGradient
+        colors={[
+          'rgba(6,8,12,0.92)',
+          'rgba(6,8,12,0.62)',
+          'rgba(6,8,12,0.55)',
+          'rgba(6,8,12,0.88)',
+        ]}
+        locations={[0, 0.35, 0.7, 1]}
+        style={StyleSheet.absoluteFillObject}
+      />
       <SafeAreaView style={{ flex: 1 }}>
         {/* iter118bb: compact header — bell icon + title + settings gear.
             Mark-all-read moved into the tab bar area so the top row is tidy. */}
@@ -417,8 +431,9 @@ const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0F1526' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 18, paddingVertical: 14, backgroundColor: '#141929',
-    borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)',
+    paddingHorizontal: 18, paddingVertical: 14,
+    backgroundColor: 'rgba(10,13,20,0.55)',
+    borderBottomWidth: 1, borderBottomColor: 'rgba(255,106,0,0.18)',
   },
   headerTitleRow: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
@@ -427,8 +442,8 @@ const s = StyleSheet.create({
   // iter118bb: tab pills
   tabsRow: {
     flexDirection: 'row', gap: 6, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 10,
-    backgroundColor: '#141929',
-    borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'rgba(10,13,20,0.55)',
+    borderBottomWidth: 1, borderBottomColor: 'rgba(255,106,0,0.12)',
   },
   tabPill: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
