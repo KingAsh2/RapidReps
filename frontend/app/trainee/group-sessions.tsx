@@ -9,6 +9,7 @@ import { useAuth } from '../../src/contexts/AuthContext';
 import { haptic } from '../../src/utils/haptics';
 import { goBack } from '../../src/utils/navigation';
 import { ScreenHeader } from '../../src/components/ScreenShell';
+import { InfoTip } from '../../src/components/InfoTip';
 
 const COLORS = { orange: '#FF6A00', teal: '#1a2a5e', navy: '#1a2a5e', white: '#FFFFFF', gray: '#8a95b0', success: '#00D26A' };
 
@@ -86,6 +87,15 @@ export default function GroupSessionsScreen() {
         title="Group Workouts"
         onBack={() => goBack('/trainee/(tabs)/home')}
         testID="trainee-group-sessions-header"
+        right={
+          <InfoTip
+            title="Group Workouts"
+            text="Boot camp blasts near you — trainers post short-notice group sessions (park HIIT, sunset yoga, boxing circuits) and ping every trainee in the area. Tap a session to join, meet other athletes, and get a killer group workout."
+            color="rgba(255,255,255,0.75)"
+            size={20}
+            testID="group-sessions-info-tip"
+          />
+        }
       />
       <FlatList
         data={sessions}

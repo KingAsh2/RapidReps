@@ -14,11 +14,13 @@ import {
   Dimensions,
   KeyboardAvoidingView,
   Platform,
+  Share,
 } from 'react-native';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { InfoTip } from '../../../src/components/InfoTip';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { useAlert } from '../../../src/contexts/AlertContext';
 import { useSoundEffects } from '../../../src/contexts/SoundContext';
@@ -87,7 +89,7 @@ const US_STATES = [
 export default function TraineeProfileScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const { user, logout, refreshUser } = useAuth();
+  const { user, logout, refreshUser, patchUser } = useAuth();
   const { showAlert } = useAlert();
   const { soundEnabled, setSoundEnabled, playTap } = useSoundEffects();
   const [loading, setLoading] = useState(true);
@@ -282,6 +284,12 @@ export default function TraineeProfileScreen() {
     // fell back to a file:// URI (rare — imageOptimizer glitch), stay in
     // edit mode so the athlete can retry via Save without losing state.
     if (dataUrl.startsWith('data:')) {
+      // iter118w: OPTIMISTIC — patch the AuthContext user immediately so
+      // every avatar consumer (tab bar, header, sheet rows) re-renders with
+      // the new photo BEFORE the network call completes. Was waiting for
+      // refreshUser() which could take seconds on slow connections, making
+      // it feel like the avatar "sometimes doesn't change".
+      patchUser({ profilePhoto: dataUrl } as any);
       try {
         await traineeAPI.updateProfile({
           ...formData,
@@ -296,6 +304,30 @@ export default function TraineeProfileScreen() {
       }
     } else {
       setIsEditing(true);
+    }
+  };
+
+  // iter118w: hardened Share Profile handler.
+  // The previous inline dynamic-import pattern crashed on iOS when the
+  // Share sheet couldn't resolve a presenting view. This version uses the
+  // static top-level `Share` API, null-safe fallbacks so a signed-out /
+  // half-hydrated user object can't crash the sheet, and explicit error
+  // logging so we can see next time if it still fails.
+  const handleShareProfile = async () => {
+    const displayName = (user?.fullName || 'my').trim();
+    const message = `Check out ${displayName === 'my' ? 'my training profile' : `${displayName}'s training profile`} on RapidReps! https://rapidreps.com`;
+    try {
+      const res = await Share.share({ message });
+      if (res.action === Share.dismissedAction) {
+        // User tapped outside the sheet — no-op, not an error.
+      }
+    } catch (e: any) {
+      console.warn('[share-profile] failed:', e?.message || e);
+      showAlert({
+        title: 'Sharing unavailable',
+        message: 'We couldn\'t open the share sheet. Please try again.',
+        type: 'error',
+      });
     }
   };
 
@@ -546,21 +578,27 @@ export default function TraineeProfileScreen() {
                 </View>
               )}
 
-              {/* iter97b: Share Profile button — mirrors trainer profile CTA */}
+              {/* iter118w: Share Profile — hardened. Was doing a dynamic
+                  `import('react-native')` inside the async onPress which
+                  could crash on iOS when the underlying UIActivityViewController
+                  didn't get a valid presenting view. Now uses the top-level
+                  Share API + null-safe fallbacks + explicit error logging. */}
               <TouchableOpacity
-                onPress={async () => {
-                  try {
-                    const { Share } = await import('react-native');
-                    await Share.share({
-                      message: `Check out my training profile on RapidReps! ${user?.fullName || ''}`,
-                    });
-                  } catch { /* user cancelled */ }
-                }}
+                onPress={handleShareProfile}
                 style={styles.shareProfileBtn}
                 data-testid="trainee-share-profile-btn"
               >
                 <Ionicons name="share-social" size={18} color={COLORS.white} />
                 <Text style={styles.shareProfileBtnText}>Share Profile</Text>
+                <View style={{ marginLeft: 6 }}>
+                  <InfoTip
+                    title="Share Profile"
+                    text="Send friends your RapidReps profile so they can see your workouts, streak, and favorite trainers. Great for accountability partners and gym buddies."
+                    color="rgba(255,255,255,0.85)"
+                    size={16}
+                    testID="trainee-share-profile-info"
+                  />
+                </View>
               </TouchableOpacity>
 
               {/* iter106s: Edit Profile button — moved up here to match the

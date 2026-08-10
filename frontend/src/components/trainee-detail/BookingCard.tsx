@@ -18,6 +18,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import PlacesAutocomplete from '../PlacesAutocomplete';
 import { resolveSessionPriceCents } from '../../utils/sessionPricing';
+import { InfoTip } from '../InfoTip';
 
 const COLORS = {
   white: '#FFFFFF',
@@ -203,7 +204,14 @@ export const BookingCard: React.FC<Props> = ({
         {/* Outdoor location */}
         {selectedSessionType === 'outdoor' && (
           <View style={styles.locationField}>
-            <Text style={styles.sectionLabel}>WHERE WILL YOU MEET?</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+              <Text style={styles.sectionLabel}>WHERE WILL YOU MEET?</Text>
+              <InfoTip
+                title="Meeting location"
+                text="Pick a public spot that works for both of you — a park, an outdoor gym, or your address. Your trainer reviews it before your card is charged, so you can chat about the exact spot in messages after they accept."
+                testID="meeting-location-info"
+              />
+            </View>
             <PlacesAutocomplete
               value={outdoorLocation}
               onChangeText={setOutdoorLocation}
@@ -219,7 +227,14 @@ export const BookingCard: React.FC<Props> = ({
         )}
 
         {/* Duration */}
-        <Text style={styles.sectionLabel}>SESSION DURATION</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Text style={styles.sectionLabel}>SESSION DURATION</Text>
+          <InfoTip
+            title="Session duration"
+            text="Longer sessions cost more but give more warm-up + cool-down time. 30 min is a quick sweat, 60 min is the standard, 90 min is a full workout with mobility."
+            testID="session-duration-info"
+          />
+        </View>
         <View style={styles.durationRow}>
           {(trainer.sessionDurationsOffered || [30, 45, 60, 90]).map((duration: number) => {
             const modality: 'outdoor' | 'virtual' = selectedSessionType === 'virtual' ? 'virtual' : 'outdoor';

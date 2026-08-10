@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { feedAPI } from '../../src/services/api';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { goBack } from '../../src/utils/navigation';
+import { InfoTip } from '../../src/components/InfoTip';
 
 const backgroundImage = require('../../assets/images/bg-plank-ropes.png');
 
@@ -80,7 +81,15 @@ export default function FeedScreen() {
         <TouchableOpacity onPress={() => goBack('/trainee/(tabs)/home')} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color={COLORS.white} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Community</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Text style={styles.headerTitle}>Community</Text>
+          <InfoTip
+            title="Community Feed"
+            text="See what other athletes in your area are up to — workout finishes, PRs, streaks, and shout-outs to their trainers. React, comment, and get pumped for your next session."
+            color="rgba(255,255,255,0.75)"
+            testID="feed-info-tip"
+          />
+        </View>
         <View style={{ width: 40 }} />
       </View>
       <FlatList

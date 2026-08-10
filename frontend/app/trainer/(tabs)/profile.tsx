@@ -56,7 +56,7 @@ const backgroundImage = require('../../../assets/images/bg-spin-class.jpg');
 
 export default function TrainerProfileScreen() {
   const router = useRouter();
-  const { user, logout, refreshUser } = useAuth();
+  const { user, logout, refreshUser, patchUser } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -109,6 +109,9 @@ export default function TrainerProfileScreen() {
       toast.error('Could not process that photo — please try another.');
       return;
     }
+    // iter118w: OPTIMISTIC — patch AuthContext user immediately so every
+    // avatar consumer re-renders with the new photo before the network call.
+    patchUser({ profilePhoto: dataUrl, avatarUrl: dataUrl } as any);
     try {
       await trainerAPI.updateProfile({
         userId: user?.id || profile?.userId,
@@ -194,14 +197,26 @@ export default function TrainerProfileScreen() {
   };
 
   const handleShareProfile = async () => {
+    // iter118w: hardened. Bail if we don't have a valid user id — a
+    // malformed `rapidreps://trainer/undefined` URL is one known trigger of
+    // the iOS Share sheet crash. Also null-safe display name + wider catch
+    // with visible feedback so silent failures stop looking like a crash.
+    if (!user?.id) {
+      console.warn('[share-profile] no user id, aborting');
+      return;
+    }
+    const displayName = user?.fullName || 'this trainer';
+    const profileLink = `https://rapidreps.com/trainer/${user.id}`;
     try {
-      const profileLink = `rapidreps://trainer/${user?.id}`;
-      await Share.share({
-        message: `Check out ${user?.fullName || 'this trainer'} on RapidReps! Book a session today.\n\nOpen in app: ${profileLink}\n\nDownload RapidReps: https://rapidreps.com/download`,
-        title: `${user?.fullName || 'Trainer'} on RapidReps`,
+      const res = await Share.share({
+        message: `Check out ${displayName} on RapidReps! Book a session today.\n\n${profileLink}`,
+        title: `${displayName} on RapidReps`,
       });
-    } catch (e) {
-      console.error('Share error:', e);
+      if (res.action === Share.dismissedAction) {
+        // User dismissed — not an error.
+      }
+    } catch (e: any) {
+      console.warn('[share-profile] failed:', e?.message || e);
     }
   };
 

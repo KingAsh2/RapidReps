@@ -17,6 +17,10 @@ interface AuthContextType {
   setDemoMode: (role: 'trainee' | 'trainer') => void;
   // iter98e: pull latest /auth/me so UI reflects fresh name/photo/accent
   refreshUser: () => Promise<User | null>;
+  /** iter118w: optimistic patch — apply a partial update to the cached user
+   *  immediately so avatar/name changes render before the network round-trip
+   *  completes. Followed up by refreshUser() to reconcile with server truth. */
+  patchUser: (partial: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -150,6 +154,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return null;
   };
 
+  // iter118w: optimistic partial patch — writes to the in-memory user
+  // object AND the AsyncStorage cache so every screen re-renders with the
+  // new values immediately (avatar, name, accent, etc.). The caller is
+  // expected to follow up with a real API call + `refreshUser()` to sync.
+  const patchUser = (partial: Partial<User>) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, ...partial } as User;
+      // Fire-and-forget cache sync — never block the UI.
+      AsyncStorage.setItem('cached_user', JSON.stringify(next)).catch(() => {});
+      return next;
+    });
+  };
+
   const setDemoMode = async (role: 'trainee' | 'trainer') => {
     setIsDemoMode(true);
     setActiveRoleState(role);
@@ -276,6 +294,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setActiveRole,
         setDemoMode,
         refreshUser,
+        patchUser,
       }}
     >
       {children}
@@ -300,6 +319,7 @@ export const useAuth = () => {
       setActiveRole: async () => {},
       setDemoMode: () => {},
       refreshUser: async () => null,
+      patchUser: () => {},
     };
   }
   return context;
