@@ -128,9 +128,15 @@ export default function TrainerProfileScreen() {
 
   // iter98d (Task 5 hardening): tab screens don't unmount on tab-switch,
   // so use useFocusEffect to stop audio when the user blurs this tab.
+  // iter118bb: ALSO refetch the profile every time the tab comes into
+  // focus — otherwise anthem changes (saved on VibeSetupScreen) and
+  // avatar updates don't reflect until pull-to-refresh, which users
+  // read as "it didn't save."
   useFocusEffect(
     React.useCallback(() => {
+      loadProfile();
       return () => { try { stopAllAudio(); } catch { /* no-op */ } };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
   );
 

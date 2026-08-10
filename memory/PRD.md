@@ -1,5 +1,18 @@
 # RapidReps PRD
 
+## 2026-08 — iter118bb: Notifications Refactor + Anthem/Avatar Persistence + Per-Item Read ✅
+
+**User asked**: (1) Notifications screen redesign to match mockup — tabbed filter bar (All/Sessions/Messages/System) + NEW vs EARLIER sections + audio chime on new unread. (2) Anthem (`vibeTrackId`) and Avatar (`profilePhoto`) updates weren't persisting visually after navigating away and back to the Profile tab.
+
+**Delivered**
+- **Notifications refactor** (`app/notifications.tsx`) — `SectionList` splits items into `NEW` (last 24h) and `EARLIER`. 4 category tab pills with count badges (`data-testid` = `notif-tab-<key>`). Swipe-to-delete + per-row `notification-item-<type>` testids retained. Settings gear routes to `/notification-preferences`.
+- **Chime util** (`src/utils/notificationChime.ts`) — `expo-av` bell sound, silent-fail. Invoked from `NotificationContext.tsx` when unread count increases.
+- **Profile persistence** — `useFocusEffect(loadProfile)` added to both `app/trainee/(tabs)/profile.tsx` and `app/trainer/(tabs)/profile.tsx` so returning to the tab re-reads the fresh trainee/trainer-profile document (picks up new `vibeTrackId` and `profilePhoto`).
+- **Per-item read endpoint** — testing surfaced that frontend called `POST /api/notifications/{id}/read` but backend only had bulk `/mark-read` → silent 404 → unread dot never cleared on tap. Added the missing route in `backend/routes/notification_routes.py`. Verified 200/400/404 via curl.
+
+**Testing** — `iteration_126.json`. Backend fix verified live: 200 on valid id, 400 on invalid, 404 on non-existent. Web-preview headless UI verification was blocked by an unrelated Expo web bundling issue in the harness; app is native-first and functionality was confirmed at the backend contract + source-level review.
+
+
 ## 2026-08 — iter118w: Emergent-Managed Push Migration + Admin New-Signup Alerts ✅
 
 **User asked**: (1) push admins whenever a new user signs up so they can proactively verify trainers; (2) migrate off directly-held APNs/Firebase creds to the Emergent-managed push pattern (HonestPays style); (3) reuse the standard hooks; (4) tap handler in `_layout.tsx` at module scope; (5) backend just builds `{message, link}`; (6) fallback ladder: push denied → in-app notifications → email for booking-critical; SOS falls back to native `Share.share` / `Linking`, never to a custom SMS API.

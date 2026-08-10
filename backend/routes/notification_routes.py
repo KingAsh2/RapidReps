@@ -90,6 +90,23 @@ async def mark_notifications_read(current_user: dict = Depends(get_current_user)
     return {"success": True}
 
 
+@router.post("/notifications/{notification_id}/read")
+async def mark_notification_read(notification_id: str, current_user: dict = Depends(get_current_user)):
+    """iter118bb: Mark a single notification as read (called on row tap)."""
+    user_id = str(current_user['_id'])
+    try:
+        oid = ObjectId(notification_id)
+    except Exception:
+        raise HTTPException(400, "Invalid notification id")
+    result = await db.notifications.update_one(
+        {'_id': oid, 'userId': user_id},
+        {'$set': {'read': True}},
+    )
+    if result.matched_count == 0:
+        raise HTTPException(404, "Notification not found")
+    return {"success": True}
+
+
 @router.delete("/notifications/{notification_id}")
 async def delete_notification(notification_id: str, current_user: dict = Depends(get_current_user)):
     """Delete a single notification (swipe-to-delete)."""

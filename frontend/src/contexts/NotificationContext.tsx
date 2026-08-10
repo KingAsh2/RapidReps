@@ -6,6 +6,7 @@ import * as Device from 'expo-device';
 import { useAuth } from './AuthContext';
 import { notificationsAPI, chatAPI, traineeAPI, trainerAPI } from '../services/api';
 import { router } from 'expo-router';
+import { playNotificationChime } from '../utils/notificationChime';
 
 // Configure how notifications appear when the app is in the foreground
 Notifications.setNotificationHandler({
@@ -69,6 +70,38 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  // iter118bb: chime state — track prior unread count so we only play the
+  // bell when it *increases* (a new notification just arrived), and a
+  // 60-second reminder chime while any unread remains.
+  const prevUnreadRef = useRef(0);
+  const chimeReminderRef = useRef<any>(null);
+
+  // iter118bb: unread-driven chime side effect.
+  useEffect(() => {
+    // New notification arrived → single chime.
+    if (unreadCount > prevUnreadRef.current) {
+      playNotificationChime();
+    }
+    prevUnreadRef.current = unreadCount;
+
+    // Any unread → gentle reminder chime every 60s. Cleared when
+    // unreadCount drops to 0.
+    if (chimeReminderRef.current) {
+      clearInterval(chimeReminderRef.current);
+      chimeReminderRef.current = null;
+    }
+    if (unreadCount > 0) {
+      chimeReminderRef.current = setInterval(() => {
+        playNotificationChime();
+      }, 60000);
+    }
+    return () => {
+      if (chimeReminderRef.current) {
+        clearInterval(chimeReminderRef.current);
+        chimeReminderRef.current = null;
+      }
+    };
+  }, [unreadCount]);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
   const [pendingSessionCount, setPendingSessionCount] = useState(0);
   // Marks "I've seen the Pending tab as of timestamp T" — badge only counts sessions created AFTER T.

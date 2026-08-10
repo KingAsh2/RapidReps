@@ -1,8 +1,8 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
-  FlatList,
+  SectionList,
   StyleSheet,
   TouchableOpacity,
   RefreshControl,
@@ -122,6 +122,45 @@ export default function NotificationsScreen() {
   const router = useRouter();
   const { notifications, unreadCount, refreshNotifications, markAllRead } = useNotifications();
   const [refreshing, setRefreshing] = useState(false);
+  // iter118bb: filter tabs — All / Sessions / Messages / System — matches
+  // the reference design and lets users triage large notification lists.
+  const [activeTab, setActiveTab] = useState<'all' | 'sessions' | 'messages' | 'system'>('all');
+
+  // iter118bb: bucket the notifications by category + NEW/EARLIER age.
+  const { tabCounts, sections } = useMemo(() => {
+    const isSession = (t: string) => t?.startsWith('session_') || t === 'rate_reminder' || t === 'virtual_session_request' || t === 'instant_book';
+    const isMessage = (t: string) => t === 'new_message';
+    const isSystem = (t: string) => !isSession(t) && !isMessage(t);
+
+    const counts = {
+      all: notifications.length,
+      sessions: notifications.filter((n: any) => isSession(n.type)).length,
+      messages: notifications.filter((n: any) => isMessage(n.type)).length,
+      system: notifications.filter((n: any) => isSystem(n.type)).length,
+    };
+
+    const filtered = notifications.filter((n: any) => {
+      if (activeTab === 'all') return true;
+      if (activeTab === 'sessions') return isSession(n.type);
+      if (activeTab === 'messages') return isMessage(n.type);
+      return isSystem(n.type);
+    });
+
+    // NEW = last 24h. EARLIER = older.
+    const now = Date.now();
+    const dayMs = 24 * 60 * 60 * 1000;
+    const fresh: any[] = [];
+    const earlier: any[] = [];
+    filtered.forEach((n: any) => {
+      const created = new Date(n.createdAt || n.created_at || 0).getTime();
+      if (now - created < dayMs) fresh.push(n);
+      else earlier.push(n);
+    });
+    const secs: { title: string; data: any[] }[] = [];
+    if (fresh.length) secs.push({ title: 'NEW', data: fresh });
+    if (earlier.length) secs.push({ title: 'EARLIER', data: earlier });
+    return { tabCounts: counts, sections: secs };
+  }, [notifications, activeTab]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -291,44 +330,74 @@ export default function NotificationsScreen() {
     <ImageBackground source={backgroundImage} style={s.container} resizeMode="cover">
       <LinearGradient colors={['rgba(255, 255, 255, 0.95)', 'rgba(245, 246, 248, 0.92)']} style={StyleSheet.absoluteFillObject} />
       <SafeAreaView style={{ flex: 1 }}>
+        {/* iter118bb: compact header — bell icon + title + settings gear.
+            Mark-all-read moved into the tab bar area so the top row is tidy. */}
         <View style={s.header}>
-          <TouchableOpacity onPress={() => router.back()} data-testid="notifications-back-btn">
-            <Ionicons name="arrow-back" size={26} color={Colors.white} />
+          <TouchableOpacity onPress={() => router.back()} data-testid="notifications-back-btn" hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+            <Ionicons name="arrow-back" size={24} color={Colors.white} />
           </TouchableOpacity>
-          <Text style={s.headerTitle}>Notifications</Text>
-          <View style={s.headerRight}>
-            {unreadCount > 0 && (
-              <TouchableOpacity onPress={markAllRead} style={s.markReadBtn} data-testid="mark-all-read-btn">
-                <Text style={s.markRead}>Mark all read</Text>
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity
-              onPress={() => router.push('/notification-preferences')}
-              style={s.settingsBtn}
-              data-testid="notification-settings-btn"
-            >
-              <Ionicons name="settings-outline" size={22} color={Colors.navy} />
-            </TouchableOpacity>
+          <View style={s.headerTitleRow}>
+            <Ionicons name="notifications" size={18} color={Colors.primary} />
+            <Text style={s.headerTitle}>NOTIFICATIONS</Text>
           </View>
+          <TouchableOpacity
+            onPress={() => router.push('/notification-preferences')}
+            data-testid="notification-settings-btn"
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
+            <Ionicons name="settings-outline" size={20} color="rgba(255,255,255,0.7)" />
+          </TouchableOpacity>
         </View>
 
-        <FlatList
-          data={notifications}
+        {/* iter118bb: category tabs with counts */}
+        <View style={s.tabsRow}>
+          {([
+            { key: 'all', label: 'All', count: tabCounts.all },
+            { key: 'sessions', label: 'Sessions', count: tabCounts.sessions },
+            { key: 'messages', label: 'Messages', count: tabCounts.messages },
+            { key: 'system', label: 'System', count: tabCounts.system },
+          ] as const).map((t) => {
+            const active = activeTab === t.key;
+            return (
+              <TouchableOpacity
+                key={t.key}
+                onPress={() => setActiveTab(t.key)}
+                style={[s.tabPill, active && s.tabPillActive]}
+                data-testid={`notif-tab-${t.key}`}
+              >
+                <Text style={[s.tabPillText, active && s.tabPillTextActive]}>{t.label}</Text>
+                {t.count > 0 ? (
+                  <View style={[s.tabCount, active && s.tabCountActive]}>
+                    <Text style={[s.tabCountText, active && s.tabCountTextActive]}>{t.count}</Text>
+                  </View>
+                ) : null}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        {unreadCount > 0 ? (
+          <TouchableOpacity onPress={markAllRead} style={s.markAllRow} data-testid="mark-all-read-btn">
+            <Text style={s.markAllText}>Mark all read</Text>
+          </TouchableOpacity>
+        ) : null}
+
+        <SectionList
+          sections={sections}
           keyExtractor={(item: any, idx) => String(item.id || idx)}
           renderItem={({ item }) => (
             <NotifRow item={item} onDelete={() => handleDelete(item)} onTap={() => handleTap(item)} />
           )}
-          contentContainerStyle={notifications.length === 0 ? s.emptyContainer : s.listContent}
+          renderSectionHeader={({ section: { title } }) => (
+            <Text style={s.sectionHeader}>{title}</Text>
+          )}
+          stickySectionHeadersEnabled={false}
+          contentContainerStyle={sections.length === 0 ? s.emptyContainer : s.listContent}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
           initialNumToRender={12}
           maxToRenderPerBatch={8}
           windowSize={9}
           removeClippedSubviews
-          ListHeaderComponent={
-            notifications.length > 0 ? (
-              <Text style={s.swipeHint}>← Swipe left on a notification to delete</Text>
-            ) : null
-          }
           ListEmptyComponent={
             <View style={s.emptyState} data-testid="notifications-empty">
               <Ionicons name="notifications-off-outline" size={56} color={Colors.grayLight} />
@@ -348,15 +417,54 @@ const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0F1526' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingVertical: 14, backgroundColor: '#141929',
-    borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)',
+    paddingHorizontal: 18, paddingVertical: 14, backgroundColor: '#141929',
+    borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)',
   },
-  headerTitle: { fontSize: 20, fontWeight: '700', color: '#FFFFFF' },
-  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  markReadBtn: {},
-  markRead: { fontSize: 13, fontWeight: '600', color: Colors.primary },
-  settingsBtn: { padding: 4 },
-  listContent: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 40 },
+  headerTitleRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+  },
+  headerTitle: { fontSize: 15, fontWeight: '900', color: '#FFFFFF', letterSpacing: 1.6 },
+  // iter118bb: tab pills
+  tabsRow: {
+    flexDirection: 'row', gap: 6, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 10,
+    backgroundColor: '#141929',
+    borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)',
+  },
+  tabPill: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
+  },
+  tabPillActive: {
+    backgroundColor: 'rgba(255,106,0,0.15)',
+    borderColor: Colors.primary,
+  },
+  tabPillText: {
+    fontSize: 12, fontWeight: '700', color: 'rgba(255,255,255,0.65)', letterSpacing: 0.2,
+  },
+  tabPillTextActive: { color: '#FFFFFF' },
+  tabCount: {
+    minWidth: 20, paddingHorizontal: 6, height: 18, borderRadius: 9,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  tabCountActive: { backgroundColor: Colors.primary },
+  tabCountText: { fontSize: 10, fontWeight: '900', color: 'rgba(255,255,255,0.7)' },
+  tabCountTextActive: { color: '#FFFFFF' },
+  // Mark-all-read strip
+  markAllRow: {
+    alignItems: 'flex-end', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 4,
+  },
+  markAllText: {
+    fontSize: 12, fontWeight: '800', color: Colors.primary, letterSpacing: 0.3,
+  },
+  // Section headers (NEW / EARLIER)
+  sectionHeader: {
+    fontSize: 11, fontWeight: '900', color: 'rgba(255,255,255,0.55)',
+    letterSpacing: 1.6, marginTop: 18, marginBottom: 10, paddingHorizontal: 4,
+  },
+  listContent: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 40 },
   swipeHint: { fontSize: 11, fontWeight: '600', color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginBottom: 10, letterSpacing: 0.5 },
 
   rowWrap: { marginBottom: 10, borderRadius: 14, overflow: 'hidden' },
@@ -371,12 +479,6 @@ const s = StyleSheet.create({
     backgroundColor: 'rgba(20,25,41,0.92)', borderRadius: 14, padding: 14,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
   },
-  // iter102y: previously the unread card used a faint orange tint
-  // (rgba(255,106,0,0.12)) which combined with the orange hero background
-  // behind the page to create a near-white card — making the white title
-  // text illegible. Fix: keep unread cards on a DARK base so white text
-  // always pops, and surface the "unread" signal via a strong orange left
-  // border + orange title color + unread dot instead.
   unreadCard: {
     backgroundColor: 'rgba(10,14,26,0.96)',
     borderColor: 'rgba(255,106,0,0.55)',

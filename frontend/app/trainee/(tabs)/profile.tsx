@@ -154,9 +154,13 @@ export default function TraineeProfileScreen() {
 
   // iter98d (Task 5 hardening): tab screens don't unmount on tab-switch,
   // so use useFocusEffect to stop audio when the user blurs this tab.
+  // iter118bb: ALSO refetch the profile on focus so anthem + avatar
+  // changes reflect immediately after returning from picker screens.
   useFocusEffect(
     React.useCallback(() => {
+      loadProfile();
       return () => { try { stopAllAudio(); } catch { /* no-op */ } };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
   );
 

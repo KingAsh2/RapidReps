@@ -1,0 +1,64 @@
+{
+  "summary": "Frontend UI verification attempted via Expo web preview through Playwright, but the Expo web build renders only the default 'Welcome to Expo — Start by creating a file in the app directory' fallback screen for every route (including /notifications). Neither /notifications nor / hydrate to the real RapidReps UI, so tabs/sections/swipe-delete/empty-state/chime code paths could not be exercised end-to-end in the browser. Backend regression (5 endpoints, iter126) executed via pytest against the public URL: 4 passed, 1 failed — the frontend's per-item mark-read route POST /api/notifications/{id}/read returns 404, which means the 'unread dot disappears on tap' requirement is broken (handleTap swallows the error silently, no crash, but the notification stays unread in the DB until the user hits 'Mark all read' or the app calls the bulk endpoint).",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "POST /api/notifications/{id}/read",
+        "issue": "Route does not exist (returns 404). Frontend app/notifications.tsx line 214-218 (handleTap) calls this endpoint whenever a notification is tapped; the catch block is empty so there is no crash, but the unread dot never clears via tap. Backend only exposes POST /api/notifications/mark-read (bulk) and DELETE /api/notifications/{id}. Add a per-item read endpoint (e.g. POST /api/notifications/{id}/read updating that single doc) OR change the frontend to call POST /api/notifications/mark-read with a payload of {ids:[id]} / to update local read-state optimistically then bulk-mark.",
+        "priority": "HIGH"
+      }
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Expo web preview at EXPO_PUBLIC_BACKEND_URL",
+        "issue": "Loading any route in a headless browser (Playwright) shows only the default Expo Router welcome screen ('Welcome to Expo / touch app/index.tsx'). SSR HTML contains the fallback, and after 25s of client-side settle time the #root DOM never hydrates into RapidReps. No JS errors, no pageerror events, no failed requests other than the harmless cdn-cgi/rum probe. Because the real UI never renders, none of the notifications testids (notif-tab-all/sessions/messages/system, notification-settings-btn, notification-item-*, notif-delete-*, notifications-empty) are reachable via Playwright. Verified /app/frontend/app/index.tsx, _layout.tsx, _layout.web.tsx all exist. Likely a Metro/expo-router 'lazy=true' bundling issue or a runtime error inside _layout.web.tsx that Expo swallows — cannot fully diagnose without device/native runner. This blocks all requested frontend verification (tabs, NEW/EARLIER sections, swipe delete, tap-to-read, chime, anthem/avatar persistence, settings gear route, empty state).",
+        "affected_selectors": [
+          "[data-testid=notif-tab-all]",
+          "[data-testid=notif-tab-sessions]",
+          "[data-testid=notif-tab-messages]",
+          "[data-testid=notif-tab-system]",
+          "[data-testid=notification-settings-btn]",
+          "[data-testid=notifications-empty]",
+          "[data-testid=notification-item-*]",
+          "[data-testid=notif-delete-*]"
+        ]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_notifications_iter126.py",
+    "/app/test_reports/pytest/iter126_results.xml",
+    "/app/test_reports/01_landing.png",
+    "/app/test_reports/02_notif_direct.png"
+  ],
+  "action_items": [
+    "Add missing backend route POST /api/notifications/{id}/read (or change handleTap to hit /api/notifications/mark-read while still supporting the per-item semantic). Without this, the 'tapping a notification marks it read / unread dot disappears' requirement in the review request fails.",
+    "Investigate why Expo web preview renders the default Expo Router welcome screen instead of the app. Likely candidates: (a) a syntax/runtime error in app/_layout.web.tsx or one of the providers (AuthProvider / NotificationProvider / SoundProvider / AlertProvider) that hides the Slot; (b) an expo-router lazy-loading regression; (c) SSR mismatch causing hydration bail-out. Add a client-side error surface (temporary console.log at the top of _layout.web.tsx and app/index.tsx) or run `npx expo export -p web` locally to see the actual error. Until this is fixed the Playwright UI regression harness cannot cover the RN app on web.",
+    "Manual verification of anthem/avatar persistence + chime + swipe-delete / SectionList behavior must be done on a real device or Expo Go until the web preview is repaired."
+  ],
+  "critical_code_review_comments": [
+    "app/notifications.tsx handleTap (L214-218) posts to /api/notifications/{id}/read but backend only implements /api/notifications/mark-read (bulk) — mismatch produces silent 404 and stuck unread indicator.",
+    "app/notifications.tsx handleTap catches on read-call swallows the error entirely; consider logging in dev so future contract drift is not invisible.",
+    "src/utils/notificationChime.ts is best-effort/silent-fail per design; NotificationContext.tsx L83 & L95 invocations are safe. Not exercised in headless web because the app UI itself did not mount.",
+    "Trainee/Trainer profile useFocusEffect(loadProfile) pattern (trainee/(tabs)/profile.tsx L159, trainer/(tabs)/profile.tsx L135) looks correct on inspection — refreshes on every focus, so anthem/avatar should re-read fresh trainee-profile data. Backend GET /api/trainee-profiles/{userId} returned 200 with vibeTrackId & profilePhoto present for the test trainee, so the read path is healthy.",
+    "GET /api/notifications returns { notifications: [...] } (an object) rather than a raw array; NotificationContext must unwrap. Documented in test."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_notifications_iter126.py (new)"
+  ],
+  "success_rate": {
+    "backend": "80% (4/5) — 1 missing endpoint",
+    "frontend": "0% — Expo web preview did not render the app; UI could not be tested"
+  },
+  "test_credentials": "Trainee test_trainee_iter25@test.com / Test123! (login 200 OK)",
+  "seed_data_creation": "None. Consumed one existing notification via DELETE in test_delete_notification.",
+  "retest_needed": true,
+  "main_agent_can_self_test": false,
+  "context_for_next_testing_agent": "Backend URL: https://highlight-vibe-bugs.preview.emergentagent.com (from /app/frontend/.env EXPO_PUBLIC_BACKEND_URL). Reuse /app/backend/tests/test_notifications_iter126.py for regression. Trainee has ~50 unread notifications seeded from prior iterations, so NEW/EARLIER split will show both sections and all four category tabs will have counts. Expo web preview appears environmentally broken (renders default Welcome screen for every URL) — do NOT waste time chasing this with Playwright until main agent fixes the web bundle; use device / Expo Go instead. If web is fixed, tests should cover: (1) tap each notif-tab-* pill and confirm the count badge is displayed and the SectionList filters; (2) SectionList shows 'NEW' + 'EARLIER' headers when mixed-age items exist; (3) swipe row → tap [data-testid=notif-delete-<id>] and confirm the row disappears + GET no longer returns that id; (4) tap [data-testid=notification-item-*] and confirm the unread dot clears (currently broken — see backend critical issue); (5) [data-testid=notification-settings-btn] navigates to /notification-preferences; (6) profile → VibeSetupScreen → back returns to profile with the updated anthem shown without pull-to-refresh; (7) PhotoCropper flow updates avatar on return.",
+  "rca of the issue": "Frontend calls POST /api/notifications/{id}/read (app/notifications.tsx L214). Backend /app/backend/routes/notification_routes.py only exposes POST /api/notifications/mark-read (bulk) and DELETE /api/notifications/{notification_id}. There is no per-notification read route. Result: server returns 404 Not Found; the try/catch in handleTap suppresses the error, so no UI toast fires, but the DB record stays read:false. On refreshNotifications() the same notification comes back marked unread, so the requirement 'unread dot disappears afterwards' is not met. Reproduction: login trainee → GET /api/notifications, pick any id with read:false → POST /api/notifications/{id}/read → observe 404. Mitigation: add a matching FastAPI route in notification_routes.py that updates that single document by ObjectId and userId, or change the frontend to POST /api/notifications/mark-read with an ids payload."
+}
