@@ -26,8 +26,12 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 // slid up/down via translateY so it works regardless of parent height
 // (e.g. inside a tab screen where the tab bar shrinks the parent). Was
 // using top: 0 + big translateY which got clipped by the tab bar.
+// iter118z: added HIDDEN state — sheet minimizes off the page except for
+// a small tap-to-reveal handle so users can hide the list entirely when
+// they want the map to fill the screen.
 const COLLAPSED_HEIGHT = Math.round(SCREEN_HEIGHT * 0.42);
 const EXPANDED_HEIGHT = Math.round(SCREEN_HEIGHT * 0.82);
+const HIDDEN_HEIGHT = 44; // just the handle strip peeks above the tab bar
 
 const COLORS = {
   orange: '#FF6A00',
@@ -73,7 +77,17 @@ export const TrainerBottomSheet: React.FC<TrainerBottomSheetProps> = ({
   onProximityPress,
 }) => {
   const translateY = useRef(new Animated.Value(EXPANDED_HEIGHT - COLLAPSED_HEIGHT)).current;
-  const [isExpanded, setIsExpanded] = useState(false);
+  // iter118z: tri-state visibility. Chevron cycles hidden → peek → expanded → peek → hidden.
+  // Down-chevron on peek fully minimizes to just the handle strip.
+  const [mode, setMode] = useState<'hidden' | 'peek' | 'expanded'>('peek');
+  const isExpanded = mode === 'expanded';
+
+  // translateY offset for each mode — bottom-anchored math.
+  const offsetFor = (m: 'hidden' | 'peek' | 'expanded') => {
+    if (m === 'expanded') return 0;
+    if (m === 'peek') return EXPANDED_HEIGHT - COLLAPSED_HEIGHT;
+    return EXPANDED_HEIGHT - HIDDEN_HEIGHT; // hidden — only 44px handle strip visible
+  };
 
   // Fastest match (shortest distance) + Top rated — pure display badges.
   const badges = useMemo(() => {
@@ -103,15 +117,22 @@ export const TrainerBottomSheet: React.FC<TrainerBottomSheetProps> = ({
       onPanResponderMove: (_, g) => translateY.setValue(g.dy),
       onPanResponderRelease: (_, g) => {
         translateY.flattenOffset();
-        const shouldExpand = g.dy < -50 || g.vy < -0.5;
+        // iter118z: drag snapping — snap to nearest of hidden / peek / expanded
+        // based on final velocity + direction.
+        let next: 'hidden' | 'peek' | 'expanded';
+        if (g.dy < -50 || g.vy < -0.5) {
+          next = mode === 'hidden' ? 'peek' : 'expanded';
+        } else if (g.dy > 50 || g.vy > 0.5) {
+          next = mode === 'expanded' ? 'peek' : 'hidden';
+        } else {
+          next = mode;
+        }
         Animated.spring(translateY, {
-          // iter118v: bottom-anchored math — expanded = 0, collapsed = the
-          // height difference so only COLLAPSED_HEIGHT peeks above bottom.
-          toValue: shouldExpand ? 0 : EXPANDED_HEIGHT - COLLAPSED_HEIGHT,
+          toValue: offsetFor(next),
           useNativeDriver: true,
           bounciness: 4,
         }).start();
-        setIsExpanded(shouldExpand);
+        setMode(next);
         haptic.light();
       },
     })
@@ -119,20 +140,28 @@ export const TrainerBottomSheet: React.FC<TrainerBottomSheetProps> = ({
 
   useEffect(() => {
     Animated.spring(translateY, {
-      toValue: isVisible ? EXPANDED_HEIGHT - COLLAPSED_HEIGHT : EXPANDED_HEIGHT,
+      toValue: isVisible ? offsetFor('peek') : EXPANDED_HEIGHT,
       useNativeDriver: true,
       bounciness: 4,
     }).start();
-  }, [isVisible, translateY]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isVisible]);
 
-  const toggleExpand = () => {
-    const next = !isExpanded;
-    Animated.spring(translateY, {
-      toValue: next ? 0 : EXPANDED_HEIGHT - COLLAPSED_HEIGHT,
-      useNativeDriver: true,
-      bounciness: 4,
-    }).start();
-    setIsExpanded(next);
+  // iter118z: tri-state cycle.
+  //   expanded → peek (down chevron / close X on expanded)
+  //   peek     → hidden (close X on peek)
+  //   hidden   → peek (tap the handle strip / hidden hint)
+  //   peek     → expanded (up chevron)
+  const cycleUp = () => {
+    const next = mode === 'hidden' ? 'peek' : mode === 'peek' ? 'expanded' : 'expanded';
+    Animated.spring(translateY, { toValue: offsetFor(next), useNativeDriver: true, bounciness: 4 }).start();
+    setMode(next);
+    haptic.light();
+  };
+  const cycleDown = () => {
+    const next = mode === 'expanded' ? 'peek' : mode === 'peek' ? 'hidden' : 'hidden';
+    Animated.spring(translateY, { toValue: offsetFor(next), useNativeDriver: true, bounciness: 4 }).start();
+    setMode(next);
     haptic.light();
   };
 
@@ -218,47 +247,94 @@ export const TrainerBottomSheet: React.FC<TrainerBottomSheetProps> = ({
       style={[styles.container, { transform: [{ translateY }] }]}
       pointerEvents={isVisible ? 'auto' : 'none'}
     >
-      {/* Grab handle */}
-      <View {...panResponder.panHandlers} style={styles.handleStrip}>
-        <View style={styles.handle} />
-      </View>
-
-      {/* Header */}
+      {/* iter118z: handle strip is tappable — a single tap while HIDDEN
+          restores to peek so users can bring the list back without a
+          hard-to-hit drag. */}
       <TouchableOpacity
-        activeOpacity={0.9}
-        onPress={toggleExpand}
-        style={styles.topRow}
-        data-testid="trainer-bottom-sheet-header"
+        {...panResponder.panHandlers}
+        activeOpacity={0.85}
+        onPress={() => { if (mode === 'hidden') cycleUp(); }}
+        style={styles.handleStrip}
+        data-testid="trainer-sheet-handle"
       >
-        <View style={{ flex: 1 }}>
-          <Text style={styles.eyebrow}>NEARBY TRAINERS</Text>
-          <Text style={styles.headline}>
-            {trainers.length} available · tap to view
-          </Text>
-        </View>
-        <View style={styles.headerArrow}>
-          <Ionicons name={isExpanded ? 'chevron-down' : 'chevron-up'} size={18} color={COLORS.white} />
-        </View>
+        <View style={styles.handle} />
       </TouchableOpacity>
 
-      {/* List */}
-      <ScrollView
-        style={styles.list}
-        showsVerticalScrollIndicator={false}
-        bounces={false}
-        contentContainerStyle={{ paddingBottom: 32 }}
-      >
-        {trainers.map((t) => renderTrainerRow(t))}
-        {trainers.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons name="search" size={28} color={COLORS.textTertiary} />
-            <Text style={styles.emptyText}>No trainers within {proximityMiles} miles.</Text>
-            <TouchableOpacity onPress={onProximityPress} style={styles.emptyCta} data-testid="empty-widen-btn">
-              <Text style={styles.emptyCtaText}>Widen search</Text>
+      {/* Header — hidden while the sheet is fully minimized (only the
+          handle strip peeks so users don't lose the map to a persistent
+          header bar). */}
+      {mode !== 'hidden' ? (
+        <>
+          <View style={styles.topRow}>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={cycleUp}
+              style={{ flex: 1 }}
+              data-testid="trainer-bottom-sheet-header"
+            >
+              <Text style={styles.eyebrow}>NEARBY TRAINERS</Text>
+              <Text style={styles.headline}>
+                {trainers.length} available · tap to view
+              </Text>
+            </TouchableOpacity>
+            {/* Expand / collapse chevron — cycles peek ↔ expanded */}
+            <TouchableOpacity
+              onPress={cycleUp}
+              disabled={isExpanded}
+              style={[styles.headerArrow, isExpanded && { opacity: 0.3 }]}
+              data-testid="trainer-sheet-expand-btn"
+              accessibilityLabel="Expand trainer list"
+            >
+              <Ionicons name="chevron-up" size={16} color={COLORS.white} />
+            </TouchableOpacity>
+            {/* iter118z: dedicated close (X) — hides the sheet entirely so
+                the map fills the screen. Tap the handle strip to restore. */}
+            <TouchableOpacity
+              onPress={cycleDown}
+              style={styles.headerClose}
+              data-testid="trainer-sheet-close-btn"
+              accessibilityLabel="Hide trainer list"
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons name={isExpanded ? 'chevron-down' : 'close'} size={16} color={COLORS.white} />
             </TouchableOpacity>
           </View>
-        ) : null}
-      </ScrollView>
+
+          {/* List */}
+          <ScrollView
+            style={styles.list}
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+            contentContainerStyle={{ paddingBottom: 32 }}
+          >
+            {trainers.map((t) => renderTrainerRow(t))}
+            {trainers.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Ionicons name="search" size={28} color={COLORS.textTertiary} />
+                <Text style={styles.emptyText}>No trainers within {proximityMiles} miles.</Text>
+                <TouchableOpacity onPress={onProximityPress} style={styles.emptyCta} data-testid="empty-widen-btn">
+                  <Text style={styles.emptyCtaText}>Widen search</Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
+          </ScrollView>
+        </>
+      ) : (
+        /* iter118z: hidden hint pill so the trainer knows they can bring
+           the list back — a tiny "N trainers · tap to show" nudge above
+           the handle strip. */
+        <TouchableOpacity
+          onPress={cycleUp}
+          activeOpacity={0.75}
+          style={styles.hiddenHint}
+          data-testid="trainer-sheet-hidden-hint"
+        >
+          <Ionicons name="chevron-up" size={14} color={COLORS.orange} />
+          <Text style={styles.hiddenHintText}>
+            {trainers.length} nearby · tap to show
+          </Text>
+        </TouchableOpacity>
+      )}
     </Animated.View>
   );
 };
@@ -326,6 +402,32 @@ const styles = StyleSheet.create({
     borderWidth: 1.2,
     borderColor: 'rgba(255,255,255,0.25)',
     backgroundColor: 'rgba(255,255,255,0.05)',
+    marginRight: 8,
+  },
+  // iter118z: close (X) button beside the chevron — hides the sheet entirely.
+  headerClose: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.2,
+    borderColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+  },
+  // iter118z: hint chip shown while the sheet is fully minimized.
+  hiddenHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 8,
+  },
+  hiddenHintText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: COLORS.orange,
+    letterSpacing: 0.5,
   },
   list: {
     flex: 1,

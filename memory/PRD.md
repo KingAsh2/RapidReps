@@ -2983,3 +2983,27 @@ Twelve checks run via bash + curl + MongoDB introspection. All 12 passed:
 - Full Stripe authorize + capture flow (iter118z candidate)
 - Cancellation grace window ("Undo booking for 60s")
 - Trainer-side "session cluster" view when multiple instant requests arrive at once
+
+---
+
+## iter118z — Fully-collapsible Nearby Trainers sheet (2026-02-10)
+
+**User request:** "The Available Nearby Trainers list should be collapsible completely minimizing it from the page when clicked."
+
+**Change (`TrainerBottomSheet.tsx` only):**
+- Tri-state model: `hidden | peek | expanded`. Was binary peek/expanded which meant the list always took ~42% of the screen. Now the trainee can hide it entirely so the map fills the screen.
+- **Header actions** (in the peek state, shown at the top of the sheet):
+  - **Left area / eyebrow tap** → cycle up (peek → expanded)
+  - **↑ chevron button** → cycle up (peek → expanded); disabled at 30% opacity when already expanded
+  - **✕ close button (new)** → cycle down. On peek → hides the sheet entirely. On expanded → collapses to peek. `data-testid="trainer-sheet-close-btn"`.
+- **Hidden state UI**: the header + list disappear; only the drag handle strip remains visible above the tab bar, with an inline `↑ N nearby · tap to show` orange hint chip so the affordance to bring the list back is obvious.
+- **Handle strip** is now a `TouchableOpacity` that also restores the sheet to peek on tap (in addition to the drag gesture), so users don't need a precise long-drag to bring it back.
+- **Drag** (existing pan responder): now snaps to the nearest of `hidden / peek / expanded` based on final velocity + direction. Downward flick on peek → hidden; upward flick on hidden → peek.
+
+**Bottom-anchored math** (unchanged from iter118v):
+- `translateY = 0` → expanded
+- `translateY = EXPANDED_HEIGHT - COLLAPSED_HEIGHT` → peek
+- `translateY = EXPANDED_HEIGHT - HIDDEN_HEIGHT (44)` → hidden (just the handle + hint chip peek)
+
+**Files touched:**
+- `/app/frontend/src/components/TrainerBottomSheet.tsx` — tri-state, dedicated close X, hidden-hint chip, tappable handle
