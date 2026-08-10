@@ -494,9 +494,18 @@ export default function TraineeHomeScreen() {
     };
   });
 
-  const handleBottomSheetBook = (trainer: any) => {
+  const handleBottomSheetBook = (trainer: any, opts?: { sessionType?: 'outdoor' | 'in_home' | 'virtual'; durationMin?: number }) => {
     // iter102au: same user-id fix as the card tap above.
-    router.push(`/trainee/trainer-detail?trainerId=${trainer.id || trainer.userId}`);
+    // iter118t: forward the pre-committed session type + duration from the
+    // sheet picker so the trainer-detail screen can pre-fill.
+    const trainerId = trainer.id || trainer.userId;
+    const params = new URLSearchParams({ trainerId });
+    // iter118t: trainer-detail already reads `type` (modality) and `dur`
+    // (duration in minutes) as pre-fill params — use those exact keys so
+    // the picker's selections actually land on the destination screen.
+    if (opts?.sessionType) params.set('type', opts.sessionType);
+    if (opts?.durationMin) params.set('dur', String(opts.durationMin));
+    router.push(`/trainee/trainer-detail?${params.toString()}`);
   };
 
   const initiateVideoCall = async (trainer: any) => {

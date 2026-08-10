@@ -8,6 +8,7 @@ import {
   PanResponder,
   Dimensions,
   ScrollView,
+  Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -64,7 +65,7 @@ interface TrainerBottomSheetProps {
   trainers: Trainer[];
   selectedTrainerId?: string;
   onSelectTrainer: (trainer: Trainer) => void;
-  onBookTrainer: (trainer: Trainer) => void;
+  onBookTrainer: (trainer: Trainer, opts?: { sessionType?: 'outdoor' | 'in_home' | 'virtual'; durationMin?: number }) => void;
   isVisible: boolean;
   // iter118h: distance filter is now embedded in the sheet
   proximityMiles?: number;
@@ -95,6 +96,20 @@ export const TrainerBottomSheet = forwardRef<TrainerBottomSheetHandle, TrainerBo
   const [isExpanded, setIsExpanded] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
   const rowOffsets = useRef<Record<string, number>>({});
+
+  // iter118t (P1 follow-up): local state backing the pre-commit context row.
+  // Making the row genuinely refinable closes the "visual IOU" — the chevron
+  // now actually opens something. Choices flow through to the parent's
+  // onBookTrainer so the trainer-detail screen can pre-fill.
+  const [sessionType, setSessionType] = useState<'outdoor' | 'in_home' | 'virtual'>('outdoor');
+  const [durationMin, setDurationMin] = useState<number>(30);
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  const sessionTypeMeta: Record<typeof sessionType, { label: string; icon: any }> = {
+    outdoor: { label: 'Outdoor', icon: 'sunny' },
+    in_home: { label: 'In-home', icon: 'home' },
+    virtual: { label: 'Virtual', icon: 'videocam' },
+  } as const;
 
   // Compute badges — Fastest match (shortest ETA) + Top rated (highest rating)
   const badges = useMemo(() => {
@@ -348,19 +363,29 @@ export const TrainerBottomSheet = forwardRef<TrainerBottomSheetHandle, TrainerBo
       {/* Fixed Book Now — always visible when a trainer is selected */}
       {selectedTrainer ? (
         <View style={styles.bookBar}>
-          {/* iter118s (P1): pre-commit context row — mirrors Uber's
-              "Personal · Apple Pay" strip. Answers "what am I actually
-              booking?" before the trainee taps Book Now. Session type +
-              duration are safe defaults; they can refine on the next screen. */}
-          <View style={styles.contextRow} data-testid="booking-context-row">
+          {/* iter118s (P1) + iter118t follow-up: pre-commit context row is
+              now genuinely refinable. Tapping it opens an in-sheet picker
+              for session type + duration. Values flow to the parent's
+              onBookTrainer so the trainer-detail screen can pre-fill. */}
+          <TouchableOpacity
+            style={styles.contextRow}
+            onPress={() => {
+              haptic.light();
+              setPickerOpen(true);
+            }}
+            activeOpacity={0.75}
+            data-testid="booking-context-row"
+            accessibilityRole="button"
+            accessibilityLabel={`Change session details. Currently ${sessionTypeMeta[sessionType].label}, ${durationMin} minutes.`}
+          >
             <View style={styles.contextChip}>
-              <Ionicons name="sunny" size={13} color={COLORS.orange} />
-              <Text style={styles.contextChipText}>Outdoor</Text>
+              <Ionicons name={sessionTypeMeta[sessionType].icon} size={13} color={COLORS.orange} />
+              <Text style={styles.contextChipText}>{sessionTypeMeta[sessionType].label}</Text>
             </View>
             <View style={styles.contextDot} />
             <View style={styles.contextChip}>
               <Ionicons name="time-outline" size={13} color={COLORS.textSecondary} />
-              <Text style={styles.contextChipText}>30 min</Text>
+              <Text style={styles.contextChipText}>{durationMin} min</Text>
             </View>
             <View style={styles.contextDot} />
             <View style={styles.contextChip}>
@@ -369,12 +394,12 @@ export const TrainerBottomSheet = forwardRef<TrainerBottomSheetHandle, TrainerBo
             </View>
             <View style={{ flex: 1 }} />
             <Ionicons name="chevron-forward" size={16} color={COLORS.textTertiary} />
-          </View>
+          </TouchableOpacity>
 
           <TouchableOpacity
             onPress={() => {
               haptic.success();
-              onBookTrainer(selectedTrainer);
+              onBookTrainer(selectedTrainer, { sessionType, durationMin });
             }}
             activeOpacity={0.92}
             data-testid="book-trainer-btn"
@@ -393,6 +418,79 @@ export const TrainerBottomSheet = forwardRef<TrainerBottomSheetHandle, TrainerBo
           </TouchableOpacity>
         </View>
       ) : null}
+
+      {/* iter118t: session-details picker — small centered modal, tap outside
+          to dismiss. Closes the "visual IOU" on the context row chevron. */}
+      <Modal
+        visible={pickerOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPickerOpen(false)}
+      >
+        <TouchableOpacity
+          style={styles.pickerBackdrop}
+          activeOpacity={1}
+          onPress={() => setPickerOpen(false)}
+          data-testid="session-picker-backdrop"
+        >
+          <TouchableOpacity activeOpacity={1} style={styles.pickerCard} onPress={() => {}}>
+            <Text style={styles.pickerTitle}>Session details</Text>
+
+            <Text style={styles.pickerSectionLabel}>SESSION TYPE</Text>
+            <View style={styles.pickerRow}>
+              {(['outdoor', 'in_home', 'virtual'] as const).map((k) => {
+                const active = sessionType === k;
+                return (
+                  <TouchableOpacity
+                    key={k}
+                    style={[styles.pickerPill, active && styles.pickerPillActive]}
+                    onPress={() => { haptic.light(); setSessionType(k); }}
+                    activeOpacity={0.85}
+                    data-testid={`session-type-${k}`}
+                  >
+                    <Ionicons
+                      name={sessionTypeMeta[k].icon}
+                      size={15}
+                      color={active ? COLORS.orange : COLORS.textSecondary}
+                    />
+                    <Text style={[styles.pickerPillText, active && styles.pickerPillTextActive]}>
+                      {sessionTypeMeta[k].label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <Text style={styles.pickerSectionLabel}>DURATION</Text>
+            <View style={styles.pickerRow}>
+              {[30, 45, 60].map((m) => {
+                const active = durationMin === m;
+                return (
+                  <TouchableOpacity
+                    key={m}
+                    style={[styles.pickerPill, active && styles.pickerPillActive]}
+                    onPress={() => { haptic.light(); setDurationMin(m); }}
+                    activeOpacity={0.85}
+                    data-testid={`session-duration-${m}`}
+                  >
+                    <Text style={[styles.pickerPillText, active && styles.pickerPillTextActive]}>
+                      {m} min
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <TouchableOpacity
+              style={styles.pickerDone}
+              onPress={() => { haptic.success(); setPickerOpen(false); }}
+              data-testid="session-picker-done"
+            >
+              <Text style={styles.pickerDoneText}>Done</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </Animated.View>
   );
 });
@@ -666,6 +764,85 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: COLORS.white,
     letterSpacing: 0.2,
+  },
+  // iter118t: session-details picker modal
+  pickerBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  pickerCard: {
+    width: '100%',
+    maxWidth: 440,
+    backgroundColor: '#141929',
+    borderRadius: 20,
+    padding: 22,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.5,
+    shadowRadius: 24,
+    elevation: 20,
+  },
+  pickerTitle: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: COLORS.white,
+    letterSpacing: -0.3,
+    marginBottom: 18,
+  },
+  pickerSectionLabel: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: COLORS.orange,
+    letterSpacing: 1.6,
+    marginBottom: 10,
+    marginTop: 6,
+  },
+  pickerRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 6,
+    flexWrap: 'wrap',
+  },
+  pickerPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+  },
+  pickerPillActive: {
+    borderColor: COLORS.orange,
+    backgroundColor: 'rgba(255,106,0,0.12)',
+  },
+  pickerPillText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.textSecondary,
+  },
+  pickerPillTextActive: {
+    color: COLORS.white,
+  },
+  pickerDone: {
+    marginTop: 18,
+    paddingVertical: 15,
+    borderRadius: 12,
+    alignItems: 'center',
+    backgroundColor: COLORS.orange,
+  },
+  pickerDoneText: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: COLORS.white,
+    letterSpacing: 0.3,
   },
 });
 

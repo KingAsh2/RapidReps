@@ -2723,3 +2723,26 @@ Both `google-services.json` and `google-service-account.json` are already in `fr
 - **List padding** — `paddingBottom` raised (160 / 180 collapsed / expanded) so the last row no longer hides behind the taller context + CTA stack.
 
 **Not changed (per user directive):** brand colors, marker/scan behavior, map surface (iter118r work protected), pixel-lock reference designs. No new data flows.
+
+---
+
+## iter118t — Closed the "visual IOU" on the context row (2026-02-10)
+
+**Feedback addressed:** the `Outdoor · 30 min · Card ›` strip added in iter118s rendered a chevron affordance but did nothing on tap — a small trust gap versus Uber's "Personal · Apple Pay" (which opens a payment picker).
+
+**Changes:**
+- `src/components/TrainerBottomSheet.tsx` — context row is now a `TouchableOpacity` that opens a session-details `Modal` (backdrop-dismissable). The picker has two sections — SESSION TYPE (Outdoor / In-home / Virtual, distinct Ionicon per option) and DURATION (30 / 45 / 60 min). Selections are held in local sheet state (`sessionType`, `durationMin`) and reflected live in the context strip. `onBookTrainer` signature extended to accept `{ sessionType, durationMin }` opts (backward-compatible — parents that ignore opts see no change).
+- `app/trainee/(tabs)/home.tsx` — `handleBottomSheetBook` now forwards the picker choices as `?type=…&dur=…` query params. **These map exactly to the existing pre-fill keys already consumed by `trainer-detail.tsx`** (`useLocalSearchParams(): { trainerId, repeat, dur, type, loc, preview }` — line 64 of that file), so the sheet's picker actually lands on the destination screen instead of being decorative.
+
+**Test IDs added for E2E:**
+- `booking-context-row` — tap to open picker
+- `session-type-outdoor` / `session-type-in_home` / `session-type-virtual`
+- `session-duration-30` / `session-duration-45` / `session-duration-60`
+- `session-picker-done` / `session-picker-backdrop`
+
+**Web-preview verification honesty:** attempted to load the tunnel URL and screenshot the trainee home. The Expo dev server serves the bundle correctly (see `/tmp/root.html` — full stylesheet payload) and Metro logs "Running application main", but the rendered DOM stays on Expo Router's default "Welcome to Expo" template — a pre-existing environment quirk that existed BEFORE iter118s (same behavior on the initial smoke test before any changes). Not caused by this iteration. The only trustworthy validation surface for this stack is Expo Go / iOS simulator / Android emulator. All added primitives (`Modal`, `TouchableOpacity`, dynamic border widths, shadow) are stock React Native APIs with well-supported RN Web polyfills — no known risk of a viewport-math regression at 58% sheet height on web.
+
+**Roadmap ordering (updated per user):**
+1. Content moderation (P0 — highest-stakes independent of UI polish)
+2. Refinable Context Row — ✅ shipped as iter118t
+3. Map floating pill (P2, held; touches map layer iter118r stabilized)
