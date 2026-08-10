@@ -248,7 +248,12 @@ export default function TraineeProfileScreen() {
       // iter105 perf: compress + resize before base64 upload.
       try {
         const { optimizeImage } = await import('../../../src/utils/imageOptimizer');
-        const FileSystem = await import('expo-file-system');
+        // iter118r: expo-file-system v19 deprecated the top-level
+        // `readAsStringAsync` — it throws at runtime. Pull it from the
+        // `/legacy` sub-entry so the base64 conversion keeps working.
+        // Without this, the catch below fires and we save the raw file://
+        // URI, which never renders in the profile disc.
+        const FileSystem = await import('expo-file-system/legacy');
         const optimizedUri = await optimizeImage(result.assets[0].uri, 'avatar');
         const b64 = await FileSystem.readAsStringAsync(optimizedUri, { encoding: FileSystem.EncodingType.Base64 });
         setFormData({ ...formData, profilePhoto: `data:image/jpeg;base64,${b64}` });

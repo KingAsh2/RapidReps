@@ -259,6 +259,14 @@ async def create_trainer_profile(profile: TrainerProfileCreate, current_user: di
     # Sync profile photo to avatarUrl and users collection
     photo = profile_doc.get('profilePhoto')
     if photo:
+        # iter118r: reject device-local URIs early (see trainee-profiles
+        # note). A `file://` URI slipping into the trainer's avatar is the
+        # exact bug the recent expo-file-system v19 deprecation caused.
+        if photo.startswith(('file://', 'content://', 'ph://', 'assets-library://')):
+            raise HTTPException(
+                status_code=400,
+                detail="Profile photo must be a data URL or hosted URL, not a device-local file path.",
+            )
         profile_doc['avatarUrl'] = photo
         await db.users.update_one(
             {'_id': ObjectId(profile.userId)},
@@ -1590,6 +1598,16 @@ async def create_trainee_profile(profile: TraineeProfileCreate, current_user: di
     # Sync profile photo to users collection
     photo = profile_doc.get('profilePhoto')
     if photo:
+        # iter118r: reject device-local URIs early. These come from broken
+        # client-side base64 conversion paths (see expo-file-system v19
+        # deprecation) — silently persisting them corrupts the profile
+        # because the URI is only valid on the picker device. Failing
+        # loudly here surfaces the client bug before it hits the disc.
+        if photo.startswith(('file://', 'content://', 'ph://', 'assets-library://')):
+            raise HTTPException(
+                status_code=400,
+                detail="Profile photo must be a data URL or hosted URL, not a device-local file path.",
+            )
         await db.users.update_one(
             {'_id': ObjectId(profile.userId)},
             {'$set': {'profilePhoto': photo}}

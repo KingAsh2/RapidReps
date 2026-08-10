@@ -122,7 +122,7 @@ export const PremiumOverviewTab = ({ dashboard, leaderboard, setActiveTab }: Pro
       } else {
         // Native: write to cache and share
         try {
-          const FileSystem = require('expo-file-system');
+          const FileSystem = require('expo-file-system/legacy');
           const Sharing = require('expo-sharing');
           const path = `${FileSystem.cacheDirectory}${filename}`;
           await FileSystem.writeAsStringAsync(path, csvText, { encoding: FileSystem.EncodingType.UTF8 });

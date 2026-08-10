@@ -1,0 +1,22 @@
+{
+  "summary": "iter118r profile photo fix verified. Backend guard on POST /api/trainee-profiles and POST /api/trainer-profiles correctly rejects device-local URIs (file://, content://, ph://, assets-library://) with HTTP 400 and the expected detail message. Valid data:image/png;base64,... uploads persist correctly and sync end-to-end across the profile endpoint, GET /api/{role}-profiles/{userId}, and GET /api/auth/me (profilePhoto for trainee; both profilePhoto and avatarUrl for trainer). Also verified all 5 frontend files now import from 'expo-file-system/legacy' as required.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iter118r_profile_photo_guard.py",
+    "/app/test_reports/pytest/iter118r_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "profile_routes.py is 2035 lines — should be split into trainee/trainer submodules for maintainability.",
+    "The file:// guard is duplicated at line ~1606 (trainee) and line ~265 (trainer). Extract into a small validate_profile_photo() helper for DRY."
+  ],
+  "updated_files": ["/app/backend/tests/test_iter118r_profile_photo_guard.py"],
+  "success_rate": {"backend": "100%", "frontend": "n/a (source-check only, all 5 files confirmed on legacy import)"},
+  "test_credentials": "Trainee: test_trainee_iter25@test.com / Test123! ; Trainer: test_trainer_iter25@test.com / Test123!",
+  "seed_data_creation": "None. Used pre-provided iter25 test accounts.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "test_iter118r_profile_photo_guard.py verifies the profile photo device-local URI guard + data-URL happy path on both trainee and trainer profile endpoints. 10/10 passing. Frontend fix was source-level only (expo-file-system/legacy import) and cannot be exercised via Playwright since this is an Expo RN app.",
+  "rca of the issue": "expo-file-system v19 deprecated top-level readAsStringAsync. In 5 pickImage code paths the throw was silently caught and the raw file:// URI was persisted as profilePhoto, so avatars never rendered. Fix: (1) all 5 frontend files now import from 'expo-file-system/legacy', (2) backend adds defense-in-depth guard rejecting file://, content://, ph://, assets-library:// prefixes on both profile POST endpoints — verified with parametrized tests."
+}

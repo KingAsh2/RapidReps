@@ -30,7 +30,7 @@ import * as Location from 'expo-location';
 import { toast } from '../../src/utils/toast';
 import Slider from '@react-native-community/slider';
 import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { optimizeImage } from '../../src/utils/imageOptimizer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';

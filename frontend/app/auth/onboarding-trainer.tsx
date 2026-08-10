@@ -25,7 +25,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { optimizeImage } from '../../src/utils/imageOptimizer';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
