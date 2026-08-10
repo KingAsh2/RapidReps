@@ -1,5 +1,18 @@
 # RapidReps PRD
 
+## 2026-08 — iter118r: Profile Photo Upload Fix ✅
+
+**Bug**: Profile-picture upload didn't stick — avatars stayed on initials fallback after the user picked a photo. Reported: *"Updating profile picture isn't working at the moment. Fix this so that the profile picture is shown in profile and in place of avatar the way it suppose to."*
+
+**Root cause**: `expo-file-system` v19 deprecated the top-level `readAsStringAsync` — it **throws at runtime**. Five call sites (`profile.tsx`, `edit-profile.tsx`, both onboarding screens, `PremiumOverviewTab.tsx`) caught the throw silently and fell back to sending the raw `file://` URI to the backend. Backend saved it as-is, and the resulting device-local URI could never render anywhere else.
+
+**Fix**:
+- Switched all 5 imports from `expo-file-system` → `expo-file-system/legacy` (which still exports the working `readAsStringAsync`).
+- Added a small backend guard on `POST /api/trainee-profiles` and `POST /api/trainer-profiles` that rejects `file://`, `content://`, `ph://`, `assets-library://` prefixes with HTTP 400. This surfaces any future silent-corruption bug immediately.
+
+**Testing** — `iteration_121.json` — Backend 100% pass. Guard correctly rejects device-local URIs; valid data URLs persist end-to-end and sync to `users.profilePhoto` for `/auth/me`.
+
+
 ## 2026-08 — iter118q: Stripe Connect Express Migration ✅
 
 **Payout flow overhauled: manual Zelle batches → Stripe Connect Express (separate charges + transfers)**
