@@ -22,8 +22,12 @@ import { TrainerAvatar } from './TrainerAvatar';
 // is just a secondary list for trainers who want to scan without zooming.
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+// iter118v: sheet is anchored to the BOTTOM of its parent (bottom: 0) and
+// slid up/down via translateY so it works regardless of parent height
+// (e.g. inside a tab screen where the tab bar shrinks the parent). Was
+// using top: 0 + big translateY which got clipped by the tab bar.
 const COLLAPSED_HEIGHT = Math.round(SCREEN_HEIGHT * 0.42);
-const EXPANDED_HEIGHT = SCREEN_HEIGHT * 0.82;
+const EXPANDED_HEIGHT = Math.round(SCREEN_HEIGHT * 0.82);
 
 const COLORS = {
   orange: '#FF6A00',
@@ -68,7 +72,7 @@ export const TrainerBottomSheet: React.FC<TrainerBottomSheetProps> = ({
   proximityMiles = 10,
   onProximityPress,
 }) => {
-  const translateY = useRef(new Animated.Value(SCREEN_HEIGHT - COLLAPSED_HEIGHT)).current;
+  const translateY = useRef(new Animated.Value(EXPANDED_HEIGHT - COLLAPSED_HEIGHT)).current;
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Fastest match (shortest distance) + Top rated — pure display badges.
@@ -101,7 +105,9 @@ export const TrainerBottomSheet: React.FC<TrainerBottomSheetProps> = ({
         translateY.flattenOffset();
         const shouldExpand = g.dy < -50 || g.vy < -0.5;
         Animated.spring(translateY, {
-          toValue: shouldExpand ? SCREEN_HEIGHT - EXPANDED_HEIGHT : SCREEN_HEIGHT - COLLAPSED_HEIGHT,
+          // iter118v: bottom-anchored math — expanded = 0, collapsed = the
+          // height difference so only COLLAPSED_HEIGHT peeks above bottom.
+          toValue: shouldExpand ? 0 : EXPANDED_HEIGHT - COLLAPSED_HEIGHT,
           useNativeDriver: true,
           bounciness: 4,
         }).start();
@@ -113,9 +119,7 @@ export const TrainerBottomSheet: React.FC<TrainerBottomSheetProps> = ({
 
   useEffect(() => {
     Animated.spring(translateY, {
-      toValue: isVisible
-        ? SCREEN_HEIGHT - COLLAPSED_HEIGHT
-        : SCREEN_HEIGHT,
+      toValue: isVisible ? EXPANDED_HEIGHT - COLLAPSED_HEIGHT : EXPANDED_HEIGHT,
       useNativeDriver: true,
       bounciness: 4,
     }).start();
@@ -124,7 +128,7 @@ export const TrainerBottomSheet: React.FC<TrainerBottomSheetProps> = ({
   const toggleExpand = () => {
     const next = !isExpanded;
     Animated.spring(translateY, {
-      toValue: next ? SCREEN_HEIGHT - EXPANDED_HEIGHT : SCREEN_HEIGHT - COLLAPSED_HEIGHT,
+      toValue: next ? 0 : EXPANDED_HEIGHT - COLLAPSED_HEIGHT,
       useNativeDriver: true,
       bounciness: 4,
     }).start();
@@ -264,7 +268,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-    top: 0,
+    // iter118v: anchor to BOTTOM of parent (not top) so the tab bar can't
+    // clip the visible portion of the sheet. Height is fixed at
+    // EXPANDED_HEIGHT and translateY slides it up/down from the bottom edge.
+    bottom: 0,
     height: EXPANDED_HEIGHT,
     backgroundColor: '#0A0E1A',
     borderTopLeftRadius: 24,

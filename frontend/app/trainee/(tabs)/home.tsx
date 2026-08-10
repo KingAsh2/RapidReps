@@ -465,32 +465,37 @@ export default function TraineeHomeScreen() {
   const displayedTrainers = getFilteredAndSortedTrainers();
   const pendingSessions = sessions.filter((s: any) => s.status === 'requested');
 
-  // Map trainers to bottom sheet format
-  const bottomSheetTrainers = displayedTrainers.map((t: any) => {
-    // iter102ah: bottom-sheet price uses the same resolver so it agrees with
-    // the cards. `price` is the dollar value for a 30-min outdoor session
-    // (the canonical "from" rate).
-    const cents = resolveSessionPriceCents(t, 'outdoor', 30);
-    return {
-      // iter102au: pass the trainer's USER ID (not the profile doc id) so the
-      // detail screen's `/trainer-profiles/{userId}` lookup actually resolves.
-      // Was silently navigating with a doc id → trainer-detail showed an error
-      // / blank state and the user thought taps did nothing.
-      id: t.userId || t.id,
-      name: t.fullName || t.name || 'Trainer',
-      photo: t.avatarUrl || t.profilePhoto,
-      rating: t.averageRating || 0,
-      reviewCount: t.reviewCount || 0,
-      distance: t.distance ?? undefined,
-      eta: t.distance ? `${Math.max(1, Math.round(t.distance * 3))} min` : undefined,
-      price: cents !== null && cents > 0 ? Math.round(cents / 100) : undefined,
-      specialty: (t.trainingStyles || [])[0],
-      isAvailable: t.isAvailable,
-      // iter118p (spec #4): surface paid-placement flag from backend so the
-      // bottom sheet can render the neutral "Promoted" tag.
-      isBoosted: !!(t.isBoosted || t.boostActive),
-    };
-  });
+  // iter118v: bottom sheet now reads from the SAME source as the map
+  // (`nearbyTrainers`) so what you see as pins is exactly what you see in
+  // the list. Was reading from a separate `displayedTrainers` list which
+  // could be empty even when the map had pins — that's why the sheet
+  // wasn't rendering.
+  const bottomSheetTrainers = nearbyTrainers
+    .filter((t: any) => {
+      if (travelProximity <= 0) return true;
+      const d = t.distanceMiles ?? t.distance;
+      if (d === null || d === undefined) return false;
+      return d <= travelProximity;
+    })
+    .map((t: any) => {
+      const cents = resolveSessionPriceCents(t as any, 'outdoor', 30);
+      const distanceMi = t.distanceMiles ?? t.distance;
+      const etaMin = t.etaMinutes ?? (distanceMi ? Math.max(1, Math.round(distanceMi * 3)) : undefined);
+      return {
+        // trainerId is the USER id (matches /trainer-profiles/{userId})
+        id: t.trainerId || t.userId || t.id,
+        name: t.fullName || t.name || 'Trainer',
+        photo: t.avatarUrl || t.profilePhoto,
+        rating: t.averageRating || 0,
+        reviewCount: t.reviewCount || 0,
+        distance: distanceMi,
+        eta: etaMin ? `${etaMin} min` : undefined,
+        price: cents !== null && cents > 0 ? Math.round(cents / 100) : undefined,
+        specialty: (t.trainingStyles || [])[0],
+        isAvailable: t.isAvailable ?? true,
+        isBoosted: !!(t.isBoosted || t.boostActive),
+      };
+    });
 
   const handleBottomSheetBook = (trainer: any) => {
     // iter118u: SIMPLIFIED — row tap in the bottom sheet goes straight to

@@ -2783,3 +2783,29 @@ Both `google-services.json` and `google-service-account.json` are already in `fr
 - `/app/frontend/src/components/NearbyTrainersMap.native.tsx`
 - `/app/frontend/src/components/TrainerBottomSheet.tsx` (full rewrite)
 - `/app/frontend/app/trainee/(tabs)/home.tsx`
+
+---
+
+## iter118v — Bottom sheet was invisible on-device: two root causes fixed (2026-02-10)
+
+**User evidence:** on-device screenshot on iOS/LTE showing "1 ACTIVE NEARBY" pin on the map but NO bottom sheet anywhere below it — just black space between the map and the tab bar.
+
+**Two independent root causes, both fixed:**
+
+1. **Data mismatch** — `bottomSheetTrainers` was mapped from `displayedTrainers` (state fed by `loadTrainers()` calling `/api/trainers/search`), while the map used `nearbyTrainers` (state fed by `loadNearbyTrainers()` calling `/api/trainers/nearby`). When those two lists disagreed (very common — different endpoints, different filters, different timing), the map could show a pin while the sheet's `.length` was 0, which triggered the `bottomSheetTrainers.length > 0` conditional to skip rendering.
+   - **Fix (`home.tsx`):** `bottomSheetTrainers` now maps from `nearbyTrainers` with the same `travelProximity` filter as the map. Guaranteed same source of truth. Field-name adaptation added (`t.distanceMiles ?? t.distance`, `t.etaMinutes ?? computed`).
+
+2. **Positioning clipped by the tab bar** — the sheet used `position: absolute; top: 0` with `translateY = SCREEN_HEIGHT - COLLAPSED_HEIGHT`. Inside a tab screen, the parent isn't SCREEN_HEIGHT tall (the tab bar takes ~83pt on iOS), so the sheet's visible portion got pushed out of the parent's visible bounds.
+   - **Fix (`TrainerBottomSheet.tsx`):** container now uses `position: absolute; bottom: 0`. `translateY = 0` = fully expanded, `translateY = EXPANDED_HEIGHT - COLLAPSED_HEIGHT` = collapsed peek, `translateY = EXPANDED_HEIGHT` = hidden. This math is agnostic to parent height — works whether the parent is a tab screen (~769pt) or the full screen.
+
+**Also flagged for the user:** the "clicking avatar did nothing" observation was from a build predating iter118u. On device this fix requires closing and re-opening Expo Go (or an EAS rebuild) — hot reload may not pick up the marker `onPress` change reliably.
+
+**What should be visible now on the trainee home (after reload):**
+- Map card with rounded border + trainer avatar pins.
+- Bottom sheet peeking up from the bottom edge (right above the tab bar), showing header `NEARBY TRAINERS · N available · tap to view` and 2–3 trainer rows with a small grab handle at the top.
+- Dragging the grab handle up expands the sheet to ~82% of screen height.
+- Tapping any avatar on the map OR any row in the sheet → trainer profile page.
+
+**Files touched:**
+- `/app/frontend/app/trainee/(tabs)/home.tsx` — `bottomSheetTrainers` sourced from `nearbyTrainers`
+- `/app/frontend/src/components/TrainerBottomSheet.tsx` — bottom-anchored positioning
