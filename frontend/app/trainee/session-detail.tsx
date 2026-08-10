@@ -10,6 +10,7 @@ import {
   Image,
   TextInput,
   Modal,
+  Platform,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -244,7 +245,27 @@ export default function SessionDetailScreen() {
     }
   };
 
-  const handleMessage = () => {
+  // iter118aa: Message now opens the NATIVE SMS composer with the
+  // trainer's number pre-filled, so trainees can text their trainer
+  // directly like they would with any real contact. Falls back to the
+  // in-app chat only if a phone number isn't on file (which shouldn't
+  // happen — phone is required at signup — but we keep the fallback so
+  // no button ever becomes a dead-end).
+  const handleMessage = async () => {
+    const phone = session?.trainerPhone;
+    if (phone) {
+      // iOS uses `sms:PHONE&body=…`, Android uses `sms:PHONE?body=…`.
+      const separator = Platform.OS === 'ios' ? '&' : '?';
+      const url = `sms:${phone}${separator}body=${encodeURIComponent(`Hi ${session?.trainerName || ''} — about our RapidReps session`)}`;
+      try {
+        const supported = await Linking.canOpenURL(url);
+        if (supported) {
+          await Linking.openURL(url);
+          return;
+        }
+      } catch { /* fall through to in-app chat */ }
+    }
+    // Fallback — in-app chat.
     if (session?.trainerId) {
       router.push(`/messages/chat?userId=${session.trainerId}&userName=${session.trainerName || 'Trainer'}`);
     }

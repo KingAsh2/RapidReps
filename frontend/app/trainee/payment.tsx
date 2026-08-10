@@ -82,23 +82,43 @@ export default function PaymentScreen() {
       setAgreedTime(tl.data.agreedTime || null);
       setAgreedLocation(tl.data.agreedLocation || null);
 
-      // 2) Load session for tier/modality/duration/base
+      // 2) Load session for pricing.
+      // iter118aa: field-name reconciliation — the session doc written by
+      // POST /sessions uses `finalSessionPriceCents` / `platformFeeCents`
+      // / `durationMinutes` / `sessionType`, NOT the older
+      // `totalCents` / `baseCents` / `tier` / `modality` names the
+      // payment screen used to look for. When neither shape matched,
+      // pricing stayed null → the Pay button rendered "$0.00" and
+      // tapping fired the misleading "Payment unlocks after both parties
+      // agree" toast even though the parties WERE agreed.
       const sess = await api.get(`/sessions/${sessionId}`);
       const s = sess.data;
+
+      // Preferred path: legacy tier-based quote when we have the full old shape.
       if (s.tier && s.modality && s.durationMin && s.baseCents != null) {
         const q = await api.get(
           `/pricing/quote?tier=${s.tier}&modality=${s.modality}&duration=${s.durationMin}&base_cents=${s.baseCents}`,
         );
         setPricing(q.data);
-      } else if (s.totalCents) {
-        // Fallback: legacy session — just show totalCents
+      } else {
+        // New/canonical path: read directly from the session doc.
+        const totalCents =
+          s.finalSessionPriceCents ??
+          s.totalChargedCents ??
+          s.totalCents ??
+          s.customerTotalCents ??
+          0;
+        const baseCents = s.baseSessionPriceCents ?? s.baseCents ?? totalCents;
+        const serviceFeeCents = s.platformFeeCents ?? 0;
+        const duration = s.durationMinutes ?? s.durationMin ?? 60;
+        const modality = s.sessionType ?? s.modality ?? 'outdoor';
         setPricing({
-          customer_total_cents: s.totalCents,
-          base_price_cents: s.baseCents || s.totalCents,
-          service_fee_cents: 0,
-          tier_label: s.tier ? s.tier : 'Session',
-          duration_min: s.durationMin || 60,
-          modality: s.modality || 'in_person',
+          customer_total_cents: totalCents,
+          base_price_cents: baseCents,
+          service_fee_cents: serviceFeeCents,
+          tier_label: s.tier || 'Session',
+          duration_min: duration,
+          modality,
         });
       }
     } catch (e: any) {
@@ -129,8 +149,15 @@ export default function PaymentScreen() {
   }, [autoPay, loading, paymentReady, pricing]);
 
   const handlePay = async () => {
-    if (!paymentReady || !pricing) {
-      toast.error('Payment unlocks after both parties agree on time/location.');
+    // iter118aa: give the trainee an accurate reason, not the generic
+    // "unlocks after agreement" toast that fires even when the parties
+    // have agreed but pricing didn't resolve.
+    if (!paymentReady) {
+      toast.error('Payment unlocks after the trainer accepts your proposal.');
+      return;
+    }
+    if (!pricing || !pricing.customer_total_cents) {
+      toast.error('Session price is unavailable — please refresh, or contact support if this persists.');
       return;
     }
     haptic.medium();

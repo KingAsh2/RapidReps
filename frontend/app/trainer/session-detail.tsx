@@ -160,16 +160,32 @@ export default function TrainerSessionDetailScreen() {
             <TouchableOpacity
               style={s.actionBtn}
               onPress={async () => {
+                // iter118aa: Message → NATIVE SMS composer (matches Call's
+                // native `tel:` behavior). Falls back to in-app chat only
+                // if the trainee has no phone on file.
+                const phone = session.traineePhone
+                  ? String(session.traineePhone).replace(/[^0-9+]/g, '')
+                  : null;
+                if (phone) {
+                  const separator = Platform.OS === 'ios' ? '&' : '?';
+                  const body = encodeURIComponent(
+                    `Hi ${session.traineeName || ''} — about our RapidReps session`,
+                  );
+                  const url = `sms:${phone}${separator}body=${body}`;
+                  try {
+                    const supported = await Linking.canOpenURL(url);
+                    if (supported) {
+                      await Linking.openURL(url);
+                      return;
+                    }
+                  } catch { /* fall through */ }
+                }
+                // Fallback — in-app chat.
                 if (!session.traineeId) {
                   toast.error("Couldn't open chat", 'No trainee on this session');
                   return;
                 }
                 try {
-                  // iter106ah: use getOrCreateConversation so the chat screen
-                  // receives the conversationId it needs to load message
-                  // history. Before this the URL only passed `userId=` and
-                  // chat.tsx silently skipped `loadMessages` (no history,
-                  // empty bubble area) since `conversationId` was missing.
                   const res = await chatAPI.getOrCreateConversation(String(session.traineeId));
                   router.push(
                     `/messages/chat?conversationId=${res.conversationId}&userId=${session.traineeId}&userName=${encodeURIComponent(session.traineeName || 'Trainee')}`,

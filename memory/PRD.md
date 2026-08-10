@@ -3007,3 +3007,35 @@ Twelve checks run via bash + curl + MongoDB introspection. All 12 passed:
 
 **Files touched:**
 - `/app/frontend/src/components/TrainerBottomSheet.tsx` — tri-state, dedicated close X, hidden-hint chip, tappable handle
+
+---
+
+## iter118aa — Two P0 booking bugs: Pay $0.00 + Message → real SMS (2026-02-10)
+
+### Bug 1: "Pay $0.00" + misleading "unlocks after agreement" toast
+
+**User report:** TrainMe attempted to book with TrainerGuy, agreed on location + details (confirmed by the AGREED SESSION card showing Centennial Park + 8/11/2026 1:00 PM in the screenshot). Pay button showed **$0.00** and tapping it fired the toast *"Payment unlocks after both parties agree on time/location"* — but they HAD agreed.
+
+**Root cause — schema-name mismatch:** the payment screen's pricing loader expected the OLD session shape (`tier`, `modality`, `durationMin`, `baseCents`, `totalCents`). The current `POST /sessions` (session_routes.py:35) writes the CANONICAL fields (`finalSessionPriceCents`, `baseSessionPriceCents`, `platformFeeCents`, `durationMinutes`, `sessionType`). None of the old keys existed on the doc, both branches of the pricing loader missed, `pricing` stayed `null`, and:
+- Pay button rendered `Pay ${pricing?.customer_total_cents || 0}` → **$0.00**
+- `handlePay` checked `!paymentReady || !pricing` → `pricing` was null → fired the WRONG toast.
+
+**Fix (`app/trainee/payment.tsx`):**
+- Pricing loader now reads canonical fields with layered fallbacks:
+  `totalCents = s.finalSessionPriceCents ?? s.totalChargedCents ?? s.totalCents ?? s.customerTotalCents ?? 0`, plus matching fallbacks for `baseCents`, `platformFeeCents`, `durationMinutes`, `sessionType`. The legacy tier-based `/pricing/quote` path is preserved as the preferred branch when the old shape IS present.
+- `handlePay` now checks `paymentReady` and `pricing.customer_total_cents` **separately** with accurate error copy:
+  - `!paymentReady` → *"Payment unlocks after the trainer accepts your proposal."*
+  - `!pricing.customer_total_cents` → *"Session price is unavailable — please refresh, or contact support if this persists."*
+
+### Bug 2: Message button should initiate ACTUAL texts between users
+
+**Fix (both `session-detail.tsx` files — trainee + trainer sides):**
+- Message button now opens the **native SMS composer** with the counterparty's phone pre-filled via `Linking.openURL('sms:PHONE?body=…')`. Matches the Call button's native `tel:` behavior for consistency.
+- Platform-aware separator: iOS uses `&body=`, Android uses `?body=`.
+- Pre-filled body: `"Hi <FirstName> — about our RapidReps session"`.
+- Falls back to the existing in-app chat if the counterparty has no phone on file (shouldn't happen since phone is required at signup, but the button is never a dead-end).
+
+**Files touched:**
+- `/app/frontend/app/trainee/payment.tsx` — schema-name reconciliation + accurate error copy
+- `/app/frontend/app/trainee/session-detail.tsx` — Message → native SMS
+- `/app/frontend/app/trainer/session-detail.tsx` — Message → native SMS
