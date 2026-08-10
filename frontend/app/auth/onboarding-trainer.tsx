@@ -27,6 +27,7 @@ import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { optimizeImage } from '../../src/utils/imageOptimizer';
+import { PhotoCropper } from '../../src/components/PhotoCropper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Background image
@@ -39,6 +40,8 @@ export default function TrainerOnboardingScreen() {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
   const [showRadiusPicker, setShowRadiusPicker] = useState(false);
+  // iter118s — in-app circular photo cropper URI (null = closed)
+  const [cropperUri, setCropperUri] = useState<string | null>(null);
   const RADIUS_OPTIONS = Array.from({ length: 35 }, (_, i) => i + 1);
   const totalSteps = 4;
 
@@ -77,25 +80,27 @@ export default function TrainerOnboardingScreen() {
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.9,
+      // iter118s: OS-native crop replaced by in-app circular cropper.
+      allowsEditing: false,
+      quality: 1,
     });
 
     if (!result.canceled && result.assets[0]?.uri) {
-      // iter105 perf: compress + resize BEFORE base64-ifying. Pre-iter105 we
-      // shipped raw camera-roll JPEGs at 50% (often still 3-5 MB) straight to
-      // the backend. The optimizer brings avatars under ~120 KB and chops
-      // upload time on cellular from ~8 s to ~1 s.
-      try {
-        const optimizedUri = await optimizeImage(result.assets[0].uri, 'avatar');
-        const b64 = await FileSystem.readAsStringAsync(optimizedUri, { encoding: FileSystem.EncodingType.Base64 });
-        setFormData({ ...formData, profilePhoto: `data:image/jpeg;base64,${b64}` });
-      } catch {
-        // Fall back to the raw uri so the user doesn't dead-end on an edge
-        // case (e.g. HEIC source on an older device).
-        setFormData({ ...formData, profilePhoto: result.assets[0].uri });
-      }
+      setCropperUri(result.assets[0].uri);
+    }
+  };
+
+  // iter118s — <PhotoCropper> confirm handler.
+  const commitCroppedPhoto = async (croppedUri: string) => {
+    setCropperUri(null);
+    try {
+      const optimizedUri = await optimizeImage(croppedUri, 'avatar');
+      const b64 = await FileSystem.readAsStringAsync(optimizedUri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      setFormData((f) => ({ ...f, profilePhoto: `data:image/jpeg;base64,${b64}` }));
+    } catch {
+      setFormData((f) => ({ ...f, profilePhoto: croppedUri }));
     }
   };
 
@@ -617,6 +622,15 @@ export default function TrainerOnboardingScreen() {
       </Modal>
 
       {/* Travel Radius now uses inline Slider — modal picker removed */}
+
+      {/* iter118s — In-app circular photo cropper */}
+      <PhotoCropper
+        visible={!!cropperUri}
+        uri={cropperUri}
+        onCancel={() => setCropperUri(null)}
+        onConfirm={commitCroppedPhoto}
+        testID="onboarding-trainer-cropper"
+      />
     </ImageBackground>
   );
 }

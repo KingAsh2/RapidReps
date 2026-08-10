@@ -32,6 +32,7 @@ import Slider from '@react-native-community/slider';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { optimizeImage } from '../../src/utils/imageOptimizer';
+import { PhotoCropper } from '../../src/components/PhotoCropper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
@@ -64,6 +65,8 @@ export default function EditTrainerProfileScreen() {
   const [profile, setProfile] = useState<TrainerProfile | null>(null);
   const [gettingLocation, setGettingLocation] = useState(false);
   const [showRadiusPicker, setShowRadiusPicker] = useState(false);
+  // iter118s — in-app circular photo cropper URI (null = closed)
+  const [cropperUri, setCropperUri] = useState<string | null>(null);
   const RADIUS_OPTIONS = Array.from({ length: 35 }, (_, i) => i + 1);
 
   // Animations
@@ -313,19 +316,26 @@ export default function EditTrainerProfileScreen() {
     }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.9,
+      // iter118s: OS-native crop replaced by our in-app circular cropper.
+      allowsEditing: false,
+      quality: 1,
     });
     if (!result.canceled && result.assets[0]?.uri) {
-      // iter105 perf: compress + resize before base64 upload.
-      try {
-        const optimizedUri = await optimizeImage(result.assets[0].uri, 'avatar');
-        const b64 = await FileSystem.readAsStringAsync(optimizedUri, { encoding: FileSystem.EncodingType.Base64 });
-        setFormData({ ...formData, profilePhoto: `data:image/jpeg;base64,${b64}` });
-      } catch {
-        setFormData({ ...formData, profilePhoto: result.assets[0].uri });
-      }
+      setCropperUri(result.assets[0].uri);
+    }
+  };
+
+  // iter118s — called by <PhotoCropper> once the trainer confirms the frame.
+  const commitCroppedPhoto = async (croppedUri: string) => {
+    setCropperUri(null);
+    try {
+      const optimizedUri = await optimizeImage(croppedUri, 'avatar');
+      const b64 = await FileSystem.readAsStringAsync(optimizedUri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      setFormData((f) => ({ ...f, profilePhoto: `data:image/jpeg;base64,${b64}` }));
+    } catch {
+      setFormData((f) => ({ ...f, profilePhoto: croppedUri }));
     }
   };
 
@@ -764,6 +774,15 @@ export default function EditTrainerProfileScreen() {
           </KeyboardAvoidingView>
         </SafeAreaView>
       </ImageBackground>
+
+      {/* iter118s — In-app circular photo cropper */}
+      <PhotoCropper
+        visible={!!cropperUri}
+        uri={cropperUri}
+        onCancel={() => setCropperUri(null)}
+        onConfirm={commitCroppedPhoto}
+        testID="trainer-edit-cropper"
+      />
     </>
   );
 }

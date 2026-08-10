@@ -1,0 +1,40 @@
+{
+  "summary": "iter118s PhotoCropper — source-level verification of the 4 wiring files + PhotoCropper component passed; backend regression (iter118r profile-photo guard) reran green (10/10). Frontend runtime UI cannot be exercised via Playwright (Expo React Native app).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "source_verification": {
+    "PhotoCropper.tsx": "Present at /app/frontend/src/components/PhotoCropper.tsx. Named export + default export confirmed. Renders <Modal> with GestureDetector wrapping Gesture.Simultaneous(Pan, Pinch). Circular viewport uses borderRadius = CROP_SIZE/2. Header has Cancel + 'Use photo' TouchableOpacity elements with data-testid={`${testID}-cancel`} and {`${testID}-confirm`}. Confirm handler calls expo-image-manipulator.manipulateAsync with computed crop math then onConfirm(result.uri). Note: RN <TouchableOpacity> does not forward `data-testid` DOM attribute; RN's automation prop is `testID`. Not a runtime bug on native, but source uses `data-testid` as specified in the review request — flagged as a low-priority code-review note only.",
+    "trainee_profile": "app/trainee/(tabs)/profile.tsx: PhotoCropper import ✅, cropperUri state ✅, pickImage sets allowsEditing:false + calls setCropperUri ✅, commitCroppedPhoto async handler ✅, <PhotoCropper testID='trainee-profile-cropper' ...> mounted ✅. No FileSystem call inside pickImage.",
+    "trainer_edit_profile": "app/trainer/edit-profile.tsx: all 5 points ✅, testID='trainer-edit-cropper' ✅.",
+    "onboarding_trainer": "app/auth/onboarding-trainer.tsx: all 5 points ✅, testID='onboarding-trainer-cropper' ✅.",
+    "onboarding_trainee": "app/auth/onboarding-trainee.tsx: all 5 points ✅, testID='onboarding-trainee-cropper' ✅.",
+    "no_native_os_crop": "None of the 4 wiring files call launchImageLibraryAsync with allowsEditing:true or aspect:[1,1]. All use allowsEditing:false + quality:1.",
+    "_layout_gesture_root": "app/_layout.tsx line 143 wraps app tree in <GestureHandlerRootView style={{flex:1}}> — required by PhotoCropper's Gesture Handler."
+  },
+  "backend_regression": {
+    "test_file": "/app/backend/tests/test_iter118r_profile_photo_guard.py",
+    "results": "10/10 passed in 2.60s",
+    "coverage": "POST /api/trainee-profiles + POST /api/trainer-profiles — device-local URI rejection (file://, content://, ph://, assets-library://) still 400s; valid data:image/png;base64,... payload (equivalent to what PhotoCropper's manipulator output + readAsStringAsync produces) persists and syncs to GET profile + GET /api/auth/me for both roles."
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iter118r_profile_photo_guard.py",
+    "/app/test_reports/pytest/iter118s_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "PhotoCropper.tsx uses `data-testid` attribute on <TouchableOpacity>. React Native does not forward `data-testid` — it uses `testID` (capital ID). On native the automation prop will be silently dropped and Cancel/Use-photo buttons won't be locatable by Detox/Maestro/appium. Recommend switching to `testID={`${testID || 'photo-cropper'}-cancel`}` (and -confirm). Only web/Expo-web renders the `data-testid` DOM attr — mobile targets won't. Since this is a mobile-first Expo RN app per the review request, this is a minor testability regression to address before mobile e2e is wired up.",
+    "PhotoCropper renders its own <GestureHandlerRootView> INSIDE a <Modal>, in addition to the app-level one in _layout.tsx. This is actually correct/needed on Android because Modal is a separate native view hierarchy — good defensive design, keep as-is.",
+    "profile_routes.py still 2035 lines (pre-existing from iter121 review) — split recommendation still stands."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100% (10/10)", "frontend": "n/a (source-check only — Expo RN cannot be Playwright-tested)"},
+  "test_credentials": "Trainee: test_trainee_iter25@test.com / Test123! ; Trainer: test_trainer_iter25@test.com / Test123!",
+  "seed_data_creation": "None. Reused iter25 accounts via existing iter118r regression suite.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "iter118s adds an in-app PhotoCropper modal in 4 photo-picking flows. All source-level integration points verified. Backend photo-endpoints unchanged and regression-green. The only real finding is the data-testid vs testID prop mismatch on RN TouchableOpacity in PhotoCropper.tsx (lines 253, 262) — cosmetic on Expo web but blocks native automation."
+}

@@ -35,6 +35,7 @@ import { stopAllAudio } from '../../../src/utils/audioCoordinator';
 import EditableName from '../../../src/components/EditableName';
 import { UserAvatar } from '../../../src/components/UserAvatar';
 import { StreakRing } from '../../../src/components/StreakRing';
+import { PhotoCropper } from '../../../src/components/PhotoCropper';
 import FloatingOrangeBg from '../../../src/components/FloatingOrangeBg';
 import { AccentColorPicker } from '../../../src/components/AccentColorPicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -130,6 +131,9 @@ export default function TraineeProfileScreen() {
   const [showColorPicker, setShowColorPicker] = useState(false);
   // iter118i — Trainer Proximity setting (live-persisted; home reloads on focus)
   const [proximityMiles, setProximityMiles] = useState<number>(10);
+  // iter118s — square-crop step after picking. `cropperUri` = raw picked
+  // URI awaiting a crop confirmation. Modal is dismissed on cancel/confirm.
+  const [cropperUri, setCropperUri] = useState<string | null>(null);
 
   const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -239,29 +243,36 @@ export default function TraineeProfileScreen() {
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.9,
+      // iter118s: OS-native crop is replaced by our in-app circular
+      // cropper — turning `allowsEditing` OFF gives us the full-resolution
+      // source to work with, and keeps the UX consistent across iOS/Android.
+      allowsEditing: false,
+      quality: 1,
     });
 
     if (!result.canceled && result.assets[0]?.uri) {
-      // iter105 perf: compress + resize before base64 upload.
-      try {
-        const { optimizeImage } = await import('../../../src/utils/imageOptimizer');
-        // iter118r: expo-file-system v19 deprecated the top-level
-        // `readAsStringAsync` — it throws at runtime. Pull it from the
-        // `/legacy` sub-entry so the base64 conversion keeps working.
-        // Without this, the catch below fires and we save the raw file://
-        // URI, which never renders in the profile disc.
-        const FileSystem = await import('expo-file-system/legacy');
-        const optimizedUri = await optimizeImage(result.assets[0].uri, 'avatar');
-        const b64 = await FileSystem.readAsStringAsync(optimizedUri, { encoding: FileSystem.EncodingType.Base64 });
-        setFormData({ ...formData, profilePhoto: `data:image/jpeg;base64,${b64}` });
-      } catch {
-        setFormData({ ...formData, profilePhoto: result.assets[0].uri });
-      }
-      setIsEditing(true);
+      // Hand the raw picked URI to the in-app cropper. Save-to-formData
+      // happens inside the cropper's onConfirm callback below.
+      setCropperUri(result.assets[0].uri);
     }
+  };
+
+  // iter118s — called by <PhotoCropper> once the athlete confirms the frame.
+  const commitCroppedPhoto = async (croppedUri: string) => {
+    setCropperUri(null);
+    try {
+      const { optimizeImage } = await import('../../../src/utils/imageOptimizer');
+      const FileSystem = await import('expo-file-system/legacy');
+      const optimizedUri = await optimizeImage(croppedUri, 'avatar');
+      const b64 = await FileSystem.readAsStringAsync(optimizedUri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      setFormData((f) => ({ ...f, profilePhoto: `data:image/jpeg;base64,${b64}` }));
+    } catch {
+      // Best-effort — never dead-end the user on a manipulator/reader glitch.
+      setFormData((f) => ({ ...f, profilePhoto: croppedUri }));
+    }
+    setIsEditing(true);
   };
 
   const handleSave = async () => {
@@ -1170,6 +1181,15 @@ export default function TraineeProfileScreen() {
         currentColor={profile?.accentColor}
         currentIntensity={profile?.accentIntensity}
         onIntensityCommit={handleAccentIntensityCommit}
+      />
+
+      {/* iter118s — In-app circular photo cropper */}
+      <PhotoCropper
+        visible={!!cropperUri}
+        uri={cropperUri}
+        onCancel={() => setCropperUri(null)}
+        onConfirm={commitCroppedPhoto}
+        testID="trainee-profile-cropper"
       />
     </RapidBg>
   );
