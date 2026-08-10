@@ -363,11 +363,13 @@ export default function TraineeProfileScreen() {
       title: 'Logout',
       message: 'Are you sure you want to logout?',
       type: 'warning',
+      icon: 'log-out',
       buttons: [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Logout',
           style: 'destructive',
+          icon: 'log-out',
           onPress: () => {
             logout();
             // iter98d (Task 2): go straight to sign-in, not Welcome splash
@@ -383,11 +385,13 @@ export default function TraineeProfileScreen() {
       title: 'Delete Account',
       message: 'This will permanently delete your account and all data. This cannot be undone.',
       type: 'warning',
+      icon: 'trash',
       buttons: [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Delete Forever',
           style: 'destructive',
+          icon: 'trash',
           onPress: async () => {
             try {
               const { authAPI } = await import('../../../src/services/api');

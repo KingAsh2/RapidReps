@@ -1,5 +1,30 @@
 # RapidReps PRD
 
+## 2026-08 — iter118bc: Premium Modal Pixel-Lock (App-Wide) ✅
+
+**User asked**: Pixel-lock the Logout modal shown in the mockup and update ALL modals to match the same design/theme with their respective icons.
+
+**Delivered — one central component, one change, entire app updated**
+- **Rewrote `src/components/AthleticAlert.tsx`** to pixel-match the mockup:
+  - Dark near-black card (`#0E1116`), 28 px radius, thin `rgba(255,106,0,0.42)` border + warm orange outer glow
+  - Top-right circular close (X) button — testid `alert-close-btn`
+  - Centered icon disc: 90 px inner dark disc + 108 px pulsing orange ring (breathing 1→1.06 loop) + 6 ember-dot decorations, 44 px orange Ionicon
+  - Title 30 px / 900 weight / white, message 15 px muted white
+  - Buttons: dark glass Cancel with `close-circle` icon on left + orange-gradient primary with contextual icon + warm shadow on right (order auto-swapped regardless of caller)
+- **Auto icon system** — `guessIconFromTitle` maps common titles ("Logout" → log-out, "Delete" → trash, "Cancel Session" → stop-circle, "Booking Failed" → alert-circle, etc.). All **108 existing `showAlert()`** call sites across the app inherit the new look automatically with sensible icons.
+- **Optional `icon: IconName` override** on both `AlertConfig` and per-button so callers can force a specific icon (used on Logout + Delete Account for pixel accuracy).
+- **Migrated trainer profile `handleLogout` from native `Alert.alert` → `showAlert`** so it now renders in the premium theme instead of the OS dialog.
+- **Explicit icons wired**: Trainee + Trainer logout (`log-out`), Trainee Delete Account (`trash`).
+
+**Files touched**
+- `src/components/AthleticAlert.tsx` (rewrite)
+- `src/contexts/AlertContext.tsx` (pass `icon` through)
+- `app/trainer/(tabs)/profile.tsx` (Alert.alert → showAlert + icon)
+- `app/trainee/(tabs)/profile.tsx` (icon: log-out / trash added)
+
+**Testing** — Source-level: lint clean (no new errors, only pre-existing warnings). Backend unaffected. Native/Expo Go verification required for the visual pixel-lock since Expo web preview in this environment renders the fallback welcome screen for every route (unrelated environment issue documented in `iteration_126.json`).
+
+
 ## 2026-08 — iter118bb: Notifications Refactor + Anthem/Avatar Persistence + Per-Item Read ✅
 
 **User asked**: (1) Notifications screen redesign to match mockup — tabbed filter bar (All/Sessions/Messages/System) + NEW vs EARLIER sections + audio chime on new unread. (2) Anthem (`vibeTrackId`) and Avatar (`profilePhoto`) updates weren't persisting visually after navigating away and back to the Profile tab.

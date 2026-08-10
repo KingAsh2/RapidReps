@@ -1,12 +1,15 @@
 import React, { createContext, useContext, useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import AthleticAlert from '../components/AthleticAlert';
 
 type AlertType = 'success' | 'error' | 'warning' | 'info';
+type IconName = keyof typeof Ionicons.glyphMap;
 
 interface AlertButton {
   text: string;
   onPress?: () => void;
   style?: 'default' | 'cancel' | 'destructive';
+  icon?: IconName;
 }
 
 interface AlertConfig {
@@ -14,6 +17,8 @@ interface AlertConfig {
   message: string;
   type?: AlertType;
   buttons?: AlertButton[];
+  /** Optional Ionicons name for the top disc — auto-picked from title if omitted */
+  icon?: IconName;
 }
 
 interface AlertContextType {
@@ -47,6 +52,7 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
           message={alertConfig.message}
           type={alertConfig.type}
           buttons={alertConfig.buttons}
+          icon={alertConfig.icon}
           onClose={hideAlert}
         />
       )}

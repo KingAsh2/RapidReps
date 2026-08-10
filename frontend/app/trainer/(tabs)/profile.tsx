@@ -18,11 +18,11 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { Alert } from 'react-native';
 // iter106ar: unify with the shared avatar disc used everywhere else.
 import { UserAvatar } from '../../../src/components/UserAvatar';
 import { PhotoCropper } from '../../../src/components/PhotoCropper';
 import { useAuth } from '../../../src/contexts/AuthContext';
+import { useAlert } from '../../../src/contexts/AlertContext';
 import { streaksAPI, trainerAPI } from '../../../src/services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
@@ -57,6 +57,7 @@ const backgroundImage = require('../../../assets/images/bg-spin-class.jpg');
 export default function TrainerProfileScreen() {
   const router = useRouter();
   const { user, logout, refreshUser, patchUser } = useAuth();
+  const { showAlert } = useAlert();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -184,22 +185,25 @@ export default function TrainerProfileScreen() {
   };
 
   const handleLogout = async () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
+    showAlert({
+      title: 'Logout',
+      message: 'Are you sure you want to logout?',
+      type: 'warning',
+      icon: 'log-out',
+      buttons: [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Logout',
           style: 'destructive',
+          icon: 'log-out',
           onPress: async () => {
             await logout();
             // iter98d (Task 2): go straight to sign-in, not Welcome splash
             router.replace('/auth/login');
           },
         },
-      ]
-    );
+      ],
+    });
   };
 
   const handleShareProfile = async () => {
