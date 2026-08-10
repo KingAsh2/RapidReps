@@ -2685,3 +2685,26 @@ Both `google-services.json` and `google-service-account.json` are already in `fr
 - `/app/frontend/app/trainee/(tabs)/home.tsx`
 
 **Testing note:** Web preview cannot render react-native-maps markers (the `.web.tsx` fallback is a horizontal card list). Native flow validated by code review + lint pass; recommend Expo Go or simulator run before shipping.
+
+---
+
+## iter118r — Inline map gestures disabled + fullscreen modal (2026-02-10)
+
+**Problem:** The `MapView` on the trainee home screen was capturing vertical scroll gestures — trying to scroll the page panned the map instead. Also, the right-edge "scan" icon looked like an expand button but was actually a (now-useless) recenter action.
+
+**Fix (`src/components/NearbyTrainersMap.native.tsx`, native only):**
+1. Inline preview `MapView` now has `scrollEnabled={false} zoomEnabled={false} rotateEnabled={false} pitchEnabled={false}` — verified this frees the parent `ScrollView` on both iOS and Android (marker `onPress` still fires because that's independent of parent gesture flags).
+2. Right-edge action button repurposed from "recenter" → "expand fullscreen" (Ionicons `expand-outline`, testid `map-fullscreen-button`).
+3. New fullscreen `<Modal presentationStyle="fullScreen">` renders a fresh interactive `MapView` with all four gestures re-enabled, dark map theme preserved, same trainer markers, plus:
+   - Close pill (top-right, safe-area aware for iOS notch)
+   - Recenter FAB (bottom-right, animates back to user location)
+   - Hint chip (top-left: "TAP A PIN TO BOOK")
+   - Tapping a pin in fullscreen fires the same `onTrainerSelect(trainerId)` and closes the modal — so the parent home screen still snaps the bottom sheet up with that trainer pre-selected.
+4. Markers, scan behavior, count chips, and styling are unchanged.
+
+**Trainee selection flow (confirmed, end-to-end):**
+- Home screen shows: (a) inline map preview (non-interactive, shows nearby pins) and (b) `TrainerBottomSheet` collapsed at bottom showing "N Trainers Nearby" with the top row visible and "Book Now" ready.
+- Path 1 — **Tap a map pin (inline)**: marker highlights, bottom sheet snaps to expanded state, that trainer's row is auto-scrolled and highlighted (orange border), "Book <FirstName> Now" CTA visible.
+- Path 2 — **Tap a row in the bottom sheet**: row highlights, "Book <FirstName> Now" updates.
+- Path 3 — **Open fullscreen map** (right-edge expand button): pan / zoom / rotate freely; tapping any pin closes the modal and lands the trainee back on the home screen with that trainer pre-selected in the expanded bottom sheet.
+- **Book Now** → routes to `/trainee/trainer-detail?trainerId=…` for confirmation and payment.

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ActivityIndicator,
-  Dimensions, Animated,
+  Dimensions, Animated, Modal, Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -64,7 +64,14 @@ interface Props {
 export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, refreshing, onTrainerSelect }: Props) {
   const router = useRouter();
   const mapRef = useRef<MapView>(null);
+  const fullscreenMapRef = useRef<MapView>(null);
   const [selected, setSelected] = useState<NearbyTrainer | null>(null);
+  // iter118r: inline map is a NON-INTERACTIVE preview so page scroll gestures
+  // aren't captured by the map surface. All interaction happens either via
+  // (a) tapping a marker → parent's bottom sheet expands with that trainer
+  // pre-selected, or (b) the fullscreen button (bottom-right) which opens a
+  // fully-interactive modal map.
+  const [fullscreen, setFullscreen] = useState(false);
 
   // Animations
   const radarAnim = useRef(new Animated.Value(0)).current;
@@ -184,6 +191,13 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
           customMapStyle={mapStyle}
           initialRegion={{ ...userLocation, latitudeDelta: 0.02, longitudeDelta: 0.02 }}
           showsUserLocation={false} showsMyLocationButton={false}
+          // iter118r: inline preview is non-interactive on BOTH iOS and
+          // Android — prevents map from swallowing the vertical page-scroll
+          // gesture. Full interactivity is available in the fullscreen modal.
+          scrollEnabled={false}
+          zoomEnabled={false}
+          rotateEnabled={false}
+          pitchEnabled={false}
           onPress={() => setSelected(null)}
         >
           {/* User — harsh white square with radar burst */}
@@ -218,9 +232,18 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
           })}
         </MapView>
 
-        {/* Recenter — sharp rectangle sticking from right edge */}
-        <TouchableOpacity style={s.recenter} onPress={recenter} data-testid="map-recenter-button" accessibilityLabel="Recenter map on my location" accessibilityRole="button">
-          <Ionicons name="scan-outline" size={18} color={N.white} />
+        {/* iter118r: right-edge action button — inline map is now a static
+            preview so recentering is meaningless. Repurposed as the
+            fullscreen/expand entry-point that pops open a fully-interactive
+            modal map (pan, zoom, rotate, pitch all re-enabled). */}
+        <TouchableOpacity
+          style={s.recenter}
+          onPress={() => setFullscreen(true)}
+          data-testid="map-fullscreen-button"
+          accessibilityLabel="Open full-screen map"
+          accessibilityRole="button"
+        >
+          <Ionicons name="expand-outline" size={18} color={N.white} />
         </TouchableOpacity>
 
         {/* iter118q: in-map "VIEW PROFILE" popup removed. The TrainerBottomSheet
@@ -233,6 +256,100 @@ export default function NearbyTrainersMap({ userLocation, trainers, onRefresh, r
           request. Trainer discovery on the home screen is now solely through
           (1) map pins and (2) the swipe-up TrainerBottomSheet — the strip
           duplicated those entry points. */}
+
+      {/* iter118r: Fullscreen interactive map modal. The inline map is a
+          static preview (gestures disabled so it doesn't hijack page scroll);
+          this modal is where trainees can pan / zoom / rotate / pitch the
+          map freely. Marker taps here still fire the same onTrainerSelect
+          callback so opening the bottom sheet from fullscreen works too. */}
+      <Modal
+        visible={fullscreen}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={() => setFullscreen(false)}
+      >
+        <View style={s.fsRoot} data-testid="fullscreen-map-modal">
+          {userLocation ? (
+            <MapView
+              ref={fullscreenMapRef}
+              style={StyleSheet.absoluteFillObject}
+              provider={PROVIDER_GOOGLE}
+              customMapStyle={mapStyle}
+              initialRegion={{ ...userLocation, latitudeDelta: 0.03, longitudeDelta: 0.03 }}
+              showsUserLocation
+              showsMyLocationButton={false}
+              scrollEnabled
+              zoomEnabled
+              rotateEnabled
+              pitchEnabled
+            >
+              <Marker coordinate={userLocation} anchor={{ x: 0.5, y: 0.5 }}>
+                <View style={s.userWrap}>
+                  <View style={s.userNode} />
+                </View>
+              </Marker>
+              {trainers.map((t) => {
+                const ringColor = t.accentColor || N.orange;
+                return (
+                  <Marker
+                    key={`fs-${t.id}`}
+                    coordinate={{ latitude: t.latitude, longitude: t.longitude }}
+                    anchor={{ x: 0.5, y: 0.5 }}
+                    onPress={() => {
+                      onTrainerSelect?.(t.trainerId);
+                      setFullscreen(false);
+                    }}
+                  >
+                    <View style={s.markerWrap}>
+                      <TrainerAvatar
+                        uri={t.avatarUrl}
+                        initials={initials(t.fullName)}
+                        ringColor={ringColor}
+                        size={48}
+                        pulse
+                      />
+                    </View>
+                  </Marker>
+                );
+              })}
+            </MapView>
+          ) : null}
+
+          {/* Close pill — top-right */}
+          <TouchableOpacity
+            onPress={() => setFullscreen(false)}
+            style={[s.fsClose, { top: Platform.OS === 'ios' ? 56 : 20 }]}
+            data-testid="fullscreen-map-close"
+            accessibilityLabel="Close full-screen map"
+            accessibilityRole="button"
+          >
+            <Ionicons name="close" size={22} color={N.white} />
+          </TouchableOpacity>
+
+          {/* Recenter — bottom-right */}
+          <TouchableOpacity
+            onPress={() => {
+              if (fullscreenMapRef.current && userLocation) {
+                fullscreenMapRef.current.animateToRegion(
+                  { ...userLocation, latitudeDelta: 0.015, longitudeDelta: 0.015 },
+                  500,
+                );
+              }
+            }}
+            style={s.fsRecenter}
+            data-testid="fullscreen-map-recenter"
+            accessibilityLabel="Recenter map on my location"
+            accessibilityRole="button"
+          >
+            <Ionicons name="locate" size={20} color={N.white} />
+          </TouchableOpacity>
+
+          {/* Hint chip — top-left */}
+          <View style={[s.fsHint, { top: Platform.OS === 'ios' ? 56 : 20 }]} pointerEvents="none">
+            <Text style={s.fsHintText}>TAP A PIN TO BOOK</Text>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -352,4 +469,32 @@ const s = StyleSheet.create({
   availRatingRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginBottom: 3 },
   availRating: { fontSize: 11, fontWeight: '700', color: N.star },
   availDist: { fontSize: 10, fontWeight: '600', color: N.textSec, letterSpacing: 1.5 },
+
+  // iter118r: fullscreen map modal
+  fsRoot: { flex: 1, backgroundColor: N.bg },
+  fsClose: {
+    position: 'absolute', right: 16,
+    width: 44, height: 44, borderRadius: 22,
+    backgroundColor: N.glass,
+    borderWidth: 1, borderColor: N.border,
+    justifyContent: 'center', alignItems: 'center',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4, shadowRadius: 8, elevation: 6,
+  },
+  fsRecenter: {
+    position: 'absolute', right: 16, bottom: 40,
+    width: 48, height: 48, borderRadius: 24,
+    backgroundColor: N.glass,
+    borderWidth: 1.5, borderColor: N.orange,
+    justifyContent: 'center', alignItems: 'center',
+    shadowColor: N.orange, shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5, shadowRadius: 10, elevation: 8,
+  },
+  fsHint: {
+    position: 'absolute', left: 16,
+    paddingHorizontal: 12, paddingVertical: 8,
+    borderRadius: 8, backgroundColor: N.glass,
+    borderWidth: 1, borderColor: N.border,
+  },
+  fsHintText: { fontSize: 11, fontWeight: '800', color: N.white, letterSpacing: 2 },
 });
