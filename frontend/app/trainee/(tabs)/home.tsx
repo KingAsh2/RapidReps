@@ -1039,8 +1039,8 @@ export default function TraineeHomeScreen() {
                 <View style={styles.dialogIconContainer}>
                   <Ionicons name="videocam" size={64} color="#FFFFFF" />
                 </View>
-                <Text style={styles.dialogTitle}>Don&apos;t Sweat Just Yet! 💪</Text>
-                <Text style={styles.dialogMessage}>Virtual Trainers available RAPIDLY! 🚀</Text>
+                <Text style={styles.dialogTitle}>Don&apos;t Sweat Just Yet</Text>
+                <Text style={styles.dialogMessage}>Virtual Trainers available RAPIDLY</Text>
                 <Text style={styles.dialogSubMessage}>Would you like Virtual Training?</Text>
                 <View style={styles.dialogButtons}>
                   <TouchableOpacity
@@ -1053,7 +1053,7 @@ export default function TraineeHomeScreen() {
                     style={styles.dialogButtonYes}
                     onPress={handleVirtualTrainingYes}
                   >
-                    <Text style={styles.dialogButtonTextYes}>Yes, Let&apos;s Go! 🔥</Text>
+                    <Text style={styles.dialogButtonTextYes}>Yes, Let&apos;s Go</Text>
                   </TouchableOpacity>
                 </View>
                 <TouchableOpacity

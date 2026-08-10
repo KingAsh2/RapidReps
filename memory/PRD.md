@@ -1,5 +1,22 @@
 # RapidReps PRD
 
+## 2026-08 — iter118t/u: Cropper Chrome Fix + Direct Avatar Tap + Emoji Cleanup ✅
+
+**Reported by user via screenshot**:
+1. PhotoCropper's "Cancel" and "Use photo" buttons overlapped the OS status bar / Dynamic Island → unclickable.
+2. Athletes shouldn't have to tap "Edit Profile" first to change their photo.
+3. Modals should look premium/gradient/on-theme.
+4. Remove the 💪🔥 emojis from the hero — "looks childish."
+
+**Fixes shipped**:
+- **Cropper safe area** — `PhotoCropper.tsx` now uses `useSafeAreaInsets()` + `paddingTop: insets.top + 8` on the header, plus `Modal statusBarTranslucent` + explicit light-content StatusBar. Never collides with the clock/notch again.
+- **Premium chrome** — Multi-stop dark navy gradient backdrop with a warm orange bloom overlay behind the disc; BlurView glass header; Cancel pill in glass and Use photo pill in orange gradient with a warm shadow glow. Matches the trainee-home hero + trainer-earnings surfaces.
+- **Direct-tap avatar** — Trainee profile: removed the `disabled={!isEditing}` gate; camera badge is always visible. Trainer profile: added a TouchableOpacity around the avatar + orange camera badge; imports & mounts PhotoCropper with its own `pickImage` + `commitCroppedPhoto`. Both paths **auto-save the photo** immediately after crop via `updateProfile` + `refreshUser` + a success toast — no "Save" hunt.
+- **Emoji cleanup** — Removed 💪🔥 from trainer hero subtitle (`home.tsx:657`), trainee hero name-line (`home.tsx:722`), and also proactively cleaned the trainee Virtual Training dialog title + button labels since the user's signal was "no childish emojis" generally.
+
+**Testing** — `iteration_123.json` — Backend regression 100%, source-level verification passed for all 5 files. Testing agent confirmed the safe-area fix is the canonical solution and the auto-save UX is correct.
+
+
 ## 2026-08 — iter118s: In-App Profile Photo Cropper ✅
 
 **Feature**: Athletes now frame their profile photo through a premium in-app cropper instead of the inconsistent OS-native crop.
