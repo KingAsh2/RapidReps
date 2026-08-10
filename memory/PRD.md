@@ -2921,3 +2921,65 @@ Both `google-services.json` and `google-service-account.json` are already in `fr
 - `frontend/src/components/InstantBookSheet.tsx` — NEW
 - `frontend/src/components/NearbyTrainersMap.native.tsx` — `onInstantBook` prop + sonar rings
 - `frontend/app/trainee/(tabs)/home.tsx` — wire the sheet to the map
+
+---
+
+## iter118y — Trainer instant-request banner + audit (2026-02-10)
+
+### iter118y — Trainer-side Instant UI shipped
+
+**`src/components/InstantRequestBanner.tsx` — NEW**
+- Floating toast pinned near the top of the trainer home. Slides in on push arrival, plays a pulsing red-dot halo (opacity 0.15↔0.5, scale 0.9↔1.8 on a 700ms sine).
+- Content: `INSTANT REQUEST` eyebrow · `<trainee name> · <distance> mi` · `<modality> · <duration> min · tap to route`. Distance is computed client-side via haversine when `trainerLocation` is available.
+- Primary action: `→` circular CTA → `router.push('/trainer/en-route?sessionId=…&traineeName=…&traineeLat=…&traineeLng=…')`.
+- Dismiss: X button (immediate) or 60-second auto-dismiss with a slide-out animation.
+- Testids: `instant-request-banner`, `instant-request-accept-btn`, `instant-request-dismiss-btn`.
+
+**`src/contexts/NotificationContext.tsx`**
+- New `latestInstantRequest` state + `clearInstantRequest()` action exposed via `useNotifications()`.
+- Foreground receiver: when a notification with `data.type === 'instant_book'` arrives, populates the state so the banner can render.
+- Background tap handler: same payload → deep-links directly to `/trainer/en-route` (skips the banner when app is cold-launched from the push).
+
+**`app/trainer/(tabs)/home.tsx`**
+- Imported `InstantRequestBanner`, mounted it right below `<FloatingOrangeBg />` so it floats over the header. Passes `currentLocation` (already tracked in the trainer home) so distance renders live.
+
+**`backend/routes/instant_book_routes.py`**
+- Push payload enriched with `traineeName`, `sessionType`, `durationMin` so the banner + deep-link have everything they need without another API round-trip.
+
+### Trainee→Trainer live coords — ALREADY WIRED (no new code needed)
+Investigation showed the reverse WebSocket channel is already fully functional and has been since iter106h:
+- `POST /api/sessions/{id}/gps-update` accepts positions from *either* participant (`is_trainer or is_trainee` check in `location_routes.py:207–210`).
+- `session_tracking_ws.py:_broadcast` fans out every position frame to all connected peers in that session's room.
+- `EnRouteMap.tsx` opens the WS with `role="trainer"` or `role="trainee"`, computes `otherKey = role === 'trainer' ? 'trainee' : 'trainer'`, and re-renders when the counterparty moves.
+- Both en-route screens (`app/trainee/trainer-en-route.tsx`, `app/trainer/en-route.tsx`) auto-post their own coords via `Location.getCurrentPositionAsync` + `sessionTrackingAPI.gpsUpdate` inside `EnRouteMap`.
+
+**Verified via code inspection**, not by new WebSocket traffic in this run — a live device pair would confirm end-to-end.
+
+### Honest audit of everything since last deploy (iter118w + iter118x + iter118y)
+
+Twelve checks run via bash + curl + MongoDB introspection. All 12 passed:
+
+| # | Check | Result |
+|---|---|---|
+| 1 | `POST /api/sessions/instant-book` responds (no auth → 403) | ✓ 403 |
+| 2 | `instant_book_routes.py` present and registered in server.py | ✓ file exists, 2 refs |
+| 3 | `InstantBookSheet`, `InstantRequestBanner`, `InfoTip`, `instantBookAPI` files exist | ✓ all four |
+| 4 | `patchUser` exists in AuthContext + used in both profile screens | ✓ 4/2/2 refs |
+| 5 | Static `Share` import + `handleShareProfile` in both profile files | ✓ present |
+| 6 | Parallel worker pool `Promise.all(workers)` in `uploadHighlightChunked.ts` | ✓ present |
+| 7 | Map `trainerSonar` style, `onInstantBook` prop, framed borderRadius, bottom-anchored sheet | ✓ all four |
+| 8 | `InstantBookSheet` mounted in trainee home; `InstantRequestBanner` in trainer home | ✓ both |
+| 9 | `latestInstantRequest` + `clearInstantRequest` in NotificationContext | ✓ both |
+| 10 | InfoTips wired at meeting-location, community-feed, group-workouts, share-profile | ✓ all four |
+| 11 | Trainee→Trainer reverse WS: EnRouteMap filters counterparty by role, posts own coords, backend accepts both parties | ✓ all three |
+| 12 | End-to-end: login → nearby → instant-book → verify Mongo doc has status=accepted, instantBook=true, paymentStatus=authorized, traineeLat/Lng populated, correct trainerId+traineeId | ✓ session created + all fields verified in Mongo |
+
+**What is still MOCKED / NOT LIVE (honest disclosure):**
+- **Stripe charge on session completion**: `paymentStatus` is set to `"authorized"` on instant-book creation, but the actual Stripe PaymentIntent is not yet created here. The session inherits the existing lifecycle's payment path — a dedicated authorize-on-book / capture-on-complete flow is a separate iteration.
+- **Real push delivery to a physical device**: `create_and_send_notification` writes to the notifications collection and calls the Expo push relay; delivery to Expo Go / a real device isn't validated in curl-only tests.
+- **Trainer banner + navigation on iOS/Android**: mounted and code-verified but not smoke-tested on Expo Go in this run.
+
+**What's still deferred (roadmap):**
+- Full Stripe authorize + capture flow (iter118z candidate)
+- Cancellation grace window ("Undo booking for 60s")
+- Trainer-side "session cluster" view when multiple instant requests arrive at once

@@ -22,6 +22,7 @@ import api from '../../../src/services/api';
 import TierCelebrationSheet from '../../../src/components/TierCelebrationSheet';
 import { UserAvatar } from '../../../src/components/UserAvatar';
 import { CoachMarkTour } from '../../../src/components/coachmarks/CoachMarkTour';
+import { InstantRequestBanner } from '../../../src/components/InstantRequestBanner';
 import { Session, SessionStatus } from '../../../src/types';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -555,6 +556,9 @@ export default function TrainerHomeScreen() {
 
         <SafeAreaView style={styles.safeArea} edges={['top']}>
       <FloatingOrangeBg />
+      {/* iter118y: floating instant-book request banner — appears the moment
+          an instant_book push arrives while the trainer app is open. */}
+      <InstantRequestBanner trainerLocation={currentLocation} />
           {/* iter118b: Header — RAPIDREPS wordmark lockup (barbell logo + condensed text) with bell + hamburger on the right */}
           <View style={styles.header}>
             <View style={styles.headerLogo}>

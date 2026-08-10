@@ -16,6 +16,18 @@ Notifications.setNotificationHandler({
   }),
 });
 
+interface InstantRequest {
+  sessionId: string;
+  trainerId?: string;
+  traineeId?: string;
+  traineeName?: string;
+  traineeLat?: number | null;
+  traineeLng?: number | null;
+  sessionType?: string;
+  durationMin?: number;
+  receivedAt: number;
+}
+
 interface NotificationContextType {
   expoPushToken: string | null;
   notifications: any[];
@@ -28,6 +40,12 @@ interface NotificationContextType {
   refreshPendingSessionCount: () => Promise<void>;
   markPendingSessionsSeen: () => Promise<void>;
   isReady: boolean;
+  /** iter118y: latest instant-book request received while the app was in
+   *  the foreground. Trainer home reads this to render the floating
+   *  "🔴 Instant request from X · 0.4 mi" toast. Cleared when the trainer
+   *  taps to route or after 60s. */
+  latestInstantRequest: InstantRequest | null;
+  clearInstantRequest: () => void;
 }
 
 const NotificationContext = createContext<NotificationContextType>({
@@ -42,6 +60,8 @@ const NotificationContext = createContext<NotificationContextType>({
   refreshPendingSessionCount: async () => {},
   markPendingSessionsSeen: async () => {},
   isReady: false,
+  latestInstantRequest: null,
+  clearInstantRequest: () => {},
 });
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -58,6 +78,9 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [isReady, setIsReady] = useState(false);
   const notificationListener = useRef<any>();
   const responseListener = useRef<any>();
+  // iter118y: foreground instant-book capture.
+  const [latestInstantRequest, setLatestInstantRequest] = useState<InstantRequest | null>(null);
+  const clearInstantRequest = () => setLatestInstantRequest(null);
   const isMounted = useRef(true);
 
   // Safe state setters that check if component is still mounted
@@ -246,6 +269,22 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       refreshNotifications();
       refreshMessageCount();
       refreshPendingSessionCount();
+      // iter118y: capture foreground instant-book pushes so trainer home
+      // can surface a floating toast.
+      const data: any = notification.request?.content?.data || {};
+      if (data.type === 'instant_book' && data.sessionId) {
+        setLatestInstantRequest({
+          sessionId: String(data.sessionId),
+          trainerId: data.trainerId ? String(data.trainerId) : undefined,
+          traineeId: data.traineeId ? String(data.traineeId) : undefined,
+          traineeName: notification.request?.content?.title ? undefined : data.traineeName,
+          traineeLat: typeof data.traineeLat === 'number' ? data.traineeLat : null,
+          traineeLng: typeof data.traineeLng === 'number' ? data.traineeLng : null,
+          sessionType: data.sessionType,
+          durationMin: data.durationMin,
+          receivedAt: Date.now(),
+        });
+      }
     });
 
     // Listen for notification taps (user interacts with notification)
@@ -255,6 +294,21 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       refreshNotifications();
       refreshMessageCount();
       refreshPendingSessionCount();
+
+      // iter118y: instant-book tap → trainer en-route directions in one gesture.
+      if (data?.type === 'instant_book' && data?.sessionId) {
+        const roles = user?.roles || [];
+        if (roles.includes('trainer')) {
+          const params = new URLSearchParams({
+            sessionId: String(data.sessionId),
+            traineeName: String(data.traineeName || ''),
+          });
+          if (data.traineeLat !== undefined && data.traineeLat !== null) params.set('traineeLat', String(data.traineeLat));
+          if (data.traineeLng !== undefined && data.traineeLng !== null) params.set('traineeLng', String(data.traineeLng));
+          try { router.push(`/trainer/en-route?${params.toString()}` as any); } catch {}
+          return;
+        }
+      }
 
       // Deep-link to receipt screen when tapping payment verification notifications
       if (data?.action === 'view_receipt' && data?.sessionId) {
@@ -311,6 +365,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         refreshPendingSessionCount,
         markPendingSessionsSeen,
         isReady,
+        latestInstantRequest,
+        clearInstantRequest,
       }}
     >
       {children}

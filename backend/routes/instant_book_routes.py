@@ -159,8 +159,11 @@ async def instant_book(
                 "sessionId": session_id,
                 "trainerId": str(trainer_user["_id"]),
                 "traineeId": trainee_id,
+                "traineeName": trainee_name,
                 "traineeLat": body.currentLat,
                 "traineeLng": body.currentLng,
+                "sessionType": body.sessionType,
+                "durationMin": body.durationMin,
                 "type": "instant_book",
             },
         )
