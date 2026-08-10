@@ -1,0 +1,24 @@
+{
+  "summary": "iter118w — Backend testing for Emergent-managed push migration + admin-notify on signup. All 6 pytest tests passed against the preview URL. Verified: (1) /api/health 200; (2) trainer signup produces admin notification with title 'New Trainer Signed Up', body containing fullName+email, category='system', link '/admin/dashboard?tab=verifications&userId=<id>'; (3) trainee signup produces title 'New User Signed Up' with link '/admin/dashboard?tab=users&userId=<id>'; (4) notify_user writes durable in-app row with userId/category/title/body/link/data/read=false/createdAt; (5) emergent_push.send_push_to_tokens returns {sent:0, failed:1, receipts:[...]} for a bogus ExponentPushToken and does NOT raise; (6) signup still returns 200 with access_token (try/except around notify_admins is in place).",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": { "ui_bugs": [], "integration_issues": [], "design_issues": [] },
+  "test_report_links": [
+    "/app/backend/tests/test_iter118w_signup_admin_notify.py",
+    "/app/test_reports/pytest/iter118w_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "utils/notifications.notify_users: the return dict computes 'total' via `sum(1 for _ in user_ids) if not sent else sent` — user_ids may be a generator already exhausted by the loop above, so 'total' is always equal to 'sent'. Minor observability issue; use `list(user_ids)` up front if accurate totals matter.",
+    "utils/notifications.notify_user: booking email fallback uses `db.users.find_one({'_id': _oid(user_id)})` but many callers may pass string IDs that aren't ObjectId-shaped (e.g. legacy uuid users). _oid() silently returns the raw string on failure, which will simply not match — acceptable but worth documenting.",
+    "utils/emergent_push: `_relay_key()` returning `os.environ.get(...) or None` — Expo public endpoint requires no auth; ok. If EMERGENT_PUSH_KEY is set but points to Expo, the extra Bearer header may cause 400. Consider tying key send to a non-default relay URL.",
+    "auth_routes.signup: `from utils.notifications import notify_admins` is imported inside the try/except on every signup — fine for isolation, but the module import cost is amortized. Not blocking."
+  ],
+  "updated_files": ["/app/backend/tests/test_iter118w_signup_admin_notify.py"],
+  "success_rate": { "backend": "100%", "frontend": "N/A (backend-only request)" },
+  "test_credentials": "admin@rapidreps.com / admin123 (from /app/memory/test_credentials.md)",
+  "seed_data_creation": "Test users created with TEST_iter118w_ prefix in emails. No cleanup performed on user rows (test suite creates fresh unique emails per run).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Frontend hook/_layout.tsx source-level checks (usePushNotifications + module-scope tap listener + PushBridge) were not exercised — request scoped as backend-only. If needed, source-inspect /app/frontend/src/hooks/usePushNotifications.ts and /app/frontend/app/_layout.tsx and/or run an Expo dev build for runtime push checks.",
+  "rca of the issue": "N/A — feature working as specified."
+}

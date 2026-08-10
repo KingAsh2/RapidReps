@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Platform } from 'react-native';
-import { Slot } from 'expo-router';
-import { AuthProvider } from '../src/contexts/AuthContext';
+import { Slot, router } from 'expo-router';
+import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
 import { AlertProvider } from '../src/contexts/AlertContext';
 import { NotificationProvider } from '../src/contexts/NotificationContext';
 import { SoundProvider } from '../src/contexts/SoundContext';
@@ -30,8 +30,32 @@ import {
   InterTight_700Bold, InterTight_900Black,
 } from '@expo-google-fonts/inter-tight';
 import * as SplashScreen from 'expo-splash-screen';
+// iter118w: Emergent-managed push notifications
+import * as Notifications from 'expo-notifications';
+import { usePushNotifications } from '../src/hooks/usePushNotifications';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
+
+// iter118w — MODULE-SCOPE tap handler.
+// This subscription must exist BEFORE first render so cold-start taps
+// (user opens the app FROM a push notification) still deep-link correctly.
+// The listener stashes the pending link in AsyncStorage; the routing hook
+// inside the component tree drains it once the Auth context + router are
+// ready. This 3-state coverage matches the manual's Section 5.1:
+//   • cold-start  → stashed on module load, drained by useEffect
+//   • background  → picked up by same listener while app is running
+//   • foreground  → same listener, no interstitial UX
+const PENDING_LINK_KEY = 'push.pendingLink.v1';
+Notifications.addNotificationResponseReceivedListener((response) => {
+  const data = response?.notification?.request?.content?.data as any;
+  const link = data?.link || (data?.screen ? `/${data.screen}` : null);
+  if (!link) return;
+  // Fire-and-forget stash; drain happens in <PushRouter /> below.
+  AsyncStorage.setItem(PENDING_LINK_KEY, String(link)).catch(() => {});
+  // If the router is already mounted, navigate immediately.
+  try { router.push(String(link) as any); } catch { /* deferred to drain */ }
+});
 
 // Initialize Sentry as early as possible for native crash capturing
 Sentry.init({
@@ -115,6 +139,33 @@ if (Platform.OS === 'web' || !STRIPE_PUBLISHABLE_KEY) {
   );
 }
 
+// iter118w — Small child of AuthProvider that mounts the push hook (once it
+// has userId + authToken) and drains any cold-start deep link stashed by the
+// module-scope tap listener above. Rendered inside the Slot's parent tree so
+// `router.push` is safe to call.
+function PushBridge() {
+  const { user, token } = useAuth();
+  usePushNotifications(user?.id || null, token || null);
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      // Small delay so the first navigation target has mounted before we
+      // try to router.push into it (avoids the "no route" flash).
+      await new Promise((r) => setTimeout(r, 800));
+      if (cancelled) return;
+      try {
+        const link = await AsyncStorage.getItem(PENDING_LINK_KEY);
+        if (link) {
+          await AsyncStorage.removeItem(PENDING_LINK_KEY);
+          router.push(link as any);
+        }
+      } catch { /* non-blocking */ }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+  return null;
+}
+
 function RootLayout() {
   const [fontsLoaded] = useFonts({
     Oswald_700Bold,
@@ -147,6 +198,9 @@ function RootLayout() {
               <SoundProvider>
                 <AlertProvider>
                   <NetworkProvider>
+                  {/* iter118w — Mount the push registration + cold-start
+                      link drain inside AuthProvider so we have userId. */}
+                  <PushBridge />
                   <Slot />
                   {/* iter102f: global firefly orange embers — visible on EVERY
                       screen. pointerEvents=none so touches pass through. Hidden

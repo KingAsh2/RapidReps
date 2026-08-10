@@ -113,6 +113,36 @@ async def signup(request: Request, user_data: UserSignUp):
     # Send welcome email (no-op without SendGrid key)
     send_welcome_email(user_data.email, user_data.fullName)
 
+    # iter118w: notify all admins of the new signup so they can proactively
+    # verify trainers / greet trainees. Uses the managed push relay + in-app
+    # fallback in utils.notifications so there's no dead-end delivery path.
+    try:
+        from utils.notifications import notify_admins
+        roles = ', '.join(user_data.roles or []) or 'user'
+        is_trainer = 'trainer' in (user_data.roles or [])
+        title = 'New Trainer Signed Up' if is_trainer else 'New User Signed Up'
+        body = (
+            f"{user_data.fullName} ({roles}) — {user_data.email}. "
+            + ('Verify their credentials from the Admin Verifications tab.' if is_trainer
+               else 'Consider a welcome message.')
+        )
+        link = (
+            f"/admin/dashboard?tab=verifications&userId={user_id}"
+            if is_trainer else f"/admin/dashboard?tab=users&userId={user_id}"
+        )
+        await notify_admins(
+            db,
+            category='system',
+            title=title,
+            body=body,
+            link=link,
+            data={'newUserId': user_id, 'roles': user_data.roles, 'source': 'signup'},
+        )
+    except Exception:
+        # Never let an admin-alert glitch block the signup itself.
+        import logging
+        logging.getLogger(__name__).exception("signup admin-notify failed")
+
     # Create access token
     access_token = create_access_token(user_id, user_data.email)
     
