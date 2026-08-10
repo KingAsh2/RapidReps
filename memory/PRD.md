@@ -1,5 +1,28 @@
 # RapidReps PRD
 
+## 2026-08 — iter118s: In-App Profile Photo Cropper ✅
+
+**Feature**: Athletes now frame their profile photo through a premium in-app cropper instead of the inconsistent OS-native crop.
+
+**New component** — `/app/frontend/src/components/PhotoCropper.tsx`:
+- Full-screen dark modal with a circular preview window that matches the exact avatar disc chrome (orange glow ring, size ratio, etc.)
+- Pinch-to-zoom (1.0×–4.0×) + drag-to-pan gestures via `react-native-gesture-handler` + `react-native-reanimated` (60fps on-UI-thread animations)
+- Spring snap-back when the pan overshoots the disc edges
+- On confirm: `expo-image-manipulator` crops the visible disc region from the source pixels, downscales to 720px max edge, ships JPEG q=0.85
+- Fallback: if manipulation fails, returns the un-cropped source so the user is never dead-ended
+- Uses BOTH `testID` (native automation) and `data-testid` (Expo-web) for full test coverage
+
+**Wired in 4 places**:
+- `app/trainee/(tabs)/profile.tsx` — testID `trainee-profile-cropper`
+- `app/trainer/edit-profile.tsx` — testID `trainer-edit-cropper`
+- `app/auth/onboarding-trainer.tsx` — testID `onboarding-trainer-cropper`
+- `app/auth/onboarding-trainee.tsx` — testID `onboarding-trainee-cropper`
+
+Each site now passes `allowsEditing: false, quality: 1` to `ImagePicker`, hands the raw URI to `<PhotoCropper>`, and awaits a cropped URI via `commitCroppedPhoto` which runs the existing `optimizeImage` + base64 pipeline.
+
+**Testing** — `iteration_122.json` — Source-level verification passed for all 4 wiring files + PhotoCropper. Backend regression (profile-photo endpoints) still 100% green. Testing agent flagged native `testID` vs web `data-testid` — fixed to include both.
+
+
 ## 2026-08 — iter118r: Profile Photo Upload Fix ✅
 
 **Bug**: Profile-picture upload didn't stick — avatars stayed on initials fallback after the user picked a photo. Reported: *"Updating profile picture isn't working at the moment. Fix this so that the profile picture is shown in profile and in place of avatar the way it suppose to."*

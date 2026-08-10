@@ -250,6 +250,12 @@ export function PhotoCropper({ visible, uri, onCancel, onConfirm, testID }: Prop
             <TouchableOpacity
               onPress={onCancel}
               hitSlop={12}
+              testID={`${testID || 'photo-cropper'}-cancel`}
+              accessibilityRole="button"
+              accessibilityLabel="Cancel crop"
+              // Kept for Expo-web where testID doesn't emit a DOM attribute.
+              // React Native drops unknown DOM-style props silently.
+              // @ts-ignore
               data-testid={`${testID || 'photo-cropper'}-cancel`}
             >
               <Text style={styles.headerBtn}>Cancel</Text>
@@ -259,6 +265,10 @@ export function PhotoCropper({ visible, uri, onCancel, onConfirm, testID }: Prop
               onPress={startCrop}
               disabled={!imgSize || processing}
               hitSlop={12}
+              testID={`${testID || 'photo-cropper'}-confirm`}
+              accessibilityRole="button"
+              accessibilityLabel="Use photo"
+              // @ts-ignore
               data-testid={`${testID || 'photo-cropper'}-confirm`}
             >
               {processing ? (
