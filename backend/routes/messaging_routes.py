@@ -8,6 +8,7 @@ import asyncio
 
 from deps import db, get_current_user, sanitize_text, create_and_send_notification
 from models import MessageCreate, MessageResponse, ConversationResponse
+from utils.message_filter import check_message, user_facing_reason
 
 router = APIRouter(prefix="/api")
 
@@ -17,6 +18,46 @@ async def send_message(message_data: MessageCreate, current_user: dict = Depends
     """Send a message to another user."""
     sender_id = str(current_user['_id'])
     receiver_id = message_data.receiverId
+
+    # iter118be: contact-info / off-platform filter. Block-and-log — first
+    # offense is only a warning; repeat offenders surface in admin queue.
+    raw_content = message_data.content or ""
+    # Admin-to-user messages are exempt (support may need to send an email
+    # or phone to escalate a real issue).
+    if not bool(current_user.get('isAdmin')):
+        flag = check_message(raw_content)
+        if flag:
+            # Find or create the conversation id so the log ties to a thread.
+            existing = await db.conversations.find_one({
+                'participants': {'$all': [sender_id, receiver_id]}
+            })
+            conv_id = str(existing['_id']) if existing else None
+            try:
+                await db.chat_flags.insert_one({
+                    '_id': str(uuid.uuid4()),
+                    'userId': sender_id,
+                    'receiverId': receiver_id,
+                    'conversationId': conv_id,
+                    'messageText': raw_content[:2000],  # truncate for storage
+                    'flagType': flag['flagType'],
+                    'matched': flag.get('matched'),
+                    'createdAt': datetime.utcnow(),
+                })
+            except Exception:
+                # Never let a logging failure block the warning back to the user.
+                pass
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    'code': 'CONTACT_INFO_BLOCKED',
+                    'flagType': flag['flagType'],
+                    'reason': user_facing_reason(flag['flagType']),
+                    'message': (
+                        "For your safety and to keep your booking protected, "
+                        "please don't share contact info here."
+                    ),
+                },
+            )
 
     conversation = await db.conversations.find_one({
         'participants': {'$all': [sender_id, receiver_id]}

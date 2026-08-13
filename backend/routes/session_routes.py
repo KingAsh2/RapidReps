@@ -23,6 +23,7 @@ from models import (
     MembershipStatus, REFERRAL_CREDIT_CENTS,
 )
 from email_service import send_session_booked_email
+from utils.payment_gate import require_paid_session
 
 stripe.api_key = os.environ.get('STRIPE_SECRET_KEY', '')
 
@@ -274,6 +275,9 @@ async def verify_session_pin(
     # Verify current user is the trainer
     if str(current_user['_id']) != session['trainerId']:
         raise HTTPException(status_code=403, detail="Only the trainer can verify the PIN")
+    
+    # iter118be: block session start when payment isn't confirmed
+    require_paid_session(session)
     
     # Check PIN
     if session.get('safetyPin') != pin:
@@ -586,6 +590,9 @@ async def confirm_trainer_gps(
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
+    # iter118be: block GPS arrival confirmation before payment is confirmed
+    require_paid_session(session)
+
     session_type = session.get('sessionType', 'outdoor')
     if session_type in (SessionType.IN_HOME, SessionType.TRAINEE_HOME):
         max_distance = 0.1  # 160m for at-home
@@ -644,6 +651,9 @@ async def trainer_confirm_arrival(
     if session.get('status') not in [SessionStatus.CONFIRMED, SessionStatus.EN_ROUTE]:
         raise HTTPException(400, "Session must be confirmed or en-route to confirm arrival")
     
+    # iter118be: block arrival flip before payment is confirmed
+    require_paid_session(session)
+    
     await db.sessions.update_one(
         {'_id': oid},
         {'$set': {
@@ -689,6 +699,9 @@ async def trainee_confirm_arrival(
     
     if session.get('status') not in [SessionStatus.CONFIRMED, SessionStatus.EN_ROUTE]:
         raise HTTPException(400, "Session must be confirmed or en-route to confirm arrival")
+    
+    # iter118be: block arrival flip before payment is confirmed
+    require_paid_session(session)
     
     await db.sessions.update_one(
         {'_id': oid},

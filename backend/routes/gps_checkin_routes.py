@@ -8,6 +8,7 @@ import math
 
 from deps import db, get_current_user, send_push_notification
 from models import SessionStatus
+from utils.payment_gate import require_paid_session
 
 router = APIRouter(prefix="/api")
 
@@ -73,6 +74,9 @@ async def gps_checkin(session_id: str, checkin: GpsCheckinRequest, current_user:
     # Session must be confirmed or en_route
     if session['status'] not in [SessionStatus.CONFIRMED, SessionStatus.EN_ROUTE, SessionStatus.IN_PROGRESS]:
         raise HTTPException(400, f"Cannot check in to session with status '{session['status']}'")
+
+    # iter118be: refuse GPS check-in when payment isn't confirmed
+    require_paid_session(session)
 
     # iter106av G8: reject noisy GPS. Devices in tunnels/underground gyms
     # can report ±500m accuracy — trusting that would false-positive check-ins.
