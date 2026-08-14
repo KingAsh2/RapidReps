@@ -8,6 +8,7 @@ import { TouchableOpacity } from 'react-native';
 import { progressAPI } from '../../src/services/api';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { goBack } from '../../src/utils/navigation';
+import { InfoTip } from '../../src/components/InfoTip';
 
 const backgroundImage = require('../../assets/images/bg-box-jumps-orange.jpg');
 const { width } = Dimensions.get('window');
@@ -69,7 +70,16 @@ export default function UserProgressScreen() {
             <Ionicons name="flame" size={32} color={COLORS.white} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.streakLevel}>{progress?.streakLevel || 'None'} Streak</Text>
+            <View style={styles.streakTitleRow}>
+              <Text style={styles.streakLevel}>{progress?.streakLevel || 'None'} Streak</Text>
+              <InfoTip
+                title="How your streak works"
+                text="1 week counts every calendar week you complete at least one session. Miss a week and it resets to 0. Levels: Warming (2+), Fire (4+), Blazing (8+), Legend (12+)."
+                color="rgba(255,255,255,0.85)"
+                size={16}
+                testID="progress-streak-info"
+              />
+            </View>
             <Text style={styles.streakCount}>{progress?.currentStreak || 0} weeks in a row</Text>
           </View>
           <View style={styles.streakBest}>
@@ -81,22 +91,50 @@ export default function UserProgressScreen() {
         {/* Stats Grid */}
         <View style={styles.statsGrid}>
           <View style={styles.statCard}>
-            <Ionicons name="barbell" size={24} color={'#FF6A00'} />
+            <View style={styles.statHeader}>
+              <Ionicons name="barbell" size={24} color={'#FF6A00'} />
+              <InfoTip
+                title="Sessions"
+                text="The number of RapidReps sessions you completed as a trainee. A session is counted once it's marked complete after the workout ends."
+                testID="progress-sessions-info"
+              />
+            </View>
             <Text style={styles.statVal}>{progress?.totalSessions || 0}</Text>
             <Text style={styles.statLabel}>Sessions</Text>
           </View>
           <View style={styles.statCard}>
-            <Ionicons name="time" size={24} color={COLORS.orange} />
+            <View style={styles.statHeader}>
+              <Ionicons name="time" size={24} color={COLORS.orange} />
+              <InfoTip
+                title="Minutes"
+                text="Total minutes trained — added up from the booked duration of every completed session you were the trainee in."
+                testID="progress-minutes-info"
+              />
+            </View>
             <Text style={styles.statVal}>{progress?.totalMinutesTrained || 0}</Text>
             <Text style={styles.statLabel}>Minutes</Text>
           </View>
           <View style={styles.statCard}>
-            <Ionicons name="flame" size={24} color={COLORS.error} />
+            <View style={styles.statHeader}>
+              <Ionicons name="flame" size={24} color={COLORS.error} />
+              <InfoTip
+                title="Calories"
+                text="Estimated calorie burn based on session length and type: 8 kcal/min outdoor, 7 kcal/min in-home, 6 kcal/min virtual. It's an average estimate, not a heart-rate measurement."
+                testID="progress-calories-info"
+              />
+            </View>
             <Text style={styles.statVal}>{progress?.estimatedCaloriesBurned || 0}</Text>
             <Text style={styles.statLabel}>Calories</Text>
           </View>
           <View style={styles.statCard}>
-            <Ionicons name="trending-up" size={24} color={COLORS.success} />
+            <View style={styles.statHeader}>
+              <Ionicons name="trending-up" size={24} color={COLORS.success} />
+              <InfoTip
+                title="Consistency Score"
+                text="Rewards showing up regularly. Formula: (sessions × 10) + (unique training weeks × 25) + (total minutes ÷ 10). Higher = more consistent."
+                testID="progress-score-info"
+              />
+            </View>
             <Text style={styles.statVal}>{progress?.consistencyScore || 0}</Text>
             <Text style={styles.statLabel}>Score</Text>
           </View>
@@ -158,6 +196,7 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: 16, paddingBottom: 32 },
   streakCard: { borderRadius: 16, padding: 20, flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
   streakIcon: { width: 52, height: 52, borderRadius: 26, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center', marginRight: 14 },
+  streakTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   streakLevel: { fontSize: 18, fontWeight: '800', color: '#fff' },
   streakCount: { fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
   streakBest: { alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6 },
@@ -165,6 +204,7 @@ const styles = StyleSheet.create({
   streakBestVal: { fontSize: 20, fontWeight: '800', color: '#fff' },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16 },
   statCard: { width: (width - 42) / 2, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 14, padding: 16, alignItems: 'center' },
+  statHeader: { width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   statVal: { fontSize: 28, fontWeight: '800', color: '#fff', marginTop: 6 },
   statLabel: { fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: '600', marginTop: 2 },
   section: { marginTop: 8, marginBottom: 16 },

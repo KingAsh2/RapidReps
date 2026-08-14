@@ -18,18 +18,29 @@ async def get_user_progress(user_id: str, current_user: dict = Depends(get_curre
     """
     Get comprehensive fitness progress for a user.
     Auto-calculated from session data + any trainer-submitted metrics.
+
+    iter118bf:
+      - Only count sessions where the user was the TRAINEE (i.e. actually
+        being trained). Previously the aggregation also included sessions
+        the user *coached*, so a trainer viewing their own progress saw
+        inflated calories/minutes.
+      - Calories now use each session's real `durationMinutes` (was
+        hard-coded to 30 for every row).
     """
-    # Auto-calculate from completed sessions
+    # Auto-calculate from completed sessions where the user was the TRAINEE
     pipeline = [
         {"$match": {
-            "$or": [{"traineeId": user_id}, {"trainerId": user_id}],
+            "traineeId": user_id,
             "status": "completed",
         }},
         {"$group": {
             "_id": None,
             "totalSessions": {"$sum": 1},
             "totalMinutes": {"$sum": {"$ifNull": ["$durationMinutes", 30]}},
-            "sessionTypes": {"$push": "$sessionType"},
+            "typedDurations": {"$push": {
+                "type": "$sessionType",
+                "minutes": {"$ifNull": ["$durationMinutes", 30]},
+            }},
             "dates": {"$push": "$sessionDateTimeStart"},
         }},
     ]
@@ -40,11 +51,13 @@ async def get_user_progress(user_id: str, current_user: dict = Depends(get_curre
         total_sessions = stats["totalSessions"]
         total_minutes = stats["totalMinutes"]
 
-        # Estimate calories
-        types = stats.get("sessionTypes", [])
-        calories = sum(CALORIES_PER_MINUTE.get(t, 7) * 30 for t in types)  # assume 30-min avg
+        # Calories = sum over sessions of (per-minute rate × real duration)
+        calories = 0
+        for td in stats.get("typedDurations", []):
+            rate = CALORIES_PER_MINUTE.get(td.get("type"), 7)
+            calories += rate * int(td.get("minutes") or 30)
 
-        # Calculate consistency score
+        # Consistency score (rewards frequency + weekly cadence + volume)
         dates = [d for d in stats.get("dates", []) if d]
         weeks_set = set()
         for d in dates:
@@ -105,9 +118,9 @@ async def get_user_progress(user_id: str, current_user: dict = Depends(get_curre
 
 @router.get("/{user_id}/history")
 async def get_workout_history(user_id: str, limit: int = 30, current_user: dict = Depends(get_current_user)):
-    """Get recent workout history."""
+    """Get recent workout history — sessions the user actually TRAINED in (as trainee)."""
     sessions = await db.sessions.find(
-        {"$or": [{"traineeId": user_id}, {"trainerId": user_id}], "status": "completed"},
+        {"traineeId": user_id, "status": "completed"},
         {"_id": 1, "sessionType": 1, "durationMinutes": 1, "sessionDateTimeStart": 1, "trainerName": 1, "traineeName": 1}
     ).sort("sessionDateTimeStart", -1).limit(limit).to_list(limit)
 
